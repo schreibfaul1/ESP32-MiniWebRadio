@@ -2,13 +2,13 @@
 // updated on Apr 26 2025
 
 
-#include "Arduino.h"
-#include "tft_rgb.h"
+#include "tft_dsi.h"
+#ifdef CONFIG_IDF_TARGET_ESP32P4
+#if TFT_CONTROLLER == 8
+    #define __malloc_heap_psram(size) heap_caps_malloc_prefer(size, 2, MALLOC_CAP_DEFAULT | MALLOC_CAP_SPIRAM, MALLOC_CAP_DEFAULT | MALLOC_CAP_INTERNAL)
 
-#define __malloc_heap_psram(size) heap_caps_malloc_prefer(size, 2, MALLOC_CAP_DEFAULT | MALLOC_CAP_SPIRAM, MALLOC_CAP_DEFAULT | MALLOC_CAP_INTERNAL)
-
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-TFT_RGB::TFT_RGB() { // Constructor
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+TFT_DSI::TFT_DSI() { // Constructor
     m_panel = NULL;
     m_h_res = 0;
     m_v_res = 0;
@@ -19,140 +19,180 @@ TFT_RGB::TFT_RGB() { // Constructor
     m_vsyncCounter = 0;
     xSemaphoreGive(m_vsync_semaphore);
 }
-void TFT_RGB::loop(){
-    if(!m_refresh) handle_vsync_event(m_panel, nullptr);
-    GIF_loop();
+void TFT_DSI::loop() {
+   GIF_loop();
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-bool TFT_RGB::on_vsync_event(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *edata, void *user_ctx) { // static callback function
-    if (user_ctx) {
-        TFT_RGB* instance = static_cast<TFT_RGB*>(user_ctx);
-        return instance->handle_vsync_event(panel, edata);
-    }
-    return false;
-}
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-bool TFT_RGB::handle_vsync_event(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *edata) {
- //   if (xSemaphoreTake(m_vsync_semaphore, 0) == pdTRUE) {
-        int res = esp_lcd_rgb_panel_refresh(m_panel);
- //       xSemaphoreGive(m_vsync_semaphore);
-        if(res == ESP_OK){
-            m_refresh = true;
-            m_vsyncCounter++;
-            return true;
-        }
- //   }
-    m_refresh = false;
-    return false;
-}
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_RGB::begin(const Pins& newPins, const Timing& newTiming) {
-
-    m_pins = newPins;
-    m_timing = newTiming;
-
-    esp_lcd_rgb_panel_config_t panel_config;
-    memset(&panel_config, 0, sizeof(panel_config));
-    panel_config.clk_src = LCD_CLK_SRC_PLL160M;
-
-    panel_config.timings.pclk_hz = m_timing.pixel_clock_hz;
-    panel_config.timings.h_res = m_timing.h_res;
-    panel_config.timings.v_res = m_timing.v_res;
-    panel_config.timings.hsync_pulse_width = m_timing.hsync_pulse_width;
-    panel_config.timings.hsync_back_porch = m_timing.hsync_back_porch;
-    panel_config.timings.hsync_front_porch = m_timing.hsync_front_porch;
-    panel_config.timings.vsync_pulse_width = m_timing.vsync_pulse_width;
-    panel_config.timings.vsync_back_porch = m_timing.vsync_back_porch;
-    panel_config.timings.vsync_front_porch = m_timing.vsync_front_porch;
-    panel_config.timings.flags.hsync_idle_low = true;
-    panel_config.timings.flags.vsync_idle_low = true;
-    panel_config.timings.flags.de_idle_high = false;
-    panel_config.timings.flags.pclk_active_neg = true;
-    panel_config.timings.flags.pclk_idle_high = true;
-
-    panel_config.data_width = 16; // RGB565
-    panel_config.bits_per_pixel = 16;
-    panel_config.num_fbs = 3;
-    panel_config.bounce_buffer_size_px = 0;
-    panel_config.dma_burst_size = 64;
-    panel_config.hsync_gpio_num = m_pins.hsync;
-    panel_config.vsync_gpio_num = m_pins.vsync;
-    panel_config.de_gpio_num = m_pins.de;
-    panel_config.pclk_gpio_num = m_pins.pclk;
-    panel_config.disp_gpio_num = m_pins.bl;
-
-    int8_t pinArr[16] = {               // Daten-Pins für RGB565
-        m_pins.b0, m_pins.b1, m_pins.b2, m_pins.b3, m_pins.b4,
-        m_pins.g0, m_pins.g1, m_pins.g2, m_pins.g3, m_pins.g4, m_pins.g5,
-        m_pins.r0, m_pins.r1, m_pins.r2, m_pins.r3, m_pins.r4
-    };
-
-    for (int i = 0; i < 16; ++i) {
-        //  log_i("i %i. pin %i", i, pinArr[i]);
-        panel_config.data_gpio_nums[i] = pinArr[i];
-    }
-    panel_config.flags.disp_active_low = false;
-    panel_config.flags.refresh_on_demand = true;
-    panel_config.flags.fb_in_psram = true;
-    panel_config.flags.double_fb = false;
-    panel_config.flags.no_fb = false;
-    panel_config.flags.bb_invalidate_cache = false;
-
-    ESP_ERROR_CHECK(esp_lcd_new_rgb_panel(&panel_config, &m_panel));
-    ESP_ERROR_CHECK(esp_lcd_panel_reset(m_panel));
-    ESP_ERROR_CHECK(esp_lcd_panel_init(m_panel));
-    if(tft_info) tft_info("Display initialisiert.");
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_DSI::begin(const Timing& newTiming) {
 
     // Hintergrundbeleuchtung einschalten
-    if(m_pins.bl >= 0){
-        gpio_set_direction((gpio_num_t)m_pins.bl, GPIO_MODE_OUTPUT);
-        gpio_set_level((gpio_num_t)m_pins.bl, 1); // Hintergrundbeleuchtung aktivieren
+    if (TFT_BL >= 0) {
+    //    gpio_set_direction((gpio_num_t)TFT_BL, GPIO_MODE_OUTPUT);
+    //    gpio_set_level((gpio_num_t)TFT_BL, 1); // Enable backlight
     }
+    m_timing = newTiming;
     m_h_res = m_timing.h_res;
     m_v_res = m_timing.v_res;
 
+    // --------------------------------------------------
+    // 1. Acquire Channel
+    // --------------------------------------------------
+    esp_ldo_channel_handle_t ldo_mipi_phy = NULL;
+    esp_ldo_channel_config_t ldo_mipi_phy_config = {
+        .chan_id = 3,
+        .voltage_mv = 2500,
+    };
+    m_err = esp_ldo_acquire_channel(&ldo_mipi_phy_config, &ldo_mipi_phy);
+    if (m_err != 0) { log_e("LDO Power not enabled, err: %i\n", m_err); }
+
+    // --------------------------------------------------
+    // 2. Reset Display
+    // --------------------------------------------------
+    reset();
+
+    // --------------------------------------------------
+    // 3. Create MIPI DSI Bus
+    // --------------------------------------------------
+    esp_lcd_dsi_bus_handle_t dsi_bus = NULL;
+    esp_lcd_dsi_bus_config_t dsi_cfg = {
+        .bus_id = 0,
+        .num_data_lanes = 2,
+        .phy_clk_src = MIPI_DSI_PHY_PLLREF_CLK_SRC_DEFAULT_LEGACY,
+        .lane_bit_rate_mbps = 900, // Anpassen für Dein Display!
+    };
+    m_err = esp_lcd_new_dsi_bus(&dsi_cfg, &dsi_bus);
+    if (m_err != 0) { log_e("con't create DSI Bus, err: %i\n", m_err); }
+
+    // --------------------------------------------------
+    // 3. Create DBI-IO for Display-Commands
+    // --------------------------------------------------
+    esp_lcd_panel_io_handle_t mipi_dbi_io;
+    esp_lcd_dbi_io_config_t   dbi_cfg = {
+          .virtual_channel = 0,
+          .lcd_cmd_bits = 8,
+          .lcd_param_bits = 8,
+    };
+    m_err = esp_lcd_new_panel_io_dbi(dsi_bus, &dbi_cfg, &mipi_dbi_io);
+    if (m_err != 0) { log_e("can't create DBI-IO, err: %i\n", m_err); }
+    m_mipi_dbi_io = mipi_dbi_io;
+
+    // --------------------------------------------------
+    // 4. Init Display-Controller (EK97001)
+    // --------------------------------------------------
+    /*
+     * R00h: NOP ( No Operation)
+     * R01h: GRB (Software Reset)
+     * R0Ah: GET_POWER_MODE (Read Display Power Mode)
+     * R0Dh: GET_DISPLAY_MODE ( Read the Current Display Mode)
+     * R0Eh: GET_SIGNAL_MODE (TBD)
+     * R10h: ENTER_SLEEP_MODE (Enter the Sleep-In Mode)
+     * R11h: EXIT_SLEEP_MODE (Exit the Sleep-In Mode)
+     * R20h:EXIT_INVERT_MODE (Display Inversion Off)
+     * R21h: ENTER_INVERT_MODE (Display Inversion On)
+     * R36h: SET_ADDRESS_MODE (Data Access Control)
+     * R78h/R79h/R7Ah/R7Bh :GIP timing control register
+     * R80h ... R86h: Gamma Control Register
+     * RB0h: Panel Control Register
+     * RB1h: Panel Control Register
+     * RB2h: Panel Control Register
+     * RB3h: Panel Control Register(non GIP mode)
+     */
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0xB2, (uint8_t[]){0x10}, 1); // 2 LANE
+
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x80, (uint8_t[]){0x8B}, 1); // Gamma
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x81, (uint8_t[]){0x78}, 1); // Gamma
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x82, (uint8_t[]){0x84}, 1); // Gamma
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x83, (uint8_t[]){0x88}, 1); // Gamma
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x84, (uint8_t[]){0xA8}, 1); // Gamma
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x85, (uint8_t[]){0xE3}, 1); // Gamma
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x86, (uint8_t[]){0x88}, 1); // Gamma
+
+    // esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x20, (uint8_t[]){0x00}, 0); // invert mode off
+    // esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x21, (uint8_t[]){0x00}, 0); // invert mode on
+
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x11, (uint8_t[]){0x00}, 0); // exit sleep
+    vTaskDelay(pdMS_TO_TICKS(100));
+
+    // --------------------------------------------------
+    // 5. Create DPI-Panel
+    // --------------------------------------------------
+
+    esp_lcd_dpi_panel_config_t dpi_cfg = {.virtual_channel = 0,
+                                          .dpi_clk_src = MIPI_DSI_DPI_CLK_SRC_DEFAULT,
+                                          .dpi_clock_freq_mhz = 52,
+                                          .pixel_format = LCD_COLOR_PIXEL_FORMAT_RGB565,
+                                          .in_color_format = LCD_COLOR_FMT_RGB565,
+                                          .out_color_format = LCD_COLOR_FMT_RGB565,
+
+                                          .num_fbs = 3,
+
+                                          .video_timing =
+                                              {
+                                                  .h_size = m_h_res,
+                                                  .v_size = m_v_res,
+                                                  .hsync_pulse_width = m_timing.hsync_pulse_width,
+                                                  .hsync_back_porch = m_timing.hsync_back_porch,
+                                                  .hsync_front_porch = m_timing.hsync_front_porch,
+                                                  .vsync_pulse_width = m_timing.hsync_pulse_width,
+                                                  .vsync_back_porch = m_timing.hsync_back_porch,
+                                                  .vsync_front_porch = m_timing.vsync_front_porch,
+                                              },
+
+                                          .flags = {
+                                              .use_dma2d = true,
+                                              .disable_lp = false,
+                                          }};
+
+    m_err = esp_lcd_new_panel_dpi(dsi_bus, &dpi_cfg, &m_panel);
+    if (m_err != 0) { log_e("can't create new panel, err: %i\n", m_err); }
+
+    m_err = esp_lcd_panel_init(m_panel);
+    if (m_err != 0) { log_e("init panel, err: %i\n", m_err); }
+    else if (tft_info) tft_info("TFT Controller: " ANSI_ESC_CYAN "EK97001" ANSI_ESC_RESET " initialized");
+
+    // --------------------------------------------------
+    // 6. Fetch Framebuffer-Pointer from Driver
+    // --------------------------------------------------
+
     void *fb0, *fb1, *fb2;
-    esp_lcd_rgb_panel_get_frame_buffer(m_panel, 3, &fb0, &fb1, &fb2);
+    esp_lcd_dpi_panel_get_frame_buffer(m_panel, 3, &fb0, &fb1, &fb2);
     m_framebuffer[0] = (uint16_t*)fb0;
     m_framebuffer[1] = (uint16_t*)fb1;
     m_framebuffer[2] = (uint16_t*)fb2;
-
-    // log_w("m_h_res: %d, m_v_res: %d, m_framebuffer[0] %i", m_h_res, m_v_res, m_framebuffer[0]);
-    memset(m_framebuffer[0], 0xFF, m_h_res * m_v_res * 2);
-    // log_w("m_h_res: %d, m_v_res: %d, m_framebuffer[1] %i", m_h_res, m_v_res, m_framebuffer[1]);
-    memset(m_framebuffer[1], 0xFF, m_h_res * m_v_res * 2);
-    // log_w("m_h_res: %d, m_v_res: %d, m_framebuffer[2] %i", m_h_res, m_v_res, m_framebuffer[2]);
-    memset(m_framebuffer[2], 0xFF, m_h_res * m_v_res * 2);
-
-    esp_lcd_rgb_panel_event_callbacks_t cbs = { // if not used, set to nullptr
-        .on_color_trans_done = nullptr,
-        .on_vsync = TFT_RGB::on_vsync_event,
-        .on_bounce_empty = nullptr,           /*!< Bounce buffer empty callback. */
-        .on_frame_buf_complete = nullptr,      /*!< A whole frame buffer was just sent to the LCD DMA */
-    };
-    esp_lcd_rgb_panel_register_event_callbacks(m_panel, &cbs, this);
-    esp_lcd_rgb_panel_refresh(m_panel);
+    char buff[256];
+    sprintf(buff, "Resolution: " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET " x " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET, m_h_res, m_v_res);
+    if (tft_info) tft_info(buff);
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_RGB::reset() {
-    ESP_ERROR_CHECK(esp_lcd_panel_reset(m_panel));
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_DSI::reset() {
+    pinMode(LCD_RESET, OUTPUT);
+    digitalWrite(LCD_RESET, 1);
+    vTaskDelay(20);
+    digitalWrite(LCD_RESET, 0);
+    vTaskDelay(20);
+    digitalWrite(LCD_RESET, 1);
+    vTaskDelay(100);
+    // ESP_ERROR_CHECK(esp_lcd_panel_reset(m_panel));
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-bool TFT_RGB::panelDrawBitmap(int16_t x0, int16_t y0, int16_t x1, int16_t y1, const void *bitmap) {
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+bool TFT_DSI::panelDrawBitmap(int16_t x0, int16_t y0, int16_t x1, int16_t y1, const void* bitmap) {
     bool res = false;
-    if(x0 >= x1 || y0 >= y1) {log_w("x0 %i, y0 %i, x1 %i, y1 %i", x0, y0, x1, y1); return false;}
+    if (x0 >= x1 || y0 >= y1) {
+        log_w("x0 %i, y0 %i, x1 %i, y1 %i", x0, y0, x1, y1);
+        return false;
+    }
     xSemaphoreTake(m_vsync_semaphore, 0.3 * configTICK_RATE_HZ);
     res = esp_lcd_panel_draw_bitmap(m_panel, x0, y0, x1, y1, (const uint16_t*)bitmap);
     xSemaphoreGive(m_vsync_semaphore);
     return res;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_RGB::setDisplayInversion(bool invert) {
-    esp_lcd_panel_invert_color(m_panel, invert);
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_DSI::setDisplayInversion(bool invert) {
+    m_invert = invert; // todo
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-void TFT_RGB::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color) {
+void TFT_DSI::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color) {
     // Calculate differences
     int16_t dx = abs(x1 - x0);
     int16_t dy = abs(y1 - y0);
@@ -165,9 +205,7 @@ void TFT_RGB::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t 
 
     while (true) {
         // Set point in framebuffer if within bounds
-        if (x0 >= 0 && x0 < m_h_res && y0 >= 0 && y0 < m_v_res) {
-            m_framebuffer[0][y0 * m_h_res + x0] = color;
-        }
+        if (x0 >= 0 && x0 < m_h_res && y0 >= 0 && y0 < m_v_res) { m_framebuffer[0][y0 * m_h_res + x0] = color; }
 
         // Wenn Endpunkt erreicht, beenden
         if (x0 == x1 && y0 == y1) break;
@@ -191,27 +229,28 @@ void TFT_RGB::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t 
     int16_t update_y1 = std::max(y0, y1) + 1;
     panelDrawBitmap(update_x0, update_y0, update_x1, update_y1, m_framebuffer[0]);
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_RGB::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_DSI::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
     // Clipping: Rechteck-Koordinaten auf den Framebuffer-Bereich beschränken
     int16_t x0 = max((int16_t)0, x);
     int16_t y0 = max((int16_t)0, y);
     int16_t x1 = min((int)m_h_res, x + w); // Rechte Grenze
     int16_t y1 = min((int)m_v_res, y + h); // Untere Grenze
     // Zeichnen des Rechtecks nur im gültigen Bereich
-    for (int16_t j = y0; j < y1; ++j) { // Zeilen iterieren
+    for (int16_t j = y0; j < y1; ++j) {     // Zeilen iterieren
         for (int16_t i = x0; i < x1; ++i) { // Spalten iterieren
             m_framebuffer[0][j * m_h_res + i] = color;
         }
     }
     panelDrawBitmap(x0, y0, x1, y1, m_framebuffer[0]);
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_RGB::fillScreen(uint16_t color) {
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_DSI::fillScreen(uint16_t color) {
+log_w("%i, %i, %i, %i, %i", 0, 0, m_h_res, m_v_res, color);
     fillRect(0, 0, m_h_res, m_v_res, color);
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_RGB::drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color) {
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_DSI::drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color) {
 
     auto drawLine = [](int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color, uint16_t* m_framebuffer[0], uint16_t m_h_res) {
         // Bresenham-Algorithmus für Linien
@@ -223,11 +262,16 @@ void TFT_RGB::drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16
             m_framebuffer[0][y0 * m_h_res + x0] = color; // Pixel setzen
             if (x0 == x1 && y0 == y1) break;
             e2 = 2 * err;
-            if (e2 >= dy) { err += dy; x0 += sx; }
-            if (e2 <= dx) { err += dx; y0 += sy; }
+            if (e2 >= dy) {
+                err += dy;
+                x0 += sx;
+            }
+            if (e2 <= dx) {
+                err += dx;
+                y0 += sy;
+            }
         }
     };
-
 
     // Zeichne die drei Linien des Dreiecks
     drawLine(x0, y0, x1, y1, color, &m_framebuffer[0], m_h_res); // Linie von Punkt 0 nach Punkt 1
@@ -241,24 +285,31 @@ void TFT_RGB::drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16
     int16_t y_max = std::max({y0, y1, y2});
     panelDrawBitmap(x_min, y_min, x_max + 1, y_max + 1, m_framebuffer[0]);
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_RGB::fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color) {
- // Helferfunktion zum Zeichnen einer horizontalen Linie
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_DSI::fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color) {
+    // Helferfunktion zum Zeichnen einer horizontalen Linie
     auto drawHorizontalLine = [&](int16_t x_start, int16_t x_end, int16_t y) {
         if (y >= 0 && y < m_v_res) { // Clipping in y-Richtung
             if (x_start > x_end) std::swap(x_start, x_end);
             x_start = std::max((int16_t)0, x_start); // Clipping in x-Richtung
             x_end = std::min((int16_t)(m_h_res - 1), x_end);
-            for (int16_t x = x_start; x <= x_end; ++x) {
-                m_framebuffer[0][y * m_h_res + x] = color;
-            }
+            for (int16_t x = x_start; x <= x_end; ++x) { m_framebuffer[0][y * m_h_res + x] = color; }
         }
     };
 
     // Punkte nach ihrer y-Koordinate sortieren
-    if (y0 > y1) { std::swap(y0, y1); std::swap(x0, x1); }
-    if (y1 > y2) { std::swap(y1, y2); std::swap(x1, x2); }
-    if (y0 > y1) { std::swap(y0, y1); std::swap(x0, x1); }
+    if (y0 > y1) {
+        std::swap(y0, y1);
+        std::swap(x0, x1);
+    }
+    if (y1 > y2) {
+        std::swap(y1, y2);
+        std::swap(x1, x2);
+    }
+    if (y0 > y1) {
+        std::swap(y0, y1);
+        std::swap(x0, x1);
+    }
 
     // Variablen zur Begrenzung des aktualisierten Bereichs
     int16_t x_min = std::min({x0, x1, x2});
@@ -285,7 +336,7 @@ void TFT_RGB::fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16
             int16_t x_end = x1 + (x2 - x1) * (y - y1) / (y2 - y1);
             drawHorizontalLine(x_start, x_end, y);
         }
-    } else { // Allgemeiner Fall: Dreieck wird in zwei Teile aufgeteilt
+    } else {                                 // Allgemeiner Fall: Dreieck wird in zwei Teile aufgeteilt
         for (int16_t y = y0; y <= y1; ++y) { // Unterer Teil
             int16_t x_start = x0 + (x1 - x0) * (y - y0) / (y1 - y0);
             int16_t x_end = x0 + (x2 - x0) * (y - y0) / (y2 - y0);
@@ -301,12 +352,12 @@ void TFT_RGB::fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16
     // Aktualisierung nur des geänderten Bereichs
     panelDrawBitmap(x_min, y_min, x_max + 1, y_max + 1, m_framebuffer[0]);
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_RGB::drawRect(int16_t Xpos, int16_t Ypos, uint16_t Width, uint16_t Height, uint16_t Color) {
-    if(Xpos < 0 || Xpos >= m_h_res || Ypos < 0 || Ypos >= m_v_res) return;
-    if(Width == 0 || Height == 0) return;
-    if(Width > m_h_res - Xpos) Width = m_h_res - Xpos;
-    if(Height > m_v_res - Ypos) Height = m_v_res - Ypos;
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_DSI::drawRect(int16_t Xpos, int16_t Ypos, uint16_t Width, uint16_t Height, uint16_t Color) {
+    if (Xpos < 0 || Xpos >= m_h_res || Ypos < 0 || Ypos >= m_v_res) return;
+    if (Width == 0 || Height == 0) return;
+    if (Width > m_h_res - Xpos) Width = m_h_res - Xpos;
+    if (Height > m_v_res - Ypos) Height = m_v_res - Ypos;
 
     auto drawLine = [](int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color, uint16_t* fb, uint16_t m_h_res) {
         // Bresenham-Algorithmus für Linien
@@ -318,16 +369,22 @@ void TFT_RGB::drawRect(int16_t Xpos, int16_t Ypos, uint16_t Width, uint16_t Heig
             fb[y0 * m_h_res + x0] = color; // Pixel setzen
             if (x0 == x1 && y0 == y1) break;
             e2 = 2 * err;
-            if (e2 >= dy) { err += dy; x0 += sx; }
-            if (e2 <= dx) { err += dx; y0 += sy; }
+            if (e2 >= dy) {
+                err += dy;
+                x0 += sx;
+            }
+            if (e2 <= dx) {
+                err += dx;
+                y0 += sy;
+            }
         }
     };
 
     // Zeichne die vier Linien des Rechtecks
-    drawLine(Xpos, Ypos, Xpos + Width - 1, Ypos, Color, m_framebuffer[0], m_h_res); // Oben
-    drawLine(Xpos + Width - 1, Ypos, Xpos + Width - 1, Ypos + Height - 1, Color, m_framebuffer[0], m_h_res); // Rechts
+    drawLine(Xpos, Ypos, Xpos + Width - 1, Ypos, Color, m_framebuffer[0], m_h_res);                           // Oben
+    drawLine(Xpos + Width - 1, Ypos, Xpos + Width - 1, Ypos + Height - 1, Color, m_framebuffer[0], m_h_res);  // Rechts
     drawLine(Xpos, Ypos + Height - 1, Xpos + Width - 1, Ypos + Height - 1, Color, m_framebuffer[0], m_h_res); // Unten
-    drawLine(Xpos, Ypos + Height - 1, Xpos, Ypos, Color, m_framebuffer[0], m_h_res); // Links
+    drawLine(Xpos, Ypos + Height - 1, Xpos, Ypos, Color, m_framebuffer[0], m_h_res);                          // Links
 
     // Aktualisierung des gezeichneten Bereichs
     int16_t x0 = std::min((int)Xpos, Xpos + Width);
@@ -337,8 +394,8 @@ void TFT_RGB::drawRect(int16_t Xpos, int16_t Ypos, uint16_t Width, uint16_t Heig
 
     panelDrawBitmap(x0, y0, x1, y1, m_framebuffer[0]);
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_RGB::drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color) {
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_DSI::drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color) {
     // Helferfunktion: Kreislinie für die Ecken berechnen
     auto drawCircleQuadrant = [&](int16_t cx, int16_t cy, int16_t r, uint8_t quadrant) {
         int16_t f = 1 - r;
@@ -370,26 +427,26 @@ void TFT_RGB::drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t 
     };
 
     // Rechteckseiten zeichnen (ohne die abgerundeten Ecken)
-    for (int16_t i = x + r; i < x + w - r; i++) { // Obere und untere horizontale Linien
-        m_framebuffer[0][y * m_h_res + i] = color; // Oben
+    for (int16_t i = x + r; i < x + w - r; i++) {            // Obere und untere horizontale Linien
+        m_framebuffer[0][y * m_h_res + i] = color;           // Oben
         m_framebuffer[0][(y + h - 1) * m_h_res + i] = color; // Unten
     }
-    for (int16_t i = y + r; i < y + h - r; i++) { // Linke und rechte vertikale Linien
-        m_framebuffer[0][i * m_h_res + x] = color; // Links
+    for (int16_t i = y + r; i < y + h - r; i++) {            // Linke und rechte vertikale Linien
+        m_framebuffer[0][i * m_h_res + x] = color;           // Links
         m_framebuffer[0][i * m_h_res + (x + w - 1)] = color; // Rechts
     }
 
     // Abgerundete Ecken zeichnen
-    drawCircleQuadrant(x + w - r - 1, y + r, r, 0x1 | 0x10); // Oben rechts
+    drawCircleQuadrant(x + w - r - 1, y + r, r, 0x1 | 0x10);         // Oben rechts
     drawCircleQuadrant(x + w - r - 1, y + h - r - 1, r, 0x2 | 0x20); // Unten rechts
-    drawCircleQuadrant(x + r, y + h - r - 1, r, 0x4 | 0x40); // Unten links
-    drawCircleQuadrant(x + r, y + r, r, 0x8 | 0x80); // Oben links
+    drawCircleQuadrant(x + r, y + h - r - 1, r, 0x4 | 0x40);         // Unten links
+    drawCircleQuadrant(x + r, y + r, r, 0x8 | 0x80);                 // Oben links
 
     // Aktualisierung des gezeichneten Bereichs
     panelDrawBitmap(x, y, x + w, y + h, m_framebuffer[0]);
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_RGB::fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color) {
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_DSI::fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color) {
     // Helferfunktion: Kreisfüllung für die Ecken berechnen
     auto fillCircleQuadrant = [&](int16_t cx, int16_t cy, int16_t r, uint8_t quadrant) {
         int16_t f = 1 - r;
@@ -425,34 +482,30 @@ void TFT_RGB::fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t 
 
     // Horizontale Bereiche zwischen den oberen und unteren Viertelkreisen füllen
     for (int16_t i = y; i < y + r; i++) { // Bereich oberhalb der Viertelkreise
-        for (int16_t j = x + r; j < x + w - r; j++) {
-            m_framebuffer[0][i * m_h_res + j] = color;
-        }
+        for (int16_t j = x + r; j < x + w - r; j++) { m_framebuffer[0][i * m_h_res + j] = color; }
     }
     for (int16_t i = y + h - r; i < y + h; i++) { // Bereich unterhalb der Viertelkreise
-        for (int16_t j = x + r; j < x + w - r; j++) {
-            m_framebuffer[0][i * m_h_res + j] = color;
-        }
+        for (int16_t j = x + r; j < x + w - r; j++) { m_framebuffer[0][i * m_h_res + j] = color; }
     }
 
     // Vertikaler Bereich zwischen den Viertelkreisen füllen
     for (int16_t i = y + r; i < y + h - r; i++) { // Vertikaler Bereich
-        for (int16_t j = x; j < x + w; j++) { // Horizontaler Bereich
+        for (int16_t j = x; j < x + w; j++) {     // Horizontaler Bereich
             m_framebuffer[0][i * m_h_res + j] = color;
         }
     }
 
     // Viertelkreise in den Ecken füllen
-    fillCircleQuadrant(x + w - r - 1, y + r, r, 0x1 | 0x10); // Oben rechts
+    fillCircleQuadrant(x + w - r - 1, y + r, r, 0x1 | 0x10);         // Oben rechts
     fillCircleQuadrant(x + w - r - 1, y + h - r - 1, r, 0x2 | 0x20); // Unten rechts
-    fillCircleQuadrant(x + r, y + h - r - 1, r, 0x4 | 0x40); // Unten links
-    fillCircleQuadrant(x + r, y + r, r, 0x8 | 0x80); // Oben links
+    fillCircleQuadrant(x + r, y + h - r - 1, r, 0x4 | 0x40);         // Unten links
+    fillCircleQuadrant(x + r, y + r, r, 0x8 | 0x80);                 // Oben links
 
     // Aktualisierung des gezeichneten Bereichs
     panelDrawBitmap(x, y, x + w, y + h, m_framebuffer[0]);
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_RGB::drawCircle(int16_t cx, int16_t cy, int16_t r, uint16_t color) {
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_DSI::drawCircle(int16_t cx, int16_t cy, int16_t r, uint16_t color) {
     // Bresenham-Algorithmus für Kreise
     int16_t f = 1 - r;
     int16_t ddF_x = 1;
@@ -490,10 +543,10 @@ void TFT_RGB::drawCircle(int16_t cx, int16_t cy, int16_t r, uint16_t color) {
     // Aktualisierung des gezeichneten Bereichs
     panelDrawBitmap(cx - r, cy - r, cx + r + 1, cy + r + 1, m_framebuffer[0]);
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_RGB::fillCircle(int16_t Xm, int16_t Ym, uint16_t r, uint16_t color){
-//void TFT_RGB::drawFilledCircle(int16_t cx, int16_t cy, int16_t r, uint16_t color) {
-    // Bresenham-Algorithmus für Kreise
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_DSI::fillCircle(int16_t Xm, int16_t Ym, uint16_t r, uint16_t color) {
+    // void TFT_DSI::drawFilledCircle(int16_t cx, int16_t cy, int16_t r, uint16_t color) {
+    //  Bresenham-Algorithmus für Kreise
     int16_t f = 1 - r;
     int16_t ddF_x = 1;
     int16_t ddF_y = -2 * r;
@@ -501,9 +554,7 @@ void TFT_RGB::fillCircle(int16_t Xm, int16_t Ym, uint16_t r, uint16_t color){
     int16_t y = r;
 
     // Fülle die erste vertikale Linie durch den Mittelpunkt
-    for (int16_t i = Ym - r; i <= Ym + r; i++) {
-        m_framebuffer[0][i * m_h_res + Xm] = color;
-    }
+    for (int16_t i = Ym - r; i <= Ym + r; i++) { m_framebuffer[0][i * m_h_res + Xm] = color; }
 
     while (x <= y) {
         // Fülle horizontale Linien für alle acht Symmetrieachsen
@@ -529,23 +580,21 @@ void TFT_RGB::fillCircle(int16_t Xm, int16_t Ym, uint16_t r, uint16_t color){
     // Aktualisierung des gezeichneten Bereichs
     panelDrawBitmap(Xm - r, Ym - r, Xm + r + 1, Ym + r + 1, m_framebuffer[0]);
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_RGB::copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
-    for(uint16_t j = y; j < y + h; j++) {
-        memcpy(m_framebuffer[destination] + j * m_h_res + x, m_framebuffer[source] + j * m_h_res + x, w * 2);
-    }
-    if(destination == 0) panelDrawBitmap(x, y, x + w, y + h, m_framebuffer[0]); // just draw when copied in fb0
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_DSI::copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
+    for (uint16_t j = y; j < y + h; j++) { memcpy(m_framebuffer[destination] + j * m_h_res + x, m_framebuffer[source] + j * m_h_res + x, w * 2); }
+    if (destination == 0) panelDrawBitmap(x, y, x + w, y + h, m_framebuffer[0]); // just draw when copied in fb0
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_RGB::readRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t* data) {
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_DSI::readRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t* data) {
     memcpy(data, m_framebuffer[0] + y * m_h_res + x, w * sizeof(uint16_t));
     return;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_RGB::setFont(uint16_t font) {
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_DSI::setFont(uint16_t font) {
 
-#ifdef TFT_TIMES_NEW_ROMAN
-    switch(font) {
+    #ifdef TFT_TIMES_NEW_ROMAN
+    switch (font) {
         case 15:
             m_current_font.cmaps = cmaps_Times15;
             m_current_font.glyph_bitmap = glyph_bitmap_Times15;
@@ -702,10 +751,10 @@ void TFT_RGB::setFont(uint16_t font) {
             break;
         default: log_e("unknown font size for Times New Roman, size is %i", font); break;
     }
-#endif
+    #endif
 
-#ifdef TFT_GARAMOND
-    switch(font) {
+    #ifdef TFT_GARAMOND
+    switch (font) {
         case 15:
             m_current_font.cmaps = cmaps_Garamond15;
             m_current_font.glyph_bitmap = glyph_bitmap_Garamond15;
@@ -862,10 +911,10 @@ void TFT_RGB::setFont(uint16_t font) {
             break;
         default: break;
     }
-#endif
+    #endif
 
-#ifdef TFT_FREE_SERIF_ITALIC
-    switch(font) {
+    #ifdef TFT_FREE_SERIF_ITALIC
+    switch (font) {
         case 15:
             m_current_font.cmaps = cmaps_FreeSerifItalic15;
             m_current_font.glyph_bitmap = glyph_bitmap_FreeSerifItalic15;
@@ -1023,10 +1072,10 @@ void TFT_RGB::setFont(uint16_t font) {
         default: break;
     }
 
-#endif
+    #endif
 
-#ifdef TFT_ARIAL
-    switch(font) {
+    #ifdef TFT_ARIAL
+    switch (font) {
         case 15:
             m_current_font.cmaps = cmaps_Arial15;
             m_current_font.glyph_bitmap = glyph_bitmap_Arial15;
@@ -1183,10 +1232,10 @@ void TFT_RGB::setFont(uint16_t font) {
             break;
         default: break;
     }
-#endif
+    #endif
 
-#ifdef TFT_Z003
-    switch(font) {
+    #ifdef TFT_Z003
+    switch (font) {
         case 15:
             m_current_font.cmaps = cmaps_Z003_15;
             m_current_font.glyph_bitmap = glyph_bitmap_Z003_15;
@@ -1343,18 +1392,18 @@ void TFT_RGB::setFont(uint16_t font) {
             break;
         default: break;
     }
-#endif
+    #endif
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-//   ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫    T E X T    ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫          *
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_RGB::writeTheFramebuffer(const uint8_t* bmi, uint16_t posX, uint16_t posY, uint16_t width, uint16_t height) {
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//    ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫    T E X T    ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ *
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_DSI::writeTheFramebuffer(const uint8_t* bmi, uint16_t posX, uint16_t posY, uint16_t width, uint16_t height) {
 
     auto bitreader = [&](const uint8_t* bm) { // lambda
         static uint16_t       bmi = 0;
         static uint8_t        idx = 0;
         static const uint8_t* bitmap = NULL;
-        if(bm) {
+        if (bm) {
             bitmap = bm;
             idx = 0x80;
             bmi = 0;
@@ -1362,82 +1411,235 @@ void TFT_RGB::writeTheFramebuffer(const uint8_t* bmi, uint16_t posX, uint16_t po
         }
         bool bit = *(bitmap + bmi) & idx;
         idx >>= 1;
-        if(idx == 0) {
+        if (idx == 0) {
             bmi++;
             idx = 0x80;
         }
-        if(bit) { return (int32_t) m_textColor;}
-        return (int32_t)-1;  // _backColor, -1 is transparent
+        if (bit) { return (int32_t)m_textColor; }
+        return (int32_t)-1; // _backColor, -1 is transparent
     };
 
     bitreader(bmi);
 
-    for(int16_t j = posY; j < posY + height; j++) {
-        for(int16_t i = posX; i < posX + width; i++) {
+    for (int16_t j = posY; j < posY + height; j++) {
+        for (int16_t i = posX; i < posX + width; i++) {
             int32_t color = bitreader(0);
-            if(color == -1) {
-                continue;
-            }
+            if (color == -1) { continue; }
             m_framebuffer[0][j * m_h_res + i] = color;
         }
     }
-    if(width == 0 || height == 0) return; // nothing to draw
+    if (width == 0 || height == 0) return; // nothing to draw
     panelDrawBitmap(posX, posY, posX + width, posY + height, m_framebuffer[0]);
 }
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // The function is passed a string and two arrays of length strlen(str + 1). This is definitely enough, since ANSI sequences or non-ASCII UTF-8 characters are always greater than 1.
 // For each printable character found in the LookUp table, the codepoint is written to the next position in the charr. The number of printable characters is increased by one.
 // If an ANSI sequence is found, the color found is written into colorArr at the position of the current character. The return value is the number of printable character.
-uint16_t TFT_RGB::analyzeText(const char* str, uint16_t* chArr, uint16_t* colorArr, uint16_t startColor) {
+uint16_t TFT_DSI::analyzeText(const char* str, uint16_t* chArr, uint16_t* colorArr, uint16_t startColor) {
     uint16_t chLen = 0;
     uint16_t idx = 0;
     int32_t  codePoint = -1;
     colorArr[0] = startColor;
 
-    while((uint8_t)str[idx] != 0) {
+    while ((uint8_t)str[idx] != 0) {
         colorArr[chLen + 1] = colorArr[chLen]; // set next color to the last one
-        switch((uint8_t)str[idx]) {
+        switch ((uint8_t)str[idx]) {
             case '\033': // ANSI sequence
-                if(strncmp(str + idx, "\033[30m", 5) == 0)                  {idx += 5;  colorArr[chLen] = TFT_BLACK;        break;} // ANSI_ESC_BLACK
-                if(strncmp(str + idx, "\033[31m", 5) == 0)                  {idx += 5;  colorArr[chLen] = TFT_RED;          break;} // ANSI_ESC_RED
-                if(strncmp(str + idx, "\033[32m", 5) == 0)                  {idx += 5;  colorArr[chLen] = TFT_GREEN;        break;} // ANSI_ESC_GREEN
-                if(strncmp(str + idx, "\033[33m", 5) == 0)                  {idx += 5;  colorArr[chLen] = TFT_YELLOW;       break;} // ANSI_ESC_YELLOW
-                if(strncmp(str + idx, "\033[34m", 5) == 0)                  {idx += 5;  colorArr[chLen] = TFT_BLUE;         break;} // ANSI_ESC_BLUE
-                if(strncmp(str + idx, "\033[35m", 5) == 0)                  {idx += 5;  colorArr[chLen] = TFT_MAGENTA;      break;} // ANSI_ESC_MAGENTA
-                if(strncmp(str + idx, "\033[36m", 5) == 0)                  {idx += 5;  colorArr[chLen] = TFT_CYAN;         break;} // ANSI_ESC_CYAN
-                if(strncmp(str + idx, "\033[37m", 5) == 0)                  {idx += 5;  colorArr[chLen] = TFT_WHITE;        break;} // ANSI_ESC_WHITE
-                if(strncmp(str + idx, "\033[38;5;130m", 11) == 0)           {idx += 11; colorArr[chLen] = TFT_BROWN;        break;} // ANSI_ESC_BROWN
-                if(strncmp(str + idx, "\033[38;5;214m", 11) == 0)           {idx += 11; colorArr[chLen] = TFT_ORANGE;       break;} // ANSI_ESC_ORANGE
-                if(strncmp(str + idx, "\033[90m", 5) == 0)                  {idx += 5;  colorArr[chLen] = TFT_GREY;         break;} // ANSI_ESC_GREY
-                if(strncmp(str + idx, "\033[91m", 5) == 0)                  {idx += 5;  colorArr[chLen] = TFT_LIGHTRED;     break;} // ANSI_ESC_LIGHTRED
-                if(strncmp(str + idx, "\033[92m", 5) == 0)                  {idx += 5;  colorArr[chLen] = TFT_LIGHTGREEN;   break;} // ANSI_ESC_LIGHTGREEN
-                if(strncmp(str + idx, "\033[93m", 5) == 0)                  {idx += 5;  colorArr[chLen] = TFT_LIGHTYELLOW;  break;} // ANSI_ESC_LIGHTYELLOW
-                if(strncmp(str + idx, "\033[94m", 5) == 0)                  {idx += 5;  colorArr[chLen] = TFT_LIGHTBLUE;    break;} // ANSI_ESC_LIGHTBLUE
-                if(strncmp(str + idx, "\033[95m", 5) == 0)                  {idx += 5;  colorArr[chLen] = TFT_LIGHTMAGENTA; break;} // ANSI_ESC_LIGHTMAGENTA
-                if(strncmp(str + idx, "\033[96m", 5) == 0)                  {idx += 5;  colorArr[chLen] = TFT_LIGHTCYAN;    break;} // ANSI_ESC_LIGHTCYAN
-                if(strncmp(str + idx, "\033[97m", 5) == 0)                  {idx += 5;  colorArr[chLen] = TFT_LIGHTGREY;    break;} // ANSI_ESC_LIGHTGREY
-                if(strncmp(str + idx, "\033[38;5;52m", 10) == 0)            {idx += 10; colorArr[chLen] = TFT_DARKRED;      break;} // ANSI_ESC_DARKRED
-                if(strncmp(str + idx, "\033[38;5;22m", 10) == 0)            {idx += 10; colorArr[chLen] = TFT_DARKGREEN;    break;} // ANSI_ESC_DARKGREEN
-                if(strncmp(str + idx, "\033[38;5;136m", 11) == 0)           {idx += 11; colorArr[chLen] = TFT_DARKYELLOW;   break;} // ANSI_ESC_DARKYELLOW
-                if(strncmp(str + idx, "\033[38;5;17m", 10) == 0)            {idx += 10; colorArr[chLen] = TFT_DARKBLUE;     break;} // ANSI_ESC_DARKBLUE
-                if(strncmp(str + idx, "\033[38;5;53m", 10) == 0)            {idx += 10; colorArr[chLen] = TFT_DARKMAGENTA;  break;} // ANSI_ESC_DARKMAGENTA
-                if(strncmp(str + idx, "\033[38;5;23m", 10) == 0)            {idx += 10; colorArr[chLen] = TFT_DARKCYAN;     break;} // ANSI_ESC_DARKCYAN
-                if(strncmp(str + idx, "\033[38;5;240m", 11) == 0)           {idx += 11; colorArr[chLen] = TFT_DARKGREY;     break;} // ANSI_ESC_DARKGREY
-                if(strncmp(str + idx, "\033[38;5;166m", 11) == 0)           {idx += 11; colorArr[chLen] = TFT_DARKORANGE;   break;} // ANSI_ESC_DARKORANGE
-                if(strncmp(str + idx, "\033[38;5;215m", 11) == 0)           {idx += 11; colorArr[chLen] = TFT_LIGHTORANGE;  break;} // ANSI_ESC_LIGHTORANGE
-                if(strncmp(str + idx, "\033[38;5;129m", 11) == 0)           {idx += 11; colorArr[chLen] = TFT_PURPLE;       break;} // ANSI_ESC_PURPLE
-                if(strncmp(str + idx, "\033[38;5;213m", 11) == 0)           {idx += 11; colorArr[chLen] = TFT_PINK;         break;} // ANSI_ESC_PINK
-                if(strncmp(str + idx, "\033[38;5;190m", 11) == 0)           {idx += 11; colorArr[chLen] = TFT_LIME;         break;} // ANSI_ESC_LIME
-                if(strncmp(str + idx, "\033[38;5;25m", 10) == 0)            {idx += 10; colorArr[chLen] = TFT_NAVY;         break;} // ANSI_ESC_NAVY
-                if(strncmp(str + idx, "\033[38;5;51m", 10) == 0)            {idx += 10; colorArr[chLen] = TFT_AQUAMARINE;   break;} // ANSI_ESC_AQUAMARINE
-                if(strncmp(str + idx, "\033[38;5;189m", 11) == 0)           {idx += 11; colorArr[chLen] = TFT_LAVENDER;     break;} // ANSI_ESC_LAVENDER
-                if(strncmp(str + idx, "\033[38;2;210;180;140m", 19) == 0)   {idx += 19; colorArr[chLen] = TFT_LIGHTBROWN;   break;} // ANSI_ESC_LIGHTBROWN
-                if(strncmp(str + idx, "\033[0m", 4) == 0)                   {idx += 4;                                      break;} // ANSI_ESC_RESET       unused
-                if(strncmp(str + idx, "\033[1m", 4) == 0)                   {idx += 4;                                      break;} // ANSI_ESC_BOLD        unused
-                if(strncmp(str + idx, "\033[2m", 4) == 0)                   {idx += 4;                                      break;} // ANSI_ESC_FAINT       unused
-                if(strncmp(str + idx, "\033[3m", 4) == 0)                   {idx += 4;                                      break;} // ANSI_ESC_ITALIC      unused
-                if(strncmp(str + idx, "\033[4m", 4) == 0)                   {idx += 4;                                      break;} // ANSI_ESC_UNDERLINE   unused
-                {if(tft_info) tft_info("unknown ANSI ESC SEQUENCE");         idx += 4;                                      break;} // unknown
+                if (strncmp(str + idx, "\033[30m", 5) == 0) {
+                    idx += 5;
+                    colorArr[chLen] = TFT_BLACK;
+                    break;
+                } // ANSI_ESC_BLACK
+                if (strncmp(str + idx, "\033[31m", 5) == 0) {
+                    idx += 5;
+                    colorArr[chLen] = TFT_RED;
+                    break;
+                } // ANSI_ESC_RED
+                if (strncmp(str + idx, "\033[32m", 5) == 0) {
+                    idx += 5;
+                    colorArr[chLen] = TFT_GREEN;
+                    break;
+                } // ANSI_ESC_GREEN
+                if (strncmp(str + idx, "\033[33m", 5) == 0) {
+                    idx += 5;
+                    colorArr[chLen] = TFT_YELLOW;
+                    break;
+                } // ANSI_ESC_YELLOW
+                if (strncmp(str + idx, "\033[34m", 5) == 0) {
+                    idx += 5;
+                    colorArr[chLen] = TFT_BLUE;
+                    break;
+                } // ANSI_ESC_BLUE
+                if (strncmp(str + idx, "\033[35m", 5) == 0) {
+                    idx += 5;
+                    colorArr[chLen] = TFT_MAGENTA;
+                    break;
+                } // ANSI_ESC_MAGENTA
+                if (strncmp(str + idx, "\033[36m", 5) == 0) {
+                    idx += 5;
+                    colorArr[chLen] = TFT_CYAN;
+                    break;
+                } // ANSI_ESC_CYAN
+                if (strncmp(str + idx, "\033[37m", 5) == 0) {
+                    idx += 5;
+                    colorArr[chLen] = TFT_WHITE;
+                    break;
+                } // ANSI_ESC_WHITE
+                if (strncmp(str + idx, "\033[38;5;130m", 11) == 0) {
+                    idx += 11;
+                    colorArr[chLen] = TFT_BROWN;
+                    break;
+                } // ANSI_ESC_BROWN
+                if (strncmp(str + idx, "\033[38;5;214m", 11) == 0) {
+                    idx += 11;
+                    colorArr[chLen] = TFT_ORANGE;
+                    break;
+                } // ANSI_ESC_ORANGE
+                if (strncmp(str + idx, "\033[90m", 5) == 0) {
+                    idx += 5;
+                    colorArr[chLen] = TFT_GREY;
+                    break;
+                } // ANSI_ESC_GREY
+                if (strncmp(str + idx, "\033[91m", 5) == 0) {
+                    idx += 5;
+                    colorArr[chLen] = TFT_LIGHTRED;
+                    break;
+                } // ANSI_ESC_LIGHTRED
+                if (strncmp(str + idx, "\033[92m", 5) == 0) {
+                    idx += 5;
+                    colorArr[chLen] = TFT_LIGHTGREEN;
+                    break;
+                } // ANSI_ESC_LIGHTGREEN
+                if (strncmp(str + idx, "\033[93m", 5) == 0) {
+                    idx += 5;
+                    colorArr[chLen] = TFT_LIGHTYELLOW;
+                    break;
+                } // ANSI_ESC_LIGHTYELLOW
+                if (strncmp(str + idx, "\033[94m", 5) == 0) {
+                    idx += 5;
+                    colorArr[chLen] = TFT_LIGHTBLUE;
+                    break;
+                } // ANSI_ESC_LIGHTBLUE
+                if (strncmp(str + idx, "\033[95m", 5) == 0) {
+                    idx += 5;
+                    colorArr[chLen] = TFT_LIGHTMAGENTA;
+                    break;
+                } // ANSI_ESC_LIGHTMAGENTA
+                if (strncmp(str + idx, "\033[96m", 5) == 0) {
+                    idx += 5;
+                    colorArr[chLen] = TFT_LIGHTCYAN;
+                    break;
+                } // ANSI_ESC_LIGHTCYAN
+                if (strncmp(str + idx, "\033[97m", 5) == 0) {
+                    idx += 5;
+                    colorArr[chLen] = TFT_LIGHTGREY;
+                    break;
+                } // ANSI_ESC_LIGHTGREY
+                if (strncmp(str + idx, "\033[38;5;52m", 10) == 0) {
+                    idx += 10;
+                    colorArr[chLen] = TFT_DARKRED;
+                    break;
+                } // ANSI_ESC_DARKRED
+                if (strncmp(str + idx, "\033[38;5;22m", 10) == 0) {
+                    idx += 10;
+                    colorArr[chLen] = TFT_DARKGREEN;
+                    break;
+                } // ANSI_ESC_DARKGREEN
+                if (strncmp(str + idx, "\033[38;5;136m", 11) == 0) {
+                    idx += 11;
+                    colorArr[chLen] = TFT_DARKYELLOW;
+                    break;
+                } // ANSI_ESC_DARKYELLOW
+                if (strncmp(str + idx, "\033[38;5;17m", 10) == 0) {
+                    idx += 10;
+                    colorArr[chLen] = TFT_DARKBLUE;
+                    break;
+                } // ANSI_ESC_DARKBLUE
+                if (strncmp(str + idx, "\033[38;5;53m", 10) == 0) {
+                    idx += 10;
+                    colorArr[chLen] = TFT_DARKMAGENTA;
+                    break;
+                } // ANSI_ESC_DARKMAGENTA
+                if (strncmp(str + idx, "\033[38;5;23m", 10) == 0) {
+                    idx += 10;
+                    colorArr[chLen] = TFT_DARKCYAN;
+                    break;
+                } // ANSI_ESC_DARKCYAN
+                if (strncmp(str + idx, "\033[38;5;240m", 11) == 0) {
+                    idx += 11;
+                    colorArr[chLen] = TFT_DARKGREY;
+                    break;
+                } // ANSI_ESC_DARKGREY
+                if (strncmp(str + idx, "\033[38;5;166m", 11) == 0) {
+                    idx += 11;
+                    colorArr[chLen] = TFT_DARKORANGE;
+                    break;
+                } // ANSI_ESC_DARKORANGE
+                if (strncmp(str + idx, "\033[38;5;215m", 11) == 0) {
+                    idx += 11;
+                    colorArr[chLen] = TFT_LIGHTORANGE;
+                    break;
+                } // ANSI_ESC_LIGHTORANGE
+                if (strncmp(str + idx, "\033[38;5;129m", 11) == 0) {
+                    idx += 11;
+                    colorArr[chLen] = TFT_PURPLE;
+                    break;
+                } // ANSI_ESC_PURPLE
+                if (strncmp(str + idx, "\033[38;5;213m", 11) == 0) {
+                    idx += 11;
+                    colorArr[chLen] = TFT_PINK;
+                    break;
+                } // ANSI_ESC_PINK
+                if (strncmp(str + idx, "\033[38;5;190m", 11) == 0) {
+                    idx += 11;
+                    colorArr[chLen] = TFT_LIME;
+                    break;
+                } // ANSI_ESC_LIME
+                if (strncmp(str + idx, "\033[38;5;25m", 10) == 0) {
+                    idx += 10;
+                    colorArr[chLen] = TFT_NAVY;
+                    break;
+                } // ANSI_ESC_NAVY
+                if (strncmp(str + idx, "\033[38;5;51m", 10) == 0) {
+                    idx += 10;
+                    colorArr[chLen] = TFT_AQUAMARINE;
+                    break;
+                } // ANSI_ESC_AQUAMARINE
+                if (strncmp(str + idx, "\033[38;5;189m", 11) == 0) {
+                    idx += 11;
+                    colorArr[chLen] = TFT_LAVENDER;
+                    break;
+                } // ANSI_ESC_LAVENDER
+                if (strncmp(str + idx, "\033[38;2;210;180;140m", 19) == 0) {
+                    idx += 19;
+                    colorArr[chLen] = TFT_LIGHTBROWN;
+                    break;
+                } // ANSI_ESC_LIGHTBROWN
+                if (strncmp(str + idx, "\033[0m", 4) == 0) {
+                    idx += 4;
+                    break;
+                } // ANSI_ESC_RESET       unused
+                if (strncmp(str + idx, "\033[1m", 4) == 0) {
+                    idx += 4;
+                    break;
+                } // ANSI_ESC_BOLD        unused
+                if (strncmp(str + idx, "\033[2m", 4) == 0) {
+                    idx += 4;
+                    break;
+                } // ANSI_ESC_FAINT       unused
+                if (strncmp(str + idx, "\033[3m", 4) == 0) {
+                    idx += 4;
+                    break;
+                } // ANSI_ESC_ITALIC      unused
+                if (strncmp(str + idx, "\033[4m", 4) == 0) {
+                    idx += 4;
+                    break;
+                } // ANSI_ESC_UNDERLINE   unused
+                {
+                    if (tft_info) tft_info("unknown ANSI ESC SEQUENCE");
+                    idx += 4;
+                    break;
+                } // unknown
                 break;
 
             case 0x20 ... 0x7F:                   // is ASCII
@@ -1447,11 +1649,12 @@ uint16_t TFT_RGB::analyzeText(const char* str, uint16_t* chArr, uint16_t* colorA
                 break;
             case 0xC2 ... 0xD1:
                 codePoint = ((uint8_t)str[idx] - 0xC2) * 0x40 + (uint8_t)str[idx + 1]; // codepoint
-                if(m_current_font.lookup_table[codePoint] != 0) {                       // is invalid UTF8 char
+                if (m_current_font.lookup_table[codePoint] != 0) {                     // is invalid UTF8 char
                     chArr[chLen] = codePoint;
                     chLen += 1;
+                } else {
+                    log_w("character 0x%02X%02X is not in table", str[idx], str[idx + 1]);
                 }
-                else { log_w("character 0x%02X%02X is not in table", str[idx], str[idx + 1]); }
                 idx += 2;
                 break;
             case 0xD2 ... 0xDF:
@@ -1459,37 +1662,37 @@ uint16_t TFT_RGB::analyzeText(const char* str, uint16_t* chArr, uint16_t* colorA
                 idx += 2;
                 break;
             case 0xE0:
-                if((uint8_t)str[idx + 1] == 0x80 && (uint8_t)str[idx + 2] == 0x99) {
+                if ((uint8_t)str[idx + 1] == 0x80 && (uint8_t)str[idx + 2] == 0x99) {
                     codePoint = 0xA4;
                     chLen += 1;
                 } // special sign 0xe28099 (general punctuation)
-                else log_w("character 0x%02X%02X  is not in table", str[idx], str[idx + 1]);
+                else
+                    log_w("character 0x%02X%02X  is not in table", str[idx], str[idx + 1]);
                 idx += 3;
                 break;
             case 0xE1 ... 0xEF: idx += 3; break;
             case 0xF0 ... 0xFF:
                 codePoint = -1;
-                if(!strncmp(str + idx, "🟢", 4)) {codePoint = 0xF9A2;}
-                if(!strncmp(str + idx, "🟡", 4)) {codePoint = 0xF9A1;}
-                if(!strncmp(str + idx, "🔴", 4)) {codePoint = 0xF9B4;}
-                if(!strncmp(str + idx, "🔵", 4)) {codePoint = 0xF9B5;}
-                if(!strncmp(str + idx, "🟠", 4)) {codePoint = 0xF9A0;}
-                if(!strncmp(str + idx, "🟣", 4)) {codePoint = 0xF9A3;}
-                if(!strncmp(str + idx, "🟤", 4)) {codePoint = 0xF9A4;}
-                if(!strncmp(str + idx, "🟩", 4)) {codePoint = 0xF9A9;}
-                if(!strncmp(str + idx, "🟨", 4)) {codePoint = 0xF9A8;}
-                if(!strncmp(str + idx, "🟥", 4)) {codePoint = 0xF9A5;}
-                if(!strncmp(str + idx, "🟦", 4)) {codePoint = 0xF9A6;}
-                if(!strncmp(str + idx, "🟧", 4)) {codePoint = 0xF9A7;}
-                if(!strncmp(str + idx, "🟪", 4)) {codePoint = 0xF9AA;}
-                if(!strncmp(str + idx, "🟫", 4)) {codePoint = 0xF9AB;}
-                if(codePoint != -1) {
+                if (!strncmp(str + idx, "🟢", 4)) { codePoint = 0xF9A2; }
+                if (!strncmp(str + idx, "🟡", 4)) { codePoint = 0xF9A1; }
+                if (!strncmp(str + idx, "🔴", 4)) { codePoint = 0xF9B4; }
+                if (!strncmp(str + idx, "🔵", 4)) { codePoint = 0xF9B5; }
+                if (!strncmp(str + idx, "🟠", 4)) { codePoint = 0xF9A0; }
+                if (!strncmp(str + idx, "🟣", 4)) { codePoint = 0xF9A3; }
+                if (!strncmp(str + idx, "🟤", 4)) { codePoint = 0xF9A4; }
+                if (!strncmp(str + idx, "🟩", 4)) { codePoint = 0xF9A9; }
+                if (!strncmp(str + idx, "🟨", 4)) { codePoint = 0xF9A8; }
+                if (!strncmp(str + idx, "🟥", 4)) { codePoint = 0xF9A5; }
+                if (!strncmp(str + idx, "🟦", 4)) { codePoint = 0xF9A6; }
+                if (!strncmp(str + idx, "🟧", 4)) { codePoint = 0xF9A7; }
+                if (!strncmp(str + idx, "🟪", 4)) { codePoint = 0xF9AA; }
+                if (!strncmp(str + idx, "🟫", 4)) { codePoint = 0xF9AB; }
+                if (codePoint != -1) {
                     chArr[chLen] = codePoint;
                     chLen += 1;
                     idx += 4;
                     break;
-                }
-                else{
+                } else {
                     log_w("character 0x%02X%02X%02X%02X  is not in table", str[idx], str[idx + 1], str[idx + 2], str[idx + 3]);
                     idx += 4;
                 }
@@ -1500,29 +1703,29 @@ uint16_t TFT_RGB::analyzeText(const char* str, uint16_t* chArr, uint16_t* colorA
     return chLen;
 }
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-uint16_t TFT_RGB::getLineLength(const char* txt, bool narrow){
+uint16_t TFT_DSI::getLineLength(const char* txt, bool narrow) {
     // returns the length of the string in pixels
     uint16_t pxLength = 0;
     uint16_t idx = 0;
     bool     isEmoji = false;
-    while((uint8_t)txt[idx] != 0) {
+    while ((uint8_t)txt[idx] != 0) {
         isEmoji = false;
-        if(txt[idx] == 0xF0) { // UTF8
-            if(!strncmp(txt + idx, "🟢", 4)) {isEmoji = true;}
-            if(!strncmp(txt + idx, "🟡", 4)) {isEmoji = true;}
-            if(!strncmp(txt + idx, "🔴", 4)) {isEmoji = true;}
-            if(!strncmp(txt + idx, "🔵", 4)) {isEmoji = true;}
-            if(!strncmp(txt + idx, "🟠", 4)) {isEmoji = true;}
-            if(!strncmp(txt + idx, "🟣", 4)) {isEmoji = true;}
-            if(!strncmp(txt + idx, "🟤", 4)) {isEmoji = true;}
-            if(!strncmp(txt + idx, "🟩", 4)) {isEmoji = true;}
-            if(!strncmp(txt + idx, "🟨", 4)) {isEmoji = true;}
-            if(!strncmp(txt + idx, "🟥", 4)) {isEmoji = true;}
-            if(!strncmp(txt + idx, "🟦", 4)) {isEmoji = true;}
-            if(!strncmp(txt + idx, "🟧", 4)) {isEmoji = true;}
-            if(!strncmp(txt + idx, "🟪", 4)) {isEmoji = true;}
-            if(!strncmp(txt + idx, "🟫", 4)) {isEmoji = true;}
-            if(isEmoji){
+        if (txt[idx] == 0xF0) { // UTF8
+            if (!strncmp(txt + idx, "🟢", 4)) { isEmoji = true; }
+            if (!strncmp(txt + idx, "🟡", 4)) { isEmoji = true; }
+            if (!strncmp(txt + idx, "🔴", 4)) { isEmoji = true; }
+            if (!strncmp(txt + idx, "🔵", 4)) { isEmoji = true; }
+            if (!strncmp(txt + idx, "🟠", 4)) { isEmoji = true; }
+            if (!strncmp(txt + idx, "🟣", 4)) { isEmoji = true; }
+            if (!strncmp(txt + idx, "🟤", 4)) { isEmoji = true; }
+            if (!strncmp(txt + idx, "🟩", 4)) { isEmoji = true; }
+            if (!strncmp(txt + idx, "🟨", 4)) { isEmoji = true; }
+            if (!strncmp(txt + idx, "🟥", 4)) { isEmoji = true; }
+            if (!strncmp(txt + idx, "🟦", 4)) { isEmoji = true; }
+            if (!strncmp(txt + idx, "🟧", 4)) { isEmoji = true; }
+            if (!strncmp(txt + idx, "🟪", 4)) { isEmoji = true; }
+            if (!strncmp(txt + idx, "🟫", 4)) { isEmoji = true; }
+            if (isEmoji) {
                 uint16_t fh = m_current_font.font_height;
                 pxLength += fh - fh / 3; // high as wide - 1/3
                 idx += 4;
@@ -1532,18 +1735,17 @@ uint16_t TFT_RGB::getLineLength(const char* txt, bool narrow){
         uint16_t glyphPos = m_current_font.lookup_table[(uint8_t)txt[idx]];
         pxLength += m_current_font.glyph_dsc[glyphPos].adv_w / 16;
         int ofsX = m_current_font.glyph_dsc[glyphPos].ofs_x;
-        if(ofsX < 0) ofsX = 0;
-        if(!narrow) pxLength += ofsX;
+        if (ofsX < 0) ofsX = 0;
+        if (!narrow) pxLength += ofsX;
         idx++;
     }
     return pxLength;
 }
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-uint16_t TFT_RGB::fitinline(uint16_t* cpArr, uint16_t chLength, uint16_t begin, int16_t win_W, uint16_t* usedPxLength, bool narrow, bool noWrap){
-    // cpArr contains the CodePoints of all printable characters in the string. chLength is the length of cpArr. From a starting position, the characters that fit into a width of win_W are determined.
-    // The ending of a word is defined by a space or an \n. The number of characters that can be written is returned. For later alignment of the characters, the length is passed in usedPxLength.
-    // narrow: no x offsets are taken into account
-    // noWrap: The last possible character is written, spaces and line ends are not taken into account.
+uint16_t TFT_DSI::fitinline(uint16_t* cpArr, uint16_t chLength, uint16_t begin, int16_t win_W, uint16_t* usedPxLength, bool narrow, bool noWrap) {
+    // cpArr contains the CodePoints of all printable characters in the string. chLength is the length of cpArr. From a starting position, the characters that fit into a width of win_W are
+    // determined. The ending of a word is defined by a space or an \n. The number of characters that can be written is returned. For later alignment of the characters, the length is passed in
+    // usedPxLength. narrow: no x offsets are taken into account noWrap: The last possible character is written, spaces and line ends are not taken into account.
     uint16_t idx = begin;
     uint16_t pxLength = 0;
     uint16_t lastSpacePos = 0;
@@ -1551,47 +1753,46 @@ uint16_t TFT_RGB::fitinline(uint16_t* cpArr, uint16_t chLength, uint16_t begin, 
     uint16_t lastUsedPxLength = 0;
     uint16_t glyphPos = 0;
     bool     isEmoji = false;
-    while(cpArr[idx] != 0) {
+    while (cpArr[idx] != 0) {
         *usedPxLength = pxLength;
-        if(cpArr[idx] == 0x20 || cpArr[idx - 1] == '-') {
+        if (cpArr[idx] == 0x20 || cpArr[idx - 1] == '-') {
             lastSpacePos = drawableChars;
             lastUsedPxLength = pxLength;
         }
         isEmoji = false;
-        if((cpArr[idx] & 0xFF00) == 0xF900){ // This is a emoji, width is the same as height
-            if(cpArr[idx] == 0xF9A2) {isEmoji = true;}
-            if(cpArr[idx] == 0xF9A1) {isEmoji = true;}
-            if(cpArr[idx] == 0xF9B4) {isEmoji = true;}
-            if(cpArr[idx] == 0xF9B5) {isEmoji = true;}
-            if(cpArr[idx] == 0xF9A0) {isEmoji = true;}
-            if(cpArr[idx] == 0xF9A3) {isEmoji = true;}
-            if(cpArr[idx] == 0xF9A4) {isEmoji = true;}
-            if(cpArr[idx] == 0xF9A9) {isEmoji = true;}
-            if(cpArr[idx] == 0xF9A8) {isEmoji = true;}
-            if(cpArr[idx] == 0xF9A5) {isEmoji = true;}
-            if(cpArr[idx] == 0xF9A6) {isEmoji = true;}
-            if(cpArr[idx] == 0xF9A7) {isEmoji = true;}
-            if(cpArr[idx] == 0xF9AA) {isEmoji = true;}
-            if(cpArr[idx] == 0xF9AB) {isEmoji = true;}
-            if(isEmoji){
+        if ((cpArr[idx] & 0xFF00) == 0xF900) { // This is a emoji, width is the same as height
+            if (cpArr[idx] == 0xF9A2) { isEmoji = true; }
+            if (cpArr[idx] == 0xF9A1) { isEmoji = true; }
+            if (cpArr[idx] == 0xF9B4) { isEmoji = true; }
+            if (cpArr[idx] == 0xF9B5) { isEmoji = true; }
+            if (cpArr[idx] == 0xF9A0) { isEmoji = true; }
+            if (cpArr[idx] == 0xF9A3) { isEmoji = true; }
+            if (cpArr[idx] == 0xF9A4) { isEmoji = true; }
+            if (cpArr[idx] == 0xF9A9) { isEmoji = true; }
+            if (cpArr[idx] == 0xF9A8) { isEmoji = true; }
+            if (cpArr[idx] == 0xF9A5) { isEmoji = true; }
+            if (cpArr[idx] == 0xF9A6) { isEmoji = true; }
+            if (cpArr[idx] == 0xF9A7) { isEmoji = true; }
+            if (cpArr[idx] == 0xF9AA) { isEmoji = true; }
+            if (cpArr[idx] == 0xF9AB) { isEmoji = true; }
+            if (isEmoji) {
                 uint16_t fh = m_current_font.font_height;
                 pxLength += fh - fh / 3; // high as wide - 1/3
             }
-        }
-        else{ // This is a valid character, get the width from the fonts table
+        } else { // This is a valid character, get the width from the fonts table
             glyphPos = m_current_font.lookup_table[cpArr[idx]];
             pxLength += m_current_font.glyph_dsc[glyphPos].adv_w / 16;
             int ofsX = m_current_font.glyph_dsc[glyphPos].ofs_x;
-            if(ofsX < 0) ofsX = 0;
-            if(!narrow) pxLength += ofsX;
+            if (ofsX < 0) ofsX = 0;
+            if (!narrow) pxLength += ofsX;
         }
-        if(pxLength > win_W || cpArr[idx] == '\n') { // force wrap
-            if(noWrap) { return drawableChars; }
-            if(lastSpacePos) {
+        if (pxLength > win_W || cpArr[idx] == '\n') { // force wrap
+            if (noWrap) { return drawableChars; }
+            if (lastSpacePos) {
                 *usedPxLength = lastUsedPxLength;
                 return lastSpacePos;
-            }
-            else return drawableChars;
+            } else
+                return drawableChars;
         }
         idx++;
         drawableChars++;
@@ -1600,47 +1801,47 @@ uint16_t TFT_RGB::fitinline(uint16_t* cpArr, uint16_t chLength, uint16_t begin, 
     return drawableChars;
 }
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-uint8_t TFT_RGB::fitInAddrWindow(uint16_t* cpArr, uint16_t chLength, int16_t win_W, int16_t win_H, bool narrow, bool noWrap){
+uint8_t TFT_DSI::fitInAddrWindow(uint16_t* cpArr, uint16_t chLength, int16_t win_W, int16_t win_H, bool narrow, bool noWrap) {
     // First, the largest character set is used to check whether a given string str fits into a window of size win_W - winH.
     // If this is not the case, the next smaller character set is selected and checked again.
     // The largest possible character set (in px) is used; if nothing fits, the smallest character set is used. Then parts of the string will not be able to be written.
     // cpArr contains the codepoints of the str, chLength determines th Length of cpArr, returns the number of lines used
-    uint8_t nrOfFonts = sizeof(fontSizes);
-    uint8_t currentFontSize = 0;
+    uint8_t  nrOfFonts = sizeof(fontSizes);
+    uint8_t  currentFontSize = 0;
     uint16_t usedPxLength = 0;
     uint16_t drawableCharsTotal = 0;
     uint16_t drawableCharsinline = 0;
     uint16_t startPos = 0;
     uint8_t  nrOfLines = 0;
-    while(true){
+    while (true) {
         currentFontSize = fontSizes[nrOfFonts - 1];
-        if(currentFontSize == 0) break;
+        if (currentFontSize == 0) break;
         setFont(currentFontSize);
         drawableCharsTotal = 0;
         startPos = 0;
         nrOfLines = 1;
         int16_t win_H_remain = win_H;
-        while(true){
-            if(win_H_remain < m_current_font.line_height) {break;}
+        while (true) {
+            if (win_H_remain < m_current_font.line_height) { break; }
             drawableCharsinline = fitinline(cpArr, chLength, startPos, win_W, &usedPxLength, narrow, noWrap);
             win_H_remain -= m_current_font.line_height;
-        //    log_i("drawableCharsinline  %i,chLength  %i, currentFontSize %i", drawableCharsinline, chLength, currentFontSize);
+            //    log_i("drawableCharsinline  %i,chLength  %i, currentFontSize %i", drawableCharsinline, chLength, currentFontSize);
             drawableCharsTotal += drawableCharsinline;
             startPos += drawableCharsinline;
-            if(drawableCharsinline == 0) break;
-            if(drawableCharsTotal == chLength) goto exit;
+            if (drawableCharsinline == 0) break;
+            if (drawableCharsTotal == chLength) goto exit;
             nrOfLines++;
         }
-        if(drawableCharsTotal == chLength) goto exit;
-        if(nrOfFonts == 0) break;
+        if (drawableCharsTotal == chLength) goto exit;
+        if (nrOfFonts == 0) break;
         nrOfFonts--;
     }
 exit:
-//  log_w("nrOfLines  %i", nrOfLines);
+    //  log_w("nrOfLines  %i", nrOfLines);
     return nrOfLines;
 }
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-size_t TFT_RGB::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, uint8_t h_align, uint8_t v_align, bool narrow, bool noWrap, bool autoSize) {
+size_t TFT_DSI::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, uint8_t h_align, uint8_t v_align, bool narrow, bool noWrap, bool autoSize) {
     // autoSize choose the biggest possible font
     uint16_t idx = 0;
     uint16_t utfPosArr[strlen(str) + 1] = {0};
@@ -1650,49 +1851,89 @@ size_t TFT_RGB::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16
     bool     isEmoji = false;
 
     //-------------------------------------------------------------------------------------------------------------------
-    auto drawEmoji= [&](uint16_t idx, uint16_t x, uint16_t y) { // lambda
-        uint8_t emoji = (utfPosArr[idx] & 0x00FF);
+    auto drawEmoji = [&](uint16_t idx, uint16_t x, uint16_t y) { // lambda
+        uint8_t  emoji = (utfPosArr[idx] & 0x00FF);
         uint16_t color = 0;
-        char shape = 'x';
-        switch(emoji){
-            case 0xA2: color = TFT_GREEN;    shape = 'c'; break;     // UTF-8: "🟢"
-            case 0xA1: color = TFT_YELLOW;   shape = 'c'; break;     // UTF-8: "🟡"
-            case 0xB4: color = TFT_RED;      shape = 'c'; break;     // UTF-8: "🔴"
-            case 0xB5: color = TFT_BLUE;     shape = 'c'; break;     // UTF-8: "🔵"
-            case 0xA0: color = TFT_ORANGE;   shape = 'c'; break;     // UTF-8: "🟠"
-            case 0xA3: color = TFT_VIOLET;   shape = 'c'; break;     // UTF-8: "🟣"
-            case 0xA4: color = TFT_BROWN;    shape = 'c'; break;     // UTF-8: "🟤"
-            case 0xA9: color = TFT_GREEN;    shape = 's'; break;     // UTF-8: "🟩"
-            case 0xA8: color = TFT_YELLOW;   shape = 's'; break;     // UTF-8: "🟨"
-            case 0xA5: color = TFT_RED;      shape = 's'; break;     // UTF-8: "🟥"
-            case 0xA6: color = TFT_BLUE;     shape = 's'; break;     // UTF-8: "🟦"
-            case 0xA7: color = TFT_ORANGE;   shape = 's'; break;     // UTF-8: "🟧"
-            case 0xAA: color = TFT_VIOLET;   shape = 's'; break;     // UTF-8: "🟪"
-            case 0xAB: color = TFT_BROWN;    shape = 's'; break;     // UTF-8: "🟫
+        char     shape = 'x';
+        switch (emoji) {
+            case 0xA2:
+                color = TFT_GREEN;
+                shape = 'c';
+                break; // UTF-8: "🟢"
+            case 0xA1:
+                color = TFT_YELLOW;
+                shape = 'c';
+                break; // UTF-8: "🟡"
+            case 0xB4:
+                color = TFT_RED;
+                shape = 'c';
+                break; // UTF-8: "🔴"
+            case 0xB5:
+                color = TFT_BLUE;
+                shape = 'c';
+                break; // UTF-8: "🔵"
+            case 0xA0:
+                color = TFT_ORANGE;
+                shape = 'c';
+                break; // UTF-8: "🟠"
+            case 0xA3:
+                color = TFT_VIOLET;
+                shape = 'c';
+                break; // UTF-8: "🟣"
+            case 0xA4:
+                color = TFT_BROWN;
+                shape = 'c';
+                break; // UTF-8: "🟤"
+            case 0xA9:
+                color = TFT_GREEN;
+                shape = 's';
+                break; // UTF-8: "🟩"
+            case 0xA8:
+                color = TFT_YELLOW;
+                shape = 's';
+                break; // UTF-8: "🟨"
+            case 0xA5:
+                color = TFT_RED;
+                shape = 's';
+                break; // UTF-8: "🟥"
+            case 0xA6:
+                color = TFT_BLUE;
+                shape = 's';
+                break; // UTF-8: "🟦"
+            case 0xA7:
+                color = TFT_ORANGE;
+                shape = 's';
+                break; // UTF-8: "🟧"
+            case 0xAA:
+                color = TFT_VIOLET;
+                shape = 's';
+                break; // UTF-8: "🟪"
+            case 0xAB:
+                color = TFT_BROWN;
+                shape = 's';
+                break; // UTF-8: "🟫
         }
-        if(shape == 'c') {
+        if (shape == 'c') {
             uint16_t fh = m_current_font.font_height; // font height
-            uint16_t fw = fh - fh / 3; // y : x =  3/3 : 2/3
-            uint16_t p = fh / 5; // padding
-            uint16_t r = (fh - 2 * p) / 2; // radius
+            uint16_t fw = fh - fh / 3;                // y : x =  3/3 : 2/3
+            uint16_t p = fh / 5;                      // padding
+            uint16_t r = (fh - 2 * p) / 2;            // radius
             uint16_t corr = fw / 10;
             uint16_t cx = x + fw / 2;
-            uint16_t cy = y +  fh / 2 + corr;
+            uint16_t cy = y + fh / 2 + corr;
             fillCircle(cx, cy, r, color);
             return fw;
-        }
-        else if(shape == 's') {
+        } else if (shape == 's') {
             uint16_t fh = m_current_font.font_height; // font height
-            uint16_t fw = fh - fh / 3; // font height - 1/3
-            uint16_t p = fh / 5; // padding
-            uint16_t a = (fh - 2 * p); // side length
+            uint16_t fw = fh - fh / 3;                // font height - 1/3
+            uint16_t p = fh / 5;                      // padding
+            uint16_t a = (fh - 2 * p);                // side length
             uint16_t corr = fw / 10;
             uint16_t sx = x + fw / 2;
             uint16_t sy = y + fh / 2 + corr;
             fillRect(sx - a / 2, sy - a / 2, a, a, color);
             return fw;
-        }
-        else {
+        } else {
             log_w("unknown shape %c", shape);
             return (uint16_t)0;
         }
@@ -1707,20 +1948,20 @@ size_t TFT_RGB::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16
         uint16_t box_h = m_current_font.glyph_dsc[glyphPos].box_h;
         int16_t  ofs_x = m_current_font.glyph_dsc[glyphPos].ofs_x;
         int16_t  ofs_y = m_current_font.glyph_dsc[glyphPos].ofs_y;
-        if(ofs_x < 0) ofs_x = 0;
+        if (ofs_x < 0) ofs_x = 0;
         x += ofs_x;
         y = y + (m_current_font.line_height - m_current_font.base_line - 1) - box_h - ofs_y;
         writeTheFramebuffer(m_current_font.glyph_bitmap + bitmap_index, x, y, box_w, box_h);
-        if(!narrow) adv_w += ofs_x;
+        if (!narrow) adv_w += ofs_x;
         return adv_w;
     };
     //-------------------------------------------------------------------------------------------------------------------
-    strChLength =  analyzeText(str, utfPosArr, colorArr, m_textColor); // fill utfPosArr, colorArr, ansiArr
-    if(autoSize) {nrOfLines = fitInAddrWindow(utfPosArr, strChLength, win_W, win_H, narrow, noWrap);}  // choose perfect fontsize
-    if(!strChLength) return 0;
+    strChLength = analyzeText(str, utfPosArr, colorArr, m_textColor);                                    // fill utfPosArr, colorArr, ansiArr
+    if (autoSize) { nrOfLines = fitInAddrWindow(utfPosArr, strChLength, win_W, win_H, narrow, noWrap); } // choose perfect fontsize
+    if (!strChLength) return 0;
     //----------------------------------------------------------------------
-    if((win_X + win_W) > m_h_res) { win_W = m_v_res - win_X; }   // Limit, right edge of the display
-    if((win_Y + win_H) > m_v_res) { win_H = m_h_res - win_Y; } // Limit, bottom of the display
+    if ((win_X + win_W) > m_h_res) { win_W = m_v_res - win_X; } // Limit, right edge of the display
+    if ((win_Y + win_H) > m_v_res) { win_H = m_h_res - win_Y; } // Limit, bottom of the display
 
     idx = 0;
     uint16_t pX = win_X;
@@ -1728,14 +1969,14 @@ size_t TFT_RGB::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16
     int16_t  pH = win_H;
     int16_t  pW = win_W;
 
-    if(v_align == TFT_ALIGN_TOP){
+    if (v_align == TFT_ALIGN_TOP) {
         ; // nothing to do, is default
     }
-    if(v_align == TFT_ALIGN_CENTER){
+    if (v_align == TFT_ALIGN_CENTER) {
         int offset = (win_H - (nrOfLines * m_current_font.line_height)) / 2;
         pY = pY + offset;
     }
-    if(v_align == TFT_ALIGN_DOWN){
+    if (v_align == TFT_ALIGN_DOWN) {
         int offset = (win_H - (nrOfLines * m_current_font.line_height));
         pY = pY + offset;
     }
@@ -1743,16 +1984,16 @@ size_t TFT_RGB::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16
     uint16_t charsToDraw = 0;
     uint16_t usedPxLength = 0;
     uint16_t charsDrawn = 0;
-    while(true) { // outer while
-        if(noWrap && idx) goto exit;
-        if(pH < m_current_font.line_height) { goto exit; }
-        //charsToDraw = fitinline(idx, pW, &usedPxLength);
+    while (true) { // outer while
+        if (noWrap && idx) goto exit;
+        if (pH < m_current_font.line_height) { goto exit; }
+        // charsToDraw = fitinline(idx, pW, &usedPxLength);
         charsToDraw = fitinline(utfPosArr, strChLength, idx, pW, &usedPxLength, narrow, noWrap);
 
-        if(h_align == TFT_ALIGN_RIGHT)  { pX += win_W - (usedPxLength) - 2; }
-        if(h_align == TFT_ALIGN_CENTER) { pX += (win_W - usedPxLength) / 2; }
+        if (h_align == TFT_ALIGN_RIGHT) { pX += win_W - (usedPxLength) - 2; }
+        if (h_align == TFT_ALIGN_CENTER) { pX += (win_W - usedPxLength) / 2; }
         uint16_t cnt = 0;
-        while(true) {               // inner while
+        while (true) { // inner while
             isEmoji = false;
             setTextColor(colorArr[idx]);
             // if(cnt == 0 && utfPosArr[idx] == 0x20) {
@@ -1760,30 +2001,28 @@ size_t TFT_RGB::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16
             //     charsDrawn++;
             //     continue;
             // } // skip leading spaces
-            if((utfPosArr[idx] & 0xFF00) == 0xF900){ // This is a emoji, width is the same as height
-                if(utfPosArr[idx] == 0xF9A2) {isEmoji = true;}
-                if(utfPosArr[idx] == 0xF9A1) {isEmoji = true;}
-                if(utfPosArr[idx] == 0xF9B4) {isEmoji = true;}
-                if(utfPosArr[idx] == 0xF9B5) {isEmoji = true;}
-                if(utfPosArr[idx] == 0xF9A0) {isEmoji = true;}
-                if(utfPosArr[idx] == 0xF9A3) {isEmoji = true;}
-                if(utfPosArr[idx] == 0xF9A4) {isEmoji = true;}
-                if(utfPosArr[idx] == 0xF9A9) {isEmoji = true;}
-                if(utfPosArr[idx] == 0xF9A8) {isEmoji = true;}
-                if(utfPosArr[idx] == 0xF9A5) {isEmoji = true;}
-                if(utfPosArr[idx] == 0xF9A6) {isEmoji = true;}
-                if(utfPosArr[idx] == 0xF9A7) {isEmoji = true;}
-                if(utfPosArr[idx] == 0xF9AA) {isEmoji = true;}
-                if(utfPosArr[idx] == 0xF9AB) {isEmoji = true;}
-            }
-            else{
+            if ((utfPosArr[idx] & 0xFF00) == 0xF900) { // This is a emoji, width is the same as height
+                if (utfPosArr[idx] == 0xF9A2) { isEmoji = true; }
+                if (utfPosArr[idx] == 0xF9A1) { isEmoji = true; }
+                if (utfPosArr[idx] == 0xF9B4) { isEmoji = true; }
+                if (utfPosArr[idx] == 0xF9B5) { isEmoji = true; }
+                if (utfPosArr[idx] == 0xF9A0) { isEmoji = true; }
+                if (utfPosArr[idx] == 0xF9A3) { isEmoji = true; }
+                if (utfPosArr[idx] == 0xF9A4) { isEmoji = true; }
+                if (utfPosArr[idx] == 0xF9A9) { isEmoji = true; }
+                if (utfPosArr[idx] == 0xF9A8) { isEmoji = true; }
+                if (utfPosArr[idx] == 0xF9A5) { isEmoji = true; }
+                if (utfPosArr[idx] == 0xF9A6) { isEmoji = true; }
+                if (utfPosArr[idx] == 0xF9A7) { isEmoji = true; }
+                if (utfPosArr[idx] == 0xF9AA) { isEmoji = true; }
+                if (utfPosArr[idx] == 0xF9AB) { isEmoji = true; }
+            } else {
                 ;
             }
             uint16_t res = 0;
-            if(isEmoji) {
+            if (isEmoji) {
                 res = drawEmoji(idx, pX, pY);
-            }
-            else {
+            } else {
                 res = drawChar(idx, pX, pY);
             }
             pX += res;
@@ -1791,8 +2030,8 @@ size_t TFT_RGB::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16
             idx++;
             cnt++;
             charsDrawn++;
-            if(idx == strChLength) goto exit;
-            if(cnt == charsToDraw) break;
+            if (idx == strChLength) goto exit;
+            if (cnt == charsToDraw) break;
         } // inner while
         pH -= m_current_font.line_height;
         pY += m_current_font.line_height;
@@ -1804,18 +2043,18 @@ exit:
     return charsDrawn;
 }
 
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-//   ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  B I T M A P  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫              *
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-#define bmpRead32(d, o) (d[o] | (uint16_t)(d[(o) + 1]) << 8 | (uint32_t)(d[(o) + 2]) << 16 | (uint32_t)(d[(o) + 3]) << 24)
-#define bmpRead16(d, o) (d[o] | (uint16_t)(d[(o) + 1]) << 8)
+    // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+    //    ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  B I T M A P  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫              *
+    // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+    #define bmpRead32(d, o) (d[o] | (uint16_t)(d[(o) + 1]) << 8 | (uint32_t)(d[(o) + 2]) << 16 | (uint32_t)(d[(o) + 3]) << 24)
+    #define bmpRead16(d, o) (d[o] | (uint16_t)(d[(o) + 1]) << 8)
 
-#define bmpColor8(c)  (((uint16_t)(((uint8_t*)(c))[0] & 0xE0) << 8) | ((uint16_t)(((uint8_t*)(c))[0] & 0x1C) << 6) | ((((uint8_t*)(c))[0] & 0x3) << 3))
-#define bmpColor16(c) ((((uint8_t*)(c))[0] | ((uint16_t)((uint8_t*)(c))[1]) << 8))
-#define bmpColor24(c) (((uint16_t)(((uint8_t*)(c))[2] & 0xF8) << 8) | ((uint16_t)(((uint8_t*)(c))[1] & 0xFC) << 3) | ((((uint8_t*)(c))[0] & 0xF8) >> 3))
-#define bmpColor32(c) (((uint16_t)(((uint8_t*)(c))[3] & 0xF8) << 8) | ((uint16_t)(((uint8_t*)(c))[2] & 0xFC) << 3) | ((((uint8_t*)(c))[1] & 0xF8) >> 3))
+    #define bmpColor8(c)  (((uint16_t)(((uint8_t*)(c))[0] & 0xE0) << 8) | ((uint16_t)(((uint8_t*)(c))[0] & 0x1C) << 6) | ((((uint8_t*)(c))[0] & 0x3) << 3))
+    #define bmpColor16(c) ((((uint8_t*)(c))[0] | ((uint16_t)((uint8_t*)(c))[1]) << 8))
+    #define bmpColor24(c) (((uint16_t)(((uint8_t*)(c))[2] & 0xF8) << 8) | ((uint16_t)(((uint8_t*)(c))[1] & 0xFC) << 3) | ((((uint8_t*)(c))[0] & 0xF8) >> 3))
+    #define bmpColor32(c) (((uint16_t)(((uint8_t*)(c))[3] & 0xF8) << 8) | ((uint16_t)(((uint8_t*)(c))[2] & 0xFC) << 3) | ((((uint8_t*)(c))[1] & 0xF8) >> 3))
 
-bool TFT_RGB::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight, float scale) {
+bool TFT_DSI::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight, float scale) {
     if (scale <= 0) {
         log_e("Invalid scale value: %f", scale);
         return false;
@@ -1833,7 +2072,7 @@ bool TFT_RGB::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, 
     }
 
     constexpr size_t headerLen = 0x36; // BMP-Header-Größe
-    uint8_t headerBuf[headerLen];
+    uint8_t          headerBuf[headerLen];
 
     if (bmp_file.size() < headerLen || bmp_file.read(headerBuf, headerLen) < headerLen) {
         log_e("Failed to read the file's header");
@@ -1848,8 +2087,8 @@ bool TFT_RGB::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, 
     }
 
     const uint32_t dataOffset = bmpRead32(headerBuf, 0x0A);
-    const int32_t bmpWidthI = bmpRead32(headerBuf, 0x12);
-    const int32_t bmpHeightI = bmpRead32(headerBuf, 0x16);
+    const int32_t  bmpWidthI = bmpRead32(headerBuf, 0x12);
+    const int32_t  bmpHeightI = bmpRead32(headerBuf, 0x16);
     const uint16_t bitsPerPixel = bmpRead16(headerBuf, 0x1C);
     const uint32_t compression = bmpRead32(headerBuf, 0x1E);
 
@@ -1874,10 +2113,10 @@ bool TFT_RGB::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, 
     const size_t displayHeight = std::min(effectiveMaxHeight, scaledHeight);
 
     const size_t rowSize = ((bmpWidth * bitsPerPixel / 8 + 3) & ~3);
-    uint8_t* rowBuffer = new uint8_t[rowSize];
+    uint8_t*     rowBuffer = new uint8_t[rowSize];
 
     for (size_t i_y = 0; i_y < displayHeight; ++i_y) {
-        const float srcY = i_y / scale;
+        const float  srcY = i_y / scale;
         const size_t srcRow = bmpHeight - 1 - (size_t)srcY;
 
         if (srcRow >= bmpHeight) continue;
@@ -1891,24 +2130,18 @@ bool TFT_RGB::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, 
         }
 
         for (size_t i_x = 0; i_x < displayWidth; ++i_x) {
-            const float srcX = i_x / scale;
+            const float  srcX = i_x / scale;
             const size_t srcCol = (size_t)srcX;
 
             if (srcCol >= bmpWidth) continue;
 
             const uint8_t* pixelPtr = rowBuffer + srcCol * (bitsPerPixel / 8);
-            uint16_t color;
+            uint16_t       color;
 
             switch (bitsPerPixel) {
-                case 16:
-                    color = bmpColor16(pixelPtr);
-                    break;
-                case 24:
-                    color = bmpColor24(pixelPtr);
-                    break;
-                case 32:
-                    color = bmpColor32(pixelPtr);
-                    break;
+                case 16: color = bmpColor16(pixelPtr); break;
+                case 24: color = bmpColor24(pixelPtr); break;
+                case 32: color = bmpColor32(pixelPtr); break;
                 default:
                     log_e("Unsupported bitsPerPixel: %d", bitsPerPixel);
                     delete[] rowBuffer;
@@ -1919,9 +2152,7 @@ bool TFT_RGB::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, 
             const size_t xPos = x + i_x;
             const size_t yPos = y + i_y;
 
-            if (xPos < m_h_res && yPos < m_v_res) {
-                m_framebuffer[0][yPos * m_h_res + xPos] = color;
-            }
+            if (xPos < m_h_res && yPos < m_v_res) { m_framebuffer[0][yPos * m_h_res + xPos] = color; }
         }
     }
 
@@ -1933,59 +2164,70 @@ bool TFT_RGB::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, 
     return true;
 }
 
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-//   ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  G I F  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-bool TFT_RGB::drawGifFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint8_t repeat) {
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//    ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  G I F  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+bool TFT_DSI::drawGifFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint8_t repeat) {
 
     gif.Iterations = repeat;
 
     GIF_DecoderReset();
 
     gif_file = fs.open(path);
-    if(!gif_file) {
-        if(tft_info) tft_info("Failed to open file for reading");
+    if (!gif_file) {
+        if (tft_info) tft_info("Failed to open file for reading");
         return false;
     }
     GIF_readGifItems();
     // check it's a gif
-    if(!gif_GifHeader.startsWith("GIF")) {
-        if(tft_info) tft_info("File is not a gif");
+    if (!gif_GifHeader.startsWith("GIF")) {
+        if (tft_info) tft_info("File is not a gif");
         return false;
     }
     // check dimensions
     // { log_w("Width: %i, Height: %i,", gif.LogicalScreenWidth, gif.LogicalScreenHeight); }
-    if(gif.LogicalScreenWidth * gif.LogicalScreenHeight > 155000) {
-        if(tft_info) tft_info("!Image is too big!!");
+    if (gif.LogicalScreenWidth * gif.LogicalScreenHeight > 155000) {
+        if (tft_info) tft_info("!Image is too big!!");
         return false;
     }
 
-    if(psramFound()){gif_ImageBuffer = (uint16_t*) ps_malloc(gif.LogicalScreenWidth * gif.LogicalScreenHeight * sizeof(uint16_t));}
-    else            {gif_ImageBuffer = (uint16_t*)    malloc(gif.LogicalScreenWidth * gif.LogicalScreenHeight * sizeof(uint16_t));}
+    if (psramFound()) {
+        gif_ImageBuffer = (uint16_t*)ps_malloc(gif.LogicalScreenWidth * gif.LogicalScreenHeight * sizeof(uint16_t));
+    } else {
+        gif_ImageBuffer = (uint16_t*)malloc(gif.LogicalScreenWidth * gif.LogicalScreenHeight * sizeof(uint16_t));
+    }
 
-    if(psramFound()){gif_RestoreBuffer = (uint16_t*) ps_malloc(gif.LogicalScreenWidth * gif.LogicalScreenHeight * sizeof(uint16_t));}
-    else            {gif_RestoreBuffer = (uint16_t*)    malloc(gif.LogicalScreenWidth * gif.LogicalScreenHeight * sizeof(uint16_t));}
+    if (psramFound()) {
+        gif_RestoreBuffer = (uint16_t*)ps_malloc(gif.LogicalScreenWidth * gif.LogicalScreenHeight * sizeof(uint16_t));
+    } else {
+        gif_RestoreBuffer = (uint16_t*)malloc(gif.LogicalScreenWidth * gif.LogicalScreenHeight * sizeof(uint16_t));
+    }
 
-    if(!gif_ImageBuffer)   {if(tft_info) tft_info("!Not enough memory!!"); return false;}
-    if(!gif_RestoreBuffer) {if(tft_info) tft_info("!Not enough memory!!"); return false;}
+    if (!gif_ImageBuffer) {
+        if (tft_info) tft_info("!Not enough memory!!");
+        return false;
+    }
+    if (!gif_RestoreBuffer) {
+        if (tft_info) tft_info("!Not enough memory!!");
+        return false;
+    }
 
-    if(GIF_decodeGif(x, y) == false) {
+    if (GIF_decodeGif(x, y) == false) {
         GIF_freeMemory();
         gif_file.close();
         gif.drawNextImage = false;
         log_w("GIF file closed");
         return true;
-    }
-    else {
+    } else {
         gif.drawNextImage = true;
     }
     return true;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-bool TFT_RGB::GIF_loop(){
-    if(!gif.drawNextImage) return false;
-    if(gif.TimeStamp > millis()) return false;
-    if(!GIF_decodeGif(100, 100)){
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+bool TFT_DSI::GIF_loop() {
+    if (!gif.drawNextImage) return false;
+    if (gif.TimeStamp > millis()) return false;
+    if (!GIF_decodeGif(100, 100)) {
         GIF_freeMemory();
         gif_file.close();
         gif.drawNextImage = false;
@@ -1994,8 +2236,8 @@ bool TFT_RGB::GIF_loop(){
     }
     return true;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_RGB::GIF_readHeader() {
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_DSI::GIF_readHeader() {
 
     //      7 6 5 4 3 2 1 0        Field Name                    Type
     //     +---------------+
@@ -2029,7 +2271,7 @@ void TFT_RGB::GIF_readHeader() {
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 
-void TFT_RGB::GIF_readLogicalScreenDescriptor() {
+void TFT_DSI::GIF_readLogicalScreenDescriptor() {
 
     //    Logical Screen Descriptor
     //
@@ -2084,7 +2326,7 @@ void TFT_RGB::GIF_readLogicalScreenDescriptor() {
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 
-void TFT_RGB::GIF_readImageDescriptor() {
+void TFT_DSI::GIF_readImageDescriptor() {
 
     //     7 6 5 4 3 2 1 0        Field Name                    Type
     //    +---------------+
@@ -2130,7 +2372,7 @@ void TFT_RGB::GIF_readImageDescriptor() {
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 
-void TFT_RGB::GIF_readLocalColorTable() {
+void TFT_DSI::GIF_readLocalColorTable() {
     // The size of the local color table can be calculated by the value given in the image descriptor.
     // Just like with the global color table, if the image descriptor specifies a size of N,
     // the color table will contain 2^(N+1) colors and will take up 3*2^(N+1) bytes.
@@ -2138,10 +2380,10 @@ void TFT_RGB::GIF_readLocalColorTable() {
     gif_LocalColorTable.clear();
     gif_LocalColorTable.shrink_to_fit();
     gif_LocalColorTable.reserve(gif.SizeOfLocalColorTable);
-    if(gif.LocalColorTableFlag == 1) {
+    if (gif.LocalColorTableFlag == 1) {
         char     rgb_buff[3];
         uint16_t i = 0;
-        while(i != gif.SizeOfLocalColorTable) {
+        while (i != gif.SizeOfLocalColorTable) {
             gif_file.readBytes(rgb_buff, 3);
             // fill LocalColorTable, pass 8-bit (each) R,G,B, get back 16-bit packed color
             gif_LocalColorTable.push_back(((rgb_buff[0] & 0xF8) << 8) | ((rgb_buff[1] & 0xFC) << 3) | ((rgb_buff[2] & 0xF8) >> 3));
@@ -2153,7 +2395,7 @@ void TFT_RGB::GIF_readLocalColorTable() {
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 
-void TFT_RGB::GIF_readGlobalColorTable() {
+void TFT_DSI::GIF_readGlobalColorTable() {
     // Each GIF has its own color palette. That is, it has a list of all the colors that can be in the image
     // and cannot contain colors that are not in that list.
     // The global color table is where that list of colors is stored. Each color is stored in three bytes.
@@ -2173,10 +2415,10 @@ void TFT_RGB::GIF_readGlobalColorTable() {
     //        7                           256                 768
 
     gif_GlobalColorTable.clear();
-    if(gif.GlobalColorTableFlag == 1) {
+    if (gif.GlobalColorTableFlag == 1) {
         char     rgb_buff[3];
         uint16_t i = 0;
-        while(i != gif.SizeOfGlobalColorTable) {
+        while (i != gif.SizeOfGlobalColorTable) {
             gif_file.readBytes(rgb_buff, 3);
             // fill GlobalColorTable, pass 8-bit (each) R,G,B, get back 16-bit packed color
             gif_GlobalColorTable.push_back(((rgb_buff[0] & 0xF8) << 8) | ((rgb_buff[1] & 0xFC) << 3) | ((rgb_buff[2] & 0xF8) >> 3));
@@ -2189,37 +2431,34 @@ void TFT_RGB::GIF_readGlobalColorTable() {
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 
-void TFT_RGB::GIF_readGraphicControlExtension() {
+void TFT_DSI::GIF_readGraphicControlExtension() {
 
-/*     7 6 5 4 3 2 1 0
-   0 | 0x21            | Extension Introducer  - Identifies the beginning of an extension block. This field contains the fixed value 0x21.
-   1 | 0xF9            | Graphic Control Label - Identifies the type of extension block. For the Graphic Control Extension, this field contains the fixed value 0xF9.
-   2 | 0x04            | Block Size - The size of the block, not including the Block Terminator. This field contains the fixed value 0x04.
-   3 | x x x d d d u t | Packed Fields: xxx - reserved, ddd - disposal method, u . user input flag, t - transparent color flag.
-   4 |                 | Delay Time LSB - The delay time in hundredths of a second before the next image is displayed. This field contains the delay time.
-   5 |                 | Delay Time MSB - The delay time in hundredths of a second before the next image is displayed. This field contains the delay time.
-   6 |                 | Transparent Color Index - The index of the transparent color in the color table. This field contains the index of the transparent color.
-   7 | 0x00            | Block Terminator - Marks the end of the Graphic Control Extension. This field contains the fixed value 0x00.
+    /*     7 6 5 4 3 2 1 0
+       0 | 0x21            | Extension Introducer  - Identifies the beginning of an extension block. This field contains the fixed value 0x21.
+       1 | 0xF9            | Graphic Control Label - Identifies the type of extension block. For the Graphic Control Extension, this field contains the fixed value 0xF9.
+       2 | 0x04            | Block Size - The size of the block, not including the Block Terminator. This field contains the fixed value 0x04.
+       3 | x x x d d d u t | Packed Fields: xxx - reserved, ddd - disposal method, u . user input flag, t - transparent color flag.
+       4 |                 | Delay Time LSB - The delay time in hundredths of a second before the next image is displayed. This field contains the delay time.
+       5 |                 | Delay Time MSB - The delay time in hundredths of a second before the next image is displayed. This field contains the delay time.
+       6 |                 | Transparent Color Index - The index of the transparent color in the color table. This field contains the index of the transparent color.
+       7 | 0x00            | Block Terminator - Marks the end of the Graphic Control Extension. This field contains the fixed value 0x00.
 
-   Disposal Method - Indicates the way in which the graphic is to be treated after being displayed
-                       0 -   No disposal specified. The decoder is not required to take any action.
-                       1 -   Do not dispose. The graphic is to be left in place.
-                       2 -   Restore to background color. The area used by the graphic must be restored to the background color.
-                       3 -   Restore to previous. The decoder is required to restore the area overwritten by the graphic with
-   User Input Flag - Indicates whether or not user input is expected before continuing. If the flag is set, processing will continue when user input is entered. The nature of the User input
-                     is determined by the application (Carriage Return, Mouse Button Click, etc.).
-                       0 -   User input is not expected.
-                       1 -   User input is expected.
-   Transparency Flag - Indicates whether a transparency index is given in the Transparent Index field. (This field is the least significant bit of the byte.)
-                       0 -   Transparent Index is not given.
-                       1 -   Transparent Index is given.
-*/
+       Disposal Method - Indicates the way in which the graphic is to be treated after being displayed
+                           0 -   No disposal specified. The decoder is not required to take any action.
+                           1 -   Do not dispose. The graphic is to be left in place.
+                           2 -   Restore to background color. The area used by the graphic must be restored to the background color.
+                           3 -   Restore to previous. The decoder is required to restore the area overwritten by the graphic with
+       User Input Flag - Indicates whether or not user input is expected before continuing. If the flag is set, processing will continue when user input is entered. The nature of the User
+       input is determined by the application (Carriage Return, Mouse Button Click, etc.). 0 -   User input is not expected. 1 -   User input is expected. Transparency Flag - Indicates whether
+       a transparency index is given in the Transparent Index field. (This field is the least significant bit of the byte.) 0 -   Transparent Index is not given. 1 -   Transparent Index is
+       given.
+    */
 
     uint8_t BlockSize = 0;
     gif_file.readBytes(gif_buffer, 1);
     BlockSize = gif_buffer[0]; // Number of bytes in the block, not including the Block Terminator
 
-    if(BlockSize == 0) return;
+    if (BlockSize == 0) return;
     gif_file.readBytes(gif_buffer, BlockSize);
     gif.PackedFields = gif_buffer[0];
     gif.DisposalMethod = (gif.PackedFields & 0x1C) >> 2;
@@ -2233,7 +2472,7 @@ void TFT_RGB::GIF_readGraphicControlExtension() {
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 
-uint8_t TFT_RGB::GIF_readPlainTextExtension(char* buf) {
+uint8_t TFT_DSI::GIF_readPlainTextExtension(char* buf) {
 
     //      7 6 5 4 3 2 1 0        Field Name                    Type
     //     +---------------+
@@ -2277,7 +2516,7 @@ uint8_t TFT_RGB::GIF_readPlainTextExtension(char* buf) {
     uint8_t BlockSize = 0, numBytes = 0;
     BlockSize = gif_file.read();
     // log_i("BlockSize=%i", BlockSize);
-    if(BlockSize > 0) {
+    if (BlockSize > 0) {
         gif_file.readBytes(gif_buffer, BlockSize);
         // log_i("%s", buffer);
     }
@@ -2298,7 +2537,7 @@ uint8_t TFT_RGB::GIF_readPlainTextExtension(char* buf) {
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 
-uint8_t TFT_RGB::GIF_readApplicationExtension(char* buf) {
+uint8_t TFT_DSI::GIF_readApplicationExtension(char* buf) {
 
     //     7 6 5 4 3 2 1 0        Field Name                    Type
     //    +---------------+
@@ -2340,7 +2579,7 @@ uint8_t TFT_RGB::GIF_readApplicationExtension(char* buf) {
 
     uint8_t BlockSize = 0, numBytes = 0;
     BlockSize = gif_file.read();
-    if(BlockSize > 0) { gif_file.readBytes(gif_buffer, BlockSize); }
+    if (BlockSize > 0) { gif_file.readBytes(gif_buffer, BlockSize); }
     numBytes = GIF_readDataSubBlock(buf);
     gif_file.readBytes(gif_buffer, 1); // BlockTerminator, marks the end of the Graphic Control Extension
     return numBytes;
@@ -2348,7 +2587,7 @@ uint8_t TFT_RGB::GIF_readApplicationExtension(char* buf) {
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 
-uint8_t TFT_RGB::GIF_readCommentExtension(char* buf) {
+uint8_t TFT_DSI::GIF_readCommentExtension(char* buf) {
 
     //    7 6 5 4 3 2 1 0        Field Name                    Type
     //  +===============+
@@ -2363,15 +2602,15 @@ uint8_t TFT_RGB::GIF_readCommentExtension(char* buf) {
 
     uint8_t numBytes = 0;
     numBytes = GIF_readDataSubBlock(buf);
-    //sprintf(chbuf, "GIF: Comment %s", buf);
-    // if(tft_info) tft_info(chbuf);
+    // sprintf(chbuf, "GIF: Comment %s", buf);
+    //  if(tft_info) tft_info(chbuf);
     gif_file.readBytes(gif_buffer, 1); // BlockTerminator, marks the end of the Graphic Control Extension
     return numBytes;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 
-uint8_t TFT_RGB::GIF_readDataSubBlock(char* buf) {
+uint8_t TFT_DSI::GIF_readDataSubBlock(char* buf) {
 
     //     7 6 5 4 3 2 1 0        Field Name                    Type
     //    +---------------+
@@ -2397,19 +2636,19 @@ uint8_t TFT_RGB::GIF_readDataSubBlock(char* buf) {
 
     uint8_t BlockSize = 0;
     BlockSize = gif_file.read();
-    if(BlockSize > 0) {
+    if (BlockSize > 0) {
         gif.ZeroDataBlock = false;
         gif_file.readBytes(buf, BlockSize);
-    }
-    else gif.ZeroDataBlock = true;
+    } else
+        gif.ZeroDataBlock = true;
     return BlockSize;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TFT_RGB::GIF_readExtension(char Label) {
+bool TFT_DSI::GIF_readExtension(char Label) {
     char buf[256];
-    switch(Label) {
+    switch (Label) {
         case 0x01:
             // log_w("PlainTextExtension");
             GIF_readPlainTextExtension(buf);
@@ -2433,7 +2672,7 @@ bool TFT_RGB::GIF_readExtension(char Label) {
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 
-int32_t TFT_RGB::GIF_GetCode(int32_t code_size, int32_t flag) {
+int32_t TFT_DSI::GIF_GetCode(int32_t code_size, int32_t flag) {
     //    Assuming a character array of 8 bits per character and using 5 bit codes to be
     //    packed, an example layout would be similar to:
     //
@@ -2458,17 +2697,17 @@ int32_t TFT_RGB::GIF_GetCode(int32_t code_size, int32_t flag) {
     int32_t        i, j, ret;
     uint8_t        count;
 
-    if(flag) {
+    if (flag) {
         curbit = 0;
         lastbit = 0;
         done = false;
         return 0;
     }
 
-    if((curbit + code_size) >= lastbit) {
-        if(done) {
+    if ((curbit + code_size) >= lastbit) {
+        if (done) {
             // log_i("done");
-            if(curbit >= lastbit) { return 0; }
+            if (curbit >= lastbit) { return 0; }
             return -1;
         }
         DSBbuffer[0] = DSBbuffer[last_byte - 2];
@@ -2482,7 +2721,7 @@ int32_t TFT_RGB::GIF_GetCode(int32_t code_size, int32_t flag) {
         count = GIF_readDataSubBlock(&DSBbuffer[2]);
         //    startWrite();
         // log_i("Dtatblocksize %i", count);
-        if(count == 0) done = true;
+        if (count == 0) done = true;
 
         last_byte = 2 + count;
 
@@ -2491,7 +2730,7 @@ int32_t TFT_RGB::GIF_GetCode(int32_t code_size, int32_t flag) {
         lastbit = (2 + count) * 8;
     }
     ret = 0;
-    for(i = curbit, j = 0; j < code_size; ++i, ++j) ret |= ((DSBbuffer[i / 8] & (1 << (i % 8))) != 0) << j;
+    for (i = curbit, j = 0; j < code_size; ++i, ++j) ret |= ((DSBbuffer[i / 8] & (1 << (i % 8))) != 0) << j;
 
     curbit += code_size;
 
@@ -2500,14 +2739,14 @@ int32_t TFT_RGB::GIF_GetCode(int32_t code_size, int32_t flag) {
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 
-int32_t TFT_RGB::GIF_LZWReadByte(bool init) {
+int32_t TFT_DSI::GIF_LZWReadByte(bool init) {
     static int32_t fresh = false;
     int32_t        code, incode;
     static int32_t firstcode, oldcode;
 
-    if(gif_next.capacity() < (1 << gif_MaxLzwBits)) gif_next.reserve((1 << gif_MaxLzwBits) - gif_next.capacity());
-    if(gif_vals.capacity() < (1 << gif_MaxLzwBits)) gif_vals.reserve((1 << gif_MaxLzwBits) - gif_vals.capacity());
-    if(gif_stack.capacity() < (1 << (gif_MaxLzwBits + 1))) gif_stack.reserve((1 << (gif_MaxLzwBits + 1)) - gif_stack.capacity());
+    if (gif_next.capacity() < (1 << gif_MaxLzwBits)) gif_next.reserve((1 << gif_MaxLzwBits) - gif_next.capacity());
+    if (gif_vals.capacity() < (1 << gif_MaxLzwBits)) gif_vals.reserve((1 << gif_MaxLzwBits) - gif_vals.capacity());
+    if (gif_stack.capacity() < (1 << (gif_MaxLzwBits + 1))) gif_stack.reserve((1 << (gif_MaxLzwBits + 1)) - gif_stack.capacity());
     gif_next.clear();
     gif_vals.clear();
     gif_stack.clear();
@@ -2516,7 +2755,7 @@ int32_t TFT_RGB::GIF_LZWReadByte(bool init) {
 
     int32_t i;
 
-    if(init) {
+    if (init) {
         //    LWZMinCodeSize      ColorCodes      ClearCode       EOICode
         //    2                   #0-#3           #4              #5
         //    3                   #0-#7           #8              #9
@@ -2538,32 +2777,31 @@ int32_t TFT_RGB::GIF_LZWReadByte(bool init) {
 
         fresh = true;
 
-        for(i = 0; i < gif.ClearCode; i++) {
+        for (i = 0; i < gif.ClearCode; i++) {
             gif_next[i] = 0;
             gif_vals[i] = i;
         }
-        for(; i < (1 << gif_MaxLzwBits); i++) gif_next[i] = gif_vals[0] = 0;
+        for (; i < (1 << gif_MaxLzwBits); i++) gif_next[i] = gif_vals[0] = 0;
 
         sp = &gif_stack[0];
 
         return 0;
-    }
-    else if(fresh) {
+    } else if (fresh) {
         fresh = false;
-        do { firstcode = oldcode = GIF_GetCode(gif.CodeSize, false); } while(firstcode == gif.ClearCode);
+        do { firstcode = oldcode = GIF_GetCode(gif.CodeSize, false); } while (firstcode == gif.ClearCode);
 
         return firstcode;
     }
 
-    if(sp > &gif_stack[0]) return *--sp;
+    if (sp > &gif_stack[0]) return *--sp;
 
-    while((code = GIF_GetCode(gif.CodeSize, false)) >= 0) {
-        if(code == gif.ClearCode) {
-            for(i = 0; i < gif.ClearCode; ++i) {
+    while ((code = GIF_GetCode(gif.CodeSize, false)) >= 0) {
+        if (code == gif.ClearCode) {
+            for (i = 0; i < gif.ClearCode; ++i) {
                 gif_next[i] = 0;
                 gif_vals[i] = i;
             }
-            for(; i < (1 << gif_MaxLzwBits); ++i) gif_next[i] = gif_vals[i] = 0;
+            for (; i < (1 << gif_MaxLzwBits); ++i) gif_next[i] = gif_vals[i] = 0;
 
             gif.CodeSize = gif.LZWMinimumCodeSize + 1;
             gif.MaxCodeSize = 2 * gif.ClearCode;
@@ -2572,54 +2810,53 @@ int32_t TFT_RGB::GIF_LZWReadByte(bool init) {
 
             firstcode = oldcode = GIF_GetCode(gif.CodeSize, false);
             return firstcode;
-        }
-        else if(code == gif.EOIcode) {
+        } else if (code == gif.EOIcode) {
             int32_t count;
             char    buf[260];
 
-            if(gif.ZeroDataBlock) return -2;
-            while((count = GIF_readDataSubBlock(buf)) > 0);
+            if (gif.ZeroDataBlock) return -2;
+            while ((count = GIF_readDataSubBlock(buf)) > 0);
 
-            if(count != 0) return -2;
+            if (count != 0) return -2;
         }
 
         incode = code;
 
-        if(code >= gif.MaxCode) {
+        if (code >= gif.MaxCode) {
             *sp++ = firstcode;
             code = oldcode;
         }
 
-        while(code >= gif.ClearCode) {
+        while (code >= gif.ClearCode) {
             *sp++ = gif_vals[code];
-            if(code == (int32_t)gif_next[code]) { return -1; }
+            if (code == (int32_t)gif_next[code]) { return -1; }
             code = gif_next[code];
         }
         *sp++ = firstcode = gif_vals[code];
 
-        if((code = gif.MaxCode) < (1 << gif_MaxLzwBits)) {
+        if ((code = gif.MaxCode) < (1 << gif_MaxLzwBits)) {
             gif_next[code] = oldcode;
             gif_vals[code] = firstcode;
             ++gif.MaxCode;
-            if((gif.MaxCode >= gif.MaxCodeSize) && (gif.MaxCodeSize < (1 << gif_MaxLzwBits))) {
+            if ((gif.MaxCode >= gif.MaxCodeSize) && (gif.MaxCodeSize < (1 << gif_MaxLzwBits))) {
                 gif.MaxCodeSize *= 2;
                 ++gif.CodeSize;
             }
         }
         oldcode = incode;
 
-        if(sp > &gif_stack[0]) return *--sp;
+        if (sp > &gif_stack[0]) return *--sp;
     }
     return code;
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
-bool TFT_RGB::GIF_ReadImage(uint16_t x, uint16_t y) {
-    int32_t  color;
-    int32_t  xpos = x + gif.ImageLeftPosition;
-    int32_t  ypos = y + gif.ImageTopPosition;
-    int32_t  max = gif.ImageHeight * gif.ImageWidth;
-    uint32_t i = 0;
-    static uint8_t gif_LastDisposalMethod = 0;
+bool TFT_DSI::GIF_ReadImage(uint16_t x, uint16_t y) {
+    int32_t         color;
+    int32_t         xpos = x + gif.ImageLeftPosition;
+    int32_t         ypos = y + gif.ImageTopPosition;
+    int32_t         max = gif.ImageHeight * gif.ImageWidth;
+    uint32_t        i = 0;
+    static uint8_t  gif_LastDisposalMethod = 0;
     static uint16_t gif_LastImageWidth = 0;
     static uint16_t gif_LastImageHeight = 0;
     static uint16_t gif_LastImageLeftPosition = 0;
@@ -2628,8 +2865,7 @@ bool TFT_RGB::GIF_ReadImage(uint16_t x, uint16_t y) {
     gif.LZWMinimumCodeSize = gif_file.read();
     if (GIF_LZWReadByte(true) < 0) return false;
 
-
-    if(gif.DisposalMethod < 2){
+    if (gif.DisposalMethod < 2) {
 
         while (i < max) {
             color = GIF_LZWReadByte(false);
@@ -2658,9 +2894,7 @@ bool TFT_RGB::GIF_ReadImage(uint16_t x, uint16_t y) {
                 uint16_t buf_x = gif.ImageLeftPosition + col;
                 uint16_t buf_y = gif.ImageTopPosition + row;
 
-                if (buf_x < gif.LogicalScreenWidth && buf_y < gif.LogicalScreenHeight) {
-                    gif_ImageBuffer[buf_y * gif.LogicalScreenWidth + buf_x] = gif_LocalColorTable[gif.BackgroundColorIndex];
-                }
+                if (buf_x < gif.LogicalScreenWidth && buf_y < gif.LogicalScreenHeight) { gif_ImageBuffer[buf_y * gif.LogicalScreenWidth + buf_x] = gif_LocalColorTable[gif.BackgroundColorIndex]; }
             }
         }
     }
@@ -2708,8 +2942,7 @@ bool TFT_RGB::GIF_ReadImage(uint16_t x, uint16_t y) {
             uint16_t buf_x = gif.ImageLeftPosition + col;
             uint16_t buf_y = gif.ImageTopPosition + row;
 
-            if (fb_x < m_h_res && fb_y < m_v_res &&
-                buf_x < gif.LogicalScreenWidth && buf_y < gif.LogicalScreenHeight) {
+            if (fb_x < m_h_res && fb_y < m_v_res && buf_x < gif.LogicalScreenWidth && buf_y < gif.LogicalScreenHeight) {
                 m_framebuffer[0][fb_y * m_h_res + fb_x] = gif_ImageBuffer[buf_y * gif.LogicalScreenWidth + buf_x];
             }
         }
@@ -2721,7 +2954,7 @@ bool TFT_RGB::GIF_ReadImage(uint16_t x, uint16_t y) {
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 
-int32_t TFT_RGB::GIF_readGifItems() {
+int32_t TFT_DSI::GIF_readGifItems() {
     GIF_readHeader();
     GIF_readLogicalScreenDescriptor();
     gif.decodeSdFile_firstread = true;
@@ -2729,20 +2962,20 @@ int32_t TFT_RGB::GIF_readGifItems() {
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TFT_RGB::GIF_decodeGif(uint16_t x, uint16_t y) {
+bool TFT_DSI::GIF_decodeGif(uint16_t x, uint16_t y) {
     char           c = 0;
     static int32_t test = 1;
     char           Label = 0;
-    if(gif.decodeSdFile_firstread == true) GIF_readGlobalColorTable(); // If exists
+    if (gif.decodeSdFile_firstread == true) GIF_readGlobalColorTable(); // If exists
     gif.decodeSdFile_firstread = false;
 
-    while(c != ';') { // Trailer found
+    while (c != ';') { // Trailer found
         c = gif_file.read();
-        if(c == '!') {               // it is a Extension
+        if (c == '!') {              // it is a Extension
             Label = gif_file.read(); // Label
             GIF_readExtension(Label);
         }
-        if(c == ',') {
+        if (c == ',') {
             GIF_readImageDescriptor(); // ImgageDescriptor
             GIF_readLocalColorTable(); // can follow the ImagrDescriptor
             GIF_ReadImage(x, y);       // read Image Data
@@ -2758,105 +2991,129 @@ bool TFT_RGB::GIF_decodeGif(uint16_t x, uint16_t y) {
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 
-void TFT_RGB::GIF_freeMemory() {
-    gif_next.clear();               gif_next.shrink_to_fit();
-    gif_vals.clear();               gif_vals.shrink_to_fit();
-    gif_stack.clear();              gif_stack.shrink_to_fit();
-    gif_GlobalColorTable.clear();   gif_GlobalColorTable.shrink_to_fit();
-    gif_LocalColorTable.clear();    gif_LocalColorTable.shrink_to_fit();
-    if(gif_ImageBuffer){free(gif_ImageBuffer); gif_ImageBuffer = NULL;}
-    if(gif_RestoreBuffer){free(gif_RestoreBuffer); gif_RestoreBuffer = NULL;}
+void TFT_DSI::GIF_freeMemory() {
+    gif_next.clear();
+    gif_next.shrink_to_fit();
+    gif_vals.clear();
+    gif_vals.shrink_to_fit();
+    gif_stack.clear();
+    gif_stack.shrink_to_fit();
+    gif_GlobalColorTable.clear();
+    gif_GlobalColorTable.shrink_to_fit();
+    gif_LocalColorTable.clear();
+    gif_LocalColorTable.shrink_to_fit();
+    if (gif_ImageBuffer) {
+        free(gif_ImageBuffer);
+        gif_ImageBuffer = NULL;
+    }
+    if (gif_RestoreBuffer) {
+        free(gif_RestoreBuffer);
+        gif_RestoreBuffer = NULL;
+    }
 }
 
-void TFT_RGB::GIF_DecoderReset(){
-   GIF_freeMemory();
-   gif_file.close();
-   gif.decodeSdFile_firstread = false;
-   gif.GlobalColorTableFlag = false;
-   gif.LocalColorTableFlag = false;
-   gif.SortFlag = false;
-   gif.TransparentColorFlag = false;
-   gif.UserInputFlag = false;
-   gif.ZeroDataBlock = 0;
-   gif.InterlaceFlag = false;
-   gif.drawNextImage = false;
-   gif.BackgroundColorIndex = 0;
-   gif.BlockTerninator = 0;
-   gif.CharacterCellWidth = 0;
-   gif.CharacterCellHeight = 0;
-   gif.CodeSize = 0;
-   gif.ColorResulution = 0;
-   gif.DisposalMethod = 0;
-   gif.ImageSeparator = 0;
-   gif.lenDatablock = 0;
-   gif.LZWMinimumCodeSize = 0;
-   gif.PackedFields = 0;
-   gif.PixelAspectRatio = 0;
-   gif.TextBackgroundColorIndex = 0;
-   gif.TextForegroundColorIndex = 0;
-   gif.TransparentColorIndex = 0;
-   gif.ClearCode = 0;
-   gif.DelayTime = 0;
-   gif.EOIcode = 0; // End Of Information
-   gif.ImageHeight = 0;
-   gif.ImageWidth = 0;
-   gif.ImageLeftPosition = 0;
-   gif.ImageTopPosition = 0;
-   gif.LogicalScreenWidth = 0;
-   gif.LogicalScreenHeight = 0;
-   gif.MaxCode = 0;
-   gif.MaxCodeSize = 0;
-   gif.SizeOfGlobalColorTable = 0;
-   gif.SizeOfLocalColorTable = 0;
-   gif.TextGridLeftPosition = 0;
-   gif.TextGridTopPosition = 0;
-   gif.TextGridWidth = 0;
-   gif.TextGridHeight = 0;
-   gif.TimeStamp = 0;
-   gif.Iterations = 0;
+void TFT_DSI::GIF_DecoderReset() {
+    GIF_freeMemory();
+    gif_file.close();
+    gif.decodeSdFile_firstread = false;
+    gif.GlobalColorTableFlag = false;
+    gif.LocalColorTableFlag = false;
+    gif.SortFlag = false;
+    gif.TransparentColorFlag = false;
+    gif.UserInputFlag = false;
+    gif.ZeroDataBlock = 0;
+    gif.InterlaceFlag = false;
+    gif.drawNextImage = false;
+    gif.BackgroundColorIndex = 0;
+    gif.BlockTerninator = 0;
+    gif.CharacterCellWidth = 0;
+    gif.CharacterCellHeight = 0;
+    gif.CodeSize = 0;
+    gif.ColorResulution = 0;
+    gif.DisposalMethod = 0;
+    gif.ImageSeparator = 0;
+    gif.lenDatablock = 0;
+    gif.LZWMinimumCodeSize = 0;
+    gif.PackedFields = 0;
+    gif.PixelAspectRatio = 0;
+    gif.TextBackgroundColorIndex = 0;
+    gif.TextForegroundColorIndex = 0;
+    gif.TransparentColorIndex = 0;
+    gif.ClearCode = 0;
+    gif.DelayTime = 0;
+    gif.EOIcode = 0; // End Of Information
+    gif.ImageHeight = 0;
+    gif.ImageWidth = 0;
+    gif.ImageLeftPosition = 0;
+    gif.ImageTopPosition = 0;
+    gif.LogicalScreenWidth = 0;
+    gif.LogicalScreenHeight = 0;
+    gif.MaxCode = 0;
+    gif.MaxCodeSize = 0;
+    gif.SizeOfGlobalColorTable = 0;
+    gif.SizeOfLocalColorTable = 0;
+    gif.TextGridLeftPosition = 0;
+    gif.TextGridTopPosition = 0;
+    gif.TextGridWidth = 0;
+    gif.TextGridHeight = 0;
+    gif.TimeStamp = 0;
+    gif.Iterations = 0;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-//   ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ J P E G ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-bool TFT_RGB::drawJpgFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight) {
-    if(!fs.exists(path)) {log_e("file %s not exists", path); return false; }
-    if(maxWidth) m_jpgWidthMax = maxWidth; else m_jpgWidthMax = m_h_res;
-    if(maxHeight) m_jpgHeightMax = maxHeight; else m_jpgHeightMax = m_v_res;
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//    ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ J P E G ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+bool TFT_DSI::drawJpgFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight) {
+    if (!fs.exists(path)) {
+        log_e("file %s not exists", path);
+        return false;
+    }
+    if (maxWidth)
+        m_jpgWidthMax = maxWidth;
+    else
+        m_jpgWidthMax = m_h_res;
+    if (maxHeight)
+        m_jpgHeightMax = maxHeight;
+    else
+        m_jpgHeightMax = m_v_res;
 
     m_jpgSdFile = fs.open(path, FILE_READ);
-    if(!m_jpgSdFile) {log_e("Failed to open file for reading"); JPEG_setJpgScale(1); return false;}
+    if (!m_jpgSdFile) {
+        log_e("Failed to open file for reading");
+        JPEG_setJpgScale(1);
+        return false;
+    }
     JPEG_getSdJpgSize(&m_jpgWidth, &m_jpgHeight);
-    int res = JPEG_drawSdJpg(x, y); (void) res;
+    int res = JPEG_drawSdJpg(x, y);
+    (void)res;
     // log_w("path %s, res %i, x %i, y %i, m_jpgWidth %i, m_jpgHeight %i", path, res, x, y, m_jpgWidth, m_jpgHeight);
     m_jpgSdFile.close();
     panelDrawBitmap(x, y, x + m_jpgWidth, y + m_jpgHeight, m_framebuffer[0]);
     return true;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_RGB::JPEG_setJpgScale(uint8_t scaleFactor) {
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_DSI::JPEG_setJpgScale(uint8_t scaleFactor) {
     switch (scaleFactor) {
-        case 1:  m_jpgScale = 0; break;
-        case 2:  m_jpgScale = 1; break;
-        case 4:  m_jpgScale = 2; break;
-        case 8:  m_jpgScale = 3; break;
+        case 1: m_jpgScale = 0; break;
+        case 2: m_jpgScale = 1; break;
+        case 4: m_jpgScale = 2; break;
+        case 8: m_jpgScale = 3; break;
         default: m_jpgScale = 0;
     }
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_RGB::JPEG_setSwapBytes(bool swapBytes){
-  m_swap = swapBytes;
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_DSI::JPEG_setSwapBytes(bool swapBytes) {
+    m_swap = swapBytes;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-unsigned int TFT_RGB::JPEG_jd_input(JDEC* jdec, uint8_t* buf, unsigned int len){
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+unsigned int TFT_DSI::JPEG_jd_input(JDEC* jdec, uint8_t* buf, unsigned int len) {
     uint32_t bytesLeft = 0;
 
-    if (m_jpg_source == TJPG_ARRAY) {  // Handle an array input
+    if (m_jpg_source == TJPG_ARRAY) {                                                   // Handle an array input
         if (m_array_index + len > m_array_size) { len = m_array_size - m_array_index; } // Avoid running off end of array
-        if (buf) memcpy_P(buf, (const uint8_t*)(m_array_data + m_array_index), len); // If buf is valid then copy len bytes to buffer
-        m_array_index += len;  // Move pointer
-    }
-    else if (m_jpg_source == TJPG_SD_FILE) {  // Handle SD library input
-        bytesLeft = m_jpgSdFile.available();  // Check how many bytes are available
+        if (buf) memcpy_P(buf, (const uint8_t*)(m_array_data + m_array_index), len);    // If buf is valid then copy len bytes to buffer
+        m_array_index += len;                                                           // Move pointer
+    } else if (m_jpg_source == TJPG_SD_FILE) {                                          // Handle SD library input
+        bytesLeft = m_jpgSdFile.available();                                            // Check how many bytes are available
         if (bytesLeft < len) len = bytesLeft;
         if (buf) {
             m_jpgSdFile.read(buf, len); // Read into buffer, pointer moved as well
@@ -2866,28 +3123,28 @@ unsigned int TFT_RGB::JPEG_jd_input(JDEC* jdec, uint8_t* buf, unsigned int len){
     }
     return len;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-// Pass image block back to the sketch for rendering, may be a complete or partial MCU
-int TFT_RGB::JPEG_jd_output(JDEC* jdec, void* bitmap, JRECT* jrect) {
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//  Pass image block back to the sketch for rendering, may be a complete or partial MCU
+int TFT_DSI::JPEG_jd_output(JDEC* jdec, void* bitmap, JRECT* jrect) {
     jdec = jdec; // Supress warning as ID is not used
 
-    int16_t  x = jrect->left + m_jpeg_x;  // Retrieve rendering parameters and add any offset
+    int16_t  x = jrect->left + m_jpeg_x; // Retrieve rendering parameters and add any offset
     int16_t  y = jrect->top + m_jpeg_y;
     uint16_t w = jrect->right + 1 - jrect->left;
     uint16_t h = jrect->bottom + 1 - jrect->top;
-//    if(x > m_jpgWidthMax) return true;  // Clip width and height to the maximum allowed dimensions
-//    if(y > m_jpgHeightMax) return true;
+    //    if(x > m_jpgWidthMax) return true;  // Clip width and height to the maximum allowed dimensions
+    //    if(y > m_jpgHeightMax) return true;
     bool r = JPEG_tft_output(x, y, w, h, (uint16_t*)bitmap);
     return r;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-bool TFT_RGB::JPEG_tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t* bitmap) {
-      if (!bitmap || w <= 0 || h <= 0) {  // Check for valid parameters
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+bool TFT_DSI::JPEG_tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t* bitmap) {
+    if (!bitmap || w <= 0 || h <= 0) { // Check for valid parameters
         log_e("Invalid parameters: bitmap is null or width/height is zero.");
         return false;
     }
     // Clip the rectangle to ensure it doesn't exceed framebuffer boundaries
-    int16_t x_end = std::min((int16_t)(x + w), (int16_t)m_h_res); // End of rectangle in x-direction
+    int16_t x_end = std::min((int16_t)(x + w), (int16_t)m_h_res);   // End of rectangle in x-direction
     int16_t y_end = std::min((int16_t)(y + h), (int16_t)(m_v_res)); // End of rectangle in y-direction
 
     if (x >= m_h_res || y >= m_v_res || x_end <= 0 || y_end <= 0) {
@@ -2896,17 +3153,17 @@ bool TFT_RGB::JPEG_tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint
     }
 
     // Adjust start coordinates if they are out of bounds
-    int16_t start_x = max((int16_t)0, x);        // Sichtbarer Startpunkt in x-Richtung
-    int16_t start_y = max((int16_t)0, y);        // Sichtbarer Startpunkt in y-Richtung
-    int16_t clip_x_offset = start_x - x;         // Offset im Bitmap in x-Richtung
-    int16_t clip_y_offset = start_y - y;         // Offset im Bitmap in y-Richtung
+    int16_t start_x = max((int16_t)0, x); // Sichtbarer Startpunkt in x-Richtung
+    int16_t start_y = max((int16_t)0, y); // Sichtbarer Startpunkt in y-Richtung
+    int16_t clip_x_offset = start_x - x;  // Offset im Bitmap in x-Richtung
+    int16_t clip_y_offset = start_y - y;  // Offset im Bitmap in y-Richtung
 
     // Berechnung der sichtbaren Breite und Höhe
-    int16_t visible_w = x_end - start_x;         // Sichtbare Breite
-    int16_t visible_h = y_end - start_y;         // Sichtbare Höhe
+    int16_t visible_w = x_end - start_x; // Sichtbare Breite
+    int16_t visible_h = y_end - start_y; // Sichtbare Höhe
 
     // Zeilenweises Kopieren mit Clipping
-    for (int16_t j = 0; j < visible_h ; ++j) {
+    for (int16_t j = 0; j < visible_h; ++j) {
         // Quelle im Bitmap: Berechne die richtige Zeilenposition
         uint16_t* src_ptr = bitmap + (clip_y_offset + j) * w + clip_x_offset;
 
@@ -2919,8 +3176,8 @@ bool TFT_RGB::JPEG_tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint
     // log_w("Bitmap erfolgreich mit Clipping gezeichnet bei x: %d, y: %d, sichtbare Breite: %d, sichtbare Höhe: %d", start_x, start_y, visible_w, visible_h);
     return true;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-uint8_t TFT_RGB::JPEG_drawSdJpg(int32_t x, int32_t y) {
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+uint8_t TFT_DSI::JPEG_drawSdJpg(int32_t x, int32_t y) {
     JDEC    jdec;
     uint8_t r = JDR_OK;
 
@@ -2932,8 +3189,8 @@ uint8_t TFT_RGB::JPEG_drawSdJpg(int32_t x, int32_t y) {
     if (r == JDR_OK) { r = JPEG_jd_decomp(&jdec, m_jpgScale); } // Extract image and render
     return r;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-uint8_t TFT_RGB::JPEG_getSdJpgSize(uint16_t* w, uint16_t* h) {
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+uint8_t TFT_DSI::JPEG_getSdJpgSize(uint16_t* w, uint16_t* h) {
 
     JDEC    jdec;
     uint8_t r = JDR_OK;
@@ -2949,103 +3206,87 @@ uint8_t TFT_RGB::JPEG_getSdJpgSize(uint16_t* w, uint16_t* h) {
     m_jpgSdFile.seek(0);
     return r;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-#if JD_FASTDECODE == 2
-    #define HUFF_BIT  10 /* Bit length to apply fast huffman decode */
-    #define HUFF_LEN  (1 << HUFF_BIT)
-    #define HUFF_MASK (HUFF_LEN - 1)
-#endif
+    // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+    #if JD_FASTDECODE == 2
+        #define HUFF_BIT  10 /* Bit length to apply fast huffman decode */
+        #define HUFF_LEN  (1 << HUFF_BIT)
+        #define HUFF_MASK (HUFF_LEN - 1)
+    #endif
 
 const uint8_t Zig[64] = {/* Zigzag-order to raster-order conversion table */
-                                0,  1,  8,  16, 9,  2,  3,  10, 17, 24, 32, 25, 18, 11, 4,  5,  12, 19, 26, 33, 40, 48,
-                                41, 34, 27, 20, 13, 6,  7,  14, 21, 28, 35, 42, 49, 56, 57, 50, 43, 36, 29, 22, 15, 23,
-                                30, 37, 44, 51, 58, 59, 52, 45, 38, 31, 39, 46, 53, 60, 61, 54, 47, 55, 62, 63};
+                         0,  1,  8,  16, 9,  2,  3,  10, 17, 24, 32, 25, 18, 11, 4,  5,  12, 19, 26, 33, 40, 48, 41, 34, 27, 20, 13, 6,  7,  14, 21, 28,
+                         35, 42, 49, 56, 57, 50, 43, 36, 29, 22, 15, 23, 30, 37, 44, 51, 58, 59, 52, 45, 38, 31, 39, 46, 53, 60, 61, 54, 47, 55, 62, 63};
 
 const uint16_t Ipsf[64] = {/* See also aa_idct.png */
-     (uint16_t)(1.00000 * 8192), (uint16_t)(1.38704 * 8192), (uint16_t)(1.30656 * 8192), (uint16_t)(1.17588 * 8192),
-     (uint16_t)(1.00000 * 8192), (uint16_t)(0.78570 * 8192), (uint16_t)(0.54120 * 8192), (uint16_t)(0.27590 * 8192),
-     (uint16_t)(1.38704 * 8192), (uint16_t)(1.92388 * 8192), (uint16_t)(1.81226 * 8192), (uint16_t)(1.63099 * 8192),
-     (uint16_t)(1.38704 * 8192), (uint16_t)(1.08979 * 8192), (uint16_t)(0.75066 * 8192), (uint16_t)(0.38268 * 8192),
-     (uint16_t)(1.30656 * 8192), (uint16_t)(1.81226 * 8192), (uint16_t)(1.70711 * 8192), (uint16_t)(1.53636 * 8192),
-     (uint16_t)(1.30656 * 8192), (uint16_t)(1.02656 * 8192), (uint16_t)(0.70711 * 8192), (uint16_t)(0.36048 * 8192),
-     (uint16_t)(1.17588 * 8192), (uint16_t)(1.63099 * 8192), (uint16_t)(1.53636 * 8192), (uint16_t)(1.38268 * 8192),
-     (uint16_t)(1.17588 * 8192), (uint16_t)(0.92388 * 8192), (uint16_t)(0.63638 * 8192), (uint16_t)(0.32442 * 8192),
-     (uint16_t)(1.00000 * 8192), (uint16_t)(1.38704 * 8192), (uint16_t)(1.30656 * 8192), (uint16_t)(1.17588 * 8192),
-     (uint16_t)(1.00000 * 8192), (uint16_t)(0.78570 * 8192), (uint16_t)(0.54120 * 8192), (uint16_t)(0.27590 * 8192),
-     (uint16_t)(0.78570 * 8192), (uint16_t)(1.08979 * 8192), (uint16_t)(1.02656 * 8192), (uint16_t)(0.92388 * 8192),
-     (uint16_t)(0.78570 * 8192), (uint16_t)(0.61732 * 8192), (uint16_t)(0.42522 * 8192), (uint16_t)(0.21677 * 8192),
-     (uint16_t)(0.54120 * 8192), (uint16_t)(0.75066 * 8192), (uint16_t)(0.70711 * 8192), (uint16_t)(0.63638 * 8192),
-     (uint16_t)(0.54120 * 8192), (uint16_t)(0.42522 * 8192), (uint16_t)(0.29290 * 8192), (uint16_t)(0.14932 * 8192),
-     (uint16_t)(0.27590 * 8192), (uint16_t)(0.38268 * 8192), (uint16_t)(0.36048 * 8192), (uint16_t)(0.32442 * 8192),
-     (uint16_t)(0.27590 * 8192), (uint16_t)(0.21678 * 8192), (uint16_t)(0.14932 * 8192), (uint16_t)(0.07612 * 8192)};
+                           (uint16_t)(1.00000 * 8192), (uint16_t)(1.38704 * 8192), (uint16_t)(1.30656 * 8192), (uint16_t)(1.17588 * 8192), (uint16_t)(1.00000 * 8192), (uint16_t)(0.78570 * 8192),
+                           (uint16_t)(0.54120 * 8192), (uint16_t)(0.27590 * 8192), (uint16_t)(1.38704 * 8192), (uint16_t)(1.92388 * 8192), (uint16_t)(1.81226 * 8192), (uint16_t)(1.63099 * 8192),
+                           (uint16_t)(1.38704 * 8192), (uint16_t)(1.08979 * 8192), (uint16_t)(0.75066 * 8192), (uint16_t)(0.38268 * 8192), (uint16_t)(1.30656 * 8192), (uint16_t)(1.81226 * 8192),
+                           (uint16_t)(1.70711 * 8192), (uint16_t)(1.53636 * 8192), (uint16_t)(1.30656 * 8192), (uint16_t)(1.02656 * 8192), (uint16_t)(0.70711 * 8192), (uint16_t)(0.36048 * 8192),
+                           (uint16_t)(1.17588 * 8192), (uint16_t)(1.63099 * 8192), (uint16_t)(1.53636 * 8192), (uint16_t)(1.38268 * 8192), (uint16_t)(1.17588 * 8192), (uint16_t)(0.92388 * 8192),
+                           (uint16_t)(0.63638 * 8192), (uint16_t)(0.32442 * 8192), (uint16_t)(1.00000 * 8192), (uint16_t)(1.38704 * 8192), (uint16_t)(1.30656 * 8192), (uint16_t)(1.17588 * 8192),
+                           (uint16_t)(1.00000 * 8192), (uint16_t)(0.78570 * 8192), (uint16_t)(0.54120 * 8192), (uint16_t)(0.27590 * 8192), (uint16_t)(0.78570 * 8192), (uint16_t)(1.08979 * 8192),
+                           (uint16_t)(1.02656 * 8192), (uint16_t)(0.92388 * 8192), (uint16_t)(0.78570 * 8192), (uint16_t)(0.61732 * 8192), (uint16_t)(0.42522 * 8192), (uint16_t)(0.21677 * 8192),
+                           (uint16_t)(0.54120 * 8192), (uint16_t)(0.75066 * 8192), (uint16_t)(0.70711 * 8192), (uint16_t)(0.63638 * 8192), (uint16_t)(0.54120 * 8192), (uint16_t)(0.42522 * 8192),
+                           (uint16_t)(0.29290 * 8192), (uint16_t)(0.14932 * 8192), (uint16_t)(0.27590 * 8192), (uint16_t)(0.38268 * 8192), (uint16_t)(0.36048 * 8192), (uint16_t)(0.32442 * 8192),
+                           (uint16_t)(0.27590 * 8192), (uint16_t)(0.21678 * 8192), (uint16_t)(0.14932 * 8192), (uint16_t)(0.07612 * 8192)};
 
-#if JD_TBLCLIP
-    #define BYTECLIP(v) Clip8[(unsigned int)(v) & 0x3FF]
-const uint8_t Clip8[1024] = {    /* 0..255 */
-    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
-    31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59,
-    60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88,
-    89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113,
-    114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136,
-    137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159,
-    160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182,
-    183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205,
-    206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228,
-    229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251,
-    252, 253, 254, 255,
-    /* 256..511 */
-    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-    255, 255, 255,
-    /* -512..-257 */
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    /* -256..-1 */
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-#endif
+    #if JD_TBLCLIP
+        #define BYTECLIP(v) Clip8[(unsigned int)(v) & 0x3FF]
+const uint8_t Clip8[1024] = {/* 0..255 */
+                             0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44,
+                             45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87,
+                             88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123,
+                             124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157,
+                             158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191,
+                             192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225,
+                             226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255,
+                             /* 256..511 */
+                             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+                             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+                             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+                             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+                             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+                             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+                             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+                             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+                             /* -512..-257 */
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             /* -256..-1 */
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    #endif
 
-#if JD_TBLCLIP == 0 /* JD_TBLCLIP */
-uint8_t TFT_RGB::JPEG_BYTECLIP(int val) {
-    if(val < 0) return 0;
-    else if(val > 255) return 255;
+    #if JD_TBLCLIP == 0 /* JD_TBLCLIP */
+uint8_t TFT_DSI::JPEG_BYTECLIP(int val) {
+    if (val < 0)
+        return 0;
+    else if (val > 255)
+        return 255;
     return (uint8_t)val;
 }
-#endif
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void* TFT_RGB::JPEG_alloc_pool(JDEC  *jd,size_t ndata) {
-    char *rp = 0;
+    #endif
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void* TFT_DSI::JPEG_alloc_pool(JDEC* jd, size_t ndata) {
+    char* rp = 0;
 
     ndata = (ndata + 3) & ~3; /* Align block size to the word boundary */
 
-    if(jd->sz_pool >= ndata) {
+    if (jd->sz_pool >= ndata) {
         jd->sz_pool -= ndata;
-        rp = (char *)jd->pool;           /* Get start of available memory pool */
-        jd->pool = (void *)(rp + ndata); /* Allocate requierd bytes */
+        rp = (char*)jd->pool;           /* Get start of available memory pool */
+        jd->pool = (void*)(rp + ndata); /* Allocate requierd bytes */
     }
 
-    return (void *)rp; /* Return allocated memory block (NULL:no memory to allocate) */
-}//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-uint8_t TFT_RGB::JPEG_create_qt_tbl(JDEC* jd, const uint8_t* data, size_t ndata) {
+    return (void*)rp; /* Return allocated memory block (NULL:no memory to allocate) */
+} // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+uint8_t TFT_DSI::JPEG_create_qt_tbl(JDEC* jd, const uint8_t* data, size_t ndata) {
     unsigned int i, zi;
     uint8_t      d;
     int32_t*     pb;
@@ -3067,8 +3308,8 @@ uint8_t TFT_RGB::JPEG_create_qt_tbl(JDEC* jd, const uint8_t* data, size_t ndata)
 
     return JDR_OK;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-uint8_t TFT_RGB::JPEG_create_huffman_tbl(JDEC* jd, const uint8_t* data, size_t ndata) {
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+uint8_t TFT_DSI::JPEG_create_huffman_tbl(JDEC* jd, const uint8_t* data, size_t ndata) {
     unsigned int i, j, b, cls, num;
     size_t       np;
     uint8_t      d, *pb, *pd;
@@ -3107,7 +3348,7 @@ uint8_t TFT_RGB::JPEG_create_huffman_tbl(JDEC* jd, const uint8_t* data, size_t n
             if (!cls && d > 11) return JDR_FMT1;
             pd[i] = d;
         }
-#if JD_FASTDECODE == 2
+    #if JD_FASTDECODE == 2
         { /* Create fast huffman decode table */
             unsigned int span, td, ti;
             uint16_t*    tbl_ac = 0;
@@ -3138,18 +3379,18 @@ uint8_t TFT_RGB::JPEG_create_huffman_tbl(JDEC* jd, const uint8_t* data, size_t n
             }
             jd->longofs[num][cls] = i; /* Code table offset for long code */
         }
-#endif
+    #endif
     }
 
     return JDR_OK;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-int TFT_RGB::JPEG_huffext(JDEC* jd, unsigned int id, unsigned int cls) {
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+int TFT_DSI::JPEG_huffext(JDEC* jd, unsigned int id, unsigned int cls) {
     size_t       dc = jd->dctr;
     uint8_t*     dp = jd->dptr;
     unsigned int d, flg = 0;
 
-#if JD_FASTDECODE == 0
+    #if JD_FASTDECODE == 0
     uint8_t         bm, nd, bl;
     const uint8_t*  hb = jd->huffbits[id][cls]; /* Bit distribution table */
     const uint16_t* hc = jd->huffcode[id][cls]; /* Code word table */
@@ -3196,7 +3437,7 @@ int TFT_RGB::JPEG_huffext(JDEC* jd, unsigned int id, unsigned int cls) {
         bl--;
     } while (bl);
 
-#else
+    #else
     const uint8_t * hb, *hd;
     const uint16_t* hc;
     unsigned int    nc, bl, wbit = jd->dbit % 32;
@@ -3231,7 +3472,7 @@ int TFT_RGB::JPEG_huffext(JDEC* jd, unsigned int id, unsigned int cls) {
     jd->dptr = dp;
     jd->wreg = w;
 
-    #if JD_FASTDECODE == 2
+        #if JD_FASTDECODE == 2
     /* Table serch for the short codes */
     d = (unsigned int)(w >> (wbit - HUFF_BIT)); /* Short code as table index */
     if (cls) {                                  /* AC element */
@@ -3253,13 +3494,13 @@ int TFT_RGB::JPEG_huffext(JDEC* jd, unsigned int id, unsigned int cls) {
     hc = jd->huffcode[id][cls] + jd->longofs[id][cls]; /* Code word table */
     hd = jd->huffdata[id][cls] + jd->longofs[id][cls]; /* Data table */
     bl = HUFF_BIT + 1;
-    #else
+        #else
     /* Incremental serch for all codes */
     hb = jd->huffbits[id][cls]; /* Bit distribution table */
     hc = jd->huffcode[id][cls]; /* Code word table */
     hd = jd->huffdata[id][cls]; /* Data table */
     bl = 1;
-    #endif
+        #endif
     for (; bl <= 16; bl++) { /* Incremental search */
         nc = *hb++;
         if (nc) {
@@ -3273,16 +3514,16 @@ int TFT_RGB::JPEG_huffext(JDEC* jd, unsigned int id, unsigned int cls) {
             } while (--nc);
         }
     }
-#endif
+    #endif
     return 0 - (int)JDR_FMT1; /* Err: code not found (may be collapted data) */
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-int TFT_RGB::JPEG_bitext(JDEC* jd, unsigned int nbit) {
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+int TFT_DSI::JPEG_bitext(JDEC* jd, unsigned int nbit) {
     size_t       dc = jd->dctr;
     uint8_t*     dp = jd->dptr;
     unsigned int d, flg = 0;
 
-#if JD_FASTDECODE == 0
+    #if JD_FASTDECODE == 0
     uint8_t mbit = jd->dbit;
     d = 0;
     do {
@@ -3318,7 +3559,7 @@ int TFT_RGB::JPEG_bitext(JDEC* jd, unsigned int nbit) {
     jd->dptr = dp;
     return (int)d;
 
-#else
+    #else
     unsigned int wbit = jd->dbit % 32;
     uint32_t     w = jd->wreg & ((1UL << wbit) - 1);
 
@@ -3353,15 +3594,15 @@ int TFT_RGB::JPEG_bitext(JDEC* jd, unsigned int nbit) {
     jd->dptr = dp;
 
     return (int)(w >> ((wbit - nbit) % 32));
-#endif
+    #endif
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-uint8_t TFT_RGB::JPEG_restart(JDEC* jd, uint16_t rstn) {
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+uint8_t TFT_DSI::JPEG_restart(JDEC* jd, uint16_t rstn) {
     unsigned int i;
     uint8_t*     dp = jd->dptr;
     size_t       dc = jd->dctr;
 
-#if JD_FASTDECODE == 0
+    #if JD_FASTDECODE == 0
     uint16_t d = 0;
 
     /* Get two bytes from the input stream */
@@ -3383,7 +3624,7 @@ uint8_t TFT_RGB::JPEG_restart(JDEC* jd, uint16_t rstn) {
     /* Check the marker */
     if ((d & 0xFFD8) != 0xFFD0 || (d & 7) != (rstn & 7)) { return JDR_FMT1; /* Err: expected RSTn marker is not detected (may be collapted data) */ }
 
-#else
+    #else
     uint16_t marker;
 
     if (jd->marker) { /* Generate a maker if it has been detected */
@@ -3408,13 +3649,13 @@ uint8_t TFT_RGB::JPEG_restart(JDEC* jd, uint16_t rstn) {
     if ((marker & 0xFFD8) != 0xFFD0 || (marker & 7) != (rstn & 7)) { return JDR_FMT1; /* Err: expected RSTn marker was not detected (may be collapted data) */ }
 
     jd->dbit = 0; /* Discard stuff bits */
-#endif
+    #endif
 
     jd->dcv[2] = jd->dcv[1] = jd->dcv[0] = 0; /* Reset DC offset */
     return JDR_OK;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_RGB::JPEG_block_idct(int32_t* src, jd_yuv_t* dst) {
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_DSI::JPEG_block_idct(int32_t* src, jd_yuv_t* dst) {
     const int32_t M13 = (int32_t)(1.41421 * 4096), M2 = (int32_t)(1.08239 * 4096), M4 = (int32_t)(2.61313 * 4096), M5 = (int32_t)(1.84776 * 4096);
     int32_t       v0, v1, v2, v3, v4, v5, v6, v7;
     int32_t       t10, t11, t12, t13;
@@ -3502,7 +3743,7 @@ void TFT_RGB::JPEG_block_idct(int32_t* src, jd_yuv_t* dst) {
         v4 -= v5;
 
         /* Descale the transformed values 8 bits and output a row */
-#if JD_FASTDECODE >= 1
+    #if JD_FASTDECODE >= 1
         dst[0] = (int16_t)((v0 + v7) >> 8);
         dst[7] = (int16_t)((v0 - v7) >> 8);
         dst[1] = (int16_t)((v1 + v6) >> 8);
@@ -3511,7 +3752,7 @@ void TFT_RGB::JPEG_block_idct(int32_t* src, jd_yuv_t* dst) {
         dst[5] = (int16_t)((v2 - v5) >> 8);
         dst[3] = (int16_t)((v3 + v4) >> 8);
         dst[4] = (int16_t)((v3 - v4) >> 8);
-#else
+    #else
         dst[0] = BYTECLIP((v0 + v7) >> 8);
         dst[7] = BYTECLIP((v0 - v7) >> 8);
         dst[1] = BYTECLIP((v1 + v6) >> 8);
@@ -3520,14 +3761,14 @@ void TFT_RGB::JPEG_block_idct(int32_t* src, jd_yuv_t* dst) {
         dst[5] = BYTECLIP((v2 - v5) >> 8);
         dst[3] = BYTECLIP((v3 + v4) >> 8);
         dst[4] = BYTECLIP((v3 - v4) >> 8);
-#endif
+    #endif
 
         dst += 8;
         src += 8; /* Next row */
     }
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-uint8_t TFT_RGB::JPEG_mcu_load(JDEC* jd) {
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+uint8_t TFT_DSI::JPEG_mcu_load(JDEC* jd) {
     int32_t*       tmp = (int32_t*)jd->workbuf; /* Block working buffer for de-quantize and IDCT */
     int            d, e;
     unsigned int   blk, nby, i, bc, z, id, cmp;
@@ -3601,8 +3842,8 @@ uint8_t TFT_RGB::JPEG_mcu_load(JDEC* jd) {
 
     return JDR_OK; /* All blocks have been loaded successfully */
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-uint8_t TFT_RGB::JPEG_mcu_output(JDEC* jd, unsigned int x, unsigned int y) {
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+uint8_t TFT_DSI::JPEG_mcu_output(JDEC* jd, unsigned int x, unsigned int y) {
     const int    CVACC = (sizeof(int) > 2) ? 1024 : 128; /* Adaptive accuracy for both 16-/32-bit systems */
     unsigned int ix, iy, mx, my, rx, ry;
     int          yy, cb, cr;
@@ -3775,8 +4016,8 @@ uint8_t TFT_RGB::JPEG_mcu_output(JDEC* jd, unsigned int x, unsigned int y) {
     bool r = JPEG_jd_output(jd, jd->workbuf, &rect);
     return r ? JDR_OK : JDR_INTR;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-uint8_t TFT_RGB::JPEG_jd_prepare(JDEC* jd, uint8_t* pool, size_t sz_pool, void* dev) {
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+uint8_t TFT_DSI::JPEG_jd_prepare(JDEC* jd, uint8_t* pool, size_t sz_pool, void* dev) {
     uint8_t *    seg, b;
     uint16_t     marker;
     unsigned int n, i, ofs;
@@ -3911,14 +4152,14 @@ uint8_t TFT_RGB::JPEG_jd_prepare(JDEC* jd, uint8_t* pool, size_t sz_pool, void* 
             case 0xD9: /* EOI */ return JDR_FMT3; /* Unsuppoted JPEG standard (may be progressive JPEG) */
 
             default: /* Unknown segment (comment, exif or etc..) */
-            // log_e("Unknown segment %02X", marker);
+                     // log_e("Unknown segment %02X", marker);
                 /* Skip segment data (null pointer specifies to remove data from the stream) */
                 if (JPEG_jd_input(jd, 0, len) != len) return JDR_INP;
         }
     }
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-uint8_t TFT_RGB::JPEG_jd_decomp(JDEC* jd, uint8_t scale) {
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+uint8_t TFT_DSI::JPEG_jd_decomp(JDEC* jd, uint8_t scale) {
     unsigned int x, y, mx, my;
     uint16_t     rst, rsc;
     uint8_t      rc;
@@ -3926,7 +4167,7 @@ uint8_t TFT_RGB::JPEG_jd_decomp(JDEC* jd, uint8_t scale) {
     if (scale > (JD_USE_SCALE ? 3 : 0)) return JDR_PAR;
     jd->scale = scale;
     mx = jd->msx * 8;
-    my = jd->msy * 8; /* Size of the MCU (pixel) */
+    my = jd->msy * 8;                         /* Size of the MCU (pixel) */
     jd->dcv[2] = jd->dcv[1] = jd->dcv[0] = 0; /* Initialize DC values */
     rst = rsc = 0;
     rc = JDR_OK;
@@ -3949,7 +4190,7 @@ uint8_t TFT_RGB::JPEG_jd_decomp(JDEC* jd, uint8_t scale) {
 //  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫   P N G   ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-bool TFT_RGB::drawPngFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight) {
+bool TFT_DSI::drawPngFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight) {
 
     png_state = PNG_NEW;
     png_error = PNG_EOK;
@@ -3962,44 +4203,44 @@ bool TFT_RGB::drawPngFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, 
     png_max_width = maxWidth;
     png_max_height = maxHeight;
 
-    if(!fs.exists(path)) {
+    if (!fs.exists(path)) {
         log_e("File not found: %s", path);
         return NULL;
     }
     png_file = fs.open(path, "r");
-    if(!png_file) {
+    if (!png_file) {
         log_e("Failed to open file for reading");
         return NULL;
     }
     int file_size = png_file.size(); /* get filesize */
     png_buffer = (char*)ps_malloc(file_size);
     png_size = file_size;
-    if(!png_buffer) {
+    if (!png_buffer) {
         log_e("Failed to allocate memory for file");
         png_file.close();
         return NULL;
     }
     png_file.readBytes(png_buffer, (size_t)file_size);
     png_file.close();
-    int err  = png_decode();
-//  log_w("png_decode err=%i",err);
+    int err = png_decode();
+    //  log_w("png_decode err=%i",err);
     return err == PNG_EOK;
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-char TFT_RGB::read_bit(uint32_t *bitpointer, const char* bitstream) {
+char TFT_DSI::read_bit(uint32_t* bitpointer, const char* bitstream) {
     char result = (char)((bitstream[(*bitpointer) >> 3] >> ((*bitpointer) & 0x7)) & 1);
     (*bitpointer)++;
     return result;
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-uint16_t TFT_RGB::read_bits(uint32_t* bitpointer, const char* bitstream, uint32_t nbits) {
+uint16_t TFT_DSI::read_bits(uint32_t* bitpointer, const char* bitstream, uint32_t nbits) {
     unsigned result = 0, i;
-    for(i = 0; i < nbits; i++) result |= ((uint16_t)read_bit(bitpointer, bitstream)) << i;
+    for (i = 0; i < nbits; i++) result |= ((uint16_t)read_bit(bitpointer, bitstream)) << i;
     return result;
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 /* the buffer must be numcodes*2 in size! */
-void TFT_RGB::huffman_tree_init(huffman_tree* tree, uint16_t* buffer, uint16_t numcodes, uint16_t maxbitlen) {
+void TFT_DSI::huffman_tree_init(huffman_tree* tree, uint16_t* buffer, uint16_t numcodes, uint16_t maxbitlen) {
     tree->tree2d = buffer;
     tree->numcodes = numcodes;
     tree->maxbitlen = maxbitlen;
@@ -4007,7 +4248,7 @@ void TFT_RGB::huffman_tree_init(huffman_tree* tree, uint16_t* buffer, uint16_t n
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 /*given the code lengths (as stored in the PNG file), generate the tree as defined by Deflate. maxbitlen is the maximum
  * bits that a code in the tree can have. return value is error.*/
-void TFT_RGB::huffman_tree_create_lengths(huffman_tree* tree, const uint16_t* bitlen) {
+void TFT_DSI::huffman_tree_create_lengths(huffman_tree* tree, const uint16_t* bitlen) {
     uint16_t tree1d[MAX_SYMBOLS];
     uint16_t blcount[MAX_BIT_LENGTH];
     uint16_t nextcode[MAX_BIT_LENGTH + 1];
@@ -4020,75 +4261,72 @@ void TFT_RGB::huffman_tree_create_lengths(huffman_tree* tree, const uint16_t* bi
     memset(nextcode, 0, sizeof(nextcode));
 
     /*step 1: count number of instances of each code length */
-    for(bits = 0; bits < tree->numcodes; bits++) { blcount[bitlen[bits]]++; }
+    for (bits = 0; bits < tree->numcodes; bits++) { blcount[bitlen[bits]]++; }
 
     /*step 2: generate the nextcode values */
-    for(bits = 1; bits <= tree->maxbitlen; bits++) { nextcode[bits] = (nextcode[bits - 1] + blcount[bits - 1]) << 1; }
+    for (bits = 1; bits <= tree->maxbitlen; bits++) { nextcode[bits] = (nextcode[bits - 1] + blcount[bits - 1]) << 1; }
 
     /*step 3: generate all the codes */
-    for(n = 0; n < tree->numcodes; n++) {
-        if(bitlen[n] != 0) { tree1d[n] = nextcode[bitlen[n]]++; }
+    for (n = 0; n < tree->numcodes; n++) {
+        if (bitlen[n] != 0) { tree1d[n] = nextcode[bitlen[n]]++; }
     }
 
-    /*convert tree1d[] to tree2d[][]. In the 2D array, a value of 32767 means uninited, a value >= numcodes is an address to another bit, a value < numcodes is a code. The 2 rows are the 2 possible
-     bit values (0 or 1), there are as many columns as codes - 1 a good huffmann tree has N * 2 - 1 nodes, of which N - 1 are internal nodes. Here, the internal nodes are stored (what their 0 and 1
-     option point to). There is only memory for such good tree currently, if there are more nodes (due to too long length codes), error 55 will happen */
-    for(n = 0; n < tree->numcodes * 2; n++) {
-        tree->tree2d[n] = 32767; /*32767 here means the tree2d isn't filled there yet */
-    }
+    /*convert tree1d[] to tree2d[][]. In the 2D array, a value of 32767 means uninited, a value >= numcodes is an address to another bit, a value < numcodes is a code. The 2 rows are the 2
+     possible bit values (0 or 1), there are as many columns as codes - 1 a good huffmann tree has N * 2 - 1 nodes, of which N - 1 are internal nodes. Here, the internal nodes are stored (what
+     their 0 and 1 option point to). There is only memory for such good tree currently, if there are more nodes (due to too long length codes), error 55 will happen */
+    for (n = 0; n < tree->numcodes * 2; n++) { tree->tree2d[n] = 32767; /*32767 here means the tree2d isn't filled there yet */ }
 
-    for(n = 0; n < tree->numcodes; n++) { /*the codes */
-        for(i = 0; i < bitlen[n]; i++) {  /*the bits for this code */
+    for (n = 0; n < tree->numcodes; n++) { /*the codes */
+        for (i = 0; i < bitlen[n]; i++) {  /*the bits for this code */
             unsigned char bit = (unsigned char)((tree1d[n] >> (bitlen[n] - i - 1)) & 1);
             /* check if oversubscribed */
-            if(treepos > tree->numcodes - 2) {
+            if (treepos > tree->numcodes - 2) {
                 log_e("oversubscribed");
                 png_error = PNG_EMALFORMED;
                 return;
             }
 
-            if(tree->tree2d[2 * treepos + bit] == 32767) { /*not yet filled in */
-                if(i + 1 == bitlen[n]) {                   /*last bit */
-                    tree->tree2d[2 * treepos + bit] = n;   /*put the current code in it */
+            if (tree->tree2d[2 * treepos + bit] == 32767) { /*not yet filled in */
+                if (i + 1 == bitlen[n]) {                   /*last bit */
+                    tree->tree2d[2 * treepos + bit] = n;    /*put the current code in it */
                     treepos = 0;
-                }
-                else { /*put address of the next step in here, first that address has to be found of course (it's just
-                          nodefilled + 1)... */
+                } else { /*put address of the next step in here, first that address has to be found of course (it's just
+                            nodefilled + 1)... */
                     nodefilled++;
-                    tree->tree2d[2 * treepos + bit] =
-                        nodefilled + tree->numcodes; /*addresses encoded with numcodes added to it */
+                    tree->tree2d[2 * treepos + bit] = nodefilled + tree->numcodes; /*addresses encoded with numcodes added to it */
                     treepos = nodefilled;
                 }
+            } else {
+                treepos = tree->tree2d[2 * treepos + bit] - tree->numcodes;
             }
-            else { treepos = tree->tree2d[2 * treepos + bit] - tree->numcodes; }
         }
     }
 
-    for(n = 0; n < tree->numcodes * 2; n++) {
-        if(tree->tree2d[n] == 32767) { tree->tree2d[n] = 0; /*remove possible remaining 32767's */ }
+    for (n = 0; n < tree->numcodes * 2; n++) {
+        if (tree->tree2d[n] == 32767) { tree->tree2d[n] = 0; /*remove possible remaining 32767's */ }
     }
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-uint16_t TFT_RGB::huffman_decode_symbol(const char* in, uint32_t  * bp, const huffman_tree* codetree, uint32_t inlength) {
-    uint16_t      treepos = 0, ct;
-    char bit;
-    for(;;) {
+uint16_t TFT_DSI::huffman_decode_symbol(const char* in, uint32_t* bp, const huffman_tree* codetree, uint32_t inlength) {
+    uint16_t treepos = 0, ct;
+    char     bit;
+    for (;;) {
         /* error: end of input memory reached without endcode */
-        if(((*bp) & 0x07) == 0 && ((*bp) >> 3) > inlength) {
+        if (((*bp) & 0x07) == 0 && ((*bp) >> 3) > inlength) {
             log_e("end of input memory reached without endcode");
-            png_error =  PNG_EMALFORMED;
+            png_error = PNG_EMALFORMED;
             return 0;
         }
 
         bit = read_bit(bp, in);
 
         ct = codetree->tree2d[(treepos << 1) | bit];
-        if(ct < codetree->numcodes) { return ct; }
+        if (ct < codetree->numcodes) { return ct; }
 
         treepos = ct - codetree->numcodes;
-        if(treepos >= codetree->numcodes) {
+        if (treepos >= codetree->numcodes) {
             log_e("error, treepos is larger than numcodes");
-            png_error =  PNG_EMALFORMED;
+            png_error = PNG_EMALFORMED;
             return 0;
         }
     }
@@ -4096,7 +4334,7 @@ uint16_t TFT_RGB::huffman_decode_symbol(const char* in, uint32_t  * bp, const hu
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 /* get the tree of a deflated block with dynamic tree, the tree itself is also Huffman compressed with a known tree*/
-void TFT_RGB::get_tree_inflate_dynamic(huffman_tree* codetree, huffman_tree* codetreeD, huffman_tree* codelengthcodetree, const char* in, uint32_t *bp, uint32_t inlength) {
+void TFT_DSI::get_tree_inflate_dynamic(huffman_tree* codetree, huffman_tree* codetreeD, huffman_tree* codelengthcodetree, const char* in, uint32_t* bp, uint32_t inlength) {
     uint16_t codelengthcode[NUM_CODE_LENGTH_CODES];
     uint16_t bitlen[NUM_DEFLATE_CODE_SYMBOLS];
     uint16_t bitlenD[NUM_DISTANCE_SYMBOLS];
@@ -4104,7 +4342,7 @@ void TFT_RGB::get_tree_inflate_dynamic(huffman_tree* codetree, huffman_tree* cod
 
     /*make sure that length values that aren't filled in will be 0, or a wrong tree will be generated */
     /*C-code note: use no "return" between ctor and dtor of an uivector! */
-    if((*bp) >> 3 >= inlength - 2) {
+    if ((*bp) >> 3 >= inlength - 2) {
         log_e("error, bit pointer will jump past memory");
         png_error = PNG_EMALFORMED;
         return;
@@ -4115,40 +4353,42 @@ void TFT_RGB::get_tree_inflate_dynamic(huffman_tree* codetree, huffman_tree* cod
     memset(bitlenD, 0, sizeof(bitlenD));
 
     /*the bit pointer is or will go past the memory */
-    hlit = read_bits(bp, in, 5) +
-           257; /*number of literal/length codes + 257. Unlike the spec, the value 257 is added to it here already */
-    hdist = read_bits(bp, in, 5) +
-            1; /*number of distance codes. Unlike the spec, the value 1 is added to it here already */
-    hclen = read_bits(bp, in, 4) +
-            4; /*number of code length codes. Unlike the spec, the value 4 is added to it here already */
+    hlit = read_bits(bp, in, 5) + 257; /*number of literal/length codes + 257. Unlike the spec, the value 257 is added to it here already */
+    hdist = read_bits(bp, in, 5) + 1;  /*number of distance codes. Unlike the spec, the value 1 is added to it here already */
+    hclen = read_bits(bp, in, 4) + 4;  /*number of code length codes. Unlike the spec, the value 4 is added to it here already */
 
-    for(i = 0; i < NUM_CODE_LENGTH_CODES; i++) {
-        if(i < hclen) { codelengthcode[CLCL[i]] = read_bits(bp, in, 3); }
-        else { codelengthcode[CLCL[i]] = 0; /*if not, it must stay 0 */ }
+    for (i = 0; i < NUM_CODE_LENGTH_CODES; i++) {
+        if (i < hclen) {
+            codelengthcode[CLCL[i]] = read_bits(bp, in, 3);
+        } else {
+            codelengthcode[CLCL[i]] = 0; /*if not, it must stay 0 */
+        }
     }
 
     huffman_tree_create_lengths(codelengthcodetree, codelengthcode);
 
     /* bail now if we encountered an error earlier */
-    if(png_error != PNG_EOK) { return; }
+    if (png_error != PNG_EOK) { return; }
 
     /*now we can use this tree to read the lengths for the tree that this function will return */
     i = 0;
-    while(i < hlit + hdist) { /*i is the current symbol we're reading in the part that contains the code lengths of
-                                 lit/len codes and dist codes */
+    while (i < hlit + hdist) { /*i is the current symbol we're reading in the part that contains the code lengths of
+                                  lit/len codes and dist codes */
         unsigned code = huffman_decode_symbol(in, bp, codelengthcodetree, inlength);
-        if(png_error != PNG_EOK) { break; }
+        if (png_error != PNG_EOK) { break; }
 
-        if(code <= 15) { /*a length code */
-            if(i < hlit) { bitlen[i] = code; }
-            else { bitlenD[i - hlit] = code; }
+        if (code <= 15) { /*a length code */
+            if (i < hlit) {
+                bitlen[i] = code;
+            } else {
+                bitlenD[i - hlit] = code;
+            }
             i++;
-        }
-        else if(code == 16) {       /*repeat previous */
+        } else if (code == 16) {    /*repeat previous */
             unsigned replength = 3; /*read in the 2 bits that indicate repeat length (3-6) */
             unsigned value;         /*set value to the previous code */
 
-            if((*bp) >> 3 >= inlength) {
+            if ((*bp) >> 3 >= inlength) {
                 log_e("error, bit pointer jumps past memory");
                 png_error = PNG_EMALFORMED;
                 break;
@@ -4156,26 +4396,31 @@ void TFT_RGB::get_tree_inflate_dynamic(huffman_tree* codetree, huffman_tree* cod
             /*error, bit pointer jumps past memory */
             replength += read_bits(bp, in, 2);
 
-            if((i - 1) < hlit) { value = bitlen[i - 1]; }
-            else { value = bitlenD[i - hlit - 1]; }
+            if ((i - 1) < hlit) {
+                value = bitlen[i - 1];
+            } else {
+                value = bitlenD[i - hlit - 1];
+            }
 
             /*repeat this value in the next lengths */
-            for(n = 0; n < replength; n++) {
+            for (n = 0; n < replength; n++) {
                 /* i is larger than the amount of codes */
-                if(i >= hlit + hdist) {
+                if (i >= hlit + hdist) {
                     log_e("error: i is larger than the amount of codes");
                     png_error = PNG_EMALFORMED;
                     break;
                 }
 
-                if(i < hlit) { bitlen[i] = value; }
-                else { bitlenD[i - hlit] = value; }
+                if (i < hlit) {
+                    bitlen[i] = value;
+                } else {
+                    bitlenD[i - hlit] = value;
+                }
                 i++;
             }
-        }
-        else if(code == 17) {       /*repeat "0" 3-10 times */
+        } else if (code == 17) {    /*repeat "0" 3-10 times */
             unsigned replength = 3; /*read in the bits that indicate repeat length */
-            if((*bp) >> 3 >= inlength) {
+            if ((*bp) >> 3 >= inlength) {
                 log_e("error, bit pointer jumps past memory");
                 png_error = PNG_EMALFORMED;
                 break;
@@ -4185,23 +4430,25 @@ void TFT_RGB::get_tree_inflate_dynamic(huffman_tree* codetree, huffman_tree* cod
             replength += read_bits(bp, in, 3);
 
             /*repeat this value in the next lengths */
-            for(n = 0; n < replength; n++) {
+            for (n = 0; n < replength; n++) {
                 /* error: i is larger than the amount of codes */
-                if(i >= hlit + hdist) {
+                if (i >= hlit + hdist) {
                     log_e("error: i is larger than the amount of codes");
                     png_error = PNG_EMALFORMED;
                     break;
                 }
 
-                if(i < hlit) { bitlen[i] = 0; }
-                else { bitlenD[i - hlit] = 0; }
+                if (i < hlit) {
+                    bitlen[i] = 0;
+                } else {
+                    bitlenD[i - hlit] = 0;
+                }
                 i++;
             }
-        }
-        else if(code == 18) {        /*repeat "0" 11-138 times */
+        } else if (code == 18) {     /*repeat "0" 11-138 times */
             unsigned replength = 11; /*read in the bits that indicate repeat length */
             /* error, bit pointer jumps past memory */
-            if((*bp) >> 3 >= inlength) {
+            if ((*bp) >> 3 >= inlength) {
                 log_e("error, bit pointer jumps past memory");
                 png_error = PNG_EMALFORMED;
                 break;
@@ -4210,20 +4457,20 @@ void TFT_RGB::get_tree_inflate_dynamic(huffman_tree* codetree, huffman_tree* cod
             replength += read_bits(bp, in, 7);
 
             /*repeat this value in the next lengths */
-            for(n = 0; n < replength; n++) {
+            for (n = 0; n < replength; n++) {
                 /* i is larger than the amount of codes */
-                if(i >= hlit + hdist) {
+                if (i >= hlit + hdist) {
                     log_e("error: i is larger than the amount of codes");
                     png_error = PNG_EMALFORMED;
                     break;
                 }
-                if(i < hlit) bitlen[i] = 0;
+                if (i < hlit)
+                    bitlen[i] = 0;
                 else
                     bitlenD[i - hlit] = 0;
                 i++;
             }
-        }
-        else {
+        } else {
             /* somehow an unexisting code appeared. This can never happen. */
             log_e("error: unexisting code");
             png_error = PNG_EMALFORMED;
@@ -4231,16 +4478,19 @@ void TFT_RGB::get_tree_inflate_dynamic(huffman_tree* codetree, huffman_tree* cod
         }
     }
 
-    if(png_error == PNG_EOK && bitlen[256] == 0) { log_e("image data is not a valid PNG image"); png_error = PNG_EMALFORMED;}
+    if (png_error == PNG_EOK && bitlen[256] == 0) {
+        log_e("image data is not a valid PNG image");
+        png_error = PNG_EMALFORMED;
+    }
 
     /*the length of the end code 256 must be larger than 0 */
     /*now we've finally got hlit and hdist, so generate the code trees, and the function is done */
-    if(png_error == PNG_EOK) { huffman_tree_create_lengths(codetree, bitlen); }
-    if(png_error == PNG_EOK) { huffman_tree_create_lengths(codetreeD, bitlenD); }
+    if (png_error == PNG_EOK) { huffman_tree_create_lengths(codetree, bitlen); }
+    if (png_error == PNG_EOK) { huffman_tree_create_lengths(codetreeD, bitlenD); }
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 /*inflate a block with dynamic of fixed Huffman tree*/
-void TFT_RGB::inflate_huffman(char* out, uint32_t   outsize, const char* in, uint32_t *bp, uint32_t *pos, uint32_t inlength, uint16_t btype) {
+void TFT_DSI::inflate_huffman(char* out, uint32_t outsize, const char* in, uint32_t* bp, uint32_t* pos, uint32_t inlength, uint16_t btype) {
     uint16_t codetree_buffer[DEFLATE_CODE_BUFFER_SIZE];
     uint16_t codetreeD_buffer[DISTANCE_BUFFER_SIZE];
     uint16_t done = 0;
@@ -4248,12 +4498,11 @@ void TFT_RGB::inflate_huffman(char* out, uint32_t   outsize, const char* in, uin
     huffman_tree codetree;
     huffman_tree codetreeD;
 
-    if(btype == 1) {
+    if (btype == 1) {
         /* fixed trees */
         huffman_tree_init(&codetree, (uint16_t*)FIXED_DEFLATE_CODE_TREE, NUM_DEFLATE_CODE_SYMBOLS, DEFLATE_CODE_BITLEN);
         huffman_tree_init(&codetreeD, (uint16_t*)FIXED_DISTANCE_TREE, NUM_DISTANCE_SYMBOLS, DISTANCE_BITLEN);
-    }
-    else if(btype == 2) {
+    } else if (btype == 2) {
         /* dynamic trees */
         uint16_t     codelengthcodetree_buffer[CODE_LENGTH_BUFFER_SIZE];
         huffman_tree codelengthcodetree;
@@ -4264,17 +4513,16 @@ void TFT_RGB::inflate_huffman(char* out, uint32_t   outsize, const char* in, uin
         get_tree_inflate_dynamic(&codetree, &codetreeD, &codelengthcodetree, in, bp, inlength);
     }
 
-    while(done == 0) {
+    while (done == 0) {
         unsigned code = huffman_decode_symbol(in, bp, &codetree, inlength);
-        if(png_error != PNG_EOK) { return; }
+        if (png_error != PNG_EOK) { return; }
 
-        if(code == 256) {
+        if (code == 256) {
             /* end code */
             done = 1;
-        }
-        else if(code <= 255) {
+        } else if (code <= 255) {
             /* literal symbol */
-            if((*pos) >= outsize) {
+            if ((*pos) >= outsize) {
                 log_e("output buffer is too small");
                 png_error = PNG_EMALFORMED;
                 return;
@@ -4282,18 +4530,17 @@ void TFT_RGB::inflate_huffman(char* out, uint32_t   outsize, const char* in, uin
 
             /* store output */
             out[(*pos)++] = (unsigned char)(code);
-        }
-        else if(code >= FIRST_LENGTH_CODE_INDEX && code <= LAST_LENGTH_CODE_INDEX) { /*length code */
+        } else if (code >= FIRST_LENGTH_CODE_INDEX && code <= LAST_LENGTH_CODE_INDEX) { /*length code */
             /* part 1: get length base */
-            uint32_t   length = LENGTH_BASE[code - FIRST_LENGTH_CODE_INDEX];
-            unsigned      codeD, distance, numextrabitsD;
-            uint32_t   start, forward, backward, numextrabits;
+            uint32_t length = LENGTH_BASE[code - FIRST_LENGTH_CODE_INDEX];
+            unsigned codeD, distance, numextrabitsD;
+            uint32_t start, forward, backward, numextrabits;
 
             /* part 2: get extra bits and add the value of that to length */
             numextrabits = LENGTH_EXTRA[code - FIRST_LENGTH_CODE_INDEX];
 
             /* error, bit pointer will jump past memory */
-            if(((*bp) >> 3) >= inlength) {
+            if (((*bp) >> 3) >= inlength) {
                 log_e("bit pointer will jump past memory");
                 png_error = PNG_EMALFORMED;
                 return;
@@ -4302,10 +4549,10 @@ void TFT_RGB::inflate_huffman(char* out, uint32_t   outsize, const char* in, uin
 
             /*part 3: get distance code */
             codeD = huffman_decode_symbol(in, bp, &codetreeD, inlength);
-            if(png_error != PNG_EOK) { return; }
+            if (png_error != PNG_EOK) { return; }
 
             /* invalid distance code (30-31 are never used) */
-            if(codeD > 29) {
+            if (codeD > 29) {
                 log_e("invalid distance code");
                 png_error = PNG_EMALFORMED;
                 return;
@@ -4317,9 +4564,9 @@ void TFT_RGB::inflate_huffman(char* out, uint32_t   outsize, const char* in, uin
             numextrabitsD = DISTANCE_EXTRA[codeD];
 
             /* error, bit pointer will jump past memory */
-            if(((*bp) >> 3) >= inlength) {
+            if (((*bp) >> 3) >= inlength) {
                 log_e("bit pointer will jump past memory");
-                png_error =  PNG_EMALFORMED;
+                png_error = PNG_EMALFORMED;
                 return;
             }
 
@@ -4329,32 +4576,32 @@ void TFT_RGB::inflate_huffman(char* out, uint32_t   outsize, const char* in, uin
             start = (*pos);
             backward = start - distance;
 
-            if((*pos) + length >= outsize) {
+            if ((*pos) + length >= outsize) {
                 log_e("output buffer is too small");
                 png_error = PNG_EMALFORMED;
                 return;
             }
 
-            for(forward = 0; forward < length; forward++) {
+            for (forward = 0; forward < length; forward++) {
                 out[(*pos)++] = out[backward];
                 backward++;
 
-                if(backward >= start) { backward = start - distance; }
+                if (backward >= start) { backward = start - distance; }
             }
         }
     }
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_RGB::inflate_uncompressed(char* out, uint32_t outsize, const char* in, uint32_t *bp, uint32_t *pos, uint32_t inlength) {
-    uint32_t   p;
-    unsigned      len, nlen, n;
+void TFT_DSI::inflate_uncompressed(char* out, uint32_t outsize, const char* in, uint32_t* bp, uint32_t* pos, uint32_t inlength) {
+    uint32_t p;
+    unsigned len, nlen, n;
 
     /* go to first boundary of byte */
-    while(((*bp) & 0x7) != 0) { (*bp)++; }
+    while (((*bp) & 0x7) != 0) { (*bp)++; }
     p = (*bp) / 8; /*byte position */
 
     /* read len (2 bytes) and nlen (2 bytes) */
-    if(p >= inlength - 4) {
+    if (p >= inlength - 4) {
         log_e("p >= inlength - 4");
         png_error = PNG_EMALFORMED;
         return;
@@ -4366,41 +4613,41 @@ void TFT_RGB::inflate_uncompressed(char* out, uint32_t outsize, const char* in, 
     p += 2;
 
     /* check if 16-bit nlen is really the one's complement of len */
-    if(len + nlen != 65535) {
+    if (len + nlen != 65535) {
         log_e("nlen is not one's complement of len");
         png_error = PNG_EMALFORMED;
         return;
     }
 
-    if((*pos) + len >= outsize) {
+    if ((*pos) + len >= outsize) {
         log_e("output buffer is too small");
         png_error = PNG_EMALFORMED;
         return;
     }
 
     /* read the literal data: len bytes are now stored in the out buffer */
-    if(p + len > inlength) {
+    if (p + len > inlength) {
         log_e("p + len > inlength");
         png_error = PNG_EMALFORMED;
         return;
     }
 
-    for(n = 0; n < len; n++) { out[(*pos)++] = in[p++]; }
+    for (n = 0; n < len; n++) { out[(*pos)++] = in[p++]; }
 
     (*bp) = p * 8;
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 /*inflate the deflated data (cfr. deflate spec); return value is the error*/
-int8_t TFT_RGB::uz_inflate_data(char* out, uint32_t outsize, const char* in, uint32_t insize, uint32_t inpos) {
-    uint32_t   bp = 0;  /*bit pointer in the "in" data, current byte is bp >> 3, current bit is bp & 0x7 (from lsb to msb of the byte) */
-    uint32_t   pos = 0; /*byte position in the out buffer */
+int8_t TFT_DSI::uz_inflate_data(char* out, uint32_t outsize, const char* in, uint32_t insize, uint32_t inpos) {
+    uint32_t bp = 0;  /*bit pointer in the "in" data, current byte is bp >> 3, current bit is bp & 0x7 (from lsb to msb of the byte) */
+    uint32_t pos = 0; /*byte position in the out buffer */
     uint16_t done = 0;
 
-    while(done == 0) {
+    while (done == 0) {
         uint16_t btype;
 
         /* ensure next bit doesn't point past the end of the buffer */
-        if((bp >> 3) >= insize) {
+        if ((bp >> 3) >= insize) {
             log_e("bp >> 3 >= insize");
             return PNG_EMALFORMED;
         }
@@ -4410,47 +4657,45 @@ int8_t TFT_RGB::uz_inflate_data(char* out, uint32_t outsize, const char* in, uin
         btype = read_bit(&bp, &in[inpos]) | (read_bit(&bp, &in[inpos]) << 1);
 
         /* process control type appropriateyly */
-        if(btype == 3) {
+        if (btype == 3) {
             log_e("btype == 3");
             png_error = PNG_EMALFORMED;
             return png_error;
-        }
-        else if(btype == 0) {
+        } else if (btype == 0) {
             inflate_uncompressed(out, outsize, &in[inpos], &bp, &pos, insize); /*no compression */
-        }
-        else {
+        } else {
             inflate_huffman(out, outsize, &in[inpos], &bp, &pos, insize, btype); /*compression, btype 01 or 10 */
         }
 
         /* stop if an error has occured */
-        if(png_error != PNG_EOK) { return png_error; }
+        if (png_error != PNG_EOK) { return png_error; }
     }
 
     return png_error;
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-int8_t TFT_RGB::uz_inflate(char* out, uint32_t outsize, const char* in, uint32_t insize) {
+int8_t TFT_DSI::uz_inflate(char* out, uint32_t outsize, const char* in, uint32_t insize) {
     /* we require two bytes for the zlib data header */
-    if(insize < 2) {
+    if (insize < 2) {
         log_e("insize < 2");
         return PNG_EMALFORMED;
     }
 
     /* 256 * in[0] + in[1] must be a multiple of 31, the FCHECK value is supposed to be made that way */
-    if((in[0] * 256 + in[1]) % 31 != 0) {
+    if ((in[0] * 256 + in[1]) % 31 != 0) {
         log_e("FCHECK value is supposed to be made that way");
         return PNG_EMALFORMED;
     }
 
     /*error: only compression method 8: inflate with sliding window of 32k is supported by the PNG spec */
-    if((in[0] & 15) != 8 || ((in[0] >> 4) & 15) > 7) {
+    if ((in[0] & 15) != 8 || ((in[0] >> 4) & 15) > 7) {
         log_e("only compression method 8: inflate with sliding window of 32k is supported by the PNG spec");
         return PNG_EMALFORMED;
     }
 
     /* the specification of PNG says about the zlib stream: "The additional flags shall not specify a preset
      * dictionary." */
-    if(((in[1] >> 5) & 1) != 0) {
+    if (((in[1] >> 5) & 1) != 0) {
         log_e("The additional flags shall not specify a preset dictionary.");
         return PNG_EMALFORMED;
     }
@@ -4462,74 +4707,69 @@ int8_t TFT_RGB::uz_inflate(char* out, uint32_t outsize, const char* in, uint32_t
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 /*Paeth predicter, used by PNG filter type 4*/
-int TFT_RGB::paeth_predictor(int a, int b, int c) {
+int TFT_DSI::paeth_predictor(int a, int b, int c) {
     int p = a + b - c;
     int pa = p > a ? p - a : a - p;
     int pb = p > b ? p - b : b - p;
     int pc = p > c ? p - c : c - p;
 
-    if(pa <= pb && pa <= pc) return a;
-    else if(pb <= pc)
+    if (pa <= pb && pa <= pc)
+        return a;
+    else if (pb <= pc)
         return b;
     else
         return c;
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_RGB::unfilter_scanline(char* recon, const char* scanline, const char* precon, uint32_t bytewidth, unsigned char filterType, uint32_t length) {
+void TFT_DSI::unfilter_scanline(char* recon, const char* scanline, const char* precon, uint32_t bytewidth, unsigned char filterType, uint32_t length) {
     /*
        For PNG filter method 0
-       unfilter a PNG image scanline by scanline. when the pixels are smaller than 1 byte, the filter works byte per byte (bytewidth = 1) precon is the previous unfiltered scanline, recon the result,
-       scanline the current one the incoming scanlines do NOT include the filtertype byte, that one is given in the parameter filterType instead recon and scanline MAY be the same memory address!
-       precon must be disjoint.
+       unfilter a PNG image scanline by scanline. when the pixels are smaller than 1 byte, the filter works byte per byte (bytewidth = 1) precon is the previous unfiltered scanline, recon the
+       result, scanline the current one the incoming scanlines do NOT include the filtertype byte, that one is given in the parameter filterType instead recon and scanline MAY be the same
+       memory address! precon must be disjoint.
      */
 
-    uint32_t   i;
-    switch(filterType) {
+    uint32_t i;
+    switch (filterType) {
         case 0:
-            for(i = 0; i < length; i++) recon[i] = scanline[i];
+            for (i = 0; i < length; i++) recon[i] = scanline[i];
             break;
         case 1:
-            for(i = 0; i < bytewidth; i++) recon[i] = scanline[i];
-            for(i = bytewidth; i < length; i++) recon[i] = scanline[i] + recon[i - bytewidth];
+            for (i = 0; i < bytewidth; i++) recon[i] = scanline[i];
+            for (i = bytewidth; i < length; i++) recon[i] = scanline[i] + recon[i - bytewidth];
             break;
         case 2:
-            if(precon)
-                for(i = 0; i < length; i++) recon[i] = scanline[i] + precon[i];
+            if (precon)
+                for (i = 0; i < length; i++) recon[i] = scanline[i] + precon[i];
             else
-                for(i = 0; i < length; i++) recon[i] = scanline[i];
+                for (i = 0; i < length; i++) recon[i] = scanline[i];
             break;
         case 3:
-            if(precon) {
-                for(i = 0; i < bytewidth; i++) recon[i] = scanline[i] + precon[i] / 2;
-                for(i = bytewidth; i < length; i++) recon[i] = scanline[i] + ((recon[i - bytewidth] + precon[i]) / 2);
-            }
-            else {
-                for(i = 0; i < bytewidth; i++) recon[i] = scanline[i];
-                for(i = bytewidth; i < length; i++) recon[i] = scanline[i] + recon[i - bytewidth] / 2;
+            if (precon) {
+                for (i = 0; i < bytewidth; i++) recon[i] = scanline[i] + precon[i] / 2;
+                for (i = bytewidth; i < length; i++) recon[i] = scanline[i] + ((recon[i - bytewidth] + precon[i]) / 2);
+            } else {
+                for (i = 0; i < bytewidth; i++) recon[i] = scanline[i];
+                for (i = bytewidth; i < length; i++) recon[i] = scanline[i] + recon[i - bytewidth] / 2;
             }
             break;
         case 4:
-            if(precon) {
-                for(i = 0; i < bytewidth; i++)
-                    recon[i] = (unsigned char)(scanline[i] + paeth_predictor(0, precon[i], 0));
-                for(i = bytewidth; i < length; i++)
-                    recon[i] = (unsigned char)(scanline[i] +
-                                               paeth_predictor(recon[i - bytewidth], precon[i], precon[i - bytewidth]));
-            }
-            else {
-                for(i = 0; i < bytewidth; i++) recon[i] = scanline[i];
-                for(i = bytewidth; i < length; i++)
-                    recon[i] = (unsigned char)(scanline[i] + paeth_predictor(recon[i - bytewidth], 0, 0));
+            if (precon) {
+                for (i = 0; i < bytewidth; i++) recon[i] = (unsigned char)(scanline[i] + paeth_predictor(0, precon[i], 0));
+                for (i = bytewidth; i < length; i++) recon[i] = (unsigned char)(scanline[i] + paeth_predictor(recon[i - bytewidth], precon[i], precon[i - bytewidth]));
+            } else {
+                for (i = 0; i < bytewidth; i++) recon[i] = scanline[i];
+                for (i = bytewidth; i < length; i++) recon[i] = (unsigned char)(scanline[i] + paeth_predictor(recon[i - bytewidth], 0, 0));
             }
             break;
         default:
-        log_e("recon: %s, scanline: %s, precon: %s, bytewidth: %d, length: %d, filterType: %d", recon, scanline, precon, bytewidth, length, filterType);
+            log_e("recon: %s, scanline: %s, precon: %s, bytewidth: %d, length: %d, filterType: %d", recon, scanline, precon, bytewidth, length, filterType);
             png_error = PNG_EMALFORMED;
             break;
     }
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_RGB::unfilter(char* out, const char* in, unsigned w, unsigned h, unsigned bpp) {
+void TFT_DSI::unfilter(char* out, const char* in, unsigned w, unsigned h, unsigned bpp) {
     /*
        For PNG filter method 0
        this function unfilters a single image (e.g. without interlacing this is called once, with Adam7 it's called 7 times) out must have enough bytes allocated already, in must have the
@@ -4539,39 +4779,39 @@ void TFT_RGB::unfilter(char* out, const char* in, unsigned w, unsigned h, unsign
     unsigned y;
     char*    prevline = 0;
 
-    uint32_t   bytewidth =
-        (bpp + 7) / 8; /*bytewidth is used for filtering, is 1 when bpp < 8, number of bytes per pixel otherwise */
-    uint32_t   linebytes = (w * bpp + 7) / 8;
+    uint32_t bytewidth = (bpp + 7) / 8; /*bytewidth is used for filtering, is 1 when bpp < 8, number of bytes per pixel otherwise */
+    uint32_t linebytes = (w * bpp + 7) / 8;
 
-    for(y = 0; y < h; y++) {
-        uint32_t   outindex = linebytes * y;
-        uint32_t   inindex = (1 + linebytes) * y; /*the extra filterbyte added to each row */
+    for (y = 0; y < h; y++) {
+        uint32_t      outindex = linebytes * y;
+        uint32_t      inindex = (1 + linebytes) * y; /*the extra filterbyte added to each row */
         unsigned char filterType = in[inindex];
 
         unfilter_scanline(&out[outindex], &in[inindex + 1], prevline, bytewidth, filterType, linebytes);
-        if(png_error != PNG_EOK) { return; }
+        if (png_error != PNG_EOK) { return; }
 
         prevline = &out[outindex];
     }
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_RGB::remove_padding_bits(char* out, const char* in, uint32_t olinebits, uint32_t ilinebits, unsigned h) {
+void TFT_DSI::remove_padding_bits(char* out, const char* in, uint32_t olinebits, uint32_t ilinebits, unsigned h) {
     /*
-       After filtering there are still padding bpp if scanlines have non multiple of 8 bit amounts. They need to be removed (except at last scanline of (Adam7-reduced) image) before working with pure
-       image buffers for the Adam7 code, the color convert code and the output to the user. in and out are allowed to be the same buffer, in may also be higher but still overlapping;
-       in must have >= ilinebits*h bpp, out must have >= olinebits*h bpp, olinebits must be <= ilinebits also used to move bpp after earlier such operations happened, e.g. in a sequence of reduced
-       images from Adam7 only useful if (ilinebits - olinebits) is a value in the range 1..7
+       After filtering there are still padding bpp if scanlines have non multiple of 8 bit amounts. They need to be removed (except at last scanline of (Adam7-reduced) image) before working
+       with pure image buffers for the Adam7 code, the color convert code and the output to the user. in and out are allowed to be the same buffer, in may also be higher but still overlapping;
+       in must have >= ilinebits*h bpp, out must have >= olinebits*h bpp, olinebits must be <= ilinebits also used to move bpp after earlier such operations happened, e.g. in a sequence of
+       reduced images from Adam7 only useful if (ilinebits - olinebits) is a value in the range 1..7
      */
-    unsigned      y;
-    uint32_t   diff = ilinebits - olinebits;
-    uint32_t   obp = 0, ibp = 0; /*bit pointers */
-    for(y = 0; y < h; y++) {
-        uint32_t   x;
-        for(x = 0; x < olinebits; x++) {
+    unsigned y;
+    uint32_t diff = ilinebits - olinebits;
+    uint32_t obp = 0, ibp = 0; /*bit pointers */
+    for (y = 0; y < h; y++) {
+        uint32_t x;
+        for (x = 0; x < olinebits; x++) {
             unsigned char bit = (unsigned char)((in[(ibp) >> 3] >> (7 - ((ibp) & 0x7))) & 1);
             ibp++;
 
-            if(bit == 0) out[(obp) >> 3] &= (unsigned char)(~(1 << (7 - ((obp) & 0x7))));
+            if (bit == 0)
+                out[(obp) >> 3] &= (unsigned char)(~(1 << (7 - ((obp) & 0x7))));
             else
                 out[(obp) >> 3] |= (1 << (7 - ((obp) & 0x7)));
             ++obp;
@@ -4581,54 +4821,54 @@ void TFT_RGB::remove_padding_bits(char* out, const char* in, uint32_t olinebits,
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 /*out must be buffer big enough to contain full image, and in must contain the full decompressed data from the IDAT chunks*/
-void TFT_RGB::post_process_scanlines(char* out, char* in) {
+void TFT_DSI::post_process_scanlines(char* out, char* in) {
     unsigned bpp = png_get_bpp();
     unsigned w = png_width;
     unsigned h = png_height;
 
-    if(bpp == 0) {
+    if (bpp == 0) {
         log_e("bpp == 0");
         png_error = PNG_EMALFORMED;
         return;
     }
 
-    if(bpp < 8 && w * bpp != ((w * bpp + 7) / 8) * 8) {
+    if (bpp < 8 && w * bpp != ((w * bpp + 7) / 8) * 8) {
         unfilter(in, in, w, h, bpp);
-        if(png_error != PNG_EOK) { return; }
+        if (png_error != PNG_EOK) { return; }
         remove_padding_bits(out, in, w * bpp, ((w * bpp + 7) / 8) * 8, h);
-    }
-    else {
+    } else {
         unfilter(out, in, w, h, bpp); /*we can immediatly filter into the out buffer, no other steps needed */
     }
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 /*read a PNG, the result will be in the same color type as the PNG (hence "generic")*/
-int8_t TFT_RGB::png_decode() {
-    const char*    chunk;
-    char*          compressed;
-    char*          inflated;
-    uint32_t       compressed_size = 0, compressed_index = 0;
-    uint32_t       inflated_size;
-    int8_t         error = 0;
+int8_t TFT_DSI::png_decode() {
+    const char* chunk;
+    char*       compressed;
+    char*       inflated;
+    uint32_t    compressed_size = 0, compressed_index = 0;
+    uint32_t    inflated_size;
+    int8_t      error = 0;
 
     /* if we have an error state, bail now */
-    if(error != PNG_EOK) { return error; }
+    if (error != PNG_EOK) { return error; }
 
     /* parse the main header, if necessary */
     png_read_header();
-    if(error != PNG_EOK) { return error; }
+    if (error != PNG_EOK) { return error; }
 
     /* if the state is not HEADER (meaning we are ready to decode the image), stop now */
-    if(png_state != PNG_HEADER) { return error; }
+    if (png_state != PNG_HEADER) { return error; }
     chunk = png_buffer + 33;
 
     /* scan through the chunks, finding the size of all IDAT chunks, and also verify general well-formed-ness */
-    while(chunk < png_buffer + png_size) {
-        uint32_t length;
-        const char*   data; /*the data in the chunk */ (void)data;
+    while (chunk < png_buffer + png_size) {
+        uint32_t    length;
+        const char* data; /*the data in the chunk */
+        (void)data;
 
         /* make sure chunk header is not larger than the total compressed */
-        if((uint32_t  )(chunk - png_buffer + 12) > png_size) {
+        if ((uint32_t)(chunk - png_buffer + 12) > png_size) {
             log_e("png_decode: chunk header is not larger than the total compressed");
             error = PNG_EMALFORMED;
             return error;
@@ -4636,14 +4876,14 @@ int8_t TFT_RGB::png_decode() {
 
         /* get length; sanity check it */
         length = upng_chunk_length(chunk);
-        if(length > INT_MAX) {
+        if (length > INT_MAX) {
             log_e("png_decode: chunk length is too large");
             error = PNG_EMALFORMED;
             return error;
         }
 
         /* make sure chunk header+paylaod is not larger than the total compressed */
-        if((uint32_t  )(chunk - png_buffer + length + 12) > png_size) {
+        if ((uint32_t)(chunk - png_buffer + length + 12) > png_size) {
             log_e("png_decode: chunk header+paylaod is not larger than the total compressed");
             error = PNG_EMALFORMED;
             return error;
@@ -4653,9 +4893,11 @@ int8_t TFT_RGB::png_decode() {
         data = chunk + 8;
 
         /* parse chunks */
-        if(upng_chunk_type(chunk) == CHUNK_IDAT) { compressed_size += length; }
-        else if(upng_chunk_type(chunk) == CHUNK_IEND) { break; }
-        else if(upng_chunk_critical(chunk)) {
+        if (upng_chunk_type(chunk) == CHUNK_IDAT) {
+            compressed_size += length;
+        } else if (upng_chunk_type(chunk) == CHUNK_IEND) {
+            break;
+        } else if (upng_chunk_critical(chunk)) {
             log_e("png_decode: unsupported critical chunk type");
             error = PNG_EUNSUPPORTED;
             return error;
@@ -4666,7 +4908,7 @@ int8_t TFT_RGB::png_decode() {
 
     /* allocate enough space for the (compressed and filtered) image data */
     compressed = (char*)ps_malloc(compressed_size);
-    if(compressed == NULL) {
+    if (compressed == NULL) {
         log_e("png_decode: out of memory");
         error = PNG_ENOMEM;
         return error;
@@ -4675,19 +4917,20 @@ int8_t TFT_RGB::png_decode() {
     /* scan through the chunks again, this time copying the values into
      * our compressed buffer.  there's no reason to validate anything a second time. */
     chunk = png_buffer + 33;
-    while(chunk < png_buffer + png_size) {
-        uint32_t   length;
-        const char*   data; /*the data in the chunk */
+    while (chunk < png_buffer + png_size) {
+        uint32_t    length;
+        const char* data; /*the data in the chunk */
 
         length = upng_chunk_length(chunk);
         data = chunk + 8;
 
         /* parse chunks */
-        if(upng_chunk_type(chunk) == CHUNK_IDAT) {
+        if (upng_chunk_type(chunk) == CHUNK_IDAT) {
             memcpy(compressed + compressed_index, data, length);
             compressed_index += length;
+        } else if (upng_chunk_type(chunk) == CHUNK_IEND) {
+            break;
         }
-        else if(upng_chunk_type(chunk) == CHUNK_IEND) { break; }
 
         chunk += upng_chunk_length(chunk) + 12;
     }
@@ -4695,7 +4938,7 @@ int8_t TFT_RGB::png_decode() {
     inflated_size = ((png_width * (png_height * png_get_bpp() + 7)) / 8) + png_height;
     inflated = (char*)ps_malloc(inflated_size);
 
-    if(inflated == NULL) {
+    if (inflated == NULL) {
         free(compressed);
         log_e("png_decode: out of memory");
         error = PNG_ENOMEM;
@@ -4704,25 +4947,25 @@ int8_t TFT_RGB::png_decode() {
 
     /* decompress image data */
     error = uz_inflate(inflated, inflated_size, compressed, compressed_size);
-    if(error != PNG_EOK) {
+    if (error != PNG_EOK) {
         free(compressed);
         free(inflated);
         return error;
     }
 
-	/* free the compressed compressed data */
-	free(compressed);
+    /* free the compressed compressed data */
+    free(compressed);
 
-	/* allocate final image buffer */
-	png_outbuff_size = (png_height * png_width * png_get_bpp() + 7) / 8;
-	png_outbuffer = (char*)ps_malloc(png_outbuff_size);
-	if (png_outbuffer == NULL) {
-		free(inflated);
-		png_size = 0;
+    /* allocate final image buffer */
+    png_outbuff_size = (png_height * png_width * png_get_bpp() + 7) / 8;
+    png_outbuffer = (char*)ps_malloc(png_outbuff_size);
+    if (png_outbuffer == NULL) {
+        free(inflated);
+        png_size = 0;
         log_e("png_decode: out of memory");
-		error = PNG_ENOMEM;
-		return error;
-	}
+        error = PNG_ENOMEM;
+        return error;
+    }
 
     /* unfilter scanlines */
     post_process_scanlines(png_outbuffer, inflated);
@@ -4730,14 +4973,18 @@ int8_t TFT_RGB::png_decode() {
     /* we are done with the inflated data */
     free(inflated);
 
-    if(png_error != PNG_EOK) {
-        if(png_outbuffer) { free(png_outbuffer); png_outbuffer = NULL;}
+    if (png_error != PNG_EOK) {
+        if (png_outbuffer) {
+            free(png_outbuffer);
+            png_outbuffer = NULL;
+        }
         png_size = 0;
+    } else {
+        png_state = PNG_DECODED;
     }
-    else { png_state = PNG_DECODED; }
 
     /* we are done with our input buffer; free it */
-    if(png_buffer) {
+    if (png_buffer) {
         free(png_buffer);
         png_buffer = NULL;
     }
@@ -4745,72 +4992,70 @@ int8_t TFT_RGB::png_decode() {
 
     png_draw_into_Framebuffer(png_pos_x, png_pos_y, png_width, png_height, png_outbuffer, png_outbuff_size, png_format);
 
-    if(png_outbuffer) {
+    if (png_outbuffer) {
         free(png_outbuffer);
         png_outbuffer = NULL;
     }
     return png_error;
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-TFT_RGB::png_format_t TFT_RGB::png_determine_format() {
-    switch(png_color_type) {
+TFT_DSI::png_format_t TFT_DSI::png_determine_format() {
+    switch (png_color_type) {
         case PNG_LUM:
-            switch(png_color_depth) {
-                case 1:     return PNG_LUMINANCE1;
-                case 2:     return PNG_LUMINANCE2;
-                case 4:     return PNG_LUMINANCE4;
-                case 8:     return PNG_LUMINANCE8;
-                default:    return PNG_BADFORMAT;
+            switch (png_color_depth) {
+                case 1: return PNG_LUMINANCE1;
+                case 2: return PNG_LUMINANCE2;
+                case 4: return PNG_LUMINANCE4;
+                case 8: return PNG_LUMINANCE8;
+                default: return PNG_BADFORMAT;
             }
             break;
         case PNG_RGB:
-            switch(png_color_depth) {
-                case 8:     return PNG_RGB8;
-                case 16:    return PNG_RGB16;
-                default:    return PNG_BADFORMAT;
+            switch (png_color_depth) {
+                case 8: return PNG_RGB8;
+                case 16: return PNG_RGB16;
+                default: return PNG_BADFORMAT;
             }
             break;
         case PNG_PAL:
-            switch(png_color_depth) {
-                case 1:     return PNG_PALLETTE1;
-                case 2:     return PNG_PALLETTE2;
-                case 4:     return PNG_PALLETTE4;
-                case 8:     return PNG_PALLETTE8;
-                default:    return PNG_BADFORMAT;
+            switch (png_color_depth) {
+                case 1: return PNG_PALLETTE1;
+                case 2: return PNG_PALLETTE2;
+                case 4: return PNG_PALLETTE4;
+                case 8: return PNG_PALLETTE8;
+                default: return PNG_BADFORMAT;
             }
             break;
         case PNG_LUMA:
-            switch(png_color_depth) {
-                case 1:     return PNG_LUMINANCE_ALPHA1;
-                case 2:     return PNG_LUMINANCE_ALPHA2;
-                case 4:     return PNG_LUMINANCE_ALPHA4;
-                case 8:     return PNG_LUMINANCE_ALPHA8;
-                default:    return PNG_BADFORMAT;
+            switch (png_color_depth) {
+                case 1: return PNG_LUMINANCE_ALPHA1;
+                case 2: return PNG_LUMINANCE_ALPHA2;
+                case 4: return PNG_LUMINANCE_ALPHA4;
+                case 8: return PNG_LUMINANCE_ALPHA8;
+                default: return PNG_BADFORMAT;
             }
             break;
         case PNG_RGBA:
-            switch(png_color_depth) {
-                case 8:     return PNG_RGBA8;
-                case 16:    return PNG_RGBA16;
-                default:    return PNG_BADFORMAT;
+            switch (png_color_depth) {
+                case 8: return PNG_RGBA8;
+                case 16: return PNG_RGBA16;
+                default: return PNG_BADFORMAT;
             }
             break;
-        default:            return PNG_BADFORMAT;
-            break;
+        default: return PNG_BADFORMAT; break;
     }
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 /*read the information from the header and store it in the upng_Info. return value is error*/
-bool TFT_RGB::png_read_header() {
+bool TFT_DSI::png_read_header() {
     png_state = PNG_HEADER;
-    if(png_size < 29) {
+    if (png_size < 29) {
         png_error = PNG_ENOTPNG;
         log_e("png_size < 29");
         return false;
     }
 
-    if(png_buffer[0] != 137 || png_buffer[1] != 80 || png_buffer[2] != 78 ||
-        png_buffer[3] != 71 || /* check that PNG header matches expected value */
+    if (png_buffer[0] != 137 || png_buffer[1] != 80 || png_buffer[2] != 78 || png_buffer[3] != 71 || /* check that PNG header matches expected value */
         png_buffer[4] != 13 || png_buffer[5] != 10 || png_buffer[6] != 26 || png_buffer[7] != 10) {
         png_error = PNG_ENOTPNG;
         log_e("image data does not have a PNG header");
@@ -4818,7 +5063,7 @@ bool TFT_RGB::png_read_header() {
     }
 
     /* check that the first chunk is the IHDR chunk */
-    if(MAKE_DWORD_PTR(png_buffer + 12) != CHUNK_IHDR) {
+    if (MAKE_DWORD_PTR(png_buffer + 12) != CHUNK_IHDR) {
         png_error = PNG_EMALFORMED;
         log_e("image data is not a valid PNG image");
         return false;
@@ -4834,27 +5079,27 @@ bool TFT_RGB::png_read_header() {
     png_format = png_determine_format();
     png_error = png_format == PNG_BADFORMAT ? PNG_EUNFORMAT : PNG_EOK;
 
-    if(png_format == PNG_BADFORMAT) {
+    if (png_format == PNG_BADFORMAT) {
         log_e("image color format is not supported");
         return false;
     }
 
     /* check that the compression method (byte 27) is 0 (only allowed value in spec) */
-    if(png_buffer[26] != 0) {
+    if (png_buffer[26] != 0) {
         png_error = PNG_EMALFORMED;
         log_e("image data is not a valid PNG image");
         return false;
     }
 
     /* check that the compression method (byte 27) is 0 (only allowed value in spec) */
-    if(png_buffer[27] != 0) {
+    if (png_buffer[27] != 0) {
         png_error = PNG_EMALFORMED;
         log_e("image data is not a valid PNG image");
         return false;
     }
 
     /* check that the compression method (byte 27) is 0 (spec allows 1, but uPNG does not support it) */
-    if(png_buffer[28] != 0) {
+    if (png_buffer[28] != 0) {
         png_error = PNG_EUNINTERLACED;
         log_e("image interlacing is not supported");
         return false;
@@ -4862,101 +5107,121 @@ bool TFT_RGB::png_read_header() {
     return true;
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-int8_t TFT_RGB::png_get_error() { return png_error; }
-uint16_t TFT_RGB::png_get_width() { return png_width; }
-uint16_t TFT_RGB::png_get_height() { return png_height; }
-uint16_t TFT_RGB::png_get_bpp() { return png_get_bitdepth() * png_get_components(); }
-const char* TFT_RGB::png_get_outbuffer(){return png_outbuffer;}
-uint32_t TFT_RGB::png_get_size(){return png_outbuff_size;}
+int8_t TFT_DSI::png_get_error() {
+    return png_error;
+}
+uint16_t TFT_DSI::png_get_width() {
+    return png_width;
+}
+uint16_t TFT_DSI::png_get_height() {
+    return png_height;
+}
+uint16_t TFT_DSI::png_get_bpp() {
+    return png_get_bitdepth() * png_get_components();
+}
+const char* TFT_DSI::png_get_outbuffer() {
+    return png_outbuffer;
+}
+uint32_t TFT_DSI::png_get_size() {
+    return png_outbuff_size;
+}
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-uint16_t TFT_RGB::png_get_components() {
-    switch(png_color_type) {
-        case PNG_LUM:
-            return 1;
-        case PNG_RGB:
-            return 3;
-        case PNG_LUMA:
-            return 2;
-        case PNG_RGBA:
-            return 4;
-        case PNG_PAL:
-            return 1;
-        default:
-            return 0;
+uint16_t TFT_DSI::png_get_components() {
+    switch (png_color_type) {
+        case PNG_LUM: return 1;
+        case PNG_RGB: return 3;
+        case PNG_LUMA: return 2;
+        case PNG_RGBA: return 4;
+        case PNG_PAL: return 1;
+        default: return 0;
     }
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-uint16_t TFT_RGB::png_get_bitdepth() { return png_color_depth; }
+uint16_t TFT_DSI::png_get_bitdepth() {
+    return png_color_depth;
+}
 //_______________________________________________________________________________________________________________________________
-uint16_t TFT_RGB::png_get_pixelsize() {
+uint16_t TFT_DSI::png_get_pixelsize() {
     uint16_t bits = png_get_bitdepth() * png_get_components();
     bits += bits % 8;
     return bits;
 }
 
-TFT_RGB::png_format_t TFT_RGB::png_get_format() { return png_format; }
+TFT_DSI::png_format_t TFT_DSI::png_get_format() {
+    return png_format;
+}
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_RGB::png_GetPixel(void* pixel, int x, int y) {
+void TFT_DSI::png_GetPixel(void* pixel, int x, int y) {
     uint32_t bpp = png_get_bpp();
     //    Serial.printf("\nbbp=%i\n",(int)bpp);
-    uint32_t   Bpp = ((bpp + 7) / 8);
-    uint32_t   position = (png_width * y + x) * Bpp;
+    uint32_t Bpp = ((bpp + 7) / 8);
+    uint32_t position = (png_width * y + x) * Bpp;
     //    Serial.printf("\nposition in file=%li\n",(long)position);
     memcpy(pixel, png_buffer + position, Bpp);
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 /*Initializing color variables */
 
-TFT_RGB::png_s_rgb16b* TFT_RGB::InitColorR5G6B5() {
-png_s_rgb16b* color = (png_s_rgb16b*)malloc(sizeof(png_s_rgb16b));
-    if(color != 0) { ResetColor(color); }
+TFT_DSI::png_s_rgb16b* TFT_DSI::InitColorR5G6B5() {
+    png_s_rgb16b* color = (png_s_rgb16b*)malloc(sizeof(png_s_rgb16b));
+    if (color != 0) { ResetColor(color); }
     return color;
 }
-TFT_RGB::png_s_rgb18b* TFT_RGB::InitColorR6G6B6() {
+TFT_DSI::png_s_rgb18b* TFT_DSI::InitColorR6G6B6() {
     png_s_rgb18b* color = (png_s_rgb18b*)malloc(sizeof(png_s_rgb18b));
-    if(color != 0) { ResetColor(color); }
+    if (color != 0) { ResetColor(color); }
     return color;
 }
-TFT_RGB::png_s_rgb24b* TFT_RGB::InitColorR8G8B8() {
+TFT_DSI::png_s_rgb24b* TFT_DSI::InitColorR8G8B8() {
     png_s_rgb24b* color = (png_s_rgb24b*)malloc(sizeof(png_s_rgb24b));
-    if(color != 0) { ResetColor(color); }
+    if (color != 0) { ResetColor(color); }
     return color;
 }
 
-void TFT_RGB::InitColor(png_s_rgb16b** dst) {
+void TFT_DSI::InitColor(png_s_rgb16b** dst) {
     *dst = (png_s_rgb16b*)malloc(sizeof(png_s_rgb16b));
     ResetColor(*dst);
 }
-void TFT_RGB::InitColor(png_s_rgb18b** dst) {
+void TFT_DSI::InitColor(png_s_rgb18b** dst) {
     *dst = (png_s_rgb18b*)malloc(sizeof(png_s_rgb18b));
     ResetColor(*dst);
 }
-void TFT_RGB::InitColor(png_s_rgb24b** dst) {
+void TFT_DSI::InitColor(png_s_rgb24b** dst) {
     *dst = (png_s_rgb24b*)malloc(sizeof(png_s_rgb24b));
     ResetColor(*dst);
 }
 
-void TFT_RGB::ResetColor(png_s_rgb16b* dst) { *dst = (png_s_rgb16b){0, 0, 0, 0}; }
-void TFT_RGB::ResetColor(png_s_rgb18b* dst) { *dst = (png_s_rgb18b){0, 0, 0, 0}; }
-void TFT_RGB::ResetColor(png_s_rgb24b* dst) { *dst = (png_s_rgb24b){0, 0, 0, 0}; }
+void TFT_DSI::ResetColor(png_s_rgb16b* dst) {
+    *dst = (png_s_rgb16b){0, 0, 0, 0};
+}
+void TFT_DSI::ResetColor(png_s_rgb18b* dst) {
+    *dst = (png_s_rgb18b){0, 0, 0, 0};
+}
+void TFT_DSI::ResetColor(png_s_rgb24b* dst) {
+    *dst = (png_s_rgb24b){0, 0, 0, 0};
+}
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 /*Converting between colors*/
 
-void TFT_RGB::png_rgb24bto18b(png_s_rgb18b* dst, png_s_rgb24b* src) {
-    dst->r = src->r >> 2;  // 3;//2;
+void TFT_DSI::png_rgb24bto18b(png_s_rgb18b* dst, png_s_rgb24b* src) {
+    dst->r = src->r >> 2; // 3;//2;
     dst->g = src->g >> 2;
-    dst->b = src->b >> 2;  // 3;//2;
+    dst->b = src->b >> 2; // 3;//2;
 }
 
-void TFT_RGB::png_rgb24bto16b(png_s_rgb16b* dst, png_s_rgb24b* src) {
-    dst->r = src->r >> 3;  // 3;//2;
+void TFT_DSI::png_rgb24bto16b(png_s_rgb16b* dst, png_s_rgb24b* src) {
+    dst->r = src->r >> 3; // 3;//2;
     dst->g = src->g >> 2;
-    dst->b = src->b >> 3;  // 3;//2;
+    dst->b = src->b >> 3; // 3;//2;
 }
-void TFT_RGB::png_rgb18btouint32(uint32_t* dst, png_s_rgb18b* src) { memcpy(dst, src, sizeof(png_s_rgb18b)); }
-void TFT_RGB::png_rgb16btouint32(uint32_t* dst, png_s_rgb16b* src) { memcpy(dst, src, sizeof(png_s_rgb16b)); }
+void TFT_DSI::png_rgb18btouint32(uint32_t* dst, png_s_rgb18b* src) {
+    memcpy(dst, src, sizeof(png_s_rgb18b));
+}
+void TFT_DSI::png_rgb16btouint32(uint32_t* dst, png_s_rgb16b* src) {
+    memcpy(dst, src, sizeof(png_s_rgb16b));
+}
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_RGB::png_draw_into_Framebuffer(uint16_t x, uint16_t y, uint16_t w, uint16_t h, char* rgbaBuffer, uint32_t png_outbuff_size, uint8_t png_format) {
+void TFT_DSI::png_draw_into_Framebuffer(uint16_t x, uint16_t y, uint16_t w, uint16_t h, char* rgbaBuffer, uint32_t png_outbuff_size, uint8_t png_format) {
 
     for (int row = 0; row < h; row++) {
         for (int col = 0; col < w; col++) {
@@ -4965,9 +5230,7 @@ void TFT_RGB::png_draw_into_Framebuffer(uint16_t x, uint16_t y, uint16_t w, uint
             uint16_t screen_y = y + row;
 
             // Prüfe, ob das Pixel innerhalb des Bildschirms liegt
-            if (screen_x >= m_h_res || screen_y >= m_v_res) {
-                continue;
-            }
+            if (screen_x >= m_h_res || screen_y >= m_v_res) { continue; }
 
             // Berechne den Index im RGBA-Buffer (basierend auf Bildbreite w)
             int rgbaIndex = (row * w + col) * 4; // 4 Bytes pro Pixel (RGBA)
@@ -5002,14 +5265,14 @@ void TFT_RGB::png_draw_into_Framebuffer(uint16_t x, uint16_t y, uint16_t w, uint
                 uint8_t newB = ((b * a) + (oldB * (255 - a))) / 255;
 
                 // 4. Convert new color back into RGB565
-                m_framebuffer[0][fbIndex] = ((newR >> 3) << 11) |  // 8->5 Bit (red)
-                                             ((newG >> 2) << 5)  |  // 8->6 Bit (green)
-                                             (newB >> 3);         // 8->5 Bit (blue)
+                m_framebuffer[0][fbIndex] = ((newR >> 3) << 11) | // 8->5 Bit (red)
+                                            ((newG >> 2) << 5) |  // 8->6 Bit (green)
+                                            (newB >> 3);          // 8->5 Bit (blue)
             } else {
                 // **Normal RGB565 conversion (no blending necessary, full opacity)**
-                m_framebuffer[0][fbIndex] = ((r >> 3) << 11) |  // 8->5 Bit (red)
-                                             ((g >> 2) << 5)  |  // 8->6 Bit (green)
-                                             (b >> 3);         // 8->5 Bit (blue)
+                m_framebuffer[0][fbIndex] = ((r >> 3) << 11) | // 8->5 Bit (red)
+                                            ((g >> 2) << 5) |  // 8->6 Bit (green)
+                                            (b >> 3);          // 8->5 Bit (blue)
             }
         }
     }
@@ -5017,3 +5280,6 @@ void TFT_RGB::png_draw_into_Framebuffer(uint16_t x, uint16_t y, uint16_t w, uint
     panelDrawBitmap(x, y, x + w, y + h, m_framebuffer[0]);
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+#endif // TFT_CONTROLLER == 8
+#endif // CONFIG_IDF_TARGET_ESP32P4
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

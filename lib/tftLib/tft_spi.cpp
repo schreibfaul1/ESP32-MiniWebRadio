@@ -1800,6 +1800,7 @@ size_t TFT_SPI::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16
     };
     //-------------------------------------------------------------------------------------------------------------------
     strChLength =  analyzeText(str, utfPosArr, colorArr, _textColor); // fill utfPosArr, colorArr, ansiArr
+    // returns the number of chars
     if(autoSize) {nrOfLines = fitInAddrWindow(utfPosArr, strChLength, win_W, win_H, narrow, noWrap);}  // choose perfect fontsize
     if(!strChLength) return 0;
     //----------------------------------------------------------------------
@@ -1836,7 +1837,7 @@ size_t TFT_SPI::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16
         //charsToDraw = fitinline(idx, pW, &usedPxLength);
         charsToDraw = fitinline(utfPosArr, strChLength, idx, pW, &usedPxLength, narrow, noWrap);
 
-        if(h_align == TFT_ALIGN_RIGHT)  { pX += win_W - (usedPxLength + 1); }
+        if(h_align == TFT_ALIGN_RIGHT)  { pX += win_W - (usedPxLength) - 2; }
         if(h_align == TFT_ALIGN_CENTER) { pX += (win_W - usedPxLength) / 2; }
         uint16_t cnt = 0;
         while(true) {               // inner while
