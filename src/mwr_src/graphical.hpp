@@ -4737,6 +4737,8 @@ class fileList : public RegisterTable {
             m_ra.val1 = 2; // isfolder
             m_ra.val2 = m_viewPos;
             m_ra.arg1 = m_curAudioFolder.get();
+            m_ra.arg2 = "";
+            m_ra.arg3 = "";
         }
         if (m_browseOnRelease == 5) {
             m_viewPos += m_fileListPos; // play file
@@ -4755,7 +4757,9 @@ class fileList : public RegisterTable {
         if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
         x_ps_free(&fileName);
         m_ra.val1 = 0;
-        m_ra.arg1 = NULL;
+        m_ra.arg1 = "";
+        m_ra.arg2 = "";
+        m_ra.arg3 = "";
         return true;
     }
 
