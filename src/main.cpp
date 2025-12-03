@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.0.4k - 27.11.2025                                                                                                               ";
+    Version 4.0.4l - 03.12.2025                                                                                                               ";
 
 
 /*  display (320x240px) with controller ILI9341 or
@@ -1007,10 +1007,10 @@ bool connectToWiFi() {
     SerialPrintfln("WiFI_info:   Connecting WiFi...");
 
     WiFi.mode(WIFI_MODE_STA);
-    wifiMulti.run();
 
     int i = 0;
     while (!WiFi.isConnected()) {
+        wifiMulti.run();
         vTaskDelay(100);
         i++;
         if (i > 50) break;
