@@ -1569,12 +1569,15 @@ class Playlist {
                                 MWR_LOG_WARN("duration %is", d);
                                 itemsBuff = itemsBuff.substr(idx + 1);
                             }
-                            itemsBuff.appendf(" " ANSI_ESC_YELLOW "(%s)" ANSI_ESC_RESET, t);
+                            itemsBuff.appendf(" " ANSI_ESC_YELLOW " %s" ANSI_ESC_RESET, t.c_get());
                         }
 
                         m_content_items.push_back(itemsBuff);
                     } else {
-                        m_content_items.push_back("");
+                        int idx = pathBuff.last_index_of('/');
+                        if(idx != -1) itemsBuff = pathBuff.substr(idx + 1);
+                        else itemsBuff = pathBuff;
+                        m_content_items.push_back(itemsBuff);
                     }
                     m_content_file.push_back(pathBuff);
                 }
@@ -1617,7 +1620,7 @@ class Playlist {
                 m_content_file.push_back(file.path());
                 ps_ptr<char>name;
                 name = file.name();
-                name.appendf("" ANSI_ESC_YELLOW " (%i)" ANSI_ESC_RESET "", file.size());
+                name.appendf("" ANSI_ESC_YELLOW " %i" ANSI_ESC_RESET "", file.size());
                 m_content_items.push_back(name);
             }
             file.close();

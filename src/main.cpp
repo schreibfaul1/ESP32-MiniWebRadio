@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.0.4l - 03.12.2025                                                                                                               ";
+    Version 4.0.4m - 07.12.2025                                                                                                               ";
 
 
 /*  display (320x240px) with controller ILI9341 or
@@ -746,12 +746,8 @@ start:
         return;
     }
 
-    if (s_state != PLAYER) {
-        changeState(PLAYER);
-        txt_PL_fName.writeText("");
-    }
-
-    if (playlist.next_index() == -1) {
+    int idx = playlist.next_index();
+    if(idx == -1) {
         SerialPrintfln("Playlist:    " ANSI_ESC_BLUE "end of playlist");
         webSrv.send("SD_playFile=", "end of playlist");
         s_f_playlistEnabled = false;
@@ -759,6 +755,13 @@ start:
         changeState(PLAYER);
         return;
     }
+
+    if(idx == 0){ // first
+        if(s_playerSubMenue == 0 || s_playerSubMenue == 2) s_playerSubMenue = 1;
+        changeState(PLAYER);
+        txt_PL_fName.writeText("");
+    }
+
     SerialPrintfln("Playlist:    " ANSI_ESC_GREEN "next playlist file");
     s_f_playlistEnabled = true;
 
@@ -788,82 +791,8 @@ start:
     MWR_LOG_WARN("path %s, items %s", playlist.get_file().c_get(), playlist.get_items().c_get());
 
     return;
-
-    //     bool         f_hasTitle = false, f_isURL = false, f_isRoot = false, f_isConnected = false;
-    //     ps_ptr<char> playFile, plsContent, plsExtension, duration, title;
-
-    //     if (s_plsCurPos == playlist.get_size()) goto exit; // end of playlist
-    //     if (first) {
-    //         s_plsCurPos = 0;
-    //         s_f_playlistEnabled = true;
-    //     } // reset before start
-    //     MWR_LOG_DEBUG("PLS_content %s, pos %i", playlist.get_file_by_index(s_plsCurPos).c_get(), s_plsCurPos);
-    //     if (!playlist.get_items_by_index(s_plsCurPos).equals("")) f_hasTitle = true; // has additional infos: duration, title
-    //     // now read from vector _PLS_content
-    //     if (playlist.get_file_by_index(s_plsCurPos).starts_with_icase("http"))
-    //         f_isURL = true; // is web file
-    //     else if (playlist.get_file_by_index(s_plsCurPos).starts_with_icase("https"))
-    //         f_isURL = true; // is web file
-    //     else
-    //         f_isRoot = true; // SD file from root
-    //     if (f_hasTitle) {
-    //         int idx = s_PLS_content[s_plsCurPos].index_of("\n", 0);
-    //         plsContent = s_PLS_content[s_plsCurPos].substr(0, idx);
-    //         plsExtension = s_PLS_content[s_plsCurPos].substr(idx + 1);
-    //     } else {
-    //         plsContent = s_PLS_content[s_plsCurPos];
-    //     }
-    //     MWR_LOG_DEBUG("plsContent %s, plsExtension %s", plsContent.c_get(), plsExtension.c_get());
-    //     s_cur_Codec = 0;
-    //     if (f_isURL) { // is web file
-    //         playFile = plsContent;
-    //         connecttohost(playFile.c_get());
-    //         f_isConnected = s_f_isWebConnected;
-    //     } else { // is local file
-    //         if (f_isRoot) {
-    //             playFile = plsContent.substr(7); // skip "file://"
-    //             playFile.urldecode();
-    //             f_isConnected = s_f_isFSConnected;
-    //         } else { // local file, not root
-    //             plsContent.urldecode();
-    //             if (s_playlistPath.valid()) { // path of m3u file
-    //                 playFile = s_playlistPath;
-    //                 MWR_LOG_DEBUG("playFile %s, plsContent %s", playFile.c_get(), plsContent.c_get());
-    //                 if (plsContent[0] != '/') playFile += "/";
-    //                 playFile += plsContent;
-    //             } else { // have no playlistpath
-    //                 playFile = plsContent;
-    //             }
-    //         }
-    //         connecttoFS("SD_MMC", playFile.c_get());
-    //         f_isConnected = s_f_isFSConnected;
-    //     }
-    //     if (f_isConnected) {
-    //         SerialPrintflnCut("Playlist:    ", ANSI_ESC_YELLOW, playFile.c_get());
-    //         webSrv.send("SD_playFile=", playFile.c_get());
-    //         s_playerSubMenue = 1;
-    //         changeState(PLAYER);
-    //         if (f_hasTitle) {
-    //             int16_t idx1 = plsExtension.index_of(",", 0); // "18,logo-1.mp3"
-    //             duration = plsExtension.substr(0, idx1);
-    //             title = plsExtension.substr(+idx1 + 1);
-    //             SerialPrintfln("Playlist:    " ANSI_ESC_GREEN "Title: %s", title.c_get());
-    //             showFileName(title.c_get());
-    //         }
-    //     }
-    //     s_plsCurPos++;
-    //     showPlsFileNumber();
-    //     return;
-
-    // exit:
-    //     SerialPrintfln("Playlist:    " ANSI_ESC_BLUE "end of playlist");
-    //     webSrv.send("SD_playFile=", "end of playlist");
-    //     s_f_playlistEnabled = false;
-    //     s_playerSubMenue = 0;
-    //     changeState(PLAYER);
-    //     s_plsCurPos = 0;
-    //     return;
 }
+
 /*****************************************************************************************************************************************************
  *                                                        C O N N E C T   TO   W I F I                                                               *
  *****************************************************************************************************************************************************/
@@ -1915,7 +1844,7 @@ void changeState(int32_t state) {
                 showFileName(s_SD_content.getColouredSStringByIndex(s_cur_AudioFileNr));
                 txt_PL_fName.show(true, false);
                 pgb_PL_progress.hide();
-                sdr_PL_volume.disable();
+                sdr_PL_volume.hide();
                 if (s_state != PLAYER) webSrv.send("changeState=", "PLAYER");
                 txt_PL_fNumber.show(true, false);
                 showAudioFileNumber();
@@ -1952,6 +1881,7 @@ void changeState(int32_t state) {
                 showFileName(s_SD_content.getColouredSStringByIndex(s_cur_AudioFileNr));
                 txt_PL_fName.show(true, false);
                 pgb_PL_progress.hide();
+                sdr_PL_volume.hide();
                 if (s_state != PLAYER) webSrv.send("changeState=", "PLAYER");
                 txt_PL_fNumber.show(true, false);
                 showAudioFileNumber();
@@ -3940,7 +3870,7 @@ void ir_short_key(uint8_t key) {
                         if (playlist.create_playlist_from_SD_folder(s_cur_AudioFolder.c_get())) {
                             playlist.sort_alphabetical();
                             s_f_playlistEnabled = true;
-                            s_playerSubMenue = 1;
+                            s_playerSubMenue = 3;
                         }
                         return;
                     }
@@ -3950,7 +3880,7 @@ void ir_short_key(uint8_t key) {
                         if (playlist.create_playlist_from_SD_folder(s_cur_AudioFolder.c_get())) {
                             playlist.sort_random();
                             s_f_playlistEnabled = true;
-                            s_playerSubMenue = 1;
+                            s_playerSubMenue = 3;
                         }
                         return;
                     }
