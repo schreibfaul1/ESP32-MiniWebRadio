@@ -298,12 +298,7 @@ void         SD_playFile(ps_ptr<char> path, uint32_t resumeFilePos = 0, bool sho
 bool         SD_rename(const char* src, const char* dest);
 bool         SD_newFolder(const char* folderPathName);
 bool         SD_delete(const char* itemPath);
-bool         preparePlaylistFromDLNAFolder();
-bool         preparePlaylistFromFile(const char* path);
-bool         preparePlaylistFromSDFolder(const char* path);
-void         sortPlayListAlphabetical();
-void         sortPlayListRandom();
-void         processPlaylist(boolean first = false);
+void         processPlaylist();
 void         changeState(int32_t state);
 void         connecttohost(ps_ptr<char> host);
 void         connecttoFS(const char* FS, const char* filename, uint32_t fileStartTime = 0);

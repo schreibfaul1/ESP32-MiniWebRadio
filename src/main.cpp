@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.0.4l - 03.12.2025                                                                                                               ";
+    Version 4.0.4m - 07.12.2025                                                                                                               ";
 
 
 /*  display (320x240px) with controller ILI9341 or
@@ -160,7 +160,6 @@ bool s_f_FFatFound = false;
 bool s_f_BH1750_found = false;
 bool s_f_clearLogo = false;
 bool s_f_clearStationName = false;
-bool s_f_shuffle = false;
 bool s_f_dlnaBrowseServer = false;
 bool s_f_dlnaWaitForResponse = false;
 bool s_f_dlnaSeekServer = false;
@@ -188,6 +187,7 @@ RTIME       rtc;
 Ticker      ticker100ms;
 IR_buttons  irb(&s_settings);
 IR          ir(IR_PIN); // do not change the objectname, it must be "ir"
+Playlist    playlist;
 
 File           audioFile;
 FtpServer      ftpSrv;
@@ -735,218 +735,64 @@ boolean isPlaylist(File file) {
  *                                                                     P L A Y L I S T                                                               *
  *****************************************************************************************************************************************************/
 
-bool preparePlaylistFromFile(const char* path) {
-    s_playlistPath = path;
-    if (!s_playlistPath.ends_with(".m3u")) {
-        MWR_LOG_ERROR("wrong playlist path %s", s_playlistPath.c_get());
-        s_playlistPath.reset();
-        return false;
-    }
-
-    int idx = s_playlistPath.last_index_of('/');
-    s_playlistPath = s_playlistPath.substr(0, idx);
-
-    File playlistFile = SD_MMC.open(path);
-    if (!playlistFile) {
-        log_e("playlistfile path not found");
-        return false;
-    }
-
-    if (playlistFile.size() > 1048576) {
-        log_e("Playlist too big, size > 1MB");
-        playlistFile.close();
-        return false;
-    }
-
-    s_PLS_content.clear();
-    ps_ptr<char> readBuff;
-    ps_ptr<char> tmpBuff;
-
-    size_t bytesRead = 0;
-    bool   f_EXTINF_seen = false;
-
-    while (playlistFile.available() > 0) {
-        readBuff.alloc(2024);
-        bytesRead = playlistFile.readBytesUntil('\n', readBuff.get(), readBuff.size());
-        if (bytesRead < 5) continue;
-
-        readBuff[bytesRead] = '\0';
-        trim(readBuff.get());
-
-        if (readBuff.starts_with("#EXTM3U")) continue;
-        if (readBuff.starts_with("#EXTINF:")) {
-            tmpBuff = readBuff.substr(8);
-            f_EXTINF_seen = true;
-            continue;
-        }
-        if (readBuff.starts_with("#")) continue;
-
-        if (f_EXTINF_seen) {
-            f_EXTINF_seen = false;
-            readBuff.append("\n");
-            readBuff += tmpBuff;
-        }
-        s_PLS_content.push_back(readBuff);
-    }
-
-    playlistFile.close();
-    return true;
-}
-//____________________________________________________________________________________________________________________________________________________
-
-bool preparePlaylistFromSDFolder(const char* path) { // all files within a SD folder
-    if (!SD_MMC.exists(path)) {
-        SerialPrintfln(ANSI_ESC_RED "SD_MMC/%s not exist", path);
-        return false;
-    }
-    File folder = SD_MMC.open(path);
-    if (!folder.isDirectory()) {
-        SerialPrintfln(ANSI_ESC_RED "SD_MMC%s is not a directory", path);
-        folder.close();
-        return false;
-    }
-    s_PLS_content.clear(); // clear _PLS_content first
-
-    while (true) { // get content
-        File file = folder.openNextFile();
-        if (!file) break;
-        if (file.isDirectory()) continue;
-        if (isAudio(file)) { s_PLS_content.push_back(file.path()); }
-        file.close();
-    }
-    folder.close();
-
-    for (int i = 0; i < s_PLS_content.size(); i++) {
-        if (s_PLS_content[i][0] == 2) { // remove ASCII 2
-            s_PLS_content[i].remove_before(1, true);
-        }
-    }
-
-    if (s_f_shuffle)
-        sortPlayListRandom();
-    else
-        sortPlayListAlphabetical();
-
-    return true;
-}
-//____________________________________________________________________________________________________________________________________________________
-bool preparePlaylistFromDLNAFolder() {
-    s_PLS_content.clear(); // clear _PLS_content first
-    const std::deque<DLNA_Client::srvItem>* foldercontent = &dlna.getBrowseResult();
-    for (int i = 0; i < foldercontent->size(); i++) {
-        // log_i( "%d : (%d) %s %s -- %s",i, foldercontent.isAudio[i], foldercontent.itemURL[i], foldercontent.title[i], foldercontent.duration[i]);
-        if (!foldercontent->at(i).isAudio) continue;
-        uint16_t len =
-            strlen((const char*)foldercontent->at(i).itemURL.c_get()) + strlen((const char*)foldercontent->at(i).title.c_get()) + strlen((const char*)foldercontent->at(i).duration.c_get()) + 3;
-        ps_ptr<char> itstr(len);
-        itstr = foldercontent->at(i).itemURL;
-        itstr += "\n";
-        itstr += foldercontent->at(i).duration;
-        itstr += ",";
-        itstr += foldercontent->at(i).title;
-        MWR_LOG_DEBUG("pushing to playlist : %s", itstr.c_get());
-        s_PLS_content.push_back(itstr);
-    }
-    if (!s_PLS_content.size()) return false;
-    MWR_LOG_INFO("pls length %i", s_PLS_content.size());
-    return true;
-}
-//____________________________________________________________________________________________________________________________________________________
-
-void sortPlayListAlphabetical() {
-    for (int i = 0; i < s_PLS_content.size(); i++) { // easy bubble sort
-        for (int j = 1; j < s_PLS_content.size(); j++) {
-            if (strcmp(s_PLS_content[j - 1].c_get(), s_PLS_content[i].c_get()) > 0) { swap(s_PLS_content[i], s_PLS_content[j - 1]); }
-        }
-    }
-}
-//____________________________________________________________________________________________________________________________________________________
-
-void sortPlayListRandom() {
-    for (int i = 0; i < s_PLS_content.size(); i++) { // easy bubble sort
-        uint16_t randIndex = random(0, s_PLS_content.size());
-        s_PLS_content[i].swap(s_PLS_content[randIndex]); // swapping the values
-    }
-}
-//____________________________________________________________________________________________________________________________________________________
-
-void processPlaylist(boolean first) {
-
-    bool         f_hasTitle = false, f_isURL = false, f_isRoot = false, f_isConnected = false;
-    ps_ptr<char> playFile, plsContent, plsExtension, duration, title;
-
-    if (s_PLS_content.size() == 0) {
+void processPlaylist() {
+    bool f_isURL, f_isFile;
+start:
+    f_isURL = false;
+    f_isFile = false;
+    if (playlist.get_size() == 0) { // guard
         MWR_LOG_ERROR("playlist is empty");
+        s_f_playlistEnabled = false;
         return;
-    } // guard
-    if (s_plsCurPos == s_PLS_content.size()) goto exit; // end of playlist
-    if (first) {
-        s_plsCurPos = 0;
-        s_f_playlistEnabled = true;
-    } // reset before start
-    MWR_LOG_DEBUG("%s", s_PLS_content[s_plsCurPos].c_get());
-    if (s_PLS_content[s_plsCurPos].index_of("\n", 0) > 0) f_hasTitle = true; // has additional infos: duration, title
-    // now read from vector _PLS_content
-    if (s_PLS_content[s_plsCurPos].starts_with("http")) f_isURL = true;     // is web file
-    if (s_PLS_content[s_plsCurPos].starts_with("file://")) f_isRoot = true; // SD file from root
-    if (f_hasTitle) {
-        int idx = s_PLS_content[s_plsCurPos].index_of("\n", 0);
-        plsContent = s_PLS_content[s_plsCurPos].substr(0, idx);
-        plsExtension = s_PLS_content[s_plsCurPos].substr(idx + 1);
-    } else {
-        plsContent = s_PLS_content[s_plsCurPos];
     }
-    MWR_LOG_DEBUG("plsContent %s, plsExtension %s", plsContent.c_get(), plsExtension.c_get());
-    s_cur_Codec = 0;
-    if (f_isURL) { // is web file
-        playFile = plsContent;
-        connecttohost(playFile.c_get());
-        f_isConnected = s_f_isWebConnected;
-    } else { // is local file
-        if (f_isRoot) {
-            playFile = plsContent.substr(7); // skip "file://"
-            playFile.urldecode();
-            f_isConnected = s_f_isFSConnected;
-        } else { // local file, not root
-            plsContent.urldecode();
-            if (s_playlistPath.valid()) { // path of m3u file
-                playFile = s_playlistPath;
-                MWR_LOG_DEBUG("playFile %s, plsContent %s", playFile.c_get(), plsContent.c_get());
-                if (plsContent[0] != '/') playFile += "/";
-                playFile += plsContent;
-            } else { // have no playlistpath
-                playFile = plsContent;
-            }
-        }
-        connecttoFS("SD_MMC", playFile.c_get());
-        f_isConnected = s_f_isFSConnected;
-    }
-    if (f_isConnected) {
-        SerialPrintflnCut("Playlist:    ", ANSI_ESC_YELLOW, playFile.c_get());
-        webSrv.send("SD_playFile=", playFile.c_get());
-        s_playerSubMenue = 1;
-        changeState(PLAYER);
-        if (f_hasTitle) {
-            int16_t idx1 = plsExtension.index_of(",", 0); // "18,logo-1.mp3"
-            duration = plsExtension.substr(0, idx1);
-            title = plsExtension.substr(+idx1 + 1);
-            SerialPrintfln("Playlist:    " ANSI_ESC_GREEN "Title: %s", title.c_get());
-            showFileName(title.c_get());
-        }
-    }
-    s_plsCurPos++;
-    showPlsFileNumber();
-    return;
 
-exit:
-    SerialPrintfln("Playlist:    " ANSI_ESC_BLUE "end of playlist");
-    webSrv.send("SD_playFile=", "end of playlist");
-    s_f_playlistEnabled = false;
-    s_playerSubMenue = 0;
-    changeState(PLAYER);
-    s_plsCurPos = 0;
+    int idx = playlist.next_index();
+    if(idx == -1) {
+        SerialPrintfln("Playlist:    " ANSI_ESC_BLUE "end of playlist");
+        webSrv.send("SD_playFile=", "end of playlist");
+        s_f_playlistEnabled = false;
+        s_playerSubMenue = 0;
+        changeState(PLAYER);
+        return;
+    }
+
+    if(idx == 0){ // first
+        if(s_playerSubMenue == 0 || s_playerSubMenue == 2) s_playerSubMenue = 1;
+        changeState(PLAYER);
+        txt_PL_fName.writeText("");
+    }
+
+    SerialPrintfln("Playlist:    " ANSI_ESC_GREEN "next playlist file");
+    s_f_playlistEnabled = true;
+
+    ps_ptr<char> path = playlist.get_file(); // path or url
+
+    if (path.starts_with_icase("http;//") or path.starts_with_icase("https://")) {
+        f_isURL = true; // is web file
+    }
+
+    if (path.starts_with("/") && SD_MMC.exists(path.c_get())) { f_isFile = true; }
+
+    if (f_isFile == false && f_isURL == false) goto start;
+
+    if (f_isURL) { connecttohost(path); }                  // is web file
+    if (f_isFile) { connecttoFS("SD_MMC", path.c_get()); } // is file
+
+    if (s_f_isFSConnected || s_f_isWebConnected) {
+        SerialPrintflnCut("Playlist:    ", ANSI_ESC_YELLOW, path.c_get());
+        webSrv.send("SD_playFile=", path);
+        txt_PL_fNumber.writeText(playlist.get_coloured_index().c_get());
+        txt_PL_fName.writeText(playlist.get_items().c_get());
+    } else {
+        SerialPrintfln("Playlist:    " ANSI_ESC_YELLOW "can't connect to %s", path.c_get());
+        goto start;
+    }
+
+    MWR_LOG_WARN("path %s, items %s", playlist.get_file().c_get(), playlist.get_items().c_get());
+
     return;
 }
+
 /*****************************************************************************************************************************************************
  *                                                        C O N N E C T   TO   W I F I                                                               *
  *****************************************************************************************************************************************************/
@@ -1230,7 +1076,6 @@ void stopSong() {
     }
     s_f_pauseResume = false;
     s_f_playlistNextFile = false;
-    s_f_shuffle = false;
     s_playlistPath.reset();
 }
 
@@ -1719,14 +1564,13 @@ void SD_playFile(ps_ptr<char> pathWoFileName, const char* fileName) { // pathWit
 void SD_playFile(ps_ptr<char> path, uint32_t fileStartTime, bool showFN) {
     if (!path.valid()) return; // avoid a possible crash
 
-    ps_ptr<char> file_name;
     if (path.ends_with("m3u")) {
-        if (SD_MMC.exists(path.c_get())) {
-            preparePlaylistFromFile(path.c_get());
-            processPlaylist(true);
-        }
+        if (playlist.create_playlist_from_file(path)) s_f_playlistEnabled = true;
         return;
     }
+
+    ps_ptr<char> file_name;
+
     if (s_playerSubMenue != 1 && s_playerSubMenue != 3) {
         s_playerSubMenue = 1;
         changeState(PLAYER);
@@ -2000,7 +1844,7 @@ void changeState(int32_t state) {
                 showFileName(s_SD_content.getColouredSStringByIndex(s_cur_AudioFileNr));
                 txt_PL_fName.show(true, false);
                 pgb_PL_progress.hide();
-                sdr_PL_volume.disable();
+                sdr_PL_volume.hide();
                 if (s_state != PLAYER) webSrv.send("changeState=", "PLAYER");
                 txt_PL_fNumber.show(true, false);
                 showAudioFileNumber();
@@ -2037,6 +1881,7 @@ void changeState(int32_t state) {
                 showFileName(s_SD_content.getColouredSStringByIndex(s_cur_AudioFileNr));
                 txt_PL_fName.show(true, false);
                 pgb_PL_progress.hide();
+                sdr_PL_volume.hide();
                 if (s_state != PLAYER) webSrv.send("changeState=", "PLAYER");
                 txt_PL_fNumber.show(true, false);
                 showAudioFileNumber();
@@ -2240,8 +2085,7 @@ void changeState(int32_t state) {
                 sdr_BR_value.show(true, true);
                 txt_BR_value.setText(int2str(s_brightness));
                 txt_BR_value.show(true, true);
-            }
-            else{
+            } else {
                 sdr_BR_value.enable();
                 txt_BR_value.enable();
             }
@@ -2404,16 +2248,7 @@ void loop() {
     }
 
     if (s_f_playlistEnabled) {
-        if (!s_f_playlistNextFile) {
-            if (!audio.isRunning() && !s_f_pauseResume) {
-                SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "next playlist file");
-                processPlaylist(false);
-                s_playlistTime = millis();
-                s_f_playlistNextFile = true;
-            }
-        } else {
-            if (s_playlistTime + 5000 < millis()) s_f_playlistNextFile = false;
-        }
+        if (!audio.isRunning() && !s_f_pauseResume) { processPlaylist(); }
     }
     //-----------------------------------------------------0.1 SEC------------------------------------------------------------------------------------
     if (s_f_100ms) { // calls every 0.1 second
@@ -2705,7 +2540,7 @@ void loop() {
         if (s_f_dlnaMakePlaylistOTF && s_f_dlna_browseReady) {
             s_f_dlnaMakePlaylistOTF = false;
             s_f_dlna_browseReady = false;
-            if (preparePlaylistFromDLNAFolder()) processPlaylist(true);
+            //    if( playlist.create_playlist_from_DLNA_folder()) s_f_playlistEnabled = true;
         }
         //------------------------------------------DLNA ITEMS RECEIVED-------------------------------------------------------------------------------
         if (s_f_dlna_browseReady) { // unused
@@ -2890,7 +2725,7 @@ void loop() {
             uint32_t br = audio.getBitRate();
             log_w("bitrate: %lu", br);
         }
-        if (r.startsWith("ibs")) { // get bitrate
+        if (r.startsWith("ibs")) { // inbuff status
             audio.inBufferStatus();
         }
     }
@@ -3028,7 +2863,7 @@ void my_audio_info(Audio::msg_t m) {
 }
 
 // ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void audio_process_i2s(int16_t* outBuff, uint16_t validSamples, bool* continueI2S) {
+void audio_process_i2s(int16_t* outBuff, int32_t validSamples, bool* continueI2S) {
 
     // int16_t sineWaveTable[44] = {
     //      0,   3743,   7377,  10793,  14082,  17136,  19848,  22113,  23825,  24908,
@@ -4032,21 +3867,21 @@ void ir_short_key(uint8_t key) {
                     }
                     if (btnNr == 3) { // play all files
                         btn_PL_playAll.showClickedPic();
-                        s_f_shuffle = false;
-                        preparePlaylistFromSDFolder(s_cur_AudioFolder.c_get());
-                        processPlaylist(true);
-                        s_playerSubMenue = 1;
-                        changeState(PLAYER);
+                        if (playlist.create_playlist_from_SD_folder(s_cur_AudioFolder.c_get())) {
+                            playlist.sort_alphabetical();
+                            s_f_playlistEnabled = true;
+                            s_playerSubMenue = 3;
+                        }
                         return;
                     }
                     if (btnNr == 4) { // shuffle and play all files
                         btn_PL_shuffle.showClickedPic();
                         vTaskDelay(100);
-                        s_f_shuffle = true;
-                        preparePlaylistFromSDFolder(s_cur_AudioFolder.c_get());
-                        processPlaylist(true);
-                        s_playerSubMenue = 1;
-                        changeState(PLAYER);
+                        if (playlist.create_playlist_from_SD_folder(s_cur_AudioFolder.c_get())) {
+                            playlist.sort_random();
+                            s_f_playlistEnabled = true;
+                            s_playerSubMenue = 3;
+                        }
                         return;
                     }
                     if (btnNr == 5) { // show file list
@@ -4947,9 +4782,10 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
     CMD_EQUALS("SD_playAllFiles"){      stopSong();
                                         webSrv.send("SD_playFolder=", param);                                                                                      // via websocket
                                         SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Play Folder" ANSI_ESC_ORANGE "\"%s\"" ANSI_ESC_RESET, param.c_get());
-                                        preparePlaylistFromSDFolder(param.c_get()); processPlaylist(true);
-                                        s_playerSubMenue = 1;
-                                        changeState(PLAYER);
+                                        if(playlist.create_playlist_from_SD_folder(param)){
+                                            s_f_playlistEnabled = true;
+                                            s_playerSubMenue = 1;
+                                        }
                                         return;}
 
     CMD_EQUALS("SD_rename"){            ps_ptr<char> arg1 = arg.substr(0, arg.index_of("&")); // only the first argument is used                              // via XMLHttpRequest
@@ -5603,19 +5439,18 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
             return;
         }
         if (name.equals("btn_PL_playAll")) {
-            s_f_shuffle = false;
-            preparePlaylistFromSDFolder(s_cur_AudioFolder.c_get());
-            processPlaylist(true);
-            s_playerSubMenue = 1;
-            changeState(PLAYER);
+            if(playlist.create_playlist_from_SD_folder(s_cur_AudioFolder)){
+                playlist.sort_alphabetical();
+                s_playerSubMenue = 1;
+                s_f_playlistEnabled = true;
+            }
             return;
         }
         if (name.equals("btn_PL_shuffle")) {
-            s_f_shuffle = true;
-            preparePlaylistFromSDFolder(s_cur_AudioFolder.c_get());
-            processPlaylist(true);
-            s_playerSubMenue = 1;
-            changeState(PLAYER);
+            if(playlist.create_playlist_from_SD_folder(s_cur_AudioFolder)){
+                playlist.sort_random();
+                s_playerSubMenue = 1;
+            }
             return;
         }
         if (name.equals("btn_PL_fileList")) {

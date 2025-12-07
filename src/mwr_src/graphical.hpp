@@ -3991,7 +3991,7 @@ class uniList {
                 log_e("txt is NULL");
                 return;
             }
-            if (!nr)
+            if (nr <= 0)
                 sprintf(m_buff, "%s%s", color, txt);
             else
                 sprintf(m_buff, "%s%s" ANSI_ESC_YELLOW " %li", color, txt, nr);
@@ -4712,7 +4712,7 @@ class fileList : public RegisterTable {
         }
         if (m_browseOnRelease == 3) {                               // log_e("m_curAudioFolder = %s", m_curAudioFolder);                                         // previous folder
             if (m_curAudioFolder.equals("/audiofiles/")) goto exit; // is already the root
-            myList.drawLine(pos, m_curAudioFolder.c_get(), "", "", ANSI_ESC_CYAN, 1);
+            myList.drawLine(pos, m_curAudioFolder.c_get(), "", "", ANSI_ESC_CYAN, -1);
             int lastSlash = m_curAudioFolder.last_index_of('/');
             if (lastSlash != -1) { // Look for the penultimate '/' before the position of the last
                 int secondLastSlash = m_curAudioFolder.last_index_of('/', lastSlash - 1);
@@ -4729,7 +4729,7 @@ class fileList : public RegisterTable {
         if (m_browseOnRelease == 4) {
             m_viewPos += m_fileListPos; // next folder
             int16_t idx = m_viewPos - 1;
-            myList.drawLine(pos, s_SD_content.getColouredSStringByIndex(idx), "", "", ANSI_ESC_CYAN, 1);
+            myList.drawLine(pos, s_SD_content.getColouredSStringByIndex(idx), "", "", ANSI_ESC_CYAN, -1);
             m_curAudioFolder = s_SD_content.getFilePathByIndex(idx);
             m_curAudioFileNr = 0;
             m_viewPos = 0;
@@ -4742,7 +4742,7 @@ class fileList : public RegisterTable {
         }
         if (m_browseOnRelease == 5) {
             m_viewPos += m_fileListPos; // play file
-            myList.drawLine(pos, m_curAudioName, "", "", ANSI_ESC_CYAN, 1);
+            myList.drawLine(pos, m_curAudioName, "", "", ANSI_ESC_CYAN, -1);
             vTaskDelay(300 / portTICK_PERIOD_MS);
             m_ra.arg1 = m_curAudioFolder.get(); // fileFolder
             m_ra.arg2 = m_curAudioName;         // fileName
