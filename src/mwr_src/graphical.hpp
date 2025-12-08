@@ -127,12 +127,8 @@ class slider : public RegisterTable {
         tft.fillRoundRect(x, y, w, m_railHigh, r, m_railColor);
         drawNewSpot(m_spotPos);
     }
-    void disable() {
-        m_enabled = false;
-    }
-    void enable(){
-        m_enabled = true;
-    }
+    void disable() { m_enabled = false; }
+    void enable() { m_enabled = true; }
     void hide() {
         if (m_backgroundTransparency) {
             if (m_saveBackground)
@@ -1901,6 +1897,7 @@ class button1state : public RegisterTable { // click button
     }
     void showAlternativePic(bool inactive = false) {
         m_clicked = false;
+        m_enabled = true;
         if (inactive) {
             setInactive();
             return;
@@ -1936,6 +1933,14 @@ class button1state : public RegisterTable { // click button
         else
             m_alternativePicturePath = x_ps_strdup("alternativePicturePath is not set");
     }
+    bool click() { // e.g. from IR
+        if (!m_enabled) { return false; }
+        drawImage(m_clickedPicturePath, m_x, m_y, m_w, m_h);
+        m_clicked = true;
+        if (graphicObjects_OnClick) graphicObjects_OnClick(m_name, m_enabled);
+        return true;
+    }
+
     bool positionXY(uint16_t x, uint16_t y) {
         if (x < m_x) return false;
         if (y < m_y) return false;
@@ -2106,6 +2111,20 @@ class button2state : public RegisterTable { // on off switch
         else
             m_inactivePicturePath = x_ps_strdup("inactivePicturePath is not set");
     }
+
+    bool click() {
+        if (!m_enabled) return false;
+        if (m_state)
+            drawImage(m_clickedOnPicturePath, m_x, m_y, m_w, m_h);
+        else
+            drawImage(m_clickedOffPicturePath, m_x, m_y, m_w, m_h);
+        m_clicked = true;
+        m_state = !m_state;
+
+        if (graphicObjects_OnClick) graphicObjects_OnClick(m_name, m_enabled);
+        return true;
+    }
+
     bool positionXY(uint16_t x, uint16_t y) {
         if (x < m_x) return false;
         if (y < m_y) return false;
@@ -2163,15 +2182,15 @@ class numbersBox : public RegisterTable { // range 000...999
         } else
             m_segmWidth = 86;
     }
-    ~numbersBox() {; }
+    ~numbersBox() { ; }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const char* color) {
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w; // width
         m_h = h; // high
-        if(!strcmp(color, "orange")) m_color = "sor";
-        if(!strcmp(color, "blue")) m_color = "sbl";
-        if(!strcmp(color, "red")) m_color = "srt";
+        if (!strcmp(color, "orange")) m_color = "sor";
+        if (!strcmp(color, "blue")) m_color = "sbl";
+        if (!strcmp(color, "red")) m_color = "srt";
         m_enabled = false;
     }
     ps_ptr<char> getName() { return m_name; }
@@ -2217,25 +2236,25 @@ class numbersBox : public RegisterTable { // range 000...999
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class pictureBox : public RegisterTable {
   private:
-    int16_t     m_x = 0;
-    int16_t     m_y = 0;
-    int16_t     m_w = 0;
-    int16_t     m_h = 0;
-    uint16_t    m_image_w = 0;
-    uint16_t    m_image_h = 0;
-    uint8_t     m_padding_left = 0;  // left margin
-    uint8_t     m_paddig_right = 0;  // right margin
-    uint8_t     m_paddig_top = 0;    // top margin
-    uint8_t     m_paddig_bottom = 0; // bottom margin
-    uint32_t    m_bgColor = 0;
-    char*       m_PicturePath = NULL;
-    char*       m_altPicturePath = NULL;
-    ps_ptr<char>       m_name = NULL;
-    bool        m_enabled = false;
-    bool        m_clicked = false;
-    bool        m_backgroundTransparency = false;
-    bool        m_saveBackground = false; // is used and to draw further objects on this box
-    releasedArg m_ra;
+    int16_t      m_x = 0;
+    int16_t      m_y = 0;
+    int16_t      m_w = 0;
+    int16_t      m_h = 0;
+    uint16_t     m_image_w = 0;
+    uint16_t     m_image_h = 0;
+    uint8_t      m_padding_left = 0;  // left margin
+    uint8_t      m_paddig_right = 0;  // right margin
+    uint8_t      m_paddig_top = 0;    // top margin
+    uint8_t      m_paddig_bottom = 0; // bottom margin
+    uint32_t     m_bgColor = 0;
+    char*        m_PicturePath = NULL;
+    char*        m_altPicturePath = NULL;
+    ps_ptr<char> m_name = NULL;
+    bool         m_enabled = false;
+    bool         m_clicked = false;
+    bool         m_backgroundTransparency = false;
+    bool         m_saveBackground = false; // is used and to draw further objects on this box
+    releasedArg  m_ra;
 
   public:
     pictureBox(const char* name) {
@@ -2580,17 +2599,17 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
     } const s_m01; // Minute * 01  168 x 260 px
     //-------------------------------------------------------------------------------------------------------------------------------------------------------
 #endif
-    uint32_t    m_bgColor = 0;
-    bool        m_enabled = false;
-    bool        m_clicked = false;
-    bool        m_state = false;
-    bool        m_backgroundTransparency = false;
-    uint16_t    m_digitsYPos = 0;
-    bool        m_showAll = false;
-    ps_ptr<char>  m_name;
-    char*       m_pathBuff = NULL;
-    uint8_t     m_min = 0, m_hour = 0, m_weekday = 0;
-    releasedArg m_ra;
+    uint32_t     m_bgColor = 0;
+    bool         m_enabled = false;
+    bool         m_clicked = false;
+    bool         m_state = false;
+    bool         m_backgroundTransparency = false;
+    uint16_t     m_digitsYPos = 0;
+    bool         m_showAll = false;
+    ps_ptr<char> m_name;
+    char*        m_pathBuff = NULL;
+    uint8_t      m_min = 0, m_hour = 0, m_weekday = 0;
+    releasedArg  m_ra;
 
   public:
     imgClock24(const char* name) {
@@ -2875,17 +2894,17 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
     } const s_m01; // Minute * 01  168 x 260 px
     //-------------------------------------------------------------------------------------------------------------------------------------------------------
 #endif
-    uint32_t    m_bgColor = 0;
-    bool        m_enabled = false;
-    bool        m_clicked = false;
-    bool        m_state = false;
-    bool        m_backgroundTransparency = false;
-    uint16_t    m_digitsYPos = 0;
-    bool        m_showAll = false;
-    ps_ptr<char>       m_name = NULL;
-    char*       m_pathBuff = NULL;
-    uint8_t     m_min = 0, m_hour = 0, m_weekday = 0;
-    releasedArg m_ra;
+    uint32_t     m_bgColor = 0;
+    bool         m_enabled = false;
+    bool         m_clicked = false;
+    bool         m_state = false;
+    bool         m_backgroundTransparency = false;
+    uint16_t     m_digitsYPos = 0;
+    bool         m_showAll = false;
+    ps_ptr<char> m_name = NULL;
+    char*        m_pathBuff = NULL;
+    uint8_t      m_min = 0, m_hour = 0, m_weekday = 0;
+    releasedArg  m_ra;
 
   public:
     imgClock24small(const char* name) {
@@ -3199,16 +3218,16 @@ class imgClock12 : public RegisterTable { // draw a clock in 12h format
     } const s_ap; // AM_PM        130 x 260 px
     //-------------------------------------------------------------------------------------------------------------------------------------------------------
 #endif
-    uint32_t    m_bgColor = 0;
-    bool        m_enabled = false;
-    bool        m_clicked = false;
-    bool        m_state = false;
-    bool        m_showAll = false;
-    bool        m_backgroundTransparency = false;
-    ps_ptr<char>       m_name;
-    char*       m_pathBuff = NULL;
-    uint8_t     m_min = 0, m_hour = 0, m_weekday = 0;
-    releasedArg m_ra;
+    uint32_t     m_bgColor = 0;
+    bool         m_enabled = false;
+    bool         m_clicked = false;
+    bool         m_state = false;
+    bool         m_showAll = false;
+    bool         m_backgroundTransparency = false;
+    ps_ptr<char> m_name;
+    char*        m_pathBuff = NULL;
+    uint8_t      m_min = 0, m_hour = 0, m_weekday = 0;
+    releasedArg  m_ra;
 
   public:
     imgClock12(const char* name) {
@@ -3535,25 +3554,25 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
     //-------------------------------------------------------------------------------------------------------------------------------------------------------
 #endif
 
-    uint32_t    m_bgColor = 0;
-    bool        m_enabled = false;
-    bool        m_clicked = false;
-    bool        m_state = false;
-    bool        m_showAll = false;
-    bool        m_backgroundTransparency = false;
-    ps_ptr<char>      m_name;
-    char*       m_pathBuff = NULL;
-    uint8_t*    m_alarmDays = NULL;
-    int16_t*    m_alarmTime = NULL;
-    uint8_t     m_min = 0, m_hour = 0, m_weekday = 0;
-    int8_t      m_btnAlarmDay = -1;
-    int8_t      m_btnAlarmTime = -1;
-    int8_t      m_idx = 0;
-    uint8_t     m_alarmDigits[4] = {0};
-    const char* m_p1 = "/digits/sevenSegment/"; // path
-    uint8_t     m_p1Len = 21;
-    const char  m_WD[7][4] = {"SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"};
-    releasedArg m_ra;
+    uint32_t     m_bgColor = 0;
+    bool         m_enabled = false;
+    bool         m_clicked = false;
+    bool         m_state = false;
+    bool         m_showAll = false;
+    bool         m_backgroundTransparency = false;
+    ps_ptr<char> m_name;
+    char*        m_pathBuff = NULL;
+    uint8_t*     m_alarmDays = NULL;
+    int16_t*     m_alarmTime = NULL;
+    uint8_t      m_min = 0, m_hour = 0, m_weekday = 0;
+    int8_t       m_btnAlarmDay = -1;
+    int8_t       m_btnAlarmTime = -1;
+    int8_t       m_idx = 0;
+    uint8_t      m_alarmDigits[4] = {0};
+    const char*  m_p1 = "/digits/sevenSegment/"; // path
+    uint8_t      m_p1Len = 21;
+    const char   m_WD[7][4] = {"SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"};
+    releasedArg  m_ra;
 
   public:
     alarmClock(const char* name) {
@@ -3837,24 +3856,24 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
 class uniList {
 
   private:
-    int16_t  m_x = 0;
-    int16_t  m_y = 0;
-    int16_t  m_w = 0;
-    int16_t  m_h = 0;
-    int32_t  m_nr[10] = {0};
-    uint8_t  m_fontSize = 0;
-    uint8_t  m_tftSize = 0;
-    uint8_t  m_lineHight = 0;
-    uint8_t  m_mode = 0;
-    uint32_t m_bgColor = 0;
-    uint8_t  m_indentContent = 0;
-    uint8_t  m_indentDirectory = 0;
-    ps_ptr<char>  m_name;
-    char*    m_buff = NULL;
-    char*    m_txt[10] = {0};
-    char*    m_ext1[10] = {0};
-    char*    m_ext2[10] = {0};
-    bool     m_enabled = false;
+    int16_t      m_x = 0;
+    int16_t      m_y = 0;
+    int16_t      m_w = 0;
+    int16_t      m_h = 0;
+    int32_t      m_nr[10] = {0};
+    uint8_t      m_fontSize = 0;
+    uint8_t      m_tftSize = 0;
+    uint8_t      m_lineHight = 0;
+    uint8_t      m_mode = 0;
+    uint32_t     m_bgColor = 0;
+    uint8_t      m_indentContent = 0;
+    uint8_t      m_indentDirectory = 0;
+    ps_ptr<char> m_name;
+    char*        m_buff = NULL;
+    char*        m_txt[10] = {0};
+    char*        m_ext1[10] = {0};
+    char*        m_ext2[10] = {0};
+    bool         m_enabled = false;
 
   public:
     uniList(const char* name) {

@@ -125,6 +125,7 @@ void IR::loop(){ // transform raw data from IR to ir_result
     static bool found_number = false;
     static bool found_short = false;
     static bool found_long = false;
+    static bool wait_for_release = false;
     static bool wait = false;
 
     if(wait){ // waiting for repeat code
@@ -171,11 +172,20 @@ void IR::loop(){ // transform raw data from IR to ir_result
         ir_cmd_a = -01;
         goto exit;
     }
+    else{
+        if(wait_for_release){
+            wait_for_release = false;
+            if(ir_released) ir_released(m_released_key);
+            m_released_key = -1;
+        }
+    }
 
     if(found_short && m_t1 + 120 < millis()){
         if(ir_rc < 8) if(ir_short_key) ir_short_key(m_short_key); // short pressed
+        m_released_key = m_short_key;
         m_short_key = -1;
         found_short = false;
+        wait_for_release = true;
     }
     if(found_number && (m_t0 + 2500 < millis())){
         if(ir_res) ir_res(number);
