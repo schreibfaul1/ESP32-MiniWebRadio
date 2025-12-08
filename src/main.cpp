@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.0.4m - 07.12.2025                                                                                                               ";
+    Version 4.0.4n - 08.12.2025                                                                                                               ";
 
 
 /*  display (320x240px) with controller ILI9341 or
@@ -62,6 +62,7 @@ timecounter_s s_timeCounter;
 SD_content    s_SD_content;
 bt_emitter_s  s_bt_emitter;
 tone_s        s_tone;
+Playlist      playlist;
 
 ps_ptr<char> s_time_s = "";
 ps_ptr<char> s_myIP;
@@ -187,7 +188,6 @@ RTIME       rtc;
 Ticker      ticker100ms;
 IR_buttons  irb(&s_settings);
 IR          ir(IR_PIN); // do not change the objectname, it must be "ir"
-Playlist    playlist;
 
 File           audioFile;
 FtpServer      ftpSrv;
@@ -747,7 +747,7 @@ start:
     }
 
     int idx = playlist.next_index();
-    if(idx == -1) {
+    if (idx == -1) {
         SerialPrintfln("Playlist:    " ANSI_ESC_BLUE "end of playlist");
         webSrv.send("SD_playFile=", "end of playlist");
         s_f_playlistEnabled = false;
@@ -756,8 +756,8 @@ start:
         return;
     }
 
-    if(idx == 0){ // first
-        if(s_playerSubMenue == 0 || s_playerSubMenue == 2) s_playerSubMenue = 1;
+    if (idx == 0) { // first
+        if (s_playerSubMenue == 0 || s_playerSubMenue == 2) s_playerSubMenue = 1;
         changeState(PLAYER);
         txt_PL_fName.writeText("");
     }
@@ -2937,8 +2937,49 @@ void ir_number(uint16_t num) {
     nbr_RA_irBox.setNumbers(num);
     nbr_RA_irBox.show();
 }
-void ir_short_key(uint8_t key) {
-    SerialPrintfln("ir_code: ..  " ANSI_ESC_YELLOW "short pressed key nr: " ANSI_ESC_BLUE "%02i", key);
+
+void ir_released(int8_t key) {
+    SerialPrintfln("ir_code: ..  " ANSI_ESC_YELLOW "released ir key nr: " ANSI_ESC_BLUE "%02i, <%s>" ANSI_ESC_RESET, key, ir_symbols[key]);
+
+    if (s_state == RADIO) {
+        btn_RA_mute.released();
+        btn_RA_prevSta.released();
+        btn_RA_nextSta.released();
+        btn_RA_player.released();
+        btn_RA_dlna.released();
+        btn_RA_clock.released();
+        btn_RA_sleep.released();
+        btn_RA_settings.released();
+        btn_RA_bt.released();
+        btn_RA_off.released();
+        btn_RA_staList.released();
+    }
+
+    if (s_state == PLAYER) {
+        btn_PL_prevFile.released();
+        btn_PL_nextFile.released();
+        btn_PL_ready.released();
+        btn_PL_playAll.released();
+        btn_PL_shuffle.released();
+        btn_PL_fileList.released();
+        btn_PL_radio.released();
+        btn_PL_off.released();
+        btn_PL_mute.released();
+        btn_PL_pause.released();
+        btn_PL_cancel.released();
+        sdr_PL_volume.released();
+        btn_PL_playNext.released();
+        btn_PL_playPrev.released();
+    }
+}
+
+void ir_long_key(int8_t key) {
+    SerialPrintfln("ir_code: ..  " ANSI_ESC_YELLOW "long pressed ir key nr: " ANSI_ESC_BLUE "%02i, <%s>" ANSI_ESC_RESET, key, ir_symbols[key]);
+    if (key == 16) fall_asleep(); // long OK
+}
+
+void ir_short_key(int8_t key) {
+    SerialPrintfln("ir_code: ..  " ANSI_ESC_YELLOW "short pressed ir key nr: " ANSI_ESC_BLUE "%02i, <%s>" ANSI_ESC_RESET, key, ir_symbols[key]);
     if (s_f_sleeping == true && !s_f_irOnOff) {
         wake_up();
         return;
@@ -3735,77 +3776,42 @@ void ir_short_key(uint8_t key) {
             if (s_state == RADIO) {
                 if (s_radioSubMenue == 4) {
                     if (btnNr == 0) {
-                        btn_RA_staList.showClickedPic();
-                        vTaskDelay(100);
-                        btnNr = 0;
-                        changeState(STATIONSLIST);
-                        setTimeCounter(LIST_TIMER);
-                        break;
+                        btn_RA_staList.click();
+                        return;
                     }
                     if (btnNr == 1) {
-                        btn_RA_player.showClickedPic();
-                        vTaskDelay(100);
-                        btnNr = 0;
-                        s_playerSubMenue = 2;
-                        changeState(PLAYER);
-                        setTimeCounter(2);
-                        break;
+                        btn_RA_player.click();
+                        return;
                     }
                     if (btnNr == 2) {
-                        btn_RA_dlna.showClickedPic();
-                        vTaskDelay(100);
-                        btnNr = 0;
-                        s_dlnaSubMenue = 1;
-                        changeState(DLNA);
-                        setTimeCounter(2);
-                        break;
+                        btn_RA_dlna.click();
+                        return;
                     }
                     if (btnNr == 3) {
-                        btn_RA_clock.showClickedPic();
-                        vTaskDelay(100);
-                        btnNr = 0;
-                        s_clockSubMenue = 2;
-                        changeState(CLOCK);
-                        setTimeCounter(2);
-                        break;
+                        btn_RA_clock.click();
+                        return;
                     }
                     if (btnNr == 4) {
-                        btn_RA_sleep.showClickedPic();
-                        vTaskDelay(100);
-                        btnNr = 0;
-                        s_sleepTimerSubMenue = 1;
-                        changeState(SLEEPTIMER);
-                        setTimeCounter(2);
-                        break;
+                        btn_RA_sleep.click();
+                        return;
                     }
                     if (btnNr == 5) {
-                        btn_RA_settings.showClickedPic();
-                        vTaskDelay(100);
-                        btnNr = 0;
-                        s_settingsSubMenue = 1;
-                        changeState(SETTINGS);
-                        setTimeCounter(2);
-                        break;
+                        btn_RA_settings.click();
+                        return;
                     }
                     if (btnNr == 6) {
-                        btn_RA_bt.showClickedPic();
-                        vTaskDelay(100);
-                        btnNr = 0;
-                        changeState(BLUETOOTH);
-                        break;
+                        btn_RA_bt.click();
                     }
                     if (btnNr == 7) {
-                        btn_RA_off.showClickedPic();
-                        vTaskDelay(100);
-                        fall_asleep();
-                        break;
+                        btn_RA_off.click();
+                        return;
                     }
                 } else {
                     s_radioSubMenue = 4;
                     btnNr = 0;
                     changeState(RADIO);
                 }
-                break;
+                return;
             }
             if (s_state == STATIONSLIST) {
                 setStationByNumber(lst_RADIO.getSelectedStation());
@@ -3830,133 +3836,57 @@ void ir_short_key(uint8_t key) {
                 }
                 if (s_playerSubMenue == 2) {
                     if (btnNr == 0) { // prev AudioFile
-                        btn_PL_prevFile.showClickedPic();
-                        vTaskDelay(50);
-                        btn_PL_prevFile.showAlternativePic();
-                        if (s_cur_AudioFileNr > 0) {
-                            s_cur_AudioFileNr--;
-                            showFileName(s_SD_content.getColouredSStringByIndex(s_cur_AudioFileNr));
-                            showAudioFileNumber();
-                            setTimeCounter(2);
-                        }
+                        btn_PL_prevFile.click();
                         return;
                     }
                     if (btnNr == 1) { // next AudioFile
-                        btn_PL_nextFile.showClickedPic();
-                        vTaskDelay(50);
-                        btn_PL_nextFile.showAlternativePic();
-                        if (s_cur_AudioFileNr + 1 < s_SD_content.getSize()) {
-                            s_cur_AudioFileNr++;
-                            showFileName(s_SD_content.getColouredSStringByIndex(s_cur_AudioFileNr));
-                            showAudioFileNumber();
-                            setTimeCounter(2);
-                        }
+                        btn_PL_nextFile.click();
                         return;
                     }
                     if (btnNr == 2) { // play file
-                        btn_PL_ready.showClickedPic();
-                        vTaskDelay(100);
-                        stopSong();
-                        SD_playFile(s_cur_AudioFolder.c_get(), s_SD_content.getColouredSStringByIndex(s_cur_AudioFileNr));
-                        btnNr = 0;
-                        s_playerSubMenue = 3;
-                        changeState(PLAYER);
-                        showAudioFileNumber();
-                        setTimeCounter(2);
+                        btn_PL_ready.click();
                         return;
                     }
                     if (btnNr == 3) { // play all files
-                        btn_PL_playAll.showClickedPic();
-                        if (playlist.create_playlist_from_SD_folder(s_cur_AudioFolder.c_get())) {
-                            playlist.sort_alphabetical();
-                            s_f_playlistEnabled = true;
-                            s_playerSubMenue = 3;
-                        }
+                        btn_PL_playAll.click();
                         return;
                     }
                     if (btnNr == 4) { // shuffle and play all files
-                        btn_PL_shuffle.showClickedPic();
-                        vTaskDelay(100);
-                        if (playlist.create_playlist_from_SD_folder(s_cur_AudioFolder.c_get())) {
-                            playlist.sort_random();
-                            s_f_playlistEnabled = true;
-                            s_playerSubMenue = 3;
-                        }
+                        btn_PL_shuffle.click();
                         return;
                     }
                     if (btnNr == 5) { // show file list
-                        btn_PL_fileList.showClickedPic();
-                        vTaskDelay(100);
-                        s_SD_content.listFilesInDir(s_cur_AudioFolder.c_get(), true, false);
-                        changeState(AUDIOFILESLIST);
+                        btn_PL_fileList.click();
                         return;
                     }
                     if (btnNr == 6) { // back to radio
-                        btn_PL_radio.showClickedPic();
-                        vTaskDelay(100);
-                        setStation(s_cur_station);
-                        s_playerSubMenue = 0;
-                        s_radioSubMenue = 0;
-                        changeState(RADIO);
+                        btn_PL_radio.click();
                         return;
                     }
                     if (btnNr == 7) { // off
-                        btn_PL_off.showClickedPic();
-                        vTaskDelay(100);
-                        fall_asleep();
+                        btn_PL_off.click();
                         return;
                     }
                 }
                 if (s_playerSubMenue == 3) {
                     if (btnNr == 0) { // mute
-                        btn_PL_mute.showClickedPic();
-                        muteChanged(!s_f_mute);
-                        vTaskDelay(100);
-                        btn_PL_mute.showAlternativePic();
-                        setTimeCounter(2);
+                        btn_PL_mute.click();
                         return;
                     }
                     if (btnNr == 1) { // pause
-                        btn_PL_pause.showClickedPic();
-                        if (s_f_isFSConnected) {
-                            s_f_pauseResume = audio.pauseResume();
-                            if (!audio.isRunning())
-                                btn_PL_pause.setOn();
-                            else
-                                btn_PL_pause.setOff();
-                        }
-                        vTaskDelay(100);
-                        btn_PL_pause.showAlternativePic();
-                        setTimeCounter(2);
+                        btn_PL_pause.click();
                         return;
                     }
                     if (btnNr == 2) { // cancel
-                        btn_PL_cancel.showClickedPic();
-                        vTaskDelay(100);
-                        btnNr = 0;
-                        s_playerSubMenue = 2;
-                        stopSong();
-                        changeState(PLAYER);
+                        btn_PL_cancel.click();
                         return;
                     }
                     if (btnNr == 3) { // prev
-                        btn_PL_playPrev.showClickedPic();
-                        vTaskDelay(100);
-                        btn_PL_playPrev.showAlternativePic();
-                        s_cur_AudioFileNr = s_SD_content.getPrevAudioFile(s_cur_AudioFileNr);
-                        SD_playFile(s_cur_AudioFolder.c_get(), s_SD_content.getColouredSStringByIndex(s_cur_AudioFileNr));
-                        showAudioFileNumber();
-                        setTimeCounter(2);
+                        btn_PL_playPrev.click();
                         return;
                     }
                     if (btnNr == 4) { // next
-                        btn_PL_playNext.showClickedPic();
-                        vTaskDelay(100);
-                        btn_PL_playNext.showAlternativePic();
-                        s_cur_AudioFileNr = s_SD_content.getNextAudioFile(s_cur_AudioFileNr);
-                        SD_playFile(s_cur_AudioFolder.c_get(), s_SD_content.getColouredSStringByIndex(s_cur_AudioFileNr));
-                        showAudioFileNumber();
-                        setTimeCounter(2);
+                        btn_PL_playNext.click();
                         return;
                     }
                 }
@@ -4439,10 +4369,7 @@ void ir_short_key(uint8_t key) {
         default: break;
     }
 }
-void ir_long_key(int8_t key) {
-    SerialPrintfln("ir_code: ..  " ANSI_ESC_YELLOW "long pressed key nr: " ANSI_ESC_BLUE "%02i", key);
-    if (key == 16) fall_asleep(); // long OK
-}
+
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 // Event from TouchPad
 
@@ -5441,6 +5368,7 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
         if (name.equals("btn_PL_playAll")) {
             if(playlist.create_playlist_from_SD_folder(s_cur_AudioFolder)){
                 playlist.sort_alphabetical();
+MWR_LOG_ERROR("s_f_playlistEnabled");
                 s_playerSubMenue = 1;
                 s_f_playlistEnabled = true;
             }
@@ -5450,6 +5378,8 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
             if(playlist.create_playlist_from_SD_folder(s_cur_AudioFolder)){
                 playlist.sort_random();
                 s_playerSubMenue = 1;
+MWR_LOG_ERROR("s_f_playlistEnabled");
+                s_f_playlistEnabled = true;
             }
             return;
         }

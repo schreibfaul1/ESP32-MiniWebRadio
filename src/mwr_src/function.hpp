@@ -736,6 +736,11 @@ const char voice_time_de[24][50] = {"Beim dritten Ton ist es genau Mitternacht",
                                     "Beim dritten Ton ist es genau zwanzig Uhr",        "Beim dritten Ton ist es genau einundzwanzig Uhr",
                                     "Beim dritten Ton ist es genau zweiundzwanzig Uhr", "Beim dritten Ton ist es genau dreiundzwanzig Uhr"};
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+const char ir_symbols[34][15] = {"ZERO",        "ONE",        "TWO",        "THREE",     "FOUR",    "FIFE",    "SIX",  "SEVEN",        "EIGHT",    "NINE",    "MUTE",
+                                 "ARROW_RIGHT", "ARROW_LEFT", "ARROW_DOWN", "ARROW_UP",  "MODE",    "OKAY",    "N/A",  "PAUSE/RESUME", "STOP",     "ON/OFF",  "RADIO",
+                                 "PLAYER",      "DLNA",       "CLOCK",      "OFF_TIMER", "VOLUME+", "VOLUME-", "-30s", "+30s",         "CHANNEL+", "CHANNEL-"};
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
 const char* aes_encrypt(const char* input) {
     static char* output = NULL;
     uint16_t     len = strlen(input) / 16;
@@ -1561,11 +1566,11 @@ class Playlist {
                 if (f_path_seen) {
                     if (f_items_seen) {
                         int idx = itemsBuff.index_of(',');
-                        if(idx != 0){
+                        if (idx != 0) {
                             ps_ptr<char> t = "";
                             t = itemsBuff.substr(0, idx);
                             int d = t.to_uint32();
-                            if(d > 0){ // has duration
+                            if (d > 0) { // has duration
                                 MWR_LOG_WARN("duration %is", d);
                                 itemsBuff = itemsBuff.substr(idx + 1);
                             }
@@ -1575,8 +1580,10 @@ class Playlist {
                         m_content_items.push_back(itemsBuff);
                     } else {
                         int idx = pathBuff.last_index_of('/');
-                        if(idx != -1) itemsBuff = pathBuff.substr(idx + 1);
-                        else itemsBuff = pathBuff;
+                        if (idx != -1)
+                            itemsBuff = pathBuff.substr(idx + 1);
+                        else
+                            itemsBuff = pathBuff;
                         m_content_items.push_back(itemsBuff);
                     }
                     m_content_file.push_back(pathBuff);
@@ -1618,7 +1625,7 @@ class Playlist {
             if (file.isDirectory()) continue;
             if (isAudio(file)) {
                 m_content_file.push_back(file.path());
-                ps_ptr<char>name;
+                ps_ptr<char> name;
                 name = file.name();
                 name.appendf("" ANSI_ESC_YELLOW " %i" ANSI_ESC_RESET "", file.size());
                 m_content_items.push_back(name);
