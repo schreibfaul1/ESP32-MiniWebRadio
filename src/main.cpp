@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.0.4n - 08.12.2025                                                                                                               ";
+    Version 4.0.4o - 08.12.2025                                                                                                               ";
 
 
 /*  display (320x240px) with controller ILI9341 or
