@@ -2,7 +2,7 @@
  * KCX_BT_Emitter.cpp
  *
  *  Created on: 21.01.2024
- *  updated on: 11.11.2024
+ *  updated on: 09.12.2024
  *      Author: Wolle
  */
 
@@ -98,6 +98,7 @@ class KCX_BT_Emitter {
     ps_ptr<char> get_bt_Version() { return m_bt_version; } // KCX_BT_RTX_V1.4
     void         power_off();
     void         power_on();
+    bool         get_power_state();
     void         userCommand(const char* cmd);
     const char*  stringifyScannedItems();
     const char*  list_protokol();
@@ -119,6 +120,7 @@ class KCX_BT_Emitter {
     void                     add_tx_queue_item(ps_ptr<char> item);
     ps_ptr<char>             get_rx_queue_item();
     void                     add_rx_queue_item(ps_ptr<char> item);
+    void                     setMode_intern(ps_ptr<char> mode);
     ps_ptr<char>             m_bt_version;
     uint8_t                  m_bt_volume = 0;
     bool                     m_bt_found = false;
@@ -138,6 +140,7 @@ class KCX_BT_Emitter {
     bool         m_f_KCX_BT_Emitter_isInit = false;
     uint32_t     m_timeStamp = 0;
     bool         m_lock = false;
+    bool         m_power = false;
 
     uint8_t m_bt_add_num = 0;
     uint8_t m_bt_name_num = 0;

@@ -2,7 +2,7 @@
  *  KCX_BT_Emitter.cpp
  *
  *  Created on: 21.01.2024
- *  updated on: 01.11.2025
+ *  updated on: 09.12.2025
  *      Author: Wolle
  */
 
@@ -49,7 +49,11 @@ void KCX_BT_Emitter::loop() {
         if (m_TX_queue.size()) {
             m_timeStamp = millis();
             ps_ptr<char> cmd = get_tx_queue_item();
-            writeCommand(cmd);
+            if (cmd.starts_with("AT+MODE_")) {
+                setMode_intern(cmd.substr(8));
+            } else {
+                writeCommand(cmd);
+            }
             return;
         }
     }
@@ -138,6 +142,7 @@ void KCX_BT_Emitter::parseATcmds() {
 
     if (item.equals("OK+")) {
         m_bt_found = true;
+        m_power = true;
         m_msg.e = evt_found;
         if (m_bt_callback) { m_bt_callback(m_msg); }
     } else if (item.equals("OK+RESET")) {
@@ -149,9 +154,11 @@ void KCX_BT_Emitter::parseATcmds() {
         m_msg.e = evt_reset;
         if (m_bt_callback) { m_bt_callback(m_msg); }
     } else if (item.equals("POWER ON")) {
+        m_power = true;
         m_msg.e = evt_power_on;
         if (m_bt_callback) { m_bt_callback(m_msg); }
     } else if (item.equals("OK+POWEROFF_MODE")) {
+        m_power = false;
         m_msg.e = evt_power_off;
         if (m_bt_callback) { m_bt_callback(m_msg); }
     } else if (item.starts_with("OK+VERS:")) { // OK+VERS:KCX_BT_RTX_V1.4
@@ -258,7 +265,7 @@ void KCX_BT_Emitter::add_tx_queue_item(ps_ptr<char> item) {
     KCX_LOG_DEBUG("add_tx_queue_item %s", item.c_get());
     return;
 }
-
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 ps_ptr<char> KCX_BT_Emitter::get_tx_queue_item() {
     ps_ptr<char> queue_item;
     if (m_TX_queue.size() == 0) return queue_item;
@@ -308,6 +315,17 @@ void KCX_BT_Emitter::setVolume(uint8_t vol) {
     add_tx_queue_item(v);
 }
 void KCX_BT_Emitter::setMode(ps_ptr<char> mode) {
+    if (!m_power) {
+        m_msg.e = evt_info;
+        m_msg.arg = "Power On  first";
+        if (m_bt_callback) m_bt_callback(m_msg);
+        return;
+    }
+    ps_ptr<char> m = "AT+MODE_";
+    m.append(mode);
+    add_tx_queue_item(m);
+}
+void KCX_BT_Emitter::setMode_intern(ps_ptr<char> mode) {
     if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;
     if (mode.equals("RX")) {
         m_bt_mode = mode;
@@ -321,20 +339,22 @@ void KCX_BT_Emitter::setMode(ps_ptr<char> mode) {
         KCX_LOG_ERROR("unknown mode %s", mode.c_get());
         return;
     }
-    // add_tx_queue_item("AT+RESET");
+    add_tx_queue_item("AT+RESET");
 }
 void KCX_BT_Emitter::changeMode() {
     if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;
-    if (m_bt_mode.equals("RX")) {
-        m_bt_mode = "TX";
-        digitalWrite(BT_MODE_PIN, HIGH);
-        m_mode_pin = HIGH;
-    } else {
-        m_bt_mode = "RX";
-        digitalWrite(BT_MODE_PIN, LOW);
-        m_mode_pin = LOW;
+    if (!m_power) {
+        m_msg.e = evt_info;
+        m_msg.arg = "Power On  first";
+        if (m_bt_callback) m_bt_callback(m_msg);
+        return;
     }
-    add_tx_queue_item("AT+RESET");
+    if (m_bt_mode.equals("RX")) {
+        m_bt_mode = "AT+MODE_TX";
+    } else {
+        m_bt_mode = "AT+MODE_RX";
+    }
+    add_tx_queue_item(m_bt_mode);
 }
 void KCX_BT_Emitter::pauseResume() {
     if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;
@@ -367,8 +387,7 @@ const char* KCX_BT_Emitter::getMyName() {
 }
 void KCX_BT_Emitter::power_off() {
     if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;
-
-    add_tx_queue_item("AT+POWER_OFF");
+    if(m_power) add_tx_queue_item("AT+POWER_OFF");
 }
 void KCX_BT_Emitter::power_on() {
     if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;
@@ -379,6 +398,9 @@ void KCX_BT_Emitter::power_on() {
     vTaskDelay(100);
     digitalWrite(BT_CONNECT_PIN, HIGH);
     m_connect_pin = HIGH;
+}
+bool KCX_BT_Emitter::get_power_state() {
+    return m_power;
 }
 void KCX_BT_Emitter::userCommand(const char* cmd) {
     if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;

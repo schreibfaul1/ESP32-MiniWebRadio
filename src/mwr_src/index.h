@@ -1043,8 +1043,8 @@ function showTab9 () {  // KCX BT Emitter
     socket.send('KCX_BT_connected')  // is connected?
     socket.send('KCX_BT_scanned')    // get scanned items
     socket.send('KCX_BT_mem')        // get saved items
-    socket.send('KCX_BT_getMode')    // get mode (TX or RX)
     socket.send('KCX_BT_getPower')   // get power state
+    socket.send('KCX_BT_getMode')    // get mode (TX or RX)
 }
 
 

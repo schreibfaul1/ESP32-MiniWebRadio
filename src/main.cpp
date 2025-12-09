@@ -1325,11 +1325,6 @@ void setup() {
         }
     }
     bt_emitter.begin();
-    bt_emitter.userCommand("AT+GMR?");                 // get version
-    bt_emitter.userCommand("AT+PAUSE?");               // pause or play?
-    bt_emitter.userCommand("AT+NAME+BT-MiniWebRadio"); // set BT receiver name
-    bt_emitter.setVolume(s_bt_emitter.volume);
-    bt_emitter.setMode(s_bt_emitter.mode);
 }
 /*****************************************************************************************************************************************************
  *                                                                   C O M M O N                                                                     *
@@ -3801,6 +3796,7 @@ void ir_short_key(int8_t key) {
                     }
                     if (btnNr == 6) {
                         btn_RA_bt.click();
+                        return;
                     }
                     if (btnNr == 7) {
                         btn_RA_off.click();
@@ -4754,7 +4750,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
                                         return;}
 
     CMD_EQUALS("DLNA_GetFolder"){       webSrv.sendStatus(306); return;}  // todo
-    CMD_EQUALS("KCX_BT_connected") {    if(!s_bt_emitter.power_state)     webSrv.send("KCX_BT_connected=", "-1");
+    CMD_EQUALS("KCX_BT_connected") {    if(!bt_emitter.get_power_state()) webSrv.send("KCX_BT_connected=", "-1");
                                         else if(bt_emitter.isConnected()) webSrv.send("KCX_BT_connected=",  "1");
                                         else                              webSrv.send("KCX_BT_connected=",  "0");
                                         return;}
@@ -4764,14 +4760,12 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
     CMD_EQUALS("KCX_BT_mem"){           bt_emitter.getVMlinks(); return;}
     CMD_EQUALS("KCX_BT_scanned"){       webSrv.send("KCX_BT_SCANNED=", bt_emitter.stringifyScannedItems()); return;}
     CMD_EQUALS("KCX_BT_getMode"){       webSrv.send("KCX_BT_MODE=", bt_emitter.getMode().c_get()); return;}
-    CMD_EQUALS("KCX_BT_changeMode"){    webSrv.send("KCX_BT_connected=", "0");
-                                        bt_emitter.changeMode();
-                                        webSrv.send("KCX_BT_MODE=", bt_emitter.getMode().c_get()); return;}
+    CMD_EQUALS("KCX_BT_changeMode"){    bt_emitter.changeMode(); return;}
     CMD_EQUALS("KCX_BT_pause"){         bt_emitter.pauseResume(); return;}
     CMD_EQUALS("KCX_BT_downvolume"){    bt_emitter.downvolume(); return;}
     CMD_EQUALS("KCX_BT_upvolume"){      bt_emitter.upvolume();   return;}
-    CMD_EQUALS("KCX_BT_getPower"){      if(s_bt_emitter.power_state) webSrv.send("KCX_BT_power=", "1"); else webSrv.send("KCX_BT_power=", "0"); return;}
-    CMD_EQUALS("KCX_BT_power"){         s_bt_emitter.power_state == 1 ? bt_emitter.power_off() : bt_emitter.power_on() ; return;}
+    CMD_EQUALS("KCX_BT_getPower"){      bt_emitter.get_power_state() ? webSrv.send("KCX_BT_power=", "1") : webSrv.send("KCX_BT_power=", "0"); return;}
+    CMD_EQUALS("KCX_BT_power"){         bt_emitter.get_power_state() ? bt_emitter.power_off() : bt_emitter.power_on() ; return;}
 
     CMD_EQUALS("hardcopy"){             SerialPrintfln("Webpage: ... " ANSI_ESC_YELLOW "create a display hardcopy" ANSI_ESC_RESET); make_hardcopy_on_sd(); webSrv.send("hardcopy=", "/hardcopy.bmp"); return;}
 
@@ -4863,6 +4857,15 @@ void on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg) {
     if (msg.e == KCX_BT_Emitter::evt_found) {
         s_bt_emitter.found = true;
         SerialPrintfln("BT-Emitter:  %s ", "found");
+        bt_emitter.userCommand("AT+GMR?");                 // get version
+        bt_emitter.userCommand("AT+PAUSE?");               // pause or play?
+        bt_emitter.userCommand("AT+NAME+BT-MiniWebRadio"); // set BT receiver name
+        bt_emitter.setVolume(s_bt_emitter.volume);
+        if (!s_bt_emitter.power_state) {
+            bt_emitter.power_off();
+        } else {
+            if (!bt_emitter.getMode().equals(s_bt_emitter.mode)) { bt_emitter.setMode(s_bt_emitter.mode); }
+        }
     }
     if (msg.e == KCX_BT_Emitter::evt_connect) {
         s_bt_emitter.connect = true;
