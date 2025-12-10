@@ -2,7 +2,7 @@
  * websrv.cpp
  *
  *  Created on: 09.07.2017
- *  updated on: 28.10.2025
+ *  updated on: 10.12.2025
  *      Author: Wolle
  */
 
@@ -1154,18 +1154,21 @@ void WebSrv::loop() {
 }
 //--------------------------------------------------------------------------------------------------------------
 void WebSrv::reply(ps_ptr<char> response, const char* MIMEType, bool header) {
+    ps_ptr<char> http_header;
+    http_header.set_name("http_header");
     if (header == true) {
         int32_t l = response.strlen();
-        // HTTP header
-        String httpheader = "";
-        httpheader += "HTTP/1.1 200 OK\r\n";
-        httpheader += "Content-type: " + (String)MIMEType + "\r\n";
-        httpheader += "Content-Length: " + String(l, 10) + "\r\n\r\n";
-
-        cmdclient.print(httpheader); // header sent
+        http_header.assign("HTTP/1.1 200 OK\r\n");
+        http_header.appendf("Content-type: %s\r\n", MIMEType);
+        http_header.appendf("Content-Length: %i\r\n\r\n", l);
+        cmdclient.print(http_header.c_get()); // header sent
     }
     cmdclient.print(response.c_get());
+
+    // http_header.println();
+    // response.println();
 }
+//--------------------------------------------------------------------------------------------------------------
 void WebSrv::sendStatus(uint16_t HTTPstatusCode) {
     int32_t l = 0; // respunse length
     // HTTP header

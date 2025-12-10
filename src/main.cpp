@@ -2656,7 +2656,7 @@ void loop() {
                                     //     log_w("SPIFFS");
             connecttoFS("SD", "/Collide.ogg");
         }
-        if (r.startsWith("sto")) { // setTimeOffset
+        if (r.startsWith("stoff")) { // setTimeOffset
             int32_t t = r.substring(3, r.length() - 1).toInt();
             log_w("setTimeOffset %li", t);
             audio.setTimeOffset(t);
@@ -2669,12 +2669,12 @@ void loop() {
         }
 
         if (r.startsWith("gafp")) { // getAudioFilePosition
-            log_w("getAudioFilePosition %lu", audio.getAudioFilePosition());
+            MWR_LOG_INFO("getAudioFilePosition %lu", audio.getAudioFilePosition());
         }
 
         if (r.startsWith("safp")) { // setAudioFilePosition
             uint32_t t = r.substring(4, r.length() - 1).toInt();
-            log_w("setAudioFilePosition %lu", t);
+            MWR_LOG_INFO("setAudioFilePosition %lu", t);
             audio.setAudioFilePosition(t);
         }
 
@@ -2686,39 +2686,39 @@ void loop() {
             f_mono = !f_mono;
             audio.forceMono(f_mono);
             if (f_mono)
-                log_w("mono");
+                MWR_LOG_INFO("mono");
             else
-                log_w("stereo");
+                MWR_LOG_INFO("stereo");
         }
         if (r.startsWith("btp")) { // bluetooth RX/TX protocol
             bt_emitter.list_protokol();
         }
         if (r.startsWith("btstr")) { // bluetooth string, send to bt emitter e.g. btstr:AT+
             bt_emitter.userCommand(r.substring(6, r.length() - 1).c_str());
-            log_w("btstr: %s", r.substring(6, r.length() - 1).c_str());
+            MWR_LOG_INFO("btstr: %s", r.substring(6, r.length() - 1).c_str());
         }
         if (r.startsWith("tsp")) { s_f_timeSpeech = true; }
         if (r.startsWith("pwd")) { // set password for WiFi
             changeState(WIFI_SETTINGS);
         }
         if (r.startsWith("gif")) { // draw gif image
-            log_w("gif");
+            MWR_LOG_INFO("gif");
             drawImage("/common/Tom_Jerry.gif", 100, 100);
         }
         static uint32_t time = 0;
         if (r.startsWith("stops")) { // stop song
             time = audio.stopSong();
-            MWR_LOG_DEBUG("file %s stopped at time %lu", s_cur_AudioFileName.c_get(), time);
+            MWR_LOG_INFO("file %s stopped at time %lu", s_cur_AudioFileName.c_get(), time);
         }
         if (r.startsWith("starts")) { // start song
             ps_ptr<char> path = "/audiofiles/" + s_cur_AudioFileName;
-            audio.connecttoFS(SD_MMC, path.c_get(), time);
-            MWR_LOG_DEBUG("file %s started at time %lu", s_cur_AudioFileName.c_get(), time);
+            bool ret = audio.connecttoFS(SD_MMC, path.c_get(), time);
+            MWR_LOG_INFO("file %s started at time %lu, ret %i", s_cur_AudioFileName.c_get(), time, ret);
         }
 
         if (r.startsWith("gbr")) { // get bitrate
             uint32_t br = audio.getBitRate();
-            log_w("bitrate: %lu", br);
+            MWR_LOG_INFO("bitrate: %lu", br);
         }
         if (r.startsWith("ibs")) { // inbuff status
             audio.inBufferStatus();
