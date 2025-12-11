@@ -174,21 +174,21 @@ bool s_f_esp_restart = false;
 bool s_f_timeSpeech = false;
 bool s_f_stationsChanged = false;
 bool s_f_sd_card_found = false;
+bool s_f_isWiFiConnected = false;
 
 std::deque<ps_ptr<char>> s_PLS_content;
 std::deque<ps_ptr<char>> s_logBuffer;
 
 const char* codecname[10] = {"unknown", "WAV", "MP3", "AAC", "M4A", "FLAC", "AACP", "OPUS", "OGG", "VORBIS"};
 
-Audio       audio;
-Preferences pref;
-WebSrv      webSrv;
-WiFiMulti   wifiMulti;
-RTIME       rtc;
-Ticker      ticker100ms;
-IR_buttons  irb(&s_settings);
-IR          ir(IR_PIN); // do not change the objectname, it must be "ir"
-
+Audio          audio;
+Preferences    pref;
+WebSrv         webSrv;
+WiFiMulti      wifiMulti;
+RTIME          rtc;
+Ticker         ticker100ms;
+IR_buttons     irb(&s_settings);
+IR             ir(IR_PIN); // do not change the objectname, it must be "ir"
 File           audioFile;
 FtpServer      ftpSrv;
 DLNA_Client    dlna;
@@ -197,6 +197,7 @@ TwoWire        i2cBusOne = TwoWire(0); // additional HW, sensors, buttons, encod
 TwoWire        i2cBusTwo = TwoWire(1); // external DAC, AC101 or ES8388
 hp_BH1750      BH1750;                 // create the sensor
 SPIClass       spiBus(FSPI);
+
 
 #if TFT_CONTROLLER < 7 // ⏹⏹⏹⏹
 TFT_SPI tft(spiBus, TFT_CS);
@@ -210,6 +211,7 @@ TFT_RGB tft;
 TP_XPT2046 tp(spiBus, TP_CS);
 #elif TP_CONTROLLER == 7
 TP_GT911 tp;
+Audio    audio;
 #elif TP_CONTROLLER == 8
 FT6x36 tp;
 #else
@@ -969,22 +971,10 @@ void setWiFiCredentials(const char* ssid, const char* password) {
     state = 3;
 
 exit:
-    if (state == 0) {
-        SerialPrintfln("WiFI_info:   " ANSI_ESC_RED "SSID: %s password can't changed, it is hard coded", ssid);
-        if (WiFi.isConnected()) audio.connecttospeech("S S I D and password are hard coded", "en");
-    }
-    if (state == 1) {
-        SerialPrintfln("WiFI_info:   " ANSI_ESC_GREEN "The passord \"%s\" for the SSID: %s has been changed", password, ssid);
-        if (WiFi.isConnected()) audio.connecttospeech("The password has been changed", "en");
-    }
-    if (state == 2) {
-        SerialPrintfln("WiFI_info:   " ANSI_ESC_GREEN "The SSID: %s has been added", ssid);
-        if (WiFi.isConnected()) audio.connecttospeech("The credentials has been added", "en");
-    }
-    if (state == 3) {
-        SerialPrintfln("WiFI_info:   " ANSI_ESC_RED "No more memory to save the credentials for: %s", ssid);
-        if (WiFi.isConnected()) audio.connecttospeech("The S S I D and password can't be stored", "en");
-    }
+    if (state == 0) { SerialPrintfln("WiFI_info:   " ANSI_ESC_RED "SSID: %s password can't changed, it is hard coded", ssid); }
+    if (state == 1) { SerialPrintfln("WiFI_info:   " ANSI_ESC_GREEN "The passord \"%s\" for the SSID: %s has been changed", password, ssid); }
+    if (state == 2) { SerialPrintfln("WiFI_info:   " ANSI_ESC_GREEN "The SSID: %s has been added", ssid); }
+    if (state == 3) { SerialPrintfln("WiFI_info:   " ANSI_ESC_RED "No more memory to save the credentials for: %s", ssid); }
     return;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -1193,10 +1183,12 @@ void setup() {
 
     if (s_volume.volumeSteps < 21) s_volume.volumeSteps = 21;
 
-    connectToWiFi();
+    s_f_isWiFiConnected = connectToWiFi();
 
-    if (WiFi.isConnected()) {
+    if (s_f_isWiFiConnected) {
+
         s_myIP = WiFi.localIP().toString().c_str();
+
         SerialPrintfln("setup: ....  connected to " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE ", IP address is " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE ", Received Signal Strength " ANSI_ESC_CYAN
                        "%i" ANSI_ESC_WHITE " dB",
                        WiFi.SSID().c_str(), s_myIP.c_get(), WiFi.RSSI());
@@ -1242,6 +1234,7 @@ void setup() {
     audio.setConnectionTimeout(CONN_TIMEOUT, CONN_TIMEOUT_SSL);
     audio.setVolumeSteps(s_volume.volumeSteps);
     audio.setVolume(0);
+
     audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT, I2S_MCLK);
     audio.setI2SCommFMT_LSB(I2S_COMM_FMT);
 
@@ -1263,7 +1256,7 @@ void setup() {
         SerialPrintfln("setup: ....  On Board Amplifier pin is: " ANSI_ESC_CYAN "%i" ANSI_ESC_RESET, AMP_ENABLED);
     }
 
-    if (WiFi.isConnected()) webSrv.begin(80, 81); // HTTP port, WebSocket port
+    if (s_f_isWiFiConnected) webSrv.begin(80, 81); // HTTP port, WebSocket port
 
     s_dlnaLevel = 0;
     s_dlnaHistory[0].name = "Media Server";
@@ -1294,20 +1287,18 @@ void setup() {
     dispHeader.show(true);
     s_radioSubMenue = 0;
 
-    if (WiFi.isConnected()) {
+    if (s_f_isWiFiConnected) {
         s_state = RADIO;
         if (s_resetReason == ESP_RST_POWERON ||   // Simply switch on the operating voltage
             s_resetReason == ESP_RST_SW ||        // ESP.restart()
             s_resetReason == ESP_RST_SDIO ||      // The boot button was pressed
             s_resetReason == ESP_RST_DEEPSLEEP) { // Wake up
-            if (WiFi.isConnected()) {
-                s_radioSubMenue = 0;
-                changeState(RADIO);
-                if (s_cur_station > 0) {
-                    setStation(s_cur_station);
-                } else {
-                    setStationViaURL(s_settings.lastconnectedhost.c_get(), "");
-                }
+            s_radioSubMenue = 0;
+            changeState(RADIO);
+            if (s_cur_station > 0) {
+                setStation(s_cur_station);
+            } else {
+                setStationViaURL(s_settings.lastconnectedhost.c_get(), "");
             }
         }
     } else {
@@ -2214,9 +2205,9 @@ void loop() {
     dlna.loop();
     audio.loop();
     webSrv.loop();
+    ftpSrv.handleFTP();
     ir.loop();
     tp.loop();
-    ftpSrv.handleFTP();
     ArduinoOTA.handle();
     bt_emitter.loop();
     tft.loop();
@@ -2522,7 +2513,7 @@ void loop() {
                 connecttohost(s_settings.lastconnectedhost.get());
         }
         //------------------------------------------RECONNECT AFTER FAIL------------------------------------------------------------------------------
-        if (s_f_reconnect && !WiFi.isConnected()) { // not used yet
+        if (s_f_reconnect && !s_f_isWiFiConnected) { // not used yet
             s_f_reconnect = false;
             connecttohost(s_settings.lastconnectedhost.get());
         }
@@ -2542,7 +2533,7 @@ void loop() {
             s_f_dlna_browseReady = false;
         }
         //-------------------------------------------WIFI DISCONNECTED?-------------------------------------------------------------------------------
-        // if (WiFi.isConnected()) {
+        // if (s_f_isWiFiConnected) {
         //     if ((WiFi.status() != WL_CONNECTED)) {
         //         s_WiFi_disconnectCnt++;
         //         if (s_WiFi_disconnectCnt == 15) {
@@ -2712,7 +2703,7 @@ void loop() {
         }
         if (r.startsWith("starts")) { // start song
             ps_ptr<char> path = "/audiofiles/" + s_cur_AudioFileName;
-            bool ret = audio.connecttoFS(SD_MMC, path.c_get(), time);
+            bool         ret = audio.connecttoFS(SD_MMC, path.c_get(), time);
             MWR_LOG_INFO("file %s started at time %lu, ret %i", s_cur_AudioFileName.c_get(), time, ret);
         }
 
