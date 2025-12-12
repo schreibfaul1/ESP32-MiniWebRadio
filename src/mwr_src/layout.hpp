@@ -80,7 +80,7 @@ struct DisplayConfig {
     uint8_t  brightnessMin;
     uint8_t  brightnessMax;
 
-    char tftSize; // 's', 'm', 'l'
+    const char* tftSize; // "s", "m", "l", "xl"
 };
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
@@ -155,7 +155,7 @@ inline constexpr DisplayConfig config = {
     240,                 // height
     5,                   // brightnessMin
     255,                 // brightnessMax
-    's'                  // size code
+    "s"                  // size code
 };
 } // namespace layout_320x240
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -178,20 +178,31 @@ namespace layout_480x320 {
 //  +-------------------------------------------+ 320
 //                                             480
 
+constexpr uint16_t h_res = 480, v_res = 320; // horizontal - vertical resolution
+constexpr uint16_t h_footer = 30; // footer height
+constexpr uint16_t hw_btn = 56 + 2; // 56x56 + padding
+constexpr uint16_t h_progBar = 14;  // height progressBar and volumeSlider
+constexpr uint16_t w_vuMeter = 32; // width vuMeter
+
+constexpr uint16_t h_area = (v_res - 2 * h_footer) / 2;  // 130, height area1 and  area2
+constexpr uint16_t y_area2 = v_res - h_footer - h_area;  // 320 - 30 - 130, yPos area2
+constexpr uint16_t y_btn = y_area2 + h_area / 2 + (h_area / 4 - hw_btn / 2);   // center in the lower half of area2
+constexpr uint16_t y_progbar  = y_area2 + (h_area / 4 - h_progBar / 2) +  h_progBar / 4;   // center in upper half of area2 # 1/4 h_progBar
+
 // -----------------------------------------------------------------------------------
 // window definitions .pos(x, y) .size(w, h) .padding(l, r, t, b)
 // -----------------------------------------------------------------------------------
-constexpr coor winHeader = coor().pos(0, 0).size(480, 30);
-constexpr coor winLogo = coor().pos(0, 30).size(130, 132);
-constexpr coor winName = coor().pos(132, 30).size(348, 132).pad(0, 4, 0, 3);
-constexpr coor winFName = coor().pos(0, 30).size(480, 132).pad(0, 5, 0, 3);
-constexpr coor winFileNr = coor().pos(0, 164).size(130, 40).pad(0, 1, 0, 1);
+constexpr coor winHeader = coor().pos(0, 0).size(h_res, h_footer);
+constexpr coor winLogo = coor().pos(0, h_footer).size(h_area, h_area).pad(1, 1, 1, 1);
+constexpr coor winName = coor().pos(h_area, h_footer).size(h_res - h_area, h_area).pad(1, 1, 0, 0); // StationName
+constexpr coor winFName = coor().pos(0, h_footer).size(h_res, h_area).pad(1, 1, 0, 0);    // FileName
+constexpr coor winFileNr = coor().pos(0, y_area2).size(h_area, h_footer).pad(0, 1, 0, 1);
 constexpr coor winVolBox = coor().pos(200, 48).size(256, 96);
-constexpr coor winProgbar = coor().pos(0, 210).size(480, 14);
-constexpr coor winTitle = coor().pos(0, 162).size(480, 128).pad(0, 5, 0, 3);
-constexpr coor winSTitle = coor().pos(0, 162).size(448, 128).pad(0, 4, 0, 3);
-constexpr coor winVUmeter = coor().pos(448, 162).size(32, 128);
-constexpr coor winFooter = coor().pos(0, 290).size(480, 30);
+constexpr coor winProgbar = coor().pos(0, y_progbar).size(h_res, h_progBar).pad(5, 5, 0, 0); // or volume slider
+constexpr coor winTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(0, 5, 0, 3);
+constexpr coor winSTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(0, 4, 0, 3);
+constexpr coor winVUmeter = coor().pos(h_res - w_vuMeter, y_area2).size(w_vuMeter, h_area);
+constexpr coor winFooter = coor().pos(0, v_res - h_footer).size(h_res, h_footer);
 constexpr coor winStaNr = coor().pos(0, 290).size(85, 30);
 constexpr coor winSleep = coor().pos(85, 290).size(87, 30);
 constexpr coor sdrOvBtns = coor().pos(0, 194).size(480, 40);
@@ -231,7 +242,7 @@ inline constexpr DisplayConfig config = {
     320,                  // height
     5,                    // brightnessMin
     255,                  // brightnessMax
-    'm'                   // size code
+    "m"                   // size code
 };
 } // namespace layout_480x320
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -307,9 +318,94 @@ inline constexpr DisplayConfig config = {
     480,                    // height
     30,                     // brightnessMin
     255,                    // brightnessMax
-    'l'                     // size code
+    "l"                     // size code
 };
 } // namespace layout_800x480
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+namespace layout_1024x600 {
+//
+//  Display 1024x800
+//  +-------------------------------------------+ _yHeader=0
+//  | Header                                    |       winHeader=60px
+//  +-------------------------------------------+ _yName=50
+//  |                                           |
+//  | Logo                   StationName        |       winFName=240px, area1
+//  |                                           |
+//  +-------------------------------------------+ _yTitle=300
+//  |                                           |
+//  |              StreamTitle                  |       winTitle=240px, area2
+//  |                                           |
+//  +-------------------------------------------+ _yFooter=430
+//  | Footer                                    |       winFooter=60px
+//  +-------------------------------------------+ 600
+//                                            1024
+
+constexpr uint16_t h_res = 1024, v_res = 600; // horizontal - vertical resolution
+constexpr uint16_t h_footer = 60; // footer height
+constexpr uint16_t hw_btn = 96 + 4; // 96x96 + padding
+constexpr uint16_t h_progBar = 40;  // height progressBar and volumeSlider
+constexpr uint16_t w_vuMeter = 70; // width vuMeter
+
+constexpr uint16_t h_area = (v_res - 2 * h_footer) / 2;  // 240, height area1 and  area2
+constexpr uint16_t y_area2 = v_res - h_footer - h_area;  // 600 - 60 - 240, yPos area2
+constexpr uint16_t y_btn = y_area2 + h_area / 2 + (h_area / 4 - hw_btn / 2);   // center in the lower half of area2
+constexpr uint16_t y_progbar  = y_area2 + (h_area / 4 - h_progBar / 2) +  h_progBar / 4;   // center in upper half of area2 # 1/4 h_progBar
+
+// -----------------------------------------------------------------------------------
+// window definitions .pos(x, y) .size(w, h) .padding(l, r, t, b)
+// -----------------------------------------------------------------------------------
+constexpr coor winHeader = coor().pos(0, 0).size(h_res, h_footer);
+constexpr coor winLogo = coor().pos(0, h_footer).size(h_area, h_area).pad(4, 4, 4, 4);
+constexpr coor winName = coor().pos(h_area, h_footer).size(h_res - h_area, h_area).pad(15, 5, 0, 0); // StationName
+constexpr coor winFName = coor().pos(0, h_footer).size(h_res, h_area).pad(5, 5, 0, 0);    // FileName
+constexpr coor winFileNr = coor().pos(0, y_area2).size(h_area, h_footer).pad(0, 4, 0, 0);
+constexpr coor winVolBox = coor().pos(200, 73).size(258, 144);
+constexpr coor winProgbar = coor().pos(0, y_progbar).size(h_res, h_progBar).pad(15, 15, 0, 0); // or volume slider
+constexpr coor winTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(15, 5, 2, 2);
+constexpr coor winSTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(15, 5, 2, 2);
+constexpr coor winVUmeter = coor().pos(h_res - w_vuMeter, y_area2).size(w_vuMeter, h_area);
+constexpr coor winFooter = coor().pos(0, v_res - h_footer).size(h_res, h_footer);
+constexpr coor winStaNr = coor().pos(0, 290).size(85, h_area);
+constexpr coor winSleep = coor().pos(85, 290).size(87, h_area);
+constexpr coor winButton = coor().pos(15, y_btn).size(hw_btn, hw_btn);
+constexpr coor winDigits = coor().pos(0, h_footer).size(h_res, h_area + h_area / 2);
+constexpr coor winWoHF = coor().pos(0, h_footer).size(h_res, h_area * 2);
+constexpr coor sdrHP = coor().pos(200, 53).size(300, 73);
+constexpr coor sdrBP = coor().pos(200, 126).size(300, 73);
+constexpr coor sdrLP = coor().pos(200, 199).size(300, 73);
+constexpr coor sdrBAL = coor().pos(200, 272).size(300, 73);
+
+// -----------------------------------------------------------------------------------
+// window derived (calculated from others)
+// -----------------------------------------------------------------------------------
+constexpr coor btnHP = coor().pos(100, sdrHP.y).size(sdrHP.w, sdrHP.h);
+constexpr coor btnBP = coor().pos(100, sdrBP.y).size(sdrBP.w, sdrBP.h);
+constexpr coor btnLP = coor().pos(100, sdrLP.y).size(sdrLP.w, sdrLP.h);
+constexpr coor btnBAL = coor().pos(100, sdrBAL.y).size(sdrBAL.w, sdrBAL.h);
+
+constexpr coor txtHP = coor().pos(sdrHP.x + sdrHP.w, sdrHP.y).size(190, sdrHP.h);
+constexpr coor txtBP = coor().pos(sdrHP.x + sdrHP.w, sdrBP.y).size(190, sdrBP.h);
+constexpr coor txtLP = coor().pos(sdrHP.x + sdrHP.w, sdrLP.y).size(190, sdrLP.h);
+constexpr coor txtBAL = coor().pos(sdrHP.x + sdrHP.w, sdrBAL.y).size(190, sdrBAL.h);
+
+inline constexpr uint8_t fonts[13] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66, 81, 96};
+
+inline constexpr DisplayConfig config = {
+    fonts,
+    27,                     // listFontSize
+    38,                     // headerFontSize
+    38,                     // footerFontSize
+    156,                    // bigNumbersFontSize
+    34,                     // fileNumberFontSize
+    {20, 137, 223, 106, 0}, // sleeptimeXPos[5]
+    112,                    // sleeptimeYPos
+    1024,                   // width
+    600,                    // height
+    30,                     // brightnessMin
+    255,                    // brightnessMax
+    "xl"                    // size code
+};
+} // namespace layout_1024x600
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 // Factory-Funktion (Compile-Time)

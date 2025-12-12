@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 22.07.2025
+ *  Updated on: 12.12.2025
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -461,7 +461,7 @@ var I2S_eq_DB = ['-40', '-37', '-34', '-31', '-28', '-25', '-22', '-19',
 
 var I2S_eq_Val = [-40, -37, -34, -31, -28, -25, -22, -19, -16, -13, -10, -7, -4, 0, +3, +6]
 
-var tft_size = 0        // (0)320x240, (1)480x320
+var tft_size = 0        // (0)320x240, (1)480x320, (2)800x480, (3)1024x600
 var ir_buttons
 
 
@@ -674,6 +674,14 @@ function connect() {
                                                             img.style.width = '800px';
                                                             img.style.height = '480px';
                                                             console.log("tftSize is l");
+                                        }
+                                        if(val == 'xl')  { tft_size = 3; // 1024x600px
+                                                            document.getElementById('canvas').width  = 232;
+                                                            document.getElementById('canvas').height = 232;
+                                                            const img = document.getElementById('label-infopic');
+                                                            img.style.width = '1024px';
+                                                            img.style.height = '600px';
+                                                            console.log("tftSize is xl");
                                         }
                                         break
             case  "volume":             resultstr1.value = "Volume is now " + val;
