@@ -2371,7 +2371,7 @@ class pictureBox : public RegisterTable {
         }
         File file = SD_MMC.open(scaledPicPath.c_get(), "r", false);
         if (file.size() < 24) {
-            log_w("file %s is too small", scaledPicPath);
+            MWR_LOG_WARN("file %s is too small", scaledPicPath.c_get());
             file.close();
             return false;
         }
@@ -2382,7 +2382,7 @@ class pictureBox : public RegisterTable {
             while (true) {
                 c1 = file.read();
                 if (c1 == -1) {
-                    log_w("sof marker in %s not found", scaledPicPath);
+                    MWR_LOG_WARN("sof marker in %s not found", scaledPicPath.c_get());
                     file.close();
                     return false;
                 } // end of file reached
@@ -2435,7 +2435,7 @@ class pictureBox : public RegisterTable {
             // log_w("w %i, h %i", m_w, m_h);
             return true;
         }
-        log_e("unknown picture format %s", picturePath);
+        MWR_LOG_ERROR("unknown picture format %s", picturePath);
         return false;
     }
 };
@@ -3561,7 +3561,7 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
     bool         m_showAll = false;
     bool         m_backgroundTransparency = false;
     ps_ptr<char> m_name;
-    char*        m_pathBuff = NULL;
+    ps_ptr<char> m_pathBuff;
     uint8_t*     m_alarmDays = NULL;
     int16_t*     m_alarmTime = NULL;
     uint8_t      m_min = 0, m_hour = 0, m_weekday = 0;
@@ -3582,11 +3582,8 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
         m_enabled = false;
         m_clicked = false;
         m_state = false;
-        m_pathBuff = x_ps_malloc(50);
-        strcpy(m_pathBuff, m_p1);
     }
     ~alarmClock() {
-        x_ps_free(&m_pathBuff);
         delete pic_alarm_digitsH10;
         delete pic_alarm_digitsH01;
         delete pic_alarm_digitsColon;
@@ -3768,29 +3765,28 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
         static uint8_t m_oldAlarmDigits[4] = {0};
         for (uint8_t i = 0; i < 4; i++) {
             if (m_oldAlarmDigits[i] != m_alarmDigits[i] || m_showAll) {
-                m_pathBuff[m_p1Len + 0] = m_alarmDigits[i] + 48;
-                m_pathBuff[m_p1Len + 1] = '\0';
+                m_pathBuff.assignf("%s%i", m_p1, m_alarmDigits[i]);
 
                 if (i == m_idx) {
-                    strcat(m_pathBuff, "orange.jpg");
+                    m_pathBuff.append("orange.jpg");
                 } else {
-                    strcat(m_pathBuff, "red.jpg");
+                    m_pathBuff.append("red.jpg");
                 }
 
                 if (i == 0) {
-                    pic_alarm_digitsH10->setPicturePath(m_pathBuff);
+                    pic_alarm_digitsH10->setPicturePath(m_pathBuff.c_get());
                     pic_alarm_digitsH10->show(m_backgroundTransparency, false);
                 }
                 if (i == 1) {
-                    pic_alarm_digitsH01->setPicturePath(m_pathBuff);
+                    pic_alarm_digitsH01->setPicturePath(m_pathBuff.c_get());
                     pic_alarm_digitsH01->show(m_backgroundTransparency, false);
                 }
                 if (i == 2) {
-                    pic_alarm_digitsM10->setPicturePath(m_pathBuff);
+                    pic_alarm_digitsM10->setPicturePath(m_pathBuff.c_get());
                     pic_alarm_digitsM10->show(m_backgroundTransparency, false);
                 }
                 if (i == 3) {
-                    pic_alarm_digitsM01->setPicturePath(m_pathBuff);
+                    pic_alarm_digitsM01->setPicturePath(m_pathBuff.c_get());
                     pic_alarm_digitsM01->show(m_backgroundTransparency, false);
                 }
             }

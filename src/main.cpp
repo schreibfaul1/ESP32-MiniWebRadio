@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.0.4o - 08.12.2025                                                                                                               ";
+    Version 4.0.4p - 15.12.2025                                                                                                               ";
 
 
 /*  display (320x240px) with controller ILI9341 or
@@ -520,12 +520,6 @@ inline void clearWithOutHeaderFooter() {
 }
 inline void clearFooter() {
     tft.copyFramebuffer(1, 0, layout.winFooter.x, layout.winFooter.y, layout.winFooter.w, layout.winFooter.h);
-}
-inline void clearStaNr() {
-    tft.copyFramebuffer(1, 0, layout.winStaNr.x, layout.winStaNr.y, layout.winStaNr.w, layout.winStaNr.h);
-}
-inline void clearSleep() {
-    tft.copyFramebuffer(1, 0, layout.winSleep.x, layout.winSleep.y, layout.winSleep.w, layout.winSleep.h);
 }
 inline void clearDigits() {
     tft.copyFramebuffer(1, 0, layout.winDigits.x, layout.winDigits.y, layout.winDigits.w, layout.winDigits.h);
@@ -1766,8 +1760,8 @@ void changeState(int32_t state) {
                 s_f_newStreamTitle = true;
             }
             if (s_radioSubMenue == 1) { // Mute, Vol+, Vol-, Sta+, Sta-, StaList
-                clearTitle();
-                txt_RA_sTitle.disable();
+                txt_RA_sTitle.hide();
+                VUmeter_RA.hide();
                 sdr_RA_volume.show(true, false);
                 btn_RA_mute.show();
                 btn_RA_prevSta.show();
@@ -1788,8 +1782,8 @@ void changeState(int32_t state) {
             }
             if (s_radioSubMenue == 3) { ; }
             if (s_radioSubMenue == 4) { // IR select mode
-                clearTitle();
-                txt_RA_sTitle.disable();
+                txt_RA_sTitle.hide();
+                VUmeter_RA.hide();
                 btn_RA_staList.showAlternativePic();
                 btn_RA_player.show();
                 btn_RA_dlna.show();
