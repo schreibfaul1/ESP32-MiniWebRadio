@@ -1,9 +1,11 @@
 // first release on 01/2025
-// updated on Apr 26 2025
-
+// updated on Dec 16 2025
 
 #include "Arduino.h"
 #include "tft_rgb.h"
+
+#ifdef CONFIG_IDF_TARGET_ESP32S3
+#if TFT_CONTROLLER == 7
 
 #define __malloc_heap_psram(size) heap_caps_malloc_prefer(size, 2, MALLOC_CAP_DEFAULT | MALLOC_CAP_SPIRAM, MALLOC_CAP_DEFAULT | MALLOC_CAP_INTERNAL)
 
@@ -5016,4 +5018,6 @@ void TFT_RGB::png_draw_into_Framebuffer(uint16_t x, uint16_t y, uint16_t w, uint
     // Only draw the changed area
     panelDrawBitmap(x, y, x + w, y + h, m_framebuffer[0]);
 }
+#endif //  TFT_CONTROLLER == 7
+#endif // CONFIG_IDF_TARGET_ESP32S3
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

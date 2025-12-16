@@ -5,8 +5,9 @@
 #pragma once
 
 #include "Arduino.h"
+#include "../../src/settings.h"
+#if TFT_CONTROLLER < 7
 #include "Audio.h"
-
 #include "driver/gpio.h"
 #include "fonts/fontsdef.h"
 #include "fonts/TimesNewRoman.h"
@@ -847,4 +848,7 @@ class TFT_SPI {
     void          png_rgb16btouint32(uint32_t* dst, png_s_rgb16b* src);
     void          png_draw_into_AddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, char* rgbaBuffer, uint32_t png_outbuff_size, uint8_t png_format);
 };
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+#endif // TFT_CONTROLLER < 7
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 

@@ -44,8 +44,6 @@ struct Layout {
     const coor& winSTitle;
     const coor& winVUmeter;
     const coor& winFooter;
-    const coor& winStaNr;
-    const coor& winSleep;
     const coor& sdrOvBtns;
     const coor& winButton;
     const coor& winDigits;
@@ -179,15 +177,15 @@ namespace layout_480x320 {
 //                                             480
 
 constexpr uint16_t h_res = 480, v_res = 320; // horizontal - vertical resolution
-constexpr uint16_t h_footer = 30; // footer height
-constexpr uint16_t hw_btn = 56 + 2; // 56x56 + padding
-constexpr uint16_t h_progBar = 14;  // height progressBar and volumeSlider
-constexpr uint16_t w_vuMeter = 32; // width vuMeter
+constexpr uint16_t h_footer = 30;            // footer height
+constexpr uint16_t hw_btn = 56 + 2;          // 56x56 + padding
+constexpr uint16_t h_progBar = 14;           // height progressBar and volumeSlider
+constexpr uint16_t w_vuMeter = 32;           // width vuMeter
 
-constexpr uint16_t h_area = (v_res - 2 * h_footer) / 2;  // 130, height area1 and  area2
-constexpr uint16_t y_area2 = v_res - h_footer - h_area;  // 320 - 30 - 130, yPos area2
-constexpr uint16_t y_btn = y_area2 + h_area / 2 + (h_area / 4 - hw_btn / 2);   // center in the lower half of area2
-constexpr uint16_t y_progbar  = y_area2 + (h_area / 4 - h_progBar / 2) +  h_progBar / 4;   // center in upper half of area2 # 1/4 h_progBar
+constexpr uint16_t h_area = (v_res - 2 * h_footer) / 2;                                // 130, height area1 and  area2
+constexpr uint16_t y_area2 = v_res - h_footer - h_area;                                // 320 - 30 - 130, yPos area2
+constexpr uint16_t y_btn = y_area2 + h_area / 2 + (h_area / 4 - hw_btn / 2);           // center in the lower half of area2
+constexpr uint16_t y_progbar = y_area2 + (h_area / 4 - h_progBar / 2) + h_progBar / 4; // center in upper half of area2 # 1/4 h_progBar
 
 // -----------------------------------------------------------------------------------
 // window definitions .pos(x, y) .size(w, h) .padding(l, r, t, b)
@@ -195,7 +193,7 @@ constexpr uint16_t y_progbar  = y_area2 + (h_area / 4 - h_progBar / 2) +  h_prog
 constexpr coor winHeader = coor().pos(0, 0).size(h_res, h_footer);
 constexpr coor winLogo = coor().pos(0, h_footer).size(h_area, h_area).pad(1, 1, 1, 1);
 constexpr coor winName = coor().pos(h_area, h_footer).size(h_res - h_area, h_area).pad(1, 1, 0, 0); // StationName
-constexpr coor winFName = coor().pos(0, h_footer).size(h_res, h_area).pad(1, 1, 0, 0);    // FileName
+constexpr coor winFName = coor().pos(0, h_footer).size(h_res, h_area).pad(1, 1, 0, 0);              // FileName
 constexpr coor winFileNr = coor().pos(0, y_area2).size(h_area, h_footer).pad(0, 1, 0, 1);
 constexpr coor winVolBox = coor().pos(200, 48).size(256, 96);
 constexpr coor winProgbar = coor().pos(0, y_progbar).size(h_res, h_progBar).pad(5, 5, 0, 0); // or volume slider
@@ -341,35 +339,48 @@ namespace layout_1024x600 {
 //                                            1024
 
 constexpr uint16_t h_res = 1024, v_res = 600; // horizontal - vertical resolution
-constexpr uint16_t h_footer = 60; // footer height
-constexpr uint16_t hw_btn = 96 + 4; // 96x96 + padding
-constexpr uint16_t h_progBar = 40;  // height progressBar and volumeSlider
+constexpr uint16_t h_header = 60;             // footer height
+constexpr uint16_t hw_btn = 96;               // 96x96
+constexpr uint16_t hw_logo = 232;
 constexpr uint16_t w_vuMeter = 70; // width vuMeter
 
-constexpr uint16_t h_area = (v_res - 2 * h_footer) / 2;  // 240, height area1 and  area2
-constexpr uint16_t y_area2 = v_res - h_footer - h_area;  // 600 - 60 - 240, yPos area2
-constexpr uint16_t y_btn = y_area2 + h_area / 2 + (h_area / 4 - hw_btn / 2);   // center in the lower half of area2
-constexpr uint16_t y_progbar  = y_area2 + (h_area / 4 - h_progBar / 2) +  h_progBar / 4;   // center in upper half of area2 # 1/4 h_progBar
+constexpr uint16_t y_header = 0;
+constexpr uint16_t h_footer = h_header;
+constexpr uint16_t y_area1 = h_footer;                   // same as h_header;
+constexpr uint16_t h_area1 = (v_res - 2 * h_footer) / 2; // (600 - (2 * 60)) / 2
+constexpr uint16_t p_logo = (h_area1 - hw_logo) / 2;     // padding logo (240 - 232) / 2
+constexpr uint16_t h_area2 = h_area1;
+constexpr uint16_t y_area2 = y_area1 + h_area1;
+constexpr uint16_t y_progbar = y_area2 + h_footer;
+constexpr uint16_t h_progbar = h_footer;
+constexpr uint16_t h_winFileNr = h_header;
+constexpr uint16_t y_btn = y_area2 + h_winFileNr + h_progbar;
+constexpr uint16_t p_tb_btn = (h_area2 - h_progbar - h_winFileNr - hw_btn) / 2; // padding top/bottom, right (130 - 30 - 30 - 56) / 2 = 7
+constexpr uint16_t p_lr_btn = (h_res - 10 * hw_btn) / 10;                        // (1024 - 10 * 96) / 10  padding left/right
 
 // -----------------------------------------------------------------------------------
 // window definitions .pos(x, y) .size(w, h) .padding(l, r, t, b)
 // -----------------------------------------------------------------------------------
-constexpr coor winHeader = coor().pos(0, 0).size(h_res, h_footer);
-constexpr coor winLogo = coor().pos(0, h_footer).size(h_area, h_area).pad(4, 4, 4, 4);
-constexpr coor winName = coor().pos(h_area, h_footer).size(h_res - h_area, h_area).pad(15, 5, 0, 0); // StationName
-constexpr coor winFName = coor().pos(0, h_footer).size(h_res, h_area).pad(5, 5, 0, 0);    // FileName
-constexpr coor winFileNr = coor().pos(0, y_area2).size(h_area, h_footer).pad(0, 4, 0, 0);
-constexpr coor winVolBox = coor().pos(200, 73).size(258, 144);
-constexpr coor winProgbar = coor().pos(0, y_progbar).size(h_res, h_progBar).pad(15, 15, 0, 0); // or volume slider
-constexpr coor winTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(15, 5, 2, 2);
-constexpr coor winSTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(15, 5, 2, 2);
-constexpr coor winVUmeter = coor().pos(h_res - w_vuMeter, y_area2).size(w_vuMeter, h_area);
+constexpr coor winHeader = coor().pos(0, y_header).size(h_res, h_footer);
+constexpr coor winLogo = coor().pos(0, h_footer).size(h_area1, h_area1).pad(p_logo, p_logo, p_logo, p_logo);
+constexpr coor winName = coor().pos(hw_logo + 2 * p_logo, y_area1).size(h_res - (hw_logo + 2 * p_logo), h_area1).pad(5, 1, 0, 0); // StationName
+constexpr coor winFName = coor().pos(0, h_header).size(h_res, h_area1).pad(1, 1, 0, 0);                                           // FileName
+constexpr coor winFileNr = coor().pos(0, y_area2).size(hw_logo + 2 * p_logo, h_winFileNr).pad(p_logo, p_logo, 0, 0);
+constexpr coor winVolBox = coor().pos(200, 48).size(256, 96);
+constexpr coor winTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area2).pad(0, 5, 0, 3);
+constexpr coor winSTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area2).pad(0, 4, 0, 3);
+constexpr coor winVUmeter = coor().pos(h_res - w_vuMeter, y_area2).size(w_vuMeter, h_area2);
 constexpr coor winFooter = coor().pos(0, v_res - h_footer).size(h_res, h_footer);
-constexpr coor winStaNr = coor().pos(0, 290).size(85, h_area);
-constexpr coor winSleep = coor().pos(85, 290).size(87, h_area);
-constexpr coor winButton = coor().pos(15, y_btn).size(hw_btn, hw_btn);
-constexpr coor winDigits = coor().pos(0, h_footer).size(h_res, h_area + h_area / 2);
-constexpr coor winWoHF = coor().pos(0, h_footer).size(h_res, h_area * 2);
+constexpr coor sdrOvBtns = coor().pos(0, y_progbar).size(h_res, h_progbar).pad(5, 5, 0, 0);  // or RA slider
+constexpr coor winProgbar = coor().pos(0, y_progbar).size(h_res, h_progbar).pad(5, 5, 3, 0); // or PL progressbar
+constexpr coor winButton = coor().pos(0, y_btn + p_tb_btn).size(hw_btn + p_lr_btn, hw_btn);
+constexpr coor winDigits = coor().pos(0, y_area1).size(h_res, h_area1 + 2 * h_header);
+constexpr coor winWoHF = coor().pos(0, y_area1).size(h_res, h_area1 + h_area2);
+// constexpr coor sdrHP = coor().pos(140, 30).size(200, 50).pad(0, 0, 8, 8);
+// constexpr coor sdrBP = coor().pos(140, 80).size(200, 50).pad(0, 0, 8, 8);
+// constexpr coor sdrLP = coor().pos(140, 130).size(200, 50).pad(0, 0, 8, 8);
+// constexpr coor sdrBAL = coor().pos(140, 180).size(200, 50).pad(0, 0, 8, 8);
+
 constexpr coor sdrHP = coor().pos(200, 53).size(300, 73);
 constexpr coor sdrBP = coor().pos(200, 126).size(300, 73);
 constexpr coor sdrLP = coor().pos(200, 199).size(300, 73);
@@ -414,13 +425,15 @@ inline Layout makeLayout() {
     using namespace layout_320x240;
 #elif TFT_CONTROLLER == 2 || TFT_CONTROLLER == 3 || TFT_CONTROLLER == 4 || TFT_CONTROLLER == 5 || TFT_CONTROLLER == 6
     using namespace layout_480x320;
-#elif TFT_CONTROLLER >= 7
+#elif TFT_CONTROLLER == 7
     using namespace layout_800x480;
+#elif TFT_CONTROLLER == 8
+    using namespace layout_1024x600;
 #else
     #error "Unsupported TFT_CONTROLLER"
 #endif
-    return {winHeader, winLogo, winName, winFName, winFileNr, winVolBox, winProgbar, winTitle, winSTitle, winVUmeter, winFooter, winStaNr, winSleep, sdrOvBtns, winButton,
-            winDigits, winWoHF, sdrHP,   sdrBP,    sdrLP,     sdrBAL,    btnHP,      btnBP,    btnLP,     btnBAL,     txtHP,     txtBP,    txtLP,    txtBAL};
+    return {winHeader, winLogo, winName, winFName, winFileNr, winVolBox, winProgbar, winTitle, winSTitle, winVUmeter, winFooter, sdrOvBtns, winButton, winDigits,
+            winWoHF,   sdrHP,   sdrBP,   sdrLP,    sdrBAL,    btnHP,     btnBP,      btnLP,    btnBAL,    txtHP,      txtBP,     txtLP,     txtBAL};
 }
 
 // global constant - finished initialized
@@ -431,8 +444,10 @@ inline DisplayConfig makeDisplayConfig() {
     using namespace layout_320x240;
 #elif TFT_CONTROLLER >= 2 && TFT_CONTROLLER <= 6
     using namespace layout_480x320;
-#elif TFT_CONTROLLER >= 7
+#elif TFT_CONTROLLER == 7
     using namespace layout_800x480;
+#elif TFT_CONTROLLER == 8
+    using namespace layout_1024x600;
 #else
     #error "Unsupported TFT_CONTROLLER"
 #endif
@@ -526,7 +541,7 @@ button1state btn_IR_radio("btn_IR_radio");
 // WIFI_SETTINGS
 wifiSettings cls_wifiSettings("wifiSettings", 2);
 // ALL_STATE
-messageBox   msg_box("messagebox");
+messageBox msg_box("messagebox");
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 void placingGraphicObjects() { // and initialize them
@@ -900,6 +915,5 @@ void placingGraphicObjects() { // and initialize them
     cls_wifiSettings.begin(layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, layout.winWoHF.pl, layout.winWoHF.pr, layout.winWoHF.pt, layout.winWoHF.pb);
     // ALL_STATE ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     msg_box.begin(-1, -1, -1, -1);
-
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

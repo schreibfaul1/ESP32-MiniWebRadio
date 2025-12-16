@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.0.4p - 15.12.2025                                                                                                               ";
+    Version 4.0.4q - 16.12.2025                                                                                                               ";
 
 
 /*  display (320x240px) with controller ILI9341 or
@@ -198,11 +198,12 @@ TwoWire        i2cBusTwo = TwoWire(1); // external DAC, AC101 or ES8388
 hp_BH1750      BH1750;                 // create the sensor
 SPIClass       spiBus(FSPI);
 
-
 #if TFT_CONTROLLER < 7 // ⏹⏹⏹⏹
 TFT_SPI tft(spiBus, TFT_CS);
 #elif TFT_CONTROLLER == 7
 TFT_RGB tft;
+#elif TFT_CONTROLLER == 8
+TFT_DSI tft;
 #else
     #error "wrong TFT_CONTROLLER"
 #endif
@@ -480,12 +481,6 @@ inline void bgColorWithOutHeaderFooter() {
 }
 inline void bgColorFooter() {
     tft.fillRect(layout.winFooter.x, layout.winFooter.y, layout.winFooter.w, layout.winFooter.h, TFT_BLACK);
-}
-inline void bgColorStaNr() {
-    tft.fillRect(layout.winStaNr.x, layout.winStaNr.y, layout.winStaNr.w, layout.winStaNr.h, TFT_BLACK);
-}
-inline void bgColorSleep() {
-    tft.fillRect(layout.winSleep.x, layout.winSleep.y, layout.winSleep.w, layout.winSleep.h, TFT_BLACK);
 }
 inline void bgColorDigits() {
     tft.fillRect(layout.winDigits.x, layout.winDigits.y, layout.winDigits.w, layout.winDigits.h, TFT_BLACK);
@@ -1116,6 +1111,14 @@ void setup() {
         s_f_brightnessIsChangeable = true;
         setupBacklight(TFT_BL, 512);
     }
+#elif TFT_CONTROLLER == 8
+    tft.begin(DSI_TIMING);
+    vTaskDelay(100 / portTICK_PERIOD_MS); // wait for TFT to be ready
+    if (TFT_BL >= 0) {
+        s_f_brightnessIsChangeable = true;
+        setupBacklight(TFT_BL, 512);
+        setTFTbrightness(5);
+    }
 #else
     #error "wrong TFT_CONTROLLER"
 #endif
@@ -1326,7 +1329,7 @@ ps_ptr<char> scaleImage(ps_ptr<char> path) {
 
     int idx = path.index_of('/', 1);
     if (idx < 0) return path; // invalid path
-    ps_ptr<char>tfts = displayConfig.tftSize;
+    ps_ptr<char> tfts = displayConfig.tftSize;
     tfts += "/";
     path.insert(tfts.c_get(), idx + 1); // "/logo/0N 90s.jpg" --> "/logo/s/0N 90s.jpg"
     MWR_LOG_DEBUG("path %s", path.c_get());

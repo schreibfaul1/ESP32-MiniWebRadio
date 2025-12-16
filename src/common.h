@@ -16,8 +16,15 @@
 #include "mbedtls/sha1.h"
 #include "rtime.h"
 #include "settings.h"
-#include "tft_rgb.h"
+
+#if TFT_CONTROLLER < 7
 #include "tft_spi.h"
+#elif TFT_CONTROLLER == 7
+#include "tft_rgb.h"
+#elif TFT_CONTROLLER == 8
+#include "tft_dsi.h"
+#endif
+
 #include "tp_ft6x36.h"
 #include "tp_gt911.h"
 #include "tp_xpt2046.h"
@@ -622,8 +629,11 @@ inline void SerialPrintflnCut(const char* item, const char* color, const char* s
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 #if TFT_CONTROLLER < 7 // ⏹⏹⏹⏹
 extern TFT_SPI tft;
-#else
+#elif TFT_CONTROLLER == 7
 extern TFT_RGB tft;
+#elif TFT_CONTROLLER == 8
+extern TFT_DSI tft;
+#else
 #endif
 
 inline void x_ps_free(char** b) {
