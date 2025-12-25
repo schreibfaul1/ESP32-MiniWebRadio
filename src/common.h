@@ -138,7 +138,7 @@ enum status {
     IR_SETTINGS = 14,
     RINGING = 15,
     WIFI_SETTINGS = 16,
-    UNDEFINED = 255
+    UNDEFINED = -1
 };
 
 static bool                     newLine = false;
@@ -306,7 +306,7 @@ bool         SD_rename(const char* src, const char* dest);
 bool         SD_newFolder(const char* folderPathName);
 bool         SD_delete(const char* itemPath);
 void         processPlaylist();
-void         changeState(int32_t state);
+void         changeState(int8_t state, int8_t subState);
 void         connecttohost(ps_ptr<char> host);
 void         connecttoFS(const char* FS, const char* filename, uint32_t fileStartTime = 0);
 void         stopSong();

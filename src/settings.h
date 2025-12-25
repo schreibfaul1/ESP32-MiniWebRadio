@@ -3,11 +3,11 @@
 
 #define _SSID             "mySSID"         // Your WiFi credentials here
 #define _PW               "myWiFiPassword" // Or in textfile on SD-card
-#define TFT_CONTROLLER    7                // (0)ILI9341, (3)ILI9486, (4)ILI9488, (5)ST7796, (7) RGB display
+#define TFT_CONTROLLER    5                // (0)ILI9341, (3)ILI9486, (4)ILI9488, (5)ST7796, (7) RGB display
 #define DISPLAY_INVERSION 0                // only SPI displays, (0) off (1) on
 #define TFT_ROTATION      1                // only SPI displays, 1 or 3 (landscape)
 #define TFT_FREQUENCY     40000000         // only SPI displays, 80000000, 40000000, 27000000, 20000000, 10000000
-#define TP_CONTROLLER     7                // only SPI displays, (0)ILI9341, (3)ILI9486, (4)ILI9488, (5)ST7796, (7)GT911, (8)FT6x63
+#define TP_CONTROLLER     5                // only SPI displays, (0)ILI9341, (3)ILI9486, (4)ILI9488, (5)ST7796, (7)GT911, (8)FT6x63
 #define TP_ROTATION       1                // only SPI displays, 1 or 3 (landscape)
 #define TP_H_MIRROR       0                // only SPI displays, (0) default, (1) mirror up <-> down
 #define TP_V_MIRROR       0                // only SPI displays, (0) default, (1) mittor left <-> right

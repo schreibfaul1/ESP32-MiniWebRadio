@@ -233,7 +233,7 @@ inline constexpr DisplayConfig config = {
     0,                    // headerFontSize, 0 -> autoSize
     0,                    // footerFontSize, 0 -> autoSize
     156,                  // bigNumbersFontSize
-    27,                   // fileNumberFontSize
+    21,                   // fileNumberFontSize
     {5, 107, 175, 73, 0}, // sleeptimeXPos[5]
     48,                   // sleeptimeYPos
     480,                  // width
@@ -917,3 +917,37 @@ void placingGraphicObjects() { // and initialize them
     msg_box.begin(-1, -1, -1, -1);
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+extern int8_t s_ir_btn_select;
+
+void set_ir_pos_RA(int lr){ // -1 left, +1 right
+    if(s_ir_btn_select == -1) return;
+    if(s_ir_btn_select == 8) return;
+    switch(s_ir_btn_select){
+        case 0: btn_RA_staList.show(); break;
+        case 1: btn_RA_player.show(); break;
+        case 2: btn_RA_dlna.show(); break;
+        case 3: btn_RA_clock.show(); break;
+        case 4: btn_RA_sleep.show(); break;
+        case 5: btn_RA_settings.show(); break;
+        case 6: btn_RA_bt.show(); break;
+        case 7: btn_RA_off.show(); break;
+    }
+    if(lr == - 1){
+        s_ir_btn_select--;
+        if(s_ir_btn_select == - 1) s_ir_btn_select = 7;
+    }
+    if(lr == +1){
+        s_ir_btn_select++;
+        if(s_ir_btn_select == 8) s_ir_btn_select = 0;
+    }
+    switch(s_ir_btn_select){
+        case 0: btn_RA_staList.showAlternativePic(); break;
+        case 1: btn_RA_player.showAlternativePic(); break;
+        case 2: btn_RA_dlna.showAlternativePic(); break;
+        case 3: btn_RA_clock.showAlternativePic(); break;
+        case 4: btn_RA_sleep.showAlternativePic(); break;
+        case 5: btn_RA_settings.showAlternativePic(); break;
+        case 6: btn_RA_bt.showAlternativePic(); break;
+        case 7: btn_RA_off.showAlternativePic(); break;
+    }
+}

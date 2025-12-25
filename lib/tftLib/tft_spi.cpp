@@ -1819,12 +1819,12 @@ size_t TFT_SPI::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16
     }
     if(v_align == TFT_ALIGN_CENTER){
         int offset = (win_H - (nrOfLines * m_current_font.line_height)) / 2;
-        if(offset < 0) log_e("%i %i offset %i", __FILE__, __LINE__, offset);
+        if(offset < 0) log_e("%s %i offset %i", __FILE__, __LINE__, offset);
         pY = pY + offset;
     }
     if(v_align == TFT_ALIGN_DOWN){
         int offset = (win_H - (nrOfLines * m_current_font.line_height));
-        if(offset < 0) log_e("%i %i offset %i", __FILE__, __LINE__, offset);
+        if(offset < 0) log_e("%s %i offset %i", __FILE__, __LINE__, offset);
         pY = pY + offset;
     }
 
