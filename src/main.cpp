@@ -87,7 +87,6 @@ uint8_t  s_alarmdays = 0;
 uint8_t  s_cur_Codec = 0;
 uint8_t  s_numServers = 0; //
 uint8_t  s_level = 0;
-uint8_t  s_timeFormat = 24; // 24 or 12
 uint8_t  s_sleepMode = 1;   // 0 display off, 1 show the clock
 uint8_t  s_staListPos = 0;
 uint8_t  s_WiFi_disconnectCnt = 0;
@@ -318,7 +317,6 @@ boolean defaultsettings() {
     s_tone.BP = atoi(parseJson("\"toneBP\":"));
     s_tone.HP = atoi(parseJson("\"toneHP\":"));
     s_tone.BAL = atoi(parseJson("\"balance\":"));
-    s_timeFormat = atoi(parseJson("\"timeFormat\":"));
     s_TZName = parseJson("\"Timezone_Name\":");
     s_TZString = parseJson("\"Timezone_String\":");
     s_settings.lastconnectedhost.copy_from(parseJson("\"lastconnectedhost\":"));
@@ -384,7 +382,6 @@ void updateSettings() {
     jO.appendf(",\n  \"toneBP\":%i", s_tone.BP);
     jO.appendf(",\n  \"toneHP\":%i", s_tone.HP);
     jO.appendf(",\n  \"balance\":%i", s_tone.BAL);
-    jO.appendf(",\n  \"timeFormat\":%i", s_timeFormat);
     jO.appendf(",\n  \"state\":%i", s_state);
     jO.appendf(",\n  \"sleepMode\":%i\n}", s_sleepMode);
 
@@ -1726,6 +1723,7 @@ void setTimeCounter(uint8_t sec) {
 void changeState(int8_t state, int8_t subState) {
 MWR_LOG_WARN("state %i, s_state %i, subState %i, s_subState %i", state, s_state, subState, s_subState);
     bool newState = false;
+    bool newSubState = false;
     disableAllObjects();
     if (s_timeCounter.timer) { setTimeCounter(0); }
     if (s_state == RADIO          && state != RADIO)          { dispHeader.show(true);  dispFooter.show(true);  newState = true; s_subState = UNDEFINED;}
@@ -1744,6 +1742,7 @@ MWR_LOG_WARN("state %i, s_state %i, subState %i, s_subState %i", state, s_state,
     if (s_state == IR_SETTINGS    && state != IR_SETTINGS)    { dispHeader.show(true);  dispFooter.show(true);  newState = true; s_subState = UNDEFINED;}
     if (s_state == RINGING        && state != RINGING)        { dispHeader.show(true);  dispFooter.show(true);  newState = true; s_subState = UNDEFINED;}
     if (s_state == WIFI_SETTINGS  && state != WIFI_SETTINGS)  { dispHeader.show(true);  dispFooter.show(true);  newState = true; s_subState = UNDEFINED;}
+    if (s_subState != subState) newSubState = true;
 
     s_f_volBarVisible = false;
     dispHeader.updateItem(_hl_item[state]);
@@ -1759,15 +1758,21 @@ MWR_LOG_WARN("state %i, s_state %i, subState %i, s_subState %i", state, s_state,
             }
             txt_RA_staName.enable();
             pic_RA_logo.enable();
-            if (subState == 0 && s_subState != 0) {
-                VUmeter_RA.show(true);
-                txt_RA_sTitle.setText("");
-                txt_RA_sTitle.show(true, false);
-                s_f_newStreamTitle = true;
+            if (subState == 0) {
+                if(newSubState) {
+                    VUmeter_RA.show(true);
+                    txt_RA_sTitle.setText("");
+                    txt_RA_sTitle.show(true, false);
+                    s_f_newStreamTitle = true;
+                }
+                else {
+                    txt_RA_sTitle.enable();
+                    txt_RA_sTitle.enable();
+                }
                 setTimeCounter(0);
             }
             if (subState == 1) {  // Mute, Vol+, Vol-, Sta+, Sta-, StaList
-                if(s_subState != 1) {
+                if(newSubState) {
                     txt_RA_sTitle.hide();
                     VUmeter_RA.hide();
                     sdr_RA_volume.show(true, false);
@@ -1780,7 +1785,7 @@ MWR_LOG_WARN("state %i, s_state %i, subState %i, s_subState %i", state, s_state,
                 }
             }
             if (subState == 2){ // Player, DLNA, Clock, SleepTime, Brightness, EQ, BT, Off
-                if(s_subState != 2) {
+                if(newSubState) {
                     txt_RA_sTitle.hide();
                     VUmeter_RA.hide();
                     if(s_ir_btn_select == 0) btn_RA_staList.showAlternativePic();
@@ -1881,7 +1886,7 @@ MWR_LOG_WARN("state %i, s_state %i, subState %i, s_subState %i", state, s_state,
             break;
         }
         case DLNA: {
-            if (s_state != DLNA) {
+            if (newState) {
                 if (s_state != DLNAITEMSLIST) audio.stopSong();
                 clearWithOutHeaderFooter();
                 pic_DL_logo.enable();
@@ -1919,13 +1924,8 @@ MWR_LOG_WARN("state %i, s_state %i, subState %i, s_subState %i", state, s_state,
             break;
         }
         case CLOCK: {
-            if (s_state != CLOCK) { bgColorWithOutHeaderFooter(); }
-            if (s_timeFormat == 24) {
-                clk_CL_24.show();
-            }
-
-            else
-                clk_CL_12.show();
+            if (newState) { bgColorWithOutHeaderFooter(); }
+            clk_CL_24.show();
             if (s_clockSubMenue == 0) {
                 btn_CL_mute.hide();
                 btn_CL_alarm.hide();
@@ -1941,39 +1941,20 @@ MWR_LOG_WARN("state %i, s_state %i, subState %i, s_subState %i", state, s_state,
                 sdr_CL_volume.show(false, false);
                 btn_CL_off.show();
             }
-            if (s_clockSubMenue == 2) { // same as s_clockSubMenue 1 for IR
-                setTimeCounter(2);
-                btn_CL_alarm.showAlternativePic();
-                btn_CL_radio.show();
-                btn_CL_mute.show();
-                btn_CL_off.show();
-                sdr_CL_volume.show(false, false);
-            }
             break;
         }
         case ALARMCLOCK: {
-            if (s_state != ALARMCLOCK) bgColorWithOutHeaderFooter();
-            if (s_alarmSubMenue == 0) {
-                btn_AC_left.show();
-                btn_AC_right.show();
-                btn_AC_up.show();
-                btn_AC_down.show();
-                btn_AC_ready.show();
-                clk_AC_red.show();
-            }
-            if (s_alarmSubMenue == 1) { // same as s_alarmSubMenue for IR
-                setTimeCounter(2);
-                btn_AC_left.showAlternativePic();
-                btn_AC_right.show();
-                btn_AC_up.show();
-                btn_AC_down.show();
-                btn_AC_ready.show();
-                clk_AC_red.show();
-            }
+            if (newState) bgColorWithOutHeaderFooter();
+            btn_AC_left.show();
+            btn_AC_right.show();
+            btn_AC_up.show();
+            btn_AC_down.show();
+            btn_AC_ready.show();
+            clk_AC_red.show();
             break;
         }
         case SLEEPTIMER: {
-            if (s_state != SLEEPTIMER) {
+            if (newState) {
                 clearWithOutHeaderFooter();
                 display_sleeptime();
                 if (TFT_CONTROLLER < 2)
@@ -1983,41 +1964,31 @@ MWR_LOG_WARN("state %i, s_state %i, subState %i, s_subState %i", state, s_state,
                 else
                     drawImage("/common/Night_Gown.jpg", 482, 112);
             }
-            if (s_sleepTimerSubMenue == 0) {
-                btn_SL_up.show();
-                btn_SL_down.show();
-                btn_SL_ready.show();
-                btn_SL_cancel.show();
-            }
-            if (s_sleepTimerSubMenue == 1) {
-                btn_SL_up.showAlternativePic();
-                btn_SL_down.show();
-                btn_SL_ready.show();
-                btn_SL_cancel.show();
-            }
+            if(s_ir_btn_select == 0) btn_SL_up.showAlternativePic();
+            else btn_SL_up.show();
+
+            btn_SL_up.show();
+            btn_SL_down.show();
+            btn_SL_ready.show();
+            btn_SL_cancel.show();
             break;
         }
         case SETTINGS: {
-            if (s_state != SETTINGS) {
+            if (newState) {
                 clearWithOutHeaderFooter();
                 showFileLogo(SETTINGS);
             }
-            if (s_settingsSubMenue == 0) {
-                btn_SE_bright.show(!s_f_brightnessIsChangeable);
-                btn_SE_equal.show();
-                btn_SE_wifi.show();
-                btn_SE_radio.show();
-            }
-            if (s_settingsSubMenue == 1) {
-                btn_SE_bright.showAlternativePic(!s_f_brightnessIsChangeable);
-                btn_SE_equal.show();
-                btn_SE_wifi.show();
-                btn_SE_radio.show();
-            }
+
+            if(s_ir_btn_select == 0) btn_SE_bright.showAlternativePic();
+            else btn_SE_bright.show();
+            btn_SE_bright.show(!s_f_brightnessIsChangeable);
+            btn_SE_equal.show();
+            btn_SE_wifi.show();
+            btn_SE_radio.show();
             break;
         }
         case BRIGHTNESS: {
-            if (s_state != BRIGHTNESS) {
+            if (newState) {
                 clearWithOutHeaderFooter();
                 pic_BR_logo.show(true, false);
                 sdr_BR_value.setValue(s_brightness);
@@ -2028,15 +1999,12 @@ MWR_LOG_WARN("state %i, s_state %i, subState %i, s_subState %i", state, s_state,
                 sdr_BR_value.enable();
                 txt_BR_value.enable();
             }
-
-            if (s_brightnessSubMenue == 0) { btn_BR_ready.show(); }
-            if (s_brightnessSubMenue == 1) { // same as s_brightnessSubMenue for IR
-                btn_BR_ready.showAlternativePic();
-            }
+            if(s_ir_btn_select == 0) btn_BR_ready.showAlternativePic();
+            else btn_BR_ready.show();
             break;
         }
         case EQUALIZER:
-            if (s_state != EQUALIZER) clearWithOutHeaderFooter();
+            if (newState) clearWithOutHeaderFooter();
             sdr_EQ_lowPass.show(true, false);
             sdr_EQ_bandPass.show(true, false);
             sdr_EQ_highPass.show(true, false);
@@ -2295,10 +2263,7 @@ void loop() {
         s_totalRuntime++;
         uint16_t minuteOfTheDay = rtc.getMinuteOfTheDay();
         uint8_t  weekDay = rtc.getweekday();
-        if (s_timeFormat == 24)
-            clk_CL_24.updateTime(minuteOfTheDay, weekDay);
-        else
-            clk_CL_12.updateTime(minuteOfTheDay, weekDay);
+        clk_CL_24.updateTime(minuteOfTheDay, weekDay);
         if (s_state == RINGING) clk_RI_24small.updateTime(minuteOfTheDay, weekDay);
         static uint8_t semaphore = 0;
         if (!semaphore) { s_f_alarm = isAlarm(weekDay, s_alarmdays, minuteOfTheDay, s_alarmtime) && s_f_rtc; } // alarm if rtc and CL green
@@ -2352,9 +2317,6 @@ void loop() {
             if (s_f_timeAnnouncement) {
                 f_resume = true;
                 s_f_eof = false;
-                if (s_timeFormat == 12) {
-                    if (hour > 12) hour -= 12;
-                }
                 ps_ptr<char> p;
                 p.assignf("/voice_time/%s/%d_00.mp3", s_timeSpeechLang.c_get(), hour);
                 SerialPrintfln("Time: ...... play Audiofile %s", p.c_get());
@@ -4376,14 +4338,6 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
                                         s_settings.irbuttons[42].val = address;
                                         return;}
 
-    CMD_EQUALS("get_timeFormat"){       webSrv.send("timeFormat=", s_timeFormat);
-                                        return;}
-
-    CMD_EQUALS("set_timeFormat"){       s_timeFormat = param.to_uint32();
-                                        if(s_state == CLOCK){clearWithOutHeaderFooter();}
-                                        SerialPrintfln("TimeFormat:  " ANSI_ESC_YELLOW "new time format: " ANSI_ESC_BLUE "%sh" ANSI_ESC_RESET, param.c_get());
-                                        return;}
-
     CMD_EQUALS("get_sleepMode"){        webSrv.send("sleepMode=", s_sleepMode); return;}
 
     CMD_EQUALS("set_sleepMode"){        s_sleepMode = param.to_uint32();
@@ -4715,7 +4669,7 @@ void tp_released(uint16_t x, uint16_t y){
             lst_DLNA.released(x, y);
             break;
         case CLOCK:
-            btn_CL_mute.released(); btn_CL_alarm.released(); btn_CL_radio.released(); clk_CL_12.released();  clk_CL_24.released(); sdr_CL_volume.released(); btn_CL_off.released();
+            btn_CL_mute.released(); btn_CL_alarm.released(); btn_CL_radio.released(); clk_CL_24.released(); sdr_CL_volume.released(); btn_CL_off.released();
             break;
         case ALARMCLOCK:
             clk_AC_red.released(); btn_AC_left.released(); btn_AC_right.released(); btn_AC_up.released(); btn_AC_down.released(); btn_AC_ready.released();

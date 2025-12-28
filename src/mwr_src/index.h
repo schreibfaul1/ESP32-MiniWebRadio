@@ -548,7 +548,6 @@ function connect() {
         socket.send("get_tone");
         socket.send("get_networks");
         socket.send("change_state=" + "RADIO");
-        socket.send("get_timeFormat");
         socket.send("get_sleepMode");
 
         loadStationsFromSD("/stations.json")
@@ -745,12 +744,6 @@ function connect() {
                                         break
             case "IR_command":          ir_command_C.value=val
                                         break
-            case "timeFormat":          var radiobtn;
-                                        if     (val == '12') radiobtn = document.getElementById("h12")
-                                        else if(val == '24') radiobtn = document.getElementById("h24")
-                                        else{console.log("wrong timeFormat ", val); break;}
-                                        radiobtn.checked = true;
-                                        break;
             case "sleepMode":           if  (val == "0") radiobtn = document.getElementById("sleepMode0")
                                         else if(val == '1') radiobtn = document.getElementById("sleepMode1")
                                         radiobtn.checked = true;
@@ -3098,18 +3091,6 @@ function appendToTerminal(text) {
                     </div>
                 </td>
                 <td style="padding: 10px; min-width: 350px; margin-left: 0px;">
-                    <br>
-                    <fieldset>
-                        <legend> 12-hour and 24-hour time format </legend>
-                        <div>
-                            <input type="radio" id="h12" name="timeFormat" value="12h" onclick="socket.send('set_timeFormat=12');">
-                            <label for="h12">12h</label>
-                        </div>
-                        <div>
-                            <input type="radio" id="h24" name="timeFormat" value="24h" checked onclick="socket.send('set_timeFormat=24');">
-                            <label for="h24">24h</label>
-                        </div>
-                    </fieldset>
                     <br>
                     <fieldset>
                         <legend> sleep mode </legend>
