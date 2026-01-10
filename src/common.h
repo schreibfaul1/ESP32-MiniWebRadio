@@ -276,7 +276,7 @@ boolean      isAlarm(uint8_t weekDay, uint8_t alarmDays, uint16_t minuteOfTheDay
 boolean      copySDtoFFat(const char* path);
 void         showStreamTitle(ps_ptr<char> streamTitle);
 void         showLogoAndStationName(bool force);
-void         showFileLogo(uint8_t state);
+void         showFileLogo(int8_t state, int8_t subState);
 void         showFileName(const char* fname);
 void         showPlsFileNumber();
 void         showAudioFileNumber();
