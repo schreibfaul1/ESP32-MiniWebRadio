@@ -1810,6 +1810,7 @@ MWR_LOG_WARN("state %i, s_state %i, subState %i, s_subState %i", state, s_state,
         }
 
         case PLAYER: {
+            stopSong();
             if (newState) {
                 clearWithOutHeaderFooter();
                 webSrv.send("changeState=", "PLAYER");
@@ -1860,6 +1861,7 @@ MWR_LOG_WARN("state %i, s_state %i, subState %i, s_subState %i", state, s_state,
             break;
         }
         case DLNA: {
+            stopSong();
             if (newState) audio.stopSong();
             clearWithOutHeaderFooter();
             pic_DL_logo.enable();
@@ -4504,85 +4506,38 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
     if (name.equals("dispFooter")) { goto exit; }
 
     if (s_state == RADIO) {
-        if (name.equals("btn_RA_mute"))    { muteChanged(btn_RA_mute.getValue()); goto exit; }
-        if (name.equals("btn_RA_prevSta")) { prevFavStation(); dispFooter.updateStation(s_cur_station); goto exit; }
-        if (name.equals("btn_RA_nextSta")) { nextFavStation(); dispFooter.updateStation(s_cur_station); goto exit; }
-        if (name.equals("btn_RA_staList")) { s_subState = 0; changeState(STATIONSLIST, 0); goto exit; }
-        if (name.equals("btn_RA_player"))  {
-            stopSong();
-            changeState(PLAYER, 0);
-            if(s_f_ok_from_ir) {
-                s_ir_btn_select = 0;
-                set_ir_pos_PL(0);
-            }
-            goto exit;
-        }
-        if (name.equals("btn_RA_dlna")) {
-            stopSong();
-            changeState(DLNA, 0);
-            if(s_f_ok_from_ir) {
-                s_ir_btn_select = 0;
-                set_ir_pos_DL(0);
-            }
-            goto exit;
-        }
-        if (name.equals("btn_RA_clock"))    { changeState(CLOCK, 0); goto exit; }
-        if (name.equals("btn_RA_sleep"))    { changeState(SLEEPTIMER, 0); goto exit; }
-        if (name.equals("btn_RA_settings")) { s_settingsSubMenue = 0; changeState(SETTINGS, -1); goto exit; }
-        if (name.equals("btn_RA_equal"))    { s_subState = 0; changeState(EQUALIZER, -1); goto exit; }
-        if (name.equals("btn_RA_bt"))       { s_subState = 0; changeState(BLUETOOTH, -1); goto exit; }
+        if (name.equals("btn_RA_mute"))     { muteChanged(btn_RA_mute.getValue()); goto exit; }
+        if (name.equals("btn_RA_prevSta"))  { prevFavStation(); dispFooter.updateStation(s_cur_station); goto exit; }
+        if (name.equals("btn_RA_nextSta"))  { nextFavStation(); dispFooter.updateStation(s_cur_station); goto exit; }
+        if (name.equals("btn_RA_staList"))  { s_subState = 0; changeState(STATIONSLIST, 0); goto exit; }
+        if (name.equals("btn_RA_player"))   { changeState(PLAYER, 0);     if(s_f_ok_from_ir) { s_ir_btn_select = 0; set_ir_pos_PL(0); } goto exit; }
+        if (name.equals("btn_RA_dlna"))     { changeState(DLNA, 0);       if(s_f_ok_from_ir) { s_ir_btn_select = 0; set_ir_pos_DL(0); } goto exit; }
+        if (name.equals("btn_RA_clock"))    { changeState(CLOCK, 0);      if(s_f_ok_from_ir) { s_ir_btn_select = 0; set_ir_pos_CL(0); } goto exit; }
+        if (name.equals("btn_RA_sleep"))    { changeState(SLEEPTIMER, 0); if(s_f_ok_from_ir) { s_ir_btn_select = 0; set_ir_pos_SL(0); } goto exit; }
+        if (name.equals("btn_RA_settings")) { changeState(SETTINGS, 0);   if(s_f_ok_from_ir) { s_ir_btn_select = 0; set_ir_pos_SE(0); } goto exit; }
+        if (name.equals("btn_RA_equal"))    { changeState(EQUALIZER, 0);  if(s_f_ok_from_ir) { s_ir_btn_select = 0; set_ir_pos_EQ(0); } goto exit; }
+        if (name.equals("btn_RA_bt"))       { changeState(BLUETOOTH, 0);  if(s_f_ok_from_ir) /*{ s_ir_btn_select = 0; set_ir_pos_BT(0); }*/ goto exit; }
         if (name.equals("btn_RA_off"))      { fall_asleep(); goto exit;}
         if (name.equals("VUmeter_RA"))      { goto exit; }
         if (name.equals("sdr_RA_volume"))   { goto exit; }
     }
     if (s_state == STATIONSLIST) {
-        if (name.equals("lst_RADIO")) {
-            if (ra.val1) {
-                setStationByNumber(ra.val1);
-                changeState(RADIO, 0);
-            }
-            goto exit;
-        }
+        if (name.equals("lst_RADIO"))       { if (ra.val1) { setStationByNumber(ra.val1); changeState(RADIO, 0); } goto exit; }
     }
     if (s_state == PLAYER) {
-        if (name.equals("btn_PL_mute")) {
-            muteChanged(btn_PL_mute.getValue());
-            return;
-        }
-        if (name.equals("btn_PL_pause")) {
-            if (s_f_isFSConnected) { s_f_pauseResume = audio.pauseResume(); }
-            goto exit;
-        }
-        if (name.equals("btn_PL_cancel")) {
-            stopSong();
-            changeState(PLAYER, 0);
-            goto exit;
-        }
+        if (name.equals("btn_PL_mute"))     { muteChanged(btn_PL_mute.getValue()); return; }
+        if (name.equals("btn_PL_pause"))    { if (s_f_isFSConnected) { s_f_pauseResume = audio.pauseResume(); } goto exit; }
+        if (name.equals("btn_PL_cancel"))   { changeState(PLAYER, 0); if(s_f_ok_from_ir) { s_ir_btn_select = 0; set_ir_pos_PL(0); } goto exit; }
         if (name.equals("btn_PL_prevFile")) { if(s_ir_btn_select == 0) set_ir_pos_PL(0); goto exit; }
         if (name.equals("btn_PL_nextFile")) { if(s_ir_btn_select == 1) set_ir_pos_PL(0); goto exit; }
-        if (name.equals("btn_PL_ready")) {
-            stopSong();
-            SD_playFile(s_cur_AudioFolder.c_get(), s_SD_content.getColouredSStringByIndex(s_cur_AudioFileNr));
-            changeState(PLAYER, 1);
-            showAudioFileNumber();
-            goto exit;
-        }
-        if (name.equals("btn_PL_playAll")) {
-            if(playlist.create_playlist_from_SD_folder(s_cur_AudioFolder)){
-                playlist.sort_alphabetical();
-                s_subState = 1;
-                s_f_playlistEnabled = true;
-            }
-            goto exit;
-        }
-        if (name.equals("btn_PL_shuffle")) {
-            if(playlist.create_playlist_from_SD_folder(s_cur_AudioFolder)){
-                playlist.sort_random();
-                s_subState = 1;
-                s_f_playlistEnabled = true;
-            }
-            goto exit;
-        }
+        if (name.equals("btn_PL_ready"))    { SD_playFile(s_cur_AudioFolder.c_get(), s_SD_content.getColouredSStringByIndex(s_cur_AudioFileNr));
+                                              changeState(PLAYER, 1); if(s_f_ok_from_ir) { s_ir_btn_select = 0; set_ir_pos_PL(0); } showAudioFileNumber(); goto exit; }
+        if (name.equals("btn_PL_playAll"))  { if(playlist.create_playlist_from_SD_folder(s_cur_AudioFolder)){
+                                                  playlist.sort_alphabetical(); s_subState = 1; s_f_playlistEnabled = true; }
+                                              goto exit; }
+        if (name.equals("btn_PL_shuffle"))  { if(playlist.create_playlist_from_SD_folder(s_cur_AudioFolder)){
+                                                  playlist.sort_random(); s_subState = 1; s_f_playlistEnabled = true; }
+                                              goto exit; }
         if (name.equals("btn_PL_fileList")) { s_SD_content.listFilesInDir(s_cur_AudioFolder.c_get(), true, false); changeState(AUDIOFILESLIST, 0); goto exit; }
         if (name.equals("btn_PL_radio"))    { changeState(RADIO, 0); setStation(s_cur_station); goto exit; }
         if (name.equals("btn_PL_off"))      { fall_asleep(); goto exit; }
@@ -4592,24 +4547,22 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
         if (name.equals("pgb_PL_progress")) { audio.setTimeOffset(ra.val2); goto exit; }
     }
     if (s_state == AUDIOFILESLIST) {
-        if (name.equals("lst_PLAYER")) {
-            if (ra.val1 == 1) { ; } // wipe up/down
-            if (ra.val1 == 2) {     // next prev folder
-                s_cur_AudioFolder = ra.arg1;
-                s_cur_AudioFileNr = ra.val2;
-                lst_PLAYER.show(s_cur_AudioFolder, s_cur_AudioFileNr);
-            }
-            if (ra.val1 == 3) {
-                s_cur_AudioFolder = ra.arg1;
-                s_cur_AudioFileNr = ra.val2;
-                stopSong();
-                SD_playFile(ra.arg3);
-            }
-            goto exit;
-        }
+        if (name.equals("lst_PLAYER"))      { if (ra.val1 == 1) { ; } // wipe up/down
+                                              if (ra.val1 == 2) {     // next prev folder
+                                                  s_cur_AudioFolder = ra.arg1;
+                                                  s_cur_AudioFileNr = ra.val2;
+                                                  lst_PLAYER.show(s_cur_AudioFolder, s_cur_AudioFileNr);
+                                              }
+                                              if (ra.val1 == 3) {     // audio file
+                                                  s_cur_AudioFolder = ra.arg1;
+                                                  s_cur_AudioFileNr = ra.val2;
+                                                  stopSong();
+                                                  SD_playFile(ra.arg3);
+                                              }
+                                              goto exit; }
     }
     if (s_state == DLNA) {
-        if (name.equals("btn_DL_mute"))     { muteChanged(btn_DL_mute.getValue()); if(s_ir_btn_select == 0) set_ir_pos_DL(0); goto exit; }
+        if (name.equals("btn_DL_mute"))     { muteChanged(btn_DL_mute.getValue());   if(s_ir_btn_select == 0) set_ir_pos_DL(0); goto exit; }
         if (name.equals("btn_DL_pause"))    { s_f_pauseResume = audio.pauseResume(); if(s_ir_btn_select == 1) set_ir_pos_DL(0); goto exit; }
         if (name.equals("btn_DL_cancel"))   { stopSong();
                                               txt_DL_fName.setText("");
@@ -4641,7 +4594,7 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
     }
     if (s_state == CLOCK) {
         if (name.equals("btn_CL_mute"))     { muteChanged(btn_CL_mute.getValue()); if(s_ir_btn_select == 2) set_ir_pos_CL(2); goto exit; }
-        if (name.equals("btn_CL_alarm"))    { changeState(ALARMCLOCK, 0); goto exit; }
+        if (name.equals("btn_CL_alarm"))    { changeState(ALARMCLOCK, 0); if(s_f_ok_from_ir) { s_ir_btn_select = 0; set_ir_pos_PL(0); } goto exit; }
         if (name.equals("btn_CL_radio"))    { changeState(RADIO, 0); goto exit; }
         if (name.equals("clk_CL_24"))       { changeState(CLOCK, 0); goto exit; }
         if (name.equals("btn_CL_off"))      { fall_asleep(); goto exit; }
@@ -4656,48 +4609,46 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
         if (name.equals("btn_AC_ready"))    { updateSettings(); changeState(CLOCK, 0); logAlarmItems(); goto exit; }
     }
     if (s_state == SLEEPTIMER) {
-        if (name.equals("btn_SL_up"))     { display_sleeptime(1); goto exit; }
-        if (name.equals("btn_SL_down"))   { display_sleeptime(-1); goto exit; }
-        if (name.equals("btn_SL_ready"))  { dispFooter.updateOffTime(s_sleeptime); changeState(RADIO, 0); goto exit; }
-        if (name.equals("btn_SL_cancel")) { changeState(RADIO, 0); goto exit; }
+        if (name.equals("btn_SL_up"))       { display_sleeptime(1); goto exit; }
+        if (name.equals("btn_SL_down"))     { display_sleeptime(-1); goto exit; }
+        if (name.equals("btn_SL_ready"))    { dispFooter.updateOffTime(s_sleeptime); changeState(RADIO, 0); goto exit; }
+        if (name.equals("btn_SL_cancel"))   { changeState(RADIO, 0); goto exit; }
     }
     if (s_state == BRIGHTNESS) {
-        if (name.equals("btn_BR_ready"))   { changeState(RADIO, 0); goto exit;}
-        if (name.equals("pic_BR_logo"))    { goto exit; }
+        if (name.equals("btn_BR_ready"))    { changeState(RADIO, 0); goto exit;}
+        if (name.equals("pic_BR_logo"))     { goto exit; }
     }
     if (s_state == EQUALIZER) {
-        if (name.equals("btn_EQ_Radio"))   { setStation(s_cur_station); changeState(RADIO, 0); goto exit; }
-        if (name.equals("btn_EQ_Player"))  { changeState(PLAYER, 0); goto exit; }
-        if (name.equals("btn_EQ_mute"))    { muteChanged(btn_EQ_mute.getValue()); goto exit; }
+        if (name.equals("btn_EQ_Radio"))    { setStation(s_cur_station); changeState(RADIO, 0); goto exit; }
+        if (name.equals("btn_EQ_Player"))   { changeState(PLAYER, 0); goto exit; }
+        if (name.equals("btn_EQ_mute"))     { muteChanged(btn_EQ_mute.getValue()); goto exit; }
     }
     if (s_state == SETTINGS) {
-        if (name.equals("btn_SE_bright"))  { changeState(BRIGHTNESS, -1); goto exit; }
-        if (name.equals("btn_SE_equal"))   { changeState(EQUALIZER, -1); goto exit; }
-        if (name.equals("btn_SE_wifi"))    { changeState(WIFI_SETTINGS, -1); goto exit; }
-        if (name.equals("btn_SE_radio"))   { changeState(RADIO, 0); goto exit; }
+        if (name.equals("btn_SE_bright"))   { changeState(BRIGHTNESS, -1); goto exit; }
+        if (name.equals("btn_SE_equal"))    { changeState(EQUALIZER, -1); goto exit; }
+        if (name.equals("btn_SE_wifi"))     { changeState(WIFI_SETTINGS, -1); goto exit; }
+        if (name.equals("btn_SE_radio"))    { changeState(RADIO, 0); goto exit; }
     }
     if (s_state == BLUETOOTH) {
-        if (name.equals("btn_BT_pause"))   { goto exit; }
-        if (name.equals("btn_BT_radio"))   { changeState(RADIO, 0); goto exit; }
-        if (name.equals("btn_BT_volDown")) { goto exit; }
-        if (name.equals("btn_BT_volUp"))   { goto exit; }
-        if (name.equals("btn_BT_mode"))    { goto exit; }
-        if (name.equals("btn_BT_power"))   { s_bt_emitter.power_state == 1 ? bt_emitter.power_off() : bt_emitter.power_on(); goto exit; }
+        if (name.equals("btn_BT_pause"))    { goto exit; }
+        if (name.equals("btn_BT_radio"))    { changeState(RADIO, 0); goto exit; }
+        if (name.equals("btn_BT_volDown"))  { goto exit; }
+        if (name.equals("btn_BT_volUp"))    { goto exit; }
+        if (name.equals("btn_BT_mode"))     { goto exit; }
+        if (name.equals("btn_BT_power"))    { s_bt_emitter.power_state == 1 ? bt_emitter.power_off() : bt_emitter.power_on(); goto exit; }
     }
     if (s_state == IR_SETTINGS) {
-        if (name.equals("btn_IR_radio"))   { changeState(RADIO, 0); goto exit; }
+        if (name.equals("btn_IR_radio"))    { changeState(RADIO, 0); goto exit; }
     }
     if (s_state == WIFI_SETTINGS) {
-        if (name.equals("wifiSettings")) {
-            setWiFiCredentials(ra.arg1, ra.arg2);
-            msg_box.setText("ESP restart", false, false);
-            msg_box.show();
-            vTaskDelay(4000);
-            s_f_msg_box = true;
-            s_timestamp = millis() + 4000;
-            s_f_esp_restart = true;
-            goto exit;
-        }
+        if (name.equals("wifiSettings"))    { setWiFiCredentials(ra.arg1, ra.arg2);
+                                              msg_box.setText("ESP restart", false, false);
+                                              msg_box.show();
+                                              vTaskDelay(4000);
+                                              s_f_msg_box = true;
+                                              s_timestamp = millis() + 4000;
+                                              s_f_esp_restart = true;
+                                              goto exit; }
     }
     MWR_LOG_DEBUG("unused event: graphicObject %s was released", name);
 exit:

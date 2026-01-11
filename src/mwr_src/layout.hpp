@@ -1147,7 +1147,7 @@ void set_ir_pos_SE(int lr) { // SETTINGS   -100 left, +100 right, -127 reset
     }
 }
 //-------------------------------------------------------------------------------------
-void set_ir_pos_EQ(int lr) { // SETTINGS   -1 left, +1 right
+void set_ir_pos_EQ(int lr) { // EQUALIZER   -1 left, +1 right
     if (s_ir_btn_select == -1) return;
     if (s_ir_btn_select == 7) return;
     switch (s_ir_btn_select) {
@@ -1173,9 +1173,39 @@ void set_ir_pos_EQ(int lr) { // SETTINGS   -1 left, +1 right
         case 1: btn_EQ_Player.showAlternativePic(); break;
         case 2: btn_EQ_mute.showAlternativePic(); break;
         case 3: btn_EQ_lowPass.showAlternativePic(); break;
-        case 4: btn_EQ_bandPass.show(); break;
-        case 5: btn_EQ_highPass.show(); break;
-        case 6: btn_EQ_balance.show(); break;
+        case 4: btn_EQ_bandPass.showAlternativePic(); break;
+        case 5: btn_EQ_highPass.showAlternativePic(); break;
+        case 6: btn_EQ_balance.showAlternativePic(); break;
+    }
+}
+//-------------------------------------------------------------------------------------
+void set_ir_pos_BT(int lr) { // BLUETOOTH   -1 left, +1 right
+    if (s_ir_btn_select == -1) return;
+    if (s_ir_btn_select == 7) return;
+    switch (s_ir_btn_select) {
+        case 0: btn_BT_volDown.show(); break;
+        case 1: btn_BT_volUp.show(); break;
+        case 2: btn_BT_pause.show(); break;
+        case 3: btn_BT_mode.show(); break;
+        case 4: btn_BT_radio.show(); break;
+        case 5: btn_BT_power.show(); break;
+    }
+    if (lr == IR_LEFT) {
+        s_ir_btn_select--;
+        if (s_ir_btn_select == -1) s_ir_btn_select = 6;
+    }
+    if (lr == IR_RIGHT) {
+        s_ir_btn_select++;
+        if (s_ir_btn_select == 7) s_ir_btn_select = 0;
+    }
+    if(lr == IR_RESEET) return;
+    switch (s_ir_btn_select) {
+        case 0: btn_BT_volDown.showAlternativePic(); break;
+        case 1: btn_BT_volUp.showAlternativePic(); break;
+        case 2: btn_BT_pause.showAlternativePic(); break;
+        case 3: btn_BT_mode.showAlternativePic(); break;
+        case 4: btn_BT_radio.show(); break;
+        case 5: btn_BT_power.show(); break;
     }
 }
 //-------------------------------------------------------------------------------------
