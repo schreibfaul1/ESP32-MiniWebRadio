@@ -918,9 +918,7 @@ void placingGraphicObjects() { // and initialize them
 extern int8_t s_ir_btn_select;
 extern int8_t s_subState;
 
-void set_ir_pos_RA(int lr) { // RADIO -1 left, +1 right
-    if (s_ir_btn_select == -1) return;
-    if (s_ir_btn_select == 8) return;
+void set_ir_pos_RA(int lr) { // RADIO   -100 left, +100 right, -127 reset
     switch (s_ir_btn_select) {
         case 0: btn_RA_staList.show(); break;
         case 1: btn_RA_player.show(); break;
@@ -931,14 +929,15 @@ void set_ir_pos_RA(int lr) { // RADIO -1 left, +1 right
         case 6: btn_RA_bt.show(); break;
         case 7: btn_RA_off.show(); break;
     }
-    if (lr == -1) {
+    if (lr == IR_LEFT) {
         s_ir_btn_select--;
         if (s_ir_btn_select == -1) s_ir_btn_select = 7;
     }
-    if (lr == +1) {
+    if (lr == IR_RIGHT) {
         s_ir_btn_select++;
         if (s_ir_btn_select == 8) s_ir_btn_select = 0;
     }
+    if(lr == IR_RESEET) return;
     switch (s_ir_btn_select) {
         case 0: btn_RA_staList.showAlternativePic(); break;
         case 1: btn_RA_player.showAlternativePic(); break;
@@ -951,7 +950,7 @@ void set_ir_pos_RA(int lr) { // RADIO -1 left, +1 right
     }
 }
 //-------------------------------------------------------------------------------------
-void set_ir_pos_PL(int lr) { // PLAYER -1 left, +1 right
+void set_ir_pos_PL(int lr) { // PLAYER   -100 left, +100 right, -127 reset
     if (s_subState == 0) {
         if (s_ir_btn_select == -1) return;
         if (s_ir_btn_select == 8) return;
@@ -965,14 +964,15 @@ void set_ir_pos_PL(int lr) { // PLAYER -1 left, +1 right
             case 6: btn_PL_radio.show(); break;
             case 7: btn_PL_off.show(); break;
         }
-        if (lr == -1) {
+        if (lr == IR_LEFT) {
             s_ir_btn_select--;
             if (s_ir_btn_select == -1) s_ir_btn_select = 7;
         }
-        if (lr == +1) {
+        if (lr == IR_RIGHT) {
             s_ir_btn_select++;
             if (s_ir_btn_select == 8) s_ir_btn_select = 0;
         }
+        if(lr == IR_RESEET) return;
         switch (s_ir_btn_select) {
             case 0: btn_PL_prevFile.showAlternativePic(); break;
             case 1: btn_PL_nextFile.showAlternativePic(); break;
@@ -994,14 +994,15 @@ void set_ir_pos_PL(int lr) { // PLAYER -1 left, +1 right
             case 3: btn_PL_playPrev.show(); break;
             case 4: btn_PL_playNext.show(); break;
         }
-        if (lr == -1) {
+        if (lr == IR_LEFT) {
             s_ir_btn_select--;
             if (s_ir_btn_select == -1) s_ir_btn_select = 4;
         }
-        if (lr == +1) {
+        if (lr == IR_RIGHT) {
             s_ir_btn_select++;
             if (s_ir_btn_select == 5) s_ir_btn_select = 0;
         }
+        if(lr == IR_RESEET) return;
         switch (s_ir_btn_select) {
             case 0: btn_PL_mute.showAlternativePic(); break;
             case 1: btn_PL_pause.showAlternativePic(); break;
@@ -1012,7 +1013,7 @@ void set_ir_pos_PL(int lr) { // PLAYER -1 left, +1 right
     }
 }
 //-------------------------------------------------------------------------------------
-void set_ir_pos_DL(int lr) { // DLNA -1 left, +1 right
+void set_ir_pos_DL(int lr) { // DLNA   -100 left, +100 right, -127 reset
     if (s_ir_btn_select == -1) return;
     if (s_ir_btn_select == 5) return;
     switch (s_ir_btn_select) {
@@ -1022,14 +1023,15 @@ void set_ir_pos_DL(int lr) { // DLNA -1 left, +1 right
         case 3: btn_DL_fileList.show(); break;
         case 4: btn_DL_radio.show(); break;
     }
-    if (lr == -1) {
+    if (lr == IR_LEFT) {
         s_ir_btn_select--;
         if (s_ir_btn_select == -1) s_ir_btn_select = 4;
     }
-    if (lr == +1) {
+    if (lr == IR_RIGHT) {
         s_ir_btn_select++;
         if (s_ir_btn_select == 5) s_ir_btn_select = 0;
     }
+    if(lr == IR_RESEET) return;
     switch (s_ir_btn_select) {
         case 0: btn_DL_mute.showAlternativePic(); break;
         case 1: btn_DL_pause.showAlternativePic(); break;
@@ -1039,7 +1041,7 @@ void set_ir_pos_DL(int lr) { // DLNA -1 left, +1 right
     }
 }
 //-------------------------------------------------------------------------------------
-void set_ir_pos_CL(int lr) { // CLOCK -1 left, +1 right
+void set_ir_pos_CL(int lr) { // CLOCK   -100 left, +100 right, -127 reset
     if (s_ir_btn_select == -1) return;
     if (s_ir_btn_select == 4) return;
     switch (s_ir_btn_select) {
@@ -1048,14 +1050,15 @@ void set_ir_pos_CL(int lr) { // CLOCK -1 left, +1 right
         case 2: btn_CL_mute.show(); break;
         case 3: btn_CL_off.show(); break;
     }
-    if (lr == -1) {
+    if (lr == IR_LEFT) {
         s_ir_btn_select--;
         if (s_ir_btn_select == -1) s_ir_btn_select = 3;
     }
-    if (lr == +1) {
+    if (lr == IR_RIGHT) {
         s_ir_btn_select++;
         if (s_ir_btn_select == 4) s_ir_btn_select = 0;
     }
+    if(lr == IR_RESEET) return;
     switch (s_ir_btn_select) {
         case 0: btn_CL_alarm.showAlternativePic(); break;
         case 1: btn_CL_radio.showAlternativePic(); break;
@@ -1064,7 +1067,7 @@ void set_ir_pos_CL(int lr) { // CLOCK -1 left, +1 right
     }
 }
 //-------------------------------------------------------------------------------------
-void set_ir_pos_AC(int lr) { // ALARMCLOCK -1 left, +1 right
+void set_ir_pos_AC(int lr) { // ALARMCLOCK   -100 left, +100 right, -127 reset
     if (s_ir_btn_select == -1) return;
     if (s_ir_btn_select == 5) return;
     switch (s_ir_btn_select) {
@@ -1074,14 +1077,15 @@ void set_ir_pos_AC(int lr) { // ALARMCLOCK -1 left, +1 right
         case 3: btn_AC_down.show(); break;
         case 4: btn_AC_ready.show(); break;
     }
-    if (lr == -1) {
+    if (lr == IR_LEFT) {
         s_ir_btn_select--;
         if (s_ir_btn_select == -1) s_ir_btn_select = 4;
     }
-    if (lr == +1) {
+    if (lr == IR_RIGHT) {
         s_ir_btn_select++;
         if (s_ir_btn_select == 5) s_ir_btn_select = 0;
     }
+    if(lr == IR_RESEET) return;
     switch (s_ir_btn_select) {
         case 0: btn_AC_left.showAlternativePic(); break;
         case 1: btn_AC_right.showAlternativePic(); break;
@@ -1091,7 +1095,7 @@ void set_ir_pos_AC(int lr) { // ALARMCLOCK -1 left, +1 right
     }
 }
 //-------------------------------------------------------------------------------------
-void set_ir_pos_SL(int lr) { // SLEEPTIMER -1 left, +1 right
+void set_ir_pos_SL(int lr) { // SLEEPTIMER   -100 left, +100 right, -127 reset
     if (s_ir_btn_select == -1) return;
     if (s_ir_btn_select == 4) return;
     switch (s_ir_btn_select) {
@@ -1100,14 +1104,15 @@ void set_ir_pos_SL(int lr) { // SLEEPTIMER -1 left, +1 right
         case 2: btn_SL_ready.show(); break;
         case 3: btn_SL_cancel.show(); break;
     }
-    if (lr == -1) {
+    if (lr == IR_LEFT) {
         s_ir_btn_select--;
         if (s_ir_btn_select == -1) s_ir_btn_select = 3;
     }
-    if (lr == +1) {
+    if (lr == IR_RIGHT) {
         s_ir_btn_select++;
         if (s_ir_btn_select == 4) s_ir_btn_select = 0;
     }
+    if(lr == IR_RESEET) return;
     switch (s_ir_btn_select) {
         case 0: btn_SL_up.showAlternativePic(); break;
         case 1: btn_SL_down.showAlternativePic(); break;
@@ -1116,7 +1121,7 @@ void set_ir_pos_SL(int lr) { // SLEEPTIMER -1 left, +1 right
     }
 }
 //-------------------------------------------------------------------------------------
-void set_ir_pos_SE(int lr) { // SETTINGS   -1 left, +1 right
+void set_ir_pos_SE(int lr) { // SETTINGS   -100 left, +100 right, -127 reset
     if (s_ir_btn_select == -1) return;
     if (s_ir_btn_select == 4) return;
     switch (s_ir_btn_select) {
@@ -1125,14 +1130,15 @@ void set_ir_pos_SE(int lr) { // SETTINGS   -1 left, +1 right
         case 2: btn_SL_ready.show(); break;
         case 3: btn_SL_cancel.show(); break;
     }
-    if (lr == -1) {
+    if (lr == IR_LEFT) {
         s_ir_btn_select--;
         if (s_ir_btn_select == -1) s_ir_btn_select = 3;
     }
-    if (lr == +1) {
+    if (lr == IR_RIGHT) {
         s_ir_btn_select++;
         if (s_ir_btn_select == 4) s_ir_btn_select = 0;
     }
+    if(lr == IR_RESEET) return;
     switch (s_ir_btn_select) {
         case 0: btn_SL_up.showAlternativePic(); break;
         case 1: btn_SL_down.showAlternativePic(); break;
@@ -1153,14 +1159,15 @@ void set_ir_pos_EQ(int lr) { // SETTINGS   -1 left, +1 right
         case 5: btn_EQ_highPass.show(); break;
         case 6: btn_EQ_balance.show(); break;
     }
-    if (lr == -1) {
+    if (lr == IR_LEFT) {
         s_ir_btn_select--;
         if (s_ir_btn_select == -1) s_ir_btn_select = 6;
     }
-    if (lr == +1) {
+    if (lr == IR_RIGHT) {
         s_ir_btn_select++;
         if (s_ir_btn_select == 7) s_ir_btn_select = 0;
     }
+    if(lr == IR_RESEET) return;
     switch (s_ir_btn_select) {
         case 0: btn_EQ_Radio.showAlternativePic(); break;
         case 1: btn_EQ_Player.showAlternativePic(); break;

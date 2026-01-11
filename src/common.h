@@ -141,6 +141,12 @@ enum status {
     UNDEFINED = -1
 };
 
+enum ir_shift {
+    IR_RIGHT = +100,
+    IR_LEFT = -100,
+    IR_RESEET = -127
+};
+
 static bool                     newLine = false;
 extern SemaphoreHandle_t        mutex_rtc;
 extern RTIME                    rtc;
