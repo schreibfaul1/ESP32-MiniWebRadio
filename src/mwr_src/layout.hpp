@@ -741,7 +741,7 @@ void placingGraphicObjects() { // and initialize them
     btn_CL_mute.setClickedOffPicturePath("/btn/Button_Mute_Off_Yellow.png");
     btn_CL_mute.setClickedOnPicturePath("/btn/Button_Mute_On_Yellow.png");
     btn_CL_mute.setAlternativeOffPicturePath("/btn/Button_Mute_Off_Magenta.png");
-    btn_CL_mute.setAlternativeOnPicturePath("/btn/Button_MuteOn_Magenta.png");
+    btn_CL_mute.setAlternativeOnPicturePath("/btn/Button_Mute_On_Magenta.png");
     btn_CL_off.begin(3 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_CL_off.setDefaultPicturePath("/btn/Button_Off_Red.png");
     btn_CL_off.setClickedPicturePath("/btn/Button_Off_Yellow.png");
