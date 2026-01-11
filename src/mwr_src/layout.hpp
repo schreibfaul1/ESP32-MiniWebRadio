@@ -1147,6 +1147,26 @@ void set_ir_pos_SE(int lr) { // SETTINGS   -100 left, +100 right, -127 reset
     }
 }
 //-------------------------------------------------------------------------------------
+void set_ir_pos_BR(int lr) { // SETTINGS   -100 left, +100 right, -127 reset
+    if (s_ir_btn_select == -1) return;
+    if (s_ir_btn_select == 1) return;
+    switch (s_ir_btn_select) {
+        case 0: btn_BR_ready.show(); break;
+    }
+    if (lr == IR_LEFT) {
+        s_ir_btn_select--;
+        if (s_ir_btn_select == -1) s_ir_btn_select = 3;
+    }
+    if (lr == IR_RIGHT) {
+        s_ir_btn_select++;
+        if (s_ir_btn_select == 4) s_ir_btn_select = 0;
+    }
+    if(lr == IR_RESEET) return;
+    switch (s_ir_btn_select) {
+        case 0: btn_BR_ready.showAlternativePic(); break;
+    }
+}
+//-------------------------------------------------------------------------------------
 void set_ir_pos_EQ(int lr) { // EQUALIZER   -1 left, +1 right
     if (s_ir_btn_select == -1) return;
     if (s_ir_btn_select == 7) return;
@@ -1181,7 +1201,7 @@ void set_ir_pos_EQ(int lr) { // EQUALIZER   -1 left, +1 right
 //-------------------------------------------------------------------------------------
 void set_ir_pos_BT(int lr) { // BLUETOOTH   -1 left, +1 right
     if (s_ir_btn_select == -1) return;
-    if (s_ir_btn_select == 7) return;
+    if (s_ir_btn_select == 6) return;
     switch (s_ir_btn_select) {
         case 0: btn_BT_volDown.show(); break;
         case 1: btn_BT_volUp.show(); break;
