@@ -2150,18 +2150,19 @@ void loop() {
                         changeState(DLNA, 0);
                     } else if (s_state == CLOCK) {
                         changeState(CLOCK, 0);
-                    } else if (s_state == ALARMCLOCK) {
-                        s_alarmSubMenue = 0;
-                        changeState(ALARMCLOCK, -1);
-                    } else if (s_state == SETTINGS) {
-                        s_settingsSubMenue = 0;
-                        changeState(SETTINGS, -1);
-                    } else if (s_state == BRIGHTNESS) {
-                        s_brightnessSubMenue = 0;
-                        changeState(BRIGHTNESS, -1);
-                    } else if (s_state == EQUALIZER) {
-                        s_equalizerSubMenue = 0;
-                        changeState(EQUALIZER, -1);
+                    // }
+                    // } else if (s_state == ALARMCLOCK) {
+                    //     s_alarmSubMenue = 0;
+                    //     changeState(ALARMCLOCK, 0);
+                    // } else if (s_state == SETTINGS) {
+                    //     s_settingsSubMenue = 0;
+                    //     changeState(SETTINGS, 0);
+                    // } else if (s_state == BRIGHTNESS) {
+                    //     s_brightnessSubMenue = 0;
+                    //     changeState(BRIGHTNESS, 0);
+                    // } else if (s_state == EQUALIZER) {
+                    //     s_equalizerSubMenue = 0;
+                    //     changeState(EQUALIZER, -1);
                     } else {
                         ;
                     } // all other, do nothing
@@ -2765,52 +2766,8 @@ void ir_number(uint16_t num) {
 
 void ir_released(int8_t key) {
     SerialPrintfln("ir_code: ..  " ANSI_ESC_YELLOW "released ir key nr: " ANSI_ESC_BLUE "%02i, <%s>" ANSI_ESC_RESET, key, ir_symbols[key]);
-
-    if (s_state == RADIO) {
-        btn_RA_mute.released();
-        btn_RA_prevSta.released();
-        btn_RA_nextSta.released();
-        btn_RA_player.released();
-        btn_RA_dlna.released();
-        btn_RA_clock.released();
-        btn_RA_sleep.released();
-        btn_RA_settings.released();
-        btn_RA_bt.released();
-        btn_RA_off.released();
-        btn_RA_staList.released();
-    }
-
-    if (s_state == PLAYER) {
-        btn_PL_prevFile.released();
-        btn_PL_nextFile.released();
-        btn_PL_ready.released();
-        btn_PL_playAll.released();
-        btn_PL_shuffle.released();
-        btn_PL_fileList.released();
-        btn_PL_radio.released();
-        btn_PL_off.released();
-        btn_PL_mute.released();
-        btn_PL_pause.released();
-        btn_PL_cancel.released();
-        sdr_PL_volume.released();
-        btn_PL_playNext.released();
-        btn_PL_playPrev.released();
-    }
-
-    if (s_state == DLNA) {
-        btn_DL_mute.released();
-        btn_DL_pause.released();
-        btn_DL_cancel.released();
-        btn_DL_fileList.released();
-        btn_DL_radio.released();
-    }
-
-    if (s_state == CLOCK) {
-        btn_CL_alarm.released();
-        btn_CL_mute.released();
-        btn_CL_radio.released();
-        btn_CL_off.released();
-    }
+    tp_released(0, 0);
+    return;
 }
 // ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void ir_long_key(int8_t key) {
@@ -2831,10 +2788,10 @@ void ir_short_key(int8_t key) {
     if (s_state == IR_SETTINGS) return; // nothing todo
 
     switch (key) {
-        case 10: // MUTE
+        case 10: // MUTE  ----------------------------------------------------------------------------------------------------------------------------
             muteChanged(!s_f_mute);
             return;
-        case 11: // ARROW RIGHT
+        case 11: // ARROW RIGHT  ---------------------------------------------------------------------------------------------------------------------
             if (s_state == RADIO) {
                 if (s_subState == 0) { nextFavStation(); } // NEXT STATION
                 if (s_subState == 2) { set_ir_pos_RA(IR_RIGHT); setTimeCounter(2); } // scroll right
@@ -2951,7 +2908,7 @@ void ir_short_key(int8_t key) {
                 }
             }
             break;
-        case 12: // ARROW LEFT
+        case 12: // ARROW LEFT  ----------------------------------------------------------------------------------------------------------------------
             if (s_state == RADIO) {
                 if (s_subState == 0) { prevFavStation(); return; } // PREV STATION
                 if (s_subState == 2) { set_ir_pos_RA(IR_LEFT);  setTimeCounter(2);  return; } // scroll left
@@ -3075,7 +3032,7 @@ void ir_short_key(int8_t key) {
                 }
             }
             break;
-        case 13: // ARROW DOWN
+        case 13: // ARROW DOWN  ----------------------------------------------------------------------------------------------------------------------
             if (s_state == RADIO) {
                 txt_RA_staName.hide();
                 volBox.enable();
@@ -3145,7 +3102,7 @@ void ir_short_key(int8_t key) {
                 return;
             }
             break;
-        case 14: // ARROW UP
+        case 14: // ARROW UP  ------------------------------------------------------------------------------------------------------------------------
             if (s_state == RADIO) {
                 txt_RA_staName.hide();
                 volBox.enable();
@@ -3217,7 +3174,7 @@ void ir_short_key(int8_t key) {
                 return;
             }
             break;
-        case 15: // MODE
+        case 15: // MODE  ----------------------------------------------------------------------------------------------------------------------------
             if (s_state == SLEEPTIMER) {
                 setStation(s_cur_station);
                 changeState(RADIO, 0);
@@ -4251,11 +4208,7 @@ void graphicObjects_OnClick(ps_ptr<char> name, uint8_t val) { // val = 0 --> is 
         }
     }
     if (s_state == CLOCK) {
-        if (val && name.equals("btn_CL_mute")) {
-            setTimeCounter(2);
-            if (!s_f_mute) { s_f_muteIsPressed = true; }
-            return;
-        }
+        if (val && name.equals("btn_CL_mute")) { if (!s_f_mute) { s_f_muteIsPressed = true; } return; }
         if (val && name.equals("btn_CL_alarm")) { return; }
         if (val && name.equals("btn_CL_radio")) { return; }
         if (val && name.equals("clk_CL_24")) { return; }
@@ -4425,10 +4378,10 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
     }
     if (s_state == ALARMCLOCK) {
         if (name.equals("clk_AC_red"))      { goto exit; }
-        if (name.equals("btn_AC_left"))     { clk_AC_red.shiftLeft(); goto exit; }
-        if (name.equals("btn_AC_right"))    { clk_AC_red.shiftRight(); goto exit; }
-        if (name.equals("btn_AC_up"))       { clk_AC_red.digitUp(); goto exit; }
-        if (name.equals("btn_AC_down"))     { clk_AC_red.digitDown(); goto exit; }
+        if (name.equals("btn_AC_left"))     { clk_AC_red.shiftLeft();  if(s_f_ok_from_ir) { s_ir_btn_select = 0; set_ir_pos_AC(0); } goto exit; }
+        if (name.equals("btn_AC_right"))    { clk_AC_red.shiftRight(); if(s_f_ok_from_ir) { s_ir_btn_select = 1; set_ir_pos_AC(1); } goto exit; }
+        if (name.equals("btn_AC_up"))       { clk_AC_red.digitUp();    if(s_f_ok_from_ir) { s_ir_btn_select = 2; set_ir_pos_AC(2); } goto exit; }
+        if (name.equals("btn_AC_down"))     { clk_AC_red.digitDown();  if(s_f_ok_from_ir) { s_ir_btn_select = 3; set_ir_pos_AC(3); } goto exit; }
         if (name.equals("btn_AC_ready"))    { updateSettings(); changeState(CLOCK, 0); logAlarmItems(); goto exit; }
     }
     if (s_state == SLEEPTIMER) {

@@ -324,6 +324,10 @@ void         my_audio_info(Audio::msg_t m);
 void         on_dlna_client(const DLNA_Client::msg_s& msg);
 void         on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg);
 void         on_websrv(const WebSrv::msg_s& msg);
+void         tp_pressed(uint16_t x, uint16_t y);
+void         tp_long_pressed(uint16_t x, uint16_t y);
+void         tp_moved(uint16_t x, uint16_t y);
+void         tp_released(uint16_t x, uint16_t y);
 
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
