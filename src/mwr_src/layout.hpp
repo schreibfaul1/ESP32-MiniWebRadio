@@ -1125,10 +1125,10 @@ void set_ir_pos_SE(int lr) { // SETTINGS   -100 left, +100 right, -127 reset
     if (s_ir_btn_select == -1) return;
     if (s_ir_btn_select == 4) return;
     switch (s_ir_btn_select) {
-        case 0: btn_SL_up.show(); break;
-        case 1: btn_SL_down.show(); break;
-        case 2: btn_SL_ready.show(); break;
-        case 3: btn_SL_cancel.show(); break;
+        case 0: btn_SE_bright.show(); break;
+        case 1: btn_SE_equal.show(); break;
+        case 2: btn_SE_wifi.show(); break;
+        case 3: btn_SE_radio.show(); break;
     }
     if (lr == IR_LEFT) {
         s_ir_btn_select--;
@@ -1140,10 +1140,10 @@ void set_ir_pos_SE(int lr) { // SETTINGS   -100 left, +100 right, -127 reset
     }
     if(lr == IR_RESEET) return;
     switch (s_ir_btn_select) {
-        case 0: btn_SL_up.showAlternativePic(); break;
-        case 1: btn_SL_down.showAlternativePic(); break;
-        case 2: btn_SL_ready.showAlternativePic(); break;
-        case 3: btn_SL_cancel.showAlternativePic(); break;
+        case 0: btn_SE_bright.showAlternativePic(); break;
+        case 1: btn_SE_equal.showAlternativePic(); break;
+        case 2: btn_SE_wifi.showAlternativePic(); break;
+        case 3: btn_SE_radio.showAlternativePic(); break;
     }
 }
 //-------------------------------------------------------------------------------------
