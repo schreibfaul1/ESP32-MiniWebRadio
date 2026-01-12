@@ -3433,12 +3433,12 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
 
     CMD_EQUALS("get_timeZoneName"){     webSrv.reply(s_TZName, webSrv.TEXT); return;}
 
-    CMD_EQUALS("change_state"){         if     (!strcmp(param.c_get(), "RADIO")       && s_state != RADIO)       {setStation(s_cur_station); changeState(RADIO, 0); return;}
-                                        else if(!strcmp(param.c_get(), "PLAYER")      && s_state != PLAYER)      {stopSong(); changeState(PLAYER, 0); return;}
-                                        else if(!strcmp(param.c_get(), "DLNA")        && s_state != DLNA)        {stopSong(); changeState(DLNA, 0);   return;}
-                                        else if(!strcmp(param.c_get(), "BLUETOOTH")   && s_state != BLUETOOTH)   {changeState(BLUETOOTH, -1); return;}
-                                        else if(!strcmp(param.c_get(), "IR_SETTINGS") && s_state != IR_SETTINGS) {changeState(IR_SETTINGS, -1); return;}
-                                        else return;}
+    CMD_EQUALS("change_state"){         if     (!strcmp(param.c_get(), "RADIO")       && s_state != RADIO)       { changeState(RADIO, 0); return; }
+                                        else if(!strcmp(param.c_get(), "PLAYER")      && s_state != PLAYER)      { stopSong(); changeState(PLAYER, 0); return; }
+                                        else if(!strcmp(param.c_get(), "DLNA")        && s_state != DLNA)        { stopSong(); changeState(DLNA, 0);   return; }
+                                        else if(!strcmp(param.c_get(), "BLUETOOTH")   && s_state != BLUETOOTH)   { changeState(BLUETOOTH, -1); return; }
+                                        else if(!strcmp(param.c_get(), "IR_SETTINGS") && s_state != IR_SETTINGS) { changeState(IR_SETTINGS, -1); return; }
+                                        else return; }
 
     CMD_EQUALS("stopfile"){             if(!s_f_isFSConnected && !s_f_isWebConnected) {webSrv.send("resumefile=", "There is no audio file active"); return;}
                                         stopSong(); changeState(PLAYER, 0); webSrv.send("stopfile=", "audiofile stopped");
@@ -4238,7 +4238,7 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
         if (name.equals("pic_BR_logo"))     { goto exit; }
     }
     if (s_state == EQUALIZER) {
-        if (name.equals("btn_EQ_Radio"))    { setStation(s_cur_station); changeState(RADIO, 0); goto exit; }
+        if (name.equals("btn_EQ_Radio"))    { changeState(RADIO, 0); goto exit; }
         if (name.equals("btn_EQ_Player"))   { changeState(PLAYER, 0); goto exit; }
         if (name.equals("btn_EQ_mute"))     { muteChanged(btn_EQ_mute.getValue()); if(s_ir_btn_select == 2) set_ir_pos_EQ(2); goto exit; }
         if (name.equals("btn_EQ_BAL"))      {                                      if(s_ir_btn_select == 3) set_ir_pos_EQ(3); goto exit; }
@@ -4248,7 +4248,7 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
     }
     if (s_state == SETTINGS) {
         if (name.equals("btn_SE_bright"))   { changeState(BRIGHTNESS, 0);    if(s_f_ok_from_ir) { s_ir_btn_select = 0; set_ir_pos_BR(0); } goto exit; }
-        if (name.equals("btn_SE_equal"))    { changeState(EQUALIZER, 0);     if(s_f_ok_from_ir) { s_ir_btn_select = 0; set_ir_pos_SE(0); } goto exit; }
+        if (name.equals("btn_SE_equal"))    { changeState(EQUALIZER, 0);     if(s_f_ok_from_ir) { s_ir_btn_select = 0; set_ir_pos_EQ(0); } goto exit; }
         if (name.equals("btn_SE_wifi"))     { changeState(WIFI_SETTINGS, 0); if(s_f_ok_from_ir) goto exit; }
         if (name.equals("btn_SE_radio"))    { changeState(RADIO, 0); goto exit; }
     }
