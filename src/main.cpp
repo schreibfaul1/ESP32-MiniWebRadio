@@ -96,9 +96,6 @@ uint8_t  s_itemListPos = 0;    // DLNA items
 uint8_t  s_fileListPos = 0;
 int8_t   s_alarmSubMenue = -1;
 int8_t   s_sleepTimerSubMenue = -1;
-int8_t   s_settingsSubMenue = -1;
-int8_t   s_brightnessSubMenue = -1;
-int8_t   s_equalizerSubMenue = -1;
 uint8_t  s_ambientValue = 50;
 uint8_t  s_dlnaLevel = 0;
 uint8_t  s_resetReason = (esp_reset_reason_t)ESP_RST_UNKNOWN;
@@ -1976,8 +1973,7 @@ MWR_LOG_WARN("state %i, s_state %i, subState %i, s_subState %i", state, s_state,
             txt_EQ_bandPass.show(true, false);
             txt_EQ_highPass.show(true, false);
             txt_EQ_balance.show(true, false);
-            if (s_equalizerSubMenue == 0) { btn_EQ_Radio.show(); }
-            if (s_equalizerSubMenue == 1) { btn_EQ_Radio.showAlternativePic(); }
+            btn_EQ_Radio.show();
             break;
 
         case BLUETOOTH: {
@@ -2837,74 +2833,17 @@ void ir_short_key(int8_t key) {
                 return;
             }
             if (s_state == BRIGHTNESS) {
-                if (s_brightnessSubMenue == 1) {
-                    s_brightness += 5;
-                    s_brightness = clamp_min_max(s_brightness, displayConfig.brightnessMin, displayConfig.brightnessMax);
-                    sdr_BR_value.setValue(s_brightness);
-                    setTimeCounter(2);
-                }
+                s_brightness += 5;
+                s_brightness = clamp_min_max(s_brightness, displayConfig.brightnessMin, displayConfig.brightnessMax);
+                sdr_BR_value.setValue(s_brightness);
             }
-            if (s_state == EQUALIZER) {
-                if (s_equalizerSubMenue == 1) {
-                    char c[10];
-                    if (s_ir_btn_select == 10) {
-                        if (s_tone.BAL < 16) {
-                            s_tone.BAL++;
-                            itoa(s_tone.BAL, c, 10);
-                            txt_EQ_balance.writeText(c);
-                            sdr_EQ_balance.setValue(s_tone.BAL);
-                        }
-                        webSrv.send("settone=", setI2STone().c_get());
-                        setTimeCounter(2);
-                        return;
-                    } // balance
-                    if (s_ir_btn_select == 20) {
-                        if (s_tone.LP < 6) {
-                            s_tone.LP++;
-                            itoa(s_tone.LP, c, 10);
-                            txt_EQ_lowPass.writeText(c);
-                            sdr_EQ_lowPass.setValue(s_tone.LP);
-                        }
-                        webSrv.send("settone=", setI2STone().c_get());
-                        setTimeCounter(2);
-                        return;
-                    } // HP
-                    if (s_ir_btn_select == 30) {
-                        if (s_tone.BP < 6) {
-                            s_tone.BP++;
-                            itoa(s_tone.BP, c, 10);
-                            txt_EQ_bandPass.writeText(c);
-                            sdr_EQ_bandPass.setValue(s_tone.BP);
-                        }
-                        webSrv.send("settone=", setI2STone().c_get());
-                        setTimeCounter(2);
-                        return;
-                    } // BP
-                    if (s_ir_btn_select == 40) {
-                        if (s_tone.HP < 6) {
-                            s_tone.HP++;
-                            itoa(s_tone.HP, c, 10);
-                            txt_EQ_highPass.writeText(c);
-                            sdr_EQ_highPass.setValue(s_tone.HP);
-                        }
-                        webSrv.send("settone=", setI2STone().c_get());
-                        setTimeCounter(2);
-                        return;
-                    } // LP
-                    if (s_ir_btn_select == 1) {
-                        s_ir_btn_select = 2;
-                        btn_EQ_Player.show();
-                        btn_EQ_mute.showAlternativePic();
-                        setTimeCounter(2);
-                        return;
-                    }
-                    if (s_ir_btn_select == 0) {
-                        s_ir_btn_select = 1;
-                        btn_EQ_Radio.show();
-                        btn_EQ_Player.showAlternativePic();
-                        setTimeCounter(2);
-                        return;
-                    }
+            if (s_state == EQUALIZER) { // scroll forward (radio, player, mute)
+                if(s_ir_btn_select < 3) set_ir_pos_EQ(IR_RIGHT);
+                else {
+                    if (s_ir_btn_select == 3) { sdr_EQ_balance.setValue(sdr_EQ_balance.getValue() + 1);   } // balance
+                    if (s_ir_btn_select == 4) { sdr_EQ_lowPass.setValue(sdr_EQ_lowPass.getValue() + 1);   } // lowpass
+                    if (s_ir_btn_select == 5) { sdr_EQ_bandPass.setValue(sdr_EQ_bandPass.getValue() + 1); } // bandpass
+                    if (s_ir_btn_select == 6) { sdr_EQ_highPass.setValue(sdr_EQ_highPass.getValue() + 1); } // highpass
                 }
             }
             break;
@@ -2960,75 +2899,19 @@ void ir_short_key(int8_t key) {
                     return;
             }
             if (s_state == BRIGHTNESS) {
-                if (s_brightnessSubMenue == 1) {
-                    s_brightness -= 5;
-                    s_brightness = clamp_min_max(s_brightness, displayConfig.brightnessMin, displayConfig.brightnessMax);
-                    sdr_BR_value.setValue(s_brightness);
-                    setTimeCounter(2);
-                    return;
-                }
+                s_brightness -= 5;
+                s_brightness = clamp_min_max(s_brightness, displayConfig.brightnessMin, displayConfig.brightnessMax);
+                sdr_BR_value.setValue(s_brightness);
+                setTimeCounter(2);
+                return;
             }
-            if (s_state == EQUALIZER) {
-                if (s_equalizerSubMenue == 1) {
-                    char c[10];
-                    if (s_ir_btn_select == 10) {
-                        if (s_tone.BAL > -16) {
-                            s_tone.BAL--;
-                            itoa(s_tone.BAL, c, 10);
-                            txt_EQ_balance.writeText(c);
-                            sdr_EQ_balance.setValue(s_tone.BAL);
-                        }
-                        webSrv.send("settone=", setI2STone().c_get());
-                        setTimeCounter(2);
-                        return;
-                    } // balance
-                    if (s_ir_btn_select == 20) {
-                        if (s_tone.LP > -40) {
-                            s_tone.LP--;
-                            itoa(s_tone.LP, c, 10);
-                            txt_EQ_lowPass.writeText(c);
-                            sdr_EQ_lowPass.setValue(s_tone.LP);
-                        }
-                        webSrv.send("settone=", setI2STone().c_get());
-                        setTimeCounter(2);
-                        return;
-                    } // LP
-                    if (s_ir_btn_select == 30) {
-                        if (s_tone.BP > -40) {
-                            s_tone.BP--;
-                            itoa(s_tone.BP, c, 10);
-                            txt_EQ_bandPass.writeText(c);
-                            sdr_EQ_bandPass.setValue(s_tone.BP);
-                        }
-                        webSrv.send("settone=", setI2STone().c_get());
-                        setTimeCounter(2);
-                        return;
-                    } // BP
-                    if (s_ir_btn_select == 40) {
-                        if (s_tone.HP > -40) {
-                            s_tone.HP--;
-                            itoa(s_tone.HP, c, 10);
-                            txt_EQ_highPass.writeText(c);
-                            sdr_EQ_highPass.setValue(s_tone.HP);
-                        }
-                        webSrv.send("settone=", setI2STone().c_get());
-                        setTimeCounter(2);
-                        return;
-                    } // HP
-                    if (s_ir_btn_select == 1) {
-                        s_ir_btn_select = 0;
-                        btn_EQ_Player.show();
-                        btn_EQ_Radio.showAlternativePic();
-                        setTimeCounter(2);
-                        return;
-                    }
-                    if (s_ir_btn_select == 2) {
-                        s_ir_btn_select = 1;
-                        btn_EQ_mute.show();
-                        btn_EQ_Player.showAlternativePic();
-                        setTimeCounter(2);
-                        return;
-                    }
+            if (s_state == EQUALIZER) { // scroll backward (radio, player, mute)
+                if(s_ir_btn_select < 3) set_ir_pos_EQ(IR_LEFT);
+                else {
+                    if (s_ir_btn_select == 3) { sdr_EQ_balance.setValue(sdr_EQ_balance.getValue() - 1);   } // balance
+                    if (s_ir_btn_select == 4) { sdr_EQ_lowPass.setValue(sdr_EQ_lowPass.getValue() - 1);   } // lowpass
+                    if (s_ir_btn_select == 5) { sdr_EQ_bandPass.setValue(sdr_EQ_bandPass.getValue() - 1); } // bandpass
+                    if (s_ir_btn_select == 6) { sdr_EQ_highPass.setValue(sdr_EQ_highPass.getValue() - 1); } // highpass
                 }
             }
             break;
@@ -3081,25 +2964,9 @@ void ir_short_key(int8_t key) {
                 setTimeCounter(2);
                 break;
             } // VOLUME--
-            if (s_state == EQUALIZER && s_equalizerSubMenue == 1) {
-                if (s_ir_btn_select == 10) {
-                    btn_EQ_Radio.showAlternativePic();
-                    btn_EQ_balance.show();
-                } else if (s_ir_btn_select == 20) {
-                    s_ir_btn_select = 10;
-                    btn_EQ_balance.showAlternativePic();
-                    btn_EQ_lowPass.show();
-                } else if (s_ir_btn_select == 30) {
-                    s_ir_btn_select = 20;
-                    btn_EQ_lowPass.showAlternativePic();
-                    btn_EQ_bandPass.show();
-                } else if (s_ir_btn_select == 40) {
-                    s_ir_btn_select = 30;
-                    btn_EQ_bandPass.showAlternativePic();
-                    btn_EQ_highPass.show();
-                }
-                setTimeCounter(2);
-                return;
+            if (s_state == EQUALIZER) {
+                set_ir_pos_EQ(IR_DOWN);
+                break;
             }
             break;
         case 14: // ARROW UP  ------------------------------------------------------------------------------------------------------------------------
@@ -3150,27 +3017,8 @@ void ir_short_key(int8_t key) {
                 setTimeCounter(2);
                 break;
             } // VOLUME++
-            if (s_state == EQUALIZER && s_equalizerSubMenue == 1) {
-                if (s_ir_btn_select < 10) {
-                    s_ir_btn_select = 10;
-                    btn_EQ_balance.showAlternativePic();
-                    btn_EQ_Radio.show();
-                    btn_EQ_Player.show();
-                    btn_EQ_mute.show();
-                } else if (s_ir_btn_select == 10) {
-                    s_ir_btn_select = 20;
-                    btn_EQ_lowPass.showAlternativePic();
-                    btn_EQ_balance.show();
-                } else if (s_ir_btn_select == 20) {
-                    s_ir_btn_select = 30;
-                    btn_EQ_bandPass.showAlternativePic();
-                    btn_EQ_lowPass.show();
-                } else if (s_ir_btn_select == 30) {
-                    s_ir_btn_select = 40;
-                    btn_EQ_highPass.showAlternativePic();
-                    btn_EQ_bandPass.show();
-                }
-                setTimeCounter(2);
+            if (s_state == EQUALIZER) {
+                set_ir_pos_EQ(IR_UP);
                 return;
             }
             break;
@@ -4096,7 +3944,7 @@ void graphicObjects_OnChange(ps_ptr<char> name, int32_t arg1) {
         txt_BR_value.writeText(int2str(arg1));
         return;
     }
-    if (name.equals("sdr_E_LP")) {
+    if (name.equals("sdr_EQ_LP")) {
         itoa(arg1, c, 10);
         strcat(c, " dB");
         txt_EQ_lowPass.writeText(c);
@@ -4104,7 +3952,7 @@ void graphicObjects_OnChange(ps_ptr<char> name, int32_t arg1) {
         webSrv.send("settone=", setI2STone().c_get());
         return;
     }
-    if (name.equals("sdr_E_BP")) {
+    if (name.equals("sdr_EQ_BP")) {
         itoa(arg1, c, 10);
         strcat(c, " dB");
         txt_EQ_bandPass.writeText(c);
@@ -4112,7 +3960,7 @@ void graphicObjects_OnChange(ps_ptr<char> name, int32_t arg1) {
         webSrv.send("settone=", setI2STone().c_get());
         return;
     }
-    if (name.equals("sdr_E_HP")) {
+    if (name.equals("sdr_EQ_HP")) {
         itoa(arg1, c, 10);
         strcat(c, " dB");
         txt_EQ_highPass.writeText(c);
@@ -4120,7 +3968,7 @@ void graphicObjects_OnChange(ps_ptr<char> name, int32_t arg1) {
         webSrv.send("settone=", setI2STone().c_get());
         return;
     }
-    if (name.equals("sdr_E_BAL")) {
+    if (name.equals("sdr_EQ_BAL")) {
         itoa(arg1, c, 10);
         strcat(c, " ");
         txt_EQ_balance.writeText(c);
@@ -4238,10 +4086,10 @@ void graphicObjects_OnClick(ps_ptr<char> name, uint8_t val) { // val = 0 --> is 
         if (val && name.equals("pic_BR_logo"))    { goto exit; }
     }
     if (s_state == EQUALIZER) {
-        if (val && name.equals("btn_E_LP"))       { sdr_EQ_lowPass.setValue(0); goto exit; }
-        if (val && name.equals("btn_E_BP"))       { sdr_EQ_bandPass.setValue(0); goto exit; }
-        if (val && name.equals("btn_E_HP"))       { sdr_EQ_highPass.setValue(0); goto exit; }
-        if (val && name.equals("btn_E_BAL"))      { sdr_EQ_balance.setValue(0); goto exit; }
+        if (val && name.equals("btn_EQ_LP"))       { sdr_EQ_lowPass.setValue(0); goto exit; }
+        if (val && name.equals("btn_EQ_BP"))       { sdr_EQ_bandPass.setValue(0); goto exit; }
+        if (val && name.equals("btn_EQ_HP"))       { sdr_EQ_highPass.setValue(0); goto exit; }
+        if (val && name.equals("btn_EQ_BAL"))      { sdr_EQ_balance.setValue(0); goto exit; }
         if (val && name.equals("btn_EQ_Radio"))   { goto exit; }
         if (val && name.equals("btn_EQ_Player"))  { goto exit; }
         if (val && name.equals("btn_EQ_mute"))    { if (!s_f_mute) s_f_muteIsPressed = true; goto exit; }
@@ -4392,12 +4240,16 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
     if (s_state == EQUALIZER) {
         if (name.equals("btn_EQ_Radio"))    { setStation(s_cur_station); changeState(RADIO, 0); goto exit; }
         if (name.equals("btn_EQ_Player"))   { changeState(PLAYER, 0); goto exit; }
-        if (name.equals("btn_EQ_mute"))     { muteChanged(btn_EQ_mute.getValue()); goto exit; }
+        if (name.equals("btn_EQ_mute"))     { muteChanged(btn_EQ_mute.getValue()); if(s_ir_btn_select == 2) set_ir_pos_EQ(2); goto exit; }
+        if (name.equals("btn_EQ_BAL"))      {                                      if(s_ir_btn_select == 3) set_ir_pos_EQ(3); goto exit; }
+        if (name.equals("btn_EQ_LP"))       {                                      if(s_ir_btn_select == 4) set_ir_pos_EQ(4); goto exit; }
+        if (name.equals("btn_EQ_BP"))       {                                      if(s_ir_btn_select == 5) set_ir_pos_EQ(5); goto exit; }
+        if (name.equals("btn_EQ_HP"))       {                                      if(s_ir_btn_select == 6) set_ir_pos_EQ(6); goto exit; }
     }
     if (s_state == SETTINGS) {
-        if (name.equals("btn_SE_bright"))   { changeState(BRIGHTNESS, -1); goto exit; }
-        if (name.equals("btn_SE_equal"))    { changeState(EQUALIZER, -1); goto exit; }
-        if (name.equals("btn_SE_wifi"))     { changeState(WIFI_SETTINGS, -1); goto exit; }
+        if (name.equals("btn_SE_bright"))   { changeState(BRIGHTNESS, 0);    if(s_f_ok_from_ir) { s_ir_btn_select = 0; set_ir_pos_BR(0); } goto exit; }
+        if (name.equals("btn_SE_equal"))    { changeState(EQUALIZER, 0);     if(s_f_ok_from_ir) { s_ir_btn_select = 0; set_ir_pos_SE(0); } goto exit; }
+        if (name.equals("btn_SE_wifi"))     { changeState(WIFI_SETTINGS, 0); if(s_f_ok_from_ir) goto exit; }
         if (name.equals("btn_SE_radio"))    { changeState(RADIO, 0); goto exit; }
     }
     if (s_state == BLUETOOTH) {
@@ -4421,7 +4273,7 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
                                               s_f_esp_restart = true;
                                               goto exit; }
     }
-    MWR_LOG_WARN("unused event: graphicObject %s was released", name);
+    MWR_LOG_WARN("unused event: graphicObject %s was released", name.c_get());
 exit:
     s_f_ok_from_ir = false;
     return;

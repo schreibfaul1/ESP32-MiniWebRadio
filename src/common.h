@@ -144,7 +144,9 @@ enum status {
 enum ir_shift {
     IR_RIGHT = +100,
     IR_LEFT = -100,
-    IR_RESEET = -127
+    IR_UP = +101,
+    IR_DOWN = - 101,
+    IR_RESET = -127
 };
 
 static bool                     newLine = false;

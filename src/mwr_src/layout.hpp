@@ -523,10 +523,10 @@ textbox      txt_BR_value("txt_BR_value");
 // SLEEPTIMER
 button1state btn_SL_up("btn_SL_up"), btn_SL_down("btn_SL_down"), btn_SL_ready("btn_SL_ready"), btn_SL_cancel("btn_SL_cancel");
 // EQUALIZER
-slider       sdr_EQ_lowPass("sdr_E_LP"), sdr_EQ_bandPass("sdr_E_BP"), sdr_EQ_highPass("sdr_E_HP"), sdr_EQ_balance("sdr_E_BAL");
-textbox      txt_EQ_lowPass("txt_E_LP"), txt_EQ_bandPass("txt_E_BP"), txt_EQ_highPass("txt_E_HP"), txt_EQ_balance("txt_E_BAL");
-button1state btn_EQ_lowPass("btn_E_LP");
-button1state btn_EQ_bandPass("btn_E_BP"), btn_EQ_highPass("btn_E_HP"), btn_EQ_balance("btn_E_BAL");
+slider       sdr_EQ_lowPass("sdr_EQ_LP"), sdr_EQ_bandPass("sdr_EQ_BP"), sdr_EQ_highPass("sdr_EQ_HP"), sdr_EQ_balance("sdr_EQ_BAL");
+textbox      txt_EQ_lowPass("txt_EQ_LP"), txt_EQ_bandPass("txt_EQ_BP"), txt_EQ_highPass("txt_EQ_HP"), txt_EQ_balance("txt_EQ_BAL");
+button1state btn_EQ_lowPass("btn_EQ_LP");
+button1state btn_EQ_bandPass("btn_EW_BP"), btn_EQ_highPass("btn_EQ_HP"), btn_EQ_balance("btn_EQ_BAL");
 button1state btn_EQ_Radio("btn_EQ_Radio"), btn_EQ_Player("btn_EQ_Player");
 button2state btn_EQ_mute("btn_EQ_mute");
 // BLUETOOTH
@@ -937,7 +937,7 @@ void set_ir_pos_RA(int lr) { // RADIO   -100 left, +100 right, -127 reset
         s_ir_btn_select++;
         if (s_ir_btn_select == 8) s_ir_btn_select = 0;
     }
-    if(lr == IR_RESEET) return;
+    if(lr == IR_RESET) return;
     switch (s_ir_btn_select) {
         case 0: btn_RA_staList.showAlternativePic(); break;
         case 1: btn_RA_player.showAlternativePic(); break;
@@ -972,7 +972,7 @@ void set_ir_pos_PL(int lr) { // PLAYER   -100 left, +100 right, -127 reset
             s_ir_btn_select++;
             if (s_ir_btn_select == 8) s_ir_btn_select = 0;
         }
-        if(lr == IR_RESEET) return;
+        if(lr == IR_RESET) return;
         switch (s_ir_btn_select) {
             case 0: btn_PL_prevFile.showAlternativePic(); break;
             case 1: btn_PL_nextFile.showAlternativePic(); break;
@@ -1002,7 +1002,7 @@ void set_ir_pos_PL(int lr) { // PLAYER   -100 left, +100 right, -127 reset
             s_ir_btn_select++;
             if (s_ir_btn_select == 5) s_ir_btn_select = 0;
         }
-        if(lr == IR_RESEET) return;
+        if(lr == IR_RESET) return;
         switch (s_ir_btn_select) {
             case 0: btn_PL_mute.showAlternativePic(); break;
             case 1: btn_PL_pause.showAlternativePic(); break;
@@ -1031,7 +1031,7 @@ void set_ir_pos_DL(int lr) { // DLNA   -100 left, +100 right, -127 reset
         s_ir_btn_select++;
         if (s_ir_btn_select == 5) s_ir_btn_select = 0;
     }
-    if(lr == IR_RESEET) return;
+    if(lr == IR_RESET) return;
     switch (s_ir_btn_select) {
         case 0: btn_DL_mute.showAlternativePic(); break;
         case 1: btn_DL_pause.showAlternativePic(); break;
@@ -1058,7 +1058,7 @@ void set_ir_pos_CL(int lr) { // CLOCK   -100 left, +100 right, -127 reset
         s_ir_btn_select++;
         if (s_ir_btn_select == 4) s_ir_btn_select = 0;
     }
-    if(lr == IR_RESEET) return;
+    if(lr == IR_RESET) return;
     switch (s_ir_btn_select) {
         case 0: btn_CL_alarm.showAlternativePic(); break;
         case 1: btn_CL_radio.showAlternativePic(); break;
@@ -1085,7 +1085,7 @@ void set_ir_pos_AC(int lr) { // ALARMCLOCK   -100 left, +100 right, -127 reset
         s_ir_btn_select++;
         if (s_ir_btn_select == 5) s_ir_btn_select = 0;
     }
-    if(lr == IR_RESEET) return;
+    if(lr == IR_RESET) return;
     switch (s_ir_btn_select) {
         case 0: btn_AC_left.showAlternativePic(); break;
         case 1: btn_AC_right.showAlternativePic(); break;
@@ -1112,7 +1112,7 @@ void set_ir_pos_SL(int lr) { // SLEEPTIMER   -100 left, +100 right, -127 reset
         s_ir_btn_select++;
         if (s_ir_btn_select == 4) s_ir_btn_select = 0;
     }
-    if(lr == IR_RESEET) return;
+    if(lr == IR_RESET) return;
     switch (s_ir_btn_select) {
         case 0: btn_SL_up.showAlternativePic(); break;
         case 1: btn_SL_down.showAlternativePic(); break;
@@ -1138,7 +1138,7 @@ void set_ir_pos_SE(int lr) { // SETTINGS   -100 left, +100 right, -127 reset
         s_ir_btn_select++;
         if (s_ir_btn_select == 4) s_ir_btn_select = 0;
     }
-    if(lr == IR_RESEET) return;
+    if(lr == IR_RESET) return;
     switch (s_ir_btn_select) {
         case 0: btn_SE_bright.showAlternativePic(); break;
         case 1: btn_SE_equal.showAlternativePic(); break;
@@ -1161,7 +1161,7 @@ void set_ir_pos_BR(int lr) { // SETTINGS   -100 left, +100 right, -127 reset
         s_ir_btn_select++;
         if (s_ir_btn_select == 4) s_ir_btn_select = 0;
     }
-    if(lr == IR_RESEET) return;
+    if(lr == IR_RESET) return;
     switch (s_ir_btn_select) {
         case 0: btn_BR_ready.showAlternativePic(); break;
     }
@@ -1169,33 +1169,43 @@ void set_ir_pos_BR(int lr) { // SETTINGS   -100 left, +100 right, -127 reset
 //-------------------------------------------------------------------------------------
 void set_ir_pos_EQ(int lr) { // EQUALIZER   -1 left, +1 right
     if (s_ir_btn_select == -1) return;
-    if (s_ir_btn_select == 7) return;
+    if (s_ir_btn_select > 6) return;
     switch (s_ir_btn_select) {
         case 0: btn_EQ_Radio.show(); break;
         case 1: btn_EQ_Player.show(); break;
         case 2: btn_EQ_mute.show(); break;
-        case 3: btn_EQ_lowPass.show(); break;
-        case 4: btn_EQ_bandPass.show(); break;
-        case 5: btn_EQ_highPass.show(); break;
-        case 6: btn_EQ_balance.show(); break;
+        case 3: btn_EQ_balance.show(); break;
+        case 4: btn_EQ_lowPass.show(); break;
+        case 5: btn_EQ_bandPass.show(); break;
+        case 6: btn_EQ_highPass.show(); break;
     }
-    if (lr == IR_LEFT) {
+    if (lr == IR_LEFT && s_ir_btn_select < 3) {
         s_ir_btn_select--;
-        if (s_ir_btn_select == -1) s_ir_btn_select = 6;
+        if (s_ir_btn_select == -1) s_ir_btn_select = 2;
     }
-    if (lr == IR_RIGHT) {
+    if (lr == IR_RIGHT && s_ir_btn_select < 3) {
         s_ir_btn_select++;
-        if (s_ir_btn_select == 7) s_ir_btn_select = 0;
+        if (s_ir_btn_select == 3) s_ir_btn_select = 0;
     }
-    if(lr == IR_RESEET) return;
+    if (lr == IR_UP) {
+        if(s_ir_btn_select < 3) s_ir_btn_select = 3;
+        else {s_ir_btn_select++;
+            if (s_ir_btn_select == 7) s_ir_btn_select = 3;
+        }
+    }
+    if (lr == IR_DOWN) {
+        s_ir_btn_select--;
+        if (s_ir_btn_select == 2) s_ir_btn_select = 0;
+    }
+    if(lr == IR_RESET) return;
     switch (s_ir_btn_select) {
         case 0: btn_EQ_Radio.showAlternativePic(); break;
         case 1: btn_EQ_Player.showAlternativePic(); break;
         case 2: btn_EQ_mute.showAlternativePic(); break;
-        case 3: btn_EQ_lowPass.showAlternativePic(); break;
-        case 4: btn_EQ_bandPass.showAlternativePic(); break;
-        case 5: btn_EQ_highPass.showAlternativePic(); break;
-        case 6: btn_EQ_balance.showAlternativePic(); break;
+        case 3: btn_EQ_balance.showAlternativePic(); break;
+        case 4: btn_EQ_lowPass.showAlternativePic(); break;
+        case 5: btn_EQ_bandPass.showAlternativePic(); break;
+        case 6: btn_EQ_highPass.showAlternativePic(); break;
     }
 }
 //-------------------------------------------------------------------------------------
@@ -1218,7 +1228,7 @@ void set_ir_pos_BT(int lr) { // BLUETOOTH   -1 left, +1 right
         s_ir_btn_select++;
         if (s_ir_btn_select == 7) s_ir_btn_select = 0;
     }
-    if(lr == IR_RESEET) return;
+    if(lr == IR_RESET) return;
     switch (s_ir_btn_select) {
         case 0: btn_BT_volDown.showAlternativePic(); break;
         case 1: btn_BT_volUp.showAlternativePic(); break;
