@@ -280,6 +280,7 @@ class progressbar : public RegisterTable {
         m_enabled = true;
     }
     void disable() { m_enabled = false; }
+    void enable() { m_enabled = true; }
     void hide() {
         if (m_backgroundTransparency) {
             if (m_saveBackground) {

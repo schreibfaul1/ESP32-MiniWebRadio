@@ -44,7 +44,6 @@ struct Layout {
     const coor& winSTitle;
     const coor& winVUmeter;
     const coor& winFooter;
-    const coor& sdrOvBtns;
     const coor& winButton;
     const coor& winDigits;
     const coor& winWoHF;
@@ -116,7 +115,7 @@ constexpr coor winVUmeter = coor().pos(296, 120).size(24, 100);
 constexpr coor winFooter = coor().pos(0, 220).size(320, 20);
 constexpr coor winStaNr = coor().pos(0, 220).size(60, 20);
 constexpr coor winSleep = coor().pos(60, 220).size(65, 20);
-constexpr coor sdrOvBtns = coor().pos(0, 150).size(320, 30);
+//constexpr coor sdrOvBtns = coor().pos(0, 150).size(320, 30);
 constexpr coor winButton = coor().pos(0, 180).size(40, 40);
 constexpr coor winDigits = coor().pos(0, 20).size(320, 160);
 constexpr coor winWoHF = coor().pos(0, 20).size(320, 200);
@@ -185,7 +184,8 @@ constexpr uint16_t w_vuMeter = 32;           // width vuMeter
 constexpr uint16_t h_area = (v_res - 2 * h_footer) / 2;                                // 130, height area1 and  area2
 constexpr uint16_t y_area2 = v_res - h_footer - h_area;                                // 320 - 30 - 130, yPos area2
 constexpr uint16_t y_btn = y_area2 + h_area / 2 + (h_area / 4 - hw_btn / 2);           // center in the lower half of area2
-constexpr uint16_t y_progbar = y_area2 + (h_area / 4 - h_progBar / 2) + h_progBar / 4; // center in upper half of area2 # 1/4 h_progBar
+constexpr uint16_t y_progbar = y_btn - 2 * h_progBar;
+constexpr uint16_t h_EQ = (2 * h_area - hw_btn) / 4;
 
 // -----------------------------------------------------------------------------------
 // window definitions .pos(x, y) .size(w, h) .padding(l, r, t, b)
@@ -203,14 +203,14 @@ constexpr coor winVUmeter = coor().pos(h_res - w_vuMeter, y_area2).size(w_vuMete
 constexpr coor winFooter = coor().pos(0, v_res - h_footer).size(h_res, h_footer);
 constexpr coor winStaNr = coor().pos(0, 290).size(85, 30);
 constexpr coor winSleep = coor().pos(85, 290).size(87, 30);
-constexpr coor sdrOvBtns = coor().pos(0, 194).size(480, 40);
+//constexpr coor sdrOvBtns = coor().pos(0, 194).size(480, 40);
 constexpr coor winButton = coor().pos(0, 234).size(56, 56);
 constexpr coor winDigits = coor().pos(0, 30).size(480, 200);
 constexpr coor winWoHF = coor().pos(0, 30).size(480, 260);
-constexpr coor sdrHP = coor().pos(140, 30).size(200, 50).pad(0, 0, 8, 8);
-constexpr coor sdrBP = coor().pos(140, 80).size(200, 50).pad(0, 0, 8, 8);
-constexpr coor sdrLP = coor().pos(140, 130).size(200, 50).pad(0, 0, 8, 8);
-constexpr coor sdrBAL = coor().pos(140, 180).size(200, 50).pad(0, 0, 8, 8);
+constexpr coor sdrHP = coor().pos(140,  h_footer + 0 * h_EQ).size(200, h_EQ).pad(0, 0, 8, 8);
+constexpr coor sdrBP = coor().pos(140,  h_footer + 1 * h_EQ).size(200, h_EQ).pad(0, 0, 8, 8);
+constexpr coor sdrLP = coor().pos(140,  h_footer + 2 * h_EQ).size(200, h_EQ).pad(0, 0, 8, 8);
+constexpr coor sdrBAL = coor().pos(140, h_footer + 3 * h_EQ).size(200, h_EQ).pad(0, 0, 8, 8);
 
 // -----------------------------------------------------------------------------------
 // window derived (calculated from others)
@@ -279,7 +279,7 @@ constexpr coor winVUmeter = coor().pos(768, 280).size(32, 150);
 constexpr coor winFooter = coor().pos(0, 430).size(800, 50);
 constexpr coor winStaNr = coor().pos(0, 290).size(85, 50);
 constexpr coor winSleep = coor().pos(85, 290).size(87, 50);
-constexpr coor sdrOvBtns = coor().pos(0, 265).size(800, 60).pad(5, 5, 0, 0);
+//constexpr coor sdrOvBtns = coor().pos(0, 265).size(800, 60).pad(5, 5, 0, 0);
 constexpr coor winButton = coor().pos(0, 345).size(80, 80);
 constexpr coor winDigits = coor().pos(0, 50).size(800, 295);
 constexpr coor winWoHF = coor().pos(0, 50).size(800, 380);
@@ -371,7 +371,7 @@ constexpr coor winTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area2
 constexpr coor winSTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area2).pad(0, 4, 0, 3);
 constexpr coor winVUmeter = coor().pos(h_res - w_vuMeter, y_area2).size(w_vuMeter, h_area2);
 constexpr coor winFooter = coor().pos(0, v_res - h_footer).size(h_res, h_footer);
-constexpr coor sdrOvBtns = coor().pos(0, y_progbar).size(h_res, h_progbar).pad(5, 5, 0, 0);  // or RA slider
+//constexpr coor sdrOvBtns = coor().pos(0, y_progbar).size(h_res, h_progbar).pad(5, 5, 0, 0);  // or RA slider
 constexpr coor winProgbar = coor().pos(0, y_progbar).size(h_res, h_progbar).pad(5, 5, 3, 0); // or PL progressbar
 constexpr coor winButton = coor().pos(0, y_btn + p_tb_btn).size(hw_btn + p_lr_btn, hw_btn);
 constexpr coor winDigits = coor().pos(0, y_area1).size(h_res, h_area1 + 2 * h_header);
@@ -432,7 +432,7 @@ inline Layout makeLayout() {
 #else
     #error "Unsupported TFT_CONTROLLER"
 #endif
-    return {winHeader, winLogo, winName, winFName, winFileNr, winVolBox, winProgbar, winTitle, winSTitle, winVUmeter, winFooter, sdrOvBtns, winButton, winDigits,
+    return {winHeader, winLogo, winName, winFName, winFileNr, winVolBox, winProgbar, winTitle, winSTitle, winVUmeter, winFooter, winButton, winDigits,
             winWoHF,   sdrHP,   sdrBP,   sdrLP,    sdrBAL,    btnHP,     btnBP,      btnLP,    btnBAL,    txtHP,      txtBP,     txtLP,     txtBAL};
 }
 
@@ -526,7 +526,7 @@ button1state btn_SL_up("btn_SL_up"), btn_SL_down("btn_SL_down"), btn_SL_ready("b
 slider       sdr_EQ_lowPass("sdr_EQ_LP"), sdr_EQ_bandPass("sdr_EQ_BP"), sdr_EQ_highPass("sdr_EQ_HP"), sdr_EQ_balance("sdr_EQ_BAL");
 textbox      txt_EQ_lowPass("txt_EQ_LP"), txt_EQ_bandPass("txt_EQ_BP"), txt_EQ_highPass("txt_EQ_HP"), txt_EQ_balance("txt_EQ_BAL");
 button1state btn_EQ_lowPass("btn_EQ_LP");
-button1state btn_EQ_bandPass("btn_EW_BP"), btn_EQ_highPass("btn_EQ_HP"), btn_EQ_balance("btn_EQ_BAL");
+button1state btn_EQ_bandPass("btn_EQ_BP"), btn_EQ_highPass("btn_EQ_HP"), btn_EQ_balance("btn_EQ_BAL");
 button1state btn_EQ_Radio("btn_EQ_Radio"), btn_EQ_Player("btn_EQ_Player");
 button2state btn_EQ_mute("btn_EQ_mute");
 // BLUETOOTH
@@ -551,7 +551,7 @@ void placingGraphicObjects() { // and initialize them
     volBox.begin(layout.winVolBox.x, layout.winVolBox.y, layout.winVolBox.w, layout.winVolBox.h, "blue");
     myList.begin(layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, displayConfig.fonts[0]);
     // RADIO -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    sdr_RA_volume.begin(layout.sdrOvBtns.x, layout.sdrOvBtns.y, layout.sdrOvBtns.w, layout.sdrOvBtns.h, layout.sdrOvBtns.pl, layout.sdrOvBtns.pr, layout.sdrOvBtns.pt, layout.sdrOvBtns.pb);
+    sdr_RA_volume.begin(layout.winProgbar.x, layout.winProgbar.y, layout.winProgbar.w, layout.winProgbar.h, layout.winProgbar.pl, layout.winProgbar.pr, layout.winProgbar.pt, layout.winProgbar.pb);
     btn_RA_mute.begin(0 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_RA_mute.setOffPicturePath("/btn/Button_Mute_Off_Green.png");
     btn_RA_mute.setOnPicturePath("/btn/Button_Mute_On_Red.png");
@@ -680,8 +680,7 @@ void placingGraphicObjects() { // and initialize them
     txt_PL_fNumber.setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
     txt_PL_fNumber.setFont(displayConfig.fileNumberFontSize);
     pic_PL_logo.begin(layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h, layout.winLogo.pl, layout.winLogo.pr, layout.winLogo.pt, layout.winLogo.pb);
-    pgb_PL_progress.begin(layout.winProgbar.x, layout.winProgbar.y, layout.winProgbar.w, layout.winProgbar.h, layout.winProgbar.pl, layout.winProgbar.pr, layout.winProgbar.pt, layout.winProgbar.pb, 0,
-                          30);
+    pgb_PL_progress.begin(layout.winProgbar.x, layout.winProgbar.y, layout.winProgbar.w, layout.winProgbar.h, layout.winProgbar.pl, layout.winProgbar.pr, layout.winProgbar.pt, layout.winProgbar.pb, 0, 30);
     pgb_PL_progress.setValue(0);
     // AUDIOFILESLIST-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     lst_PLAYER.begin(layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, displayConfig.tftSize, displayConfig.listFontSize);
@@ -810,7 +809,7 @@ void placingGraphicObjects() { // and initialize them
     btn_SE_radio.setAlternativePicturePath("/btn/Button_Radio_Magenta.png");
     pic_SE_logo.begin(layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h, layout.winLogo.pl, layout.winLogo.pr, layout.winLogo.pt, layout.winLogo.pb);
     // BRIGHTNESS --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    sdr_BR_value.begin(2 * layout.winButton.w, layout.winButton.y + 5, 4 * layout.winButton.w, layout.sdrOvBtns.h, layout.winButton.pl, layout.winButton.pr, layout.winButton.pt, layout.winButton.pb);
+    sdr_BR_value.begin(2 * layout.winButton.w, layout.winButton.y + 5, 4 * layout.winButton.w, layout.winProgbar.h, layout.winButton.pl, layout.winButton.pr, layout.winButton.pt, layout.winButton.pb);
     sdr_BR_value.setMinMaxVal(displayConfig.brightnessMin, displayConfig.brightnessMax);
     btn_BR_ready.begin(7 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_BR_ready.setDefaultPicturePath("/btn/Button_Ready_Blue.png");
@@ -877,25 +876,33 @@ void placingGraphicObjects() { // and initialize them
     btn_BT_volDown.begin(0 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_BT_volDown.setDefaultPicturePath("/btn/Button_Volume_Down_Blue.png");
     btn_BT_volDown.setClickedPicturePath("/btn/Button_Volume_Down_Yellow.png");
+    btn_BT_volDown.setAlternativePicturePath("/btn/Button_Volume_Down_Magenta.png");
     btn_BT_volUp.begin(1 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_BT_volUp.setDefaultPicturePath("/btn/Button_Volume_Up_Blue.png");
     btn_BT_volUp.setClickedPicturePath("/btn/Button_Volume_Up_Yellow.png");
+    btn_BT_volUp.setAlternativePicturePath("/btn/Button_Volume_Up_Magenta.png");
     btn_BT_pause.begin(2 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_BT_pause.setOffPicturePath("/btn/Button_Pause_Blue.png");
     btn_BT_pause.setOnPicturePath("/btn/Button_Play_Blue.png");
     btn_BT_pause.setClickedOffPicturePath("/btn/Button_Pause_Yellow.png");
     btn_BT_pause.setClickedOnPicturePath("/btn/Button_Play_Yellow.png");
+    btn_BT_pause.setAlternativeOffPicturePath("/btn/Button_Pause_Magenta.png");
+    btn_BT_pause.setAlternativeOnPicturePath("/btn/Button_Play_Magenta.png");
     btn_BT_mode.begin(3 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_BT_mode.setDefaultPicturePath("/btn/Button_RxTx_Blue.png");
     btn_BT_mode.setClickedPicturePath("/btn/Button_RxTx_Yellow.png");
+    btn_BT_mode.setAlternativePicturePath("/btn/Button_RxTx_Magenta.png");
     btn_BT_radio.begin(4 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_BT_radio.setDefaultPicturePath("/btn/Button_Radio_Green.png");
     btn_BT_radio.setClickedPicturePath("/btn/Button_Radio_Yellow.png");
+    btn_BT_radio.setAlternativePicturePath("/btn/Button_Radio_Magenta.png");
     btn_BT_power.begin(5 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_BT_power.setOffPicturePath("/btn/Button_Bluetooth_Red.png");
     btn_BT_power.setOnPicturePath("/btn/Button_Bluetooth_Blue.png");
     btn_BT_power.setClickedOffPicturePath("/btn/Button_Bluetooth_Yellow.png");
     btn_BT_power.setClickedOnPicturePath("/btn/Button_Bluetooth_Yellow.png");
+    btn_BT_power.setAlternativeOffPicturePath("/btn/Button_Bluetooth_Magenta.png");
+    btn_BT_power.setAlternativeOnPicturePath("/btn/Button_Bluetooth_Magenta.png");
     pic_BT_mode.setPicturePath("/common/BTnc.png");
     pic_BT_mode.begin(layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h, layout.winLogo.pl, layout.winLogo.pr, layout.winLogo.pt, layout.winLogo.pb);
     pic_BT_mode.setAlternativPicturePath("/common/BTnc.png");
@@ -916,7 +923,7 @@ void placingGraphicObjects() { // and initialize them
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 extern int8_t s_ir_btn_select;
-extern int8_t s_subState;
+extern int8_t s_subState_player;
 
 void set_ir_pos_RA(int lr) { // RADIO   -100 left, +100 right, -127 reset
     switch (s_ir_btn_select) {
@@ -951,7 +958,7 @@ void set_ir_pos_RA(int lr) { // RADIO   -100 left, +100 right, -127 reset
 }
 //-------------------------------------------------------------------------------------
 void set_ir_pos_PL(int lr) { // PLAYER   -100 left, +100 right, -127 reset
-    if (s_subState == 0) {
+    if (s_subState_player == 0) {
         if (s_ir_btn_select == -1) return;
         if (s_ir_btn_select == 8) return;
         switch (s_ir_btn_select) {
@@ -984,7 +991,7 @@ void set_ir_pos_PL(int lr) { // PLAYER   -100 left, +100 right, -127 reset
             case 7: btn_PL_off.showAlternativePic(); break;
         }
     }
-    if (s_subState == 1) {
+    if (s_subState_player == 1) {
         if (s_ir_btn_select == -1) return;
         if (s_ir_btn_select == 5) return;
         switch (s_ir_btn_select) {
@@ -1222,11 +1229,11 @@ void set_ir_pos_BT(int lr) { // BLUETOOTH   -1 left, +1 right
     }
     if (lr == IR_LEFT) {
         s_ir_btn_select--;
-        if (s_ir_btn_select == -1) s_ir_btn_select = 6;
+        if (s_ir_btn_select == -1) s_ir_btn_select = 5;
     }
     if (lr == IR_RIGHT) {
         s_ir_btn_select++;
-        if (s_ir_btn_select == 7) s_ir_btn_select = 0;
+        if (s_ir_btn_select == 6) s_ir_btn_select = 0;
     }
     if(lr == IR_RESET) return;
     switch (s_ir_btn_select) {
@@ -1234,8 +1241,8 @@ void set_ir_pos_BT(int lr) { // BLUETOOTH   -1 left, +1 right
         case 1: btn_BT_volUp.showAlternativePic(); break;
         case 2: btn_BT_pause.showAlternativePic(); break;
         case 3: btn_BT_mode.showAlternativePic(); break;
-        case 4: btn_BT_radio.show(); break;
-        case 5: btn_BT_power.show(); break;
+        case 4: btn_BT_radio.showAlternativePic(); break;
+        case 5: btn_BT_power.showAlternativePic(); break;
     }
 }
 //-------------------------------------------------------------------------------------
