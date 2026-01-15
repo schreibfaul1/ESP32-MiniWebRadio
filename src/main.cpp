@@ -1276,10 +1276,11 @@ void setup() {
             s_resetReason == ESP_RST_DEEPSLEEP) { // Wake up
             if (s_cur_station > 0) {
                 setStation(s_cur_station);
+                changeState(RADIO, 0);
             } else {
                 s_state = UNDEFINED;
-                changeState(RADIO, 0);
                 setStationViaURL(s_settings.lastconnectedhost.c_get(), "");
+                changeState(RADIO, 0);
             }
         }
     } else {
@@ -1370,36 +1371,82 @@ uint8_t upvolume() {
     return s_volume.cur_volume;
 }
 
+// void setStation(uint16_t sta) {
+//     static uint16_t old_cur_station = 0;
+//     if (sta == 0) { return; }
+//     if (sta > staMgnt.getSumStations()) sta = s_cur_station;
+//     s_stationURL = staMgnt.getStationUrl(sta);
+//     s_homepage = "";
+//     SerialPrintfln("action: ...  switch to station " ANSI_ESC_CYAN "%d", sta);
+
+//     if (s_f_isWebConnected && sta == old_cur_station && s_state == RADIO) { // Station is already selected
+//         s_f_newStreamTitle = true;
+//     } else {
+//         if (s_state != RADIO) { changeState(RADIO, 0); }
+//         s_streamTitle = "";
+//         s_icyDescription = "";
+//         s_f_newStreamTitle = true;
+//         s_f_newIcyDescription = true;
+//         connecttohost(s_stationURL.c_get());
+//         //    if(!s_f_isWebConnected) s_cur_station = old_cur_station; // host is not connected
+//     }
+//     old_cur_station = sta;
+//     StationsItems();
+//     if (s_state == RADIO) {
+//         showLogoAndStationName(true);
+//         if (s_cur_station == 0) {
+//             dispFooter.updateFlag(NULL);
+//         } else {
+//             dispFooter.updateFlag(getFlagPath(s_cur_station));
+//         }
+//     }
+//     dispFooter.updateStation(s_cur_station);
+// }
+
 void setStation(uint16_t sta) {
     static uint16_t old_cur_station = 0;
     if (sta == 0) { return; }
     if (sta > staMgnt.getSumStations()) sta = s_cur_station;
     s_stationURL = staMgnt.getStationUrl(sta);
-    s_homepage = "";
     SerialPrintfln("action: ...  switch to station " ANSI_ESC_CYAN "%d", sta);
-
+    s_homepage = "";
+    s_streamTitle = "";
+    s_icyDescription = "";
+    s_f_newStreamTitle = true;
+    s_f_newIcyDescription = true;
     if (s_f_isWebConnected && sta == old_cur_station && s_state == RADIO) { // Station is already selected
-        s_f_newStreamTitle = true;
+    //    s_f_newStreamTitle = true;
     } else {
-        if (s_state != RADIO) { changeState(RADIO, 0); }
-        s_streamTitle = "";
-        s_icyDescription = "";
-        s_f_newStreamTitle = true;
-        s_f_newIcyDescription = true;
         connecttohost(s_stationURL.c_get());
-        //    if(!s_f_isWebConnected) s_cur_station = old_cur_station; // host is not connected
     }
+    changeState(RADIO, 0);
     old_cur_station = sta;
     StationsItems();
-    if (s_state == RADIO) {
-        showLogoAndStationName(true);
-        if (s_cur_station == 0) {
-            dispFooter.updateFlag(NULL);
-        } else {
-            dispFooter.updateFlag(getFlagPath(s_cur_station));
-        }
+    showLogoAndStationName(true);
+    if (s_cur_station == 0) {
+        dispFooter.updateFlag(NULL);
+    } else {
+        dispFooter.updateFlag(getFlagPath(s_cur_station));
     }
     dispFooter.updateStation(s_cur_station);
+}
+
+void setStationViaURL(const char* url, const char* extension) {
+    // e.g.  http://lstn.lv/bbcradio.m3u8?station=bbc_radio_one&bitrate=96000
+    // url is http://lstn.lv/bbcradio.m3u8?station=bbc_radio_one, extension is bitrate=96000
+    s_stationName_air.reset();
+
+    s_cur_station = 0;
+    ps_ptr<char>origin_url = url;
+    if (strlen(extension) > 0) origin_url.appendf("&%s", extension);
+    s_stationURL = origin_url;
+    connecttohost(origin_url);
+    changeState(RADIO, 0);
+    StationsItems();
+    clearStreamTitle();
+    showLogoAndStationName(true);
+    dispFooter.updateFlag(NULL);
+    dispFooter.updateStation(0); // set 000
 }
 
 const char* getFlagPath(uint16_t station) {
@@ -1449,32 +1496,7 @@ void StationsItems() {
     }
 }
 
-void setStationViaURL(const char* url, const char* extension) {
-    // e.g.  http://lstn.lv/bbcradio.m3u8?station=bbc_radio_one&bitrate=96000
-    // url is http://lstn.lv/bbcradio.m3u8?station=bbc_radio_one, extension is bitrate=96000
-    s_stationName_air.reset();
 
-    s_cur_station = 0;
-    int   len_url = strlen(url) + strlen(extension) + 3;
-    char* origin_url = (char*)calloc(1, len_url);
-    if (strlen(extension) > 0) {
-        strcpy(origin_url, url);
-        strcat(origin_url, "&");
-        strcat(origin_url, extension);
-    } else {
-        strcpy(origin_url, url);
-    }
-    s_stationURL = origin_url;
-
-    connecttohost(origin_url);
-    StationsItems();
-    if (s_state == RADIO) {
-        clearStreamTitle();
-        showLogoAndStationName(true);
-        dispFooter.updateFlag(NULL);
-    }
-    dispFooter.updateStation(0); // set 000
-}
 
 void savefile(ps_ptr<char> fileName, uint32_t contentLength, ps_ptr<char> contentType) { // save the uploadfile on SD_MMC
 
@@ -1761,9 +1783,11 @@ MWR_LOG_WARN("state %i, s_state %i, subState %i, s_subState_radio %i, s_subState
                     VUmeter_RA.show(true);
                     txt_RA_sTitle.setText("");
                     txt_RA_sTitle.show(true, false);
+                    s_f_newIcyDescription = true;
                     s_f_newStreamTitle = true;
                 }
                 else {
+                    VUmeter_RA.enable();
                     txt_RA_sTitle.enable();
                     txt_RA_sTitle.enable();
                 }

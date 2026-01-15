@@ -143,7 +143,7 @@ class slider : public RegisterTable {
         } else {
             tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         }
-        m_enabled = true;
+        m_enabled = false;
         m_show = false;
     }
     bool released() {
@@ -4980,6 +4980,7 @@ class vuMeter : public RegisterTable {
         }
     }
     void disable() { m_enabled = false; }
+    void enable()  { m_enabled = true; }
     void setBGcolor(uint32_t color) { m_bgColor = color; }
     void update(uint16_t vum) {
         if (!m_enabled) return;
