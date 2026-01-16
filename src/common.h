@@ -138,7 +138,15 @@ enum status {
     IR_SETTINGS = 14,
     RINGING = 15,
     WIFI_SETTINGS = 16,
-    UNDEFINED = 255
+    UNDEFINED = -1
+};
+
+enum ir_shift {
+    IR_RIGHT = +100,
+    IR_LEFT = -100,
+    IR_UP = +101,
+    IR_DOWN = - 101,
+    IR_RESET = -127
 };
 
 static bool                     newLine = false;
@@ -276,7 +284,7 @@ boolean      isAlarm(uint8_t weekDay, uint8_t alarmDays, uint16_t minuteOfTheDay
 boolean      copySDtoFFat(const char* path);
 void         showStreamTitle(ps_ptr<char> streamTitle);
 void         showLogoAndStationName(bool force);
-void         showFileLogo(uint8_t state);
+void         showFileLogo(int8_t state, int8_t subState);
 void         showFileName(const char* fname);
 void         showPlsFileNumber();
 void         showAudioFileNumber();
@@ -306,7 +314,7 @@ bool         SD_rename(const char* src, const char* dest);
 bool         SD_newFolder(const char* folderPathName);
 bool         SD_delete(const char* itemPath);
 void         processPlaylist();
-void         changeState(int32_t state);
+void         changeState(int8_t state, int8_t subState);
 void         connecttohost(ps_ptr<char> host);
 void         connecttoFS(const char* FS, const char* filename, uint32_t fileStartTime = 0);
 void         stopSong();
@@ -318,6 +326,10 @@ void         my_audio_info(Audio::msg_t m);
 void         on_dlna_client(const DLNA_Client::msg_s& msg);
 void         on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg);
 void         on_websrv(const WebSrv::msg_s& msg);
+void         tp_pressed(uint16_t x, uint16_t y);
+void         tp_long_pressed(uint16_t x, uint16_t y);
+void         tp_moved(uint16_t x, uint16_t y);
+void         tp_released(uint16_t x, uint16_t y);
 
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 

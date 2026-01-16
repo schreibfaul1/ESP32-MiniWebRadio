@@ -28,6 +28,7 @@ class slider : public RegisterTable {
     uint32_t     m_spotColor = 0;
     bool         m_enabled = false;
     bool         m_clicked = false;
+    bool         m_show = false;
     bool         m_objectInit = false;
     bool         m_backgroundTransparency = false;
     bool         m_saveBackground = false;
@@ -68,6 +69,7 @@ class slider : public RegisterTable {
         m_middle_h = m_y + (m_h / 2);
         m_spotPos = (m_leftStop + m_rightStop) / 2; // in the middle
         m_objectInit = true;
+        m_show = false;
     }
     void setMinMaxVal(int16_t minVal, int16_t maxVal) {
         m_minVal = minVal;
@@ -106,7 +108,8 @@ class slider : public RegisterTable {
             m_spotPos = spotPos;
     }
     int16_t getValue() { return m_val; }
-    void    show(bool backgroundTransparency, bool saveBackground) {
+
+    void show(bool backgroundTransparency, bool saveBackground) {
         m_backgroundTransparency = backgroundTransparency;
         m_saveBackground = saveBackground;
         m_enabled = true;
@@ -117,19 +120,22 @@ class slider : public RegisterTable {
         (void)h;
         int r = 2;
         if (m_backgroundTransparency) {
-            if (m_saveBackground)
+            if (m_saveBackground){
                 tft.copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
-            else
+            } else {
                 tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+            }
         } else {
             tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         }
         tft.fillRoundRect(x, y, w, m_railHigh, r, m_railColor);
         drawNewSpot(m_spotPos);
+        m_show = true;
     }
     void disable() { m_enabled = false; }
     void enable() { m_enabled = true; }
     void hide() {
+        if(!m_show) return;
         if (m_backgroundTransparency) {
             if (m_saveBackground)
                 tft.copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
@@ -138,7 +144,8 @@ class slider : public RegisterTable {
         } else {
             tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         }
-        m_enabled = true;
+        m_enabled = false;
+        m_show = false;
     }
     bool released() {
         if (!m_enabled) return false;
@@ -152,7 +159,7 @@ class slider : public RegisterTable {
     int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max) {
         const int32_t run = in_max - in_min;
         if (run == 0) {
-            log_e("map(): Invalid input range, %li == %li (min == max) in %s", in_min, in_max, m_name);
+            MWR_LOG_ERROR("map(): Invalid input range, %li == %li (min == max) in %s", in_min, in_max, m_name);
             return -1;
         }
         const int32_t rise = out_max - out_min;
@@ -162,10 +169,11 @@ class slider : public RegisterTable {
     void drawNewSpot(uint16_t xPos) {
         if (m_enabled) {
             if (m_backgroundTransparency) {
-                if (m_saveBackground)
+                if (m_saveBackground) {
                     tft.copyFramebuffer(2, 0, m_spotPos - m_spotRadius - 1, m_middle_h - m_spotRadius - 1, 2 * m_spotRadius + 2, 2 * m_spotRadius + 2);
-                else
+                } else {
                     tft.copyFramebuffer(1, 0, m_spotPos - m_spotRadius - 1, m_middle_h - m_spotRadius - 1, 2 * m_spotRadius + 2, 2 * m_spotRadius + 2);
+                }
             } else {
                 tft.fillRect(m_spotPos - m_spotRadius, m_middle_h - m_spotRadius, 2 * m_spotRadius, 2 * m_spotRadius + 1, m_bgColor);
             }
@@ -274,6 +282,7 @@ class progressbar : public RegisterTable {
         m_enabled = true;
     }
     void disable() { m_enabled = false; }
+    void enable() { m_enabled = true; }
     void hide() {
         if (m_backgroundTransparency) {
             if (m_saveBackground) {
@@ -302,7 +311,7 @@ class progressbar : public RegisterTable {
     int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max) {
         const int32_t run = in_max - in_min;
         if (run == 0) {
-            log_e("map(): Invalid input range, %li == %li (min == max) in %s", in_min, in_max, m_name);
+            MWR_LOG_WARN("map(): Invalid input range, %li == %li (min == max) in %s", in_min, in_max, m_name);
             return -1;
         }
         const int32_t rise = out_max - out_min;
@@ -951,12 +960,12 @@ class selectbox : public RegisterTable {
         m_y = y; // y pos
         m_w = w;
         if (m_w < 40) {
-            log_e("width < 40px");
+            MWR_LOG_WARN("width < 40px");
             return;
         } // width
         m_h = h;
         if (m_h < 10) {
-            log_e("height < 10px");
+            MWR_LOG_WARN("height < 10px");
             return;
         } // high
         m_padding_left = paddig_left;
@@ -1078,13 +1087,13 @@ class selectbox : public RegisterTable {
         m_txt_select->released();
         if (m_txt_btn_down->released())
             if (m_idx < m_selContent.size() - 1) {
-                m_idx++; /* log_e("btn_down %i/%i", m_idx, m_selContent.size()); */
+                m_idx++; /* MWR_LOG_DEBUG("btn_down %i/%i", m_idx, m_selContent.size()); */
                 writeText(m_idx);
                 ret = true;
             }
         if (m_txt_btn_up->released())
             if (m_idx > 0) {
-                m_idx--; /* log_e("btn_up %i/%i",   m_idx, m_selContent.size()); */
+                m_idx--; /* MWR_LOG_DEBUG("btn_up %i/%i",   m_idx, m_selContent.size()); */
                 writeText(m_idx);
                 ret = true;
             }
@@ -1097,7 +1106,7 @@ class selectbox : public RegisterTable {
         if (m_selContent.size() > 0) {
             for (uint8_t i = 0; i < m_selContent.size(); i++) {
                 if (strcmp(txt, m_selContent[i]) == 0) {
-                    //    log_w("addText: %s already in list", txt);
+                    //    MWR_LOG_WARN("addText: %s already in list", txt);
                     return;
                 }
             }
@@ -1112,7 +1121,7 @@ class selectbox : public RegisterTable {
         } else
             txt = m_selContent[idx];
         if (m_enabled) {
-            // log_w("writeText: %s", txt);
+            MWR_LOG_DEBUG("writeText: %s", txt);
             m_txt_select->setText(txt, m_narrow, m_noWrap);
             m_txt_select->show(m_backgroundTransparency, m_saveBackground);
             char c_idx[5] = {0};
@@ -1528,12 +1537,12 @@ class wifiSettings : public RegisterTable {
         m_y = y; // y pos
         m_w = w;
         if (m_w < 40) {
-            log_e("width < 40px");
+            MWR_LOG_WARN("width < 40px");
             return;
         } // width
         m_h = h;
         if (m_h < 10) {
-            log_e("height < 10px");
+            MWR_LOG_WARN("height < 10px");
             return;
         } // high
         m_padding_left = paddig_left;
@@ -1623,7 +1632,7 @@ class wifiSettings : public RegisterTable {
         if (m_sel_ssid->positionXY(x, y)) { ; }
         if (m_in_password->positionXY(x, y)) { ; }
         if (m_keyboard->positionXY(x, y)) {
-            log_e("key pressed %i", m_keyboard->getVal());
+            MWR_LOG_INFO("key pressed %i", m_keyboard->getVal());
             changePassword(m_keyboard->getVal(), m_credentials_idx);
             m_in_password->setText(m_credentials[m_credentials_idx].password.c_get());
             m_in_password->show(m_backgroundTransparency, m_saveBackground);
@@ -1872,6 +1881,7 @@ class button1state : public RegisterTable { // click button
         m_backgroundTransparency = backgroundTransparency;
     }
     ps_ptr<char> getName() { return m_name; }
+    void enable() { m_enabled = true; }
     bool         isEnabled() { return m_enabled; }
     void         show(bool inactive = false) {
         m_clicked = false;
@@ -2015,6 +2025,7 @@ class button2state : public RegisterTable { // on off switch
         m_active = true;
     }
     ps_ptr<char> getName() { return m_name; }
+    void enable() { m_enabled = true; }
     bool         isEnabled() { return m_enabled; }
     void         show() {
         m_clicked = false;
@@ -3030,350 +3041,6 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class imgClock12 : public RegisterTable { // draw a clock in 12h format
-  private:
-    pictureBox* pic_clock12_digitsH10 = new pictureBox("clock12_digitsH10");       // digits hour   * 10
-    pictureBox* pic_clock12_digitsH01 = new pictureBox("clock12_digitsH01");       // digits hour   * 01
-    pictureBox* pic_clock12_digitsM10 = new pictureBox("clock12_digitsM10");       // digits minute * 10
-    pictureBox* pic_clock12_digitsM01 = new pictureBox("clock12_digitsM01");       // digits minute * 01
-    pictureBox* pic_clock12_digitsColon = new pictureBox("clock12_digitsColon");   // digits colon
-    pictureBox* pic_clock12_digits_AM_PM = new pictureBox("clock12_digits_AM_PM"); // digits AM/PM
-    int16_t     m_x = 0;
-    int16_t     m_y = 0;
-    int16_t     m_w = 0;
-    int16_t     m_h = 0;
-    uint16_t    m_digitsYPos = 0;
-#if TFT_CONTROLLER < 2
-    uint16_t m_digitsYoffset = 30;
-    //------------------------------------------------------------------------padding-left-right-top-bottom--------------------------------------------------
-    struct w_h10 {
-        uint16_t x = 0;
-        uint16_t w = 56;
-        uint16_t h = 120;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_h10; // Hour * 10     56 x 120 px
-    struct w_h01 {
-        uint16_t x = 56;
-        uint16_t w = 56;
-        uint16_t h = 120;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_h01; // Hour * 01     56 x 120 px
-    struct w_c {
-        uint16_t x = 112;
-        uint16_t w = 40;
-        uint16_t h = 120;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_c; // Colon         40 x 120 px
-    struct w_m10 {
-        uint16_t x = 152;
-        uint16_t w = 56;
-        uint16_t h = 120;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_m10; // Minute * 10   56 x 120 px
-    struct w_m01 {
-        uint16_t x = 208;
-        uint16_t w = 56;
-        uint16_t h = 120;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_m01; // Minute * 01   56 x 120 px
-    struct w_ap {
-        uint16_t x = 264;
-        uint16_t w = 56;
-        uint16_t h = 120;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_ap; // AM_PM         56 x 120 px
-    //-------------------------------------------------------------------------------------------------------------------------------------------------------
-#elif TFT_CONTROLLER < 7
-    uint16_t m_digitsYoffset = 30;
-    //------------------------------------------------------------------------padding-left-right-top-bottom--------------------------------------------------
-    struct w_h10 {
-        uint16_t x = 16;
-        uint16_t w = 80;
-        uint16_t h = 160;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_h10; // Hour * 10     80 x 160 px
-    struct w_h01 {
-        uint16_t x = 96;
-        uint16_t w = 80;
-        uint16_t h = 160;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_h01; // Hour * 01     80 x 160 px
-    struct w_c {
-        uint16_t x = 176;
-        uint16_t w = 48;
-        uint16_t h = 160;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_c; // Colon         48 x 160 px
-    struct w_m10 {
-        uint16_t x = 224;
-        uint16_t w = 80;
-        uint16_t h = 160;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_m10; // Minute * 10   80 x 160 px
-    struct w_m01 {
-        uint16_t x = 304;
-        uint16_t w = 80;
-        uint16_t h = 160;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_m01; // Minute * 01   80 x 160 px
-    struct w_ap {
-        uint16_t x = 384;
-        uint16_t w = 80;
-        uint16_t h = 160;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_ap; // AM_PM         80 x 160 px
-    //-------------------------------------------------------------------------------------------------------------------------------------------------------
-#else
-    uint16_t m_digitsYoffset = 30;
-    //------------------------------------------------------------------------padding-left-right-top-bottom--------------------------------------------------
-    struct w_h10 {
-        uint16_t x = 36;
-        uint16_t w = 130;
-        uint16_t h = 260;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_h10; // Hour * 10    130 x 260 px
-    struct w_h01 {
-        uint16_t x = 166;
-        uint16_t w = 130;
-        uint16_t h = 260;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_h01; // Hour * 01    130 x 260 px
-    struct w_c {
-        uint16_t x = 296;
-        uint16_t w = 78;
-        uint16_t h = 260;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_c; // Colon         78 x 260 px
-    struct w_m10 {
-        uint16_t x = 374;
-        uint16_t w = 130;
-        uint16_t h = 260;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_m10; // Minute * 10  130 x 260 px
-    struct w_m01 {
-        uint16_t x = 504;
-        uint16_t w = 130;
-        uint16_t h = 260;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_m01; // Minute * 01  130 x 260 px
-    struct w_ap {
-        uint16_t x = 634;
-        uint16_t w = 130;
-        uint16_t h = 260;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_ap; // AM_PM        130 x 260 px
-    //-------------------------------------------------------------------------------------------------------------------------------------------------------
-#endif
-    uint32_t     m_bgColor = 0;
-    bool         m_enabled = false;
-    bool         m_clicked = false;
-    bool         m_state = false;
-    bool         m_showAll = false;
-    bool         m_backgroundTransparency = false;
-    ps_ptr<char> m_name;
-    char*        m_pathBuff = NULL;
-    uint8_t      m_min = 0, m_hour = 0, m_weekday = 0;
-    releasedArg  m_ra;
-
-  public:
-    imgClock12(const char* name) {
-        register_object(this);
-        m_name = name;
-        m_bgColor = TFT_BLACK;
-        m_enabled = false;
-        m_clicked = false;
-        m_state = false;
-        m_pathBuff = x_ps_malloc(50);
-    }
-    ~imgClock12() {
-        x_ps_free(&m_pathBuff);
-        delete pic_clock12_digitsH10;
-        delete pic_clock12_digitsH01;
-        delete pic_clock12_digitsColon;
-        delete pic_clock12_digitsM10;
-        delete pic_clock12_digitsM01;
-        delete pic_clock12_digits_AM_PM;
-    }
-    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
-        m_x = x; // x pos
-        m_y = y; // y pos
-        m_w = w; // width
-        m_h = h; // high
-        m_enabled = false;
-        m_digitsYPos = m_y + m_digitsYoffset;
-        pic_clock12_digitsH10->begin(s_h10.x, m_digitsYPos, s_h10.w, s_h10.h, s_h10.pl, s_h10.pr, s_h10.pt, s_h10.pb);
-        pic_clock12_digitsH01->begin(s_h01.x, m_digitsYPos, s_h01.w, s_h01.h, s_h01.pl, s_h01.pr, s_h01.pt, s_h01.pb);
-        pic_clock12_digitsColon->begin(s_c.x, m_digitsYPos, s_c.w, s_c.h, s_c.pl, s_c.pr, s_c.pt, s_c.pb);
-        pic_clock12_digitsM10->begin(s_m10.x, m_digitsYPos, s_m10.w, s_m10.h, s_m10.pl, s_m10.pr, s_m10.pt, s_m10.pb);
-        pic_clock12_digitsM01->begin(s_m01.x, m_digitsYPos, s_m01.w, s_m10.h, s_m01.pl, s_m01.pr, s_m01.pt, s_m01.pb);
-        pic_clock12_digits_AM_PM->begin(s_ap.x, m_digitsYPos, s_ap.w, s_ap.h, s_ap.pl, s_ap.pr, s_ap.pt, s_ap.pb);
-    }
-    ps_ptr<char> getName() { return m_name; }
-    bool         isEnabled() { return m_enabled; }
-    void         show(bool inactive = false) {
-        m_clicked = false;
-        if (inactive) {
-            //    setInactive();
-            return;
-        }
-        m_enabled = true;
-        m_showAll = true;
-        writeTime(m_hour, m_min);
-    }
-    void hide() {
-        m_enabled = false;
-        tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-    }
-    void disable() {
-        m_enabled = false;
-        m_showAll = false;
-    }
-    bool isDisabled() { return !m_enabled; }
-    bool enable() { return m_enabled = true; }
-    void updateTime(uint16_t minuteOfTheDay, uint8_t weekday) {
-        // minuteOfTheDay counts at 00:00, from 0...23*60+59
-        // weekDay So - 0, Mo - 1 ... Sa - 6
-        m_hour = minuteOfTheDay / 60;
-        m_min = minuteOfTheDay % 60;
-        m_weekday = weekday;
-        if (m_enabled) writeTime(m_hour, m_min);
-    }
-    void writeTime(uint8_t m_hour, uint8_t m_min) {
-        static uint8_t oldTime[4];
-        static bool    k = false;
-        uint8_t        time[5];
-        time[0] = m_hour / 10;
-        time[1] = m_hour % 10;
-        time[2] = m_min / 10;
-        time[3] = m_min % 10;
-
-        bool        isPM = true;
-        static bool isOldPM = false;
-        for (uint8_t i = 0; i < 4; i++) {
-            uint8_t hour = m_hour;
-            if (hour > 0 && hour < 13)
-                isPM = false;
-            else
-                (hour -= 12);
-            time[0] = hour / 10;
-            time[1] = hour % 10;
-            if ((time[i] != oldTime[i]) || m_showAll) {
-                sprintf(m_pathBuff, "/digits/foldedNumbers/%iwhite.jpg", time[i]);
-                if (i == 0) {
-                    pic_clock12_digitsH10->setPicturePath(m_pathBuff);
-                    pic_clock12_digitsH10->show(m_backgroundTransparency, false);
-                }
-                if (i == 1) {
-                    pic_clock12_digitsH01->setPicturePath(m_pathBuff);
-                    pic_clock12_digitsH01->show(m_backgroundTransparency, false);
-                }
-                if (i == 2) {
-                    pic_clock12_digitsM10->setPicturePath(m_pathBuff);
-                    pic_clock12_digitsM10->show(m_backgroundTransparency, false);
-                }
-                if (i == 3) {
-                    pic_clock12_digitsM01->setPicturePath(m_pathBuff);
-                    pic_clock12_digitsM01->show(m_backgroundTransparency, false);
-                }
-            }
-            oldTime[i] = time[i];
-        }
-        if ((isPM != isOldPM) || m_showAll) {
-            if (isPM) {
-                pic_clock12_digits_AM_PM->setPicturePath("/digits/foldedNumbers/pmwhite.jpg");
-                pic_clock12_digits_AM_PM->show(m_backgroundTransparency, false);
-            } else {
-                pic_clock12_digits_AM_PM->setPicturePath("/digits/foldedNumbers/amwhite.jpg");
-                pic_clock12_digits_AM_PM->show(m_backgroundTransparency, false);
-            }
-            isOldPM = isPM;
-        }
-
-        k = !k;
-        if (k) {
-            pic_clock12_digitsColon->setPicturePath("/digits/foldedNumbers/dwhite.jpg");
-            pic_clock12_digitsColon->show(m_backgroundTransparency, false);
-        } else {
-            pic_clock12_digitsColon->setPicturePath("/digits/foldedNumbers/ewhite.jpg");
-            pic_clock12_digitsColon->show(m_backgroundTransparency, false);
-        }
-
-        m_showAll = false;
-    }
-    bool positionXY(uint16_t x, uint16_t y) {
-        if (!m_enabled) return false;
-        if (x < m_x) return false;
-        if (y < m_y) return false;
-        if (x > m_x + m_w) return false;
-        if (y > m_y + m_h) return false;
-        if (m_enabled) m_clicked = true;
-        if (graphicObjects_OnClick) graphicObjects_OnClick(m_name, m_enabled);
-        //    if(!m_enabled) return false;
-        return true;
-    }
-    bool released() {
-        if (!m_enabled) return false;
-        if (!m_clicked) return false;
-        if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
-        m_clicked = false;
-        return true;
-    }
-};
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
   private:
     pictureBox* pic_alarm_digitsH10 = new pictureBox("alarm_digitsH10");     // digits hour   * 10
@@ -3397,7 +3064,7 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
     uint16_t m_alarmdaysXPos[7] = {2, 47, 92, 137, 182, 227, 272}; // same as altarmTimeXPos
     uint8_t  m_alarmdaysYoffset = 2;
     uint8_t  m_alarmdaysW = 44;
-    uint8_t  m_alarmdaysH = 25;
+    uint8_t  m_alarmdaysH = 24;
     uint8_t  m_fontSize = 0; // auto
     //------------------------------------------------------------------------padding-left-right-top-bottom--------------------------------------------------
     struct w_h10 {
@@ -3993,7 +3660,7 @@ class uniList {
         }
         if (m_mode == DLNA) {
             if (!txt) {
-                log_e("txt is NULL");
+                MWR_LOG_WARN("txt is NULL");
                 return;
             }
             if (!ext1)
@@ -4018,7 +3685,7 @@ class uniList {
         }
         if (m_mode == PLAYER) {
             if (!txt) {
-                log_e("txt is NULL");
+                MWR_LOG_WARN("txt is NULL");
                 return;
             }
             if (nr <= 0)
@@ -4248,7 +3915,7 @@ class dlnaList : public RegisterTable {
 
     void drawItem(int8_t pos, bool selectedLine = false) { // pos 0 is parent, pos 1...9 are itens, selectedLine means released (ok)
         if (pos < 0 || pos > 9) {
-            log_e("pos oor %i", pos);
+            MWR_LOG_WARN("pos oor %i", pos);
             return;
         } // guard
         if (*m_dlnaLevel == 0 && pos > m_dlnaServer->size()) { /* log_e("pos too high %i", pos);*/
@@ -4383,7 +4050,7 @@ class dlnaList : public RegisterTable {
                 m_currDLNAsrvNr = m_itemListPos - 1;
                 m_currItemNr[*m_dlnaLevel] = m_itemListPos - 1;
                 if (m_dlnaServer->at(m_itemListPos - 1).friendlyName.c_get() == NULL) {
-                    log_e("invalid pointer in dlna history");
+                    MWR_LOG_WARN("invalid pointer in dlna history");
                     m_dlnaHistory[(*m_dlnaLevel) + 1].name = "dummy";
                     goto exit;
                 }
@@ -4522,7 +4189,7 @@ class dlnaList : public RegisterTable {
             vTaskDelay(300);
             (*m_dlnaLevel)++;
             if (m_dlnaServer->at(m_currItemNr[0]).friendlyName.c_get() == NULL) {
-                log_e("invalid pointer in dlna history");
+                MWR_LOG_ERROR("invalid pointer in dlna history");
                 m_dlnaHistory[*m_dlnaLevel].name = "dummy";
                 return NULL;
             }
@@ -4680,7 +4347,7 @@ class fileList : public RegisterTable {
         m_clicked = false;
         m_enabled = true;
         if (!cur_AudioFolder.valid()) {
-            log_w("cur_AudioFolder set to /audiofiles/");
+            MWR_LOG_DEBUG("cur_AudioFolder set to /audiofiles/");
             m_curAudioFolder = "/audiofiles/";
         } else if (!cur_AudioFolder.equals(m_curAudioFolder))
             m_curAudioFolder = cur_AudioFolder; // cur_AudioFolder can have the same address as m_curAudioFolder
@@ -4748,7 +4415,7 @@ class fileList : public RegisterTable {
                 int secondLastSlash = m_curAudioFolder.last_index_of('/', lastSlash - 1);
                 if (secondLastSlash != -1) m_curAudioFolder[secondLastSlash + 1] = '\0';
             }
-            log_e("m_curAudioFolder = %s", m_curAudioFolder);
+            MWR_LOG_DEBUG("m_curAudioFolder = %s", m_curAudioFolder);
             m_curAudioFileNr = 0;
             m_viewPos = 0;
             s_SD_content.listFilesInDir(m_curAudioFolder.c_get(), true, false);
@@ -5311,10 +4978,11 @@ class vuMeter : public RegisterTable {
             tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
         } else {
             tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-            m_enabled = false;
         }
+        m_enabled = false;
     }
     void disable() { m_enabled = false; }
+    void enable()  { m_enabled = true; }
     void setBGcolor(uint32_t color) { m_bgColor = color; }
     void update(uint16_t vum) {
         if (!m_enabled) return;
@@ -5644,7 +5312,7 @@ class displayHeader : public RegisterTable {
     void updateItem(const char* hl_item) { // radio, clock, audioplayer...
         if (!m_enabled) return;
         if (!hl_item) {
-            log_e("hl_item is NULL");
+            MWR_LOG_WARN("hl_item is NULL");
             return;
         }
         if (m_item && !strcmp(hl_item, m_item)) return; // nothing to do
