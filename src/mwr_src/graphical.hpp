@@ -109,7 +109,7 @@ class slider : public RegisterTable {
     }
     int16_t getValue() { return m_val; }
 
-    void    show(bool backgroundTransparency, bool saveBackground) {
+    void show(bool backgroundTransparency, bool saveBackground) {
         m_backgroundTransparency = backgroundTransparency;
         m_saveBackground = saveBackground;
         m_enabled = true;
@@ -120,10 +120,11 @@ class slider : public RegisterTable {
         (void)h;
         int r = 2;
         if (m_backgroundTransparency) {
-            if (m_saveBackground)
+            if (m_saveBackground){
                 tft.copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
-            else
+            } else {
                 tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+            }
         } else {
             tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         }
@@ -168,10 +169,11 @@ class slider : public RegisterTable {
     void drawNewSpot(uint16_t xPos) {
         if (m_enabled) {
             if (m_backgroundTransparency) {
-                if (m_saveBackground)
+                if (m_saveBackground) {
                     tft.copyFramebuffer(2, 0, m_spotPos - m_spotRadius - 1, m_middle_h - m_spotRadius - 1, 2 * m_spotRadius + 2, 2 * m_spotRadius + 2);
-                else
+                } else {
                     tft.copyFramebuffer(1, 0, m_spotPos - m_spotRadius - 1, m_middle_h - m_spotRadius - 1, 2 * m_spotRadius + 2, 2 * m_spotRadius + 2);
+                }
             } else {
                 tft.fillRect(m_spotPos - m_spotRadius, m_middle_h - m_spotRadius, 2 * m_spotRadius, 2 * m_spotRadius + 1, m_bgColor);
             }
@@ -3062,7 +3064,7 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
     uint16_t m_alarmdaysXPos[7] = {2, 47, 92, 137, 182, 227, 272}; // same as altarmTimeXPos
     uint8_t  m_alarmdaysYoffset = 2;
     uint8_t  m_alarmdaysW = 44;
-    uint8_t  m_alarmdaysH = 25;
+    uint8_t  m_alarmdaysH = 24;
     uint8_t  m_fontSize = 0; // auto
     //------------------------------------------------------------------------padding-left-right-top-bottom--------------------------------------------------
     struct w_h10 {
@@ -4976,8 +4978,8 @@ class vuMeter : public RegisterTable {
             tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
         } else {
             tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-            m_enabled = false;
         }
+        m_enabled = false;
     }
     void disable() { m_enabled = false; }
     void enable()  { m_enabled = true; }

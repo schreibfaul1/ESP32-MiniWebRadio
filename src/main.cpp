@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.0.4r - 18.12.2025                                                                                                               ";
+    Version 4.0.4s - 16.01.2026                                                                                                               ";
 
 
 /*  display (320x240px) with controller ILI9341 or
@@ -1091,7 +1091,7 @@ void setup() {
     tft.setBackGoundColor(TFT_BLACK);
     if (TFT_BL >= 0) {
         s_f_brightnessIsChangeable = true;
-        setupBacklight(TFT_BL, 100000);
+        setupBacklight(TFT_BL, 512);
     }
 #elif TFT_CONTROLLER == 7
     tft.begin(RGB_PINS, RGB_TIMING);
@@ -1275,12 +1275,11 @@ void setup() {
             s_resetReason == ESP_RST_SDIO ||      // The boot button was pressed
             s_resetReason == ESP_RST_DEEPSLEEP) { // Wake up
             if (s_cur_station > 0) {
+                s_state = UNDEFINED;
                 setStation(s_cur_station);
-                changeState(RADIO, 0);
             } else {
                 s_state = UNDEFINED;
                 setStationViaURL(s_settings.lastconnectedhost.c_get(), "");
-                changeState(RADIO, 0);
             }
         }
     } else {
@@ -1733,7 +1732,7 @@ void setTimeCounter(uint8_t sec) {
 // clang-format off
 /*🟢🟡🔴*/
 void changeState(int8_t state, int8_t subState) {
-MWR_LOG_WARN("state %i, s_state %i, subState %i, s_subState_radio %i, s_subState_player %i", state, s_state, subState, s_subState_radio, s_subState_player);
+    MWR_LOG_DEBUG("state %i, s_state %i, subState %i, s_subState_radio %i, s_subState_player %i", state, s_state, subState, s_subState_radio, s_subState_player);
     bool newState = false;
     bool newSubState = false;
     disableAllObjects();
@@ -1955,7 +1954,7 @@ MWR_LOG_WARN("state %i, s_state %i, subState %i, s_subState_radio %i, s_subState
             dispHeader.enable(); dispFooter.enable();
             if (newState) {
                 clearWithOutHeaderFooter();
-                pic_BR_logo.show(true, false);
+                pic_BR_logo.show(false, false);
                 sdr_BR_value.setValue(s_brightness);
                 sdr_BR_value.show(true, true);
                 txt_BR_value.setText(int2str(s_brightness));
@@ -3937,6 +3936,7 @@ void graphicObjects_OnClick(ps_ptr<char> name, uint8_t val) { // val = 0 --> is 
         if (val && name.equals("btn_RA_bt"))       { goto exit; }
         if (!val && name.equals("btn_RA_bt"))      { setTimeCounter(2); goto exit; }
         if (val && name.equals("btn_RA_off"))      { goto exit; }
+        if (val && name.equals("btn_RA_settings")) { goto exit; }
         if (val && name.equals("VUmeter_RA"))      { goto exit; }
     }
     if (s_state == STATIONSLIST) {
@@ -4058,6 +4058,7 @@ exit:
 void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
 
     // all state
+    if (name.equals("dispHeader")) { goto exit; }
     if (name.equals("dispFooter")) { goto exit; }
 
     if (s_state == RADIO) {
@@ -4172,6 +4173,7 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
     if (s_state == BRIGHTNESS) {
         if (name.equals("btn_BR_ready"))    { changeState(RADIO, 0); goto exit;}
         if (name.equals("pic_BR_logo"))     { goto exit; }
+        if (name.equals("sdr_BR_value"))    { goto exit; }
     }
     if (s_state == EQUALIZER) {
         if (name.equals("btn_EQ_Radio"))    { changeState(RADIO, 0); goto exit; }
