@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.0.4s - 16.01.2026                                                                                                               ";
+    Version 4.0.4t - 17.01.2026                                                                                                               ";
 
 
 /*  display (320x240px) with controller ILI9341 or
@@ -1610,7 +1610,7 @@ void fall_asleep() {
     } else {
         changeState(CLOCK, 0);
     }
-    if (s_bt_emitter.power_state) bt_emitter.power_off();
+    if (s_bt_emitter.found && s_bt_emitter.power_state) bt_emitter.power_off();
     SerialPrintfln("falling asleep");
     dispHeader.hide();
     dispFooter.hide();
@@ -1630,7 +1630,7 @@ void wake_up() {
     dispHeader.speakerOnOff(!s_f_mute);
     dispHeader.updateRSSI(WiFi.RSSI(), true);
     dispFooter.show(true);
-    if (!s_bt_emitter.power_state) bt_emitter.power_on();
+    if (s_bt_emitter.found && s_bt_emitter.power_state) bt_emitter.power_on();
 }
 
 void setRTC(ps_ptr<char> TZString) {
@@ -2381,8 +2381,13 @@ void loop() {
             //    if(br) t = (fs * 8)/ br;
             //    MWR_LOG_DEBUG("Br %d, Dur %ds", br, t);
         }
+         //--------------------------------------------- BT EMITTER ----------------------------------------------------------------------------------
+        if(s_bt_emitter.found && s_bt_emitter.power_state != bt_emitter.get_power_state()){
+            if(s_bt_emitter.power_state) bt_emitter.power_on();
+            else bt_emitter.power_off();
+        }
     } //  END s_f_1sec
-
+    //------------------------------------------------------------------------------------------------------------------------------------------------
     if (s_f_10sec == true) { // calls every 10 seconds
         s_f_10sec = false;
         // if(s_state == RADIO && !s_icyBitRate && !s_f_sleeping) {
@@ -3565,7 +3570,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
     CMD_EQUALS("KCX_BT_downvolume"){    bt_emitter.downvolume(); return;}
     CMD_EQUALS("KCX_BT_upvolume"){      bt_emitter.upvolume();   return;}
     CMD_EQUALS("KCX_BT_getPower"){      bt_emitter.get_power_state() ? webSrv.send("KCX_BT_power=", "1") : webSrv.send("KCX_BT_power=", "0"); return;}
-    CMD_EQUALS("KCX_BT_power"){         bt_emitter.get_power_state() ? bt_emitter.power_off() : bt_emitter.power_on() ; return;}
+    CMD_EQUALS("KCX_BT_power"){         bt_emitter.get_power_state() ? s_bt_emitter.power_state = false : s_bt_emitter.power_state = true ; return;}
 
     CMD_EQUALS("hardcopy"){             SerialPrintfln("Webpage: ... " ANSI_ESC_YELLOW "create a display hardcopy" ANSI_ESC_RESET); make_hardcopy_on_sd(); webSrv.send("hardcopy=", "/hardcopy.bmp"); return;}
 
@@ -3661,9 +3666,7 @@ void on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg) {
         bt_emitter.userCommand("AT+PAUSE?");               // pause or play?
         bt_emitter.userCommand("AT+NAME+BT-MiniWebRadio"); // set BT receiver name
         bt_emitter.setVolume(s_bt_emitter.volume);
-        if (!s_bt_emitter.power_state) {
-            bt_emitter.power_off();
-        } else {
+        if (s_bt_emitter.power_state) {
             if (!bt_emitter.getMode().equals(s_bt_emitter.mode)) { bt_emitter.setMode(s_bt_emitter.mode); }
         }
     }
@@ -3692,8 +3695,8 @@ void on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg) {
         s_bt_emitter.connect = false;
     }
     if (msg.e == KCX_BT_Emitter::evt_power_on) {
-        s_bt_emitter.power_state = true;
         webSrv.send("KCX_BT_power=", "1");
+        webSrv.send("KCX_BT_connected=", "0");
         btn_BT_power.setValue(true);
         pic_BT_mode.setPicturePath("/common/BTnc.png");
         if (s_state == BLUETOOTH) pic_BT_mode.show(true, false);
@@ -3701,7 +3704,6 @@ void on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg) {
         bt_emitter.userCommand("AT+BT_MODE?");
     }
     if (msg.e == KCX_BT_Emitter::evt_power_off) {
-        s_bt_emitter.power_state = false;
         webSrv.send("KCX_BT_power=", "0");
         webSrv.send("KCX_BT_connected=", "-1");
         btn_BT_power.setValue(false);
@@ -4200,7 +4202,7 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
         if (name.equals("btn_BT_pause"))    { if(s_ir_btn_select == 2) set_ir_pos_BT(2); goto exit; }
         if (name.equals("btn_BT_mode"))     { if(s_ir_btn_select == 3) set_ir_pos_BT(3); goto exit; }
         if (name.equals("btn_BT_radio"))    { changeState(RADIO, 0); goto exit; }
-        if (name.equals("btn_BT_power"))    { if(s_ir_btn_select == 5) set_ir_pos_BT(5); s_bt_emitter.power_state == 1 ? bt_emitter.power_off() : bt_emitter.power_on(); goto exit; }
+        if (name.equals("btn_BT_power"))    { if(s_ir_btn_select == 5) set_ir_pos_BT(5); s_bt_emitter.power_state = !s_bt_emitter.power_state; s_bt_emitter.power_state == 0 ? bt_emitter.power_off() : bt_emitter.power_on(); goto exit; }
     }
     if (s_state == IR_SETTINGS) {
         if (name.equals("btn_IR_radio"))    { changeState(RADIO, 0); goto exit; }
