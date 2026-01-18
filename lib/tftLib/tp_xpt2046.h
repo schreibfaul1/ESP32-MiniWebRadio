@@ -26,21 +26,10 @@ extern __attribute__((weak)) void tp_long_released(uint16_t x, uint16_t y);
 
 class TP_XPT2046{
   private:
-    const uint16_t ILI9341_WIDTH  = 240;
-    const uint16_t ILI9341_HEIGHT = 320;
-    const uint16_t HX8347D_WIDTH  = 240;
-    const uint16_t HX8347D_HEIGHT = 320;
-    const uint16_t ILI9486_WIDTH  = 320;
-    const uint16_t ILI9486_HEIGHT = 480;
-    const uint16_t ILI9488_WIDTH  = 320;
-    const uint16_t ILI9488_HEIGHT = 480;
-    const uint16_t ST7796_WIDTH   = 320;
-    const uint16_t ST7796_HEIGHT  = 480;
-
     SPIClass* spi_TP; // use in class TP_XPT2046
   public:
     TP_XPT2046(SPIClass &spi, int csPin);
-    void     begin(uint8_t IRQ);
+    void     begin(uint8_t IRQ, uint16_t h_resolution, uint16_t v_resolution);
     void     loop();
     void     setVersion(uint8_t v);
     void     setRotation(uint8_t m);
@@ -51,6 +40,7 @@ class TP_XPT2046{
     SPISettings TP_SPI;
     uint8_t     _TP_CS, _TP_IRQ;
     uint16_t    x=0, y=0;
+    uint16_t    m_h_resolution=320, m_v_resolution=240;
     uint8_t     _rotation;
     bool        f_loop=false;
     bool        m_mirror_h = false;

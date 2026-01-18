@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.0.4t - 17.01.2026                                                                                                               ";
+    Version 4.0.4u - 18.01.2026                                                                                                               ";
 
 
 /*  display (320x240px) with controller ILI9341 or
@@ -113,6 +113,8 @@ uint16_t s_sleeptime = 0;   // time in min until MiniWebRadio goes to sleep
 uint16_t s_plsCurPos = 0;
 uint16_t s_dlnaItemNr = 0;
 uint16_t s_bh1750Value = 50;
+uint16_t s_h_resolution = 320;
+uint16_t s_v_resolution = 240;
 uint32_t s_icyBitRate = 0;     // from http response header via event
 uint32_t s_decoderBitRate = 0; // from decoder via getBitRate(false)
 uint32_t s_playlistTime = 0;   // playlist start time millis() for timeout
@@ -1082,6 +1084,8 @@ void setup() {
     pref.begin("Pref", false); // instance of preferences from AccessPoint (SSID, PW ...)
 
 #if TFT_CONTROLLER < 7
+    if(TFT_CONTROLLER == 0){ s_h_resolution = 320; s_v_resolution = 240; }
+    else {                   s_h_resolution = 480; s_v_resolution = 320; }
     spiBus.begin(TFT_SCK, TFT_MISO, TFT_MOSI, -1); // SPI1 for TFT
     tft.setTFTcontroller(TFT_CONTROLLER);
     tft.setDiaplayInversion(DISPLAY_INVERSION);
@@ -1094,6 +1098,7 @@ void setup() {
         setupBacklight(TFT_BL, 512);
     }
 #elif TFT_CONTROLLER == 7
+    s_h_resolution = 800; s_v_resolution = 480;
     tft.begin(RGB_PINS, RGB_TIMING);
     tft.setDisplayInversion(false);
     vTaskDelay(100 / portTICK_PERIOD_MS); // wait for TFT to be ready
@@ -1103,6 +1108,7 @@ void setup() {
         setupBacklight(TFT_BL, 512);
     }
 #elif TFT_CONTROLLER == 8
+    s_h_resolution = 1024; s_v_resolution = 600;
     tft.begin(DSI_TIMING);
     vTaskDelay(100 / portTICK_PERIOD_MS); // wait for TFT to be ready
     if (TFT_BL >= 0) {
@@ -1114,18 +1120,18 @@ void setup() {
     #error "wrong TFT_CONTROLLER"
 #endif
 
-#if TP_CONTROLLER < 7
-    tp.begin(TP_IRQ);
+#if TP_CONTROLLER < 7 // XPT2046
+    tp.begin(TP_IRQ, s_h_resolution, s_v_resolution);
     tp.setVersion(TP_CONTROLLER);
     tp.setRotation(TP_ROTATION);
     tp.setMirror(TP_H_MIRROR, TP_V_MIRROR);
-#elif TP_CONTROLLER == 7
+#elif TP_CONTROLLER == 7 // GT911
     tp.begin(&i2cBusOne, GT911_I2C_ADDRESS);
     tp.getProductID();
     tp.setVersion(TP_GT911::GT911);
     tp.setRotation(TP_ROTATION);
     tp.setMirror(TP_H_MIRROR, TP_V_MIRROR);
-#elif TP_CONTROLLER == 8
+#elif TP_CONTROLLER == 8 // FT6x36
     tp.begin(&i2cBusOne, 0x38);
     tp.get_FT6x36_items();
     tp.setRotation(TP_ROTATION);
@@ -3922,7 +3928,9 @@ exit:
 void graphicObjects_OnClick(ps_ptr<char> name, uint8_t val) { // val = 0 --> is inactive
 
     // all state
-    if (val == 3 && name.equals("dispFooter"))     { setTimeCounter(0); goto exit; } // pos 3 is RSSI or TC
+    if (name.equals("dispHeader"))                 {goto exit; }
+    if (name.equals("dispFooter"))                 {goto exit; }
+
     if (s_state == RADIO) {
         if (val && name.equals("btn_RA_mute"))     { setTimeCounter(2); if (!s_f_mute) s_f_muteIsPressed = true; goto exit; }
         if (val && name.equals("btn_RA_prevSta"))  { setTimeCounter(2); goto exit; }

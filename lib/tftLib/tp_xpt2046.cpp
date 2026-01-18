@@ -18,8 +18,10 @@ TP_XPT2046::TP_XPT2046(SPIClass &spi, int csPin){
     digitalWrite(_TP_CS, HIGH);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TP_XPT2046::begin(uint8_t IRQ){
+void TP_XPT2046::begin(uint8_t IRQ, uint16_t h_resolution, uint16_t v_resolution) {
     _TP_IRQ = IRQ;
+    m_h_resolution = h_resolution;
+    m_v_resolution = v_resolution;
     pinMode(_TP_CS, OUTPUT);
     digitalWrite(_TP_CS, HIGH);
     pinMode(_TP_IRQ, INPUT);
@@ -98,64 +100,52 @@ void TP_XPT2046::setMirror(bool h, bool v) {
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TP_XPT2046::setVersion(uint8_t v) {
 
-    switch(v) {
-        case 0: TP_vers = TP_ILI9341_0; break;
-        case 1: TP_vers = TP_ILI9341_1; break;
-        case 2: TP_vers = TP_HX8347D_0; break;
-        case 3: TP_vers = TP_ILI9486_0; break;
-        case 4: TP_vers = TP_ILI9488_0; break;
-        case 5: TP_vers = TP_ST7796_0; break;
-        default: TP_vers = TP_ILI9341_0; break;
+    switch (v) {
+        case 0: // ILI9341 display
+            TP_vers = TP_ILI9341_0;
+            Xmax = 1913; // Values Calibration
+            Xmin = 150;
+            Ymax = 1944;
+            Ymin = 220;
+            break;
+        case 1: // ILI9341 display for RaspberryPI  #70
+            TP_vers = TP_ILI9341_1;
+            Xmax = 1940;
+            Xmin = 90;
+            Ymax = 1864;
+            Ymin = 105;
+            break;
+        case 2: // Waveshare HX8347D display
+            TP_vers = TP_HX8347D_0;
+            Xmax = 1850;
+            Xmin = 170;
+            Ymax = 1880;
+            Ymin = 140;
+            break;
+        case 3: // ILI9486 display for RaspberryPI
+            TP_vers = TP_ILI9486_0;
+            Xmax = 1922;
+            Xmin = 140;
+            Ymax = 1930;
+            Ymin = 125;
+            break;
+        case 4: // ILI9488 display
+            TP_vers = TP_ILI9488_0;
+            Xmax = 1922;
+            Xmin = 140;
+            Ymax = 1930;
+            Ymin = 125;
+            break;
+        case 5: // ST7796 4" display
+            TP_vers = TP_ST7796_0;
+            Xmax = 1922;
+            Xmin = 103;
+            Ymax = 1950;
+            Ymin = 110;
+            break;
     }
-
-    if(TP_vers == TP_ILI9341_0) { // ILI9341 display
-        Xmax = 1913;              // Values Calibration
-        Xmin = 150;
-        Ymax = 1944;
-        Ymin = 220;
-        xFaktor = float(Xmax - Xmin) / ILI9341_WIDTH;
-        yFaktor = float(Ymax - Ymin) / ILI9341_HEIGHT;
-    }
-    if(TP_vers == TP_ILI9341_1) { // ILI9341 display for RaspberryPI  #70
-        Xmax = 1940;
-        Xmin = 90;
-        Ymax = 1864;
-        Ymin = 105;
-        xFaktor = float(Xmax - Xmin) / ILI9341_WIDTH;
-        yFaktor = float(Ymax - Ymin) / ILI9341_HEIGHT;
-    }
-    if(TP_vers == TP_HX8347D_0) { // Waveshare HX8347D display
-        Xmax = 1850;
-        Xmin = 170;
-        Ymax = 1880;
-        Ymin = 140;
-        xFaktor = float(Xmax - Xmin) / HX8347D_WIDTH;
-        yFaktor = float(Ymax - Ymin) / HX8347D_HEIGHT;
-    }
-    if(TP_vers == TP_ILI9486_0) { // ILI9486 display for RaspberryPI
-        Xmax = 1922;
-        Xmin = 140;
-        Ymax = 1930;
-        Ymin = 125;
-        xFaktor = float(Xmax - Xmin) / ILI9486_WIDTH;
-        yFaktor = float(Ymax - Ymin) / ILI9486_HEIGHT;
-    }
-    if(TP_vers == TP_ILI9488_0) { // ILI9488 display
-        Xmax = 1922;
-        Xmin = 140;
-        Ymax = 1930;
-        Ymin = 125;
-        xFaktor = float(Xmax - Xmin) / ILI9488_WIDTH;
-        yFaktor = float(Ymax - Ymin) / ILI9488_HEIGHT;
-    }
-    if(TP_vers == TP_ST7796_0) { // ST7796 4" display
-        Xmax = 1922;
-        Xmin = 103;
-        Ymax = 1950;
-        Ymin = 110;
-        xFaktor = float(Xmax - Xmin) / ST7796_WIDTH;
-        yFaktor = float(Ymax - Ymin) / ST7796_HEIGHT;
-    }
+    xFaktor = float(Xmax - Xmin) / m_v_resolution;
+    yFaktor = float(Ymax - Ymin) / m_h_resolution;
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool TP_XPT2046::read_TP(uint16_t& x, uint16_t& y) {
@@ -178,41 +168,16 @@ bool TP_XPT2046::read_TP(uint16_t& x, uint16_t& y) {
 
     // log_w("_x %i, _y %i", _x, _y);
 
-    if((_x < Xmin) || (_x > Xmax)) return false; // outside the display
+    if((_x < Xmin) || (_x > Xmax)) { return false; } // outside the display
     _x = Xmax - _x;
     _x /= xFaktor;
 
-    if((_y < Ymin) || (y > Ymax)) return false; // outside the display
+    if((_y < Ymin) || (_y > Ymax)) { return false; } // outside the display
     _y = Ymax - _y;
     _y /= yFaktor;
 
-    if(m_mirror_h) {
-        switch(TP_vers) {
-            case TP_ILI9341_0: // ILI9341
-                _y = ILI9341_HEIGHT - _y;
-                break;
-            case TP_ILI9341_1: _y = ILI9341_HEIGHT - _y; break;
-            case TP_HX8347D_0: _y = HX8347D_HEIGHT - _y; break;
-            case TP_ILI9486_0: _y = ILI9486_HEIGHT - _y; break;
-            case TP_ILI9488_0: _y = ILI9488_HEIGHT - _y; break;
-            case TP_ST7796_0: _y = ST7796_HEIGHT - _y;
-            default: break;
-        }
-    }
-
-    if(m_mirror_v) {
-        switch(TP_vers) {
-            case TP_ILI9341_0: // ILI9341
-                _x = ILI9341_WIDTH - _x;
-                break;
-            case TP_ILI9341_1: _x = ILI9341_WIDTH - _x; break;
-            case TP_HX8347D_0: _x = HX8347D_WIDTH - _x; break;
-            case TP_ILI9486_0: _x = ILI9486_WIDTH - _x; break;
-            case TP_ILI9488_0: _x = ILI9488_WIDTH - _x; break;
-            case TP_ST7796_0: _x = ST7796_WIDTH - _x; break;
-            default: break;
-        }
-    }
+    if (m_mirror_h) { _y = m_h_resolution - _y; }
+    if (m_mirror_v) { _x = m_v_resolution - _x; }
 
     // log_i("_x %i, _y %i", _x, _y);
     x = _x;
@@ -220,15 +185,15 @@ bool TP_XPT2046::read_TP(uint16_t& x, uint16_t& y) {
 
     //-------------------------------------------------------------
     if(TP_vers == TP_ILI9341_0) { // 320px x 240px
-        if(_rotation == 0) { y = ILI9341_HEIGHT - y; }
+        if(_rotation == 0) { y = m_h_resolution - y; }
         if(_rotation == 1) {
             tmpxy = x;
             x = y;
             y = tmpxy;
-            y = ILI9341_WIDTH - y;
-            x = ILI9341_HEIGHT - x;
+            y = m_v_resolution - y;
+            x = m_h_resolution - x;
         }
-        if(_rotation == 2) { x = ILI9341_WIDTH - x; }
+        if(_rotation == 2) { x = m_v_resolution - x; }
         if(_rotation == 3) {
             tmpxy = x;
             x = y;
@@ -238,21 +203,21 @@ bool TP_XPT2046::read_TP(uint16_t& x, uint16_t& y) {
     //-------------------------------------------------------------
     if(TP_vers == TP_ILI9341_1) { // 320px x 240px
         if(_rotation == 0) {
-            y = ILI9341_HEIGHT - y;
-            x = ILI9341_WIDTH - x;
+            y = m_h_resolution - y;
+            x = m_v_resolution - x;
         }
         if(_rotation == 1) {
             tmpxy = x;
             x = y;
             y = tmpxy;
-            x = ILI9341_HEIGHT - x;
+            x = m_h_resolution - x;
         }
         if(_rotation == 2) { ; }
         if(_rotation == 3) {
             tmpxy = x;
             x = y;
             y = tmpxy;
-            y = ILI9341_WIDTH - y;
+            y = m_v_resolution - y;
         }
     }
     //-------------------------------------------------------------
@@ -263,22 +228,22 @@ bool TP_XPT2046::read_TP(uint16_t& x, uint16_t& y) {
         if(_rotation == 1) {
             tmpxy = x;
             x = y;
-            y = HX8347D_WIDTH - tmpxy;
-            if(x > HX8347D_HEIGHT - 1) x = 0;
-            if(y > HX8347D_WIDTH - 1) y = 0;
+            y = m_v_resolution - tmpxy;
+            if(x > m_h_resolution - 1) x = 0;
+            if(y > m_v_resolution - 1) y = 0;
         }
         if(_rotation == 2) {
-            x = HX8347D_WIDTH - x;
-            y = HX8347D_HEIGHT - y;
-            if(x > HX8347D_WIDTH - 1) x = 0;
-            if(y > HX8347D_HEIGHT - 1) y = 0;
+            x = m_v_resolution - x;
+            y = m_h_resolution - y;
+            if(x > m_v_resolution - 1) x = 0;
+            if(y > m_h_resolution - 1) y = 0;
         }
         if(_rotation == TP_ILI9486_0) {
             tmpxy = y;
             y = x;
-            x = HX8347D_HEIGHT - tmpxy;
-            if(x > HX8347D_HEIGHT - 1) x = 0;
-            if(y > HX8347D_WIDTH - 1) y = 0;
+            x = m_h_resolution - tmpxy;
+            if(x > m_h_resolution - 1) x = 0;
+            if(y > m_v_resolution - 1) y = 0;
         }
     }
     //-------------------------------------------------------------
@@ -289,68 +254,68 @@ bool TP_XPT2046::read_TP(uint16_t& x, uint16_t& y) {
         if(_rotation == 1) {
             tmpxy = x;
             x = y;
-            y = ILI9486_WIDTH - tmpxy;
-            if(x > ILI9486_HEIGHT - 1) x = 0;
-            if(y > ILI9486_WIDTH - 1) y = 0;
+            y = m_v_resolution - tmpxy;
+            if(x > m_h_resolution - 1) x = 0;
+            if(y > m_v_resolution - 1) y = 0;
         }
         if(_rotation == 2) {
-            x = ILI9486_WIDTH - x;
-            y = ILI9486_HEIGHT - y;
-            if(x > ILI9486_WIDTH - 1) x = 0;
-            if(y > ILI9486_HEIGHT - 1) y = 0;
+            x = m_v_resolution - x;
+            y = m_h_resolution - y;
+            if(x > m_v_resolution - 1) x = 0;
+            if(y > m_h_resolution - 1) y = 0;
         }
         if(_rotation == 3) {
             tmpxy = y;
             y = x;
-            x = ILI9486_HEIGHT - tmpxy;
-            if(x > ILI9486_HEIGHT - 1) x = 0;
-            if(y > ILI9486_WIDTH - 1) y = 0;
+            x = m_h_resolution - tmpxy;
+            if(x > m_h_resolution - 1) x = 0;
+            if(y > m_v_resolution - 1) y = 0;
         }
     }
     //-------------------------------------------------------------
     if(TP_vers == TP_ILI9488_0) { // ILI 9488 Display V1.0, 480px x 320px
-        if(_rotation == 0) { x = ILI9488_WIDTH - x; }
+        if(_rotation == 0) { x = m_v_resolution - x; }
         if(_rotation == 1) { // landscape
             tmpxy = x;
             x = y;
             y = tmpxy;
-            if(x > ILI9488_HEIGHT - 1) x = 0;
-            if(y > ILI9488_WIDTH - 1) y = 0;
+            if(x > m_h_resolution - 1) x = 0;
+            if(y > m_v_resolution - 1) y = 0;
         }
         if(_rotation == 2) { // portrait + 180 degree
-            y = ILI9488_HEIGHT - y;
-            if(x > ILI9488_WIDTH - 1) x = 0;
-            if(y > ILI9488_HEIGHT - 1) y = 0;
+            y = m_h_resolution - y;
+            if(x > m_v_resolution - 1) x = 0;
+            if(y > m_h_resolution - 1) y = 0;
         }
         if(_rotation == 3) { // landscape + 180 degree
             tmpxy = x;
-            x = ILI9488_HEIGHT - y;
-            y = ILI9488_WIDTH - tmpxy;
-            if(x > ILI9488_HEIGHT - 1) x = 0;
-            if(y > ILI9488_WIDTH - 1) y = 0;
+            x = m_h_resolution - y;
+            y = m_v_resolution - tmpxy;
+            if(x > m_h_resolution - 1) x = 0;
+            if(y > m_v_resolution - 1) y = 0;
         }
     }
     //-------------------------------------------------------------
     if(TP_vers == TP_ST7796_0) { // ST7796 Display V1.1, 480px x 320px
-        if(_rotation == 0) { x = ST7796_WIDTH - x; }
+        if(_rotation == 0) { x = m_v_resolution - x; }
         if(_rotation == 1) { // landscape
             tmpxy = x;
             x = y;
             y = tmpxy;
-            if(x > ST7796_HEIGHT - 1) x = 0;
-            if(y > ST7796_WIDTH - 1) y = 0;
+            if(x > m_h_resolution - 1) x = 0;
+            if(y > m_v_resolution - 1) y = 0;
         }
         if(_rotation == 2) { // portrait + 180 degree
-            y = ILI9488_HEIGHT - y;
-            if(x > ST7796_WIDTH - 1) x = 0;
-            if(y > ST7796_HEIGHT - 1) y = 0;
+            y = m_h_resolution - y;
+            if(x > m_v_resolution - 1) x = 0;
+            if(y > m_h_resolution - 1) y = 0;
         }
         if(_rotation == 3) { // landscape + 180 degree
             tmpxy = x;
-            x = ST7796_HEIGHT - y;
-            y = ST7796_WIDTH - tmpxy;
-            if(x > ST7796_HEIGHT - 1) x = 0;
-            if(y > ST7796_WIDTH - 1) y = 0;
+            x = m_h_resolution - y;
+            y = m_v_resolution - tmpxy;
+            if(x > m_h_resolution - 1) x = 0;
+            if(y > m_v_resolution - 1) y = 0;
         }
     }
     //    log_i("TP_vers %d, Rotation %d, X = %i, Y = %i",TP_vers, _rotation, x, y);
