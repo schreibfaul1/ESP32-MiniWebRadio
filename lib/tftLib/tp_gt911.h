@@ -44,7 +44,7 @@ class TP_GT911{
 
   public:
     TP_GT911();
-    bool     begin(TwoWire* twi, uint8_t addr);
+    bool     begin(TwoWire* twi, uint8_t addr, uint16_t h_resolution, uint16_t v_resolution);
     void     loop();
     void     setVersion(uint8_t v);
     void     setRotation(uint8_t m);
@@ -65,6 +65,8 @@ class TP_GT911{
     int8_t   m_rstPin;
     uint8_t  m_rotation = 0;
     uint8_t  m_version = GT911;
+    uint16_t m_h_resolution = 800;;
+    uint16_t m_v_resolution = 480;
     bool     m_isInit = false;
     bool     m_mirror_h = false;
     bool     m_mirror_v = false;

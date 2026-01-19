@@ -277,7 +277,7 @@ namespace layout_800x480 {
 constexpr uint16_t h_res = 800, v_res = 480; // horizontal - vertical resolution
 constexpr uint16_t h_footer = 50;            // footer height
 constexpr uint16_t hw_btn = 76 + 2;          // 76x76 + padding
-constexpr uint16_t h_progBar = 16;           // height progressBar and volumeSlider
+constexpr uint16_t h_progBar = 24;           // height progressBar and volumeSlider
 constexpr uint16_t w_vuMeter = 40;           // width vuMeter
 
 constexpr uint16_t h_area = (v_res - 2 * h_footer) / 2;                                // 130, height area1 and  area2
@@ -736,7 +736,7 @@ void placingGraphicObjects() { // and initialize them
     btn_DL_radio.setDefaultPicturePath("/btn/Button_Radio_Green.png");
     btn_DL_radio.setClickedPicturePath("/btn/Button_Radio_Yellow.png");
     btn_DL_radio.setAlternativePicturePath("/btn/Button_Radio_Magenta.png");
-    sdr_DL_volume.begin(5 * layout.winButton.w + 10, layout.winButton.y, layout.winButton.w * 3 - 10, layout.winButton.h, layout.winButton.pl, layout.winButton.pr, layout.winButton.pt,
+    sdr_DL_volume.begin(5 * layout.winButton.w + 10, layout.winButton.y, displayConfig.dispWidth - (5 * layout.winButton.w + 20), layout.winButton.h, layout.winButton.pl, layout.winButton.pr, layout.winButton.pt,
                         layout.winButton.pb);
     txt_DL_fName.begin(layout.winName.x, layout.winName.y, layout.winName.w, layout.winName.h, layout.winName.pl, layout.winName.pr, layout.winName.pt, layout.winName.pb);
     txt_DL_fName.setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);

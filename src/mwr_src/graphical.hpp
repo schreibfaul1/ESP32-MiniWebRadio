@@ -64,7 +64,7 @@ class slider : public RegisterTable {
         m_padding_top = paddig_top;                                                     // unused
         m_padding_bottom = paddig_bottom;                                               // unused
         m_leftStop = m_x + m_padding_left + m_spotRadius + 10;                          // x pos left stop
-        m_rightStop = m_x + m_w - m_padding_left - m_padding_right - m_spotRadius - 10; // x pos right stop
+        m_rightStop = m_x + m_w - m_padding_right - m_spotRadius - 10; // x pos right stop
         m_enabled = false;
         m_middle_h = m_y + (m_h / 2);
         m_spotPos = (m_leftStop + m_rightStop) / 2; // in the middle
@@ -5306,7 +5306,7 @@ class displayHeader : public RegisterTable {
         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         m_enabled = false;
     }
-    void enable() { m_enabled = true; }
+    void enable() { m_enabled = true; m_timeStringObject->enable(); }
     void disable() { m_enabled = false; }
     void setBGcolor(uint32_t color) { m_bgColor = color; }
     void updateItem(const char* hl_item) { // radio, clock, audioplayer...

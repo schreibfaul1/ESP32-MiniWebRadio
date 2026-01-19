@@ -9,7 +9,7 @@
 // Code for GT911
 TP_GT911::TP_GT911() {}
 
-bool TP_GT911::begin(TwoWire* twi, uint8_t addr) {
+bool TP_GT911::begin(TwoWire* twi, uint8_t addr, uint16_t h_resolution, uint16_t v_resolution) {
     m_wire = twi; // I2C TwoWire Instance
     m_addr = addr;
     char buff[64] = {0};
@@ -18,8 +18,13 @@ bool TP_GT911::begin(TwoWire* twi, uint8_t addr) {
         m_isInit = true;
         sprintf(buff, "TouchPad found at " ANSI_ESC_CYAN "0x%02X" ANSI_ESC_RESET, m_addr);
         if (tp_info) tp_info(buff);
-
         readInfo(); // Need to get resolution to use rotation
+        if(v_resolution != m_info.yResolution || h_resolution != m_info.xResolution) {
+            sprintf(buff, "Incorrect preset resolution " ANSI_ESC_CYAN "%dx%d, found " ANSI_ESC_CYAN "%dx%d" ANSI_ESC_RESET, m_h_resolution, m_v_resolution, m_info.xResolution, m_info.yResolution);
+            if (tp_info) tp_info(buff);
+        }
+        m_h_resolution = m_info.xResolution;
+        m_v_resolution = m_info.yResolution;
         return true;
     }
     sprintf(buff, ANSI_ESC_RED "TouchPad not found at 0x%02X" ANSI_ESC_RESET, m_addr);
@@ -31,29 +36,7 @@ bool TP_GT911::begin(TwoWire* twi, uint8_t addr) {
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 void TP_GT911::setRotation(uint8_t m) {
-
     m_rotation = m;
-
-    if (m_version == GT911) {
-        switch (m_rotation) {
-            case 0:
-                m_info.xResolution = 480;
-                m_info.yResolution = 800;
-                break;
-            case 1:
-                m_info.xResolution = 800;
-                m_info.yResolution = 480;
-                break;
-            case 2:
-                m_info.xResolution = 480;
-                m_info.yResolution = 800;
-                break;
-            case 3:
-                m_info.xResolution = 800;
-                m_info.yResolution = 480;
-                break;
-        }
-    }
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 void TP_GT911::setMirror(bool h, bool v) {
@@ -63,13 +46,15 @@ void TP_GT911::setMirror(bool h, bool v) {
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 void TP_GT911::setVersion(uint8_t v) {
     switch (v) {
-        case 3:
+        case GT911:
             m_version = GT911;
             break; // GT927, GT928, GT967, GT5688
                    // case 4: m_version = TP_ILI2510; break; // ILI9488
                    // case 5: m_version = TP_FT5406; break; // FT5446, FT6336U
     }
-    log_i("Resulution: %dx%d", m_info.xResolution, m_info.yResolution);
+    char buff[64] = {0};
+    sprintf(buff, "TP resolution " ANSI_ESC_CYAN "%dx%d" ANSI_ESC_RESET, m_h_resolution, m_v_resolution);
+    if (tp_info) tp_info(buff);
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 void TP_GT911::loop() {
@@ -226,22 +211,22 @@ uint8_t TP_GT911::touched() {
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 TP_GT911::GTPoint TP_GT911::getPoint(uint8_t num) {
     int x_new = 0, y_new = 0;
-    if (m_mirror_h) m_points[num].x = m_info.xResolution - m_points[num].x;
-    if (m_mirror_v) m_points[num].y = m_info.yResolution - m_points[num].y;
+    if (m_mirror_h) m_points[num].x = m_h_resolution - m_points[num].x;
+    if (m_mirror_v) m_points[num].y = m_v_resolution - m_points[num].y;
 
     switch (m_rotation) {
-        case 0:
-            y_new = m_info.yResolution - m_points[num].x;
+        case 0: // 90 degree
             x_new = m_points[num].y;
+            y_new = m_h_resolution - m_points[num].x;
             break;
-        case 1: return m_points[num]; // No change
-        case 2:
-            x_new = m_info.xResolution - m_points[num].x;
-            y_new = m_info.yResolution - m_points[num].y;
-            break;
-        case 3:
-            x_new = m_info.xResolution - m_points[num].y;
+        case 1: return m_points[num]; // 0 degree, no change
+        case 2: // -90 degree
+            x_new = m_v_resolution - m_points[num].y;
             y_new = m_points[num].x;
+            break;
+        case 3: // -180 degree
+            x_new = m_h_resolution - m_points[num].x;
+            y_new = m_v_resolution - m_points[num].y;
             break;
     }
     m_points[num].x = x_new;
@@ -251,26 +236,29 @@ TP_GT911::GTPoint TP_GT911::getPoint(uint8_t num) {
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 TP_GT911::GTPoint* TP_GT911::getPoints() {
     int x_new = 0, y_new = 0;
-    for (uint8_t i = 0; i < GT911_MAX_CONTACTS; i++) {
-        if (m_mirror_h) m_points[i].x = m_info.xResolution - m_points[i].x;
-        if (m_mirror_v) m_points[i].y = m_info.yResolution - m_points[i].y;
+    for (uint8_t num = 0; num < GT911_MAX_CONTACTS; num++) {
+        if (m_mirror_h) m_points[num].x = m_h_resolution - m_points[num].x;
+        if (m_mirror_v) m_points[num].y = m_v_resolution - m_points[num].y;
         switch (m_rotation) {
-            case 0:
-                x_new = m_info.xResolution - m_points[i].x;
-                y_new = m_points[i].y;
-                break;
-            case 1: break; // No change
-            case 2:
-                x_new = m_info.xResolution - m_points[i].x;
-                y_new = m_info.yResolution - m_points[i].y;
-                break;
-            case 3:
-                x_new = m_info.yResolution - m_points[i].y;
-                y_new = m_points[i].x;
-                break;
+        case 0: // 90 degree
+            x_new = m_points[num].y;
+            y_new = m_h_resolution - m_points[num].x;
+            break;
+        case 1: // 0 degree, no change
+            x_new = m_points[num].x;
+            y_new = m_points[num].y;
+            break;
+        case 2: // -90 degree
+            x_new = m_v_resolution - m_points[num].y;
+            y_new = m_points[num].x;
+            break;
+        case 3: // -180 degree
+            x_new = m_h_resolution - m_points[num].x;
+            y_new = m_v_resolution - m_points[num].y;
+            break;
         }
-        m_points[i].x = x_new;
-        m_points[i].y = y_new;
+        m_points[num].x = x_new;
+        m_points[num].y = y_new;
     }
     return m_points;
 }

@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.0.4u - 18.01.2026                                                                                                               ";
+    Version 4.0.4v - 19.01.2026                                                                                                               ";
 
 
 /*  display (320x240px) with controller ILI9341 or
@@ -1126,13 +1126,13 @@ void setup() {
     tp.setRotation(TP_ROTATION);
     tp.setMirror(TP_H_MIRROR, TP_V_MIRROR);
 #elif TP_CONTROLLER == 7 // GT911
-    tp.begin(&i2cBusOne, GT911_I2C_ADDRESS);
+    tp.begin(&i2cBusOne, GT911_I2C_ADDRESS, s_h_resolution, s_v_resolution);
     tp.getProductID();
     tp.setVersion(TP_GT911::GT911);
     tp.setRotation(TP_ROTATION);
     tp.setMirror(TP_H_MIRROR, TP_V_MIRROR);
 #elif TP_CONTROLLER == 8 // FT6x36
-    tp.begin(&i2cBusOne, 0x38);
+    tp.begin(&i2cBusOne, 0x38, s_h_resolution, s_v_resolution);
     tp.get_FT6x36_items();
     tp.setRotation(TP_ROTATION);
     tp.setMirror(TP_H_MIRROR, TP_V_MIRROR);
@@ -1815,6 +1815,7 @@ void changeState(int8_t state, int8_t subState) {
                 if(newSubState) {
                     txt_RA_sTitle.hide();
                     VUmeter_RA.hide();
+                    sdr_RA_volume.hide();
                     btn_RA_staList.show();
                     btn_RA_player.show(); btn_RA_dlna.show(); btn_RA_clock.show(); btn_RA_sleep.show(); btn_RA_settings.show();
                     btn_RA_bt.show(!s_bt_emitter.found);
@@ -1873,6 +1874,9 @@ void changeState(int8_t state, int8_t subState) {
                 }
                 else{
                     pgb_PL_progress.enable();
+                    sdr_PL_volume.enable();
+                    txt_PL_fName.enable();
+                    txt_PL_fNumber.enable();
                     btn_PL_mute.enable(); btn_PL_pause.enable(); btn_PL_pause.enable(); btn_PL_cancel.enable();  btn_PL_playPrev.enable(); btn_PL_playNext.enable();
                 }
             }

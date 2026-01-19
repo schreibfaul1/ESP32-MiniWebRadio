@@ -8,7 +8,7 @@
 
 FT6x36::FT6x36() {}
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-bool FT6x36::begin(TwoWire* twi, uint8_t addr) {
+bool FT6x36::begin(TwoWire* twi, uint8_t addr, uint16_t h_resolution, uint16_t v_resolution) {
     m_wire = twi; // I2C TwoWire Instance
     m_addr = addr;
     if (probe()) {
@@ -18,6 +18,8 @@ bool FT6x36::begin(TwoWire* twi, uint8_t addr) {
         if (tp_info) tp_info(buff);
         write(FT6x36U_ADDR_DEVICE_MODE, 0);
         write(FT6X36_ADDR_THRESHHOLD, 22);
+        m_h_resolution = h_resolution;
+        m_v_resolution = v_resolution;
         return true;
     }
     m_wire->flush();
@@ -141,36 +143,36 @@ FT6x36::T_Point FT6x36::getPoint(uint8_t num) {
 
     if (m_rotation == 0) { // 0°
         if (m_mirror_v)
-            points.x = 480 - points.x;
+            points.x = m_h_resolution - points.x;
         else {}
         if (m_mirror_h)
-            points.y = 320 - points.y;
+            points.y = m_v_resolution - points.y;
         else {}
     } else if (m_rotation == 1) { // 90°
         uint16_t tmp = points.x;
         if (m_mirror_v)
-            points.x = 480 - points.y;
+            points.x = m_h_resolution - points.y;
         else
             points.x = points.y;
         if (m_mirror_h)
             points.y = tmp;
         else
-            points.y = 320 - tmp;
+            points.y = m_v_resolution - tmp;
     } else if (m_rotation == 2) { // 180°
         if (m_mirror_v) {
         } else
-            points.x = 320 - points.x;
+            points.x = m_v_resolution - points.x;
         if (m_mirror_h) {
         } else
-            points.y = 480 - points.y;
+            points.y = m_h_resolution - points.y;
     } else if (m_rotation == 3) { // 270°
         uint16_t tmp = points.x;
         if (m_mirror_v)
             points.x = points.y;
         else
-            points.x = 480 - points.y;
+            points.x = m_h_resolution - points.y;
         if (m_mirror_h)
-            points.y = 320 - tmp;
+            points.y = m_v_resolution - tmp;
         else
             points.y = tmp;
     }

@@ -53,7 +53,7 @@ class FT6x36 {
 
   public:
     FT6x36();
-    bool     begin(TwoWire* twi, uint8_t addr);
+    bool     begin(TwoWire* twi, uint8_t addr, uint16_t h_resolution, uint16_t v_resolution);
     bool     probe();
     void     loop();
     void     setRotation(uint8_t m);
@@ -70,6 +70,8 @@ class FT6x36 {
     int8_t   m_sda;
     uint8_t  m_addr;
     uint8_t  m_rotation = 0;
+    uint16_t m_h_resolution = 0;
+    uint16_t m_v_resolution = 0;
     bool     m_f_isTouch = false;
     bool     m_f_isLongPressed = false;
     bool     m_isInit = false;
