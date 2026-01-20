@@ -13,8 +13,9 @@
 
 
 /*  display (320x240px) with controller ILI9341 or
-    display (480x320px) with controller ILI9486 or ILI9488 (SPI) or
+    display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
     display (800x480px) (RGB-HMI) with TP controller GT911 (I2C)
+    display (1024x600px) (DSI) with TP controller GT911 (I2C)
 
     SD_MMC is mandatory
     IR remote is optional

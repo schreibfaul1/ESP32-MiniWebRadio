@@ -4939,20 +4939,15 @@ class vuMeter : public RegisterTable {
         m_bgColor = TFT_BLACK;
     }
     ~vuMeter() {}
-    void begin(uint16_t x, uint16_t y, uint16_t real_w, uint16_t real_h) {
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
         m_x = x; // x pos
         m_y = y; // y pos
-        m_real_w = real_w;
-        m_real_h = real_h;
-#if TFT_CONTROLLER < 2 // 320 x 240px
-        m_segm_w = 9;
-        m_segm_h = 7;
-#else // 480 x 320px
-        m_segm_w = 12;
-        m_segm_h = 8;
-#endif
-        m_w = 2 * m_segm_w + 3 * m_frameSize;
-        m_h = 12 * m_segm_h + 13 * m_frameSize;
+        m_w = w;
+        m_h = h;
+
+        m_segm_w = (w - 3 * m_frameSize) / 2;  // 2 columns + 3 frameSizes
+        m_segm_h = (h - 2 * m_frameSize) / 12; // 12 rows + 2 frameSizes
+
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
@@ -4961,9 +4956,9 @@ class vuMeter : public RegisterTable {
         m_enabled = true;
         m_clicked = false;
         if (m_backgroundTransparency) {
-            tft.copyFramebuffer(1, 0, m_x, m_y, m_real_w, m_real_h);
+            tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
         } else {
-            tft.fillRect(m_x, m_y, m_real_w, m_real_h, m_bgColor);
+            tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         }
         tft.drawRect(m_x, m_y, m_w, m_h, m_frameColor);
         for (uint8_t i = 0; i < 12; i++) {
