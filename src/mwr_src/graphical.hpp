@@ -1375,9 +1375,9 @@ class wifiSettings : public RegisterTable {
     int16_t      m_h = 0;
     uint8_t      m_fontSize = 0;
     uint8_t      m_padding_left = 0;  // left margin
-    uint8_t      m_paddig_right = 0;  // right margin
-    uint8_t      m_paddig_top = 0;    // top margin
-    uint8_t      m_paddig_bottom = 0; // bottom margin
+    uint8_t      m_padding_right = 0;  // right margin
+    uint8_t      m_padding_top = 0;    // top margin
+    uint8_t      m_padding_bottom = 0; // bottom margin
     uint8_t      m_credentials_idx = 0;
     uint8_t      m_borderWidth = 0;
     uint32_t     m_bgColor = 0;
@@ -1456,7 +1456,16 @@ class wifiSettings : public RegisterTable {
         delete m_in_password;
         delete m_keyboard;
     }
-    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom) {
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t padding_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom) {
+        m_x = x; // x pos
+        m_y = y; // y pos
+        m_w = w;
+        m_h = h;
+        m_padding_left = padding_left;
+        m_padding_right = paddig_right;
+        m_padding_top = paddig_top;
+        m_padding_bottom = paddig_bottom;
+
         if (w == 320) { // s 320x240
             m_winSelect.x = 10;
             m_winSelect.y = 40;
@@ -1532,23 +1541,37 @@ class wifiSettings : public RegisterTable {
             m_winKeybrd.pr = 1;
             m_winKeybrd.pt = 1;
             m_winKeybrd.pb = 1; // keyboard
+        } else if (w == 1024) {  // l 1024x600
+            m_winSelect.x = m_x + m_w / 30;
+            m_winSelect.y = m_y + 70;
+            m_winSelect.w = m_w - (2 * m_w / 30);
+            m_winSelect.h = 50;
+            m_winSelect.pl = 1;
+            m_winSelect.pr = 1;
+            m_winSelect.pt = 1;
+            m_winSelect.pb = 1; // selectbox
+            m_winPWD.x = m_x + m_w / 30;
+            m_winPWD.y = m_winSelect.y + m_winSelect.h +10;
+            m_winPWD.w = m_w - (2 * m_w / 30);
+            m_winPWD.h = 50;
+            m_winPWD.pl = 3;
+            m_winPWD.pr = 1;
+            m_winPWD.pt = 1;
+            m_winPWD.pb = 1; // password
+            m_winKeybrd.x = m_x + m_w / 30;
+            m_winKeybrd.y = m_winPWD.y + m_winPWD.h + 10;
+            m_winKeybrd.w = m_w - (2 * m_w / 30);
+            m_winKeybrd.h = m_h - (m_winKeybrd.y + 10);
+            m_winKeybrd.pl = 3;
+            m_winKeybrd.pr = 1;
+            m_winKeybrd.pt = 1;
+            m_winKeybrd.pb = 1; // keyboard
         }
-        m_x = x; // x pos
-        m_y = y; // y pos
-        m_w = w;
-        if (m_w < 40) {
-            MWR_LOG_WARN("width < 40px");
+        else {
+            MWR_LOG_WARN("unsupported resolution width %i px", w);
             return;
-        } // width
-        m_h = h;
-        if (m_h < 10) {
-            MWR_LOG_WARN("height < 10px");
-            return;
-        } // high
-        m_padding_left = paddig_left;
-        m_paddig_right = paddig_right;
-        m_paddig_top = paddig_top;
-        m_paddig_bottom = paddig_bottom;
+        }
+
         m_sel_ssid->begin(m_winSelect.x, m_winSelect.y, m_winSelect.w, m_winSelect.h, m_winSelect.pl, m_winSelect.pr, m_winSelect.pt, m_winSelect.pb);
         m_in_password->begin(m_winPWD.x, m_winPWD.y, m_winPWD.w, m_winPWD.h, m_winPWD.pl, m_winPWD.pr, m_winPWD.pt, m_winPWD.pb);
         m_keyboard->begin(m_winKeybrd.x, m_winKeybrd.y, m_winKeybrd.w, m_winKeybrd.h, m_winKeybrd.pl, m_winKeybrd.pr, m_winKeybrd.pt, m_winKeybrd.pb);
