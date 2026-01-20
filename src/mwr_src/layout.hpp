@@ -387,7 +387,7 @@ constexpr coor winVolBox = coor().pos(200, 48).size(285, 144);
 constexpr coor winProgbar = coor().pos(0, y_progbar).size(h_res, h_progBar).pad(5, 5, 0, 0); // or volume slider
 constexpr coor winTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(0, 5, 0, 3);
 constexpr coor winSTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(10, 5, 2, 2);
-constexpr coor winVUmeter = coor().pos(h_res - w_vuMeter, y_area2).size(w_vuMeter, h_area);
+constexpr coor winVUmeter = coor().pos(h_res - w_vuMeter, y_area2).size(w_vuMeter, h_area).pad(5, 5, 5, 5);
 constexpr coor winFooter = coor().pos(0, v_res - h_footer).size(h_res, h_footer);
 constexpr coor winStaNr = coor().pos(0, 290).size(85, 50);
 constexpr coor winSleep = coor().pos(85, 290).size(87, 50);
@@ -612,7 +612,7 @@ void placingGraphicObjects() { // and initialize them
     txt_RA_sTitle.begin(layout.winSTitle.x, layout.winSTitle.y, layout.winSTitle.w, layout.winSTitle.h, layout.winSTitle.pl, layout.winSTitle.pr, layout.winSTitle.pt, layout.winSTitle.pb);
     txt_RA_sTitle.setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
     txt_RA_sTitle.setFont(0); // 0 -> auto
-    txt_RA_staName.begin(layout.winName.x, layout.winName.y, layout.winName.w, layout.winName.h, layout.winName.pl, layout.winName.pr, layout.winName.pt, layout.winName.pl);
+    txt_RA_staName.begin(layout.winName.x, layout.winName.y, layout.winName.w, layout.winName.h, layout.winName.pl, layout.winName.pr, layout.winName.pt, layout.winName.pb);
     txt_RA_staName.setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_TOP);
     txt_RA_staName.setFont(0); // 0 -> auto
     txt_RA_irNum.begin(layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, layout.winWoHF.pl, layout.winWoHF.pr, layout.winWoHF.pt, layout.winWoHF.pb);
@@ -620,7 +620,7 @@ void placingGraphicObjects() { // and initialize them
     txt_RA_irNum.setTextColor(TFT_GOLD);
     txt_RA_irNum.setFont(displayConfig.bigNumbersFontSize);
     pic_RA_logo.begin(layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h, layout.winLogo.pl, layout.winLogo.pr, layout.winLogo.pt, layout.winLogo.pb);
-    VUmeter_RA.begin(layout.winVUmeter.x, layout.winVUmeter.y, layout.winVUmeter.w, layout.winVUmeter.h);
+    VUmeter_RA.begin(layout.winVUmeter.x, layout.winVUmeter.y, layout.winVUmeter.w, layout.winVUmeter.h, layout.winVUmeter.pl, layout.winVUmeter.pr, layout.winVUmeter.pt, layout.winVUmeter.pb);
     nbr_RA_irBox.begin(layout.winVolBox.x, layout.winVolBox.y, layout.winVolBox.w, layout.winVolBox.h, "orange");
     // STATIONSLIST ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     lst_RADIO.begin(layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, displayConfig.tftSize, displayConfig.listFontSize);

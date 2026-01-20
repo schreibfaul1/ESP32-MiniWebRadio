@@ -4929,8 +4929,10 @@ class vuMeter : public RegisterTable {
     uint8_t      m_segm_w = 0;
     uint8_t      m_segm_h = 0;
     uint8_t      m_frameSize = 1;
-    uint16_t     m_real_w = 0;
-    uint16_t     m_real_h = 0;
+    uint16_t     m_frame_x = 0;
+    uint16_t     m_frame_y = 0;
+    uint16_t     m_frame_w = 0;
+    uint16_t     m_frame_h = 0;
 
   public:
     vuMeter(const char* name) {
@@ -4939,15 +4941,19 @@ class vuMeter : public RegisterTable {
         m_bgColor = TFT_BLACK;
     }
     ~vuMeter() {}
-    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom) {
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w;
         m_h = h;
-
-        m_segm_w = (w - 3 * m_frameSize) / 2;  // 2 columns + 3 frameSizes
-        m_segm_h = (h - 2 * m_frameSize) / 12; // 12 rows + 2 frameSizes
-
+        m_frame_x = x + paddig_left;
+        m_frame_y = y + paddig_top;
+        uint16_t frame_w = m_w - paddig_left - paddig_right;
+        uint16_t frame_h = m_h - paddig_top - paddig_bottom;
+        m_segm_w = (frame_w - 3 * m_frameSize) / 2;  // 2 columns + 3 frameSizes
+        m_segm_h = (frame_h - 2 * m_frameSize) / 12; // 12 rows + 2 frameSizes
+        m_frame_w = 2  * m_segm_w + 3 * m_frameSize;
+        m_frame_h = 12 * m_segm_h + 13 * m_frameSize;
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
@@ -4960,7 +4966,7 @@ class vuMeter : public RegisterTable {
         } else {
             tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         }
-        tft.drawRect(m_x, m_y, m_w, m_h, m_frameColor);
+        tft.drawRect(m_frame_x, m_frame_y, m_frame_w, m_frame_h, m_frameColor);
         for (uint8_t i = 0; i < 12; i++) {
             drawRect(i, 0, 0);
             drawRect(i, 1, 0);
@@ -5022,13 +5028,13 @@ class vuMeter : public RegisterTable {
     }
 
   private:
-    void drawRect(uint8_t pos, uint8_t ch, bool br) {
+    void drawRect(uint8_t row, uint8_t col, bool br) {
         uint16_t color = 0;
-        uint16_t y_end = m_y + m_h - m_frameSize - m_segm_h;
-        uint16_t xPos = m_x + m_frameSize + ch * (m_segm_w + m_frameSize);
-        uint16_t yPos = y_end - pos * (m_frameSize + m_segm_h);
-        if (pos > 11) return;
-        switch (pos) {
+        uint16_t y_end = m_frame_y + m_frame_h - m_frameSize - m_segm_h;
+        uint16_t xPos = m_frame_x + m_frameSize + col * (m_segm_w + m_frameSize);
+        uint16_t yPos = y_end - row * (m_frameSize + m_segm_h);
+        if (row > 11) return;
+        switch (row) {
             case 0 ... 6: // green
                 br ? color = TFT_GREEN : color = TFT_DARKGREEN;
                 break;
