@@ -217,7 +217,7 @@ constexpr coor winStaNr = coor().pos(0, 290).size(85, 30);
 constexpr coor winSleep = coor().pos(85, 290).size(87, 30);
 constexpr coor winButton = coor().pos(0, 234).size(hw_btn, hw_btn);
 constexpr coor winDigits = coor().pos(0, h_footer).size(h_res, 200);
-constexpr coor winWoHF = coor().pos(0, h_footer).size(h_res, 260);
+constexpr coor winWoHF = coor().pos(0, h_footer).size(h_res, 2 * h_area); // window without header and footer
 constexpr coor sdrHP = coor().pos(140,  h_footer + 0 * h_EQ).size(200, h_EQ).pad(0, 0, 8, 8);
 constexpr coor sdrBP = coor().pos(140,  h_footer + 1 * h_EQ).size(200, h_EQ).pad(0, 0, 8, 8);
 constexpr coor sdrLP = coor().pos(140,  h_footer + 2 * h_EQ).size(200, h_EQ).pad(0, 0, 8, 8);
@@ -306,7 +306,7 @@ constexpr coor winStaNr = coor().pos(0, 290).size(85, 50);
 constexpr coor winSleep = coor().pos(85, 290).size(87, 50);
 constexpr coor winButton = coor().pos(0, 345).size(hw_btn, hw_btn);
 constexpr coor winDigits = coor().pos(0, h_footer).size(h_res, 295);
-constexpr coor winWoHF = coor().pos(0, h_footer).size(h_res, 380);
+constexpr coor winWoHF = coor().pos(0, h_footer).size(h_res, 2 * h_area);
 constexpr coor sdrHP = coor().pos(140,  h_footer + 0 * h_EQ).size(300, h_EQ).pad(0, 0, 8, 8);
 constexpr coor sdrBP = coor().pos(140,  h_footer + 1 * h_EQ).size(300, h_EQ).pad(0, 0, 8, 8);
 constexpr coor sdrLP = coor().pos(140,  h_footer + 2 * h_EQ).size(300, h_EQ).pad(0, 0, 8, 8);
@@ -393,7 +393,7 @@ constexpr coor winStaNr = coor().pos(0, 290).size(85, 50);
 constexpr coor winSleep = coor().pos(85, 290).size(87, 50);
 constexpr coor winButton = coor().pos(0, y_btn).size(hw_btn, hw_btn);
 constexpr coor winDigits = coor().pos(0, h_footer).size(h_res, 295);
-constexpr coor winWoHF = coor().pos(0, h_footer).size(h_res, 380);
+constexpr coor winWoHF = coor().pos(0, h_footer).size(h_res, 2 * h_area);
 constexpr coor sdrHP = coor().pos(140,  h_footer + 0 * h_EQ).size(300, h_EQ).pad(0, 0, 8, 8);
 constexpr coor sdrBP = coor().pos(140,  h_footer + 1 * h_EQ).size(300, h_EQ).pad(0, 0, 8, 8);
 constexpr coor sdrLP = coor().pos(140,  h_footer + 2 * h_EQ).size(300, h_EQ).pad(0, 0, 8, 8);
@@ -416,7 +416,7 @@ inline constexpr uint8_t fonts[13] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66
 
 inline constexpr DisplayConfig config = {
     fonts,
-    27,                     // listFontSize
+    38,                     // listFontSize
     38,                     // headerFontSize
     38,                     // footerFontSize
     156,                    // bigNumbersFontSize

@@ -4950,8 +4950,8 @@ class vuMeter : public RegisterTable {
         m_frame_y = y + paddig_top;
         uint16_t frame_w = m_w - paddig_left - paddig_right;
         uint16_t frame_h = m_h - paddig_top - paddig_bottom;
-        m_segm_w = (frame_w - 3 * m_frameSize) / 2;  // 2 columns + 3 frameSizes
-        m_segm_h = (frame_h - 2 * m_frameSize) / 12; // 12 rows + 2 frameSizes
+        m_segm_w = ((frame_w - 3 * m_frameSize) / 2) - m_frameSize;  // 2 columns + 3 frameSizes
+        m_segm_h = ((frame_h - 2 * m_frameSize) / 12) - m_frameSize; // 12 rows + 2 frameSizes
         m_frame_w = 2  * m_segm_w + 3 * m_frameSize;
         m_frame_h = 12 * m_segm_h + 13 * m_frameSize;
     }
