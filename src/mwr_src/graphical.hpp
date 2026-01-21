@@ -1657,7 +1657,7 @@ class wifiSettings : public RegisterTable {
         if (m_keyboard->positionXY(x, y)) {
             MWR_LOG_INFO("key pressed %i", m_keyboard->getVal());
             changePassword(m_keyboard->getVal(), m_credentials_idx);
-            m_in_password->setText(m_credentials[m_credentials_idx].password.c_get());
+            m_in_password->setText(m_credentials[m_credentials_idx].password.get());
             m_in_password->show(m_backgroundTransparency, m_saveBackground);
         }
         if (!m_enabled) return false;
@@ -1672,7 +1672,7 @@ class wifiSettings : public RegisterTable {
             if (selTxt) {
                 for (int i = 0; i < m_credentials.size(); i++) {
                     if (m_credentials[i].ssid.equals(selTxt)) {
-                        m_in_password->setText(m_credentials[i].password.c_get());
+                        m_in_password->setText(m_credentials[i].password.get());
                         m_in_password->show(m_backgroundTransparency, m_saveBackground);
                         m_credentials_idx = i;
                     }
@@ -1697,7 +1697,7 @@ class wifiSettings : public RegisterTable {
     }
     void add_WiFi_Items(ps_ptr<char> ssid, ps_ptr<char> pw) {
         if (ssid.strlen() == 0) { ssid = ""; }
-        m_credentials.emplace_back(ssid.c_get(), pw.c_get());
+        m_credentials.emplace_back(ssid.c_get(), pw.get());
         m_sel_ssid->addText(ssid.c_get());
     }
     void clearText() {
@@ -1713,7 +1713,8 @@ class wifiSettings : public RegisterTable {
     void changePassword(char ch, uint8_t idx) {
         int len = m_credentials[idx].password.strlen();
         if (ch == 0x08) { // backspace
-            if (len == 0) return;
+            if (len == 0) m_credentials[idx].password =  "";
+            else
             m_credentials[idx].password = m_credentials[idx].password.substr(0, len - 1);
         } else if (ch == 0x0D) { // enter
             //    log_w("enter pressed");
@@ -3819,8 +3820,8 @@ class dlnaList : public RegisterTable {
         m_clicked = false;
         m_state = false;
         m_pathBuff = x_ps_malloc(50);
-        m_ra.arg1 = NULL;
-        m_ra.arg2 = NULL;
+        m_ra.arg1 = "";
+        m_ra.arg2 = "";
         m_ra.val1 = 0;
         m_ra.val2 = 0;
         for (uint8_t i = 0; i < 10; i++) m_currItemNr[i] = 0;
@@ -4343,8 +4344,8 @@ class fileList : public RegisterTable {
         m_enabled = false;
         m_clicked = false;
         m_state = false;
-        m_ra.arg1 = NULL;
-        m_ra.arg2 = NULL;
+        m_ra.arg1 = "";
+        m_ra.arg2 = "";
         m_ra.val1 = 0;
         m_ra.val2 = 0;
     }
@@ -4731,8 +4732,8 @@ class stationsList : public RegisterTable {
         m_clicked = false;
         m_state = false;
         m_pathBuff = x_ps_malloc(50);
-        m_ra.arg1 = NULL;
-        m_ra.arg2 = NULL;
+        m_ra.arg1 = "";
+        m_ra.arg2 = "";
         m_ra.val1 = 0;
         m_ra.val2 = 0;
     }
@@ -4794,7 +4795,7 @@ class stationsList : public RegisterTable {
         if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
         x_ps_free(&m_buff);
         m_ra.val1 = 0;
-        m_ra.arg1 = NULL;
+        m_ra.arg1 = "";
         return true;
     }
 

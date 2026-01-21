@@ -855,11 +855,9 @@ bool connectToWiFi() {
     return true; // can't connect to any network
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void setWiFiCredentials(const char* ssid, const char* password) {
-    if (!ssid || !password) return;
-    if (strlen(ssid) < 5) return; // min length
+void setWiFiCredentials(ps_ptr<char> ssid, ps_ptr<char> password) {
 
-    MWR_LOG_ERROR("ssid %s pw %s", ssid, password);
+    MWR_LOG_INFO("ssid %s pw %s", ssid.c_get(), password.c_get());
 
     ps_ptr<char> line = "";
     ps_ptr<char> credentials;
@@ -874,10 +872,15 @@ void setWiFiCredentials(const char* ssid, const char* password) {
             case 4: line = pref.getString("wifiStr4").c_str(); break;
             case 5: line = pref.getString("wifiStr5").c_str(); break;
         }
-        if (line.starts_with(ssid) && line[strlen(ssid)] == '\t') { // ssid found, update password
-            credentials = ssid;
-            credentials += "\t";
-            credentials += password;
+        if (line.starts_with(ssid.c_get()) && line[strlen(ssid.c_get())] == '\t') { // ssid found, update password
+            if(password == ""){
+                credentials = "\t";
+            }
+            else {
+                credentials = ssid;
+                credentials += "\t";
+                credentials += password;
+            }
             if (i == 0) {
                 MWR_LOG_ERROR("password can't changed, is hard coded");
                 state = 0;
@@ -953,10 +956,10 @@ void setWiFiCredentials(const char* ssid, const char* password) {
     state = 3;
 
 exit:
-    if (state == 0) { SerialPrintfln("WiFI_info:   " ANSI_ESC_RED "SSID: %s password can't changed, it is hard coded", ssid); }
-    if (state == 1) { SerialPrintfln("WiFI_info:   " ANSI_ESC_GREEN "The passord \"%s\" for the SSID: %s has been changed", password, ssid); }
-    if (state == 2) { SerialPrintfln("WiFI_info:   " ANSI_ESC_GREEN "The SSID: %s has been added", ssid); }
-    if (state == 3) { SerialPrintfln("WiFI_info:   " ANSI_ESC_RED "No more memory to save the credentials for: %s", ssid); }
+    if (state == 0) { SerialPrintfln("WiFI_info:   " ANSI_ESC_RED "SSID: %s password can't changed, it is hard coded", ssid.c_get()); }
+    if (state == 1) { SerialPrintfln("WiFI_info:   " ANSI_ESC_GREEN "The passord \"%s\" for the SSID: %s has been changed", password.c_get(), ssid.c_get()); }
+    if (state == 2) { SerialPrintfln("WiFI_info:   " ANSI_ESC_GREEN "The SSID: %s has been added", ssid.c_get()); }
+    if (state == 3) { SerialPrintfln("WiFI_info:   " ANSI_ESC_RED "No more memory to save the credentials for: %s", ssid.c_get()); }
     return;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -2043,9 +2046,14 @@ void changeState(int8_t state, int8_t subState) {
             cls_wifiSettings.clearText();
             cls_wifiSettings.setBorderWidth(1);
             cls_wifiSettings.setFontSize(displayConfig.listFontSize);
-            int16_t n = WiFi.scanNetworks();
-            SerialPrintfln("setup: ....  " ANSI_ESC_WHITE "%i WiFi networks found", n);
-            for (int i = 0; i < n; i++) {
+            int16_t n = 0;
+            while (n < 1){
+                n = WiFi.scanNetworks();
+                SerialPrintfln("setup: ....  " ANSI_ESC_WHITE "%i WiFi networks found", n);
+                vTaskDelay(500);
+            } // wait until at least one WiFi network is found
+
+            for (int i = 0; i < n; i++) { // Add WiFi networks to the list
                 SerialPrintfln("setup: ....  " ANSI_ESC_GREEN "%s (%d)", WiFi.SSID(i).c_str(), (int16_t)WiFi.RSSI(i));
                 ps_ptr<char> pw = get_WiFi_PW(WiFi.SSID(i).c_str());
                 cls_wifiSettings.add_WiFi_Items(WiFi.SSID(i).c_str(), pw.c_get());
@@ -4151,13 +4159,13 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
     if (s_state == DLNAITEMSLIST) {
         if (name.equals("lst_DLNA"))        { if (ra.val1 == 1) { // play a file
                                                    txt_DL_fName.setTextColor(TFT_CYAN);
-                                                   txt_DL_fName.setText(ra.arg2);
+                                                   txt_DL_fName.setText(ra.arg2.c_get());
                                                    connecttohost(ra.arg1);
                                                    changeState(DLNA, 0);
                                                    goto exit;
                                                 }
                                                 if (ra.val1 == 2) {// browse dlna object, waiting for content and create a playlist
-                                                    dlna.browseServer(ra.val2, ra.arg1, 0, 50);
+                                                    dlna.browseServer(ra.val2, ra.arg1.c_get(), 0, 50);
                                                     s_f_dlnaMakePlaylistOTF = true;
                                                     goto exit;
                                                 }
