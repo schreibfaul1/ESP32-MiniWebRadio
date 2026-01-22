@@ -1757,7 +1757,7 @@ function addStationsToGrid () {
 function loadJSON (path, success, error) {
     console.log(path)
     var xhr = new XMLHttpRequest()
-    xhr.timeout = 2000; // time in milliseconds
+    xhr.timeout = 4000; // time in milliseconds
     xhr.onreadystatechange = function () {
         if (xhr.readyState === 4) {
             if (xhr.status === 200) {
@@ -1782,9 +1782,9 @@ function selectcategory (presctrl) { // tab Search: preset, select a category
 }
 
 function selectitem (presctrl) { // tab Search: preset, select a station
-  if(category == "country")  loadJSON('https://de2.api.radio-browser.info/json/stations/bycountrycodeexact/'  + presctrl.value.substring(0, 2) + "#name", gotStations, 'jsonp')
-  if(category == "language") loadJSON('https://de2.api.radio-browser.info/json/stations/bylanguage/' + presctrl.value.substring(0, presctrl.value.lastIndexOf(" ")), gotStations, 'jsonp')
-  if(category == "tag")      loadJSON('https://de2.api.radio-browser.info/json/stations/bytag/'      + presctrl.value.substring(0, presctrl.value.lastIndexOf(" ")), gotStations, 'jsonp')
+  if(category == "country")  loadJSON('https://de2.api.radio-browser.info/json/stations/bycountrycodeexact/'  + presctrl.value.substring(0, 2) + "?limit=10000&order=name", gotStations, 'jsonp')
+  if(category == "language") loadJSON('https://de2.api.radio-browser.info/json/stations/bylanguage/' + presctrl.value.substring(0, presctrl.value.lastIndexOf(" ")) + "?limit=10000&order=name", gotStations, 'jsonp')
+  if(category == "tag")      loadJSON('https://de2.api.radio-browser.info/json/stations/bytag/'      + presctrl.value.substring(0, presctrl.value.lastIndexOf(" ")) + "?limit=10000&order=name", gotStations, 'jsonp')
 
 }
 

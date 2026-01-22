@@ -3814,7 +3814,7 @@ class dlnaList : public RegisterTable {
         m_state = false;
         m_pathBuff = x_ps_malloc(50);
         m_ra.arg1 = NULL;
-        m_ra.arg2 = NULL;
+        m_ra.arg2 = "";
         m_ra.val1 = 0;
         m_ra.val2 = 0;
         for (uint8_t i = 0; i < 10; i++) m_currItemNr[i] = 0;
@@ -4085,7 +4085,7 @@ class dlnaList : public RegisterTable {
                     m_chptr = m_buff;
                     m_ra.arg1 = m_srvContent->at(m_itemListPos - 1).itemURL.get(); // url --> connecttohost()
                     m_ra.arg2 = m_srvContent->at(m_itemListPos - 1).title.get();   // filename --> showFileName()
-                    if (m_ra.arg1 && m_ra.arg2) m_ra.val1 = 1;
+                    if (m_ra.arg1 && m_ra.arg2.strlen() > 0) m_ra.val1 = 1;
                     m_browseOnRelease = 0;
                     goto exit;
                 }
@@ -4338,7 +4338,7 @@ class fileList : public RegisterTable {
         m_clicked = false;
         m_state = false;
         m_ra.arg1 = NULL;
-        m_ra.arg2 = NULL;
+        m_ra.arg2 = "";
         m_ra.val1 = 0;
         m_ra.val2 = 0;
     }
@@ -4726,7 +4726,7 @@ class stationsList : public RegisterTable {
         m_state = false;
         m_pathBuff = x_ps_malloc(50);
         m_ra.arg1 = NULL;
-        m_ra.arg2 = NULL;
+        m_ra.arg2 = "";
         m_ra.val1 = 0;
         m_ra.val2 = 0;
     }

@@ -226,8 +226,8 @@ struct dlnaHistory_s {
 };
 struct releasedArg {
     const char* arg1 = NULL;
-    const char* arg2 = NULL;
-    ps_ptr<char> arg3 = "";
+    ps_ptr<char> arg2;
+    ps_ptr<char> arg3;
     int16_t     val1 = 0;
     int16_t     val2 = 0;
 };

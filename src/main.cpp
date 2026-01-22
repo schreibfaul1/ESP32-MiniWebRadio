@@ -4155,7 +4155,7 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
     if (s_state == DLNAITEMSLIST) {
         if (name.equals("lst_DLNA"))        { if (ra.val1 == 1) { // play a file
                                                    txt_DL_fName.setTextColor(TFT_CYAN);
-                                                   txt_DL_fName.setText(ra.arg2);
+                                                   txt_DL_fName.setText(ra.arg2.c_get());
                                                    connecttohost(ra.arg1);
                                                    changeState(DLNA, 0);
                                                    goto exit;
@@ -4225,7 +4225,7 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
         if (name.equals("btn_IR_radio"))    { changeState(RADIO, 0); goto exit; }
     }
     if (s_state == WIFI_SETTINGS) {
-        if (name.equals("wifiSettings"))    { setWiFiCredentials(ra.arg1, ra.arg2);
+        if (name.equals("wifiSettings"))    { setWiFiCredentials(ra.arg1, ra.arg2.c_get());
                                               msg_box.setText("ESP restart", false, false);
                                               msg_box.show();
                                               vTaskDelay(4000);
