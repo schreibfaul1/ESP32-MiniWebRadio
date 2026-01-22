@@ -283,9 +283,9 @@ const Timing DSI_TIMING = {.h_res = 1024,
 
         #define GT911_I2C_ADDRESS 0x5D // default I2C-address of GT911
 
-        #define I2S_DOUT 9
-        #define I2S_BCLK 12
-        #define I2S_LRC  10
+        #define I2S_DOUT 2
+        #define I2S_BCLK 3
+        #define I2S_LRC  4
         #define I2S_MCLK -1 // important, don't change!
 
         #define IR_PIN             6  // IR Receiver (if available)

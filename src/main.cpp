@@ -3953,6 +3953,7 @@ void graphicObjects_OnClick(ps_ptr<char> name, uint8_t val) { // val = 0 --> is 
         if (val && name.equals("btn_RA_off"))      { goto exit; }
         if (val && name.equals("btn_RA_settings")) { goto exit; }
         if (val && name.equals("VUmeter_RA"))      { goto exit; }
+        if (val && name.equals("txt_RA_sTitle"))   { goto exit; }
     }
     if (s_state == STATIONSLIST) {
         if (val && name.equals("lst_RADIO"))       { setTimeCounter(LIST_TIMER); goto exit; }
