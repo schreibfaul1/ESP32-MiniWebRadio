@@ -3911,21 +3911,21 @@ void tp_long_released(uint16_t x, uint16_t y){
 //    if(s_state == DLNAITEMSLIST) {lst_DLNA.longReleased();}
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void graphicObjects_OnChange(ps_ptr<char> name, int32_t arg1) {
+void graphicObjects_OnChange(ps_ptr<char> name, int32_t val) {
     ps_ptr<char> c;
-    if (name.equals("sdr_RA_volume"))   { setTimeCounter(2); setVolume(arg1); goto exit; }
-    if (name.equals("sdr_PL_volume"))   { setVolume(arg1); goto exit; }
-    if (name.equals("sdr_DL_volume"))   { setVolume(arg1); goto exit; }
-    if (name.equals("sdr_CL_volume"))   { setVolume(arg1); goto exit; }
-    if (name.equals("sdr_BR_value"))    { s_brightness = arg1; setTFTbrightness(arg1); txt_BR_value.writeText(int2str(arg1)); goto exit; }
-    if (name.equals("sdr_EQ_LP"))       { c.assignf("%i dB", arg1); txt_EQ_lowPass.writeText(c.c_get());  s_tone.LP  = arg1; webSrv.send("settone=", setI2STone().c_get()); goto exit; }
-    if (name.equals("sdr_EQ_BP"))       { c.assignf("%i dB", arg1); txt_EQ_bandPass.writeText(c.c_get()); s_tone.BP  = arg1; webSrv.send("settone=", setI2STone().c_get()); goto exit; }
-    if (name.equals("sdr_EQ_HP"))       { c.assignf("%i dB", arg1); txt_EQ_highPass.writeText(c.c_get()); s_tone.HP  = arg1; webSrv.send("settone=", setI2STone().c_get()); goto exit; }
-    if (name.equals("sdr_EQ_BAL"))      { c.assignf("%i dB", arg1); txt_EQ_balance.writeText(c.c_get());  s_tone.BAL = arg1; webSrv.send("settone=", setI2STone().c_get()); goto exit; }
+    if (name.equals("sdr_RA_volume"))   { setTimeCounter(2); setVolume(val); goto exit; }
+    if (name.equals("sdr_PL_volume"))   { setVolume(val); goto exit; }
+    if (name.equals("sdr_DL_volume"))   { setVolume(val); goto exit; }
+    if (name.equals("sdr_CL_volume"))   { setVolume(val); goto exit; }
+    if (name.equals("sdr_BR_value"))    { s_brightness = val; setTFTbrightness(val); txt_BR_value.writeText(int2str(val)); goto exit; }
+    if (name.equals("sdr_EQ_LP"))       { c.assignf("%i dB", val); txt_EQ_lowPass.writeText(c.c_get());  s_tone.LP  = val; webSrv.send("settone=", setI2STone().c_get()); goto exit; }
+    if (name.equals("sdr_EQ_BP"))       { c.assignf("%i dB", val); txt_EQ_bandPass.writeText(c.c_get()); s_tone.BP  = val; webSrv.send("settone=", setI2STone().c_get()); goto exit; }
+    if (name.equals("sdr_EQ_HP"))       { c.assignf("%i dB", val); txt_EQ_highPass.writeText(c.c_get()); s_tone.HP  = val; webSrv.send("settone=", setI2STone().c_get()); goto exit; }
+    if (name.equals("sdr_EQ_BAL"))      { c.assignf("%i dB", val); txt_EQ_balance.writeText(c.c_get());  s_tone.BAL = val; webSrv.send("settone=", setI2STone().c_get()); goto exit; }
     if (name.equals("pgb_PL_progress")) { goto exit; }
     if (name.equals("pgb_DL_progress")) { goto exit; }
 
-    MWR_LOG_WARN("unused event: graphicObject %s was changed, val %li", name.c_get(), arg1);
+    MWR_LOG_WARN("unused event: graphicObject %s was changed, val %li", name.c_get(), val);
 exit:
     return;
 }
