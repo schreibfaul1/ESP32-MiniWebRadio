@@ -4129,7 +4129,7 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
                                                   s_cur_AudioFolder = ra.arg1;
                                                   s_cur_AudioFileNr = ra.val2;
                                                   stopSong();
-                                                  SD_playFile(ra.arg3);
+                                                  SD_playFile(ra.arg3.c_get());
                                               }
                                               goto exit; }
     }

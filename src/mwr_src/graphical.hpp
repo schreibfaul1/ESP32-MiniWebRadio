@@ -6,7 +6,7 @@
     ║                                                     G R A P H I C   O B J E C T S                                                         ║
     ╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝   */
 
-extern __attribute__((weak)) void graphicObjects_OnChange(ps_ptr<char> name, int32_t arg1);
+extern __attribute__((weak)) void graphicObjects_OnChange(ps_ptr<char> name, int32_t val);
 extern __attribute__((weak)) void graphicObjects_OnClick(ps_ptr<char> name, uint8_t val);
 extern __attribute__((weak)) void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra);
 
