@@ -785,7 +785,7 @@ bool WebSrv::handlehttp() { // HTTPserver, message received
             // log_i("cT: %s", rhl);
             int idx = indexOf(rhl + 13, ";");
             if (idx > 0) rhl[13 + idx] = '\0';
-            strcpy(contentType, rhl + 13);
+            strlcpy(contentType, rhl + 13, sizeof(contentType));
             trim(contentType);
         } else if (startsWith(rhl, "GET /")) {
             method_GET = true;

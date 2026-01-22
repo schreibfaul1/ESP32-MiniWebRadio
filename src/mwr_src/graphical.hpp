@@ -44,7 +44,7 @@ class slider : public RegisterTable {
     releasedArg  m_ra;
 
   public:
-    slider(const char* name) {
+    slider(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
         m_railHigh = 6;
@@ -215,7 +215,7 @@ class progressbar : public RegisterTable {
     releasedArg  m_ra;
 
   public:
-    progressbar(const char* name) {
+    progressbar(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
         m_railHigh = 6;
@@ -355,7 +355,7 @@ class textbox : public RegisterTable {
     uint32_t     m_bgColor = 0;
     uint32_t     m_fgColor = 0;
     uint32_t     m_borderColor = 0;
-    char*        m_text = NULL;
+    ps_ptr<char> m_text;
     ps_ptr<char> m_name;
     bool         m_enabled = false;
     bool         m_clicked = false;
@@ -375,7 +375,7 @@ class textbox : public RegisterTable {
         m_borderColor = TFT_BLACK;
         m_fontSize = 1;
     }
-    ~textbox() { x_ps_free(&m_text); }
+    ~textbox() {}
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom) {
         m_x = x; // x pos
         m_y = y; // y pos
@@ -394,7 +394,6 @@ class textbox : public RegisterTable {
         m_saveBackground = saveBackground;
         m_enabled = true;
         m_clicked = false;
-        if (!m_text) { m_text = strdup(""); }
         if (m_backgroundTransparency) {
             if (m_saveBackground)
                 tft.copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
@@ -403,7 +402,7 @@ class textbox : public RegisterTable {
         } else {
             tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         }
-        writeText(m_text);
+        writeText(m_text.c_get());
     }
     void hide() {
         if (m_backgroundTransparency) {
@@ -456,9 +455,7 @@ class textbox : public RegisterTable {
         return true;
     }
     void setText(const char* txt, bool narrow = false, bool noWrap = false) { // prepare a text, wait of show() to write it
-        if (!txt) { txt = strdup(""); }
-        x_ps_free(&m_text);
-        m_text = x_ps_strdup(txt);
+        m_text = txt;
         m_narrow = narrow;
         m_noWrap = noWrap;
     }
@@ -468,11 +465,8 @@ class textbox : public RegisterTable {
     }
 
     void writeText(const char* txt) {
-        if (!txt) { txt = strdup(""); }
-        if (txt != m_text) { // no self copy
-            x_ps_free(&m_text);
-            m_text = x_ps_strdup(txt);
-        }
+        m_text = txt;
+
         if (m_enabled) {
             uint16_t txtColor_tmp = tft.getTextColor();
             uint16_t bgColor_tmp = tft.getBackGroundColor();
@@ -493,7 +487,7 @@ class textbox : public RegisterTable {
             int h = m_h - (m_paddig_bottom + m_paddig_top);
             if (m_borderWidth > 0) { tft.drawRect(m_x, m_y, m_w, m_h, m_borderColor); }
             if (m_borderWidth > 1) { tft.drawRect(m_x + 1, m_y + 1, m_w - 2, m_h - 2, m_borderColor); }
-            tft.writeText(m_text, x, y, w, h, m_h_align, m_v_align, m_narrow, m_noWrap, m_autoSize);
+            tft.writeText(m_text.c_get(), x, y, w, h, m_h_align, m_v_align, m_narrow, m_noWrap, m_autoSize);
             tft.setTextColor(txtColor_tmp);
             tft.setBackGoundColor(bgColor_tmp);
         }
