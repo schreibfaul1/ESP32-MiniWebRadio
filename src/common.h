@@ -295,7 +295,7 @@ boolean      isAudio(File file);
 boolean      isAudio(const char* path);
 boolean      isPlaylist(File file);
 bool         connectToWiFi();
-void         setWiFiCredentials(const char* ssid, const char* password);
+void         setWiFiCredentials(ps_ptr<char> ssid, ps_ptr<char> password);
 ps_ptr<char> scaleImage(ps_ptr<char> path);
 void         setVolume(uint8_t vol);
 uint8_t      downvolume();

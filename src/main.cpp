@@ -781,7 +781,7 @@ start:
  *                                                        C O N N E C T   TO   W I F I                                                               *
  *****************************************************************************************************************************************************/
 bool connectToWiFi() {
-HEAP_GUARD();
+
     MWR_LOG_DEBUG("Connecting to WiFi...");
     ps_ptr<char> line(512);
 
@@ -864,11 +864,10 @@ HEAP_GUARD();
     return true; // can't connect to any network
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void setWiFiCredentials(const char* ssid, const char* password) {
-    if (!ssid || !password) return;
-    if (strlen(ssid) < 5) return; // min length
+void setWiFiCredentials(ps_ptr<char> ssid, ps_ptr<char> password) {
+    if (ssid.strlen() < 5) return; // min length
 
-    MWR_LOG_ERROR("ssid %s pw %s", ssid, password);
+    MWR_LOG_ERROR("ssid %s pw %s", ssid.c_get(), password.c_get());
 
     ps_ptr<char> line = "";
     ps_ptr<char> credentials;
@@ -883,10 +882,15 @@ void setWiFiCredentials(const char* ssid, const char* password) {
             case 4: line = pref.getString("wifiStr4").c_str(); break;
             case 5: line = pref.getString("wifiStr5").c_str(); break;
         }
-        if (line.starts_with(ssid) && line[strlen(ssid)] == '\t') { // ssid found, update password
-            credentials = ssid;
-            credentials += "\t";
-            credentials += password;
+        if (line.starts_with(ssid.c_get()) && line[ssid.strlen()] == '\t') { // ssid found
+            if(password.strlen() == 0){
+                credentials = "\t";                                          // delete ssid and password
+            }
+            else{                                                            // update password
+                credentials = ssid;
+                credentials += "\t";
+                credentials += password;
+            }
             if (i == 0) {
                 MWR_LOG_ERROR("password can't changed, is hard coded");
                 state = 0;
@@ -3936,8 +3940,16 @@ exit:
 void graphicObjects_OnClick(ps_ptr<char> name, uint8_t val) { // val = 0 --> is inactive
 
     // all state
-    if (name.equals("dispHeader"))                 {goto exit; }
-    if (name.equals("dispFooter"))                 {goto exit; }
+    if (name.equals("dispHeader"))                 { goto exit; }
+    if (name.equals("timeString"))                 { goto exit; }
+    if (name.equals("dispFooter"))                 { goto exit; }
+    if (name.equals("footer_StaNr"))               { goto exit; }
+    if (name.equals("footer_Antenna"))             { goto exit; }
+    if (name.equals("footer_Flag"))                { goto exit; }
+    if (name.equals("footer_OffTimer"))            { goto exit; }
+    if (name.equals("footer_Hourglass"))           { goto exit; }
+    if (name.equals("footer_BitRate"))             { goto exit; }
+    if (name.equals("footer_IPaddr"))              { goto exit; }
 
     if (s_state == RADIO) {
         if (val && name.equals("btn_RA_mute"))     { setTimeCounter(2); if (!s_f_mute) s_f_muteIsPressed = true; goto exit; }
@@ -4068,6 +4080,12 @@ void graphicObjects_OnClick(ps_ptr<char> name, uint8_t val) { // val = 0 --> is 
                 goto exit;
             }
         }
+        if(name.starts_with("txt_btn"))                        { goto exit; }
+        if (val && name.equals("btn_SE_wifi"))                 { goto exit; }
+        if (val && name.equals("select_txtbtn_down"))          { goto exit; }
+        if (val && name.equals("wifiSettings_selectbox_ssid")) { goto exit; }
+        if (val && name.equals("wifiSettings_selectbox_ssid")) { goto exit; }
+        if (val && name.equals("wifiSettings_keyBoard"))       { goto exit; }
     }
     MWR_LOG_WARN("unused event: graphicObject %s was clicked", name.c_get());
 exit:
