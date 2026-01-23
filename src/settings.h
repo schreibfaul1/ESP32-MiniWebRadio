@@ -288,12 +288,12 @@ const Timing DSI_TIMING = {.h_res = 1024,
         #define I2S_LRC  4
         #define I2S_MCLK -1 // important, don't change!
 
-        #define IR_PIN             6  // IR Receiver (if available)
-        #define BT_EMITTER_RX      -1 // must be -1, not enough pins
-        #define BT_EMITTER_TX      -1 // must be -1, not enough pins
-        #define BT_EMITTER_LINK    -1 // must be -1, not enough pins
-        #define BT_EMITTER_MODE    -1 // must be -1, not enough pins
-        #define BT_EMITTER_CONNECT -1 // must be -1, not enough pins
+        #define IR_PIN             5  // IR Receiver (if available)
+        #define BT_EMITTER_RX      28
+        #define BT_EMITTER_TX      29
+        #define BT_EMITTER_LINK    30
+        #define BT_EMITTER_MODE    31
+        #define BT_EMITTER_CONNECT 34
 
         #define LCD_RESET   33
         #define TFT_BL      32 // same as RGB_PINS.bl

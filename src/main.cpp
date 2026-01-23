@@ -4002,6 +4002,7 @@ void graphicObjects_OnClick(ps_ptr<char> name, uint8_t val) { // val = 0 --> is 
         if (val && name.equals("btn_PL_playPrev")) { s_cur_AudioFileNr = s_SD_content.getPrevAudioFile(s_cur_AudioFileNr); goto exit; }
         if (val && name.equals("btn_PL_playNext")) { s_cur_AudioFileNr = s_SD_content.getNextAudioFile(s_cur_AudioFileNr); goto exit; }
         if (val && name.equals("pgb_PL_progress")) { goto exit; }
+        if (val && name.equals("txt_PL_fName")) { goto exit; }
     }
     if (s_state == AUDIOFILESLIST) {
         if (val && name.equals("lst_PLAYER")) { setTimeCounter(LIST_TIMER); goto exit; }
@@ -4068,6 +4069,7 @@ void graphicObjects_OnClick(ps_ptr<char> name, uint8_t val) { // val = 0 --> is 
         if (val && name.equals("btn_BT_volUp"))   { bt_emitter.upvolume();   goto exit; }
         if (val && name.equals("btn_BT_mode"))    { bt_emitter.changeMode(); goto exit; }
         if (val && name.equals("btn_BT_power"))   { goto exit; }
+        if (val && name.equals("txt_BT_mode"))    { goto exit; }
     }
     if (s_state == IR_SETTINGS) {
         if (val && name.equals("btn_IR_radio"))   { goto exit; }
