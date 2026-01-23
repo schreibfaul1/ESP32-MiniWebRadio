@@ -3941,6 +3941,7 @@ void graphicObjects_OnClick(ps_ptr<char> name, uint8_t val) { // val = 0 --> is 
 
     // all state
     if (name.equals("dispHeader"))                 { goto exit; }
+    if (name.equals("header_Item"))                { goto exit; }
     if (name.equals("timeString"))                 { goto exit; }
     if (name.equals("dispFooter"))                 { goto exit; }
     if (name.equals("footer_StaNr"))               { goto exit; }
@@ -4002,7 +4003,7 @@ void graphicObjects_OnClick(ps_ptr<char> name, uint8_t val) { // val = 0 --> is 
         if (val && name.equals("btn_PL_playPrev")) { s_cur_AudioFileNr = s_SD_content.getPrevAudioFile(s_cur_AudioFileNr); goto exit; }
         if (val && name.equals("btn_PL_playNext")) { s_cur_AudioFileNr = s_SD_content.getNextAudioFile(s_cur_AudioFileNr); goto exit; }
         if (val && name.equals("pgb_PL_progress")) { goto exit; }
-        if (val && name.equals("txt_PL_fName")) { goto exit; }
+        if (val && name.equals("txt_PL_fName"))    { goto exit; }
     }
     if (s_state == AUDIOFILESLIST) {
         if (val && name.equals("lst_PLAYER")) { setTimeCounter(LIST_TIMER); goto exit; }
@@ -4054,10 +4055,10 @@ void graphicObjects_OnClick(ps_ptr<char> name, uint8_t val) { // val = 0 --> is 
         if (val && name.equals("pic_BR_logo"))    { goto exit; }
     }
     if (s_state == EQUALIZER) {
-        if (val && name.equals("btn_EQ_LP"))       { sdr_EQ_lowPass.setValue(0);  goto exit; }
-        if (val && name.equals("btn_EQ_BP"))       { sdr_EQ_bandPass.setValue(0); goto exit; }
-        if (val && name.equals("btn_EQ_HP"))       { sdr_EQ_highPass.setValue(0); goto exit; }
-        if (val && name.equals("btn_EQ_BAL"))      { sdr_EQ_balance.setValue(0);  goto exit; }
+        if (val && name.equals("btn_EQ_LP"))      { sdr_EQ_lowPass.setValue(0);  goto exit; }
+        if (val && name.equals("btn_EQ_BP"))      { sdr_EQ_bandPass.setValue(0); goto exit; }
+        if (val && name.equals("btn_EQ_HP"))      { sdr_EQ_highPass.setValue(0); goto exit; }
+        if (val && name.equals("btn_EQ_BAL"))     { sdr_EQ_balance.setValue(0);  goto exit; }
         if (val && name.equals("btn_EQ_Radio"))   { goto exit; }
         if (val && name.equals("btn_EQ_Player"))  { goto exit; }
         if (val && name.equals("btn_EQ_mute"))    { if (!s_f_mute) s_f_muteIsPressed = true; goto exit; }

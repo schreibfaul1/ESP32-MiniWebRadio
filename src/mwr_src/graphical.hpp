@@ -2394,7 +2394,7 @@ class pictureBox : public RegisterTable {
         ps_ptr<char> pp = picturePath;
         auto         scaledPicPath = scaleImage(pp);
         if (!SD_MMC.exists(scaledPicPath.c_get())) { /* log_w("file %s not exists, objName: %s", scaledPicPath, m_name)*/
-            ;
+            MWR_LOG_ERROR("cannot open file %s", scaledPicPath.c_get());
             return false;
         }
         File file = SD_MMC.open(scaledPicPath.c_get(), "r", false);
@@ -2577,7 +2577,7 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
         uint8_t  pb = 0;
     } const s_m01; // Minute * 01   96 x 160 px
     //-------------------------------------------------------------------------------------------------------------------------------------------------------
-#else
+elif TFT_CONTROLLER == 7
     uint16_t m_digitsYoffset = 30;
     //------------------------------------------------------------------------padding-left-right-top-bottom--------------------------------------------------
     struct w_h10 {
@@ -2626,7 +2626,56 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
         uint8_t  pb = 0;
     } const s_m01; // Minute * 01  168 x 260 px
     //-------------------------------------------------------------------------------------------------------------------------------------------------------
+#elif TFT_CONTROLLER == 8
+    uint16_t m_digitsYoffset = 10;
+    //------------------------------------------------------------------------padding-left-right-top-bottom--------------------------------------------------
+    struct w_h10 {
+        uint16_t x = 6;
+        uint16_t w = 225;
+        uint16_t h = 260;
+        uint8_t  pl = 0;
+        uint8_t  pr = 0;
+        uint8_t  pt = 0;
+        uint8_t  pb = 0;
+    } const s_h10; // Hour * 10    225 x 350 px
+    struct w_h01 {
+        uint16_t x = 231;
+        uint16_t w = 225;
+        uint16_t h = 350;
+        uint8_t  pl = 0;
+        uint8_t  pr = 0;
+        uint8_t  pt = 0;
+        uint8_t  pb = 0;
+    } const s_h01; // Hour * 01    225 x 350 px
+    struct w_c {
+        uint16_t x = 456;
+        uint16_t w = 112;
+        uint16_t h = 350;
+        uint8_t  pl = 0;
+        uint8_t  pr = 0;
+        uint8_t  pt = 0;
+        uint8_t  pb = 0;
+    } const s_c; // Colon         112 x 350 px
+    struct w_m10 {
+        uint16_t x = 568;
+        uint16_t w = 225;
+        uint16_t h = 350;
+        uint8_t  pl = 0;
+        uint8_t  pr = 0;
+        uint8_t  pt = 0;
+        uint8_t  pb = 0;
+    } const s_m10; // Minute * 10  225 x 350 px
+    struct w_m01 {
+        uint16_t x = 793;
+        uint16_t w = 225;
+        uint16_t h = 350;
+        uint8_t  pl = 0;
+        uint8_t  pr = 0;
+        uint8_t  pt = 0;
+        uint8_t  pb = 0;
+    } const s_m01; // Minute * 01  225 x 350 px
 #endif
+
     uint32_t     m_bgColor = 0;
     bool         m_enabled = false;
     bool         m_clicked = false;
@@ -2734,10 +2783,10 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
 
         k = !k;
         if (k) {
-            pic_clock24_digitsColon->setPicturePath("/digits/sevenSegment/dgreen.jpg");
+            pic_clock24_digitsColon->setPicturePath("/digits/sevenSegment/cgreen.jpg");
             pic_clock24_digitsColon->show(m_backgroundTransparency, false);
         } else {
-            pic_clock24_digitsColon->setPicturePath("/digits/sevenSegment/egreen.jpg");
+            pic_clock24_digitsColon->setPicturePath("/digits/sevenSegment/cgreen_dk.jpg");
             pic_clock24_digitsColon->show(m_backgroundTransparency, false);
         }
         m_showAll = false;

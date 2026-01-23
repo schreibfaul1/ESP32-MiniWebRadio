@@ -346,10 +346,10 @@ inline constexpr DisplayConfig config = {
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 namespace layout_1024x600 {
 //
-//  Display 1024x800
+//  Display 1024x600
 //  +-------------------------------------------+ _yHeader=0
 //  | Header                                    |       winHeader=60px
-//  +-------------------------------------------+ _yName=50
+//  +-------------------------------------------+ _yName=60
 //  |                                           |
 //  | Logo                   StationName        |       winFName=240px, area1
 //  |                                           |
@@ -357,7 +357,7 @@ namespace layout_1024x600 {
 //  |                                           |
 //  |              StreamTitle                  |       winTitle=240px, area2
 //  |                                           |
-//  +-------------------------------------------+ _yFooter=430
+//  +-------------------------------------------+ _yFooter=540
 //  | Footer                                    |       winFooter=60px
 //  +-------------------------------------------+ 600
 //                                            1024
@@ -392,7 +392,7 @@ constexpr coor winFooter = coor().pos(0, v_res - h_footer).size(h_res, h_footer)
 constexpr coor winStaNr = coor().pos(0, 290).size(85, 50);
 constexpr coor winSleep = coor().pos(85, 290).size(87, 50);
 constexpr coor winButton = coor().pos(0, y_btn).size(hw_btn, hw_btn);
-constexpr coor winDigits = coor().pos(0, h_footer).size(h_res, 295);
+constexpr coor winDigits = coor().pos(0, h_footer).size(h_res, y_btn); // clock24, alarmclock
 constexpr coor winWoHF = coor().pos(0, h_footer).size(h_res, 2 * h_area);
 constexpr coor sdrHP = coor().pos(140,  h_footer + 0 * h_EQ).size(300, h_EQ).pad(0, 0, 8, 8);
 constexpr coor sdrBP = coor().pos(140,  h_footer + 1 * h_EQ).size(300, h_EQ).pad(0, 0, 8, 8);
