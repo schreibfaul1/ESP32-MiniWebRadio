@@ -3691,14 +3691,19 @@ void on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg) {
     if (msg.e == KCX_BT_Emitter::evt_connect) {
         s_bt_emitter.connect = true;
         if (s_bt_emitter.mode.equals("TX")) {
-            pic_BT_mode.setPicturePath("/common/BTgold.png");
+            if(s_state == BLUETOOTH) {
+                pic_BT_mode.setPicturePath("/common/BT_TX.png");
+                pic_BT_mode.show(true, false);
+            }
             webSrv.send("KCX_BT_MODE=", "TX");
         } else {
-            pic_BT_mode.setPicturePath("/common/BTblue.png");
+            if (s_state == BLUETOOTH) {
+                pic_BT_mode.setPicturePath("/common/BT_RX.png");
+                pic_BT_mode.show(true, false);
+            }
             webSrv.send("KCX_BT_MODE=", "RX");
         }
         webSrv.send("KCX_BT_connected=", "1");
-        if (s_state == BLUETOOTH) pic_BT_mode.show(true, false);
         SerialPrintfln("BT-Emitter:  %s ", "connected");
     }
     if (msg.e == KCX_BT_Emitter::evt_disconnect) {

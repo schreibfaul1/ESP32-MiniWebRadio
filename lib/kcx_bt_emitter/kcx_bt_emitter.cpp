@@ -218,7 +218,7 @@ void KCX_BT_Emitter::parseATcmds() {
             m_msg.e = evt_connect;
             if (m_bt_callback) { m_bt_callback(m_msg); }
         }
-    } else if (item.equals("SCAN ...")) {
+    } else if (item.equals("SCAN....")) {
         if (m_f_connected == BT_CONNECTED) {
             m_f_connected = BT_NOT_CONNECTED;
             m_msg.e = evt_disconnect;
@@ -235,6 +235,16 @@ void KCX_BT_Emitter::parseATcmds() {
     } else if (item.equals("OK+STATUS:1")) {
         if (m_f_connected == BT_NOT_CONNECTED) {
             m_f_connected = BT_CONNECTED;
+            m_msg.e = evt_connect;
+            if (m_bt_callback) { m_bt_callback(m_msg); }
+        }
+    } else if (item.equals("CON ONE")) {
+        if (m_f_connected == BT_CONNECTED) {
+             m_msg.e = evt_connect;
+            if (m_bt_callback) { m_bt_callback(m_msg); }
+        }
+    } else if (item.equals("CON LAST")) {
+        if (m_f_connected == BT_CONNECTED) {
             m_msg.e = evt_connect;
             if (m_bt_callback) { m_bt_callback(m_msg); }
         }
