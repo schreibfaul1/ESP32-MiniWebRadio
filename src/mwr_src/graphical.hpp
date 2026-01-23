@@ -5132,7 +5132,7 @@ class displayHeader : public RegisterTable {
     uint8_t      m_volume = 0;
     uint32_t     m_bgColor = TFT_BLACK;
     ps_ptr<char> m_name;
-    char*        m_item = NULL;
+    ps_ptr<char> m_item;
     char         m_time[10] = "00:00:00";
     bool         m_enabled = false;
     bool         m_clicked = false;
@@ -5326,7 +5326,6 @@ class displayHeader : public RegisterTable {
         m_timeStringObject = new timeString("timeString", m_fontSize);
     }
     ~displayHeader() {
-        x_ps_free(&m_item);
         delete txt_Item;
         delete pic_Speaker;
         delete txt_Volume;
@@ -5354,16 +5353,16 @@ class displayHeader : public RegisterTable {
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
-    void         show(bool transparency = false) {
+
+    void show(bool transparency = false) {
         m_backgroundTransparency = transparency;
+        if(m_backgroundTransparency) tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+        else                         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         m_timeStringObject->show(m_backgroundTransparency, false);
         m_enabled = true;
         m_clicked = false;
         m_old_rssi = -1;
-        if (m_item)
-            updateItem(m_item);
-        else
-            updateItem("");
+        updateItem(m_item);
         speakerOnOff(m_speakerOn);
         updateVolume(m_volume);
         updateRSSI(m_rssi);
@@ -5376,16 +5375,10 @@ class displayHeader : public RegisterTable {
     void enable() { m_enabled = true; m_timeStringObject->enable(); }
     void disable() { m_enabled = false; }
     void setBGcolor(uint32_t color) { m_bgColor = color; }
-    void updateItem(const char* hl_item) { // radio, clock, audioplayer...
+    void updateItem(ps_ptr<char> hl_item) { // radio, clock, audioplayer...
         if (!m_enabled) return;
-        if (!hl_item) {
-            MWR_LOG_WARN("hl_item is NULL");
-            return;
-        }
-        if (m_item && !strcmp(hl_item, m_item)) return; // nothing to do
-        x_ps_free(&m_item);
-        m_item = strdup(hl_item);
-        txt_Item->setText(hl_item);
+        m_item = hl_item;
+        txt_Item->setText(hl_item.c_get());
         txt_Item->show(m_backgroundTransparency, false);
     }
     void setItemColor(uint16_t itemColor) {
@@ -5779,8 +5772,11 @@ class displayFooter : public RegisterTable {
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
+
     void         show(bool transparency = false) {
         m_backgroundTransparency = transparency;
+        if(m_backgroundTransparency) tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+        else                         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         m_enabled = true;
         m_clicked = false;
         pic_Antenna->show(m_backgroundTransparency, false);

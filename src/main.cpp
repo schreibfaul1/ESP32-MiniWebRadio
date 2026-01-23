@@ -1626,7 +1626,7 @@ void fall_asleep() {
     } else {
         changeState(CLOCK, 0);
     }
-    if (s_bt_emitter.found && s_bt_emitter.power_state) bt_emitter.power_off();
+    if (s_bt_emitter.found) s_bt_emitter.power_state = false;
     SerialPrintfln("falling asleep");
     dispHeader.hide();
     dispFooter.hide();
@@ -1646,7 +1646,7 @@ void wake_up() {
     dispHeader.speakerOnOff(!s_f_mute);
     dispHeader.updateRSSI(WiFi.RSSI(), true);
     dispFooter.show(true);
-    if (s_bt_emitter.found && s_bt_emitter.power_state) bt_emitter.power_on();
+    if (s_bt_emitter.found) s_bt_emitter.power_state = true;
 }
 
 void setRTC(ps_ptr<char> TZString) {
