@@ -225,7 +225,7 @@ struct dlnaHistory_s {
     uint16_t     maxItems = 0;
 };
 struct releasedArg {
-    const char* arg1 = NULL;
+    ps_ptr<char> arg1;
     ps_ptr<char> arg2;
     ps_ptr<char> arg3;
     int16_t     val1 = 0;

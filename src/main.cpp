@@ -3539,10 +3539,10 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
                                         }
                                         return;}
 
-    CMD_EQUALS("SD_rename"){            ps_ptr<char> arg1 = arg.substr(0, arg.index_of("&")); // only the first argument is used                              // via XMLHttpRequest
+    CMD_EQUALS("SD_rename"){            ps_ptr<char> _arg = arg.substr(0, arg.index_of("&")); // only the first argument is used                              // via XMLHttpRequest
                                         SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Rename " ANSI_ESC_ORANGE "old \"%s\" new \"%s\"" ANSI_ESC_RESET "  ",
-                                        param.c_get(), arg1.c_get());
-                                        bool res = SD_rename(param.c_get(), arg1.c_get());
+                                        param.c_get(), _arg.c_get());
+                                        bool res = SD_rename(param.c_get(), _arg.c_get());
                                         if(res) webSrv.reply("refresh", webSrv.TEXT);
                                         else webSrv.sendStatus(400);
                                         return;}
@@ -4161,7 +4161,7 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
                                                    goto exit;
                                                 }
                                                 if (ra.val1 == 2) {// browse dlna object, waiting for content and create a playlist
-                                                    dlna.browseServer(ra.val2, ra.arg1, 0, 50);
+                                                    dlna.browseServer(ra.val2, ra.arg1.c_get(), 0, 50);
                                                     s_f_dlnaMakePlaylistOTF = true;
                                                     goto exit;
                                                 }
@@ -4225,7 +4225,7 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
         if (name.equals("btn_IR_radio"))    { changeState(RADIO, 0); goto exit; }
     }
     if (s_state == WIFI_SETTINGS) {
-        if (name.equals("wifiSettings"))    { setWiFiCredentials(ra.arg1, ra.arg2.c_get());
+        if (name.equals("wifiSettings"))    { setWiFiCredentials(ra.arg1.c_get(), ra.arg2.c_get());
                                               msg_box.setText("ESP restart", false, false);
                                               msg_box.show();
                                               vTaskDelay(4000);

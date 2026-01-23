@@ -1681,8 +1681,8 @@ class wifiSettings : public RegisterTable {
             ;
         }
         if (m_keyboard->getVal() == 0x0D) {                              // enter
-            m_ra.arg1 = m_credentials[m_credentials_idx].ssid.get();     // ssid
-            m_ra.arg2 = m_credentials[m_credentials_idx].password.get(); // password
+            m_ra.arg1 = m_credentials[m_credentials_idx].ssid;           // ssid
+            m_ra.arg2 = m_credentials[m_credentials_idx].password;      // password
             // log_w("enter pressed ssid %s, password %s", m_ssid[m_pwd_idx], m_password[m_pwd_idx]);
             if (graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name.c_get(), m_ra);
         }
@@ -3813,7 +3813,7 @@ class dlnaList : public RegisterTable {
         m_clicked = false;
         m_state = false;
         m_pathBuff = x_ps_malloc(50);
-        m_ra.arg1 = NULL;
+        m_ra.arg1 = "";
         m_ra.arg2 = "";
         m_ra.val1 = 0;
         m_ra.val2 = 0;
@@ -4083,9 +4083,9 @@ class dlnaList : public RegisterTable {
                 if (m_srvContent->at(m_itemListPos - 1).isAudio) {
                     sprintf(m_buff, "%s", m_srvContent->at(m_itemListPos - 1).title.c_get());
                     m_chptr = m_buff;
-                    m_ra.arg1 = m_srvContent->at(m_itemListPos - 1).itemURL.get(); // url --> connecttohost()
-                    m_ra.arg2 = m_srvContent->at(m_itemListPos - 1).title.get();   // filename --> showFileName()
-                    if (m_ra.arg1 && m_ra.arg2.strlen() > 0) m_ra.val1 = 1;
+                    m_ra.arg1 = m_srvContent->at(m_itemListPos - 1).itemURL; // url --> connecttohost()
+                    m_ra.arg2 = m_srvContent->at(m_itemListPos - 1).title;   // filename --> showFileName()
+                    if (m_ra.arg1.strlen() > 0 && m_ra.arg2.strlen() > 0) m_ra.val1 = 1;
                     m_browseOnRelease = 0;
                     goto exit;
                 }
@@ -4337,7 +4337,7 @@ class fileList : public RegisterTable {
         m_enabled = false;
         m_clicked = false;
         m_state = false;
-        m_ra.arg1 = NULL;
+        m_ra.arg1 = "";
         m_ra.arg2 = "";
         m_ra.val1 = 0;
         m_ra.val2 = 0;
@@ -4438,7 +4438,7 @@ class fileList : public RegisterTable {
             s_SD_content.listFilesInDir(m_curAudioFolder.c_get(), true, false);
             m_ra.val1 = 2;
             m_ra.val2 = m_curAudioFileNr;
-            m_ra.arg1 = m_curAudioFolder.get();
+            m_ra.arg1 = m_curAudioFolder;
         }
         if (m_browseOnRelease == 4) {
             m_viewPos += m_fileListPos; // next folder
@@ -4450,7 +4450,7 @@ class fileList : public RegisterTable {
             s_SD_content.listFilesInDir(m_curAudioFolder.c_get(), true, false);
             m_ra.val1 = 2; // isfolder
             m_ra.val2 = m_viewPos;
-            m_ra.arg1 = m_curAudioFolder.get();
+            m_ra.arg1 = m_curAudioFolder;
             m_ra.arg2 = "";
             m_ra.arg3 = "";
         }
@@ -4458,11 +4458,11 @@ class fileList : public RegisterTable {
             m_viewPos += m_fileListPos; // play file
             myList.drawLine(pos, m_curAudioName, "", "", ANSI_ESC_CYAN, -1);
             vTaskDelay(300 / portTICK_PERIOD_MS);
-            m_ra.arg1 = m_curAudioFolder.get(); // fileFolder
-            m_ra.arg2 = m_curAudioName;         // fileName
-            m_ra.arg3 = m_curAudioPath;         // filePath
-            m_ra.val1 = 3;                      // isfile
-            m_ra.val2 = m_viewPos - 1;          // fileNr (is curAudioFileNr)
+            m_ra.arg1 = m_curAudioFolder; // fileFolder
+            m_ra.arg2 = m_curAudioName;   // fileName
+            m_ra.arg3 = m_curAudioPath;   // filePath
+            m_ra.val1 = 3;                // isfile
+            m_ra.val2 = m_viewPos - 1;    // fileNr (is curAudioFileNr)
         }
     exit:
         m_browseOnRelease = 0;
@@ -4725,7 +4725,7 @@ class stationsList : public RegisterTable {
         m_clicked = false;
         m_state = false;
         m_pathBuff = x_ps_malloc(50);
-        m_ra.arg1 = NULL;
+        m_ra.arg1 = "";
         m_ra.arg2 = "";
         m_ra.val1 = 0;
         m_ra.val2 = 0;
@@ -4788,7 +4788,7 @@ class stationsList : public RegisterTable {
         if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
         x_ps_free(&m_buff);
         m_ra.val1 = 0;
-        m_ra.arg1 = NULL;
+        m_ra.arg1 = "";
         return true;
     }
 
