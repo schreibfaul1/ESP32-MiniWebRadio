@@ -2186,11 +2186,16 @@ class button2state : public RegisterTable { // on off switch
 class numbersBox : public RegisterTable { // range 000...999
   private:
     bool         m_enabled = false;
-    uint8_t      m_segmWidth = 0;
+    uint16_t     m_segmWidth = 0;
+    uint16_t     m_segmentHigh = 0;
     int16_t      m_x = 0;
     int16_t      m_y = 0;
     int16_t      m_w = 0;
     int16_t      m_h = 0;
+    int16_t      m_box_x = 0;
+    int16_t      m_box_y = 0;
+    int16_t      m_box_w = 0;
+    int16_t      m_box_h = 0;
     uint32_t     m_bgColor = 0;
     bool         m_clicked = false;
     releasedArg  m_ra;
@@ -2209,8 +2214,10 @@ class numbersBox : public RegisterTable { // range 000...999
             m_segmWidth = 64;
         } else if (TFT_CONTROLLER == 7) {
             m_segmWidth = 64;
-        } else // TFT_CONTROLLER == 8
+        } else if(TFT_CONTROLLER == 8) {
             m_segmWidth = 121;
+            m_segmentHigh = 200;
+        }
     }
     ~numbersBox() { ; }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
@@ -2218,7 +2225,7 @@ class numbersBox : public RegisterTable { // range 000...999
         m_y = y; // y pos
         m_w = w; // width
         m_h = h; // high
-
+        placingDigits(w, h);
         m_enabled = false;
     }
     ps_ptr<char> getName() { return m_name; }
@@ -2232,12 +2239,12 @@ class numbersBox : public RegisterTable { // range 000...999
         ps_ptr<char> path;
         for (uint8_t i = 0; i < 3; i++) {
             path.assignf("%s%c%s.jpg", m_root, m_numbers[i], m_color);
-            if (!drawImage(path.c_get(), m_x + i * m_segmWidth, m_y)) return false;
+            if (!drawImage(path.c_get(), m_x + m_box_x + i * m_segmWidth, m_y + m_box_y)) return false;
         }
         return true;
     }
     void hide() {
-        tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        tft.fillRect(m_x + m_box_x, m_y + m_box_y, m_box_w, m_box_h, m_bgColor);
         m_enabled = false;
     }
     void disable() { m_enabled = false; }
@@ -2263,6 +2270,13 @@ class numbersBox : public RegisterTable { // range 000...999
         m_clicked = false;
         if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
         return true;
+    }
+private:
+    void placingDigits(uint16_t w, uint16_t h){
+        m_box_w = 3 * m_segmWidth;
+        m_box_h = m_segmentHigh;
+        m_box_x = (w - m_box_w) / 2;
+        m_box_y = (h - m_box_h) / 2;
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

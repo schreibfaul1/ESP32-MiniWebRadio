@@ -2723,7 +2723,7 @@ void ir_number(uint16_t num) {
     txt_RA_staName.hide();
     nbr_RA_staBox.enable();
     nbr_RA_staBox.setNumbers(num);
-    nbr_RA_staBox.show(TFT_BLUE);
+    nbr_RA_staBox.show(TFT_ORANGE);
 }
 
 void ir_released(int8_t key) {
