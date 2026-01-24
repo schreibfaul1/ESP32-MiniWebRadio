@@ -4029,19 +4029,21 @@ void graphicObjects_OnClick(ps_ptr<char> name, uint8_t val) { // val = 0 --> is 
         }
     }
     if (s_state == CLOCK) {
-        if (val && name.equals("btn_CL_mute"))    { if (!s_f_mute) { s_f_muteIsPressed = true; } goto exit; }
-        if (val && name.equals("btn_CL_alarm"))   { goto exit; }
-        if (val && name.equals("btn_CL_radio"))   { goto exit; }
-        if (val && name.equals("clk_CL_24"))      { goto exit; }
-        if (val && name.equals("btn_CL_off"))     { goto exit; }
+        if (val && name.equals("btn_CL_mute"))         { if (!s_f_mute) { s_f_muteIsPressed = true; } goto exit; }
+        if (val && name.equals("btn_CL_alarm"))        { goto exit; }
+        if (val && name.equals("btn_CL_radio"))        { goto exit; }
+        if (val && name.equals("clk_CL_24"))           { goto exit; }
+        if (val && name.equals("btn_CL_off"))          { goto exit; }
     }
     if (s_state == ALARMCLOCK) {
-        if (val && name.equals("clk_AC_red"))     { goto exit; }
-        if (val && name.equals("btn_AC_left"))    { goto exit; }
-        if (val && name.equals("btn_AC_right"))   { goto exit; }
-        if (val && name.equals("btn_AC_up"))      { goto exit; }
-        if (val && name.equals("btn_AC_down"))    { goto exit; }
-        if (val && name.equals("btn_AC_ready"))   { goto exit; }
+        if (val && name.equals("clk_AC_red"))          { goto exit; }
+        if (val && name.equals("btn_AC_left"))         { goto exit; }
+        if (val && name.equals("btn_AC_right"))        { goto exit; }
+        if (val && name.equals("btn_AC_up"))           { goto exit; }
+        if (val && name.equals("btn_AC_down"))         { goto exit; }
+        if (val && name.equals("btn_AC_ready"))        { goto exit; }
+        if (val && name.starts_with("txt_alarm_days")) { goto exit; }
+        if (val && name.starts_with("txt_alarm_time")) { goto exit; }
     }
     if (s_state == SLEEPTIMER) {
         if (val && name.equals("btn_SL_up"))      { goto exit; }

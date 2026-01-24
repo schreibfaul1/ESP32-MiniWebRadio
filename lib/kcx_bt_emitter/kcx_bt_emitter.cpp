@@ -208,7 +208,7 @@ void KCX_BT_Emitter::parseATcmds() {
     } else if (item.starts_with("MacAdd")) {
         bool found = false;
         for (auto sc : m_bt_scannedItems) {
-            KCX_LOG_ERROR("item %s", item.c_get());
+            // KCX_LOG_ERROR("item %s", item.c_get());
             if (item.equals(sc)) { found = true; }
         }
         if (!found) { m_bt_scannedItems.push_back(item); }
