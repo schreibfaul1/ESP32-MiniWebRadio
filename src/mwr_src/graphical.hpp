@@ -2230,8 +2230,7 @@ class numbersBox : public RegisterTable { // range 000...999
     }
     ps_ptr<char> getName() { return m_name; }
     bool         show(uint16_t color) {
-        if (!m_enabled) return false;
-        else if(color == TFT_BLUE) m_color = "blue";
+        if     (color == TFT_BLUE) m_color = "blue";
         else if(color == TFT_ORANGE) m_color = "orange";
         else if(color == TFT_GREEN) m_color = "green";
         else if(color == TFT_RED) m_color = "red";
@@ -2241,6 +2240,7 @@ class numbersBox : public RegisterTable { // range 000...999
             path.assignf("%s%c%s.jpg", m_root, m_numbers[i], m_color);
             if (!drawImage(path.c_get(), m_x + m_box_x + i * m_segmWidth, m_y + m_box_y)) return false;
         }
+        m_enabled = true;
         return true;
     }
     void hide() {
@@ -2280,6 +2280,116 @@ private:
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class offTimerBox : public RegisterTable { // range 000...999
+  private:
+    bool         m_enabled = false;
+    uint16_t     m_digitsWidth = 0;
+    uint16_t     m_colonWidth = 0;
+    uint16_t     m_digitsHigh = 0;
+    uint16_t     m_digitsXpos[4] = {0};
+    int16_t      m_x = 0;
+    int16_t      m_y = 0;
+    int16_t      m_w = 0;
+    int16_t      m_h = 0;
+    int16_t      m_box_x = 0;
+    int16_t      m_box_y = 0;
+    int16_t      m_box_w = 0;
+    int16_t      m_box_h = 0;
+    uint32_t     m_bgColor = 0;
+    const char*  m_color = "green";
+    uint16_t     m_offColor = TFT_RED;
+    uint16_t     m_onColor = TFT_GREEN;
+    bool         m_clicked = false;
+    releasedArg  m_ra;
+    ps_ptr<char> m_name;
+    ps_ptr<char> m_path;
+    char         m_numbers[10] = "000";
+
+  public:
+    offTimerBox(const char* name) {
+        register_object(this);
+        m_name = name;
+        if (TFT_CONTROLLER < 2) {
+            m_digitsWidth = 48;
+        } else if (TFT_CONTROLLER < 7) {
+            m_digitsWidth = 64;
+        } else if (TFT_CONTROLLER == 7) {
+            m_digitsWidth = 64;
+        } else if(TFT_CONTROLLER == 8) {
+            m_digitsWidth = 121;
+            m_colonWidth= 42;
+            m_digitsHigh = 200;
+        }
+    }
+    ~offTimerBox() { ; }
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
+        m_x = x; // x pos
+        m_y = y; // y pos
+        m_w = w; // width
+        m_h = h; // high
+        placingDigits(m_w, m_h);
+        m_enabled = false;
+    }
+    ps_ptr<char> getName() { return m_name; }
+
+    bool show(uint16_t time) {
+        if(!time) m_color = "red";
+        else      m_color = "green";
+        ps_ptr<char> numbers;
+        numbers.assignf("%dc%02d", time / 60, time % 60);
+        m_path.assignf("/digits/s/x%s.jpg", m_color);
+
+        m_path[10] = numbers[0];
+        drawImage(m_path.c_get(), m_x + m_digitsXpos[0], m_y + m_box_y);
+        m_path[10] = numbers[1];
+        drawImage(m_path.c_get(), m_x + m_digitsXpos[1], m_y + m_box_y);
+        m_path[10] = numbers[2];
+        drawImage(m_path.c_get(), m_x + m_digitsXpos[2], m_y + m_box_y);
+        m_path[10] = numbers[3];
+        drawImage(m_path.c_get(), m_x + m_digitsXpos[3], m_y + m_box_y);
+        m_enabled = true;
+        return true;
+    }
+    void hide() {
+        tft.fillRect(m_x + m_box_x, m_y + m_box_y, m_box_w, m_box_h, m_bgColor);
+        m_enabled = false;
+    }
+    void disable() { m_enabled = false; }
+    void enable() { m_enabled = true; }
+    bool isEnabled() { return m_enabled; }
+    // void setTime(uint16_t time) {
+    //     snprintf(m_numbers, sizeof(m_numbers), "%03u", time);
+    // }
+    bool positionXY(uint16_t x, uint16_t y) {
+        if (x < m_x) return false;
+        if (y < m_y) return false;
+        if (x > m_x + m_w) return false;
+        if (y > m_y + m_h) return false;
+        if (m_enabled) m_clicked = true;
+        if (graphicObjects_OnClick) graphicObjects_OnClick(m_name, m_enabled);
+        //    if(!m_enabled) return false;
+        return true;
+    }
+    bool released() {
+        if (!m_enabled) return false;
+        if (!m_clicked) return false;
+        m_clicked = false;
+        if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
+        return true;
+    }
+private:
+    void placingDigits(uint16_t w, uint16_t h){
+        m_box_w = 3 * m_digitsWidth + m_colonWidth;
+        m_box_h = m_digitsHigh;
+        m_box_x = (w - m_box_w) / 2;
+        m_box_y = (h - m_box_h) / 2;
+        m_digitsXpos[0] = m_box_x;
+        m_digitsXpos[1] = m_digitsXpos[0] + m_digitsWidth;
+        m_digitsXpos[2] = m_digitsXpos[1] + m_colonWidth;
+        m_digitsXpos[3] = m_digitsXpos[2] + m_digitsWidth;
+    }
+};
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class pictureBox : public RegisterTable {
   private:
     int16_t      m_x = 0;
@@ -2289,9 +2399,9 @@ class pictureBox : public RegisterTable {
     uint16_t     m_image_w = 0;
     uint16_t     m_image_h = 0;
     uint8_t      m_padding_left = 0;  // left margin
-    uint8_t      m_paddig_right = 0;  // right margin
-    uint8_t      m_paddig_top = 0;    // top margin
-    uint8_t      m_paddig_bottom = 0; // bottom margin
+    uint8_t      m_padding_right = 0;  // right margin
+    uint8_t      m_padding_top = 0;    // top margin
+    uint8_t      m_padding_bottom = 0; // bottom margin
     uint32_t     m_bgColor = 0;
     char*        m_PicturePath = NULL;
     char*        m_altPicturePath = NULL;
@@ -2313,15 +2423,15 @@ class pictureBox : public RegisterTable {
         x_ps_free(&m_PicturePath);
         x_ps_free(&m_altPicturePath);
     }
-    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom) {
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t padding_left, uint8_t padding_right, uint8_t padding_top, uint8_t padding_bottom) {
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w; // width
         m_h = h; // high
-        m_padding_left = paddig_left;
-        m_paddig_right = paddig_right;
-        m_paddig_top = paddig_top;
-        m_paddig_bottom = paddig_bottom;
+        m_padding_left = padding_left;
+        m_padding_right = padding_right;
+        m_padding_top = padding_top;
+        m_padding_bottom = padding_bottom;
         m_enabled = false;
     }
     ps_ptr<char> getName() { return m_name; }
@@ -2332,9 +2442,9 @@ class pictureBox : public RegisterTable {
         m_backgroundTransparency = backgroundTransparency;
         m_saveBackground = saveBackground;
         int x = m_x + m_padding_left;
-        int y = m_y + m_paddig_top;
-        int w = m_w - (m_paddig_right + m_padding_left);
-        int h = m_h - (m_paddig_bottom + m_paddig_top);
+        int y = m_y + m_padding_top;
+        int w = m_w - (m_padding_right + m_padding_left);
+        int h = m_h - (m_padding_bottom + m_padding_top);
         if (!GetImageSize(m_PicturePath)) {
             GetImageSize(m_altPicturePath);
 

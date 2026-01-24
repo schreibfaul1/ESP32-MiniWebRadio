@@ -610,25 +610,7 @@ void display_sleeptime(int8_t ud) { // set sleeptimer
             default: s_sleeptime = 0; break; // min
         }
     }
-    ps_ptr<char> tmp, path;
-    tmp.assignf("%d%02d", s_sleeptime / 60, s_sleeptime % 60);
-
-    for (uint8_t i = 0; i < 4; i++) {
-        path = "/digits_small/";
-        if (i == 3) {
-            if (!s_sleeptime)
-                path.append("dsgn.jpg");
-            else
-                path.append("dsrt.jpg");
-        } else {
-            path.append(tmp.get() + i, 1);
-            if (!s_sleeptime)
-                path.append("sgn.jpg");
-            else
-                path.append("srt.jpg");
-        }
-        drawImage(path.c_get(), displayConfig.sleeptimeXPos[i], displayConfig.sleeptimeYPos);
-    }
+    otb_SL_stime.show(s_sleeptime);
 }
 
 boolean drawImage(const char* path, uint16_t posX, uint16_t posY, uint16_t maxWidth, uint16_t maxHeigth) {
@@ -1903,13 +1885,9 @@ void changeState(int8_t state, int8_t subState) {
             dispHeader.enable(); dispFooter.enable();
             if (newState) {
                 clearWithOutHeaderFooter();
-                display_sleeptime();
-                if (TFT_CONTROLLER < 2)
-                    drawImage("/common/Night_Gown.bmp", 198, 23);
-                else if (TFT_CONTROLLER < 7)
-                    drawImage("/common/Night_Gown.bmp", 280, 45);
-                else
-                    drawImage("/common/Night_Gown.jpg", 482, 112);
+                otb_SL_stime.show(s_sleeptime);
+                pic_SL_logo.setPicturePath("/common/Night_Gown.jpg");
+                pic_SL_logo.show(false, false);
             }
             btn_SL_up.show(); btn_SL_up.show(); btn_SL_down.show(); btn_SL_ready.show(); btn_SL_cancel.show();
             break;

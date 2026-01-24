@@ -525,6 +525,8 @@ slider       sdr_BR_value("sdr_BR_value");
 textbox      txt_BR_value("txt_BR_value");
 // SLEEPTIMER
 button1state btn_SL_up("btn_SL_up"), btn_SL_down("btn_SL_down"), btn_SL_ready("btn_SL_ready"), btn_SL_cancel("btn_SL_cancel");
+offTimerBox  otb_SL_stime("otb_SL_stime");
+pictureBox   pic_SL_logo("pic_SL_logo");
 // EQUALIZER
 slider       sdr_EQ_lowPass("sdr_EQ_LP"), sdr_EQ_bandPass("sdr_EQ_BP"), sdr_EQ_highPass("sdr_EQ_HP"), sdr_EQ_balance("sdr_EQ_BAL");
 textbox      txt_EQ_lowPass("txt_EQ_LP"), txt_EQ_bandPass("txt_EQ_BP"), txt_EQ_highPass("txt_EQ_HP"), txt_EQ_balance("txt_EQ_BAL");
@@ -791,6 +793,8 @@ void placingGraphicObjects() { // and initialize them
     btn_SL_cancel.setDefaultPicturePath("/btn/Button_Cancel_Blue.png");
     btn_SL_cancel.setClickedPicturePath("/btn/Button_Cancel_Yellow.png");
     btn_SL_cancel.setAlternativePicturePath("/btn/Button_Cancel_Magenta.png");
+    otb_SL_stime.begin(0,                     layout.winFooter.h, layout.winFooter.w / 2, layout.winButton.y - layout.winHeader.h);
+    pic_SL_logo.begin(layout.winFooter.w / 2, layout.winFooter.h, layout.winFooter.w / 2, layout.winButton.y - layout.winHeader.h, 0, 0, 10, 0);
     // SETTINGS ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     btn_SE_bright.begin(0 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_SE_bright.setDefaultPicturePath("/btn/Button_Brightness_Green.png");
