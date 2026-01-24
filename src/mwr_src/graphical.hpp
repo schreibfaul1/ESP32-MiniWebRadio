@@ -2196,7 +2196,7 @@ class numbersBox : public RegisterTable { // range 000...999
     releasedArg  m_ra;
     ps_ptr<char> m_name;
     const char*  m_color = "sbl";
-    char         m_root[20] = "/digits_small/";
+    char         m_root[20] = "/digits/s/";
     char         m_numbers[4] = "000";
 
   public:
@@ -2213,24 +2213,26 @@ class numbersBox : public RegisterTable { // range 000...999
             m_segmWidth = 121;
     }
     ~numbersBox() { ; }
-    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const char* color) {
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w; // width
         m_h = h; // high
-        if (!strcmp(color, "orange")) m_color = "sor";
-        if (!strcmp(color, "blue")) m_color = "sbl";
-        if (!strcmp(color, "red")) m_color = "srt";
+
         m_enabled = false;
     }
     ps_ptr<char> getName() { return m_name; }
-    bool         show() {
+    bool         show(uint16_t color) {
         if (!m_enabled) return false;
-        char path[50];
+        else if(color == TFT_BLUE) m_color = "blue";
+        else if(color == TFT_ORANGE) m_color = "orange";
+        else if(color == TFT_GREEN) m_color = "green";
+        else if(color == TFT_RED) m_color = "red";
+        else m_color = "orange";
+        ps_ptr<char> path;
         for (uint8_t i = 0; i < 3; i++) {
-            sprintf(path, "%s%c%s.jpg", m_root, m_numbers[i], m_color);
-            if (!drawImage(path, m_x + i * m_segmWidth, m_y)) return false;
-            ;
+            path.assignf("%s%c%s.jpg", m_root, m_numbers[i], m_color);
+            if (!drawImage(path.c_get(), m_x + i * m_segmWidth, m_y)) return false;
         }
         return true;
     }

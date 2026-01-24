@@ -456,40 +456,9 @@ void timer100ms() {
  *                                                               D I S P L A Y                                                                       *
  *****************************************************************************************************************************************************/
 
-inline void bgColorHeader() {
-    tft.fillRect(layout.winHeader.x, layout.winHeader.y, layout.winHeader.w, layout.winHeader.h, TFT_BLACK);
-}
-inline void bgColorLogo() {
-    tft.fillRect(layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h, TFT_BLACK);
-}
-inline void bgColorStationName() {
-    tft.fillRect(layout.winName.x, layout.winName.y, layout.winName.w, layout.winName.h, TFT_BLACK);
-}
-inline void bgColorLogoAndStationname() {
-    tft.fillRect(layout.winFName.x, layout.winFName.y, layout.winFName.w, layout.winFName.h, TFT_BLACK);
-}
-inline void bgColorTitle() {
-    tft.fillRect(layout.winTitle.x, layout.winTitle.y, layout.winTitle.w, layout.winTitle.h, TFT_BLACK);
-} // incl. VUmeter
-inline void bgColorStreamTitle() {
-    tft.fillRect(layout.winSTitle.x, layout.winSTitle.y, layout.winSTitle.w, layout.winSTitle.h, TFT_BLACK);
-} // without VUmeter
 inline void bgColorWithOutHeaderFooter() {
     tft.fillRect(layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, TFT_BLACK);
 }
-inline void bgColorFooter() {
-    tft.fillRect(layout.winFooter.x, layout.winFooter.y, layout.winFooter.w, layout.winFooter.h, TFT_BLACK);
-}
-inline void bgColorDigits() {
-    tft.fillRect(layout.winDigits.x, layout.winDigits.y, layout.winDigits.w, layout.winDigits.h, TFT_BLACK);
-}
-inline void bgColorButtonBar() {
-    tft.fillRect(0, layout.winButton.y, displayConfig.dispWidth, layout.winButton.h, TFT_BLACK);
-}
-inline void bgColorAll() {
-    tft.fillScreen(TFT_BLACK);
-} // y   0...239
-
 inline void clearHeader() {
     tft.copyFramebuffer(1, 0, layout.winHeader.x, layout.winHeader.y, layout.winHeader.w, layout.winHeader.h);
 }
@@ -499,26 +468,11 @@ inline void clearLogo() {
 inline void clearStationName() {
     tft.copyFramebuffer(1, 0, layout.winName.x, layout.winName.y, layout.winName.w, layout.winName.h);
 }
-inline void clearLogoAndStationname() {
-    tft.copyFramebuffer(1, 0, layout.winFName.x, layout.winFName.y, layout.winFName.w, layout.winFName.h);
-}
-inline void clearTitle() {
-    tft.copyFramebuffer(1, 0, layout.winTitle.x, layout.winTitle.y, layout.winTitle.w, layout.winTitle.h);
-} // incl. VUmeter
 inline void clearStreamTitle() {
     tft.copyFramebuffer(1, 0, layout.winSTitle.x, layout.winSTitle.y, layout.winSTitle.w, layout.winSTitle.h);
 } // without VUmeter
 inline void clearWithOutHeaderFooter() {
     tft.copyFramebuffer(1, 0, layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h);
-}
-inline void clearFooter() {
-    tft.copyFramebuffer(1, 0, layout.winFooter.x, layout.winFooter.y, layout.winFooter.w, layout.winFooter.h);
-}
-inline void clearDigits() {
-    tft.copyFramebuffer(1, 0, layout.winDigits.x, layout.winDigits.y, layout.winDigits.w, layout.winDigits.h);
-}
-inline void clearButtonBar() {
-    tft.copyFramebuffer(1, 0, 0, layout.winButton.y, displayConfig.dispWidth, layout.winButton.h);
 }
 inline void clearAll() {
     tft.copyFramebuffer(1, 0, 0, 0, displayConfig.dispWidth, displayConfig.dispHeight);
@@ -2759,7 +2713,7 @@ void ir_res(uint32_t res) {
     if (s_state != RADIO) return;
     if (s_f_sleeping == true) return;
     SerialPrintfln("ir_result:   " ANSI_ESC_YELLOW "Stationnumber " ANSI_ESC_BLUE "%lu" ANSI_ESC_RESET "  ", (long unsigned)res);
-    nbr_RA_irBox.hide();
+    nbr_RA_staBox.hide();
     setStationByNumber(res);
     return;
 }
@@ -2767,9 +2721,9 @@ void ir_number(uint16_t num) {
     if (s_state != RADIO) return;
     if (s_f_sleeping) return;
     txt_RA_staName.hide();
-    nbr_RA_irBox.enable();
-    nbr_RA_irBox.setNumbers(num);
-    nbr_RA_irBox.show();
+    nbr_RA_staBox.enable();
+    nbr_RA_staBox.setNumbers(num);
+    nbr_RA_staBox.show(TFT_BLUE);
 }
 
 void ir_released(int8_t key) {
@@ -2938,7 +2892,7 @@ void ir_short_key(int8_t key) {
                 volBox.enable();
                 downvolume();
                 volBox.setNumbers(s_volume.cur_volume);
-                volBox.show();
+                volBox.show(TFT_BLUE);
                 setTimeCounter(2);
                 break;
             } // VOLUME--
@@ -2952,7 +2906,7 @@ void ir_short_key(int8_t key) {
                 volBox.enable();
                 downvolume();
                 volBox.setNumbers(s_volume.cur_volume);
-                volBox.show();
+                volBox.show(TFT_BLUE);
                 setTimeCounter(2);
                 break;
             } // VOLUME--
@@ -2966,7 +2920,7 @@ void ir_short_key(int8_t key) {
                 volBox.enable();
                 downvolume(); // VOLUME--
                 volBox.setNumbers(s_volume.cur_volume);
-                volBox.show();
+                volBox.show(TFT_BLUE);
                 setTimeCounter(2);
                 break;
             }
@@ -2992,7 +2946,7 @@ void ir_short_key(int8_t key) {
                 volBox.enable();
                 upvolume();
                 volBox.setNumbers(s_volume.cur_volume);
-                volBox.show();
+                volBox.show(TFT_BLUE);
                 setTimeCounter(2);
                 break;
             } // VOLUME++
@@ -3006,7 +2960,7 @@ void ir_short_key(int8_t key) {
                 volBox.enable();
                 upvolume();
                 volBox.setNumbers(s_volume.cur_volume);
-                volBox.show();
+                volBox.show(TFT_BLUE);
                 setTimeCounter(2);
                 break;
             } // VOLUME++
@@ -3020,7 +2974,7 @@ void ir_short_key(int8_t key) {
                 volBox.enable();
                 upvolume(); // VOLUME++
                 volBox.setNumbers(s_volume.cur_volume);
-                volBox.show();
+                volBox.show(TFT_BLUE);
                 break;
             }
             if(s_state == DLNAITEMSLIST) { lst_DLNA.prevItem(); setTimeCounter(LIST_TIMER); return; } // item++
@@ -3257,7 +3211,7 @@ void ir_short_key(int8_t key) {
                 volBox.enable();
                 upvolume();
                 volBox.setNumbers(s_volume.cur_volume);
-                volBox.show();
+                volBox.show(TFT_BLUE);
                 setTimeCounter(2);
                 break;
             }
@@ -3266,7 +3220,7 @@ void ir_short_key(int8_t key) {
                 volBox.enable();
                 upvolume();
                 volBox.setNumbers(s_volume.cur_volume);
-                volBox.show();
+                volBox.show(TFT_BLUE);
                 setTimeCounter(2);
                 break;
             } // VOLUME++
@@ -3275,7 +3229,7 @@ void ir_short_key(int8_t key) {
                 volBox.enable();
                 upvolume();
                 volBox.setNumbers(s_volume.cur_volume);
-                volBox.show();
+                volBox.show(TFT_BLUE);
                 setTimeCounter(2);
                 break;
             } // VOLUME++
@@ -3297,7 +3251,7 @@ void ir_short_key(int8_t key) {
                 volBox.enable();
                 downvolume();
                 volBox.setNumbers(s_volume.cur_volume);
-                volBox.show();
+                volBox.show(TFT_BLUE);
                 setTimeCounter(2);
                 break;
             } // VOLUME--
@@ -3306,7 +3260,7 @@ void ir_short_key(int8_t key) {
                 volBox.enable();
                 downvolume();
                 volBox.setNumbers(s_volume.cur_volume);
-                volBox.show();
+                volBox.show(TFT_BLUE);
                 setTimeCounter(2);
                 break;
             } // VOLUME--
@@ -3315,7 +3269,7 @@ void ir_short_key(int8_t key) {
                 volBox.enable();
                 downvolume();
                 volBox.setNumbers(s_volume.cur_volume);
-                volBox.show();
+                volBox.show(TFT_BLUE);
                 setTimeCounter(2);
                 break;
             } // VOLUME--

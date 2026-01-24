@@ -36,9 +36,7 @@ struct Layout {
     const coor& winHeader;
     const coor& winLogo;
     const coor& winName;
-    const coor& winFName;
     const coor& winFileNr;
-    const coor& winVolBox;
     const coor& winProgbar;
     const coor& winTitle;
     const coor& winSTitle;
@@ -118,9 +116,7 @@ constexpr uint16_t h_EQ = (2 * h_area - hw_btn) / 4;
 constexpr coor winHeader = coor().pos(0, 0).size(h_res, h_footer);
 constexpr coor winLogo = coor().pos(0, h_footer).size(h_area, h_area).pad(1, 1, 1, 1);
 constexpr coor winName = coor().pos(h_area, h_footer).size(h_res - h_area, h_area).pad(1, 1, 0, 0); // StationName
-constexpr coor winFName = coor().pos(0, h_footer).size(h_res, h_area).pad(1, 1, 0, 0);              // FileName
 constexpr coor winFileNr = coor().pos(0, y_area2).size(h_area, h_footer).pad(0, 1, 0, 1);
-constexpr coor winVolBox = coor().pos(138, 34).size(144, 72);
 constexpr coor winProgbar = coor().pos(0, y_progbar).size(h_res, h_progBar).pad(5, 5, 0, 0); // or volume slider
 constexpr coor winTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(0, 5, 0, 3);
 constexpr coor winSTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(0, 4, 0, 3);
@@ -176,7 +172,7 @@ namespace layout_480x320 {
 //  | Header                                    |       winHeader=30px
 //  +-------------------------------------------+ _yName=30
 //  |                                           |
-//  | Logo                   StationName        |       winFName=130px
+//  | Logo                   StationName        |       winName=130px
 //  |                                           |
 //  +-------------------------------------------+ _yTitle=160
 //  |                                           |
@@ -205,9 +201,7 @@ constexpr uint16_t h_EQ = (2 * h_area - hw_btn) / 4;
 constexpr coor winHeader = coor().pos(0, 0).size(h_res, h_footer);
 constexpr coor winLogo = coor().pos(0, h_footer).size(h_area, h_area).pad(1, 1, 1, 1);
 constexpr coor winName = coor().pos(h_area, h_footer).size(h_res - h_area, h_area).pad(1, 1, 0, 0); // StationName
-constexpr coor winFName = coor().pos(0, h_footer).size(h_res, h_area).pad(1, 1, 0, 0);              // FileName
 constexpr coor winFileNr = coor().pos(0, y_area2).size(h_area, h_footer).pad(0, 1, 0, 1);
-constexpr coor winVolBox = coor().pos(200, 48).size(256, 96);
 constexpr coor winProgbar = coor().pos(0, y_progbar).size(h_res, h_progBar).pad(5, 5, 0, 0); // or volume slider
 constexpr coor winTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(0, 5, 0, 3);
 constexpr coor winSTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(0, 4, 0, 3);
@@ -263,7 +257,7 @@ namespace layout_800x480 {
 //  | Header                                    |       winHeader=50px
 //  +-------------------------------------------+ _yName=50
 //  |                                           |
-//  | Logo                   StationName        |       winFName=190px
+//  | Logo                   StationName        |       winName=190px
 //  |                                           |
 //  +-------------------------------------------+ _yTitle=240
 //  |                                           |
@@ -294,9 +288,7 @@ constexpr uint16_t h_EQ = (2 * h_area - hw_btn) / 4;
 constexpr coor winHeader = coor().pos(0, 0).size(h_res, h_footer);
 constexpr coor winLogo = coor().pos(0, h_footer).size(h_area, h_area).pad(4, 4, 4, 4);
 constexpr coor winName = coor().pos(h_area, h_footer).size(h_res - h_area, h_area).pad(15, 5, 0, 0); // StationName
-constexpr coor winFName = coor().pos(0, h_footer).size(h_res, h_area).pad(5, 5, 0, 0);              // FileName
 constexpr coor winFileNr = coor().pos(0, y_area2).size(h_area, h_footer).pad(0, 4, 0, 0);
-constexpr coor winVolBox = coor().pos(200, 48).size(285, 144);
 constexpr coor winProgbar = coor().pos(0, y_progbar).size(h_res, h_progBar).pad(5, 5, 0, 0); // or volume slider
 constexpr coor winTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(0, 5, 0, 3);
 constexpr coor winSTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(10, 5, 2, 2);
@@ -351,7 +343,7 @@ namespace layout_1024x600 {
 //  | Header                                    |       winHeader=60px
 //  +-------------------------------------------+ _yName=60
 //  |                                           |
-//  | Logo                   StationName        |       winFName=240px, area1
+//  | Logo                   StationName        |       winName=240px, area1
 //  |                                           |
 //  +-------------------------------------------+ _yTitle=300
 //  |                                           |
@@ -381,9 +373,7 @@ constexpr uint16_t h_EQ = (2 * h_area - hw_btn) / 4;
 constexpr coor winHeader = coor().pos(0, 0).size(h_res, h_footer);
 constexpr coor winLogo = coor().pos(0, h_footer).size(h_area, h_area).pad(4, 4, 4, 4);
 constexpr coor winName = coor().pos(h_area, h_footer).size(h_res - h_area, h_area).pad(15, 5, 0, 0); // StationName
-constexpr coor winFName = coor().pos(0, h_footer).size(h_res, h_area).pad(5, 5, 0, 0);              // FileName
 constexpr coor winFileNr = coor().pos(0, y_area2).size(h_area, h_footer).pad(0, 4, 0, 0);
-constexpr coor winVolBox = coor().pos(200, 48).size(285, 144);
 constexpr coor winProgbar = coor().pos(0, y_progbar).size(h_res, h_progBar).pad(5, 5, 0, 0); // or volume slider
 constexpr coor winTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(0, 5, 0, 3);
 constexpr coor winSTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(10, 5, 2, 2);
@@ -445,7 +435,7 @@ inline Layout makeLayout() {
 #else
     #error "Unsupported TFT_CONTROLLER"
 #endif
-    return {winHeader, winLogo, winName, winFName, winFileNr, winVolBox, winProgbar, winTitle, winSTitle, winVUmeter, winFooter, winButton, winDigits,
+    return {winHeader, winLogo, winName, winFileNr, winProgbar, winTitle, winSTitle, winVUmeter, winFooter, winButton, winDigits,
             winWoHF,   sdrHP,   sdrBP,   sdrLP,    sdrBAL,    btnHP,     btnBP,      btnLP,    btnBAL,    txtHP,      txtBP,     txtLP,     txtBAL};
 }
 
@@ -488,7 +478,7 @@ pictureBox   pic_RA_logo("pic_RA_logo");
 textbox      txt_RA_sTitle("txt_RA_sTitle"), txt_RA_staName("txt_RA_staName"), txt_RA_irNum("txt_RA_irNum");
 vuMeter      VUmeter_RA("VUmeter_RA");
 slider       sdr_RA_volume("sdr_RA_volume");
-numbersBox   nbr_RA_irBox("nbr_RA_irBox");
+numbersBox   nbr_RA_staBox("nbr_RA_staBox");
 // STATIONSLIST
 stationsList lst_RADIO("lst_RADIO");
 // PLAYER
@@ -561,7 +551,7 @@ void placingGraphicObjects() { // and initialize them
     dispHeader.begin(layout.winHeader.x, layout.winHeader.y, layout.winHeader.w, layout.winHeader.h);
     dispHeader.setTimeColor(TFT_LIGHTGREEN);
     dispFooter.begin(layout.winFooter.x, layout.winFooter.y, layout.winFooter.w, layout.winFooter.h);
-    volBox.begin(layout.winVolBox.x, layout.winVolBox.y, layout.winVolBox.w, layout.winVolBox.h, "blue");
+    volBox.begin(layout.winName.x, layout.winName.y, layout.winName.w, layout.winName.h);
     myList.begin(layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, displayConfig.fonts[0]);
     // RADIO -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     sdr_RA_volume.begin(layout.winProgbar.x, layout.winProgbar.y, layout.winProgbar.w, layout.winProgbar.h, layout.winProgbar.pl, layout.winProgbar.pr, layout.winProgbar.pt, layout.winProgbar.pb);
@@ -621,7 +611,7 @@ void placingGraphicObjects() { // and initialize them
     txt_RA_irNum.setFont(displayConfig.bigNumbersFontSize);
     pic_RA_logo.begin(layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h, layout.winLogo.pl, layout.winLogo.pr, layout.winLogo.pt, layout.winLogo.pb);
     VUmeter_RA.begin(layout.winVUmeter.x, layout.winVUmeter.y, layout.winVUmeter.w, layout.winVUmeter.h, layout.winVUmeter.pl, layout.winVUmeter.pr, layout.winVUmeter.pt, layout.winVUmeter.pb);
-    nbr_RA_irBox.begin(layout.winVolBox.x, layout.winVolBox.y, layout.winVolBox.w, layout.winVolBox.h, "orange");
+    nbr_RA_staBox.begin(layout.winName.x, layout.winName.y, layout.winName.w, layout.winName.h);
     // STATIONSLIST ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     lst_RADIO.begin(layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, displayConfig.tftSize, displayConfig.listFontSize);
     // PLAYER-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -644,8 +634,7 @@ void placingGraphicObjects() { // and initialize them
     btn_PL_cancel.setDefaultPicturePath("/btn/Button_Cancel_Red.png");
     btn_PL_cancel.setClickedPicturePath("/btn/Button_Cancel_Yellow.png");
     btn_PL_cancel.setAlternativePicturePath("/btn/Button_Cancel_Magenta.png");
-    sdr_PL_volume.begin(5 * layout.winButton.w + 10, layout.winButton.y, displayConfig.dispWidth - (5 * layout.winButton.w + 20), layout.winButton.h, layout.winButton.pl, layout.winButton.pr,
-                        layout.winButton.pt, layout.winButton.pb);
+    sdr_PL_volume.begin(5 * layout.winButton.w + 10, layout.winButton.y, displayConfig.dispWidth - (5 * layout.winButton.w + 20), layout.winButton.h, layout.winButton.pl, layout.winButton.pr, layout.winButton.pt, layout.winButton.pb);
     btn_PL_prevFile.begin(0 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_PL_prevFile.setDefaultPicturePath("/btn/Button_Left_Blue.png");
     btn_PL_prevFile.setClickedPicturePath("/btn/Button_Left_Yellow.png");
