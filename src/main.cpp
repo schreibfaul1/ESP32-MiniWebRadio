@@ -1833,8 +1833,7 @@ void changeState(int8_t state, int8_t subState) {
             break;
         }
         case DLNA: {
-            stopSong();
-            if (newState) audio.stopSong();
+            if (newState && s_state != DLNAITEMSLIST) audio.stopSong();
             clearWithOutHeaderFooter();
             pic_DL_logo.enable();
             dispHeader.enable();
@@ -4113,17 +4112,23 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
         if (name.equals("pgb_DL_progress")) { audio.setTimeOffset(ra.val2); goto exit; }
     }
     if (s_state == DLNAITEMSLIST) {
-        if (name.equals("lst_DLNA"))        { if (ra.val1 == 1) { // play a file
-                                                   txt_DL_fName.setTextColor(TFT_CYAN);
-                                                   txt_DL_fName.setText(ra.arg2.c_get());
-                                                   connecttohost(ra.arg1);
-                                                   changeState(DLNA, 0);
-                                                   goto exit;
+        if (name.equals("lst_DLNA"))        {   if (ra.val1 == 0) { // wipe up/down
+                                                    goto exit;
+                                                }
+                                                if (ra.val1 == 1) { // play a file
+                                                    txt_DL_fName.setTextColor(TFT_CYAN);
+                                                    txt_DL_fName.setText(ra.arg2.c_get());
+                                                    connecttohost(ra.arg1);
+                                                    changeState(DLNA, 0);
+                                                    goto exit;
                                                 }
                                                 if (ra.val1 == 2) {// browse dlna object, waiting for content and create a playlist
                                                     dlna.browseServer(ra.val2, ra.arg1.c_get(), 0, 50);
                                                     s_f_dlnaMakePlaylistOTF = true;
                                                     goto exit;
+                                                }
+                                                else {
+                                                    MWR_LOG_WARN("unknown val: %i", ra.val1);
                                                 }
                                             }
     }

@@ -3739,7 +3739,8 @@ class dlnaList : public RegisterTable {
         } // get serverlist
         if (m_browseOnRelease == 2) {
             (*m_dlnaLevel)--;
-            m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId.c_get(), 0, 9);
+            if(*m_dlnaLevel == 0)  m_dlna->browseServer(m_currDLNAsrvNr, "0", 0, 9);
+            else                   m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId.c_get(), 0, 9);
         } // previous level
         if (m_browseOnRelease == 3) {
             (*m_dlnaLevel)++;
@@ -4082,7 +4083,8 @@ class dlnaList : public RegisterTable {
             m_dlnaMaxItems = m_dlnaHistory[*m_dlnaLevel].maxItems;
             m_viewPoint = 0;
             m_currItemNr[*m_dlnaLevel] = 0;
-            m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId.c_get(), m_viewPoint, 9);
+            if(*m_dlnaLevel == 0)  m_dlna->browseServer(m_currDLNAsrvNr, "0", 0, 9);
+            else                   m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId.c_get(), m_viewPoint, 9);
             m_dlna->loop();
             while (m_dlna->getState() != m_dlna->IDLE) {
                 m_dlna->loop();
