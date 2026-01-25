@@ -1588,9 +1588,6 @@ void wake_up() {
 void setRTC(ps_ptr<char> TZString) {
     rtc.stop();
     rtc.begin(TZString.c_get());
-    if(!s_f_rtc) {
-        SerialPrintfln(ANSI_ESC_RED "connection to NTP failed" ANSI_ESC_RESET "  ");
-    }
 }
 
 boolean isAlarm(uint8_t weekDay, uint8_t alarmDays, uint16_t minuteOfTheDay, int16_t* alarmTime) {
@@ -2106,7 +2103,9 @@ void loop() {
             }
         }
 
-        if (!s_f_rtc) { s_f_rtc = rtc.hasValidTime(); }
+        if (!s_f_rtc) {
+            s_f_rtc = rtc.hasValidTime();
+        }
 
         int16_t audioVol = audio.getVolume();
         uint8_t currVol = s_volume.cur_volume;

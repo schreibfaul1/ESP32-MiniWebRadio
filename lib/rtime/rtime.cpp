@@ -250,7 +250,7 @@ RTIME::RTIME(){
 RTIME::~RTIME(){
 	esp_sntp_stop();
 }
-boolean RTIME::begin(String TimeZone){
+void RTIME::begin(String TimeZone){
     stop(); // if sntp is already running after restart: assert failed: sntp_setoperatingmode
     if(TimeZone.length() == 0) TimeZone = "CET-1CEST,M3.5.0,M10.5.0/3"; // default
     RTIME_TZ=TimeZone;
@@ -261,7 +261,6 @@ boolean RTIME::begin(String TimeZone){
     // -D NTP_Pool_3='"time-a-g.nist.gov"'
     esp_sntp_setoperatingmode(esp_sntp_operatingmode_t(SNTP_OPMODE_POLL));
     configTzTime(RTIME_TZ.c_str(), NTP_Pool_1, NTP_Pool_2, NTP_Pool_3);
-    return true; // obtain_time();
 }
 
 void RTIME::stop(){

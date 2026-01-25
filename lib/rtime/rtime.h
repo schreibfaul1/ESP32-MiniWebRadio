@@ -24,7 +24,7 @@ class RTIME{
 public:
 	RTIME();
 	~RTIME();
-	boolean begin(String TimeZone="CET-1CEST,M3.5.0,M10.5.0/3");
+	void begin(String TimeZone="CET-1CEST,M3.5.0,M10.5.0/3");
 	bool hasValidTime();
 	void stop();
 	const char* gettime();
