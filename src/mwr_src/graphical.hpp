@@ -454,7 +454,7 @@ class textbox : public RegisterTable {
         if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
         return true;
     }
-    void setText(const char* txt, bool narrow = false, bool noWrap = false) { // prepare a text, wait of show() to write it
+    void setText(ps_ptr<char> txt, bool narrow = false, bool noWrap = false) { // prepare a text, wait of show() to write it
         m_text = txt;
         m_narrow = narrow;
         m_noWrap = noWrap;
@@ -464,9 +464,8 @@ class textbox : public RegisterTable {
         m_v_align = v_align;
     }
 
-    void writeText(const char* txt) {
+    void writeText(ps_ptr<char> txt) {
         m_text = txt;
-
         if (m_enabled) {
             uint16_t txtColor_tmp = tft.getTextColor();
             uint16_t bgColor_tmp = tft.getBackGroundColor();
@@ -511,7 +510,7 @@ class inputbox : public RegisterTable {
     uint32_t     m_bgColor = 0;
     uint32_t     m_fgColor = 0;
     uint32_t     m_borderColor = 0;
-    char*        m_text = NULL;
+    ps_ptr<char> m_text;
     ps_ptr<char> m_name;
     bool         m_enabled = false;
     bool         m_clicked = false;
@@ -531,7 +530,7 @@ class inputbox : public RegisterTable {
         m_borderColor = TFT_BLACK;
         m_fontSize = 1;
     }
-    ~inputbox() { x_ps_free(&m_text); }
+    ~inputbox() { }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom) {
         m_x = x; // x pos
         m_y = y; // y pos
@@ -550,7 +549,6 @@ class inputbox : public RegisterTable {
         m_saveBackground = saveBackground;
         m_enabled = true;
         m_clicked = false;
-        if (!m_text) { m_text = strdup(""); }
         if (m_backgroundTransparency) {
             if (m_saveBackground)
                 tft.copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
@@ -611,10 +609,8 @@ class inputbox : public RegisterTable {
         if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
         return true;
     }
-    void setText(const char* txt, bool narrow = false, bool noWrap = false) { // prepare a text, wait of show() to write it
-        if (!txt) { txt = strdup(""); }
-        x_ps_free(&m_text);
-        m_text = x_ps_strdup(txt);
+    void setText(ps_ptr<char> txt, bool narrow = false, bool noWrap = false) { // prepare a text, wait of show() to write it
+        m_text = txt;
         m_narrow = narrow;
         m_noWrap = noWrap;
     }
@@ -622,12 +618,8 @@ class inputbox : public RegisterTable {
         m_h_align = h_align;
         m_v_align = v_align;
     }
-    void writeText(const char* txt) {
-        if (!txt) { txt = strdup(""); }
-        if (txt != m_text) { // no self copy
-            x_ps_free(&m_text);
-            m_text = x_ps_strdup(txt);
-        }
+    void writeText(ps_ptr<char> txt) {
+        m_text = txt;
         if (m_enabled) {
             uint16_t txtColor_tmp = tft.getTextColor();
             uint16_t bgColor_tmp = tft.getBackGroundColor();
@@ -652,15 +644,15 @@ class inputbox : public RegisterTable {
             uint16_t lineLength = 0;
             uint16_t txtMaxWidth = w - 2 * h;
             uint16_t idx = 0;
-            lineLength = tft.getLineLength(m_text, m_narrow);
+            lineLength = tft.getLineLength(m_text.c_get(), m_narrow);
             while (lineLength > txtMaxWidth) {
-                lineLength = tft.getLineLength(m_text + idx, m_narrow);
+                lineLength = tft.getLineLength(m_text.get() + idx, m_narrow);
                 if (lineLength > txtMaxWidth) {
                     idx++;
-                    if (idx > strlen(m_text)) break;
+                    if (idx > m_text.strlen()) break;
                 }
             }
-            tft.writeText(m_text + idx, x, y, w, h, m_h_align, m_v_align, m_narrow, m_noWrap, false);
+            tft.writeText(m_text.get() + idx, x, y, w, h, m_h_align, m_v_align, m_narrow, m_noWrap, false);
             tft.setTextColor(txtColor_tmp);
             tft.setBackGoundColor(bgColor_tmp);
         }
@@ -2212,9 +2204,10 @@ class numbersBox : public RegisterTable { // range 000...999
             m_segmWidth = 48;
         } else if (TFT_CONTROLLER < 7) {
             m_segmWidth = 64;
-        } else if (TFT_CONTROLLER == 7) {
-            m_segmWidth = 64;
-        } else if(TFT_CONTROLLER == 8) {
+        } else if (TFT_CONTROLLER == 7) { // 800x480
+            m_segmWidth = 97;
+            m_segmentHigh = 160;
+        } else if(TFT_CONTROLLER == 8) { // 1024x600
             m_segmWidth = 121;
             m_segmentHigh = 200;
         }
@@ -2313,9 +2306,11 @@ class offTimerBox : public RegisterTable { // range 000...999
             m_digitsWidth = 48;
         } else if (TFT_CONTROLLER < 7) {
             m_digitsWidth = 64;
-        } else if (TFT_CONTROLLER == 7) {
-            m_digitsWidth = 64;
-        } else if(TFT_CONTROLLER == 8) {
+        } else if (TFT_CONTROLLER == 7) { // 800x480
+            m_digitsWidth = 97;
+            m_colonWidth= 34;
+            m_digitsHigh = 160;
+        } else if(TFT_CONTROLLER == 8) {  // 1024x600
             m_digitsWidth = 121;
             m_colonWidth= 42;
             m_digitsHigh = 200;
@@ -2716,53 +2711,8 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
     } const s_m01; // Minute * 01   96 x 160 px
     //-------------------------------------------------------------------------------------------------------------------------------------------------------
 elif TFT_CONTROLLER == 7
-    uint16_t m_digitsYoffset = 30;
-    //------------------------------------------------------------------------padding-left-right-top-bottom--------------------------------------------------
-    struct w_h10 {
-        uint16_t x = 36;
-        uint16_t w = 168;
-        uint16_t h = 260;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_h10; // Hour * 10    168 x 260 px
-    struct w_h01 {
-        uint16_t x = 204;
-        uint16_t w = 168;
-        uint16_t h = 260;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_h01; // Hour * 01    168 x 260 px
-    struct w_c {
-        uint16_t x = 372;
-        uint16_t w = 56;
-        uint16_t h = 260;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_c; // Colon         56 x 260 px
-    struct w_m10 {
-        uint16_t x = 428;
-        uint16_t w = 168;
-        uint16_t h = 260;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_m10; // Minute * 10  168 x 260 px
-    struct w_m01 {
-        uint16_t x = 596;
-        uint16_t w = 168;
-        uint16_t h = 260;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_m01; // Minute * 01  168 x 260 px
+
+
     //-------------------------------------------------------------------------------------------------------------------------------------------------------
 #elif TFT_CONTROLLER == 8
 
@@ -2904,7 +2854,14 @@ elif TFT_CONTROLLER == 7
 private:
     void placingDigits(uint16_t w, uint16_t h){
         uint16_t digits_y = 0, digits_w = 0, colon_w = 0, digits_h = 0, paddig_l = 0;
-        if(w == 1024){ // digits 225x350, colon 70x350
+        if(w == 800){ // digits 170x280, colon 59x280
+            digits_w = 170;
+            colon_w = 59;
+            digits_h = 280;
+            digits_y = (h - digits_h) / 2;
+            paddig_l = (w - (4 * digits_w + colon_w)) / 2;
+        }
+        else if(w == 1024){ // digits 225x350, colon 70x350
             digits_w = 225;
             colon_w = 70;
             digits_h = 350;
@@ -3373,57 +3330,7 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
     } const s_m01; // Minute * 01   96 x 150 px
     //-------------------------------------------------------------------------------------------------------------------------------------------------------
 #else // 800 x 480px
-    // uint16_t m_alarmdaysXPos[7] = {50, 150, 250, 350, 450, 550, 650};
-    // uint8_t  m_alarmdaysYoffset = 10;
-    // uint8_t  m_alarmdaysW = 100;
-    // uint8_t  m_alarmdaysH = 32;
-    // uint8_t  m_fontSize = 0; // auto
-    // //------------------------------------------------------------------------padding-left-right-top-bottom--------------------------------------------------
-    // struct w_h10 {
-    //     uint16_t x = 112;
-    //     uint16_t w = 132;
-    //     uint16_t h = 220;
-    //     uint8_t  pl = 0;
-    //     uint8_t  pr = 0;
-    //     uint8_t  pt = 0;
-    //     uint8_t  pb = 0;
-    // } const s_h10; // Hour * 10    132 x 220 px
-    // struct w_h01 {
-    //     uint16_t x = 244;
-    //     uint16_t w = 132;
-    //     uint16_t h = 220;
-    //     uint8_t  pl = 0;
-    //     uint8_t  pr = 0;
-    //     uint8_t  pt = 0;
-    //     uint8_t  pb = 0;
-    // } const s_h01; // Hour * 01    132 x 220 px
-    // struct w_c {
-    //     uint16_t x = 376;
-    //     uint16_t w = 80;
-    //     uint16_t h = 220;
-    //     uint8_t  pl = 0;
-    //     uint8_t  pr = 0;
-    //     uint8_t  pt = 0;
-    //     uint8_t  pb = 0;
-    // } const s_c; // Colon         47 x 220 px
-    // struct w_m10 {
-    //     uint16_t x = 423;
-    //     uint16_t w = 132;
-    //     uint16_t h = 220;
-    //     uint8_t  pl = 0;
-    //     uint8_t  pr = 0;
-    //     uint8_t  pt = 0;
-    //     uint8_t  pb = 0;
-    // } const s_m10; // Minute * 10  132 x 220 px
-    // struct w_m01 {
-    //     uint16_t x = 555;
-    //     uint16_t w = 132;
-    //     uint16_t h = 220;
-    //     uint8_t  pl = 0;
-    //     uint8_t  pr = 0;
-    //     uint8_t  pt = 0;
-    //     uint8_t  pb = 0;
-    // } const s_m01; // Minute * 01  132 x 220 px
+
     //-------------------------------------------------------------------------------------------------------------------------------------------------------
 #endif
 
@@ -3725,7 +3632,13 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
     void placingDigits(uint16_t w, uint16_t h){
         uint16_t digits_y = 0, digits_w = 0, colon_w = 0, digits_h = 0, digits_paddig_l = 0, alarmdays_padding_l = 0;
         uint16_t h4 = h / 4; // [1/4 days, time + 3/4 digits]
-        if(w == 1024){ // digits 158x260, colon 55x260, h 370 -> h4 92
+        if(w == 800){ // digits 121x200, colon 42x200, h 293 -> h4 73
+            digits_w = 121;
+            colon_w = 42;
+            digits_h = 200;
+            digits_y = (3 * h4 - digits_h) / 2 + h4;
+        }
+        else if(w == 1024){ // digits 158x260, colon 55x260, h 370 -> h4 92
             digits_w = 158;
             colon_w = 55;
             digits_h = 260;
