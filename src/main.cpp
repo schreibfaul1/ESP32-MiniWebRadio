@@ -626,7 +626,7 @@ boolean drawImage(const char* path, uint16_t posX, uint16_t posY, uint16_t maxWi
     if (scImg.ends_with("gif")) { return tft.drawGifFile(SD_MMC, scImg.c_get(), posX, posY, 0); }
     if (scImg.ends_with("png")) { return tft.drawPngFile(SD_MMC, scImg.c_get(), posX, posY); }
 
-    SerialPrintfln(ANSI_ESC_RED "the file \"%s\" contains neither a bmp, a gif nor a jpg graphic" ANSI_ESC_RESET "  ", scImg.c_get());
+    SerialPrintfln(ANSI_ESC_RED "the file \"%s\" contains neither a bmp, a gif, a png nor a jpg graphic" ANSI_ESC_RESET "  ", scImg.c_get());
     return false; // neither jpg nor bmp
 }
 /*****************************************************************************************************************************************************

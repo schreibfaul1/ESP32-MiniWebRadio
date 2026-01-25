@@ -2474,6 +2474,7 @@ private:
         m_digitsXpos[1] = m_digitsXpos[0] + m_digitsWidth;
         m_digitsXpos[2] = m_digitsXpos[1] + m_colonWidth;
         m_digitsXpos[3] = m_digitsXpos[2] + m_digitsWidth;
+        MWR_LOG_INFO("box w=%i, h=%i, x=%i, y=%i, x0=%i, x1=%i, x2=%i, x3=%i", m_box_w, m_box_h, m_box_x, m_box_y, m_digitsXpos[0], m_digitsXpos[1], m_digitsXpos[2], m_digitsXpos[3]);
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -3442,7 +3443,7 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
         alarmdays_padding_l = m_alarmdaysW / 2;
         for(int i = 0; i < 7; i++) {m_alarmdaysXPos[i] = alarmdays_padding_l + i * m_alarmdaysW;}
         m_alarmdaysYoffset = 2;
-        m_alarmdaysH = h4 / 2 -1;
+        m_alarmdaysH = h4 / 2;
 
         s_h10.x = digits_paddig_l;
         s_h10.y = digits_y;
