@@ -2995,7 +2995,7 @@ bool TFT_SPI::JPEG_tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint
     int16_t y_end = std::min((int16_t)(y + h), (int16_t)(m_v_res)); // End of rectangle in y-direction
 
     if (x >= m_h_res || y >= m_v_res || x_end <= 0 || y_end <= 0) {
-        log_e("Rectangle is completely outside the framebuffer boundaries.");
+        log_e("Rectangle is completely outside the framebuffer boundaries, x: %d, y: %d, x_end: %d, y_end: %d", x, y, x_end, y_end);
         return false;
     }
 

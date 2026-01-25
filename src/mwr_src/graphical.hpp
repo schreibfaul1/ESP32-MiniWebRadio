@@ -2202,8 +2202,9 @@ class numbersBox : public RegisterTable { // range 000...999
         m_name = name;
         if (TFT_CONTROLLER < 2) {
             m_segmWidth = 48;
-        } else if (TFT_CONTROLLER < 7) {
-            m_segmWidth = 64;
+        } else if (TFT_CONTROLLER < 7) {  // 480x320
+            m_segmWidth = 67;
+            m_segmentHigh = 110;
         } else if (TFT_CONTROLLER == 7) { // 800x480
             m_segmWidth = 97;
             m_segmentHigh = 160;
@@ -2304,8 +2305,10 @@ class offTimerBox : public RegisterTable { // range 000...999
         m_name = name;
         if (TFT_CONTROLLER < 2) {
             m_digitsWidth = 48;
-        } else if (TFT_CONTROLLER < 7) {
-            m_digitsWidth = 64;
+        } else if (TFT_CONTROLLER < 7) {   // 480x320
+            m_digitsWidth = 67;
+            m_colonWidth= 23;
+            m_digitsHigh = 110;
         } else if (TFT_CONTROLLER == 7) { // 800x480
             m_digitsWidth = 97;
             m_colonWidth= 34;
@@ -2662,55 +2665,9 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
     } const s_m01; // Minute * 01   72 x 120 px
     //-------------------------------------------------------------------------------------------------------------------------------------------------------
 #elif TFT_CONTROLLER < 7
-    uint16_t m_digitsYoffset = 30;
-    //------------------------------------------------------------------------padding-left-right-top-bottom--------------------------------------------------
-    struct w_h10 {
-        uint16_t x = 32;
-        uint16_t w = 96;
-        uint16_t h = 160;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_h10; // Hour * 10     96 x 160 px
-    struct w_h01 {
-        uint16_t x = 128;
-        uint16_t w = 96;
-        uint16_t h = 160;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_h01; // Hour * 01     96 x 160 px
-    struct w_c {
-        uint16_t x = 224;
-        uint16_t w = 32;
-        uint16_t h = 160;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_c; // Colon         32 x 160 px
-    struct w_m10 {
-        uint16_t x = 256;
-        uint16_t w = 96;
-        uint16_t h = 160;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_m10; // Minute * 10   96 x 160 px
-    struct w_m01 {
-        uint16_t x = 352;
-        uint16_t w = 96;
-        uint16_t h = 160;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_m01; // Minute * 01   96 x 160 px
+
     //-------------------------------------------------------------------------------------------------------------------------------------------------------
-elif TFT_CONTROLLER == 7
+#elif TFT_CONTROLLER == 7
 
 
     //-------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2752,7 +2709,7 @@ elif TFT_CONTROLLER == 7
         m_y = y; // y pos
         m_w = w; // width
         m_h = h; // high
-        placingDigits(w, h);
+        placingDigits(m_w, m_h);
         m_enabled = false;
         pic_clock24_digitsH10->begin(m_x + s_h10.x, m_y + s_h10.y, s_h10.w, s_h10.h, s_h10.pl, s_h10.pr, s_h10.pt, s_h10.pb);
         pic_clock24_digitsH01->begin(m_x + s_h01.x, m_y + s_h01.y, s_h01.w, s_h01.h, s_h01.pl, s_h01.pr, s_h01.pt, s_h01.pb);
@@ -2854,7 +2811,14 @@ elif TFT_CONTROLLER == 7
 private:
     void placingDigits(uint16_t w, uint16_t h){
         uint16_t digits_y = 0, digits_w = 0, colon_w = 0, digits_h = 0, paddig_l = 0;
-        if(w == 800){ // digits 170x280, colon 59x280
+        if(w == 480){ // digits 110x182, colon 39x182
+            digits_w = 110;
+            colon_w = 39;
+            digits_h = 182;
+            digits_y = (h - digits_h) / 2;
+            paddig_l = (w - (4 * digits_w + colon_w)) / 2;
+        }
+        else if(w == 800){ // digits 170x280, colon 59x280
             digits_w = 170;
             colon_w = 59;
             digits_h = 280;
@@ -2869,7 +2833,7 @@ private:
             paddig_l = (w - (4 * digits_w + colon_w)) / 2;
         }
         else{
-            MWR_LOG_ERROR("wrong h-resolution %i", h);
+            MWR_LOG_ERROR("wrong h-resolution %i", w);
         }
         s_h10.x = paddig_l;
         s_h10.y = digits_y;
@@ -2881,7 +2845,7 @@ private:
         s_h01.h = digits_h;
         s_c.x   = s_h01.x + digits_w;
         s_c.y   = digits_y;
-        s_c.w   = digits_w;
+        s_c.w   = colon_w;
         s_c.h   = digits_h;
         s_m10.x = s_c.x + colon_w;
         s_m10.y = digits_y;
@@ -3277,57 +3241,7 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
     } const s_m01; // Minute * 01  72 x 104 px
     //-------------------------------------------------------------------------------------------------------------------------------------------------------
 #elif TFT_CONTROLLER < 7
-    uint16_t m_alarmdaysXPos[7] = {9, 75, 141, 207, 273, 339, 405};
-    uint8_t  m_alarmdaysYoffset = 2;
-    uint8_t  m_alarmdaysW = 65;
-    uint8_t  m_alarmdaysH = 23;
-    uint8_t  m_fontSize = 0; // auto
-    //------------------------------------------------------------------------padding-left-right-top-bottom--------------------------------------------------
-    struct w_h10 {
-        uint16_t x = 32;
-        uint16_t w = 96;
-        uint16_t h = 220;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_h10; // Hour * 10     96 x 150 px
-    struct w_h01 {
-        uint16_t x = 128;
-        uint16_t w = 96;
-        uint16_t h = 220;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_h01; // Hour * 01     96 x 150 px
-    struct w_c {
-        uint16_t x = 224;
-        uint16_t w = 32;
-        uint16_t h = 220;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_c; // Colon         32 x 150 px
-    struct w_m10 {
-        uint16_t x = 255;
-        uint16_t w = 96;
-        uint16_t h = 220;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_m10; // Minute * 10   96 x 150 px
-    struct w_m01 {
-        uint16_t x = 352;
-        uint16_t w = 96;
-        uint16_t h = 220;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_m01; // Minute * 01   96 x 150 px
+
     //-------------------------------------------------------------------------------------------------------------------------------------------------------
 #else // 800 x 480px
 
@@ -3632,7 +3546,13 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
     void placingDigits(uint16_t w, uint16_t h){
         uint16_t digits_y = 0, digits_w = 0, colon_w = 0, digits_h = 0, digits_paddig_l = 0, alarmdays_padding_l = 0;
         uint16_t h4 = h / 4; // [1/4 days, time + 3/4 digits]
-        if(w == 800){ // digits 121x200, colon 42x200, h 293 -> h4 73
+        if(w == 480){ // digits 84x140, colon 30x140, h 198 -> h4 49
+            digits_w = 84;
+            colon_w = 30;
+            digits_h = 140;
+            digits_y = (3 * h4 - digits_h) / 2 + h4;
+        }
+        else if(w == 800){ // digits 121x200, colon 42x200, h 293 -> h4 73
             digits_w = 121;
             colon_w = 42;
             digits_h = 200;
