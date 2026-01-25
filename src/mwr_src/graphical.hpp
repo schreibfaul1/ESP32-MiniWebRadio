@@ -2486,6 +2486,8 @@ class pictureBox : public RegisterTable {
     int16_t      m_h = 0;
     uint16_t     m_image_w = 0;
     uint16_t     m_image_h = 0;
+    uint16_t     m_image_x = 0;
+    uint16_t     m_image_y = 0;
     uint8_t      m_padding_left = 0;  // left margin
     uint8_t      m_padding_right = 0;  // right margin
     uint8_t      m_padding_top = 0;    // top margin
@@ -2527,8 +2529,8 @@ class pictureBox : public RegisterTable {
     bool show(bool backgroundTransparency, bool saveBackground) {
         m_backgroundTransparency = backgroundTransparency;
         m_saveBackground = saveBackground;
-        int x = m_x + m_padding_left;
-        int y = m_y + m_padding_top;
+        int x = m_x + m_padding_left + m_image_x;
+        int y = m_y + m_padding_top + m_image_y;
         int w = m_w - (m_padding_right + m_padding_left);
         int h = m_h - (m_padding_bottom + m_padding_top);
         if (m_image_w == 0 || m_image_h == 0) {
@@ -2573,6 +2575,14 @@ class pictureBox : public RegisterTable {
     void setAlternativPicturePath(ps_ptr<char> path) {
         m_altPicturePath = path;
     }
+
+    void align(bool h, bool v){
+        if(h){ m_padding_left = 0; m_padding_right = 0; m_image_x = (m_w - m_image_w) / 2; }
+        else m_image_x = 0;
+        if(v){ m_padding_top = 0; m_padding_bottom = 0; m_image_y = (m_h - m_image_h) / 2; }
+        else m_image_y = 0;
+    }
+
     bool positionXY(uint16_t x, uint16_t y) {
         if (x < m_x) return false;
         if (y < m_y) return false;

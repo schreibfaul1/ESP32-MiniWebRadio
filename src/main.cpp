@@ -1887,6 +1887,7 @@ void changeState(int8_t state, int8_t subState) {
                 clearWithOutHeaderFooter();
                 otb_SL_stime.show(s_sleeptime);
                 pic_SL_logo.setPicturePath("/common/Night_Gown.jpg");
+                pic_SL_logo.align(true, true);
                 pic_SL_logo.show(false, false);
             }
             btn_SL_up.show(); btn_SL_up.show(); btn_SL_down.show(); btn_SL_ready.show(); btn_SL_cancel.show();
