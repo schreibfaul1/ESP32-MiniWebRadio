@@ -2622,7 +2622,7 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
         uint8_t  pr = 0;
         uint8_t  pt = 0;
         uint8_t  pb = 0;
-    } s_h10, s_h01, s_c, s_m10, s_m01;
+    } m_h10, m_h01, m_c, m_m10, m_m01;
 
     uint32_t     m_bgColor = 0;
     bool         m_enabled = false;
@@ -2660,11 +2660,11 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
         m_h = h; // high
         placingDigits(m_w, m_h);
         m_enabled = false;
-        pic_clock24_digitsH10->begin(m_x + s_h10.x, m_y + s_h10.y, s_h10.w, s_h10.h, s_h10.pl, s_h10.pr, s_h10.pt, s_h10.pb);
-        pic_clock24_digitsH01->begin(m_x + s_h01.x, m_y + s_h01.y, s_h01.w, s_h01.h, s_h01.pl, s_h01.pr, s_h01.pt, s_h01.pb);
-        pic_clock24_digitsColon->begin(m_x + s_c.x, m_y + s_c.y,   s_c.w, s_c.h, s_c.pl, s_c.pr, s_c.pt, s_c.pb);
-        pic_clock24_digitsM10->begin(m_x + s_m10.x, m_y + s_m10.y, s_m10.w, s_m10.h, s_m10.pl, s_m10.pr, s_m10.pt, s_m10.pb);
-        pic_clock24_digitsM01->begin(m_x + s_m01.x, m_y + s_m01.y, s_m01.w, s_m10.h, s_m01.pl, s_m01.pr, s_m01.pt, s_m01.pb);
+        pic_clock24_digitsH10->begin(m_x + m_h10.x, m_y + m_h10.y, m_h10.w, m_h10.h, m_h10.pl, m_h10.pr, m_h10.pt, m_h10.pb);
+        pic_clock24_digitsH01->begin(m_x + m_h01.x, m_y + m_h01.y, m_h01.w, m_h01.h, m_h01.pl, m_h01.pr, m_h01.pt, m_h01.pb);
+        pic_clock24_digitsColon->begin(m_x + m_c.x, m_y + m_c.y,   m_c.w,   m_c.h,   m_c.pl,   m_c.pr,   m_c.pt,   m_c.pb);
+        pic_clock24_digitsM10->begin(m_x + m_m10.x, m_y + m_m10.y, m_m10.w, m_m10.h, m_m10.pl, m_m10.pr, m_m10.pt, m_m10.pb);
+        pic_clock24_digitsM01->begin(m_x + m_m01.x, m_y + m_m01.y, m_m01.w, m_m10.h, m_m01.pl, m_m01.pr, m_m01.pt, m_m01.pb);
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
@@ -2779,199 +2779,61 @@ private:
         colon_w = img.w;
         digits_y = (h - digits_h) / 2;
         paddig_l = (w - (4 * digits_w + colon_w)) / 2;
-        s_h10.x = paddig_l;
-        s_h10.y = digits_y;
-        s_h10.w = digits_w;
-        s_h10.h = digits_h;
-        s_h01.x = s_h10.x + digits_w;
-        s_h01.y = digits_y;
-        s_h01.w = digits_w;
-        s_h01.h = digits_h;
-        s_c.x   = s_h01.x + digits_w;
-        s_c.y   = digits_y;
-        s_c.w   = colon_w;
-        s_c.h   = digits_h;
-        s_m10.x = s_c.x + colon_w;
-        s_m10.y = digits_y;
-        s_m10.w = digits_w;
-        s_m10.h = digits_h;
-        s_m01.x = s_m10.x + digits_w;
-        s_m01.y = digits_y;
-        s_m01.w = digits_w;
-        s_m01.h = digits_h;
+        m_h10.x = paddig_l;
+        m_h10.y = digits_y;
+        m_h10.w = digits_w;
+        m_h10.h = digits_h;
+        m_h01.x = m_h10.x + digits_w;
+        m_h01.y = digits_y;
+        m_h01.w = digits_w;
+        m_h01.h = digits_h;
+        m_c.x   = m_h01.x + digits_w;
+        m_c.y   = digits_y;
+        m_c.w   = colon_w;
+        m_c.h   = digits_h;
+        m_m10.x = m_c.x + colon_w;
+        m_m10.y = digits_y;
+        m_m10.w = digits_w;
+        m_m10.h = digits_h;
+        m_m01.x = m_m10.x + digits_w;
+        m_m01.y = digits_y;
+        m_m01.w = digits_w;
+        m_m01.h = digits_h;
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class imgClock24small : public RegisterTable { // draw a clock in 24h format
   private:
-    pictureBox* pic_clock24_digitsH10 = new pictureBox("clock24_digitsH10");     // digits hour   * 10
-    pictureBox* pic_clock24_digitsH01 = new pictureBox("clock24_digitsH01");     // digits hour   * 01
-    pictureBox* pic_clock24_digitsM10 = new pictureBox("clock24_digitsM10");     // digits minute * 10
-    pictureBox* pic_clock24_digitsM01 = new pictureBox("clock24_digitsM01");     // digits minute * 01
-    pictureBox* pic_clock24_digitsColon = new pictureBox("clock24_digitsColon"); // digits colon
-    int16_t     m_x = 0;
-    int16_t     m_y = 0;
-    int16_t     m_w = 0;
-    int16_t     m_h = 0;
-#if TFT_CONTROLLER < 2
-    uint16_t m_digitsYoffset = 3;
-    //------------------------------------------------------------------------padding-left-right-top-bottom--------------------------------------------------
-    struct w_h10 {
-        uint16_t x = 0;
-        uint16_t w = 48;
-        uint16_t h = 72;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_h10; // Hour * 10     72 x 120 px
-    struct w_h01 {
-        uint16_t x = 48;
-        uint16_t w = 48;
-        uint16_t h = 72;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_h01; // Hour * 01     72 x 120 px
-    struct w_c {
-        uint16_t x = 96;
-        uint16_t w = 16;
-        uint16_t h = 72;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_c; // Colon         24 x 120 px
-    struct w_m10 {
-        uint16_t x = 112;
-        uint16_t w = 48;
-        uint16_t h = 72;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_m10; // Minute * 10   72 x 120 px
-    struct w_m01 {
-        uint16_t x = 160;
-        uint16_t w = 48;
-        uint16_t h = 72;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_m01; // Minute * 01   72 x 120 px
-    //-------------------------------------------------------------------------------------------------------------------------------------------------------
-#elif TFT_CONTROLLER < 7
-    uint16_t m_digitsYoffset = 3;
-    //------------------------------------------------------------------------padding-left-right-top-bottom--------------------------------------------------
-    struct w_h10 {
-        uint16_t x = 0;
-        uint16_t w = 64;
-        uint16_t h = 96;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_h10; // Hour * 10     96 x 160 px
-    struct w_h01 {
-        uint16_t x = 64;
-        uint16_t w = 64;
-        uint16_t h = 96;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_h01; // Hour * 01     96 x 160 px
-    struct w_c {
-        uint16_t x = 128;
-        uint16_t w = 32;
-        uint16_t h = 96;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_c; // Colon         32 x 160 px
-    struct w_m10 {
-        uint16_t x = 160;
-        uint16_t w = 64;
-        uint16_t h = 96;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_m10; // Minute * 10   96 x 160 px
-    struct w_m01 {
-        uint16_t x = 224;
-        uint16_t w = 64;
-        uint16_t h = 96;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_m01; // Minute * 01   96 x 160 px
-    //-------------------------------------------------------------------------------------------------------------------------------------------------------
-#else
-    uint16_t m_digitsYoffset = 3;
-    //------------------------------------------------------------------------padding-left-right-top-bottom--------------------------------------------------
-    struct w_h10 {
-        uint16_t x = 0;
-        uint16_t w = 86;
-        uint16_t h = 144;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_h10; // Hour * 10    168 x 260 px
-    struct w_h01 {
-        uint16_t x = 86;
-        uint16_t w = 86;
-        uint16_t h = 144;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_h01; // Hour * 01    168 x 260 px
-    struct w_c {
-        uint16_t x = 172;
-        uint16_t w = 31;
-        uint16_t h = 144;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_c; // Colon         56 x 260 px
-    struct w_m10 {
-        uint16_t x = 203;
-        uint16_t w = 86;
-        uint16_t h = 144;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_m10; // Minute * 10  168 x 260 px
-    struct w_m01 {
-        uint16_t x = 289;
-        uint16_t w = 86;
-        uint16_t h = 144;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_m01; // Minute * 01  168 x 260 px
-    //-------------------------------------------------------------------------------------------------------------------------------------------------------
-#endif
+    pictureBox*  pic_clock24_digitsH10 = new pictureBox("clock24_digitsH10");     // digits hour   * 10
+    pictureBox*  pic_clock24_digitsH01 = new pictureBox("clock24_digitsH01");     // digits hour   * 01
+    pictureBox*  pic_clock24_digitsM10 = new pictureBox("clock24_digitsM10");     // digits minute * 10
+    pictureBox*  pic_clock24_digitsM01 = new pictureBox("clock24_digitsM01");     // digits minute * 01
+    pictureBox*  pic_clock24_digitsColon = new pictureBox("clock24_digitsColon"); // digits colon
+    int16_t      m_x = 0;
+    int16_t      m_y = 0;
+    int16_t      m_w = 0;
+    int16_t      m_h = 0;
     uint32_t     m_bgColor = 0;
     bool         m_enabled = false;
     bool         m_clicked = false;
     bool         m_state = false;
     bool         m_backgroundTransparency = false;
-    uint16_t     m_digitsYPos = 0;
     bool         m_showAll = false;
     ps_ptr<char> m_name = NULL;
     char*        m_pathBuff = NULL;
     uint8_t      m_min = 0, m_hour = 0, m_weekday = 0;
     releasedArg  m_ra;
+
+    struct pos {
+        uint16_t x;
+        uint16_t y;
+        uint16_t w;
+        uint16_t h;
+        uint8_t  pl = 0;
+        uint8_t  pr = 0;
+        uint8_t  pt = 0;
+        uint8_t  pb = 0;
+    } m_h10, m_h01, m_c, m_m10, m_m01;
 
   public:
     imgClock24small(const char* name) {
@@ -2996,13 +2858,13 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
         m_y = y; // y pos
         m_w = w; // width
         m_h = h; // high
+        placingDigits(m_w, m_h);
         m_enabled = false;
-        m_digitsYPos = m_y + m_digitsYoffset;
-        pic_clock24_digitsH10->begin(m_x + s_h10.x, m_digitsYPos, s_h10.w, s_h10.h, s_h10.pl, s_h10.pr, s_h10.pt, s_h10.pb);
-        pic_clock24_digitsH01->begin(m_x + s_h01.x, m_digitsYPos, s_h01.w, s_h01.h, s_h01.pl, s_h01.pr, s_h01.pt, s_h01.pb);
-        pic_clock24_digitsColon->begin(m_x + s_c.x, m_digitsYPos, s_c.w, s_c.h, s_c.pl, s_c.pr, s_c.pt, s_c.pb);
-        pic_clock24_digitsM10->begin(m_x + s_m10.x, m_digitsYPos, s_m10.w, s_m10.h, s_m10.pl, s_m10.pr, s_m10.pt, s_m10.pb);
-        pic_clock24_digitsM01->begin(m_x + s_m01.x, m_digitsYPos, s_m01.w, s_m10.h, s_m01.pl, s_m01.pr, s_m01.pt, s_m01.pb);
+        pic_clock24_digitsH10->begin(m_x + m_h10.x, m_y + m_h10.y, m_h10.w, m_h10.h, m_h10.pl, m_h10.pr, m_h10.pt, m_h10.pb);
+        pic_clock24_digitsH01->begin(m_x + m_h01.x, m_y + m_h01.y, m_h01.w, m_h01.h, m_h01.pl, m_h01.pr, m_h01.pt, m_h01.pb);
+        pic_clock24_digitsColon->begin(m_x + m_c.x, m_y + m_c.y,   m_c.w,   m_c.h,   m_c.pl,   m_c.pr,   m_c.pt,   m_c.pb);
+        pic_clock24_digitsM10->begin(m_x + m_m10.x, m_y + m_m10.y, m_m10.w, m_m10.h, m_m10.pl, m_m10.pr, m_m10.pt, m_m10.pb);
+        pic_clock24_digitsM01->begin(m_x + m_m01.x, m_y + m_m01.y, m_m01.w, m_m10.h, m_m01.pl, m_m01.pr, m_m01.pt, m_m01.pb);
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
@@ -3045,7 +2907,7 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
 
         for (uint8_t i = 0; i < 4; i++) {
             if ((time[i] != oldTime[i]) || m_showAll) {
-                sprintf(m_pathBuff, "/digits_small/%isrt.jpg", time[i]);
+                sprintf(m_pathBuff, "/digits/s/%ired.jpg", time[i]);
                 if (i == 0) {
                     pic_clock24_digitsH10->setPicturePath(m_pathBuff);
                     pic_clock24_digitsH10->show(m_backgroundTransparency, false);
@@ -3068,10 +2930,10 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
 
         k = !k;
         if (k) {
-            pic_clock24_digitsColon->setPicturePath("/digits_small/dsrt.jpg");
+            pic_clock24_digitsColon->setPicturePath("/digits/s/cred.jpg");
             pic_clock24_digitsColon->show(m_backgroundTransparency, false);
         } else {
-            pic_clock24_digitsColon->setPicturePath("/digits_small/esrt.jpg");
+            pic_clock24_digitsColon->setPicturePath("/digits/s/cred_dk.jpg");
             pic_clock24_digitsColon->show(m_backgroundTransparency, false);
         }
         m_showAll = false;
@@ -3094,6 +2956,49 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
         if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
         m_clicked = false;
         return true;
+    }
+private:
+    void placingDigits(uint16_t w, uint16_t h){
+        uint16_t digits_y = 0, digits_w = 0, colon_w = 0, digits_h = 0, paddig_l = 0;
+
+        imgSize img = GetImageSize("/digits/s/0green.jpg"); // get size of digit '0'
+        if(img.w == 0 || img.h == 0){
+            MWR_LOG_ERROR("cannot get digit size");
+            return;
+        }
+        MWR_LOG_DEBUG("digits w = %i, h = %i", img.w, img.h);
+        digits_w = img.w;
+        digits_h = img.h;
+
+        img = GetImageSize("/digits/s/cgreen.jpg"); // get size of colon
+        if(img.w == 0 || img.h == 0){
+            MWR_LOG_ERROR("cannot get colon size");
+            return;
+        }
+        MWR_LOG_DEBUG("colon w = %i, h = %i", img.w, img.h);
+        colon_w = img.w;
+        digits_y = (h - digits_h) / 2;
+        paddig_l = (w - (4 * digits_w + colon_w)) / 2;
+        m_h10.x = paddig_l;
+        m_h10.y = digits_y;
+        m_h10.w = digits_w;
+        m_h10.h = digits_h;
+        m_h01.x = m_h10.x + digits_w;
+        m_h01.y = digits_y;
+        m_h01.w = digits_w;
+        m_h01.h = digits_h;
+        m_c.x   = m_h01.x + digits_w;
+        m_c.y   = digits_y;
+        m_c.w   = colon_w;
+        m_c.h   = digits_h;
+        m_m10.x = m_c.x + colon_w;
+        m_m10.y = digits_y;
+        m_m10.w = digits_w;
+        m_m10.h = digits_h;
+        m_m01.x = m_m10.x + digits_w;
+        m_m01.y = digits_y;
+        m_m01.w = digits_w;
+        m_m01.h = digits_h;
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
