@@ -12,6 +12,93 @@ extern __attribute__((weak)) void graphicObjects_OnRelease(ps_ptr<char> name, re
 
 extern SemaphoreHandle_t mutex_display;
 extern SD_content        s_SD_content;
+
+struct imgSize {
+    uint16_t w = 0;
+    uint16_t h = 0;
+};
+
+imgSize GetImageSize(ps_ptr<char> picturePath) {
+    if(picturePath.strlen() == 0) {
+        MWR_LOG_DEBUG("picturePath is empty");
+        return imgSize{0, 0};
+    }
+    imgSize img = {0};
+    auto scaledPicPath = scaleImage(picturePath);
+    if (!SD_MMC.exists(scaledPicPath.c_get())) { /* log_w("file %s not exists, objName: %s", scaledPicPath, m_name)*/
+        MWR_LOG_ERROR("cannot open file '%s'", scaledPicPath.c_get());
+        return img;
+    }
+    File file = SD_MMC.open(scaledPicPath.c_get(), "r", false);
+    if (file.size() < 24) {
+        MWR_LOG_WARN("file '%s' is too small", scaledPicPath.c_get());
+        file.close();
+        return img;
+    }
+    char buf[8];
+    file.readBytes(buf, 3);
+    if ((buf[0] == 0xFF) && (buf[1] == 0xD8) && (buf[2] == 0xFF)) { // format jpeg
+        int16_t c1, c2;
+        while (true) {
+            c1 = file.read();
+            if (c1 == -1) {
+                MWR_LOG_WARN("sof marker in %s not found", scaledPicPath.c_get());
+                file.close();
+                return img;
+            } // end of file reached
+            if (c1 == 0xFF) {
+                c2 = file.read();
+                if (c2 == 0xC0) break;
+            } // 0xFFC0 Marker found
+        }
+        file.readBytes(buf, 7);
+        img.h = buf[3] * 256 + buf[4];
+        img.w = buf[5] * 256 + buf[6];
+        //    log_i("w %i, h %i", m_w, m_h);
+        return img;
+    }
+    if ((buf[0] == 'B') && (buf[1] == 'M') && (buf[2] == '6')) { // format bmp
+        for (int i = 0; i < 15; i++) file.read();                // read 15 dummys
+        img.w = file.read();                                 // pos 18
+        img.w += (file.read() << 8);
+        img.w += (file.read() << 16);
+        img.w += (file.read() << 24);
+        img.h = file.read(); // pos 22
+        img.h += (file.read() << 8);
+        img.h += (file.read() << 16);
+        img.h += (file.read() << 24);
+        //    log_i("w %i, h %i", m_w, m_h);
+        return img;
+    }
+    if ((buf[0] == 'G') && (buf[1] == 'I') && (buf[2] == 'F')) { // format gif
+        for (int i = 0; i < 3; i++) file.read();                 // read 3 dummys
+        img.w = file.read();                                 // pos 6
+        img.w += (file.read() << 8);
+        img.h = file.read(); // pos 8
+        img.h += (file.read() << 8);
+        //    log_i("w %i, h %i", m_w, m_h);
+        return img;
+    }
+    if ((buf[0] == 0x89) && (buf[1] == 'P') && (buf[2] == 'N')) { // format png
+        for (int i = 0; i < 13; i++) file.read();                 // read 13 dummys
+        img.w = file.read() << 24;                            // pos 16
+        img.w += file.read() << 16;                           // pos 17
+        img.w += file.read() << 8;                            // pos 18
+        img.w += file.read();                                 // pos 19
+        img.h = file.read() << 24;                            // pos 20
+        img.h += file.read() << 16;                           // pos 21
+        img.h += file.read() << 8;                            // pos 22
+        img.h += file.read();                                 // pos 23
+        // bitDepth  = header[24];  // Position 24 = Bit-Tiefe
+        // colorType = header[25];  // Position 25 = Farbtyp
+        // log_w("w %i, h %i", m_w, m_h);
+        return img;
+    }
+    MWR_LOG_ERROR("unknown picture format %s", picturePath);
+    return img;
+}
+
+
 class slider : public RegisterTable {
   private:
     int16_t      m_x = 0;
@@ -2188,11 +2275,11 @@ class numbersBox : public RegisterTable { // range 000...999
     int16_t      m_box_y = 0;
     int16_t      m_box_w = 0;
     int16_t      m_box_h = 0;
-    uint32_t     m_bgColor = 0;
+    uint32_t     m_bgColor = TFT_BLACK;
     bool         m_clicked = false;
     releasedArg  m_ra;
     ps_ptr<char> m_name;
-    const char*  m_color = "sbl";
+    const char*  m_color = "blue";
     char         m_root[20] = "/digits/s/";
     char         m_numbers[4] = "000";
 
@@ -2200,18 +2287,6 @@ class numbersBox : public RegisterTable { // range 000...999
     numbersBox(const char* name) {
         register_object(this);
         m_name = name;
-        if (TFT_CONTROLLER < 2) {
-            m_segmWidth = 48;
-        } else if (TFT_CONTROLLER < 7) {  // 480x320
-            m_segmWidth = 67;
-            m_segmentHigh = 110;
-        } else if (TFT_CONTROLLER == 7) { // 800x480
-            m_segmWidth = 97;
-            m_segmentHigh = 160;
-        } else if(TFT_CONTROLLER == 8) { // 1024x600
-            m_segmWidth = 121;
-            m_segmentHigh = 200;
-        }
     }
     ~numbersBox() { ; }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
@@ -2223,7 +2298,8 @@ class numbersBox : public RegisterTable { // range 000...999
         m_enabled = false;
     }
     ps_ptr<char> getName() { return m_name; }
-    bool         show(uint16_t color) {
+
+    bool show(uint16_t color) {
         if     (color == TFT_BLUE) m_color = "blue";
         else if(color == TFT_ORANGE) m_color = "orange";
         else if(color == TFT_GREEN) m_color = "green";
@@ -2267,6 +2343,16 @@ class numbersBox : public RegisterTable { // range 000...999
     }
 private:
     void placingDigits(uint16_t w, uint16_t h){
+
+       imgSize img = GetImageSize("/digits/s/0green.jpg"); // get size of digit '0'
+        if(img.w == 0 || img.h == 0){
+            MWR_LOG_ERROR("cannot get digit size");
+            return;
+        }
+        MWR_LOG_DEBUG("digits w = %i, h = %i", img.w, img.h);
+        m_segmWidth = img.w;
+        m_segmentHigh = img.h;
+
         m_box_w = 3 * m_segmWidth;
         m_box_h = m_segmentHigh;
         m_box_x = (w - m_box_w) / 2;
@@ -2303,21 +2389,6 @@ class offTimerBox : public RegisterTable { // range 000...999
     offTimerBox(const char* name) {
         register_object(this);
         m_name = name;
-        if (TFT_CONTROLLER < 2) {
-            m_digitsWidth = 48;
-        } else if (TFT_CONTROLLER < 7) {   // 480x320
-            m_digitsWidth = 67;
-            m_colonWidth= 23;
-            m_digitsHigh = 110;
-        } else if (TFT_CONTROLLER == 7) { // 800x480
-            m_digitsWidth = 97;
-            m_colonWidth= 34;
-            m_digitsHigh = 160;
-        } else if(TFT_CONTROLLER == 8) {  // 1024x600
-            m_digitsWidth = 121;
-            m_colonWidth= 42;
-            m_digitsHigh = 200;
-        }
     }
     ~offTimerBox() { ; }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
@@ -2377,6 +2448,24 @@ class offTimerBox : public RegisterTable { // range 000...999
     }
 private:
     void placingDigits(uint16_t w, uint16_t h){
+
+       imgSize img = GetImageSize("/digits/s/0green.jpg"); // get size of digit '0'
+        if(img.w == 0 || img.h == 0){
+            MWR_LOG_ERROR("cannot get digit size");
+            return;
+        }
+        MWR_LOG_DEBUG("digits w = %i, h = %i", img.w, img.h);
+        m_digitsWidth = img.w;
+        m_digitsHigh = img.h;
+
+        img = GetImageSize("/digits/s/cgreen.jpg"); // get size of colon
+        if(img.w == 0 || img.h == 0){
+            MWR_LOG_ERROR("cannot get colon size");
+            return;
+        }
+        MWR_LOG_DEBUG("colon w = %i, h = %i", img.w, img.h);
+        m_colonWidth = img.w;
+
         m_box_w = 3 * m_digitsWidth + m_colonWidth;
         m_box_h = m_digitsHigh;
         m_box_x = (w - m_box_w) / 2;
@@ -2401,9 +2490,9 @@ class pictureBox : public RegisterTable {
     uint8_t      m_padding_top = 0;    // top margin
     uint8_t      m_padding_bottom = 0; // bottom margin
     uint32_t     m_bgColor = 0;
-    char*        m_PicturePath = NULL;
-    char*        m_altPicturePath = NULL;
-    ps_ptr<char> m_name = NULL;
+    ps_ptr<char> m_PicturePath;
+    ps_ptr<char> m_altPicturePath;
+    ps_ptr<char> m_name;
     bool         m_enabled = false;
     bool         m_clicked = false;
     bool         m_backgroundTransparency = false;
@@ -2417,10 +2506,8 @@ class pictureBox : public RegisterTable {
         setPicturePath(NULL);
         setAlternativPicturePath(NULL);
     }
-    ~pictureBox() {
-        x_ps_free(&m_PicturePath);
-        x_ps_free(&m_altPicturePath);
-    }
+    ~pictureBox() { }
+
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t padding_left, uint8_t padding_right, uint8_t padding_top, uint8_t padding_bottom) {
         m_x = x; // x pos
         m_y = y; // y pos
@@ -2443,21 +2530,16 @@ class pictureBox : public RegisterTable {
         int y = m_y + m_padding_top;
         int w = m_w - (m_padding_right + m_padding_left);
         int h = m_h - (m_padding_bottom + m_padding_top);
-        if (!GetImageSize(m_PicturePath)) {
-            GetImageSize(m_altPicturePath);
-
+        if (m_image_w == 0 || m_image_h == 0) {
             if (m_saveBackground) { tft.copyFramebuffer(1, 2, m_x, m_y, m_w, m_h); }
             if (m_backgroundTransparency) { tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h); }
-            if (m_altPicturePath)
-                m_enabled = drawImage(m_altPicturePath, x, y, w, h);
-            else
-                m_enabled = false;
+            m_enabled = drawImage(m_altPicturePath.c_get(), x, y, w, h);
             if (m_saveBackground) { tft.copyFramebuffer(0, 1, m_x, m_y, m_w, m_h); }
             return m_enabled;
         } else {
             if (m_saveBackground) { tft.copyFramebuffer(1, 2, m_x, m_y, m_w, m_h); }
             if (m_backgroundTransparency) { tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h); }
-            m_enabled = drawImage(m_PicturePath, x, y, w, h);
+            m_enabled = drawImage(m_PicturePath.c_get(), x, y, w, h);
             if (m_saveBackground) { tft.copyFramebuffer(0, 1, m_x, m_y, m_w, m_h); }
             return m_enabled;
         }
@@ -2480,21 +2562,15 @@ class pictureBox : public RegisterTable {
         m_enabled = false;
     }
     void enable() { m_enabled = true; }
-    void setPicturePath(const char* path) {
-        if (m_PicturePath) {
-            x_ps_free(&m_PicturePath);
-            m_PicturePath = NULL;
-        }
-        if (path)
-            m_PicturePath = x_ps_strdup(path);
-        else
-            m_PicturePath = x_ps_strdup("picturePath is not set");
-        if (path) { GetImageSize(path); }
+
+    void setPicturePath(ps_ptr<char> path) {
+        m_PicturePath = path;
+        imgSize img = GetImageSize(path);
+        m_image_w = img.w;
+        m_image_h = img.h;
     }
-    void setAlternativPicturePath(const char* path) {
-        x_ps_free(&m_altPicturePath);
-        if (path) m_altPicturePath = x_ps_strdup(path);
-        //    else m_altPicturePath = x_ps_strdup("alternativePicturePath is not set");
+    void setAlternativPicturePath(ps_ptr<char> path) {
+        m_altPicturePath = path;
     }
     bool positionXY(uint16_t x, uint16_t y) {
         if (x < m_x) return false;
@@ -2512,85 +2588,6 @@ class pictureBox : public RegisterTable {
         m_clicked = false;
         if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
         return true;
-    }
-
-  private:
-    bool GetImageSize(const char* picturePath) {
-        if (!picturePath) return false;
-        ps_ptr<char> pp = picturePath;
-        auto         scaledPicPath = scaleImage(pp);
-        if (!SD_MMC.exists(scaledPicPath.c_get())) { /* log_w("file %s not exists, objName: %s", scaledPicPath, m_name)*/
-            MWR_LOG_ERROR("cannot open file %s", scaledPicPath.c_get());
-            return false;
-        }
-        File file = SD_MMC.open(scaledPicPath.c_get(), "r", false);
-        if (file.size() < 24) {
-            MWR_LOG_WARN("file %s is too small", scaledPicPath.c_get());
-            file.close();
-            return false;
-        }
-        char buf[8];
-        file.readBytes(buf, 3);
-        if ((buf[0] == 0xFF) && (buf[1] == 0xD8) && (buf[2] == 0xFF)) { // format jpeg
-            int16_t c1, c2;
-            while (true) {
-                c1 = file.read();
-                if (c1 == -1) {
-                    MWR_LOG_WARN("sof marker in %s not found", scaledPicPath.c_get());
-                    file.close();
-                    return false;
-                } // end of file reached
-                if (c1 == 0xFF) {
-                    c2 = file.read();
-                    if (c2 == 0xC0) break;
-                } // 0xFFC0 Marker found
-            }
-            file.readBytes(buf, 7);
-            m_image_h = buf[3] * 256 + buf[4];
-            m_image_w = buf[5] * 256 + buf[6];
-            //    log_i("w %i, h %i", m_w, m_h);
-            return true;
-        }
-        if ((buf[0] == 'B') && (buf[1] == 'M') && (buf[2] == '6')) { // format bmp
-            for (int i = 0; i < 15; i++) file.read();                // read 15 dummys
-            m_image_w = file.read();                                 // pos 18
-            m_image_w += (file.read() << 8);
-            m_image_w += (file.read() << 16);
-            m_image_w += (file.read() << 24);
-            m_image_h = file.read(); // pos 22
-            m_image_h += (file.read() << 8);
-            m_image_h += (file.read() << 16);
-            m_image_h += (file.read() << 24);
-            //    log_i("w %i, h %i", m_w, m_h);
-            return true;
-        }
-        if ((buf[0] == 'G') && (buf[1] == 'I') && (buf[2] == 'F')) { // format gif
-            for (int i = 0; i < 3; i++) file.read();                 // read 3 dummys
-            m_image_w = file.read();                                 // pos 6
-            m_image_w += (file.read() << 8);
-            m_image_h = file.read(); // pos 8
-            m_image_h += (file.read() << 8);
-            //    log_i("w %i, h %i", m_w, m_h);
-            return true;
-        }
-        if ((buf[0] == 0x89) && (buf[1] == 'P') && (buf[2] == 'N')) { // format png
-            for (int i = 0; i < 13; i++) file.read();                 // read 13 dummys
-            m_image_w = file.read() << 24;                            // pos 16
-            m_image_w += file.read() << 16;                           // pos 17
-            m_image_w += file.read() << 8;                            // pos 18
-            m_image_w += file.read();                                 // pos 19
-            m_image_h = file.read() << 24;                            // pos 20
-            m_image_h += file.read() << 16;                           // pos 21
-            m_image_h += file.read() << 8;                            // pos 22
-            m_image_h += file.read();                                 // pos 23
-
-            // bitDepth  = header[24];  // Position 24 = Bit-Tiefe
-            // colorType = header[25];  // Position 25 = Farbtyp
-            // log_w("w %i, h %i", m_w, m_h);
-            return true;
-        }
-        MWR_LOG_ERROR("unknown picture format %s", picturePath);
-        return false;
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -2615,65 +2612,6 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
         uint8_t  pt = 0;
         uint8_t  pb = 0;
     } s_h10, s_h01, s_c, s_m10, s_m01;
-#if TFT_CONTROLLER < 2
-    uint16_t m_digitsYoffset = 30;
-    //------------------------------------------------------------------------padding-left-right-top-bottom--------------------------------------------------
-    struct w_h10 {
-        uint16_t x = 4;
-        uint16_t w = 72;
-        uint16_t h = 120;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_h10; // Hour * 10     72 x 120 px
-    struct w_h01 {
-        uint16_t x = 76;
-        uint16_t w = 72;
-        uint16_t h = 120;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_h01; // Hour * 01     72 x 120 px
-    struct w_c {
-        uint16_t x = 148;
-        uint16_t w = 24;
-        uint16_t h = 120;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_c; // Colon         24 x 120 px
-    struct w_m10 {
-        uint16_t x = 172;
-        uint16_t w = 72;
-        uint16_t h = 120;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_m10; // Minute * 10   72 x 120 px
-    struct w_m01 {
-        uint16_t x = 244;
-        uint16_t w = 72;
-        uint16_t h = 120;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_m01; // Minute * 01   72 x 120 px
-    //-------------------------------------------------------------------------------------------------------------------------------------------------------
-#elif TFT_CONTROLLER < 7
-
-    //-------------------------------------------------------------------------------------------------------------------------------------------------------
-#elif TFT_CONTROLLER == 7
-
-
-    //-------------------------------------------------------------------------------------------------------------------------------------------------------
-#elif TFT_CONTROLLER == 8
-
-#endif
 
     uint32_t     m_bgColor = 0;
     bool         m_enabled = false;
@@ -2811,30 +2749,25 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
 private:
     void placingDigits(uint16_t w, uint16_t h){
         uint16_t digits_y = 0, digits_w = 0, colon_w = 0, digits_h = 0, paddig_l = 0;
-        if(w == 480){ // digits 110x182, colon 39x182
-            digits_w = 110;
-            colon_w = 39;
-            digits_h = 182;
-            digits_y = (h - digits_h) / 2;
-            paddig_l = (w - (4 * digits_w + colon_w)) / 2;
+
+        imgSize img = GetImageSize("/digits/l/0green.jpg"); // get size of digit '0'
+        if(img.w == 0 || img.h == 0){
+            MWR_LOG_ERROR("cannot get digit size");
+            return;
         }
-        else if(w == 800){ // digits 170x280, colon 59x280
-            digits_w = 170;
-            colon_w = 59;
-            digits_h = 280;
-            digits_y = (h - digits_h) / 2;
-            paddig_l = (w - (4 * digits_w + colon_w)) / 2;
+        MWR_LOG_DEBUG("digits w = %i, h = %i", img.w, img.h);
+        digits_w = img.w;
+        digits_h = img.h;
+
+        img = GetImageSize("/digits/l/cgreen.jpg"); // get size of colon
+        if(img.w == 0 || img.h == 0){
+            MWR_LOG_ERROR("cannot get colon size");
+            return;
         }
-        else if(w == 1024){ // digits 225x350, colon 70x350
-            digits_w = 225;
-            colon_w = 70;
-            digits_h = 350;
-            digits_y = (h - digits_h) / 2;
-            paddig_l = (w - (4 * digits_w + colon_w)) / 2;
-        }
-        else{
-            MWR_LOG_ERROR("wrong h-resolution %i", w);
-        }
+        MWR_LOG_DEBUG("colon w = %i, h = %i", img.w, img.h);
+        colon_w = img.w;
+        digits_y = (h - digits_h) / 2;
+        paddig_l = (w - (4 * digits_w + colon_w)) / 2;
         s_h10.x = paddig_l;
         s_h10.y = digits_y;
         s_h10.w = digits_w;
@@ -3180,74 +3113,13 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
         uint8_t  pb = 0;
     } s_h10, s_h01, s_c, s_m10, s_m01;
 
-    uint16_t m_alarmdaysXPos[7] = {0};
-    uint16_t m_alarmdaysYPos = 0;
-    uint16_t m_alarmtimeYPos = 0;
-    uint16_t  m_alarmdaysYoffset = 0;
-    uint16_t  m_alarmdaysW = 0;
-    uint16_t  m_alarmdaysH = 0;
-    uint16_t  m_fontSize   = 0; // auto
-#if TFT_CONTROLLER < 2
-    uint16_t m_alarmdaysXPos[7] = {2, 47, 92, 137, 182, 227, 272}; // same as altarmTimeXPos
-    uint8_t  m_alarmdaysYoffset = 2;
-    uint8_t  m_alarmdaysW = 44;
-    uint8_t  m_alarmdaysH = 24;
-    uint8_t  m_fontSize = 0; // auto
-    //------------------------------------------------------------------------padding-left-right-top-bottom--------------------------------------------------
-    struct w_h10 {
-        uint16_t x = 4;
-        uint16_t w = 72;
-        uint16_t h = 104;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_h10; // Hour * 10    72 x 104 px
-    struct w_h01 {
-        uint16_t x = 76;
-        uint16_t w = 72;
-        uint16_t h = 104;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_h01; // Hour * 01    72 x 104 px
-    struct w_c {
-        uint16_t x = 148;
-        uint16_t w = 72;
-        uint16_t h = 104;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_c; // Colon        24 x 104 px
-    struct w_m10 {
-        uint16_t x = 172;
-        uint16_t w = 72;
-        uint16_t h = 104;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_m10; // Minute * 10  72 x 104 px
-    struct w_m01 {
-        uint16_t x = 244;
-        uint16_t w = 72;
-        uint16_t h = 104;
-        uint8_t  pl = 0;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 0;
-    } const s_m01; // Minute * 01  72 x 104 px
-    //-------------------------------------------------------------------------------------------------------------------------------------------------------
-#elif TFT_CONTROLLER < 7
-
-    //-------------------------------------------------------------------------------------------------------------------------------------------------------
-#else // 800 x 480px
-
-    //-------------------------------------------------------------------------------------------------------------------------------------------------------
-#endif
-
+    uint16_t     m_alarmdaysXPos[7] = {0};
+    uint16_t     m_alarmdaysYPos = 0;
+    uint16_t     m_alarmtimeYPos = 0;
+    uint16_t     m_alarmdaysYoffset = 0;
+    uint16_t     m_alarmdaysW = 0;
+    uint16_t     m_alarmdaysH = 0;
+    uint16_t     m_fontSize   = 0; // auto
     uint32_t     m_bgColor = 0;
     bool         m_enabled = false;
     bool         m_clicked = false;
@@ -3546,27 +3418,22 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
     void placingDigits(uint16_t w, uint16_t h){
         uint16_t digits_y = 0, digits_w = 0, colon_w = 0, digits_h = 0, digits_paddig_l = 0, alarmdays_padding_l = 0;
         uint16_t h4 = h / 4; // [1/4 days, time + 3/4 digits]
-        if(w == 480){ // digits 84x140, colon 30x140, h 198 -> h4 49
-            digits_w = 84;
-            colon_w = 30;
-            digits_h = 140;
-            digits_y = (3 * h4 - digits_h) / 2 + h4;
+
+       imgSize img = GetImageSize("/digits/m/0green.jpg"); // get size of digit '0'
+        if(img.w == 0 || img.h == 0){
+            MWR_LOG_ERROR("cannot get digit size");
+            return;
         }
-        else if(w == 800){ // digits 121x200, colon 42x200, h 293 -> h4 73
-            digits_w = 121;
-            colon_w = 42;
-            digits_h = 200;
-            digits_y = (3 * h4 - digits_h) / 2 + h4;
+        MWR_LOG_DEBUG("digits w = %i, h = %i", img.w, img.h);
+        digits_w = img.w;
+        digits_h = img.h;
+
+        img = GetImageSize("/digits/m/cred.jpg"); // get size of colon
+        if(img.w == 0 || img.h == 0){
+            MWR_LOG_ERROR("cannot get colon size");
+            return;
         }
-        else if(w == 1024){ // digits 158x260, colon 55x260, h 370 -> h4 92
-            digits_w = 158;
-            colon_w = 55;
-            digits_h = 260;
-            digits_y = (3 * h4 - digits_h) / 2 + h4;
-        }
-        else{
-            MWR_LOG_ERROR("wrong h-resolution %i", h);
-        }
+        colon_w = img.w;
 
         digits_y = (3 * h4 - digits_h) / 2 + h4;
         digits_paddig_l = (w - (4 * digits_w + colon_w)) / 2;
