@@ -797,8 +797,10 @@ bool connectToWiFi() {
     WiFi.setAutoReconnect(true);
     if (WIFI_TX_POWER >= 2 && WIFI_TX_POWER <= 21) WiFi.setTxPower((wifi_power_t)(WIFI_TX_POWER * 4));
     SerialPrintfln("WiFI_info:   " ANSI_ESC_GREEN "WiFi connected" ANSI_ESC_RESET "  ");
-    vTaskDelay(500);
-    SerialPrintfln("WiFI_info:   " ANSI_ESC_GREEN "IP address: %s" ANSI_ESC_RESET "  ", WiFi.localIP().toString().c_str());
+    vTaskDelay(1000);
+    s_myIP = WiFi.localIP().toString().c_str();
+    SerialPrintfln("WiFI_info:   connected to " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE ", IP address is " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE ", Received Signal Strength " ANSI_ESC_CYAN
+                       "%i" ANSI_ESC_WHITE " dB" ANSI_ESC_RESET "   ", WiFi.SSID().c_str(), s_myIP.c_get(), WiFi.RSSI());
     return true; // can't connect to any network
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -1129,15 +1131,6 @@ void setup() {
     if (s_volume.volumeSteps < 21) s_volume.volumeSteps = 21;
 
     s_f_isWiFiConnected = connectToWiFi();
-
-    if (s_f_isWiFiConnected) {
-        s_myIP = WiFi.localIP().toString().c_str();
-
-        SerialPrintfln("setup: ....  connected to " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE ", IP address is " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE ", Received Signal Strength " ANSI_ESC_CYAN
-                       "%i" ANSI_ESC_WHITE " dB" ANSI_ESC_RESET "   ", WiFi.SSID().c_str(), s_myIP.c_get(), WiFi.RSSI());
-
-
-    }
 
     placingGraphicObjects();
     sdr_BR_value.setValue(s_brightness);

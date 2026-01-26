@@ -2474,7 +2474,7 @@ private:
         m_digitsXpos[1] = m_digitsXpos[0] + m_digitsWidth;
         m_digitsXpos[2] = m_digitsXpos[1] + m_colonWidth;
         m_digitsXpos[3] = m_digitsXpos[2] + m_digitsWidth;
-        MWR_LOG_INFO("box w=%i, h=%i, x=%i, y=%i, x0=%i, x1=%i, x2=%i, x3=%i", m_box_w, m_box_h, m_box_x, m_box_y, m_digitsXpos[0], m_digitsXpos[1], m_digitsXpos[2], m_digitsXpos[3]);
+        MWR_LOG_DEBUG("box w=%i, h=%i, x=%i, y=%i, x0=%i, x1=%i, x2=%i, x3=%i", m_box_w, m_box_h, m_box_x, m_box_y, m_digitsXpos[0], m_digitsXpos[1], m_digitsXpos[2], m_digitsXpos[3]);
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -3629,7 +3629,7 @@ class dlnaList : public RegisterTable {
     uint8_t                                    m_lineHight = 0;
     uint8_t                                    m_browseOnRelease = 0;
     uint8_t                                    m_itemListPos = 0;
-    uint8_t                                    m_itemListPos_old = 0;
+    uint8_t                                    m_itemListPos_last = 0;
     int8_t                                     m_currDLNAsrvNr = -1;
     int16_t                                    m_currItemNr[10] = {0};
     int16_t                                    m_viewPoint = 0;
@@ -3739,9 +3739,9 @@ class dlnaList : public RegisterTable {
         m_clicked = false;
 
         if (m_chptr || (m_itemListPos == 0 && (*m_dlnaLevel) > 0)) {
-            if(m_itemListPos_old != m_itemListPos) drawItem(m_itemListPos_old, false); // redraw old line, make white
+            if(m_itemListPos_last != m_itemListPos) drawItem(m_itemListPos_last, false); // redraw old line, make default color
             bool res = drawItem(m_itemListPos, true); // make cyan or magenta
-            m_itemListPos_old = m_itemListPos;
+        //    m_itemListPos_last = m_itemListPos;
             m_chptr = NULL;
             if(res == false) return false;
             vTaskDelay(300);
@@ -3758,7 +3758,6 @@ class dlnaList : public RegisterTable {
         }
         if (m_browseOnRelease == 3) { // folder, next level
             (*m_dlnaLevel)++;
-            MWR_LOG_ERROR("childcount %i", m_dlnaHistory[*m_dlnaLevel].childCount);
             if( m_dlnaHistory[*m_dlnaLevel].childCount == 0) return false;
             m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId.c_get(), 0, 9);
         }
@@ -3793,7 +3792,6 @@ class dlnaList : public RegisterTable {
         sprintf(m_buff, "%i-%i/%i", m_viewPoint + 1, m_viewPoint + (pos - 1), m_dlnaMaxItems); // shows the current items pos e.g. "30-39/210"
         tft.setTextColor(TFT_ORANGE);
         tft.writeText(m_buff, 10, m_y, m_w - 10, m_lineHight, TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER, true, true);
-        m_itemListPos_old = 0;
         return;
     }
 
@@ -3809,7 +3807,8 @@ class dlnaList : public RegisterTable {
         bool         isURL = false;
         bool         isServer = false;
         bool         res = false;
-        const char *item = dummy, *itemURL = dummy, *color = ANSI_ESC_WHITE; (void)itemURL;
+        const char *item = dummy, *itemURL = dummy; (void)itemURL;
+        ps_ptr<char> color = ANSI_ESC_WHITE;
         ps_ptr<char> duration = "?";
         int32_t      itemSize = 0;
         int16_t      childCount = 0;
@@ -3818,10 +3817,11 @@ class dlnaList : public RegisterTable {
             if (pos + m_viewPoint == m_currItemNr[*m_dlnaLevel] + 1) { color = ANSI_ESC_MAGENTA; }
             else                                                     { color = ANSI_ESC_ORANGE; }
             if (selectedLine)                                        { color = ANSI_ESC_CYAN; res = true; }
-            myList.drawLine(pos, m_dlnaHistory[*m_dlnaLevel].name.c_get(), "", "", color, 1);
+            myList.drawLine(pos, m_dlnaHistory[*m_dlnaLevel].name.c_get(), "", "", color.c_get(), 1);
+            if(color == ANSI_ESC_MAGENTA) m_itemListPos_last = pos;
             return res;
         }
-
+        myList.drawLine(0, m_dlnaHistory[*m_dlnaLevel].name.c_get(), "", "", ANSI_ESC_ORANGE, 1);
         if (*m_dlnaLevel == 0) { // is list of server
             if (m_dlnaServer->at(pos - 1).friendlyName.c_get()) {
                 item = m_dlnaServer->at(pos - 1).friendlyName.c_get();
@@ -3850,7 +3850,8 @@ class dlnaList : public RegisterTable {
         if (childCount)                                                 { sprintf(extension, "%i", childCount); } // only folders have childCount
         if (itemSize)                                                   { sprintf(extension, "%li", itemSize);  } // only files have itemsize
         if (!duration.equals("?"))                                      { sprintf(extension, "%s", duration.c_get()); } // must be a audiofile
-        myList.drawLine(pos, item, extension, itemURL, color, 1);
+        if(color == ANSI_ESC_MAGENTA) { m_itemListPos_last = pos; }
+        myList.drawLine(pos, item, extension, itemURL, color.c_get(), 1);
         return res;
     }
 
