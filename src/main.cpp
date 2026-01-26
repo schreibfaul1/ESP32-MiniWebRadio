@@ -1419,6 +1419,7 @@ void setStationByNumber(uint16_t staNr) {
 
 void StationsItems() {
     ps_ptr<char> stationLogo_air = "/logo/" + s_stationName_air + ".jpg";
+    auto         scImg = scaleImage(stationLogo_air);
     char         staNr[10];
     itoa(s_cur_station, staNr, 10);
 
@@ -3434,7 +3435,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
 
     CMD_EQUALS("SD/"){                  if(!webSrv.streamfile(SD_MMC, scaleImage(param).c_get())){                                               // via XMLHttpRequest
                                         SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "The file could not be transferred " ANSI_ESC_RED "\"%s\"" ANSI_ESC_RESET "  ", param.get());
-                                        webSrv.sendStatus(404);} // not found
+                                        webSrv.streamfile(SD_MMC, scaleImage("/common/unknown.jpg"));}
                                         return;}
 
     CMD_EQUALS("SD_Download"){          webSrv.streamfile(SD_MMC, param.c_get());                                                                         // via XMLHttpRequest

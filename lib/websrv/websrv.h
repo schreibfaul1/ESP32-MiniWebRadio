@@ -102,7 +102,7 @@ class WebSrv {
     void loop();
     void show(const char* pagename, const char* MIMEType, int16_t len = -1);
     void show_not_found();
-    bool streamfile(fs::FS& fs, const char* path);
+    bool streamfile(fs::FS& fs, ps_ptr<char> path);
     bool send(const char* cmd, int msg, uint8_t opcode = Text_Frame);
     bool send(ps_ptr<char> cmd, ps_ptr<char> msg = "", uint8_t opcode = Text_Frame);
     void sendPing();

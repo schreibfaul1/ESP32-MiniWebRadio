@@ -109,17 +109,17 @@ void WebSrv::show(const char* pagename, const char* MIMEType, int16_t len) {
     cmdclient.clear();
 }
 //--------------------------------------------------------------------------------------------------------------
-bool WebSrv::streamfile(fs::FS& fs, const char* path) { // transfer file from SD to webbrowser
+bool WebSrv::streamfile(fs::FS& fs, ps_ptr<char> path) { // transfer file from SD to webbrowser
 
-    if (!path) {
+    if (path.strlen() == 0) {
         m_msg.e = evt_error;
         m_msg.arg.assignf(ANSI_ESC_RED "SD path is null");
         if (m_websrv_callback) m_websrv_callback(m_msg);
         return false;
     } // guard
-    if (strlen(path) > 1024) {
+    if (path.strlen() > 1024) {
         m_msg.e = evt_info;
-        m_msg.arg.assignf(ANSI_ESC_RED "SD path is too long %i bytes", strlen(path));
+        m_msg.arg.assignf(ANSI_ESC_RED "SD path is too long %i bytes", path.strlen());
         if (m_websrv_callback) m_websrv_callback(m_msg);
         return false;
     } // guard
@@ -131,16 +131,19 @@ bool WebSrv::streamfile(fs::FS& fs, const char* path) { // transfer file from SD
             return false;
         }
     } // guard
-    if (!fs.exists(path)) {
+    if (!fs.exists(path.c_get())) {
+        if(path.ends_with(".jpg")){
+            return false;
+        }
         show_not_found();
         return false;
     } // guard
 
     ps_ptr<char> c_path;
-    c_path.copy_from(path);
+    c_path.copy_from(path.c_get());
     c_path.truncate_at('?'); // Remove query string
 
-    File file = fs.open(path, "r");
+    File file = fs.open(path.c_get(), "r");
     if (!file) {
         m_msg.e = evt_info;
         m_msg.arg.assignf("Failed to open file for reading: %s", c_path.c_get());

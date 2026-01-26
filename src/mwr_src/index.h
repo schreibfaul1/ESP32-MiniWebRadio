@@ -166,7 +166,6 @@ const char index_html[] PROGMEM = R"=====(
             width : 128px;
             height : 128px;
             margin-top: 5px;
-            background-image : url(SD/common/unknown.jpg);
         }
         #label-bt-logo {
             margin-left : 4px;
@@ -639,9 +638,9 @@ function connect() {
                                         break
             case "stationURL":          station.value = val
                                         break
-            case "stationLogo":         showLogo1('label-logo', val)
+            case "stationLogo":         showLogo('label-logo', val)
                                         break
-            case "hardcopy":            showLogo1('label-infopic', val)
+            case "hardcopy":            showLogo('label-infopic', val)
             case "streamtitle":         cmd.value = val
                                         break
             case "homepage":            window.open(val, '_blank') // show the station homepage
@@ -650,7 +649,7 @@ function connect() {
                                         break
             case "AudioFileList":       getAudioFileList(val)
                                         break
-            case "tftSize":             if(val == 's')  { tft_size = 0; // 320x240px
+            case "tftSize":             if(val == 's')  { tft_size = 's'; // 320x240px
                                                             document.getElementById('canvas').width  = 96;
                                                             document.getElementById('canvas').height = 96;
                                                             const img = document.getElementById('label-infopic');
@@ -658,7 +657,7 @@ function connect() {
                                                             img.style.height = '240px';
                                                             console.log("tftSize is s");
                                         }
-                                        if(val == 'm')  { tft_size = 1; // 480x320px
+                                        if(val == 'm')  { tft_size = 'm'; // 480x320px
                                                             document.getElementById('canvas').width  = 128;
                                                             document.getElementById('canvas').height = 128;
                                                             const img = document.getElementById('label-infopic');
@@ -666,7 +665,7 @@ function connect() {
                                                             img.style.height = '320px';
                                                             console.log("tftSize is m");
                                         }
-                                        if(val == 'l')  { tft_size = 2; // 800x480px
+                                        if(val == 'l')  { tft_size = 'l'; // 800x480px
                                                             document.getElementById('canvas').width  = 184;
                                                             document.getElementById('canvas').height = 184;
                                                             const img = document.getElementById('label-infopic');
@@ -674,7 +673,7 @@ function connect() {
                                                             img.style.height = '480px';
                                                             console.log("tftSize is l");
                                         }
-                                        if(val == 'xl')  { tft_size = 3; // 1024x600px
+                                        if(val == 'xl')  { tft_size = 'xl'; // 1024x600px
                                                             document.getElementById('canvas').width  = 232;
                                                             document.getElementById('canvas').height = 232;
                                                             const img = document.getElementById('label-infopic');
@@ -755,10 +754,10 @@ function connect() {
                                         if (val == 'IR_SETTINGS' && state != 'IR') showTab8();
                                         break;
             case "KCX_BT_connected":    console.log(msg, val)
-                                        if(val == '-1') {showLogo1('label-bt-logo', '/png/BT_off.png');}
-                                        if(val == '0')  {showLogo1('label-bt-logo', '/png/BT.png');}
-                                        if(val == '1' && bt_RxTx == 'TX') {showLogo1('label-bt-logo', '/png/BT_TX.png');}
-                                        if(val == '1' && bt_RxTx == 'RX') {showLogo1('label-bt-logo', '/png/BT_RX.png');}
+                                        if(val == '-1') {showLogo('label-bt-logo', '/png/BT_off.png');}
+                                        if(val == '0')  {showLogo('label-bt-logo', '/png/BT.png');}
+                                        if(val == '1' && bt_RxTx == 'TX') {showLogo('label-bt-logo', '/png/BT_TX.png');}
+                                        if(val == '1' && bt_RxTx == 'RX') {showLogo('label-bt-logo', '/png/BT_RX.png');}
                                         break;
             case "KCX_BT_power":        if(val == '1'){ document.getElementById('BT_Power').src = 'SD/png/BT_Blue.png'
                                                         console.log("BT Power on")}
@@ -1119,12 +1118,11 @@ async function loadFileFromSD(file_name, content_type) {
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 // --------------------------------------------------------- TAB RADIO -------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------------------------------------
-function showLogo1(id, src) { // get the bitmap from SD, convert to URL first
+function showLogo(id, src) { // get the pic from SD, convert to URL first
     const myImg = document.getElementById(id);
-    if(src == '') src = '/common/unknown.jpg'
     src = "/SD" + src
     src += "?" + new Date().getTime()
-    console.log("showLogo1 id=", id, "src=", src)
+    console.log("showLogo id=", id, "src=", src)
     myImg.src = src;
 }
 
