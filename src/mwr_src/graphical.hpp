@@ -3629,6 +3629,7 @@ class dlnaList : public RegisterTable {
     uint8_t                                    m_lineHight = 0;
     uint8_t                                    m_browseOnRelease = 0;
     uint8_t                                    m_itemListPos = 0;
+    uint8_t                                    m_itemListPos_old = 0;
     int8_t                                     m_currDLNAsrvNr = -1;
     int16_t                                    m_currItemNr[10] = {0};
     int16_t                                    m_viewPoint = 0;
@@ -3667,7 +3668,6 @@ class dlnaList : public RegisterTable {
         m_ra.arg2 = "";
         m_ra.val1 = 0;
         m_ra.val2 = 0;
-        for (uint8_t i = 0; i < 10; i++) m_currItemNr[i] = 0;
     }
     ~dlnaList() {
         x_ps_free(&m_name);
@@ -3682,14 +3682,25 @@ class dlnaList : public RegisterTable {
         m_enabled = false;
         m_lineHight = m_h / 10;
         m_tftSize = tftSize;
+
     }
-    void client_and_history(DLNA_Client* dlna, dlnaHistory_s* dh) {
+    void client_and_history(DLNA_Client* dlna, dlnaHistory_s* dh, uint8_t historySize) {
         m_dlna = dlna;
         m_dlnaHistory = dh;
+        for (uint8_t i = 0; i < historySize; i++) {
+            m_currItemNr[i] = 0;
+            m_dlnaHistory[i].objId = "0";
+            m_dlnaHistory[i].name = "";
+            m_dlnaHistory[i].maxItems = 9;
+            m_dlnaHistory[i].childCount = 0;
+        }
+        m_dlnaHistory[0].name = "Media Server";
     }
     ps_ptr<char> getName() { return m_name; }
-    bool         isEnabled() { return m_enabled; }
-    void         show(int8_t number, const std::deque<DLNA_Client::dlnaServer>& dlnaServer, const std::deque<DLNA_Client::srvItem>& srvContent, uint8_t* dlnaLevel, uint16_t maxItems) {
+
+    bool isEnabled() { return m_enabled; }
+
+    void show(int8_t number, const std::deque<DLNA_Client::dlnaServer>& dlnaServer, const std::deque<DLNA_Client::srvItem>& srvContent, uint8_t* dlnaLevel, uint16_t maxItems) {
         m_browseOnRelease = 0;
         m_dlnaServer = &dlnaServer;
         m_srvContent = &srvContent;
@@ -3706,6 +3717,7 @@ class dlnaList : public RegisterTable {
         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
     }
     void disable() { m_enabled = false; }
+
     bool positionXY(uint16_t x, uint16_t y) { // called every tine if x or y has changed
         if (x < m_x) return false;
         if (y < m_y) return false;
@@ -3727,25 +3739,29 @@ class dlnaList : public RegisterTable {
         m_clicked = false;
 
         if (m_chptr || (m_itemListPos == 0 && (*m_dlnaLevel) > 0)) {
-            drawItem(m_itemListPos, true);
+            if(m_itemListPos_old != m_itemListPos) drawItem(m_itemListPos_old, false); // redraw old line, make white
+            bool res = drawItem(m_itemListPos, true); // make cyan or magenta
+            m_itemListPos_old = m_itemListPos;
             m_chptr = NULL;
+            if(res == false) return false;
             vTaskDelay(300);
         }
 
         if (m_browseOnRelease == 0) { ; } // file
-        if (m_browseOnRelease == 1) {
+        if (m_browseOnRelease == 1) { // get serverlist
             (*m_dlnaLevel)++;
             m_dlna->browseServer(m_currDLNAsrvNr, "0", 0, 9);
-        } // get serverlist
-        if (m_browseOnRelease == 2) {
+        }
+        if (m_browseOnRelease == 2) { // previous level
             (*m_dlnaLevel)--;
-            if(*m_dlnaLevel == 0)  m_dlna->browseServer(m_currDLNAsrvNr, "0", 0, 9);
-            else                   m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId.c_get(), 0, 9);
-        } // previous level
-        if (m_browseOnRelease == 3) {
-            (*m_dlnaLevel)++;
             m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId.c_get(), 0, 9);
-        } // folder, next level
+        }
+        if (m_browseOnRelease == 3) { // folder, next level
+            (*m_dlnaLevel)++;
+            MWR_LOG_ERROR("childcount %i", m_dlnaHistory[*m_dlnaLevel].childCount);
+            if( m_dlnaHistory[*m_dlnaLevel].childCount == 0) return false;
+            m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId.c_get(), 0, 9);
+        }
         if (m_browseOnRelease == 4) { m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId.c_get(), m_viewPoint, 9); } // scroll up / down
 
         m_browseOnRelease = 0;
@@ -3777,67 +3793,65 @@ class dlnaList : public RegisterTable {
         sprintf(m_buff, "%i-%i/%i", m_viewPoint + 1, m_viewPoint + (pos - 1), m_dlnaMaxItems); // shows the current items pos e.g. "30-39/210"
         tft.setTextColor(TFT_ORANGE);
         tft.writeText(m_buff, 10, m_y, m_w - 10, m_lineHight, TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER, true, true);
-
+        m_itemListPos_old = 0;
         return;
     }
 
-    void drawItem(int8_t pos, bool selectedLine = false) { // pos 0 is parent, pos 1...9 are itens, selectedLine means released (ok)
-        if (pos < 0 || pos > 9) {
-            MWR_LOG_WARN("pos oor %i", pos);
-            return;
-        } // guard
-        if (*m_dlnaLevel == 0 && pos > m_dlnaServer->size()) { /* log_e("pos too high %i", pos);*/
-            return;
-        } // guard
-        if (*m_dlnaLevel > 0 && pos > m_srvContent->size()) { /* log_e("pos too high %i", pos);*/
-            return;
-        } // guard
-        char        extension[15] = {0};
-        char        dummy[] = "";
-        bool        isAudio = false;
-        bool        isURL = false;
-        const char *item = dummy, *duration = dummy, *itemURL = dummy, *color = ANSI_ESC_WHITE;
-        (void)itemURL;
-        int32_t itemSize = 0;
-        int16_t childCount = 0;
+    bool drawItem(int8_t pos, bool selectedLine = false) { // pos 0 is parent, pos 1...9 are itens, selectedLine means released (ok)
+
+        if (pos < 0 || pos > 9) { MWR_LOG_WARN("pos oor %i", pos); return false; } // guard
+        if (*m_dlnaLevel == 0 && pos > m_dlnaServer->size()) { /* log_e("pos too high %i", pos);*/ return false; } // guard
+        if (*m_dlnaLevel > 0 && pos > m_srvContent->size()) { /* log_e("pos too high %i", pos);*/  return false; } // guard
+
+        char         extension[15] = {0};
+        char         dummy[] = "";
+        bool         isAudio = false;
+        bool         isURL = false;
+        bool         isServer = false;
+        bool         res = false;
+        const char *item = dummy, *itemURL = dummy, *color = ANSI_ESC_WHITE; (void)itemURL;
+        ps_ptr<char> duration = "?";
+        int32_t      itemSize = 0;
+        int16_t      childCount = 0;
+
         if (pos == 0) {
-            if (pos + m_viewPoint == m_currItemNr[*m_dlnaLevel] + 1)
-                color = ANSI_ESC_MAGENTA;
-            else
-                color = ANSI_ESC_ORANGE;
-            if (selectedLine) color = ANSI_ESC_CYAN;
+            if (pos + m_viewPoint == m_currItemNr[*m_dlnaLevel] + 1) { color = ANSI_ESC_MAGENTA; }
+            else                                                     { color = ANSI_ESC_ORANGE; }
+            if (selectedLine)                                        { color = ANSI_ESC_CYAN; res = true; }
             myList.drawLine(pos, m_dlnaHistory[*m_dlnaLevel].name.c_get(), "", "", color, 1);
-            return;
+            return res;
         }
-        if (*m_dlnaLevel == 0) {
-            if (m_dlnaServer->at(pos - 1).friendlyName.c_get()) item = m_dlnaServer->at(pos - 1).friendlyName.c_get();
-        } else {
-            if (m_srvContent->at(pos - 1).title.c_get()) item = m_srvContent->at(pos - 1).title.c_get();
-            itemSize = m_srvContent->at(pos - 1).itemSize;
-            childCount = m_srvContent->at(pos - 1).childCount;
-            if (m_srvContent->at(pos - 1).duration.c_get()) duration = m_srvContent->at(pos - 1).duration.c_get();
-            isAudio = m_srvContent->at(pos - 1).isAudio;
+
+        if (*m_dlnaLevel == 0) { // is list of server
+            if (m_dlnaServer->at(pos - 1).friendlyName.c_get()) {
+                item = m_dlnaServer->at(pos - 1).friendlyName.c_get();
+                isServer = true;
+            }
+        } else { // is list of folder or file
+            if (m_srvContent->at(pos - 1).title.c_get()) {
+                item = m_srvContent->at(pos - 1).title.c_get();
+                itemSize = m_srvContent->at(pos - 1).itemSize;
+                childCount = m_srvContent->at(pos - 1).childCount;
+                duration = m_srvContent->at(pos - 1).duration;
+            }
             if (startsWith(m_srvContent->at(pos - 1).itemURL.c_get(), "http")) {
+                isAudio = m_srvContent->at(pos - 1).isAudio;
                 isURL = true;
                 itemURL = m_srvContent->at(pos - 1).itemURL.c_get();
             }
         }
 
-        if ((pos - 1) + m_viewPoint == m_currItemNr[*m_dlnaLevel]) {
-            color = ANSI_ESC_MAGENTA;
-        } else if (isURL && isAudio) {
-            color = ANSI_ESC_YELLOW;
-        } else {
-            color = ANSI_ESC_WHITE;
-        }
-        if (selectedLine) { color = ANSI_ESC_CYAN; }
-
-        if (childCount) { sprintf(extension, "%i", childCount); }
-        if (itemSize) { sprintf(extension, "%li", itemSize); }
-        if (duration[0] != '?') {
-            if (strcmp(duration, "0:00:00") != 0) sprintf(extension, "%s", duration);
-        }
+        if (isURL && isAudio)                                           { color = ANSI_ESC_YELLOW; } // is audiofile
+        else if ((pos - 1) + m_viewPoint == m_currItemNr[*m_dlnaLevel]) { color = ANSI_ESC_MAGENTA;} // is current item
+        else                                                            { color = ANSI_ESC_WHITE; }  // all other
+        if (selectedLine && childCount > 0)                             { color = ANSI_ESC_CYAN; res = true; }    // is folder with childs
+        if (selectedLine && isServer)                                   { color = ANSI_ESC_CYAN; res = true; }    // is server
+        if (selectedLine && isURL && isAudio)                           { color = ANSI_ESC_CYAN; res = true; }    // is file
+        if (childCount)                                                 { sprintf(extension, "%i", childCount); } // only folders have childCount
+        if (itemSize)                                                   { sprintf(extension, "%li", itemSize);  } // only files have itemsize
+        if (!duration.equals("?"))                                      { sprintf(extension, "%s", duration.c_get()); } // must be a audiofile
         myList.drawLine(pos, item, extension, itemURL, color, 1);
+        return res;
     }
 
     void hasReleased(uint16_t x, uint16_t y) {
@@ -3922,6 +3936,7 @@ class dlnaList : public RegisterTable {
                     m_dlnaHistory[(*m_dlnaLevel) + 1].name = "dummy";
                     goto exit;
                 }
+                m_dlnaHistory[(*m_dlnaLevel) + 1].childCount = 0;
                 m_dlnaHistory[(*m_dlnaLevel) + 1].name = m_dlnaServer->at(m_itemListPos - 1).friendlyName;
                 m_browseOnRelease = 1;
                 goto exit;
@@ -3950,6 +3965,7 @@ class dlnaList : public RegisterTable {
             m_chptr = m_buff;
             m_dlnaHistory[(*m_dlnaLevel) + 1].objId = m_srvContent->at(m_itemListPos - 1).objectId;
             m_dlnaHistory[(*m_dlnaLevel) + 1].name = m_srvContent->at(m_itemListPos - 1).title;
+            m_dlnaHistory[(*m_dlnaLevel) + 1].childCount = m_srvContent->at(m_itemListPos - 1).childCount;
             m_browseOnRelease = 3;
             goto exit;
         }
@@ -4047,6 +4063,7 @@ class dlnaList : public RegisterTable {
         drawItem(m_currItemNr[*m_dlnaLevel] + 0 - m_viewPoint + 1); // make magenta
         drawItem(m_currItemNr[*m_dlnaLevel] - 1 - m_viewPoint + 1); // std colour
     }
+
     const char* getSelectedURL() { // ok from IR
         if (*m_dlnaLevel == 0) {   //------------------------------------------------------------------------------------------------------- choose server
             // log_e("server %s", m_dlnaServer.friendlyName[m_currItemNr[0]]);
@@ -4101,6 +4118,7 @@ class dlnaList : public RegisterTable {
             m_currItemNr[*m_dlnaLevel] = 0;
             m_dlnaHistory[*m_dlnaLevel].objId = m_srvContent->at(m_currItemNr[(*m_dlnaLevel) - 1] - m_viewPoint).objectId;
             m_dlnaHistory[*m_dlnaLevel].name = m_srvContent->at(m_currItemNr[(*m_dlnaLevel) - 1] - m_viewPoint).title;
+            m_dlnaHistory[*m_dlnaLevel].childCount = m_srvContent->at(m_currItemNr[(*m_dlnaLevel) - 1] - m_viewPoint).childCount;
             m_viewPoint = 0;
             m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId.c_get(), 0, 9);
             m_dlna->loop();

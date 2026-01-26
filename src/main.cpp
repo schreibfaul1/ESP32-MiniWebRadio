@@ -797,6 +797,8 @@ bool connectToWiFi() {
     WiFi.setAutoReconnect(true);
     if (WIFI_TX_POWER >= 2 && WIFI_TX_POWER <= 21) WiFi.setTxPower((wifi_power_t)(WIFI_TX_POWER * 4));
     SerialPrintfln("WiFI_info:   " ANSI_ESC_GREEN "WiFi connected" ANSI_ESC_RESET "  ");
+    vTaskDelay(500);
+    SerialPrintfln("WiFI_info:   " ANSI_ESC_GREEN "IP address: %s" ANSI_ESC_RESET "  ", WiFi.localIP().toString().c_str());
     return true; // can't connect to any network
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -1134,15 +1136,7 @@ void setup() {
         SerialPrintfln("setup: ....  connected to " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE ", IP address is " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE ", Received Signal Strength " ANSI_ESC_CYAN
                        "%i" ANSI_ESC_WHITE " dB" ANSI_ESC_RESET "   ", WiFi.SSID().c_str(), s_myIP.c_get(), WiFi.RSSI());
 
-        if (!MDNS.begin("MiniWebRadio")) {  SerialPrintfln("%s", "WiFI_info:   " ANSI_ESC_YELLOW "Error starting mDNS", ANSI_ESC_RESET); }
-        else {                              SerialPrintfln("%s", "WiFI_info:   mDNS started");
-                                            MDNS.addService("esp32", "tcp", 80);
-                                            SerialPrintfln("WiFI_info:   mDNS name: " ANSI_ESC_CYAN "MiniWebRadio" ANSI_ESC_RESET);
-        }
-        ArduinoOTA.setHostname("MiniWebRadio");
-        ArduinoOTA.begin();
-        ftpSrv.begin(SD_MMC, FTP_USERNAME, FTP_PASSWORD); // username, password for ftp.
-        setRTC(s_TZString);
+
     }
 
     placingGraphicObjects();
@@ -1165,7 +1159,7 @@ void setup() {
     btn_PL_mute.setValue(s_f_mute);
     btn_DL_mute.setValue(s_f_mute);
     btn_BT_power.setValue(s_bt_emitter.power_state);
-    lst_DLNA.client_and_history(&dlna, &s_dlnaHistory[0]);
+    lst_DLNA.client_and_history(&dlna, &s_dlnaHistory[0], 10);
     lst_RADIO.currentStationNr(&s_cur_station);
     clk_AC_red.alarm_time_and_days(&s_alarmdays, s_alarmtime);
 
@@ -1196,12 +1190,6 @@ void setup() {
     }
 
     if (s_f_isWiFiConnected) webSrv.begin(80, 81); // HTTP port, WebSocket port
-
-    s_dlnaLevel = 0;
-    s_dlnaHistory[0].name = "Media Server";
-    s_dlnaHistory[0].objId = "";
-    s_dlnaHistory[1].objId = "0";
-    s_f_dlnaSeekServer = true;
 
     if (s_f_mute) { SerialPrintfln("setup: ....  volume is muted: (from " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET ")", s_volume.cur_volume); }
     setI2STone();
@@ -1234,6 +1222,16 @@ void setup() {
                 setStationViaURL(s_settings.lastconnectedhost.c_get(), "");
             }
         }
+        if (!MDNS.begin("MiniWebRadio")) {  SerialPrintfln("%s", "WiFI_info:   " ANSI_ESC_YELLOW "Error starting mDNS", ANSI_ESC_RESET); }
+        else {                              SerialPrintfln("%s", "WiFI_info:   mDNS started");
+                                            MDNS.addService("esp32", "tcp", 80);
+                                            SerialPrintfln("WiFI_info:   mDNS name: " ANSI_ESC_CYAN "MiniWebRadio" ANSI_ESC_RESET);
+        }
+        ArduinoOTA.setHostname("MiniWebRadio");
+        ArduinoOTA.begin();
+        ftpSrv.begin(SD_MMC, FTP_USERNAME, FTP_PASSWORD); // username, password for ftp.
+        setRTC(s_TZString);
+        s_f_dlnaSeekServer = true;
     } else {
         s_state = UNDEFINED;
         changeState(WIFI_SETTINGS, 0);

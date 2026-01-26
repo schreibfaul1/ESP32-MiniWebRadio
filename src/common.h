@@ -223,6 +223,7 @@ struct dlnaHistory_s {
     ps_ptr<char> objId;
     ps_ptr<char> name;
     uint16_t     maxItems = 0;
+    uint16_t     childCount = 0;
 };
 struct releasedArg {
     ps_ptr<char> arg1;
