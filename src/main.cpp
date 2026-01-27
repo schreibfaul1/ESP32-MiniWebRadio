@@ -499,7 +499,7 @@ void showStreamTitle(ps_ptr<char> streamtitle) {
 void showLogoAndStationName(bool force) {
     ps_ptr<char>        SN_utf8;
     ps_ptr<char>        path;
-    // ps_ptr<uint16_t>     staNr;
+    ps_ptr<char>        staNr;
     static ps_ptr<char> old_SN_utf8;
     if (force) { old_SN_utf8.reset(); }
 
@@ -511,20 +511,20 @@ void showLogoAndStationName(bool force) {
         SN_utf8 = s_stationName_air;
     }
     SN_utf8.trim();
+
+    path = "/logo/" + SN_utf8 + ".jpg";
+    if(!SD_MMC.exists(scaleImage(path).c_get())) path = "/common/unknown.png";
+
     if (old_SN_utf8 != SN_utf8) {
         old_SN_utf8 = SN_utf8;
         txt_RA_staName.setTextColor(TFT_CYAN);
         txt_RA_staName.setText(SN_utf8.c_get());
         txt_RA_staName.show(true, false);
+        pic_RA_logo.setPicturePath(path.c_get());
+        pic_RA_logo.show(true, false);
     }
 
-    path = "/logo/" + SN_utf8 + ".jpg";
-    if(!SD_MMC.exists(scaleImage(path).c_get())) path = "/common/unknown.png";
-    pic_RA_logo.setPicturePath(path.c_get());
-    pic_RA_logo.show(true, false);
-
-    char staNr[10];
-    itoa(s_cur_station, staNr, 10);
+    staNr.assignf("%i", s_cur_station);
     webSrv.send("stationLogo=", path.c_get());
     webSrv.send("stationNr=", staNr);
     webSrv.send("stationURL=", s_settings.lastconnectedhost.get());
@@ -3286,7 +3286,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
                                         SerialPrintfln("action: ...  new volume after alarm: " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET "  ", s_volume.volumeAfterAlarm); return;}
     CMD_EQUALS("homepage"){             webSrv.send("homepage=", s_homepage.c_get()); return;}
 
-    CMD_EQUALS("to_listen"){            StationsItems(); return;}   // via websocket, return the name and number of the current station
+    CMD_EQUALS("to_listen"){            showLogoAndStationName(false); return;}   // via websocket, return the name and number of the current station
     CMD_EQUALS("get_tone"){             webSrv.send("settone=", setI2STone().c_get()); return;}
 
     CMD_EQUALS("get_streamtitle"){      webSrv.reply(s_streamTitle.c_get(), webSrv.TEXT); return;}
@@ -3387,7 +3387,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
 
     CMD_EQUALS("SD/"){                  if(!webSrv.streamfile(SD_MMC, scaleImage(param).c_get())){                                               // via XMLHttpRequest
                                         SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "The file could not be transferred " ANSI_ESC_RED "\"%s\"" ANSI_ESC_RESET "  ", param.get());
-                                        webSrv.streamfile(SD_MMC, scaleImage("/common/unknown.jpg"));}
+                                        webSrv.streamfile(SD_MMC, scaleImage("/common/unknown.png"));}
                                         return;}
 
     CMD_EQUALS("SD_Download"){          webSrv.streamfile(SD_MMC, param.c_get());                                                                         // via XMLHttpRequest
@@ -3615,8 +3615,8 @@ void on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg) {
     }
     if (msg.e == KCX_BT_Emitter::evt_volume) {
         s_bt_emitter.volume = msg.val;
-        char v[5];
-        itoa(s_bt_emitter.volume, v, 10);
+        ps_ptr<char> v;
+        v.assignf("%i", s_bt_emitter.volume);
         txt_BT_volume.writeText(v);
         SerialPrintfln("BT-Emitter:  %s " ANSI_ESC_YELLOW "%i" ANSI_ESC_RESET "  ", "volume", msg.val);
     }

@@ -2656,7 +2656,7 @@ function appendToTerminal(text) {
         </div>
         <div style="display: flex;">
             <div id="div-logo" style="flex: 0 0 210px;">
-                <img id="label-logo" src="SD/common/unknown.jpg" alt="img" onclick="socket.send('homepage')"    >
+                <img id="label-logo" src="SD/common/unknown.png" alt="img" onclick="socket.send('homepage')"    >
             </div>
             <div id="div-tone-s" style="flex:1; justify-content: center;">
                 <div style="width: 380px; height:130px;">
