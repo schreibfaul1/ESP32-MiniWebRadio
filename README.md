@@ -49,6 +49,8 @@ Schematic<br>SPI Display
 ![Schematic ESP32-P4 with external DAC](docs/MWR_P4_SPI_Display_schematic.jpg)<br>
 <br>RGB Display
 ![Schematic ESP32-S3 with RGB Display](docs/MWR_V4_RGB_Display_schematic.jpg)<br>
+<br>DSI Display
+![Schematic ESP32-P4 with DSI Display](docs/MWR_P4_DSI_Display_schematic.jpg)<br>
 <br>
 
 [Display Layout](docs/MiniWebRadio%20V3.4%20Layout.pdf)<br>
