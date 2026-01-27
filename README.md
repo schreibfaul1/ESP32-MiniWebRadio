@@ -31,7 +31,7 @@ RGB Display (800x480) with Touchpad (I2C) or DSI Display (1024x600) with Touchpa
 <li>SD Card (FAT32) + SD adapter (can use SD slot on back of TFT display if available)</li>
 
 ![Display sizes](docs/Displaysizes.jpg)
-![Tested displays](docs/tested_displays.pdf)
+[Tested displays](docs/tested_displays.pdf)
 
 
 </ul>
