@@ -99,7 +99,8 @@ namespace layout_320x240 {
 
 constexpr uint16_t h_res = 320, v_res = 240; // horizontal - vertical resolution
 constexpr uint16_t h_footer = 20;            // footer height
-constexpr uint16_t hw_btn = 40 + 0;          // 40x40 + padding
+constexpr uint16_t hw_btn = 40 + 0;          // 40x40 + padding, normal buttons
+constexpr uint16_t hw_btn_s  = 32 + 2;       // 32x32 + padding, small buttons
 constexpr uint16_t h_progBar = 11;           // height progressBar and volumeSlider
 constexpr uint16_t w_vuMeter = 24;           // width vuMeter
 
@@ -125,23 +126,26 @@ constexpr coor winFooter = coor().pos(0, v_res - h_footer).size(h_res, h_footer)
 constexpr coor winButton = coor().pos(0, y_btn).size(hw_btn, hw_btn);
 constexpr coor winDigits = coor().pos(0, h_footer).size(h_res, y_btn - h_footer); // clock24, alarmclock
 constexpr coor winWoHF = coor().pos(0, h_footer).size(h_res, 2 * h_area);
-constexpr coor sdrHP = coor().pos(80,  h_footer + 0 * h_EQ).size(150, h_EQ).pad(0, 0, 8, 8);
-constexpr coor sdrBP = coor().pos(80,  h_footer + 1 * h_EQ).size(150, h_EQ).pad(0, 0, 8, 8);
-constexpr coor sdrLP = coor().pos(80,  h_footer + 2 * h_EQ).size(150, h_EQ).pad(0, 0, 8, 8);
-constexpr coor sdrBAL = coor().pos(80, h_footer + 3 * h_EQ).size(150, h_EQ).pad(0, 0, 8, 8);
+
 
 // -----------------------------------------------------------------------------------
 // window derived (calculated from others)
 // -----------------------------------------------------------------------------------
-constexpr coor btnHP = coor().pos(10, sdrHP.y).size(sdrHP.w, sdrHP.h);
-constexpr coor btnBP = coor().pos(10, sdrBP.y).size(sdrBP.w, sdrBP.h);
-constexpr coor btnLP = coor().pos(10, sdrLP.y).size(sdrLP.w, sdrLP.h);
-constexpr coor btnBAL = coor().pos(10, sdrBAL.y).size(sdrBAL.w, sdrBAL.h);
 
-constexpr coor txtHP = coor().pos(sdrHP.x + sdrHP.w, sdrHP.y).size(90, sdrHP.h);
-constexpr coor txtBP = coor().pos(sdrHP.x + sdrHP.w, sdrBP.y).size(90, sdrBP.h);
-constexpr coor txtLP = coor().pos(sdrHP.x + sdrHP.w, sdrLP.y).size(90, sdrLP.h);
-constexpr coor txtBAL = coor().pos(sdrHP.x + sdrHP.w, sdrBAL.y).size(90, sdrBAL.h);
+constexpr coor btnHP = coor().pos(  20, h_footer + 0 * h_EQ).size(hw_btn_s, hw_btn_s);
+constexpr coor btnBP = coor().pos(  20, h_footer + 1 * h_EQ).size(hw_btn_s, hw_btn_s);
+constexpr coor btnLP = coor().pos(  20, h_footer + 2 * h_EQ).size(hw_btn_s, hw_btn_s);
+constexpr coor btnBAL = coor().pos( 20, h_footer + 3 * h_EQ).size(hw_btn_s, hw_btn_s);
+
+constexpr coor sdrHP = coor().pos( 80, h_footer + 0 * h_EQ).size(150, h_EQ).pad(0, 0, 8, 8);
+constexpr coor sdrBP = coor().pos( 80, h_footer + 1 * h_EQ).size(150, h_EQ).pad(0, 0, 8, 8);
+constexpr coor sdrLP = coor().pos( 80, h_footer + 2 * h_EQ).size(150, h_EQ).pad(0, 0, 8, 8);
+constexpr coor sdrBAL = coor().pos(80, h_footer + 3 * h_EQ).size(150, h_EQ).pad(0, 0, 8, 8);
+
+constexpr coor txtHP = coor().pos( 250, h_footer + 0 * h_EQ).size(60, h_EQ);
+constexpr coor txtBP = coor().pos( 250, h_footer + 1 * h_EQ).size(60, h_EQ);
+constexpr coor txtLP = coor().pos( 250, h_footer + 2 * h_EQ).size(60, h_EQ);
+constexpr coor txtBAL = coor().pos(250, h_footer + 3 * h_EQ).size(60, h_EQ);
 
 inline constexpr uint8_t fonts[13] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66, 81, 96};
 
@@ -183,7 +187,8 @@ namespace layout_480x320 {
 
 constexpr uint16_t h_res = 480, v_res = 320; // horizontal - vertical resolution
 constexpr uint16_t h_footer = 30;            // footer height
-constexpr uint16_t hw_btn = 56 + 2;          // 56x56 + padding
+constexpr uint16_t hw_btn = 56 + 2;          // 56x56 + padding, normal buttons
+constexpr uint16_t hw_btn_s  = 44 + 2;       // 44x45 + padding, small buttons
 constexpr uint16_t h_progBar = 14;           // height progressBar and volumeSlider
 constexpr uint16_t w_vuMeter = 32;           // width vuMeter
 
@@ -208,23 +213,26 @@ constexpr coor winFooter = coor().pos(0, v_res - h_footer).size(h_res, h_footer)
 constexpr coor winButton = coor().pos(0, y_btn).size(hw_btn, hw_btn);
 constexpr coor winDigits = coor().pos(0, h_footer).size(h_res, y_btn - h_footer); // clock24, alarmclock
 constexpr coor winWoHF = coor().pos(0, h_footer).size(h_res, 2 * h_area); // window without header and footer
-constexpr coor sdrHP = coor().pos(140,  h_footer + 0 * h_EQ).size(200, h_EQ).pad(0, 0, 8, 8);
-constexpr coor sdrBP = coor().pos(140,  h_footer + 1 * h_EQ).size(200, h_EQ).pad(0, 0, 8, 8);
-constexpr coor sdrLP = coor().pos(140,  h_footer + 2 * h_EQ).size(200, h_EQ).pad(0, 0, 8, 8);
-constexpr coor sdrBAL = coor().pos(140, h_footer + 3 * h_EQ).size(200, h_EQ).pad(0, 0, 8, 8);
+
 
 // -----------------------------------------------------------------------------------
 // window derived (calculated from others)
 // -----------------------------------------------------------------------------------
-constexpr coor btnHP = coor().pos(50, sdrHP.y).size(sdrHP.w, sdrHP.h);
-constexpr coor btnBP = coor().pos(50, sdrBP.y).size(sdrBP.w, sdrBP.h);
-constexpr coor btnLP = coor().pos(50, sdrLP.y).size(sdrLP.w, sdrLP.h);
-constexpr coor btnBAL = coor().pos(50, sdrBAL.y).size(sdrBAL.w, sdrBAL.h);
 
-constexpr coor txtHP = coor().pos(sdrHP.x + sdrHP.w, sdrHP.y).size(140, sdrHP.h);
-constexpr coor txtBP = coor().pos(sdrHP.x + sdrHP.w, sdrBP.y).size(140, sdrBP.h);
-constexpr coor txtLP = coor().pos(sdrHP.x + sdrHP.w, sdrLP.y).size(140, sdrLP.h);
-constexpr coor txtBAL = coor().pos(sdrHP.x + sdrHP.w, sdrBAL.y).size(140, sdrBAL.h);
+constexpr coor btnHP = coor().pos(  50, h_footer + 0 * h_EQ).size(hw_btn_s, hw_btn_s);
+constexpr coor btnBP = coor().pos(  50, h_footer + 1 * h_EQ).size(hw_btn_s, hw_btn_s);
+constexpr coor btnLP = coor().pos(  50, h_footer + 2 * h_EQ).size(hw_btn_s, hw_btn_s);
+constexpr coor btnBAL = coor().pos( 50, h_footer + 3 * h_EQ).size(hw_btn_s, hw_btn_s);
+
+constexpr coor sdrHP = coor().pos( 120, h_footer + 0 * h_EQ).size(200, h_EQ).pad(0, 0, 8, 8);
+constexpr coor sdrBP = coor().pos( 120, h_footer + 1 * h_EQ).size(200, h_EQ).pad(0, 0, 8, 8);
+constexpr coor sdrLP = coor().pos( 120, h_footer + 2 * h_EQ).size(200, h_EQ).pad(0, 0, 8, 8);
+constexpr coor sdrBAL = coor().pos(120, h_footer + 3 * h_EQ).size(200, h_EQ).pad(0, 0, 8, 8);
+
+constexpr coor txtHP = coor().pos( 340, h_footer + 0 * h_EQ).size(120, h_EQ);
+constexpr coor txtBP = coor().pos( 340, h_footer + 1 * h_EQ).size(120, h_EQ);
+constexpr coor txtLP = coor().pos( 340, h_footer + 2 * h_EQ).size(120, h_EQ);
+constexpr coor txtBAL = coor().pos(340, h_footer + 3 * h_EQ).size(120, h_EQ);
 
 inline constexpr uint8_t fonts[13] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66, 81, 96};
 
@@ -265,8 +273,9 @@ namespace layout_800x480 {
 //                                             800
 
 constexpr uint16_t h_res = 800, v_res = 480; // horizontal - vertical resolution
-constexpr uint16_t h_footer = 50;            // footer height
-constexpr uint16_t hw_btn = 76 + 2;          // 76x76 + padding
+constexpr uint16_t h_footer  = 50;           // footer height
+constexpr uint16_t hw_btn    = 76 + 2;       // 76x76 + padding, normal buttons
+constexpr uint16_t hw_btn_s  = 65 + 2;       // 65x65 + padding, small buttons
 constexpr uint16_t h_progBar = 24;           // height progressBar and volumeSlider
 constexpr uint16_t w_vuMeter = 40;           // width vuMeter
 
@@ -293,23 +302,24 @@ constexpr coor winFooter = coor().pos(0, v_res - h_footer).size(h_res, h_footer)
 constexpr coor winButton = coor().pos(0, y_btn).size(hw_btn, hw_btn);
 constexpr coor winDigits = coor().pos(0, h_footer).size(h_res, y_btn - h_footer); // clock24, alarmclock
 constexpr coor winWoHF = coor().pos(0, h_footer).size(h_res, 2 * h_area);
-constexpr coor sdrHP = coor().pos(140,  h_footer + 0 * h_EQ).size(300, h_EQ).pad(0, 0, 8, 8);
-constexpr coor sdrBP = coor().pos(140,  h_footer + 1 * h_EQ).size(300, h_EQ).pad(0, 0, 8, 8);
-constexpr coor sdrLP = coor().pos(140,  h_footer + 2 * h_EQ).size(300, h_EQ).pad(0, 0, 8, 8);
-constexpr coor sdrBAL = coor().pos(140, h_footer + 3 * h_EQ).size(300, h_EQ).pad(0, 0, 8, 8);
 
 // -----------------------------------------------------------------------------------
 // window derived (calculated from others)
 // -----------------------------------------------------------------------------------
-constexpr coor btnHP = coor().pos(100, sdrHP.y).size(sdrHP.w, sdrHP.h);
-constexpr coor btnBP = coor().pos(100, sdrBP.y).size(sdrBP.w, sdrBP.h);
-constexpr coor btnLP = coor().pos(100, sdrLP.y).size(sdrLP.w, sdrLP.h);
-constexpr coor btnBAL = coor().pos(100, sdrBAL.y).size(sdrBAL.w, sdrBAL.h);
+constexpr coor btnHP = coor().pos( 100, h_footer + 0 * h_EQ).size(hw_btn_s, hw_btn_s);
+constexpr coor btnBP = coor().pos( 100, h_footer + 1 * h_EQ).size(hw_btn_s, hw_btn_s);
+constexpr coor btnLP = coor().pos( 100, h_footer + 2 * h_EQ).size(hw_btn_s, hw_btn_s);
+constexpr coor btnBAL = coor().pos(100, h_footer + 3 * h_EQ).size(hw_btn_s, hw_btn_s);
 
-constexpr coor txtHP = coor().pos(sdrHP.x + sdrHP.w, sdrHP.y).size(190, sdrHP.h);
-constexpr coor txtBP = coor().pos(sdrHP.x + sdrHP.w, sdrBP.y).size(190, sdrBP.h);
-constexpr coor txtLP = coor().pos(sdrHP.x + sdrHP.w, sdrLP.y).size(190, sdrLP.h);
-constexpr coor txtBAL = coor().pos(sdrHP.x + sdrHP.w, sdrBAL.y).size(190, sdrBAL.h);
+constexpr coor sdrHP = coor().pos( 180, h_footer + 0 * h_EQ).size(350, h_EQ).pad(0, 0, 8, 8);
+constexpr coor sdrBP = coor().pos( 180, h_footer + 1 * h_EQ).size(350, h_EQ).pad(0, 0, 8, 8);
+constexpr coor sdrLP = coor().pos( 180, h_footer + 2 * h_EQ).size(350, h_EQ).pad(0, 0, 8, 8);
+constexpr coor sdrBAL = coor().pos(180, h_footer + 3 * h_EQ).size(350, h_EQ).pad(0, 0, 8, 8);
+
+constexpr coor txtHP = coor().pos( 500, h_footer + 0 * h_EQ).size(190, h_EQ);
+constexpr coor txtBP = coor().pos( 500, h_footer + 1 * h_EQ).size(190, h_EQ);
+constexpr coor txtLP = coor().pos( 500, h_footer + 2 * h_EQ).size(190, h_EQ);
+constexpr coor txtBAL = coor().pos(500, h_footer + 3 * h_EQ).size(190, h_EQ);
 
 inline constexpr uint8_t fonts[13] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66, 81, 96};
 
@@ -350,7 +360,8 @@ namespace layout_1024x600 {
 
 constexpr uint16_t h_res = 1024, v_res = 600; // horizontal - vertical resolution
 constexpr uint16_t h_footer = 60;             // footer height
-constexpr uint16_t hw_btn = 96 + 4;           // 96x96 + padding
+constexpr uint16_t hw_btn = 96 + 4;           // 96x96 + padding, normal buttons
+constexpr uint16_t hw_btn_s  = 80 + 2;        // 80x80 + padding, small buttons
 constexpr uint16_t h_progBar = 30;            // height progressBar and volumeSlider
 constexpr uint16_t w_vuMeter = 50;            // width vuMeter
 
@@ -376,23 +387,27 @@ constexpr coor winFooter = coor().pos(0, v_res - h_footer).size(h_res, h_footer)
 constexpr coor winButton = coor().pos(0, y_btn).size(hw_btn, hw_btn);
 constexpr coor winDigits = coor().pos(0, h_footer).size(h_res, y_btn - h_footer); // clock24, alarmclock
 constexpr coor winWoHF = coor().pos(0, h_footer).size(h_res, 2 * h_area);
-constexpr coor sdrHP = coor().pos(140,  h_footer + 0 * h_EQ).size(300, h_EQ).pad(0, 0, 8, 8);
-constexpr coor sdrBP = coor().pos(140,  h_footer + 1 * h_EQ).size(300, h_EQ).pad(0, 0, 8, 8);
-constexpr coor sdrLP = coor().pos(140,  h_footer + 2 * h_EQ).size(300, h_EQ).pad(0, 0, 8, 8);
-constexpr coor sdrBAL = coor().pos(140, h_footer + 3 * h_EQ).size(300, h_EQ).pad(0, 0, 8, 8);
 
 // -----------------------------------------------------------------------------------
 // window derived (calculated from others)
 // -----------------------------------------------------------------------------------
-constexpr coor btnHP = coor().pos(100, sdrHP.y).size(sdrHP.w, sdrHP.h);
-constexpr coor btnBP = coor().pos(100, sdrBP.y).size(sdrBP.w, sdrBP.h);
-constexpr coor btnLP = coor().pos(100, sdrLP.y).size(sdrLP.w, sdrLP.h);
-constexpr coor btnBAL = coor().pos(100, sdrBAL.y).size(sdrBAL.w, sdrBAL.h);
 
-constexpr coor txtHP = coor().pos(sdrHP.x + sdrHP.w, sdrHP.y).size(190, sdrHP.h);
-constexpr coor txtBP = coor().pos(sdrHP.x + sdrHP.w, sdrBP.y).size(190, sdrBP.h);
-constexpr coor txtLP = coor().pos(sdrHP.x + sdrHP.w, sdrLP.y).size(190, sdrLP.h);
-constexpr coor txtBAL = coor().pos(sdrHP.x + sdrHP.w, sdrBAL.y).size(190, sdrBAL.h);
+constexpr coor btnHP = coor().pos( 100, h_footer + 0 * h_EQ).size(hw_btn_s, hw_btn_s);
+constexpr coor btnBP = coor().pos( 100, h_footer + 1 * h_EQ).size(hw_btn_s, hw_btn_s);
+constexpr coor btnLP = coor().pos( 100, h_footer + 2 * h_EQ).size(hw_btn_s, hw_btn_s);
+constexpr coor btnBAL = coor().pos(100, h_footer + 3 * h_EQ).size(hw_btn_s, hw_btn_s);
+
+constexpr coor sdrHP = coor().pos( 220, h_footer + 0 * h_EQ).size(500, h_EQ).pad(0, 0, 8, 8);
+constexpr coor sdrBP = coor().pos( 220, h_footer + 1 * h_EQ).size(500, h_EQ).pad(0, 0, 8, 8);
+constexpr coor sdrLP = coor().pos( 220, h_footer + 2 * h_EQ).size(500, h_EQ).pad(0, 0, 8, 8);
+constexpr coor sdrBAL = coor().pos(220, h_footer + 3 * h_EQ).size(500, h_EQ).pad(0, 0, 8, 8);
+
+constexpr coor txtHP = coor().pos( 800, h_footer + 0 * h_EQ).size(170, h_EQ);
+constexpr coor txtBP = coor().pos( 800, h_footer + 1 * h_EQ).size(170, h_EQ);
+constexpr coor txtLP = coor().pos( 800, h_footer + 2 * h_EQ).size(170, h_EQ);
+constexpr coor txtBAL = coor().pos(800, h_footer + 3 * h_EQ).size(170, h_EQ);
+
+
 
 inline constexpr uint8_t fonts[13] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66, 81, 96};
 
@@ -840,21 +855,21 @@ void placingGraphicObjects() { // and initialize them
     txt_EQ_balance.setAlign(TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER);
     txt_EQ_balance.setFont(0); // 0 -> auto
     btn_EQ_lowPass.begin(layout.btnLP.x, layout.btnLP.y, layout.btnLP.w, layout.btnLP.h);
-    btn_EQ_lowPass.setDefaultPicturePath("/btn/Button_LP_Green.png");
-    btn_EQ_lowPass.setClickedPicturePath("/btn/Button_LP_Yellow.png");
-    btn_EQ_lowPass.setAlternativePicturePath("/btn/Button_LP_Magenta.png");
+    btn_EQ_lowPass.setDefaultPicturePath("/btn/s/Button_LP_Green.png");
+    btn_EQ_lowPass.setClickedPicturePath("/btn/s/Button_LP_Yellow.png");
+    btn_EQ_lowPass.setAlternativePicturePath("/btn/s/Button_LP_Magenta.png");
     btn_EQ_bandPass.begin(layout.btnBP.x, layout.btnBP.y, layout.btnBP.w, layout.btnBP.h);
-    btn_EQ_bandPass.setDefaultPicturePath("/btn/Button_BP_Green.png");
-    btn_EQ_bandPass.setClickedPicturePath("/btn/Button_BP_Yellow.png");
-    btn_EQ_bandPass.setAlternativePicturePath("/btn/Button_BP_Magenta.png");
+    btn_EQ_bandPass.setDefaultPicturePath("/btn/s/Button_BP_Green.png");
+    btn_EQ_bandPass.setClickedPicturePath("/btn/s/Button_BP_Yellow.png");
+    btn_EQ_bandPass.setAlternativePicturePath("/btn/s/Button_BP_Magenta.png");
     btn_EQ_highPass.begin(layout.btnHP.x, layout.btnHP.y, layout.btnHP.w, layout.btnHP.h);
-    btn_EQ_highPass.setDefaultPicturePath("/btn/Button_HP_Green.png");
-    btn_EQ_highPass.setClickedPicturePath("/btn/Button_HP_Yellow.png");
-    btn_EQ_highPass.setAlternativePicturePath("/btn/Button_HP_Magenta.png");
+    btn_EQ_highPass.setDefaultPicturePath("/btn/s/Button_HP_Green.png");
+    btn_EQ_highPass.setClickedPicturePath("/btn/s/Button_HP_Yellow.png");
+    btn_EQ_highPass.setAlternativePicturePath("/btn/s/Button_HP_Magenta.png");
     btn_EQ_balance.begin(layout.btnBAL.x, layout.btnBAL.y, layout.btnBAL.w, layout.btnBAL.h);
-    btn_EQ_balance.setDefaultPicturePath("/btn/Button_BAL_Green.png");
-    btn_EQ_balance.setClickedPicturePath("/btn/Button_BAL_Yellow.png");
-    btn_EQ_balance.setAlternativePicturePath("/btn/Button_BAL_Magenta.png");
+    btn_EQ_balance.setDefaultPicturePath("/btn/s/Button_BAL_Green.png");
+    btn_EQ_balance.setClickedPicturePath("/btn/s/Button_BAL_Yellow.png");
+    btn_EQ_balance.setAlternativePicturePath("/btn/s/Button_BAL_Magenta.png");
     btn_EQ_Radio.begin(0 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_EQ_Radio.setDefaultPicturePath("/btn/Button_Radio_Green.png");
     btn_EQ_Radio.setClickedPicturePath("/btn/Button_Radio_Yellow.png");

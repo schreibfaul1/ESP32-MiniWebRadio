@@ -912,10 +912,10 @@ void setWiFiCredentials(ps_ptr<char> ssid, ps_ptr<char> password) {
     state = 3;
 
 exit:
-    if (state == 0) { SerialPrintfln("WiFI_info:   " ANSI_ESC_RED "SSID: %s password can't changed, it is hard coded" ANSI_ESC_RESET "  ", ssid); }
-    if (state == 1) { SerialPrintfln("WiFI_info:   " ANSI_ESC_GREEN "The passord \"%s\" for the SSID: %s has been changed" ANSI_ESC_RESET "  ", password, ssid); }
-    if (state == 2) { SerialPrintfln("WiFI_info:   " ANSI_ESC_GREEN "The SSID: %s has been added" ANSI_ESC_RESET "  ", ssid); }
-    if (state == 3) { SerialPrintfln("WiFI_info:   " ANSI_ESC_RED "No more memory to save the credentials for: %s" ANSI_ESC_RESET "  ", ssid); }
+    if (state == 0) { SerialPrintfln("WiFI_info:   " ANSI_ESC_RED "SSID: %s password can't changed, it is hard coded" ANSI_ESC_RESET "  ", ssid.c_get()); }
+    if (state == 1) { SerialPrintfln("WiFI_info:   " ANSI_ESC_GREEN "The passord \"%s\" for the SSID: %s has been changed" ANSI_ESC_RESET "  ", password.c_get(), ssid.c_get()); }
+    if (state == 2) { SerialPrintfln("WiFI_info:   " ANSI_ESC_GREEN "The SSID: %s has been added" ANSI_ESC_RESET "  ", ssid.c_get()); }
+    if (state == 3) { SerialPrintfln("WiFI_info:   " ANSI_ESC_RED "No more memory to save the credentials for: %s" ANSI_ESC_RESET "  ", ssid.c_get()); }
     return;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
