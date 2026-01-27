@@ -3650,6 +3650,7 @@ class dlnaList : public RegisterTable {
     DLNA_Client*                               m_dlna;
     dlnaHistory_s*                             m_dlnaHistory = NULL;
     releasedArg                                m_ra;
+    enum DLNA_Action { DLNA_NONE = 0, DLNA_FILE = 1, DLNA_SERVERLIST = 2, DLNA_PREV_LEVEL = 3, DLNA_NEXT_LEVEL = 4, DLNA_WIPE = 5};
 
   public:
     dlnaList(const char* name) {
@@ -3701,7 +3702,7 @@ class dlnaList : public RegisterTable {
     bool isEnabled() { return m_enabled; }
 
     void show(int8_t number, const std::deque<DLNA_Client::dlnaServer>& dlnaServer, const std::deque<DLNA_Client::srvItem>& srvContent, uint8_t* dlnaLevel, uint16_t maxItems) {
-        m_browseOnRelease = 0;
+        m_browseOnRelease = DLNA_NONE;
         m_dlnaServer = &dlnaServer;
         m_srvContent = &srvContent;
         m_dlnaLevel = dlnaLevel;
@@ -3747,23 +3748,24 @@ class dlnaList : public RegisterTable {
             vTaskDelay(300);
         }
 
-        if (m_browseOnRelease == 0) { ; } // file
-        if (m_browseOnRelease == 1) { // get serverlist
+        if (m_browseOnRelease == DLNA_NONE) { ; } // nothing todo
+        if (m_browseOnRelease == DLNA_FILE) { ; } // file
+        if (m_browseOnRelease == DLNA_SERVERLIST) { // get serverlist
             (*m_dlnaLevel)++;
             m_dlna->browseServer(m_currDLNAsrvNr, "0", 0, 9);
         }
-        if (m_browseOnRelease == 2) { // previous level
+        if (m_browseOnRelease == DLNA_PREV_LEVEL) { // previous level
             (*m_dlnaLevel)--;
             m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId.c_get(), 0, 9);
         }
-        if (m_browseOnRelease == 3) { // folder, next level
+        if (m_browseOnRelease == DLNA_NEXT_LEVEL) { // folder, next level
             (*m_dlnaLevel)++;
             if( m_dlnaHistory[*m_dlnaLevel].childCount == 0) return false;
             m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId.c_get(), 0, 9);
         }
-        if (m_browseOnRelease == 4) { m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId.c_get(), m_viewPoint, 9); } // scroll up / down
+        if (m_browseOnRelease == DLNA_WIPE) { m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId.c_get(), m_viewPoint, 9); } // scroll up / down
 
-        m_browseOnRelease = 0;
+        m_browseOnRelease = DLNA_NONE;
         m_oldX = 0;
         m_oldY = 0;
         if (graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
@@ -3881,7 +3883,7 @@ class dlnaList : public RegisterTable {
                 m_viewPoint -= 36;
             else
                 m_viewPoint = 0;
-            m_browseOnRelease = 4;
+            m_browseOnRelease = DLNA_WIPE;
             m_chptr = NULL;
             goto exit;
         }
@@ -3893,7 +3895,7 @@ class dlnaList : public RegisterTable {
                 m_viewPoint -= 9;
             else
                 m_viewPoint = 0;
-            m_browseOnRelease = 4;
+            m_browseOnRelease = DLNA_WIPE;
             m_chptr = NULL;
             goto exit;
         }
@@ -3906,7 +3908,7 @@ class dlnaList : public RegisterTable {
                 m_viewPoint += 36;
             else
                 m_viewPoint += diff;
-            m_browseOnRelease = 4;
+            m_browseOnRelease = DLNA_WIPE;
             m_chptr = NULL;
             goto exit;
         }
@@ -3915,7 +3917,7 @@ class dlnaList : public RegisterTable {
             m_ra.val1 = 0;
             if (m_viewPoint + 9 >= m_dlnaMaxItems - 1) goto exit;
             m_viewPoint += 9;
-            m_browseOnRelease = 4;
+            m_browseOnRelease = DLNA_WIPE;
             m_chptr = NULL;
             goto exit;
         }
@@ -3923,7 +3925,7 @@ class dlnaList : public RegisterTable {
         if (m_itemListPos == 0) { // previous level, content list
             if (*m_dlnaLevel == 0) { goto exit; }
             m_viewPoint = 0;
-            m_browseOnRelease = 2;
+            m_browseOnRelease = DLNA_PREV_LEVEL;
             goto exit;
         }
 
@@ -3939,7 +3941,7 @@ class dlnaList : public RegisterTable {
                 }
                 m_dlnaHistory[(*m_dlnaLevel) + 1].childCount = 0;
                 m_dlnaHistory[(*m_dlnaLevel) + 1].name = m_dlnaServer->at(m_itemListPos - 1).friendlyName;
-                m_browseOnRelease = 1;
+                m_browseOnRelease = DLNA_SERVERLIST;
                 goto exit;
             }
         }
@@ -3953,7 +3955,7 @@ class dlnaList : public RegisterTable {
                     m_ra.arg1 = m_srvContent->at(m_itemListPos - 1).itemURL; // url --> connecttohost()
                     m_ra.arg2 = m_srvContent->at(m_itemListPos - 1).title;   // filename --> showFileName()
                     if (m_ra.arg1.strlen() > 0 && m_ra.arg2.strlen() > 0) m_ra.val1 = 1;
-                    m_browseOnRelease = 0;
+                    m_browseOnRelease = DLNA_FILE;
                     goto exit;
                 }
             }
@@ -3967,7 +3969,7 @@ class dlnaList : public RegisterTable {
             m_dlnaHistory[(*m_dlnaLevel) + 1].objId = m_srvContent->at(m_itemListPos - 1).objectId;
             m_dlnaHistory[(*m_dlnaLevel) + 1].name = m_srvContent->at(m_itemListPos - 1).title;
             m_dlnaHistory[(*m_dlnaLevel) + 1].childCount = m_srvContent->at(m_itemListPos - 1).childCount;
-            m_browseOnRelease = 3;
+            m_browseOnRelease = DLNA_NEXT_LEVEL;
             goto exit;
         }
         // log_i("at this position is nothing to do");
@@ -3975,7 +3977,7 @@ class dlnaList : public RegisterTable {
         return;
     }
 
-  public:
+  public: // -------------------------- IR actions --------------------------------------------------------------
     void prevPage() { // from IR control
         if (m_viewPoint == 0) return;
         if (m_viewPoint > 9)

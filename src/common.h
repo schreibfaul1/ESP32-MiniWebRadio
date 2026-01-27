@@ -306,7 +306,6 @@ const char*  getFlagPath(uint16_t station);
 void         nextStation();
 void         prevStation();
 void         setStationByNumber(uint16_t staNr);
-void         StationsItems();
 void         setStationViaURL(const char* url, const char* extension);
 void         savefile(ps_ptr<char> fileName, uint32_t contentLength, ps_ptr<char> contenttype);
 ps_ptr<char> setI2STone();

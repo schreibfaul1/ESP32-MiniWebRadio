@@ -151,7 +151,7 @@ inline constexpr DisplayConfig config = {
     0,                   // headerFontSize, 0 -> autoSize
     0,                   // footerFontSize, 0 -> autoSize
     156,                 // bigNumbersFontSize
-    21,                  // fileNumberFontSize
+    15,                  // fileNumberFontSize
     {5, 77, 129, 57, 0}, // sleeptimeXPos[5]
     48,                  // sleeptimeYPos
     320,                 // width
