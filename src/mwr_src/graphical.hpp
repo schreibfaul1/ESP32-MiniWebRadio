@@ -3630,10 +3630,12 @@ class dlnaList : public RegisterTable {
     uint8_t                                    m_browseOnRelease = 0;
     uint8_t                                    m_itemListPos = 0;
     uint8_t                                    m_itemListPos_last = 0;
+    uint8_t                                    m_displayed_lines = 0;
     int8_t                                     m_currDLNAsrvNr = -1;
     int16_t                                    m_currItemNr[10] = {0};
     int16_t                                    m_viewPoint = 0;
-    uint16_t                                   m_dlnaMaxItems = 0;
+    int16_t                                    m_dlnaMaxItems = -1;
+    int16_t                                    m_dlnaMaxServers = -1;
     uint32_t                                   m_bgColor = 0;
     bool                                       m_enabled = false;
     bool                                       m_clicked = false;
@@ -3701,7 +3703,7 @@ class dlnaList : public RegisterTable {
 
     bool isEnabled() { return m_enabled; }
 
-    void show(int8_t number, const std::deque<DLNA_Client::dlnaServer>& dlnaServer, const std::deque<DLNA_Client::srvItem>& srvContent, uint8_t* dlnaLevel, uint16_t maxItems) {
+    void show(int8_t number, const std::deque<DLNA_Client::dlnaServer>& dlnaServer, const std::deque<DLNA_Client::srvItem>& srvContent, uint8_t* dlnaLevel, int16_t maxItems, int16_t maxServers) {
         m_browseOnRelease = DLNA_NONE;
         m_dlnaServer = &dlnaServer;
         m_srvContent = &srvContent;
@@ -3710,6 +3712,7 @@ class dlnaList : public RegisterTable {
         m_clicked = false;
         m_enabled = true;
         m_dlnaMaxItems = maxItems;
+        m_dlnaMaxServers = maxServers;
         m_dlnaHistory[0].maxItems = m_dlna->getNrOfServers();
         dlnaItemsList();
     }
@@ -3778,9 +3781,9 @@ class dlnaList : public RegisterTable {
         uint8_t pos = 0;
         myList.setMode(DLNA, m_tftSize, m_fontSize);
         myList.clearList();
-        myList.drawLine(0, m_dlnaHistory[*m_dlnaLevel].name.c_get(), NULL, ANSI_ESC_ORANGE);
         tft.setTextColor(TFT_WHITE);
-        for (pos = 1; pos < 10; pos++) {
+        m_displayed_lines = 0;
+        for (pos = 0; pos < 10; pos++) {
             if (pos == 1 && m_viewPoint > 0) { myList.drawTriangeUp(); }
             if (pos == 9 && m_viewPoint + 9 < m_dlnaMaxItems - 1) { myList.drawTriangeDown(); }
             if (*m_dlnaLevel == 0 && pos > m_dlnaServer->size()) { /* log_e("pos too high %i", pos);*/
@@ -3790,6 +3793,7 @@ class dlnaList : public RegisterTable {
                 break;
             } // guard
             drawItem(pos);
+            m_displayed_lines++;
         }
         sprintf(m_buff, "%i-%i/%i", m_viewPoint + 1, m_viewPoint + (pos - 1), m_dlnaMaxItems); // shows the current items pos e.g. "30-39/210"
         tft.setTextColor(TFT_ORANGE);
@@ -3823,7 +3827,6 @@ class dlnaList : public RegisterTable {
             if(color == ANSI_ESC_MAGENTA) m_itemListPos_last = pos;
             return res;
         }
-        myList.drawLine(0, m_dlnaHistory[*m_dlnaLevel].name.c_get(), "", "", ANSI_ESC_ORANGE, 1);
         if (*m_dlnaLevel == 0) { // is list of server
             if (m_dlnaServer->at(pos - 1).friendlyName.c_get()) {
                 item = m_dlnaServer->at(pos - 1).friendlyName.c_get();
@@ -4046,9 +4049,13 @@ class dlnaList : public RegisterTable {
         drawItem(m_currItemNr[*m_dlnaLevel] + 0 - m_viewPoint + 1); // make magenta
         drawItem(m_currItemNr[*m_dlnaLevel] + 1 - m_viewPoint + 1); // std colour
     }
-    void nextItem() { // from IR control
-        if (m_dlnaMaxItems == m_currItemNr[*m_dlnaLevel] - 1) return;
-        if (m_currItemNr[*m_dlnaLevel] == m_dlnaMaxItems - 1) return;
+
+    void nextItem() { // from IR control, scroll down
+        int maxItems = -1;
+        if(*m_dlnaLevel == 0) { maxItems = m_dlnaMaxServers; }
+        else                  { maxItems = m_dlnaMaxItems;   }
+        MWR_LOG_INFO("m_itemListPos_last %i, m_displayed_lines %i, maxItems %i, m_currItemNr[*m_dlnaLevel] %i", m_itemListPos_last, m_displayed_lines, maxItems, m_currItemNr[*m_dlnaLevel]);
+        if (maxItems - 1 <= m_currItemNr[*m_dlnaLevel]) return;
         m_currItemNr[*m_dlnaLevel]++;
         if (m_currItemNr[*m_dlnaLevel] >= m_viewPoint + 9) {
             m_viewPoint += 9;

@@ -222,8 +222,8 @@ int log_redirect_handler(const char* format, va_list args) {
 struct dlnaHistory_s {
     ps_ptr<char> objId;
     ps_ptr<char> name;
-    uint16_t     maxItems = 0;
-    uint16_t     childCount = 0;
+    int16_t     maxItems = -1;
+    int16_t     childCount = -1;
 };
 struct releasedArg {
     ps_ptr<char> arg1;

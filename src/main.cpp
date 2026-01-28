@@ -103,6 +103,7 @@ uint8_t  s_dlnaLevel = 0;
 uint8_t  s_resetReason = (esp_reset_reason_t)ESP_RST_UNKNOWN;
 int16_t  s_totalNumberReturned = -1;
 int16_t  s_dlnaMaxItems = -1;
+int16_t  s_dlnaMaXServers = -1;
 int16_t  s_alarmtime[7] = {0};  // in minutes (23:59 = 23 *60 + 59) [0] Sun, [1] Mon
 int16_t  s_cur_AudioFileNr = 0; // this is the position of the file within the (alpha ordered) folder starting with 0
 int16_t  s_brightness = UINT8_MAX;
@@ -1794,7 +1795,7 @@ void changeState(int8_t state, int8_t subState) {
             break;
         }
         case DLNAITEMSLIST: {
-            lst_DLNA.show(s_currDLNAsrvNr, dlna.getServer(), dlna.getBrowseResult(), &s_dlnaLevel, s_dlnaMaxItems);
+            lst_DLNA.show(s_currDLNAsrvNr, dlna.getServer(), dlna.getBrowseResult(), &s_dlnaLevel, s_dlnaMaxItems, s_dlnaMaXServers);
             setTimeCounter(LIST_TIMER);
             break;
         }
@@ -3530,7 +3531,7 @@ void on_dlna_client(const DLNA_Client::msg_s& msg) {
         }
         if (s_f_dlnaWaitForResponse) {
             s_f_dlnaWaitForResponse = false;
-            lst_DLNA.show(s_dlnaItemNr, dlna.getServer(), dlna.getBrowseResult(), &s_dlnaLevel, s_dlnaMaxItems);
+            lst_DLNA.show(s_dlnaItemNr, dlna.getServer(), dlna.getBrowseResult(), &s_dlnaLevel, s_dlnaMaxItems, s_dlnaMaXServers);
             setTimeCounter(LIST_TIMER);
         } else {
             webSrv.send("dlnaContent=", dlna.stringifyContent());
@@ -3545,6 +3546,7 @@ void on_dlna_client(const DLNA_Client::msg_s& msg) {
             const auto& server = msg.server->at(i);
             SerialPrintfln("DLNA_server: [%d] " ANSI_ESC_CYAN "%s:%d " ANSI_ESC_YELLOW " %s" ANSI_ESC_RESET "  ", i, server.ip.c_get(), server.port, server.friendlyName.c_get());
         }
+        s_dlnaMaXServers = msg.server->size();
         SerialPrintfln("DLNA_server: %i media server found", msg.server->size());
     }
 }
