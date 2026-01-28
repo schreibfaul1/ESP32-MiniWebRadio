@@ -2157,10 +2157,9 @@ void loop() {
         if (f_resume && s_f_eof) {
             f_resume = false;
             s_f_eof = false;
-            if (s_cur_station)
-                setStation(s_cur_station);
+            if (s_cur_station) setStation(s_cur_station);
             else
-                connecttohost(s_settings.lastconnectedhost.get());
+                setStationViaURL(s_settings.lastconnectedhost.get(), "");
             return;
         }
         //------------------------------------------AUDIO_CURRENT_TIME - DURATION---------------------------------------------------------------------
@@ -2508,7 +2507,7 @@ void my_audio_info(Audio::msg_t m) {
                     changeState(PLAYER, 0);
                 }
             }
-            if (s_state == RADIO) { clearWithOutHeaderFooter(); }
+            if (s_state == RADIO) { }
             if (s_state == DLNA) {
                 txt_DL_fName.setText("");
                 txt_DL_fName.show(true, false);

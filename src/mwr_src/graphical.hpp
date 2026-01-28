@@ -3843,8 +3843,8 @@ class dlnaList : public RegisterTable {
             }
         }
 
-        if (isURL && isAudio)                                           { color = ANSI_ESC_YELLOW; } // is audiofile
-        else if ((pos - 1) + m_viewPoint == m_currItemNr[*m_dlnaLevel]) { color = ANSI_ESC_MAGENTA;} // is current item
+        if ((pos - 1) + m_viewPoint == m_currItemNr[*m_dlnaLevel])      { color = ANSI_ESC_MAGENTA;} // is current item
+        else if (isURL && isAudio)                                      { color = ANSI_ESC_YELLOW; } // is audiofile
         else                                                            { color = ANSI_ESC_WHITE; }  // all other
         if (selectedLine && childCount > 0)                             { color = ANSI_ESC_CYAN; res = true; }    // is folder with childs
         if (selectedLine && isServer)                                   { color = ANSI_ESC_CYAN; res = true; }    // is server
