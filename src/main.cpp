@@ -2599,6 +2599,7 @@ void on_BH1750(int32_t ambVal) { //--AMBIENT LIGHT SENSOR BH1750--
     int16_t bh1750Value = 0;
     bh1750Value = map_l(ambVal, 0, 1600, displayConfig.brightnessMin, displayConfig.brightnessMax);
     MWR_LOG_DEBUG("ambVal %i, bh1750Value %i, s_brightness %i", ambVal, bh1750Value, s_brightness);
+    if(TFT_CONTROLLER == 8) bh1750Value = 255 - bh1750Value; // invert brightness
     setTFTbrightness(max(bh1750Value, s_brightness));
 }
 // ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
