@@ -68,6 +68,8 @@ void GetRunTimeStats(char* pcWriteBuffer) {
     uint8_t       ulStatsAsPercentage;
     uint64_t      ulTotalRunTime;
     char          leftSpace[] = "             |";
+    const size_t  MAX_WRITE_BUFFER_SIZE = 8192;  // Assume at least 8KB buffer
+    size_t        current_len = 0;
 
     // Take a snapshot of the number of tasks in case it changes while this function is executing.
     uxArraySize = uxTaskGetNumberOfTasks();
@@ -83,10 +85,13 @@ void GetRunTimeStats(char* pcWriteBuffer) {
         ulTotalRunTime /= 100UL;
 
         char* tmpBuff = x_ps_malloc(100);
-        strcpy(pcWriteBuffer, leftSpace);
-        strcat(pcWriteBuffer, ANSI_ESC_YELLOW " TASKNAME            | RUNTIMECOUNTER | TOTALRUNTIME[%] | CORE | PRIO  |\n");
-        strcat(pcWriteBuffer, leftSpace);
-        strcat(pcWriteBuffer, "---------------------+----------------+-----------------+------+-------|\n");
+        strlcpy(pcWriteBuffer, leftSpace, MAX_WRITE_BUFFER_SIZE);
+        current_len = strlen(pcWriteBuffer);
+        strlcat(pcWriteBuffer, ANSI_ESC_YELLOW " TASKNAME            | RUNTIMECOUNTER | TOTALRUNTIME[%] | CORE | PRIO  |\n", MAX_WRITE_BUFFER_SIZE);
+        current_len = strlen(pcWriteBuffer);
+        strlcat(pcWriteBuffer, leftSpace, MAX_WRITE_BUFFER_SIZE);
+        current_len = strlen(pcWriteBuffer);
+        strlcat(pcWriteBuffer, "---------------------+----------------+-----------------+------+-------|\n", MAX_WRITE_BUFFER_SIZE);
 
         // Avoid divide by zero errors.
         if (ulTotalRunTime > 0) {
@@ -111,10 +116,16 @@ void GetRunTimeStats(char* pcWriteBuffer) {
                     i++;
                 }
                 if (tmpBuff[45] == '0') tmpBuff[45] = ' ';
-                strcat(pcWriteBuffer, leftSpace);
-                strcat(pcWriteBuffer, " ");
-                strcat(pcWriteBuffer, tmpBuff);
-                strcat(pcWriteBuffer, "\n");
+                current_len = strlen(pcWriteBuffer);
+                if (current_len + strlen(leftSpace) + strlen(tmpBuff) + 5 < MAX_WRITE_BUFFER_SIZE) {
+                    strlcat(pcWriteBuffer, leftSpace, MAX_WRITE_BUFFER_SIZE);
+                    strlcat(pcWriteBuffer, " ", MAX_WRITE_BUFFER_SIZE);
+                    strlcat(pcWriteBuffer, tmpBuff, MAX_WRITE_BUFFER_SIZE);
+                    strlcat(pcWriteBuffer, "\n", MAX_WRITE_BUFFER_SIZE);
+                } else {
+                    log_w("GetRunTimeStats: buffer overflow prevented");
+                    break;  // Stop adding more tasks if buffer is full
+                }
             }
             x_ps_free(&tmpBuff);
         }
@@ -130,13 +141,16 @@ void GetRunTimeStats(char* pcWriteBuffer) {
         } else {
             sprintf(tmpBuff, "%s" ANSI_ESC_LIGHTGREEN " time since start: %llus, VSYNCS: %llu  ==> fps: <1", leftSpace, s_totalRuntime, tft.getVsyncCounter());
         }
-        strcat(tmpBuff, "                                   ");
+        strlcat(tmpBuff, "                                   ", 130);
         tmpBuff[90] = '\0';
-        strcat(tmpBuff, ANSI_ESC_YELLOW "|\n");
-        strcat(pcWriteBuffer, tmpBuff);
+        strlcat(tmpBuff, ANSI_ESC_YELLOW "|\n", 130);
+        current_len = strlen(pcWriteBuffer);
+        if (current_len + strlen(tmpBuff) < MAX_WRITE_BUFFER_SIZE) {
+            strlcat(pcWriteBuffer, tmpBuff, MAX_WRITE_BUFFER_SIZE);
+        }
         x_ps_free(&tmpBuff);
 #endif
-        strcat(pcWriteBuffer, "             |---------------------+----------------+-----------------+------+-------|\n");
+        strlcat(pcWriteBuffer, "             |---------------------+----------------+-----------------+------+-------|\n", MAX_WRITE_BUFFER_SIZE);
     }
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

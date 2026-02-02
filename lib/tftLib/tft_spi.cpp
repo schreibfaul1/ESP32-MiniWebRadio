@@ -1819,12 +1819,13 @@ size_t TFT_SPI::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16
     }
     if(v_align == TFT_ALIGN_CENTER){
         int offset = (win_H - (nrOfLines * m_current_font.line_height)) / 2;
-        if(offset < 0) log_e("%s %i offset %i", __FILE__, __LINE__, offset);
+        if(offset < 0) log_e("%s %i offset %i at pos x:%i y:%i, size w:%i, h:%i", __FILE__, __LINE__, offset, win_X, win_Y, win_W, win_H);
         pY = pY + offset;
     }
     if(v_align == TFT_ALIGN_DOWN){
         int offset = (win_H - (nrOfLines * m_current_font.line_height));
-        if(offset < 0) log_e("%s %i offset %i", __FILE__, __LINE__, offset);
+        if(offset < 0) log_e("%s %i offset %i at pos x:%i y:%i, size w:%i, h:%i", __FILE__, __LINE__, offset, win_X, win_Y, win_W, win_H);
+        pY = pY + offset;
         pY = pY + offset;
     }
 
@@ -2995,7 +2996,7 @@ bool TFT_SPI::JPEG_tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint
     int16_t y_end = std::min((int16_t)(y + h), (int16_t)(m_v_res)); // End of rectangle in y-direction
 
     if (x >= m_h_res || y >= m_v_res || x_end <= 0 || y_end <= 0) {
-        log_e("Rectangle is completely outside the framebuffer boundaries.");
+        log_e("Rectangle is completely outside the framebuffer boundaries, x: %d, y: %d, x_end: %d, y_end: %d", x, y, x_end, y_end);
         return false;
     }
 

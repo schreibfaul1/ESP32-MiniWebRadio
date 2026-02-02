@@ -156,6 +156,7 @@ extern WebSrv                   webSrv;
 extern std::deque<ps_ptr<char>> s_logBuffer;
 
 void SerialPrintfln(const char* fmt, ...) {
+    if (s_logBuffer.size() == 1024) s_logBuffer.pop_back();
     ps_ptr<char> myLog;
     if (newLine) {
         newLine = false;
@@ -221,12 +222,13 @@ int log_redirect_handler(const char* format, va_list args) {
 struct dlnaHistory_s {
     ps_ptr<char> objId;
     ps_ptr<char> name;
-    uint16_t     maxItems = 0;
+    int16_t     maxItems = -1;
+    int16_t     childCount = -1;
 };
 struct releasedArg {
-    const char* arg1 = NULL;
-    const char* arg2 = NULL;
-    const char* arg3 = NULL;
+    ps_ptr<char> arg1;
+    ps_ptr<char> arg2;
+    ps_ptr<char> arg3;
     int16_t     val1 = 0;
     int16_t     val2 = 0;
 };
@@ -294,7 +296,7 @@ boolean      isAudio(File file);
 boolean      isAudio(const char* path);
 boolean      isPlaylist(File file);
 bool         connectToWiFi();
-void         setWiFiCredentials(const char* ssid, const char* password);
+void         setWiFiCredentials(ps_ptr<char> ssid, ps_ptr<char> password);
 ps_ptr<char> scaleImage(ps_ptr<char> path);
 void         setVolume(uint8_t vol);
 uint8_t      downvolume();
@@ -304,7 +306,6 @@ const char*  getFlagPath(uint16_t station);
 void         nextStation();
 void         prevStation();
 void         setStationByNumber(uint16_t staNr);
-void         StationsItems();
 void         setStationViaURL(const char* url, const char* extension);
 void         savefile(ps_ptr<char> fileName, uint32_t contentLength, ps_ptr<char> contenttype);
 ps_ptr<char> setI2STone();
@@ -455,7 +456,12 @@ inline int rfind(const char* str, char ch, int start = -1) { // same as indexof(
     return -1; // character not found
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-inline int replacestr(char* line, const char* search, const char* replace) { /* returns number of strings replaced.*/
+inline int replacestr(char* line, const char* search, const char* replace, int depth = 0) { /* returns number of strings replaced.*/
+    const int MAX_RECURSION_DEPTH = 100;  // Prevent stack overflow from excessive recursion
+    if (depth > MAX_RECURSION_DEPTH) {
+        log_w("replacestr: max recursion depth reached");
+        return 0;
+    }
     int   count = 0;
     char* sp; // start of pattern
     // printf("replacestr(%s, %s, %s)\n", line, search, replace);
@@ -484,7 +490,7 @@ inline int replacestr(char* line, const char* search, const char* replace) { /* 
         }
     }
     memcpy(sp, replace, rLen);
-    count += replacestr(sp + rLen, search, replace);
+    count += replacestr(sp + rLen, search, replace, depth + 1);
     return (count);
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

@@ -3,14 +3,14 @@
 
 #define _SSID             "mySSID"         // Your WiFi credentials here
 #define _PW               "myWiFiPassword" // Or in textfile on SD-card
-#define TFT_CONTROLLER    5                // (0)ILI9341[320x240], (3)ILI9486[480x320], (4)ILI9488[480x320], (5)ST7796[480x320], (7)RGB display[800x480], // (8)DSI display[1024x600]
+#define TFT_CONTROLLER    5                // (0)ILI9341[320x240], (3)ILI9486[480x320], (4)ILI9488[480x320], (5)ST7796[480x320], (7)RGB display[800x480], (8)DSI display[1024x600]
 #define DISPLAY_INVERSION 0                // only SPI displays, (0) off (1) on
 #define TFT_ROTATION      1                // only SPI displays, 1 or 3 (landscape)
 #define TFT_FREQUENCY     40000000         // only SPI displays, 80000000, 40000000, 27000000, 20000000, 10000000
-#define TP_CONTROLLER     5                // only SPI displays, (0)ILI9341, (3)ILI9486, (4)ILI9488, (5)ST7796, (7)GT911, (8)FT6x63
-#define TP_ROTATION       1                // only SPI displays, 1 or 3 (landscape)
-#define TP_H_MIRROR       0                // only SPI displays, (0) default, (1) mirror up <-> down
-#define TP_V_MIRROR       0                // only SPI displays, (0) default, (1) mittor left <-> right
+#define TP_CONTROLLER     5                // (0)ILI9341, (3)ILI9486, (4)ILI9488, (5)ST7796, (7)GT911, (8)FT6x63
+#define TP_ROTATION       1                // 1 or 3 (landscape)
+#define TP_H_MIRROR       0                // (0) default, (1) mirror up <-> down
+#define TP_V_MIRROR       0                // (0) default, (1) mirror left <-> right
 #define LIGHT_SENSOR      1                // (0) none, (1) BH1750
 #define I2S_COMM_FMT      0                // (0) MAX98357A PCM5102A CS4344, (1) LSBJ (Least Significant Bit Justified format) PT8211
 #define SDMMC_FREQUENCY   80000000         // 80000000 or 40000000 Hz
@@ -283,23 +283,23 @@ const Timing DSI_TIMING = {.h_res = 1024,
 
         #define GT911_I2C_ADDRESS 0x5D // default I2C-address of GT911
 
-        #define I2S_DOUT 9
-        #define I2S_BCLK 12
-        #define I2S_LRC  10
+        #define I2S_DOUT 2
+        #define I2S_BCLK 3
+        #define I2S_LRC  4
         #define I2S_MCLK -1 // important, don't change!
 
-        #define IR_PIN             6  // IR Receiver (if available)
-        #define BT_EMITTER_RX      -1 // must be -1, not enough pins
-        #define BT_EMITTER_TX      -1 // must be -1, not enough pins
-        #define BT_EMITTER_LINK    -1 // must be -1, not enough pins
-        #define BT_EMITTER_MODE    -1 // must be -1, not enough pins
-        #define BT_EMITTER_CONNECT -1 // must be -1, not enough pins
+        #define IR_PIN             5  // IR Receiver (if available)
+        #define BT_EMITTER_RX      28
+        #define BT_EMITTER_TX      29
+        #define BT_EMITTER_LINK    30
+        #define BT_EMITTER_MODE    31
+        #define BT_EMITTER_CONNECT 34
 
         #define LCD_RESET   33
         #define TFT_BL      32 // same as RGB_PINS.bl
         #define AMP_ENABLED -1 // control pin for extenal amplifier (if available)
 
-        #define I2C_SDA 7 // I2C dala line for capacitive touchpad  (-1 if not used)
-        #define I2C_SCL 8 // I2C clock line for capacitive touchpad (-1 if not used)
+        #define I2C_SDA 7 // I2C dala line for capacitive touchpad
+        #define I2C_SCL 8 // I2C clock line for capacitive touchpad
     #endif
 #endif

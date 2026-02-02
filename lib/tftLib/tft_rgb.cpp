@@ -1650,7 +1650,6 @@ size_t TFT_RGB::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16
     uint16_t strChLength = 0; // nr. of chars
     uint8_t  nrOfLines = 1;
     bool     isEmoji = false;
-
     //-------------------------------------------------------------------------------------------------------------------
     auto drawEmoji= [&](uint16_t idx, uint16_t x, uint16_t y) { // lambda
         uint8_t emoji = (utfPosArr[idx] & 0x00FF);

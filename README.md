@@ -26,12 +26,12 @@ Required HW:
 <ul>
 <li>ESP32-S3 board <b>with 4MB PSRAM or larger</b></li>
 <li>DAC (e.g. PCM5102a)</li>
-<li>TFT Display with Touchpad (SPI), Display controller can be ILI9341 (320x240px), ILI9486 (480x320px), ILI9488 (480x320px) or ST7796 (480x320px) or
-RGB Display with Touchpad (I2C) </li>
+<li>TFT Display with Touchpad (SPI), Display controller can be ILI9341 (320x240px), ILI9486 (480x320px), ILI9488 (480x320px), ST7796 (480x320px) or
+RGB Display (800x480) with Touchpad (I2C) or DSI Display (1024x600) with Touchpad (I2C)  </li>
 <li>SD Card (FAT32) + SD adapter (can use SD slot on back of TFT display if available)</li>
 
-![Display sizes](docs/Displysizes.jpg)
-
+![Display sizes](docs/Displaysizes.jpg)
+[Tested displays](docs/tested_displays.pdf)
 
 
 </ul>
@@ -49,6 +49,8 @@ Schematic<br>SPI Display
 ![Schematic ESP32-P4 with external DAC](docs/MWR_P4_SPI_Display_schematic.jpg)<br>
 <br>RGB Display
 ![Schematic ESP32-S3 with RGB Display](docs/MWR_V4_RGB_Display_schematic.jpg)<br>
+<br>DSI Display
+![Schematic ESP32-P4 with DSI Display](docs/MWR_P4_DSI_Display_schematic.jpg)<br>
 <br>
 
 [Display Layout](docs/MiniWebRadio%20V3.4%20Layout.pdf)<br>
