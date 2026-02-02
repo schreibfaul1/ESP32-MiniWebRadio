@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.1.0 - Feb 02, 2026                                                                                                               ";
+    Version 4.1.0a - Feb 02, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -91,8 +91,6 @@ uint8_t  s_numServers = 0; //
 uint8_t  s_level = 0;
 uint8_t  s_sleepMode = 1;   // 0 display off, 1 show the clock
 uint8_t  s_staListPos = 0;
-uint8_t  s_WiFi_disconnectCnt = 0;
-uint8_t  s_reconnectCnt = 0;
 uint8_t  s_cthFailCounter = 0; // connecttohost fail
 uint8_t  s_itemListPos = 0;    // DLNA items
 uint8_t  s_fileListPos = 0;
@@ -138,6 +136,7 @@ bool s_f_muteIsPressed = false;
 bool s_f_sleeping = false;
 bool s_f_irOnOff = false;
 bool s_f_isWebConnected = false;
+bool s_f_WiFi_lost = false;
 bool s_f_isFSConnected = false;
 bool s_f_eof = false;
 bool s_f_reconnect = false;
@@ -2252,22 +2251,17 @@ void loop() {
             s_f_dlna_browseReady = false;
         }
         //-------------------------------------------WIFI DISCONNECTED?-------------------------------------------------------------------------------
-        // if (s_f_isWiFiConnected) {
-        //     if ((WiFi.status() != WL_CONNECTED)) {
-        //         s_WiFi_disconnectCnt++;
-        //         if (s_WiFi_disconnectCnt == 15) {
-        //             s_WiFi_disconnectCnt = 1;
-        //             SerialPrintfln("WiFi      :  " ANSI_ESC_YELLOW "Reconnecting to WiFi...");
-        //             WiFi.disconnect();
-        //             WiFi.reconnect();
-        //         }
-        //     } else {
-        //         if (s_WiFi_disconnectCnt) {
-        //             s_WiFi_disconnectCnt = 0;
-        //             if (s_state == RADIO) audio.connecttohost(s_settings.lastconnectedhost.get());
-        //         }
-        //     }
-        // }
+        if(WiFi.isConnected() == false){
+            SerialPrintfln("WiFi      :  " ANSI_ESC_YELLOW "Reconnecting to WiFi...");
+            dispHeader.updateRSSI(-86);
+            s_f_WiFi_lost = true;
+        }
+        else {
+            if(s_f_WiFi_lost){
+                s_f_WiFi_lost = false;
+                if (s_state == RADIO) audio.connecttohost(s_settings.lastconnectedhost.get());
+            }
+        }
         //------------------------------------------GET AUDIO FILE ITEMS------------------------------------------------------------------------------
         if (s_f_isFSConnected) {
             //    uint32_t t = 0;
