@@ -1914,7 +1914,7 @@ void changeState(int8_t state, int8_t subState) {
                 setTFTbrightness(s_brightness);
                 SerialPrintfln(ANSI_ESC_MAGENTA "Alarm" ANSI_ESC_RESET "  ");
                 setVolume(s_volume.ringVolume);
-                audio.setVolume(s_volume.ringVolume, s_volume.volumeCurve);
+                audio.setVolume(s_volume.ringVolume);
                 muteChanged(false);
                 connecttoFS("SD_MMC", "/ring/alarm_clock.mp3");
                 clk_RI_24small.show();
@@ -2061,20 +2061,20 @@ void loop() {
         if (audioVol > currVol) { // downvolume
             if (audioVol - steps >= currVol) {
                 if (audioVol - steps < 0)
-                    audio.setVolume(0, s_volume.volumeCurve);
+                    audio.setVolume(0);
                 else
-                    audio.setVolume(audioVol - steps, s_volume.volumeCurve);
+                    audio.setVolume(audioVol - steps);
             } else
-                audio.setVolume(audioVol - 1, s_volume.volumeCurve);
+                audio.setVolume(audioVol - 1);
         }
         if (audioVol < currVol) { // upvolume
             if (audioVol + steps <= currVol) {
                 if (audioVol + steps > 255)
-                    audio.setVolume(255, s_volume.volumeCurve);
+                    audio.setVolume(255);
                 else
-                    audio.setVolume(audioVol + steps, s_volume.volumeCurve);
+                    audio.setVolume(audioVol + steps);
             } else {
-                audio.setVolume(audioVol + 1, s_volume.volumeCurve);
+                audio.setVolume(audioVol + 1);
             }
         }
         if (s_f_msg_box) {                // messagebox is visible?
@@ -2113,7 +2113,7 @@ void loop() {
             if (!s_f_rtc) return;
             s_volume.cur_volume = s_volume.volumeAfterAlarm;
             setVolume(s_volume.cur_volume);
-            audio.setVolume(s_volume.cur_volume, s_volume.volumeCurve);
+            audio.setVolume(s_volume.cur_volume);
             dispHeader.updateVolume(s_volume.cur_volume);
             wake_up();
         }

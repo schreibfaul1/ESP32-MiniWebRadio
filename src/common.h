@@ -252,7 +252,6 @@ struct volume_s {
     uint8_t ringVolume = 21;
     uint8_t volumeAfterAlarm = 12;
     uint8_t volumeSteps = 21;
-    uint8_t volumeCurve = 1;
 };
 
 struct bt_emitter_s {
