@@ -455,9 +455,9 @@ const char index_html[] PROGMEM = R"=====(
 
 // global variables and functions
 /* eslint-disable no-unused-vars, no-undef */
-var I2S_eq_DB = ['-10', ' -9', ' -8', ' -7', ' -6', ' -5', ' -4', ' -3', ' -2', ' -1', '  0', ' +1', ' +2', ' +3', ' +4', ' +5', ' +6', ' +7', ' +8', ' +9', '+10']
+var I2S_eq_DB = ['-12', '-11', '-10', ' -9', ' -8', ' -7', ' -6', ' -5', ' -4', ' -3', ' -2', ' -1', '  0', ' +1', ' +2', ' +3', ' +4', ' +5', ' +6', ' +7', ' +8', ' +9', '+10', '+11', '+12']
 
-var I2S_eq_Val = [-10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+var I2S_eq_Val = [-12, -11, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 
 var tft_size = 0        // (0)320x240, (1)480x320, (2)800x480, (3)1024x600
 var ir_buttons
@@ -1151,9 +1151,9 @@ function setstation () { // Radio: button play - Enter a streamURL here....
 
 function setSlider (elmnt, value) {
     console.log("setSlider", elmnt, value)
-    if (elmnt === 'LowPass' ) { v = parseInt(value, 10) + 10; slider_LP_set(v); }
-    if (elmnt === 'BandPass') { v = parseInt(value, 10) + 10; slider_BP_set(v); }
-    if (elmnt === 'HighPass') { v = parseInt(value, 10) + 10; slider_HP_set(v); }
+    if (elmnt === 'LowPass' ) { v = parseInt(value, 10) + 12; slider_LP_set(v); }
+    if (elmnt === 'BandPass') { v = parseInt(value, 10) + 12; slider_BP_set(v); }
+    if (elmnt === 'HighPass') { v = parseInt(value, 10) + 12; slider_HP_set(v); }
     if (elmnt === 'Balance')  slider_BAL_set(value)
 }
 
@@ -2662,7 +2662,7 @@ function appendToTerminal(text) {
 
                     <label class="sdr_lbl_left">High:</label>
                     <div class="slidecontainer" style="float: left; width: 180px; height: 40px;">
-                        <input type="range" min="0" max="20" value="10" id="HighPass"
+                        <input type="range" min="0" max="21" value="12" id="HighPass"
                         onmouseup="slider_HP_mouseUp()"
                         ontouchend="slider_HP_mouseUp()"
                         oninput="slider_HP_change()">
@@ -2672,7 +2672,7 @@ function appendToTerminal(text) {
 
                     <label class="sdr_lbl_left">Band:</label>
                     <div class="slidecontainer" style="float: left; width: 180px; height: 40px;">
-                        <input type="range" min="0" max="20" value="10" id="BandPass"
+                        <input type="range" min="0" max="24" value="12" id="BandPass"
                         onmouseup="slider_BP_mouseUp()"
                         ontouchend="slider_BP_mouseUp()"
                         oninput="slider_BP_change()">
@@ -2682,7 +2682,7 @@ function appendToTerminal(text) {
 
                     <label class="sdr_lbl_left">Low:</label>
                     <div class="slidecontainer" style="float: left; width: 180px; height: 40px;">
-                        <input type="range" min="0" max="20" value="10" id="LowPass"
+                        <input type="range" min="0" max="21" value="12" id="LowPass"
                         onmouseup="slider_LP_mouseUp()"
                         ontouchend="slider_LP_mouseUp()"
                         oninput="slider_LP_change()">
