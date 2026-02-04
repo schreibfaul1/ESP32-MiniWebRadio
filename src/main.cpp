@@ -134,7 +134,6 @@ bool s_f_1min = false;
 bool s_f_mute = false;
 bool s_f_muteIsPressed = false;
 bool s_f_sleeping = false;
-bool s_f_irOnOff = false;
 bool s_f_isWebConnected = false;
 bool s_f_WiFi_lost = false;
 bool s_f_isFSConnected = false;
@@ -2053,30 +2052,15 @@ void loop() {
         if (!s_f_rtc) {
             s_f_rtc = rtc.hasValidTime();
         }
+        // ------------------------------------------- volume / mute --------------------------------------------------------------------------------
+        if(!s_f_mute){
+            if(audio.getVolume() != s_volume.cur_volume) { audio.setVolume(s_volume.cur_volume);}
+        }
+        else{
+            if (audio.getVolume() != 0) { audio.setVolume(0); }
+        }
 
-        int16_t audioVol = audio.getVolume();
-        uint8_t currVol = s_volume.cur_volume;
-        if (s_f_mute) currVol = 0;
-        uint8_t steps = s_volume.volumeSteps / 7;
-        if (audioVol > currVol) { // downvolume
-            if (audioVol - steps >= currVol) {
-                if (audioVol - steps < 0)
-                    audio.setVolume(0);
-                else
-                    audio.setVolume(audioVol - steps);
-            } else
-                audio.setVolume(audioVol - 1);
-        }
-        if (audioVol < currVol) { // upvolume
-            if (audioVol + steps <= currVol) {
-                if (audioVol + steps > 255)
-                    audio.setVolume(255);
-                else
-                    audio.setVolume(audioVol + steps);
-            } else {
-                audio.setVolume(audioVol + 1);
-            }
-        }
+        // ------------------------------------------- message box ----------------------------------------------------------------------------------
         if (s_f_msg_box) {                // messagebox is visible?
             if (s_timestamp < millis()) { // time to hide
                 s_f_msg_box = false;
@@ -2088,7 +2072,7 @@ void loop() {
             }
         }
     }
-    //-----------------------------------------------------1 SEC--------------------------------------------------------------------------------------
+    //----------------------------------------------------- 1 SEC ------------------------------------------------------------------------------------
 
     if (s_f_1sec) { // calls every second
         s_f_1sec = false;
@@ -2648,24 +2632,23 @@ void ir_number(uint16_t num) {
 
 void ir_released(int8_t key) {
     SerialPrintfln("ir_code: ..  " ANSI_ESC_YELLOW "released ir key nr: " ANSI_ESC_BLUE "%02i, <%s>" ANSI_ESC_RESET "  ", key, ir_symbols[key]);
-    tp_released(0, 0);
+    // tp_released(0, 0);
     return;
 }
 // ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void ir_long_key(int8_t key) {
     SerialPrintfln("ir_code: ..  " ANSI_ESC_YELLOW "long pressed ir key nr: " ANSI_ESC_BLUE "%02i, <%s>" ANSI_ESC_RESET "  ", key, ir_symbols[key]);
-    if (key == 16) fall_asleep(); // long OK
+    if (key == 16) {
+        if(!s_f_sleeping)fall_asleep(); // long OK
+        else wake_up();
+    }
 }
 // ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // clang-format off
 void ir_short_key(int8_t key) {
     s_f_ok_from_ir = false;
     SerialPrintfln("ir_code: ..  " ANSI_ESC_YELLOW "short pressed ir key nr: " ANSI_ESC_BLUE "%02i, <%s>" ANSI_ESC_RESET "  ", key, ir_symbols[key]);
-    if (s_f_sleeping == true && !s_f_irOnOff) {
-        wake_up();
-        return;
-    }
-    if (s_f_irOnOff == true && key != 20) return;
+    if (s_f_sleeping == true && key != 20) return;
     if (s_state == IR_SETTINGS) return; // nothing todo
 
     switch (key) {
@@ -3094,11 +3077,11 @@ void ir_short_key(int8_t key) {
             }
             break;
         case 20: // ON/OFF  --------------------------------------------------------------------------------------------------------------------------
-            s_f_irOnOff = !s_f_irOnOff;
-            if (s_f_irOnOff)
+            if (!s_f_sleeping){
                 fall_asleep();
-            else
+            } else {
                 wake_up();
+            }
             break;
         case 21: // RADIO  ---------------------------------------------------------------------------------------------------------------------------
             if (s_state != RADIO) {
