@@ -835,11 +835,11 @@ void placingGraphicObjects() { // and initialize them
     txt_BR_value.setFont(displayConfig.fonts[4]);
     // EQUALIZER ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     sdr_EQ_lowPass.begin(layout.sdrLP.x, layout.sdrLP.y, layout.sdrLP.w, layout.sdrLP.h, layout.sdrLP.pl, layout.sdrLP.pr, layout.sdrLP.pt, layout.sdrLP.pb);
-    sdr_EQ_lowPass.setMinMaxVal(-40, 6);
+    sdr_EQ_lowPass.setMinMaxVal(-12, 9);
     sdr_EQ_bandPass.begin(layout.sdrBP.x, layout.sdrBP.y, layout.sdrBP.w, layout.sdrBP.h, layout.sdrBP.pl, layout.sdrBP.pr, layout.sdrBP.pt, layout.sdrBP.pb);
-    sdr_EQ_bandPass.setMinMaxVal(-40, 6);
+    sdr_EQ_bandPass.setMinMaxVal(-12, 12);
     sdr_EQ_highPass.begin(layout.sdrHP.x, layout.sdrHP.y, layout.sdrHP.w, layout.sdrHP.h, layout.sdrHP.pl, layout.sdrHP.pr, layout.sdrHP.pt, layout.sdrHP.pb);
-    sdr_EQ_highPass.setMinMaxVal(-40, 6);
+    sdr_EQ_highPass.setMinMaxVal(-12, 9);
     sdr_EQ_balance.begin(layout.sdrBAL.x, layout.sdrBAL.y, layout.sdrBAL.w, layout.sdrBAL.h, layout.sdrBAL.pl, layout.sdrBAL.pr, layout.sdrBAL.pt, layout.sdrBAL.pb);
     sdr_EQ_balance.setMinMaxVal(-16, 16);
     txt_EQ_lowPass.begin(layout.txtLP.x, layout.txtLP.y, layout.txtLP.w, layout.txtLP.h, 0, 0, 0, 0);

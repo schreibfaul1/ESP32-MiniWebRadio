@@ -252,7 +252,6 @@ struct volume_s {
     uint8_t ringVolume = 21;
     uint8_t volumeAfterAlarm = 12;
     uint8_t volumeSteps = 21;
-    uint8_t volumeCurve = 1;
 };
 
 struct bt_emitter_s {
@@ -308,7 +307,8 @@ void         prevStation();
 void         setStationByNumber(uint16_t staNr);
 void         setStationViaURL(const char* url, const char* extension);
 void         savefile(ps_ptr<char> fileName, uint32_t contentLength, ps_ptr<char> contenttype);
-ps_ptr<char> setI2STone();
+void         setI2STone();
+ps_ptr<char> getI2STone();
 void         SD_playFile(ps_ptr<char> pathWoFileName, const char* fileName);
 void         SD_playFile(ps_ptr<char> path, uint32_t resumeFilePos = 0, bool showFN = true);
 bool         SD_rename(const char* src, const char* dest);

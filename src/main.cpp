@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.1.0a - Feb 02, 2026                                                                                                               ";
+    Version 4.1.0b - Feb 05, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -134,7 +134,6 @@ bool s_f_1min = false;
 bool s_f_mute = false;
 bool s_f_muteIsPressed = false;
 bool s_f_sleeping = false;
-bool s_f_irOnOff = false;
 bool s_f_isWebConnected = false;
 bool s_f_WiFi_lost = false;
 bool s_f_isFSConnected = false;
@@ -1417,10 +1416,14 @@ void saveImage(const char* fileName, uint32_t contentLength) { // save the jpg i
     }
 }
 
-ps_ptr<char> setI2STone() {
-    ps_ptr<char> tone;
+void setI2STone() {
     audio.setTone(s_tone.LP, s_tone.BP, s_tone.HP);
     audio.setBalance(s_tone.BAL);
+    return;
+}
+
+ps_ptr<char> getI2STone() {
+    ps_ptr<char> tone;
     tone.assignf("LowPass=%i\nBandPass=%i\nHighPass=%i\nBalance=%i\n", s_tone.LP, s_tone.BP, s_tone.HP, s_tone.BAL);
     return tone;
 }
@@ -1910,7 +1913,7 @@ void changeState(int8_t state, int8_t subState) {
                 setTFTbrightness(s_brightness);
                 SerialPrintfln(ANSI_ESC_MAGENTA "Alarm" ANSI_ESC_RESET "  ");
                 setVolume(s_volume.ringVolume);
-                audio.setVolume(s_volume.ringVolume, s_volume.volumeCurve);
+                audio.setVolume(s_volume.ringVolume);
                 muteChanged(false);
                 connecttoFS("SD_MMC", "/ring/alarm_clock.mp3");
                 clk_RI_24small.show();
@@ -2049,30 +2052,15 @@ void loop() {
         if (!s_f_rtc) {
             s_f_rtc = rtc.hasValidTime();
         }
+        // ------------------------------------------- volume / mute --------------------------------------------------------------------------------
+        if(!s_f_mute){
+            if(audio.getVolume() != s_volume.cur_volume) { audio.setVolume(s_volume.cur_volume);}
+        }
+        else{
+            if (audio.getVolume() != 0) { audio.setVolume(0); }
+        }
 
-        int16_t audioVol = audio.getVolume();
-        uint8_t currVol = s_volume.cur_volume;
-        if (s_f_mute) currVol = 0;
-        uint8_t steps = s_volume.volumeSteps / 7;
-        if (audioVol > currVol) { // downvolume
-            if (audioVol - steps >= currVol) {
-                if (audioVol - steps < 0)
-                    audio.setVolume(0, s_volume.volumeCurve);
-                else
-                    audio.setVolume(audioVol - steps, s_volume.volumeCurve);
-            } else
-                audio.setVolume(audioVol - 1, s_volume.volumeCurve);
-        }
-        if (audioVol < currVol) { // upvolume
-            if (audioVol + steps <= currVol) {
-                if (audioVol + steps > 255)
-                    audio.setVolume(255, s_volume.volumeCurve);
-                else
-                    audio.setVolume(audioVol + steps, s_volume.volumeCurve);
-            } else {
-                audio.setVolume(audioVol + 1, s_volume.volumeCurve);
-            }
-        }
+        // ------------------------------------------- message box ----------------------------------------------------------------------------------
         if (s_f_msg_box) {                // messagebox is visible?
             if (s_timestamp < millis()) { // time to hide
                 s_f_msg_box = false;
@@ -2084,11 +2072,15 @@ void loop() {
             }
         }
     }
-    //-----------------------------------------------------1 SEC--------------------------------------------------------------------------------------
+    //----------------------------------------------------- 1 SEC ------------------------------------------------------------------------------------
 
     if (s_f_1sec) { // calls every second
         s_f_1sec = false;
         s_totalRuntime++;
+        // for(int i = 0; i< 3; i++){
+        //     uint8_t* sa = audio.getSpectrum();
+        //     MWR_LOG_INFO("%i, %i, %i", sa[0], sa[1], sa[2]);
+        // }
         uint16_t minuteOfTheDay = rtc.getMinuteOfTheDay();
         uint8_t  weekDay = rtc.getweekday();
         clk_CL_24.updateTime(minuteOfTheDay, weekDay);
@@ -2109,7 +2101,7 @@ void loop() {
             if (!s_f_rtc) return;
             s_volume.cur_volume = s_volume.volumeAfterAlarm;
             setVolume(s_volume.cur_volume);
-            audio.setVolume(s_volume.cur_volume, s_volume.volumeCurve);
+            audio.setVolume(s_volume.cur_volume);
             dispHeader.updateVolume(s_volume.cur_volume);
             wake_up();
         }
@@ -2644,24 +2636,23 @@ void ir_number(uint16_t num) {
 
 void ir_released(int8_t key) {
     SerialPrintfln("ir_code: ..  " ANSI_ESC_YELLOW "released ir key nr: " ANSI_ESC_BLUE "%02i, <%s>" ANSI_ESC_RESET "  ", key, ir_symbols[key]);
-    tp_released(0, 0);
+    // tp_released(0, 0);
     return;
 }
 // ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void ir_long_key(int8_t key) {
     SerialPrintfln("ir_code: ..  " ANSI_ESC_YELLOW "long pressed ir key nr: " ANSI_ESC_BLUE "%02i, <%s>" ANSI_ESC_RESET "  ", key, ir_symbols[key]);
-    if (key == 16) fall_asleep(); // long OK
+    if (key == 16) {
+        if(!s_f_sleeping)fall_asleep(); // long OK
+        else wake_up();
+    }
 }
 // ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // clang-format off
 void ir_short_key(int8_t key) {
     s_f_ok_from_ir = false;
     SerialPrintfln("ir_code: ..  " ANSI_ESC_YELLOW "short pressed ir key nr: " ANSI_ESC_BLUE "%02i, <%s>" ANSI_ESC_RESET "  ", key, ir_symbols[key]);
-    if (s_f_sleeping == true && !s_f_irOnOff) {
-        wake_up();
-        return;
-    }
-    if (s_f_irOnOff == true && key != 20) return;
+    if (s_f_sleeping == true && key != 20) return;
     if (s_state == IR_SETTINGS) return; // nothing todo
 
     switch (key) {
@@ -3090,11 +3081,11 @@ void ir_short_key(int8_t key) {
             }
             break;
         case 20: // ON/OFF  --------------------------------------------------------------------------------------------------------------------------
-            s_f_irOnOff = !s_f_irOnOff;
-            if (s_f_irOnOff)
+            if (!s_f_sleeping){
                 fall_asleep();
-            else
+            } else {
                 wake_up();
+            }
             break;
         case 21: // RADIO  ---------------------------------------------------------------------------------------------------------------------------
             if (s_state != RADIO) {
@@ -3282,25 +3273,25 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
     CMD_EQUALS("homepage"){             webSrv.send("homepage=", s_homepage.c_get()); return;}
 
     CMD_EQUALS("to_listen"){            showLogoAndStationName(false); return;}   // via websocket, return the name and number of the current station
-    CMD_EQUALS("get_tone"){             webSrv.send("settone=", setI2STone().c_get()); return;}
+    CMD_EQUALS("get_tone"){             webSrv.send("settone=", getI2STone().c_get()); return;}
 
     CMD_EQUALS("get_streamtitle"){      webSrv.reply(s_streamTitle.c_get(), webSrv.TEXT); return;}
 
     CMD_EQUALS("LowPass"){              s_tone.LP = param.to_int32();                           // audioI2S tone
                                         ps_ptr<char>lp; lp = "Lowpass set to " + param  + "dB";
-                                        webSrv.send("tone=", lp.c_get()); setI2STone().c_get(); return;}
+                                        setI2STone(); return;}
 
     CMD_EQUALS("BandPass"){             s_tone.BP = param.to_int32();                           // audioI2S tone
                                         ps_ptr<char>bp; bp = "Bandpass set to " + param + "dB";
-                                        webSrv.send("tone=", bp.c_get()); setI2STone().c_get(); return;}
+                                        setI2STone(); return;}
 
     CMD_EQUALS("HighPass"){             s_tone.HP = param.to_int32();                           // audioI2S tone
                                         ps_ptr<char> hp; hp = "Highpass set to " + param + "dB";
-                                        webSrv.send("tone=", hp.c_get()); setI2STone().c_get(); return;}
+                                        setI2STone(); return;}
 
     CMD_EQUALS("Balance"){              s_tone.BAL = param.to_int32();
                                         ps_ptr<char> bal = "Balance set to " + param;
-                                        webSrv.send("tone=", bal.c_get()); setI2STone().c_get(); return;}
+                                        setI2STone(); return;}
 
     CMD_EQUALS("prev_station"){         prevFavStation(); return;}                                                                                           // via websocket
 
@@ -3801,10 +3792,10 @@ void graphicObjects_OnChange(ps_ptr<char> name, int32_t val) {
     if (name.equals("sdr_DL_volume"))   { setVolume(val); goto exit; }
     if (name.equals("sdr_CL_volume"))   { setVolume(val); goto exit; }
     if (name.equals("sdr_BR_value"))    { s_brightness = val; setTFTbrightness(val); txt_BR_value.writeText(int2str(val)); goto exit; }
-    if (name.equals("sdr_EQ_LP"))       { c.assignf("%i dB", val); txt_EQ_lowPass.writeText(c.c_get());  s_tone.LP  = val; webSrv.send("settone=", setI2STone().c_get()); goto exit; }
-    if (name.equals("sdr_EQ_BP"))       { c.assignf("%i dB", val); txt_EQ_bandPass.writeText(c.c_get()); s_tone.BP  = val; webSrv.send("settone=", setI2STone().c_get()); goto exit; }
-    if (name.equals("sdr_EQ_HP"))       { c.assignf("%i dB", val); txt_EQ_highPass.writeText(c.c_get()); s_tone.HP  = val; webSrv.send("settone=", setI2STone().c_get()); goto exit; }
-    if (name.equals("sdr_EQ_BAL"))      { c.assignf("%i dB", val); txt_EQ_balance.writeText(c.c_get());  s_tone.BAL = val; webSrv.send("settone=", setI2STone().c_get()); goto exit; }
+    if (name.equals("sdr_EQ_LP"))       { c.assignf("%i dB", val); txt_EQ_lowPass.writeText(c.c_get());  s_tone.LP  = val; webSrv.send("settone=", getI2STone().c_get()); goto exit; }
+    if (name.equals("sdr_EQ_BP"))       { c.assignf("%i dB", val); txt_EQ_bandPass.writeText(c.c_get()); s_tone.BP  = val; webSrv.send("settone=", getI2STone().c_get()); goto exit; }
+    if (name.equals("sdr_EQ_HP"))       { c.assignf("%i dB", val); txt_EQ_highPass.writeText(c.c_get()); s_tone.HP  = val; webSrv.send("settone=", getI2STone().c_get()); goto exit; }
+    if (name.equals("sdr_EQ_BAL"))      { c.assignf("%i dB", val); txt_EQ_balance.writeText(c.c_get());  s_tone.BAL = val; webSrv.send("settone=", getI2STone().c_get()); goto exit; }
     if (name.equals("pgb_PL_progress")) { goto exit; }
     if (name.equals("pgb_DL_progress")) { goto exit; }
 
