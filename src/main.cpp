@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.1.0a - Feb 02, 2026                                                                                                               ";
+    Version 4.1.0b - Feb 05, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -2077,6 +2077,10 @@ void loop() {
     if (s_f_1sec) { // calls every second
         s_f_1sec = false;
         s_totalRuntime++;
+        // for(int i = 0; i< 3; i++){
+        //     uint8_t* sa = audio.getSpectrum();
+        //     MWR_LOG_INFO("%i, %i, %i", sa[0], sa[1], sa[2]);
+        // }
         uint16_t minuteOfTheDay = rtc.getMinuteOfTheDay();
         uint8_t  weekDay = rtc.getweekday();
         clk_CL_24.updateTime(minuteOfTheDay, weekDay);
