@@ -79,10 +79,7 @@ void TP_XPT2046::loop() {
             // log_i("tp_released");
             if (m_f_longPressed) {
                 m_f_longPressed = false;
-                if (tp_released)
-                    tp_released(x1, y1);
-                else if (tp_long_released)
-                    tp_long_released(x1, y1);
+                if (tp_long_released) tp_long_released(x1, y1);
             } else {
                 if (tp_released) tp_released(x1, y1);
             }

@@ -132,9 +132,6 @@ bool WebSrv::streamfile(fs::FS& fs, ps_ptr<char> path) { // transfer file from S
         }
     } // guard
     if (!fs.exists(path.c_get())) {
-        if(path.ends_with(".jpg")){
-            return false;
-        }
         show_not_found();
         return false;
     } // guard

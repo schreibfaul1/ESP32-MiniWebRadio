@@ -159,6 +159,7 @@ void KCX_BT_Emitter::parseATcmds() {
         if (m_bt_callback) { m_bt_callback(m_msg); }
     } else if (item.equals("OK+POWEROFF_MODE")) {
         m_power = false;
+        m_f_connected = BT_NOT_CONNECTED;
         m_msg.e = evt_power_off;
         if (m_bt_callback) { m_bt_callback(m_msg); }
     } else if (item.starts_with("OK+VERS:")) { // OK+VERS:KCX_BT_RTX_V1.4
@@ -206,23 +207,29 @@ void KCX_BT_Emitter::parseATcmds() {
         m_msg.arg = item.c_get();
         if (m_bt_callback) { m_bt_callback(m_msg); }
     } else if (item.starts_with("MacAdd")) {
-        bool found = false;
-        for (auto sc : m_bt_scannedItems) {
-            // KCX_LOG_ERROR("item %s", item.c_get());
-            if (item.equals(sc)) { found = true; }
+        if (m_power) {
+            bool found = false;
+            for (auto sc : m_bt_scannedItems) {
+                // KCX_LOG_ERROR("item %s", item.c_get());
+                if (item.equals(sc)) { found = true; }
+            }
+            if (!found) { m_bt_scannedItems.push_back(item); }
         }
-        if (!found) { m_bt_scannedItems.push_back(item); }
     } else if (item.starts_with("CONNECT=>")) {
-        if (m_f_connected == BT_NOT_CONNECTED) {
-            m_f_connected = BT_CONNECTED;
-            m_msg.e = evt_connect;
-            if (m_bt_callback) { m_bt_callback(m_msg); }
+        if (m_power) {
+            if (m_f_connected == BT_NOT_CONNECTED) {
+                m_f_connected = BT_CONNECTED;
+                m_msg.e = evt_connect;
+                if (m_bt_callback) { m_bt_callback(m_msg); }
+            }
         }
     } else if (item.equals("SCAN....")) {
-        if (m_f_connected == BT_CONNECTED) {
-            m_f_connected = BT_NOT_CONNECTED;
-            m_msg.e = evt_disconnect;
-            if (m_bt_callback) { m_bt_callback(m_msg); }
+        if (m_power) {
+            if (m_f_connected == BT_CONNECTED) {
+                m_f_connected = BT_NOT_CONNECTED;
+                m_msg.e = evt_disconnect;
+                if (m_bt_callback) { m_bt_callback(m_msg); }
+            }
         }
         m_msg.e = evt_scan;
         if (m_bt_callback) { m_bt_callback(m_msg); }
@@ -240,7 +247,7 @@ void KCX_BT_Emitter::parseATcmds() {
         }
     } else if (item.equals("CON ONE")) {
         if (m_f_connected == BT_CONNECTED) {
-             m_msg.e = evt_connect;
+            m_msg.e = evt_connect;
             if (m_bt_callback) { m_bt_callback(m_msg); }
         }
     } else if (item.equals("CON LAST")) {
@@ -255,7 +262,17 @@ void KCX_BT_Emitter::parseATcmds() {
         m_msg.e = evt_play;
         if (m_bt_callback) { m_bt_callback(m_msg); }
     } else {
-        KCX_LOG_INFO("command: %s", item.c_get());
+        if (item.starts_with("Auto_link")) {
+            ;
+        } else if (item.starts_with("BT_NAME")) {
+            ;
+        } else if (item.starts_with("BT_ADD")) {
+            ;
+        } else if (item.starts_with("OK+VMLINK")) {
+            ;
+        } else {
+            KCX_LOG_INFO("command: %s", item.c_get());
+        }
     }
     return;
 }
@@ -271,6 +288,8 @@ void KCX_BT_Emitter::protocol_addElement(const char* RX_TX, const char* str) {
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void KCX_BT_Emitter::add_tx_queue_item(ps_ptr<char> item) {
+    for (int i = 0; i < m_TX_queue.size(); i++)
+        if (item.equals(m_TX_queue[i])) return; // item already in list
     m_TX_queue.push_back(item);
     KCX_LOG_DEBUG("add_tx_queue_item %s", item.c_get());
     return;
@@ -397,7 +416,7 @@ const char* KCX_BT_Emitter::getMyName() {
 }
 void KCX_BT_Emitter::power_off() {
     if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;
-    if(m_power) add_tx_queue_item("AT+POWER_OFF");
+    if (m_power) add_tx_queue_item("AT+POWER_OFF");
 }
 void KCX_BT_Emitter::power_on() {
     if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;
