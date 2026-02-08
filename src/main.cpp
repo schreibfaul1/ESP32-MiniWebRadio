@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.1.0c - Feb 06, 2026                                                                                                               ";
+    Version 4.1.0c1 - Feb 08, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -4008,7 +4008,7 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
                                                   playlist.sort_random(); s_subState_player = 1; s_f_playlistEnabled = true; }
                                               goto exit; }
         if (name.equals("btn_PL_fileList")) { s_SD_content.listFilesInDir(s_cur_AudioFolder.c_get(), true, false); changeState(AUDIOFILESLIST, 0); goto exit; }
-        if (name.equals("btn_PL_radio"))    { changeState(RADIO, 0); setStation(s_cur_station); goto exit; }
+        if (name.equals("btn_PL_radio"))    { setStation(s_cur_station); goto exit; }
         if (name.equals("btn_PL_off"))      { fall_asleep(); goto exit; }
         if (name.equals("sdr_PL_volume"))   { goto exit; }
         if (name.equals("btn_PL_playNext")) { SD_playFile(s_cur_AudioFolder.c_get(), s_SD_content.getColouredSStringByIndex(s_cur_AudioFileNr)); showAudioFileNumber(); goto exit; }
@@ -4042,7 +4042,7 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
                                               if(s_ir_btn_select == 3) set_ir_pos_DL(0);
                                               goto exit; }
         if (name.equals("btn_DL_fileList")) { changeState(DLNAITEMSLIST, 0); txt_DL_fName.setText(""); goto exit; }
-        if (name.equals("btn_DL_radio"))    { changeState(RADIO, 0); setStation(s_cur_station); goto exit; }
+        if (name.equals("btn_DL_radio"))    { setStation(s_cur_station); goto exit; }
         if (name.equals("sdr_DL_volume"))   { goto exit; }
         if (name.equals("pgb_DL_progress")) { audio.setTimeOffset(ra.val2); goto exit; }
     }

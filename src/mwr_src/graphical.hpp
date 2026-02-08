@@ -5196,7 +5196,7 @@ class displayHeader : public RegisterTable {
         updateItem(m_item);
         speakerOnOff(m_speakerOn);
         updateVolume(m_volume);
-        updateRSSI(m_rssi);
+        updateRSSI(m_rssi, true);
         updateTime(m_time, true);
     }
     void hide() {
