@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.1.0c1 - Feb 08, 2026                                                                                                               ";
+    Version 4.1.0c2 - Feb 08, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -1327,7 +1327,7 @@ uint8_t upvolume() {
 
 void setStation(uint16_t sta) {
     static uint16_t old_cur_station = 0;
-    if (sta == 0) { return; }
+    if (sta == 0) { setStationViaURL(s_settings.lastconnectedhost.c_get(), ""); }
     if (sta > staMgnt.getSumStations()) sta = s_cur_station;
     s_stationURL = staMgnt.getStationUrl(sta);
     SerialPrintfln("action: ...  switch to station " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET "  ", sta);
