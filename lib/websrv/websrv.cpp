@@ -182,7 +182,6 @@ bool WebSrv::streamfile(fs::FS& fs, ps_ptr<char> path) { // transfer file from S
             buffPtr += bytesWritten;
             bytesToSend -= bytesWritten;
             bytesInBuff -= bytesWritten;
-            vTaskDelay(1);
         }
     }
 

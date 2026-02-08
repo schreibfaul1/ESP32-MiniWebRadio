@@ -1615,6 +1615,7 @@ void setTimeCounter(uint8_t sec) {
         s_timeCounter.timer = 0;
         s_timeCounter.factor = 0;
         dispFooter.updateTC(0);
+        s_f_newBitRate = true;
     }
 }
 
