@@ -781,7 +781,7 @@ function connect() {
                                         fillTimeZoneSelect(val)
                                         break;
             case "serTerminal":         appendToTerminal(val);
-                                        console.log(msg, val)
+                                        // console.log(msg, val)
                                         break;
             default:                    console.log('unknown message', msg, val)
         }
@@ -1117,13 +1117,27 @@ async function loadFileFromSD(file_name, content_type) {
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 // --------------------------------------------------------- TAB RADIO -------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------------------------------------
-function showLogo(id, src) { // get the pic from SD, convert to URL first
-    const myImg = document.getElementById(id);
-    src = "/SD" + src
-    src += "?" + new Date().getTime()
-    console.log("showLogo id=", id, "src=", src)
-    myImg.src = src;
+async function showLogo(id, src, timeoutMs = 15000) {
+    const img = document.getElementById(id);
+    const url = "/SD" + src + "?" + Date.now();
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+        const response = await fetch(url, { signal: controller.signal });
+        if (!response.ok) throw new Error(response.statusText);
+
+        const blob = await response.blob();
+        img.src = URL.createObjectURL(blob);
+    } catch (e) {
+        console.warn("Logo load failed:", e);
+        img.src = ""; // oder Fallback
+    } finally {
+        clearTimeout(timer);
+    }
 }
+
 
 function test(){
     socket.send("test=")

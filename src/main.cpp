@@ -1217,13 +1217,8 @@ void setup() {
             s_resetReason == ESP_RST_SW ||        // ESP.restart()
             s_resetReason == ESP_RST_SDIO ||      // The boot button was pressed
             s_resetReason == ESP_RST_DEEPSLEEP) { // Wake up
-            if (s_cur_station > 0) {
-                s_state = UNDEFINED;
-                setStation(s_cur_station);
-            } else {
-                s_state = UNDEFINED;
-                setStationViaURL(s_settings.lastconnectedhost.c_get(), "");
-            }
+            s_state = UNDEFINED;
+            setStation(s_cur_station);
         }
         if (!MDNS.begin("MiniWebRadio")) {
             SerialPrintfln("%s", "WiFI_info:   " ANSI_ESC_YELLOW "Error starting mDNS", ANSI_ESC_RESET);
@@ -1524,12 +1519,7 @@ void wake_up() {
     SerialPrintfln("awake");
     clearAll();
     setTFTbrightness(s_brightness);
-    if (s_cur_station) {
-        setStation(s_cur_station);
-    } else {
-        connecttohost(s_settings.lastconnectedhost.get());
-    }
-    changeState(RADIO, 0);
+    setStation(s_cur_station);
     showLogoAndStationName(true);
     dispHeader.show(true);
     dispHeader.speakerOnOff(!s_f_mute);
@@ -1674,8 +1664,7 @@ void changeState(int8_t state, int8_t subState) {
                 dispFooter.updateFlag(getFlagPath(s_cur_station));
                 webSrv.send("changeState=", "RADIO");
                 if(!s_f_isWebConnected){
-                    if (s_cur_station) { setStation(s_cur_station); }
-                    else               { connecttohost(s_settings.lastconnectedhost.get()); }
+                    setStation(s_cur_station);
                 }
                 if(s_f_isWebConnected) showLogoAndStationName(true);
             }
@@ -2156,10 +2145,7 @@ void loop() {
         if (f_resume && s_f_eof) {
             f_resume = false;
             s_f_eof = false;
-            if (s_cur_station)
-                setStation(s_cur_station);
-            else
-                setStationViaURL(s_settings.lastconnectedhost.get(), "");
+            setStation(s_cur_station);
             return;
         }
         //------------------------------------------AUDIO_CURRENT_TIME - DURATION---------------------------------------------------------------------
@@ -2225,10 +2211,7 @@ void loop() {
         //------------------------------------------CONNECT TO LASTHOST-------------------------------------------------------------------------------
         if (s_f_connectToLastStation) { // not used yet
             s_f_connectToLastStation = false;
-            if (s_cur_station)
-                setStation(s_cur_station);
-            else
-                connecttohost(s_settings.lastconnectedhost.get());
+            setStation(s_cur_station);
         }
         //------------------------------------------RECONNECT AFTER FAIL------------------------------------------------------------------------------
         if (s_f_reconnect && !s_f_isWiFiConnected) { // not used yet
@@ -2523,9 +2506,9 @@ void my_audio_info(Audio::msg_t m) {
 
         case Audio::evt_lasthost:
             if (s_f_playlistEnabled) return;
-            s_settings.lastconnectedhost.assign(m.msg);
-            SerialPrintflnCut("lastURL: ..  ", ANSI_ESC_WHITE, s_settings.lastconnectedhost.get());
-            webSrv.send("stationURL=", s_settings.lastconnectedhost.get());
+            if(s_state == RADIO) s_settings.lastconnectedhost.assign(m.msg);
+            SerialPrintflnCut("lastURL: ..  ", ANSI_ESC_WHITE, m.msg);
+            webSrv.send("stationURL=", m.msg);
             break;
 
         case Audio::evt_icyurl:
@@ -3653,6 +3636,7 @@ void on_websrv(const WebSrv::msg_s& msg) {
         SerialPrintfln("WebSrv Info: " ANSI_ESC_GREEN "%s " ANSI_ESC_RESET "  ", msg.arg.c_get());
     }
     if (msg.e == WebSrv::evt_error) { SerialPrintfln("WebSrv Err:  " ANSI_ESC_RED "%s" ANSI_ESC_RESET "  ", msg.arg.c_get()); }
+    if (msg.e == WebSrv::evt_warn) { SerialPrintfln("WebSrv Warn:  " ANSI_ESC_YELLOW "%s" ANSI_ESC_RESET "  ", msg.arg.c_get()); }
     if (msg.e == WebSrv::evt_command) { WEBSRV_onCommand(msg.cmd, msg.param1, msg.arg1); }
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
