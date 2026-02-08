@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.1.0c2 - Feb 08, 2026                                                                                                               ";
+    Version 4.1.0c3 - Feb 08, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -2634,7 +2634,7 @@ void ir_number(uint16_t num) {
 
 void ir_released(int8_t key) {
     SerialPrintfln("ir_code: ..  " ANSI_ESC_YELLOW "released ir key nr: " ANSI_ESC_BLUE "%02i, <%s>" ANSI_ESC_RESET "  ", key, ir_symbols[key]);
-    // tp_released(0, 0);
+    tp_released(0, 0);
     return;
 }
 // ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
