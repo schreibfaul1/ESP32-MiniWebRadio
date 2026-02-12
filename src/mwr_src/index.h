@@ -1228,14 +1228,21 @@ function slider_BAL_mouseUp () { // Slider Balance mouseupevent
 }
 
 function slider_BAL_change () { //  Slider Balance changeevent
+    var bal = Number(Balance.value)
+    bal_str = " 0 / 0 "
+    if(Number(Balance.value) < 0) bal_str = Balance.value + " / 0"
+    if(Number(Balance.value) > 0) bal_str = "0 / -" + Balance.value
     console.log('Balance=%i', Number(Balance.value))
-    document.getElementById('label_BAL_value').innerHTML = Balance.value
+    document.getElementById('label_BAL_value').innerHTML = bal_str
 }
 
 function slider_BAL_set (value) { // set Slider Balance
     var val = Number(value)
+    bal_str = " 0 / 0 "
+    if(val < 0) bal_str = val + " / 0"
+    if(val > 0) bal_str = "0 / -" + val
     document.getElementById('Balance').value = val
-    document.getElementById('label_BAL_value').innerHTML = Balance.value
+    document.getElementById('label_BAL_value').innerHTML = bal_str
     console.log('Balance=%i', val)
 }
 
@@ -2676,7 +2683,7 @@ function appendToTerminal(text) {
 
                     <label class="sdr_lbl_left">High:</label>
                     <div class="slidecontainer" style="float: left; width: 180px; height: 40px;">
-                        <input type="range" min="0" max="21" value="12" id="HighPass"
+                        <input type="range" min="0" max="24" value="12" id="HighPass"
                         onmouseup="slider_HP_mouseUp()"
                         ontouchend="slider_HP_mouseUp()"
                         oninput="slider_HP_change()">
@@ -2696,7 +2703,7 @@ function appendToTerminal(text) {
 
                     <label class="sdr_lbl_left">Low:</label>
                     <div class="slidecontainer" style="float: left; width: 180px; height: 40px;">
-                        <input type="range" min="0" max="21" value="12" id="LowPass"
+                        <input type="range" min="0" max="24" value="12" id="LowPass"
                         onmouseup="slider_LP_mouseUp()"
                         ontouchend="slider_LP_mouseUp()"
                         oninput="slider_LP_change()">
@@ -2711,8 +2718,8 @@ function appendToTerminal(text) {
                         ontouchend="slider_BAL_mouseUp()"
                         oninput="slider_BAL_change()">
                     </div>
-                    <label id="label_BAL_value" class="sdr_lbl_right">0</label>
-                    <label class="sdr_lbl_measure"></label>
+                    <label id="label_BAL_value" class="sdr_lbl_right">0 / 0</label>
+                    <label class="sdr_lbl_measure">dB</label>
 
 
                 </div>

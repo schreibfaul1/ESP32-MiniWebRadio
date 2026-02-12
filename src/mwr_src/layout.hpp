@@ -132,20 +132,20 @@ constexpr coor winWoHF = coor().pos(0, h_footer).size(h_res, 2 * h_area);
 // window derived (calculated from others)
 // -----------------------------------------------------------------------------------
 
-constexpr coor btnHP = coor().pos(  20, h_footer + 0 * h_EQ).size(hw_btn_s, hw_btn_s);
-constexpr coor btnBP = coor().pos(  20, h_footer + 1 * h_EQ).size(hw_btn_s, hw_btn_s);
-constexpr coor btnLP = coor().pos(  20, h_footer + 2 * h_EQ).size(hw_btn_s, hw_btn_s);
-constexpr coor btnBAL = coor().pos( 20, h_footer + 3 * h_EQ).size(hw_btn_s, hw_btn_s);
+constexpr coor btnHP = coor().pos(  10, h_footer + 0 * h_EQ).size(hw_btn_s, hw_btn_s);
+constexpr coor btnBP = coor().pos(  10, h_footer + 1 * h_EQ).size(hw_btn_s, hw_btn_s);
+constexpr coor btnLP = coor().pos(  10, h_footer + 2 * h_EQ).size(hw_btn_s, hw_btn_s);
+constexpr coor btnBAL = coor().pos( 10, h_footer + 3 * h_EQ).size(hw_btn_s, hw_btn_s);
 
-constexpr coor sdrHP = coor().pos( 80, h_footer + 0 * h_EQ).size(150, h_EQ).pad(0, 0, 8, 8);
-constexpr coor sdrBP = coor().pos( 80, h_footer + 1 * h_EQ).size(150, h_EQ).pad(0, 0, 8, 8);
-constexpr coor sdrLP = coor().pos( 80, h_footer + 2 * h_EQ).size(150, h_EQ).pad(0, 0, 8, 8);
-constexpr coor sdrBAL = coor().pos(80, h_footer + 3 * h_EQ).size(150, h_EQ).pad(0, 0, 8, 8);
+constexpr coor sdrHP = coor().pos( 55, h_footer + 0 * h_EQ).size(150, h_EQ).pad(0, 0, 8, 8);
+constexpr coor sdrBP = coor().pos( 55, h_footer + 1 * h_EQ).size(150, h_EQ).pad(0, 0, 8, 8);
+constexpr coor sdrLP = coor().pos( 55, h_footer + 2 * h_EQ).size(150, h_EQ).pad(0, 0, 8, 8);
+constexpr coor sdrBAL = coor().pos(55, h_footer + 3 * h_EQ).size(150, h_EQ).pad(0, 0, 8, 8);
 
-constexpr coor txtHP = coor().pos( 250, h_footer + 0 * h_EQ).size(60, h_EQ);
-constexpr coor txtBP = coor().pos( 250, h_footer + 1 * h_EQ).size(60, h_EQ);
-constexpr coor txtLP = coor().pos( 250, h_footer + 2 * h_EQ).size(60, h_EQ);
-constexpr coor txtBAL = coor().pos(250, h_footer + 3 * h_EQ).size(60, h_EQ);
+constexpr coor txtHP = coor().pos( 210, h_footer + 0 * h_EQ).size(105, h_EQ).pad(0, 0, 1, 1);
+constexpr coor txtBP = coor().pos( 210, h_footer + 1 * h_EQ).size(105, h_EQ).pad(0, 0, 1, 1);
+constexpr coor txtLP = coor().pos( 210, h_footer + 2 * h_EQ).size(105, h_EQ).pad(0, 0, 1, 1);
+constexpr coor txtBAL = coor().pos(210, h_footer + 3 * h_EQ).size(105, h_EQ).pad(0, 0, 1, 1);
 
 inline constexpr uint8_t fonts[13] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66, 81, 96};
 
@@ -219,20 +219,20 @@ constexpr coor winWoHF = coor().pos(0, h_footer).size(h_res, 2 * h_area); // win
 // window derived (calculated from others)
 // -----------------------------------------------------------------------------------
 
-constexpr coor btnHP = coor().pos(  50, h_footer + 0 * h_EQ).size(hw_btn_s, hw_btn_s);
-constexpr coor btnBP = coor().pos(  50, h_footer + 1 * h_EQ).size(hw_btn_s, hw_btn_s);
-constexpr coor btnLP = coor().pos(  50, h_footer + 2 * h_EQ).size(hw_btn_s, hw_btn_s);
-constexpr coor btnBAL = coor().pos( 50, h_footer + 3 * h_EQ).size(hw_btn_s, hw_btn_s);
+constexpr coor btnHP = coor().pos(  40, h_footer + 0 * h_EQ).size(hw_btn_s, hw_btn_s);
+constexpr coor btnBP = coor().pos(  40, h_footer + 1 * h_EQ).size(hw_btn_s, hw_btn_s);
+constexpr coor btnLP = coor().pos(  40, h_footer + 2 * h_EQ).size(hw_btn_s, hw_btn_s);
+constexpr coor btnBAL = coor().pos( 40, h_footer + 3 * h_EQ).size(hw_btn_s, hw_btn_s);
 
-constexpr coor sdrHP = coor().pos( 120, h_footer + 0 * h_EQ).size(200, h_EQ).pad(0, 0, 8, 8);
-constexpr coor sdrBP = coor().pos( 120, h_footer + 1 * h_EQ).size(200, h_EQ).pad(0, 0, 8, 8);
-constexpr coor sdrLP = coor().pos( 120, h_footer + 2 * h_EQ).size(200, h_EQ).pad(0, 0, 8, 8);
-constexpr coor sdrBAL = coor().pos(120, h_footer + 3 * h_EQ).size(200, h_EQ).pad(0, 0, 8, 8);
+constexpr coor sdrHP = coor().pos( 110, h_footer + 0 * h_EQ).size(200, h_EQ).pad(0, 0, 8, 8);
+constexpr coor sdrBP = coor().pos( 110, h_footer + 1 * h_EQ).size(200, h_EQ).pad(0, 0, 8, 8);
+constexpr coor sdrLP = coor().pos( 110, h_footer + 2 * h_EQ).size(200, h_EQ).pad(0, 0, 8, 8);
+constexpr coor sdrBAL = coor().pos(110, h_footer + 3 * h_EQ).size(200, h_EQ).pad(0, 0, 8, 8);
 
-constexpr coor txtHP = coor().pos( 340, h_footer + 0 * h_EQ).size(120, h_EQ);
-constexpr coor txtBP = coor().pos( 340, h_footer + 1 * h_EQ).size(120, h_EQ);
-constexpr coor txtLP = coor().pos( 340, h_footer + 2 * h_EQ).size(120, h_EQ);
-constexpr coor txtBAL = coor().pos(340, h_footer + 3 * h_EQ).size(120, h_EQ);
+constexpr coor txtHP = coor().pos( 320, h_footer + 0 * h_EQ).size(150, h_EQ).pad(0, 0, 3, 3);
+constexpr coor txtBP = coor().pos( 320, h_footer + 1 * h_EQ).size(150, h_EQ).pad(0, 0, 3, 3);
+constexpr coor txtLP = coor().pos( 320, h_footer + 2 * h_EQ).size(150, h_EQ).pad(0, 0, 3, 3);
+constexpr coor txtBAL = coor().pos(320, h_footer + 3 * h_EQ).size(150, h_EQ).pad(0, 0, 3, 3);
 
 inline constexpr uint8_t fonts[13] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66, 81, 96};
 
@@ -311,15 +311,15 @@ constexpr coor btnBP = coor().pos( 100, h_footer + 1 * h_EQ).size(hw_btn_s, hw_b
 constexpr coor btnLP = coor().pos( 100, h_footer + 2 * h_EQ).size(hw_btn_s, hw_btn_s);
 constexpr coor btnBAL = coor().pos(100, h_footer + 3 * h_EQ).size(hw_btn_s, hw_btn_s);
 
-constexpr coor sdrHP = coor().pos( 180, h_footer + 0 * h_EQ).size(350, h_EQ).pad(0, 0, 8, 8);
-constexpr coor sdrBP = coor().pos( 180, h_footer + 1 * h_EQ).size(350, h_EQ).pad(0, 0, 8, 8);
-constexpr coor sdrLP = coor().pos( 180, h_footer + 2 * h_EQ).size(350, h_EQ).pad(0, 0, 8, 8);
-constexpr coor sdrBAL = coor().pos(180, h_footer + 3 * h_EQ).size(350, h_EQ).pad(0, 0, 8, 8);
+constexpr coor sdrHP = coor().pos( 180, h_footer + 0 * h_EQ).size(380, h_EQ).pad(0, 0, 8, 8);
+constexpr coor sdrBP = coor().pos( 180, h_footer + 1 * h_EQ).size(380, h_EQ).pad(0, 0, 8, 8);
+constexpr coor sdrLP = coor().pos( 180, h_footer + 2 * h_EQ).size(380, h_EQ).pad(0, 0, 8, 8);
+constexpr coor sdrBAL = coor().pos(180, h_footer + 3 * h_EQ).size(380, h_EQ).pad(0, 0, 8, 8);
 
-constexpr coor txtHP = coor().pos( 500, h_footer + 0 * h_EQ).size(190, h_EQ);
-constexpr coor txtBP = coor().pos( 500, h_footer + 1 * h_EQ).size(190, h_EQ);
-constexpr coor txtLP = coor().pos( 500, h_footer + 2 * h_EQ).size(190, h_EQ);
-constexpr coor txtBAL = coor().pos(500, h_footer + 3 * h_EQ).size(190, h_EQ);
+constexpr coor txtHP = coor().pos( 570, h_footer + 0 * h_EQ).size(200, h_EQ).pad(0, 0, 6, 6);
+constexpr coor txtBP = coor().pos( 570, h_footer + 1 * h_EQ).size(200, h_EQ).pad(0, 0, 6, 6);
+constexpr coor txtLP = coor().pos( 570, h_footer + 2 * h_EQ).size(200, h_EQ).pad(0, 0, 6, 6);
+constexpr coor txtBAL = coor().pos(570, h_footer + 3 * h_EQ).size(200, h_EQ).pad(0, 0, 6, 6);
 
 inline constexpr uint8_t fonts[13] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66, 81, 96};
 
@@ -402,10 +402,10 @@ constexpr coor sdrBP = coor().pos( 220, h_footer + 1 * h_EQ).size(500, h_EQ).pad
 constexpr coor sdrLP = coor().pos( 220, h_footer + 2 * h_EQ).size(500, h_EQ).pad(0, 0, 8, 8);
 constexpr coor sdrBAL = coor().pos(220, h_footer + 3 * h_EQ).size(500, h_EQ).pad(0, 0, 8, 8);
 
-constexpr coor txtHP = coor().pos( 800, h_footer + 0 * h_EQ).size(170, h_EQ);
-constexpr coor txtBP = coor().pos( 800, h_footer + 1 * h_EQ).size(170, h_EQ);
-constexpr coor txtLP = coor().pos( 800, h_footer + 2 * h_EQ).size(170, h_EQ);
-constexpr coor txtBAL = coor().pos(800, h_footer + 3 * h_EQ).size(170, h_EQ);
+constexpr coor txtHP = coor().pos( 730, h_footer + 0 * h_EQ).size(260, h_EQ).pad(0, 0, 4, 4);
+constexpr coor txtBP = coor().pos( 730, h_footer + 1 * h_EQ).size(260, h_EQ).pad(0, 0, 4, 4);
+constexpr coor txtLP = coor().pos( 730, h_footer + 2 * h_EQ).size(260, h_EQ).pad(0, 0, 4, 4);
+constexpr coor txtBAL = coor().pos(730, h_footer + 3 * h_EQ).size(260, h_EQ).pad(0, 0, 4, 4);
 
 
 
@@ -835,23 +835,23 @@ void placingGraphicObjects() { // and initialize them
     txt_BR_value.setFont(displayConfig.fonts[4]);
     // EQUALIZER ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     sdr_EQ_lowPass.begin(layout.sdrLP.x, layout.sdrLP.y, layout.sdrLP.w, layout.sdrLP.h, layout.sdrLP.pl, layout.sdrLP.pr, layout.sdrLP.pt, layout.sdrLP.pb);
-    sdr_EQ_lowPass.setMinMaxVal(-12, 9);
+    sdr_EQ_lowPass.setMinMaxVal(-12, 12);
     sdr_EQ_bandPass.begin(layout.sdrBP.x, layout.sdrBP.y, layout.sdrBP.w, layout.sdrBP.h, layout.sdrBP.pl, layout.sdrBP.pr, layout.sdrBP.pt, layout.sdrBP.pb);
     sdr_EQ_bandPass.setMinMaxVal(-12, 12);
     sdr_EQ_highPass.begin(layout.sdrHP.x, layout.sdrHP.y, layout.sdrHP.w, layout.sdrHP.h, layout.sdrHP.pl, layout.sdrHP.pr, layout.sdrHP.pt, layout.sdrHP.pb);
-    sdr_EQ_highPass.setMinMaxVal(-12, 9);
+    sdr_EQ_highPass.setMinMaxVal(-12, 12);
     sdr_EQ_balance.begin(layout.sdrBAL.x, layout.sdrBAL.y, layout.sdrBAL.w, layout.sdrBAL.h, layout.sdrBAL.pl, layout.sdrBAL.pr, layout.sdrBAL.pt, layout.sdrBAL.pb);
     sdr_EQ_balance.setMinMaxVal(-16, 16);
-    txt_EQ_lowPass.begin(layout.txtLP.x, layout.txtLP.y, layout.txtLP.w, layout.txtLP.h, 0, 0, 0, 0);
+    txt_EQ_lowPass.begin(layout.txtLP.x, layout.txtLP.y, layout.txtLP.w, layout.txtLP.h, layout.txtLP.pl, layout.txtLP.pr, layout.txtLP.pt, layout.txtLP.pb);
     txt_EQ_lowPass.setAlign(TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER);
     txt_EQ_lowPass.setFont(0); // 0 -> auto
-    txt_EQ_bandPass.begin(layout.txtBP.x, layout.txtBP.y, layout.txtBP.w, layout.txtBP.h, 0, 0, 0, 0);
+    txt_EQ_bandPass.begin(layout.txtBP.x, layout.txtBP.y, layout.txtBP.w, layout.txtBP.h, layout.txtBP.pl, layout.txtBP.pr, layout.txtBP.pt, layout.txtBP.pb);
     txt_EQ_bandPass.setAlign(TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER);
     txt_EQ_bandPass.setFont(0); // 0 -> auto
-    txt_EQ_highPass.begin(layout.txtHP.x, layout.txtHP.y, layout.txtHP.w, layout.txtHP.h, 0, 0, 0, 0);
+    txt_EQ_highPass.begin(layout.txtHP.x, layout.txtHP.y, layout.txtHP.w, layout.txtHP.h, layout.txtHP.pl, layout.txtHP.pr, layout.txtHP.pt, layout.txtHP.pb);
     txt_EQ_highPass.setAlign(TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER);
     txt_EQ_highPass.setFont(0); // 0 -> auto
-    txt_EQ_balance.begin(layout.txtBAL.x, layout.txtBAL.y, layout.txtBAL.w, layout.txtBAL.h, 0, 0, 0, 0);
+    txt_EQ_balance.begin(layout.txtBAL.x, layout.txtBAL.y, layout.txtBAL.w, layout.txtBAL.h, layout.txtBAL.pl, layout.txtBAL.pr, layout.txtBAL.pt, layout.txtBAL.pb);
     txt_EQ_balance.setAlign(TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER);
     txt_EQ_balance.setFont(0); // 0 -> auto
     btn_EQ_lowPass.begin(layout.btnLP.x, layout.btnLP.y, layout.btnLP.w, layout.btnLP.h);

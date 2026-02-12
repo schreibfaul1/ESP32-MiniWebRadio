@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.1.0c4 - Feb 08, 2026                                                                                                               ";
+    Version 4.1.0d - Feb 12, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -2390,6 +2390,15 @@ void loop() {
             else
                 MWR_LOG_INFO("stereo");
         }
+        if (r.startsWith("sm")) { // force mono
+            static bool f_mute = false;
+            f_mute = !f_mute;
+            audio.setMute(f_mute);
+            if (f_mute)
+                MWR_LOG_INFO("mute on");
+            else
+                MWR_LOG_INFO("mute off");
+        }
         if (r.startsWith("btp")) { // bluetooth RX/TX protocol
             bt_emitter.list_protokol();
         }
@@ -3781,10 +3790,13 @@ void graphicObjects_OnChange(ps_ptr<char> name, int32_t val) {
     if (name.equals("sdr_DL_volume"))   { setVolume(val); goto exit; }
     if (name.equals("sdr_CL_volume"))   { setVolume(val); goto exit; }
     if (name.equals("sdr_BR_value"))    { s_brightness = val; setTFTbrightness(val); txt_BR_value.writeText(int2str(val)); goto exit; }
-    if (name.equals("sdr_EQ_LP"))       { c.assignf("%i dB", val); txt_EQ_lowPass.writeText(c.c_get());  s_tone.LP  = val; webSrv.send("settone=", getI2STone().c_get()); setI2STone(); goto exit; }
-    if (name.equals("sdr_EQ_BP"))       { c.assignf("%i dB", val); txt_EQ_bandPass.writeText(c.c_get()); s_tone.BP  = val; webSrv.send("settone=", getI2STone().c_get()); setI2STone(); goto exit; }
-    if (name.equals("sdr_EQ_HP"))       { c.assignf("%i dB", val); txt_EQ_highPass.writeText(c.c_get()); s_tone.HP  = val; webSrv.send("settone=", getI2STone().c_get()); setI2STone(); goto exit; }
-    if (name.equals("sdr_EQ_BAL"))      { c.assignf("%i dB", val); txt_EQ_balance.writeText(c.c_get());  s_tone.BAL = val; webSrv.send("settone=", getI2STone().c_get()); setI2STone(); goto exit; }
+    if (name.equals("sdr_EQ_LP"))       { c.assignf("%i dB", val); s_tone.LP  = val; webSrv.send("settone=", getI2STone().c_get()); setI2STone(); txt_EQ_lowPass.writeText(c.c_get());  goto exit; }
+    if (name.equals("sdr_EQ_BP"))       { c.assignf("%i dB", val); s_tone.BP  = val; webSrv.send("settone=", getI2STone().c_get()); setI2STone(); txt_EQ_bandPass.writeText(c.c_get()); goto exit; }
+    if (name.equals("sdr_EQ_HP"))       { c.assignf("%i dB", val); s_tone.HP  = val; webSrv.send("settone=", getI2STone().c_get()); setI2STone(); txt_EQ_highPass.writeText(c.c_get()); goto exit; }
+    if (name.equals("sdr_EQ_BAL"))      { if(val < 0)       c.assignf("%i/0 dB", val);  // e.g. -10/0 dB
+                                          else if (val > 0) c.assignf("0/-%i dB", val); // e.g. 0/-8 dB
+                                          else              c.assignf("0/0 dB", val);   // 0/0 dB
+                                          s_tone.BAL = val; webSrv.send("settone=", getI2STone().c_get()); setI2STone(); txt_EQ_balance.writeText(c.c_get());  goto exit; }
     if (name.equals("pgb_PL_progress")) { goto exit; }
     if (name.equals("pgb_DL_progress")) { goto exit; }
 
