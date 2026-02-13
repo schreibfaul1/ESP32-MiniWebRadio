@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.1.0d - Feb 12, 2026                                                                                                               ";
+    Version 4.1.0e - Feb 13, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -3713,7 +3713,7 @@ void tp_moved(uint16_t x, uint16_t y) {
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void tp_released(uint16_t x, uint16_t y){
 
-    if(s_f_sleeping){ wake_up(); return;}   // if sleeping
+    if(s_f_sleeping && x > 0 && y > 0){ wake_up(); return;}   // if sleeping
 
     // all state
     dispHeader.released();
