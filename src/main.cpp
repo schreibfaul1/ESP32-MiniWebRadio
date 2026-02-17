@@ -200,6 +200,8 @@ TFT_SPI tft(spiBus, TFT_CS);
 TFT_RGB tft;
 #elif TFT_CONTROLLER == 8
 TFT_DSI tft;
+#elif TFT_CONTROLLER == 9
+TFT_DSI tft;
 #else
     #error "wrong TFT_CONTROLLER"
 #endif
@@ -1070,7 +1072,7 @@ void setup() {
         s_f_brightnessIsChangeable = true;
         setupBacklight(TFT_BL, 512);
     }
-#elif TFT_CONTROLLER == 8
+#elif (TFT_CONTROLLER == 8) || (TFT_CONTROLLER == 9)
     s_h_resolution = 1024;
     s_v_resolution = 600;
     tft.begin(DSI_TIMING);
@@ -1133,7 +1135,7 @@ void setup() {
     defaultsettings();
     if (ESP.getFlashChipSize() > 80000000) { FFat.begin(); }
 
-    if (TFT_CONTROLLER > 8) SerialPrintfln(ANSI_ESC_RED "The value in TFT_CONTROLLER is invalid" ANSI_ESC_RESET "   ");
+    if (TFT_CONTROLLER > 9) SerialPrintfln(ANSI_ESC_RED "The value in TFT_CONTROLLER is invalid" ANSI_ESC_RESET "   ");
 
     drawImage("/common/MiniWebRadioV4.jpg", 0, 0); // Welcomescreen
     updateSettings();
@@ -2566,7 +2568,7 @@ void my_audio_info(Audio::msg_t m) {
 }
 
 // ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void audio_process_i2s(int16_t* outBuff, int32_t validSamples, bool* continueI2S) {
+// void audio_process_i2s(int32_t* outBuff, int32_t validSamples, bool* continueI2S) {
 
     // int16_t sineWaveTable[44] = {
     //      0,   3743,   7377,  10793,  14082,  17136,  19848,  22113,  23825,  24908,
@@ -2586,14 +2588,14 @@ void audio_process_i2s(int16_t* outBuff, int32_t validSamples, bool* continueI2S
     //     tabPtr++;
     //     if(tabPtr == 44) tabPtr = 0;
     // }
-    *continueI2S = true;
-}
+  //  *continueI2S = true;
+//}
 // ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void on_BH1750(int32_t ambVal) { //--AMBIENT LIGHT SENSOR BH1750--
     int16_t bh1750Value = 0;
     bh1750Value = map_l(ambVal, 0, 1600, displayConfig.brightnessMin, displayConfig.brightnessMax);
     MWR_LOG_DEBUG("ambVal %i, bh1750Value %i, s_brightness %i", ambVal, bh1750Value, s_brightness);
-    if (TFT_CONTROLLER == 8) bh1750Value = 255 - bh1750Value; // invert brightness
+    if (TFT_CONTROLLER == 8 || TFT_CONTROLLER == 9) bh1750Value = 255 - bh1750Value; // invert brightness
     setTFTbrightness(max(bh1750Value, s_brightness));
 }
 // ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

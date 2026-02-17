@@ -4884,8 +4884,8 @@ class vuMeter : public RegisterTable {
     void setBGcolor(uint32_t color) { m_bgColor = color; }
     void update(uint16_t vum) {
         if (!m_enabled) return;
-        uint8_t left = map_l(vum >> 8, 0, 127, 0, 11);
-        uint8_t right = map_l(vum & 0x00FF, 0, 127, 0, 11);
+        uint8_t left = map_l(vum >> 8, 0, 255, 0, 12);
+        uint8_t right = map_l(vum & 0x00FF, 0, 255, 0, 12);
 
         xSemaphoreTake(mutex_display, portMAX_DELAY);
         if (left > m_VUleftCh) {
@@ -4930,7 +4930,7 @@ class vuMeter : public RegisterTable {
         uint16_t y_end = m_frame_y + m_frame_h - m_frameSize - m_segm_h;
         uint16_t xPos = m_frame_x + m_frameSize + col * (m_segm_w + m_frameSize);
         uint16_t yPos = y_end - row * (m_frameSize + m_segm_h);
-        if (row > 11) return;
+        if (row > 12) return;
         switch (row) {
             case 0 ... 6: // green
                 br ? color = TFT_GREEN : color = TFT_DARKGREEN;
@@ -5105,7 +5105,7 @@ class displayHeader : public RegisterTable {
         uint8_t  pb = 0;
     } const s_time; // time object
     //------------------------------------------------------------------------------------------------------------------------------------------------
-#elif TFT_CONTROLLER == 8                 // 1024 x 600px
+#elif (TFT_CONTROLLER == 8) || (TFT_CONTROLLER == 9)                 // 1024 x 600px
     //------------------------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
     struct w_i {
         uint16_t x = 0;
@@ -5496,7 +5496,7 @@ class displayFooter : public RegisterTable {
         uint8_t  pb = 0;
     } const s_IPaddr;
     //-----------------------------------------------------------------------------------------------------------------------------------
-#elif  TFT_CONTROLLER == 8                  // 1024 x 600px
+#elif  (TFT_CONTROLLER == 8 || TFT_CONTROLLER == 9)                  // 1024 x 600px
     //-----------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
     struct w_a { // antenna
         uint16_t x = 0;

@@ -21,7 +21,7 @@
 #include "tft_spi.h"
 #elif TFT_CONTROLLER == 7
 #include "tft_rgb.h"
-#elif TFT_CONTROLLER == 8
+#elif TFT_CONTROLLER == 8 || TFT_CONTROLLER == 9
 #include "tft_dsi.h"
 #endif
 
@@ -649,7 +649,7 @@ inline void SerialPrintflnCut(const char* item, const char* color, const char* s
 extern TFT_SPI tft;
 #elif TFT_CONTROLLER == 7
 extern TFT_RGB tft;
-#elif TFT_CONTROLLER == 8
+#elif TFT_CONTROLLER == 8 ||  TFT_CONTROLLER == 9
 extern TFT_DSI tft;
 #else
 #endif

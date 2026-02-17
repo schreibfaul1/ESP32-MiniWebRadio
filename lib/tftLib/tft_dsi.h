@@ -2,7 +2,7 @@
 // updated on Nov 26 2025
 #include "Arduino.h"
 #include "../../src/settings.h"
-#if TFT_CONTROLLER == 8
+#if (TFT_CONTROLLER == 8) || (TFT_CONTROLLER == 9)
 #pragma once
 #include "tft_structures.h"
 #include "Arduino.h"
