@@ -58,7 +58,7 @@ void TFT_DSI::begin(const Timing& newTiming) {
         .bus_id = 0,
         .num_data_lanes = 2,
         .phy_clk_src = MIPI_DSI_PHY_PLLREF_CLK_SRC_DEFAULT_LEGACY,
-        .lane_bit_rate_mbps = 900, // Anpassen für Dein Display!
+        .lane_bit_rate_mbps = m_timing.lane_bit_rate_mbps, // Anpassen für Dein Display!
     };
     m_err = esp_lcd_new_dsi_bus(&dsi_cfg, &dsi_bus);
     if (m_err != 0) { log_e("con't create DSI Bus, err: %i\n", m_err); }
@@ -126,6 +126,7 @@ void TFT_DSI::begin(const Timing& newTiming) {
      */
     esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x30, (uint8_t[]){0x00}, 1);
     esp_lcd_panel_io_tx_param(mipi_dbi_io, 0xF7, (uint8_t[]){0x49,0x61,0x02,0x00}, 4);
+
     esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x30, (uint8_t[]){0x01}, 1);
     esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x04, (uint8_t[]){0x0C}, 1);
     esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x05, (uint8_t[]){0x00}, 1);
@@ -141,6 +142,7 @@ void TFT_DSI::begin(const Timing& newTiming) {
     esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x2A, (uint8_t[]){0x01}, 1);
     esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x2B, (uint8_t[]){0x04}, 1);
     esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x2C, (uint8_t[]){0x01}, 1);
+
     esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x30, (uint8_t[]){0x02}, 1);
     esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x01, (uint8_t[]){0x22}, 1);
     esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x03, (uint8_t[]){0x12}, 1);
@@ -161,6 +163,24 @@ void TFT_DSI::begin(const Timing& newTiming) {
     esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x12, (uint8_t[]){0x36,0x2C,0x2E,0x3C,0x38,0x35,0x35,0x32,0x2E,0x1D,0x2B,0x21,0x16,0x29}, 14);
     esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x13, (uint8_t[]){0x36,0x2C,0x2E,0x3C,0x38,0x35,0x35,0x32,0x2E,0x1D,0x2B,0x21,0x16,0x29}, 14);
 
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x30, (uint8_t[]){0x0A}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x02, (uint8_t[]){0x4F}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x0B, (uint8_t[]){0x40}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x12, (uint8_t[]){0x3E}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x13, (uint8_t[]){0x78}, 1);
+
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x30, (uint8_t[]){0x0D}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x0D, (uint8_t[]){0x04}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x10, (uint8_t[]){0x0C}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x11, (uint8_t[]){0x0C}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x12, (uint8_t[]){0x0C}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x13, (uint8_t[]){0x0C}, 1);
+
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x30, (uint8_t[]){0x00}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x11, (uint8_t[]){0x00}, 1);
+    vTaskDelay(pdMS_TO_TICKS(120));
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x29, (uint8_t[]){0x00}, 1);
+    vTaskDelay(pdMS_TO_TICKS(100));
     vTaskDelay(pdMS_TO_TICKS(100));
 
 #endif
@@ -171,7 +191,7 @@ void TFT_DSI::begin(const Timing& newTiming) {
 
     esp_lcd_dpi_panel_config_t dpi_cfg = {.virtual_channel = 0,
                                           .dpi_clk_src = MIPI_DSI_DPI_CLK_SRC_DEFAULT,
-                                          .dpi_clock_freq_mhz = 52,
+                                          .dpi_clock_freq_mhz = m_timing.pixel_clock_mhz,
                                           .pixel_format = LCD_COLOR_PIXEL_FORMAT_RGB565,
                                           .in_color_format = LCD_COLOR_FMT_RGB565,
                                           .out_color_format = LCD_COLOR_FMT_RGB565,
@@ -219,6 +239,19 @@ void TFT_DSI::begin(const Timing& newTiming) {
     sprintf(buff, "Resolution: " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET " x " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET, m_h_res, m_v_res);
     if (tft_info) tft_info(buff);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_DSI::reset() {
     pinMode(LCD_RESET, OUTPUT);

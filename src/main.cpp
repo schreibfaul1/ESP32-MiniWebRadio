@@ -722,7 +722,6 @@ start:
  *                                                        C O N N E C T   TO   W I F I                                                               *
  *****************************************************************************************************************************************************/
 bool connectToWiFi() {
-
     MWR_LOG_DEBUG("Connecting to WiFi...");
     ps_ptr<char> line(512);
 
@@ -1028,8 +1027,6 @@ void setup() {
     trim(Version);
 
     if (I2C_SDA >= 0) {
-        i2cBusOne.end();
-        i2cBusOne.flush();
         i2cBusOne.begin(I2C_SDA, I2C_SCL, 100000);
     }
 
@@ -1240,16 +1237,16 @@ void setup() {
         changeState(WIFI_SETTINGS, 0);
     }
 
-    if (LIGHT_SENSOR >= 0) {
-        s_f_BH1750_found = BH1750.begin(&i2cBusOne, BH1750.ADDR_TO_GROUND); // init the sensor with address pin connetcted to ground
-        if (s_f_BH1750_found) {                                             // result (bool) wil be be "false" if no sensor found
-            SerialPrintfln("setup: ....  " ANSI_ESC_WHITE "Ambient Light Sensor BH1750 found at " ANSI_ESC_CYAN "0x%X" ANSI_ESC_RESET, BH1750.ADDR_TO_GROUND);
-            BH1750.setResolutionMode(BH1750.ONE_TIME_H_RESOLUTION_MODE);
-            BH1750.setSensitivity(BH1750.SENSITIVITY_ADJ_MAX);
-        } else {
-            SerialPrintfln("setup: ....  " ANSI_ESC_RED "Ambient Light Sensor BH1750 not found" ANSI_ESC_RESET);
-        }
-    }
+    // if (LIGHT_SENSOR >= 0) {
+    //     s_f_BH1750_found = BH1750.begin(&i2cBusOne, BH1750.ADDR_TO_GROUND); // init the sensor with address pin connetcted to ground
+    //     if (s_f_BH1750_found) {                                             // result (bool) wil be be "false" if no sensor found
+    //         SerialPrintfln("setup: ....  " ANSI_ESC_WHITE "Ambient Light Sensor BH1750 found at " ANSI_ESC_CYAN "0x%X" ANSI_ESC_RESET, BH1750.ADDR_TO_GROUND);
+    //         BH1750.setResolutionMode(BH1750.ONE_TIME_H_RESOLUTION_MODE);
+    //         BH1750.setSensitivity(BH1750.SENSITIVITY_ADJ_MAX);
+    //     } else {
+    //         SerialPrintfln("setup: ....  " ANSI_ESC_RED "Ambient Light Sensor BH1750 not found" ANSI_ESC_RESET);
+    //     }
+    // }
     if (BT_EMITTER_RX >= 0) bt_emitter.begin();
 }
 /*****************************************************************************************************************************************************
