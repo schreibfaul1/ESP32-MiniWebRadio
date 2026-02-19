@@ -5105,7 +5105,7 @@ class displayHeader : public RegisterTable {
         uint8_t  pb = 0;
     } const s_time; // time object
     //------------------------------------------------------------------------------------------------------------------------------------------------
-#elif (TFT_CONTROLLER == 8) || (TFT_CONTROLLER == 9)                 // 1024 x 600px
+#elif (TFT_CONTROLLER == 8 || TFT_CONTROLLER == 9)                 // 1024 x 600px
     //------------------------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
     struct w_i {
         uint16_t x = 0;

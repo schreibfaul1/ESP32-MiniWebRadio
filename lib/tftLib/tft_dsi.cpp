@@ -4,7 +4,7 @@
 
 #include "tft_dsi.h"
 #ifdef CONFIG_IDF_TARGET_ESP32P4
-#if TFT_CONTROLLER == 8 || TFT_CONTROLLER == 9
+#if (TFT_CONTROLLER == 8 || TFT_CONTROLLER == 9)
     #define __malloc_heap_psram(size) heap_caps_malloc_prefer(size, 2, MALLOC_CAP_DEFAULT | MALLOC_CAP_SPIRAM, MALLOC_CAP_DEFAULT | MALLOC_CAP_INTERNAL)
 
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -114,7 +114,7 @@ void TFT_DSI::begin(const Timing& newTiming) {
 
     esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x11, (uint8_t[]){0x00}, 0); // exit sleep
     vTaskDelay(pdMS_TO_TICKS(100));
-#endif
+#endif // TFT_CONTROLLER == 8
 
 #if TFT_CONTROLLER == 9
     // --------------------------------------------------
@@ -183,7 +183,7 @@ void TFT_DSI::begin(const Timing& newTiming) {
     vTaskDelay(pdMS_TO_TICKS(100));
     vTaskDelay(pdMS_TO_TICKS(100));
 
-#endif
+#endif // TFT_CONTROLLER == 9
 
     // --------------------------------------------------
     // 5. Create DPI-Panel
@@ -5369,6 +5369,6 @@ void TFT_DSI::png_draw_into_Framebuffer(uint16_t x, uint16_t y, uint16_t w, uint
     panelDrawBitmap(x, y, x + w, y + h, m_framebuffer[0]);
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-#endif // TFT_CONTROLLER == 8
+#endif // (TFT_CONTROLLER == 8 || TFT_CONTROLLER == 9)
 #endif // CONFIG_IDF_TARGET_ESP32P4
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

@@ -198,9 +198,7 @@ SPIClass       spiBus(FSPI);
 TFT_SPI tft(spiBus, TFT_CS);
 #elif TFT_CONTROLLER == 7
 TFT_RGB tft;
-#elif TFT_CONTROLLER == 8
-TFT_DSI tft;
-#elif TFT_CONTROLLER == 9
+#elif (TFT_CONTROLLER == 8 || TFT_CONTROLLER == 9)
 TFT_DSI tft;
 #else
     #error "wrong TFT_CONTROLLER"

@@ -3,12 +3,12 @@
 
 #define _SSID             "Wolles-FRITZBOX"         // Your WiFi credentials here
 #define _PW               "40441061073895958449" // Or in textfile on SD-card
-#define TFT_CONTROLLER    8                // (0)SPI-ILI9341[320x240], (3)SPI-ILI9486[480x320], (4)SPI-ILI9488[480x320], (5)SPI-ST7796[480x320], (7)RGB[800x480], (8)DSI-EK97001[1024x600], (9)DSI-JD9165[1024x600]
+#define TFT_CONTROLLER    9                // (0)SPI-ILI9341[320x240], (3)SPI-ILI9486[480x320], (4)SPI-ILI9488[480x320], (5)SPI-ST7796[480x320], (7)RGB[800x480], (8)DSI-EK97001[1024x600], (9)DSI-JD9165[1024x600]
 #define DISPLAY_INVERSION 0                // only SPI displays, (0) off (1) on
 #define TFT_ROTATION      1                // only SPI displays, 1 or 3 (landscape)
 #define TFT_FREQUENCY     40000000         // only SPI displays, 80000000, 40000000, 27000000, 20000000, 10000000
 #define TP_CONTROLLER     7                // (0)ILI9341, (3)ILI9486, (4)ILI9488, (5)ST7796, (7)GT911, (8)FT6x63
-#define TP_ROTATION       3                // 1 or 3 (landscape)
+#define TP_ROTATION       1                // 1 or 3 (landscape)
 #define TP_H_MIRROR       0                // (0) default, (1) mirror up <-> down
 #define TP_V_MIRROR       0                // (0) default, (1) mirror left <-> right
 #define LIGHT_SENSOR      1                // (0) none, (1) BH1750
@@ -297,7 +297,7 @@ const Timing DSI_TIMING = {.h_res = 1024,
         #define BT_EMITTER_CONNECT 34
 
         #define LCD_RESET   33
-        #define TFT_BL      32 // same as RGB_PINS.bl
+        #define TFT_BL      32 //
         #define AMP_ENABLED -1 // control pin for extenal amplifier (if available)
 
         #define I2C_SDA 7 // I2C dala line for capacitive touchpad
@@ -346,8 +346,8 @@ const Timing DSI_TIMING = {.h_res = 1024,
         #define BT_EMITTER_CONNECT 34
 
         #define LCD_RESET   27 //
-        #define TFT_BL      23 //  32 // same as RGB_PINS.bl
-        #define AMP_ENABLED 22 // control pin for extenal amplifier (if available)
+        #define TFT_BL      23 //
+        #define AMP_ENABLED -1 //control pin for extenal amplifier (if available)
 
         #define I2C_SDA 7 // I2C dala line for capacitive touchpad
         #define I2C_SCL 8 // I2C clock line for capacitive touchpad

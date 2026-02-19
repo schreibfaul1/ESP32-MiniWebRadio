@@ -456,7 +456,7 @@ inline DisplayConfig makeDisplayConfig() {
     using namespace layout_480x320;
 #elif TFT_CONTROLLER == 7
     using namespace layout_800x480;
-#elif TFT_CONTROLLER == 8 || TFT_CONTROLLER == 9
+#elif (TFT_CONTROLLER == 8 || TFT_CONTROLLER == 9)
     using namespace layout_1024x600;
 #else
     #error "Unsupported TFT_CONTROLLER"
