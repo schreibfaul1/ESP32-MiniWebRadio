@@ -4,7 +4,7 @@
 
 #include "tft_dsi.h"
 #ifdef CONFIG_IDF_TARGET_ESP32P4
-#if TFT_CONTROLLER == 8
+#if (TFT_CONTROLLER == 8 || TFT_CONTROLLER == 9)
     #define __malloc_heap_psram(size) heap_caps_malloc_prefer(size, 2, MALLOC_CAP_DEFAULT | MALLOC_CAP_SPIRAM, MALLOC_CAP_DEFAULT | MALLOC_CAP_INTERNAL)
 
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -58,7 +58,7 @@ void TFT_DSI::begin(const Timing& newTiming) {
         .bus_id = 0,
         .num_data_lanes = 2,
         .phy_clk_src = MIPI_DSI_PHY_PLLREF_CLK_SRC_DEFAULT_LEGACY,
-        .lane_bit_rate_mbps = 900, // Anpassen für Dein Display!
+        .lane_bit_rate_mbps = m_timing.lane_bit_rate_mbps, // Anpassen für Dein Display!
     };
     m_err = esp_lcd_new_dsi_bus(&dsi_cfg, &dsi_bus);
     if (m_err != 0) { log_e("con't create DSI Bus, err: %i\n", m_err); }
@@ -76,9 +76,11 @@ void TFT_DSI::begin(const Timing& newTiming) {
     if (m_err != 0) { log_e("can't create DBI-IO, err: %i\n", m_err); }
     m_mipi_dbi_io = mipi_dbi_io;
 
+#if TFT_CONTROLLER == 8
     // --------------------------------------------------
     // 4. Init Display-Controller (EK97001)
     // --------------------------------------------------
+    const char* controller = "EK97001";
     /*
      * R00h: NOP ( No Operation)
      * R01h: GRB (Software Reset)
@@ -112,6 +114,76 @@ void TFT_DSI::begin(const Timing& newTiming) {
 
     esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x11, (uint8_t[]){0x00}, 0); // exit sleep
     vTaskDelay(pdMS_TO_TICKS(100));
+#endif // TFT_CONTROLLER == 8
+
+#if TFT_CONTROLLER == 9
+    // --------------------------------------------------
+    // 4. Init Display-Controller (JD9165)
+    // --------------------------------------------------
+    const char* controller = "JD9165";
+    /*
+
+     */
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x30, (uint8_t[]){0x00}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0xF7, (uint8_t[]){0x49,0x61,0x02,0x00}, 4);
+
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x30, (uint8_t[]){0x01}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x04, (uint8_t[]){0x0C}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x05, (uint8_t[]){0x00}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x06, (uint8_t[]){0x00}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x0B, (uint8_t[]){0x11}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x17, (uint8_t[]){0x00}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x20, (uint8_t[]){0x04}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x1F, (uint8_t[]){0x05}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x23, (uint8_t[]){0x00}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x25, (uint8_t[]){0x19}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x28, (uint8_t[]){0x18}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x29, (uint8_t[]){0x04}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x2A, (uint8_t[]){0x01}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x2B, (uint8_t[]){0x04}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x2C, (uint8_t[]){0x01}, 1);
+
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x30, (uint8_t[]){0x02}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x01, (uint8_t[]){0x22}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x03, (uint8_t[]){0x12}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x04, (uint8_t[]){0x00}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x05, (uint8_t[]){0x64}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x0A, (uint8_t[]){0x08}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x0B, (uint8_t[]){0x0A,0x1A,0x0B,0x0D,0x0D,0x11,0x10,0x06,0x08,0x1F,0x1D}, 11);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x0C, (uint8_t[]){0x0D,0x0D,0x0D,0x0D,0x0D,0x0D,0x0D,0x0D,0x0D,0x0D,0x0D}, 11);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x0D, (uint8_t[]){0x16,0x1B,0x0B,0x0D,0x0D,0x11,0x10,0x07,0x09,0x1E,0x1C}, 11);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x0E, (uint8_t[]){0x0D,0x0D,0x0D,0x0D,0x0D,0x0D,0x0D,0x0D,0x0D,0x0D,0x0D}, 11);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x0F, (uint8_t[]){0x16,0x1B,0x0D,0x0B,0x0D,0x11,0x10,0x1C,0x1E,0x09,0x07}, 11);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x10, (uint8_t[]){0x0D,0x0D,0x0D,0x0D,0x0D,0x0D,0x0D,0x0D,0x0D,0x0D,0x0D}, 11);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x11, (uint8_t[]){0x0A,0x1A,0x0D,0x0B,0x0D,0x11,0x10,0x1D,0x1F,0x08,0x06}, 11);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x12, (uint8_t[]){0x0D,0x0D,0x0D,0x0D,0x0D,0x0D,0x0D,0x0D,0x0D,0x0D,0x0D}, 11);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x14, (uint8_t[]){0x00,0x00,0x11,0x11}, 4);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x18, (uint8_t[]){0x99}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x30, (uint8_t[]){0x06}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x12, (uint8_t[]){0x36,0x2C,0x2E,0x3C,0x38,0x35,0x35,0x32,0x2E,0x1D,0x2B,0x21,0x16,0x29}, 14);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x13, (uint8_t[]){0x36,0x2C,0x2E,0x3C,0x38,0x35,0x35,0x32,0x2E,0x1D,0x2B,0x21,0x16,0x29}, 14);
+
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x30, (uint8_t[]){0x0A}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x02, (uint8_t[]){0x4F}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x0B, (uint8_t[]){0x40}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x12, (uint8_t[]){0x3E}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x13, (uint8_t[]){0x78}, 1);
+
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x30, (uint8_t[]){0x0D}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x0D, (uint8_t[]){0x04}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x10, (uint8_t[]){0x0C}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x11, (uint8_t[]){0x0C}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x12, (uint8_t[]){0x0C}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x13, (uint8_t[]){0x0C}, 1);
+
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x30, (uint8_t[]){0x00}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x11, (uint8_t[]){0x00}, 1);
+    vTaskDelay(pdMS_TO_TICKS(120));
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x29, (uint8_t[]){0x00}, 1);
+    vTaskDelay(pdMS_TO_TICKS(100));
+    vTaskDelay(pdMS_TO_TICKS(100));
+
+#endif // TFT_CONTROLLER == 9
 
     // --------------------------------------------------
     // 5. Create DPI-Panel
@@ -119,7 +191,7 @@ void TFT_DSI::begin(const Timing& newTiming) {
 
     esp_lcd_dpi_panel_config_t dpi_cfg = {.virtual_channel = 0,
                                           .dpi_clk_src = MIPI_DSI_DPI_CLK_SRC_DEFAULT,
-                                          .dpi_clock_freq_mhz = 52,
+                                          .dpi_clock_freq_mhz = m_timing.pixel_clock_mhz,
                                           .pixel_format = LCD_COLOR_PIXEL_FORMAT_RGB565,
                                           .in_color_format = LCD_COLOR_FMT_RGB565,
                                           .out_color_format = LCD_COLOR_FMT_RGB565,
@@ -148,7 +220,11 @@ void TFT_DSI::begin(const Timing& newTiming) {
 
     m_err = esp_lcd_panel_init(m_panel);
     if (m_err != 0) { log_e("init panel, err: %i\n", m_err); }
-    else if (tft_info) tft_info("TFT Controller: " ANSI_ESC_CYAN "EK97001" ANSI_ESC_RESET " initialized");
+    else if (tft_info){
+        char buff[100];
+        sprintf(buff, "TFT Controller: " ANSI_ESC_CYAN "%s" ANSI_ESC_RESET " initialized", controller);
+        tft_info(buff);
+    }
 
     // --------------------------------------------------
     // 6. Fetch Framebuffer-Pointer from Driver
@@ -163,6 +239,19 @@ void TFT_DSI::begin(const Timing& newTiming) {
     sprintf(buff, "Resolution: " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET " x " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET, m_h_res, m_v_res);
     if (tft_info) tft_info(buff);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_DSI::reset() {
     pinMode(LCD_RESET, OUTPUT);
@@ -5280,6 +5369,6 @@ void TFT_DSI::png_draw_into_Framebuffer(uint16_t x, uint16_t y, uint16_t w, uint
     panelDrawBitmap(x, y, x + w, y + h, m_framebuffer[0]);
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-#endif // TFT_CONTROLLER == 8
+#endif // (TFT_CONTROLLER == 8 || TFT_CONTROLLER == 9)
 #endif // CONFIG_IDF_TARGET_ESP32P4
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

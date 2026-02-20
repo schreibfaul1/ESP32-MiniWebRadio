@@ -30,10 +30,12 @@ struct Timing {
     uint16_t h_res;
     uint16_t v_res;
     uint32_t pixel_clock_hz;
+    float    pixel_clock_mhz;
     uint8_t  hsync_pulse_width;
     uint8_t  hsync_back_porch;
     uint16_t hsync_front_porch;
     uint8_t  vsync_pulse_width;
     uint8_t  vsync_back_porch;
     uint8_t  vsync_front_porch;
+    float    lane_bit_rate_mbps;
 };

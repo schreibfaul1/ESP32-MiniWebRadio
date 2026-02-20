@@ -10,21 +10,24 @@
 TP_GT911::TP_GT911() {}
 
 bool TP_GT911::begin(TwoWire* twi, uint8_t addr, uint16_t h_resolution, uint16_t v_resolution) {
+    m_disp_h_resolution = h_resolution;
+    m_disp_v_resolution = v_resolution;
     m_wire = twi; // I2C TwoWire Instance
     m_addr = addr;
-    char buff[64] = {0};
+    char buff[128] = {0};
     m_wire->beginTransmission(m_addr);
     if (m_wire->endTransmission() == 0) {
         m_isInit = true;
         sprintf(buff, "TouchPad found at " ANSI_ESC_CYAN "0x%02X" ANSI_ESC_RESET, m_addr);
         if (tp_info) tp_info(buff);
         readInfo(); // Need to get resolution to use rotation
-        if(v_resolution != m_info.yResolution || h_resolution != m_info.xResolution) {
-            sprintf(buff, "Incorrect preset resolution " ANSI_ESC_CYAN "%dx%d, found " ANSI_ESC_CYAN "%dx%d" ANSI_ESC_RESET, m_h_resolution, m_v_resolution, m_info.xResolution, m_info.yResolution);
+        if (m_disp_v_resolution != m_info.yResolution || m_disp_h_resolution != m_info.xResolution) {
+            sprintf(buff, "Touch resolution " ANSI_ESC_CYAN "%dx%d" ANSI_ESC_RESET " mapped to display " ANSI_ESC_CYAN "%dx%d" ANSI_ESC_RESET "", m_info.xResolution, m_info.yResolution,
+                    m_disp_h_resolution, m_disp_v_resolution);
             if (tp_info) tp_info(buff);
         }
-        m_h_resolution = m_info.xResolution;
-        m_v_resolution = m_info.yResolution;
+        m_touch_h_resolution = m_info.xResolution;
+        m_touch_v_resolution = m_info.yResolution;
         return true;
     }
     sprintf(buff, ANSI_ESC_RED "TouchPad not found at 0x%02X" ANSI_ESC_RESET, m_addr);
@@ -53,7 +56,7 @@ void TP_GT911::setVersion(uint8_t v) {
                    // case 5: m_version = TP_FT5406; break; // FT5446, FT6336U
     }
     char buff[64] = {0};
-    sprintf(buff, "TP resolution " ANSI_ESC_CYAN "%dx%d" ANSI_ESC_RESET, m_h_resolution, m_v_resolution);
+    sprintf(buff, "TP resolution " ANSI_ESC_CYAN "%dx%d" ANSI_ESC_RESET, m_touch_h_resolution, m_touch_v_resolution);
     if (tp_info) tp_info(buff);
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -132,13 +135,16 @@ bool TP_GT911::write(uint16_t reg, uint8_t data) {
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 uint8_t TP_GT911::read(uint16_t reg) {
+    m_wire->setTimeOut(100); // 100ms Timeout
     m_wire->beginTransmission(m_addr);
+
     m_wire->write(reg >> 8);
     m_wire->write(reg & 0xFF);
-    m_wire->endTransmission(false);
-    m_wire->requestFrom(m_addr, (uint8_t)1);
-    while (m_wire->available()) { return m_wire->read(); }
-    m_wire->endTransmission(true);
+    if (m_wire->endTransmission(false) != 0) return 0;
+
+    if (m_wire->requestFrom(m_addr, (uint8_t)1) != 1) return 0;
+
+    if (m_wire->available()) { return m_wire->read(); }
     return 0;
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -154,17 +160,22 @@ bool TP_GT911::readBytes(uint16_t reg, uint8_t* data, uint16_t size) {
     m_wire->beginTransmission(m_addr);
     m_wire->write(reg >> 8);
     m_wire->write(reg & 0xFF);
-    m_wire->endTransmission(false);
+    if (m_wire->endTransmission(false) != 0) {
+        return false; // ❌ Früher abbrechen bei Fehler
+    }
 
     uint16_t index = 0;
     while (index < size) {
-        uint8_t req = _min(size - index, I2C_BUFFER_LENGTH);
-        m_wire->requestFrom(m_addr, req);
-        while (m_wire->available()) { data[index++] = m_wire->read(); }
-        index++;
+        uint8_t req = min((int)(size - index), (int)I2C_BUFFER_LENGTH);
+        if (m_wire->requestFrom(m_addr, req) != req) {
+            return false; // ❌ Prüfe ob alle Bytes empfangen wurden
+        }
+        while (m_wire->available() && index < size) { data[index++] = m_wire->read(); }
+        // index++ entfernt - war der Bug!
     }
-    m_wire->endTransmission(true);
-    return size == index - 1;
+
+    m_wire->endTransmission(true); // Sende STOP
+    return index == size;
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 uint8_t TP_GT911::calcChecksum(uint8_t* buf, uint8_t len) {
@@ -186,7 +197,7 @@ int8_t TP_GT911::readTouches() {
             write(GT911_REG_COORD_ADDR, 0);
             return flag & 0x0F;
         }
-        delay(1);
+        delay(5);
     } while (millis() < timeout);
 
     return 0;
@@ -210,23 +221,31 @@ uint8_t TP_GT911::touched() {
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 TP_GT911::GTPoint TP_GT911::getPoint(uint8_t num) {
+
+    uint16_t x, y;
+    x = (m_points[num].x * m_disp_h_resolution) / m_touch_h_resolution;
+    y = (m_points[num].y * m_disp_v_resolution) / m_touch_v_resolution;
+
+    m_points[num].x = constrain(x, 0, m_disp_h_resolution - 1);
+    m_points[num].y = constrain(y, 0, m_disp_v_resolution - 1);
+
     int x_new = 0, y_new = 0;
-    if (m_mirror_h) m_points[num].x = m_h_resolution - m_points[num].x;
-    if (m_mirror_v) m_points[num].y = m_v_resolution - m_points[num].y;
+    if (m_mirror_h) m_points[num].x = m_touch_h_resolution - m_points[num].x;
+    if (m_mirror_v) m_points[num].y = m_touch_v_resolution - m_points[num].y;
 
     switch (m_rotation) {
         case 0: // 90 degree
             x_new = m_points[num].y;
-            y_new = m_h_resolution - m_points[num].x;
+            y_new = m_touch_h_resolution - m_points[num].x;
             break;
         case 1: return m_points[num]; // 0 degree, no change
-        case 2: // -90 degree
-            x_new = m_v_resolution - m_points[num].y;
+        case 2:                       // -90 degree
+            x_new = m_touch_v_resolution - m_points[num].y;
             y_new = m_points[num].x;
             break;
         case 3: // -180 degree
-            x_new = m_h_resolution - m_points[num].x;
-            y_new = m_v_resolution - m_points[num].y;
+            x_new = m_touch_h_resolution - m_points[num].x;
+            y_new = m_touch_v_resolution - m_points[num].y;
             break;
     }
     m_points[num].x = x_new;
@@ -237,25 +256,25 @@ TP_GT911::GTPoint TP_GT911::getPoint(uint8_t num) {
 TP_GT911::GTPoint* TP_GT911::getPoints() {
     int x_new = 0, y_new = 0;
     for (uint8_t num = 0; num < GT911_MAX_CONTACTS; num++) {
-        if (m_mirror_h) m_points[num].x = m_h_resolution - m_points[num].x;
-        if (m_mirror_v) m_points[num].y = m_v_resolution - m_points[num].y;
+        if (m_mirror_h) m_points[num].x = m_touch_h_resolution - m_points[num].x;
+        if (m_mirror_v) m_points[num].y = m_touch_v_resolution - m_points[num].y;
         switch (m_rotation) {
-        case 0: // 90 degree
-            x_new = m_points[num].y;
-            y_new = m_h_resolution - m_points[num].x;
-            break;
-        case 1: // 0 degree, no change
-            x_new = m_points[num].x;
-            y_new = m_points[num].y;
-            break;
-        case 2: // -90 degree
-            x_new = m_v_resolution - m_points[num].y;
-            y_new = m_points[num].x;
-            break;
-        case 3: // -180 degree
-            x_new = m_h_resolution - m_points[num].x;
-            y_new = m_v_resolution - m_points[num].y;
-            break;
+            case 0: // 90 degree
+                x_new = m_points[num].y;
+                y_new = m_touch_h_resolution - m_points[num].x;
+                break;
+            case 1: // 0 degree, no change
+                x_new = m_points[num].x;
+                y_new = m_points[num].y;
+                break;
+            case 2: // -90 degree
+                x_new = m_touch_v_resolution - m_points[num].y;
+                y_new = m_points[num].x;
+                break;
+            case 3: // -180 degree
+                x_new = m_touch_h_resolution - m_points[num].x;
+                y_new = m_touch_v_resolution - m_points[num].y;
+                break;
         }
         m_points[num].x = x_new;
         m_points[num].y = y_new;

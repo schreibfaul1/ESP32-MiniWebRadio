@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.1.0e - Feb 13, 2026                                                                                                               ";
+    Version 4.1.1 - Feb 20, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -55,6 +55,16 @@ char _hl_item[18][40]{"",                    // none
 
 constexpr uint16_t MAX_STATIONS = 1000;
 
+Audio          audio;
+Preferences    pref;
+WebSrv         webSrv;
+WiFiMulti      wifiMulti;
+RTIME          rtc;
+Ticker         ticker100ms;
+TwoWire        i2cBusOne = TwoWire(0); // additional HW, sensors, buttons, encoder etc
+TwoWire        i2cBusTwo = TwoWire(1); // external DAC, AC101 or ES8388
+SPIClass       spiBus(FSPI);
+
 settings_s    s_settings;
 volume_s      s_volume;
 dlnaHistory_s s_dlnaHistory[10];
@@ -63,6 +73,14 @@ SD_content    s_SD_content;
 bt_emitter_s  s_bt_emitter;
 tone_s        s_tone;
 Playlist      playlist;
+
+IR_buttons     irb(&s_settings);
+IR             ir(IR_PIN); // do not change the objectname, it must be "ir"
+File           audioFile;
+FtpServer      ftpSrv;
+DLNA_Client    dlna;
+KCX_BT_Emitter bt_emitter(BT_EMITTER_RX, BT_EMITTER_TX, BT_EMITTER_CONNECT, BT_EMITTER_MODE);
+hp_BH1750      BH1750;                 // create the sensor
 
 ps_ptr<char> s_time_s = "";
 ps_ptr<char> s_myIP;
@@ -177,28 +195,14 @@ std::deque<ps_ptr<char>> s_logBuffer;
 
 const char* codecname[10] = {"unknown", "WAV", "MP3", "AAC", "M4A", "FLAC", "AACP", "OPUS", "OGG", "VORBIS"};
 
-Audio          audio;
-Preferences    pref;
-WebSrv         webSrv;
-WiFiMulti      wifiMulti;
-RTIME          rtc;
-Ticker         ticker100ms;
-IR_buttons     irb(&s_settings);
-IR             ir(IR_PIN); // do not change the objectname, it must be "ir"
-File           audioFile;
-FtpServer      ftpSrv;
-DLNA_Client    dlna;
-KCX_BT_Emitter bt_emitter(BT_EMITTER_RX, BT_EMITTER_TX, BT_EMITTER_CONNECT, BT_EMITTER_MODE);
-TwoWire        i2cBusOne = TwoWire(0); // additional HW, sensors, buttons, encoder etc
-TwoWire        i2cBusTwo = TwoWire(1); // external DAC, AC101 or ES8388
-hp_BH1750      BH1750;                 // create the sensor
-SPIClass       spiBus(FSPI);
+
+
 
 #if TFT_CONTROLLER < 7 // ⏹⏹⏹⏹
 TFT_SPI tft(spiBus, TFT_CS);
 #elif TFT_CONTROLLER == 7
 TFT_RGB tft;
-#elif TFT_CONTROLLER == 8
+#elif TFT_CONTROLLER > 7
 TFT_DSI tft;
 #else
     #error "wrong TFT_CONTROLLER"
@@ -1012,13 +1016,14 @@ void stopSong() {
  *****************************************************************************************************************************************************/
 
 void setup() {
+    Serial.begin(MONITOR_SPEED);
     Audio::audio_info_callback = my_audio_info; // audio callback
     dlna.dlna_client_callbak(on_dlna_client);   // dlna callback
     bt_emitter.kcx_bt_emitter_callback(on_kcx_bt_emitter);
     webSrv.websrv_callbak(on_websrv);
     esp_log_level_set("*", ESP_LOG_DEBUG);
     esp_log_set_vprintf(log_redirect_handler);
-    Serial.begin(MONITOR_SPEED);
+
     vTaskDelay(1500); // wait for Serial to be ready
     mutex_rtc = xSemaphoreCreateMutex();
     mutex_display = xSemaphoreCreateMutex();
@@ -1070,7 +1075,7 @@ void setup() {
         s_f_brightnessIsChangeable = true;
         setupBacklight(TFT_BL, 512);
     }
-#elif TFT_CONTROLLER == 8
+#elif TFT_CONTROLLER > 7
     s_h_resolution = 1024;
     s_v_resolution = 600;
     tft.begin(DSI_TIMING);
@@ -1133,7 +1138,7 @@ void setup() {
     defaultsettings();
     if (ESP.getFlashChipSize() > 80000000) { FFat.begin(); }
 
-    if (TFT_CONTROLLER > 8) SerialPrintfln(ANSI_ESC_RED "The value in TFT_CONTROLLER is invalid" ANSI_ESC_RESET "   ");
+    if (TFT_CONTROLLER > 9) SerialPrintfln(ANSI_ESC_RED "The value in TFT_CONTROLLER is invalid" ANSI_ESC_RESET "   ");
 
     drawImage("/common/MiniWebRadioV4.jpg", 0, 0); // Welcomescreen
     updateSettings();
@@ -1171,8 +1176,7 @@ void setup() {
     audio.setConnectionTimeout(CONN_TIMEOUT, CONN_TIMEOUT_SSL);
     audio.setVolumeSteps(s_volume.volumeSteps);
     audio.setVolume(0);
-
-    audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT, I2S_MCLK);
+    audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
     audio.setI2SCommFMT_LSB(I2S_COMM_FMT);
 
     SerialPrintfln("setup: ....  number of saved stations: " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET "   ", staMgnt.getSumStations());
