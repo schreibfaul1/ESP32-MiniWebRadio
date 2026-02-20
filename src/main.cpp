@@ -55,6 +55,16 @@ char _hl_item[18][40]{"",                    // none
 
 constexpr uint16_t MAX_STATIONS = 1000;
 
+Audio          audio;
+Preferences    pref;
+WebSrv         webSrv;
+WiFiMulti      wifiMulti;
+RTIME          rtc;
+Ticker         ticker100ms;
+TwoWire        i2cBusOne = TwoWire(0); // additional HW, sensors, buttons, encoder etc
+TwoWire        i2cBusTwo = TwoWire(1); // external DAC, AC101 or ES8388
+SPIClass       spiBus(FSPI);
+
 settings_s    s_settings;
 volume_s      s_volume;
 dlnaHistory_s s_dlnaHistory[10];
@@ -63,6 +73,14 @@ SD_content    s_SD_content;
 bt_emitter_s  s_bt_emitter;
 tone_s        s_tone;
 Playlist      playlist;
+
+IR_buttons     irb(&s_settings);
+IR             ir(IR_PIN); // do not change the objectname, it must be "ir"
+File           audioFile;
+FtpServer      ftpSrv;
+DLNA_Client    dlna;
+KCX_BT_Emitter bt_emitter(BT_EMITTER_RX, BT_EMITTER_TX, BT_EMITTER_CONNECT, BT_EMITTER_MODE);
+hp_BH1750      BH1750;                 // create the sensor
 
 ps_ptr<char> s_time_s = "";
 ps_ptr<char> s_myIP;
@@ -177,28 +195,14 @@ std::deque<ps_ptr<char>> s_logBuffer;
 
 const char* codecname[10] = {"unknown", "WAV", "MP3", "AAC", "M4A", "FLAC", "AACP", "OPUS", "OGG", "VORBIS"};
 
-Audio          audio;
-Preferences    pref;
-WebSrv         webSrv;
-WiFiMulti      wifiMulti;
-RTIME          rtc;
-Ticker         ticker100ms;
-IR_buttons     irb(&s_settings);
-IR             ir(IR_PIN); // do not change the objectname, it must be "ir"
-File           audioFile;
-FtpServer      ftpSrv;
-DLNA_Client    dlna;
-KCX_BT_Emitter bt_emitter(BT_EMITTER_RX, BT_EMITTER_TX, BT_EMITTER_CONNECT, BT_EMITTER_MODE);
-TwoWire        i2cBusOne = TwoWire(0); // additional HW, sensors, buttons, encoder etc
-TwoWire        i2cBusTwo = TwoWire(1); // external DAC, AC101 or ES8388
-hp_BH1750      BH1750;                 // create the sensor
-SPIClass       spiBus(FSPI);
+
+
 
 #if TFT_CONTROLLER < 7 // ⏹⏹⏹⏹
 TFT_SPI tft(spiBus, TFT_CS);
 #elif TFT_CONTROLLER == 7
 TFT_RGB tft;
-#elif (TFT_CONTROLLER == 8 || TFT_CONTROLLER == 9)
+#elif TFT_CONTROLLER == 8
 TFT_DSI tft;
 #else
     #error "wrong TFT_CONTROLLER"
@@ -720,6 +724,7 @@ start:
  *                                                        C O N N E C T   TO   W I F I                                                               *
  *****************************************************************************************************************************************************/
 bool connectToWiFi() {
+
     MWR_LOG_DEBUG("Connecting to WiFi...");
     ps_ptr<char> line(512);
 
@@ -1011,13 +1016,14 @@ void stopSong() {
  *****************************************************************************************************************************************************/
 
 void setup() {
+    Serial.begin(MONITOR_SPEED);
     Audio::audio_info_callback = my_audio_info; // audio callback
     dlna.dlna_client_callbak(on_dlna_client);   // dlna callback
     bt_emitter.kcx_bt_emitter_callback(on_kcx_bt_emitter);
     webSrv.websrv_callbak(on_websrv);
     esp_log_level_set("*", ESP_LOG_DEBUG);
     esp_log_set_vprintf(log_redirect_handler);
-    Serial.begin(MONITOR_SPEED);
+
     vTaskDelay(1500); // wait for Serial to be ready
     mutex_rtc = xSemaphoreCreateMutex();
     mutex_display = xSemaphoreCreateMutex();
@@ -1025,6 +1031,8 @@ void setup() {
     trim(Version);
 
     if (I2C_SDA >= 0) {
+        i2cBusOne.end();
+        i2cBusOne.flush();
         i2cBusOne.begin(I2C_SDA, I2C_SCL, 100000);
     }
 
@@ -1067,7 +1075,7 @@ void setup() {
         s_f_brightnessIsChangeable = true;
         setupBacklight(TFT_BL, 512);
     }
-#elif (TFT_CONTROLLER == 8) || (TFT_CONTROLLER == 9)
+#elif TFT_CONTROLLER == 8
     s_h_resolution = 1024;
     s_v_resolution = 600;
     tft.begin(DSI_TIMING);
@@ -1130,7 +1138,7 @@ void setup() {
     defaultsettings();
     if (ESP.getFlashChipSize() > 80000000) { FFat.begin(); }
 
-    if (TFT_CONTROLLER > 9) SerialPrintfln(ANSI_ESC_RED "The value in TFT_CONTROLLER is invalid" ANSI_ESC_RESET "   ");
+    if (TFT_CONTROLLER > 8) SerialPrintfln(ANSI_ESC_RED "The value in TFT_CONTROLLER is invalid" ANSI_ESC_RESET "   ");
 
     drawImage("/common/MiniWebRadioV4.jpg", 0, 0); // Welcomescreen
     updateSettings();
@@ -1168,8 +1176,7 @@ void setup() {
     audio.setConnectionTimeout(CONN_TIMEOUT, CONN_TIMEOUT_SSL);
     audio.setVolumeSteps(s_volume.volumeSteps);
     audio.setVolume(0);
-
-    audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT, I2S_MCLK);
+    audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
     audio.setI2SCommFMT_LSB(I2S_COMM_FMT);
 
     SerialPrintfln("setup: ....  number of saved stations: " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET "   ", staMgnt.getSumStations());
@@ -1235,16 +1242,16 @@ void setup() {
         changeState(WIFI_SETTINGS, 0);
     }
 
-    // if (LIGHT_SENSOR >= 0) {
-    //     s_f_BH1750_found = BH1750.begin(&i2cBusOne, BH1750.ADDR_TO_GROUND); // init the sensor with address pin connetcted to ground
-    //     if (s_f_BH1750_found) {                                             // result (bool) wil be be "false" if no sensor found
-    //         SerialPrintfln("setup: ....  " ANSI_ESC_WHITE "Ambient Light Sensor BH1750 found at " ANSI_ESC_CYAN "0x%X" ANSI_ESC_RESET, BH1750.ADDR_TO_GROUND);
-    //         BH1750.setResolutionMode(BH1750.ONE_TIME_H_RESOLUTION_MODE);
-    //         BH1750.setSensitivity(BH1750.SENSITIVITY_ADJ_MAX);
-    //     } else {
-    //         SerialPrintfln("setup: ....  " ANSI_ESC_RED "Ambient Light Sensor BH1750 not found" ANSI_ESC_RESET);
-    //     }
-    // }
+    if (LIGHT_SENSOR >= 0) {
+        s_f_BH1750_found = BH1750.begin(&i2cBusOne, BH1750.ADDR_TO_GROUND); // init the sensor with address pin connetcted to ground
+        if (s_f_BH1750_found) {                                             // result (bool) wil be be "false" if no sensor found
+            SerialPrintfln("setup: ....  " ANSI_ESC_WHITE "Ambient Light Sensor BH1750 found at " ANSI_ESC_CYAN "0x%X" ANSI_ESC_RESET, BH1750.ADDR_TO_GROUND);
+            BH1750.setResolutionMode(BH1750.ONE_TIME_H_RESOLUTION_MODE);
+            BH1750.setSensitivity(BH1750.SENSITIVITY_ADJ_MAX);
+        } else {
+            SerialPrintfln("setup: ....  " ANSI_ESC_RED "Ambient Light Sensor BH1750 not found" ANSI_ESC_RESET);
+        }
+    }
     if (BT_EMITTER_RX >= 0) bt_emitter.begin();
 }
 /*****************************************************************************************************************************************************
@@ -2563,7 +2570,7 @@ void my_audio_info(Audio::msg_t m) {
 }
 
 // ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-// void audio_process_i2s(int32_t* outBuff, int32_t validSamples, bool* continueI2S) {
+void audio_process_i2s(int16_t* outBuff, int32_t validSamples, bool* continueI2S) {
 
     // int16_t sineWaveTable[44] = {
     //      0,   3743,   7377,  10793,  14082,  17136,  19848,  22113,  23825,  24908,
@@ -2583,14 +2590,14 @@ void my_audio_info(Audio::msg_t m) {
     //     tabPtr++;
     //     if(tabPtr == 44) tabPtr = 0;
     // }
-  //  *continueI2S = true;
-//}
+    *continueI2S = true;
+}
 // ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void on_BH1750(int32_t ambVal) { //--AMBIENT LIGHT SENSOR BH1750--
     int16_t bh1750Value = 0;
     bh1750Value = map_l(ambVal, 0, 1600, displayConfig.brightnessMin, displayConfig.brightnessMax);
     MWR_LOG_DEBUG("ambVal %i, bh1750Value %i, s_brightness %i", ambVal, bh1750Value, s_brightness);
-    if (TFT_CONTROLLER == 8 || TFT_CONTROLLER == 9) bh1750Value = 255 - bh1750Value; // invert brightness
+    if (TFT_CONTROLLER == 8) bh1750Value = 255 - bh1750Value; // invert brightness
     setTFTbrightness(max(bh1750Value, s_brightness));
 }
 // ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
