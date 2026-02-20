@@ -202,7 +202,7 @@ const char* codecname[10] = {"unknown", "WAV", "MP3", "AAC", "M4A", "FLAC", "AAC
 TFT_SPI tft(spiBus, TFT_CS);
 #elif TFT_CONTROLLER == 7
 TFT_RGB tft;
-#elif TFT_CONTROLLER == 8
+#elif TFT_CONTROLLER > 7
 TFT_DSI tft;
 #else
     #error "wrong TFT_CONTROLLER"
@@ -1075,7 +1075,7 @@ void setup() {
         s_f_brightnessIsChangeable = true;
         setupBacklight(TFT_BL, 512);
     }
-#elif TFT_CONTROLLER == 8
+#elif TFT_CONTROLLER > 7
     s_h_resolution = 1024;
     s_v_resolution = 600;
     tft.begin(DSI_TIMING);
@@ -1138,7 +1138,7 @@ void setup() {
     defaultsettings();
     if (ESP.getFlashChipSize() > 80000000) { FFat.begin(); }
 
-    if (TFT_CONTROLLER > 8) SerialPrintfln(ANSI_ESC_RED "The value in TFT_CONTROLLER is invalid" ANSI_ESC_RESET "   ");
+    if (TFT_CONTROLLER > 9) SerialPrintfln(ANSI_ESC_RED "The value in TFT_CONTROLLER is invalid" ANSI_ESC_RESET "   ");
 
     drawImage("/common/MiniWebRadioV4.jpg", 0, 0); // Welcomescreen
     updateSettings();
