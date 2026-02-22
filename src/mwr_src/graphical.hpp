@@ -19,12 +19,12 @@ struct imgSize {
 };
 
 imgSize GetImageSize(ps_ptr<char> picturePath) {
-    if(picturePath.strlen() == 0) {
+    if (picturePath.strlen() == 0) {
         MWR_LOG_DEBUG("picturePath is empty");
         return imgSize{0, 0};
     }
     imgSize img = {0};
-    auto scaledPicPath = scaleImage(picturePath);
+    auto    scaledPicPath = scaleImage(picturePath);
     if (!SD_MMC.exists(scaledPicPath.c_get())) { /* log_w("file %s not exists, objName: %s", scaledPicPath, m_name)*/
         MWR_LOG_ERROR("cannot open file '%s'", scaledPicPath.c_get());
         return img;
@@ -59,7 +59,7 @@ imgSize GetImageSize(ps_ptr<char> picturePath) {
     }
     if ((buf[0] == 'B') && (buf[1] == 'M') && (buf[2] == '6')) { // format bmp
         for (int i = 0; i < 15; i++) file.read();                // read 15 dummys
-        img.w = file.read();                                 // pos 18
+        img.w = file.read();                                     // pos 18
         img.w += (file.read() << 8);
         img.w += (file.read() << 16);
         img.w += (file.read() << 24);
@@ -72,7 +72,7 @@ imgSize GetImageSize(ps_ptr<char> picturePath) {
     }
     if ((buf[0] == 'G') && (buf[1] == 'I') && (buf[2] == 'F')) { // format gif
         for (int i = 0; i < 3; i++) file.read();                 // read 3 dummys
-        img.w = file.read();                                 // pos 6
+        img.w = file.read();                                     // pos 6
         img.w += (file.read() << 8);
         img.h = file.read(); // pos 8
         img.h += (file.read() << 8);
@@ -81,14 +81,14 @@ imgSize GetImageSize(ps_ptr<char> picturePath) {
     }
     if ((buf[0] == 0x89) && (buf[1] == 'P') && (buf[2] == 'N')) { // format png
         for (int i = 0; i < 13; i++) file.read();                 // read 13 dummys
-        img.w = file.read() << 24;                            // pos 16
-        img.w += file.read() << 16;                           // pos 17
-        img.w += file.read() << 8;                            // pos 18
-        img.w += file.read();                                 // pos 19
-        img.h = file.read() << 24;                            // pos 20
-        img.h += file.read() << 16;                           // pos 21
-        img.h += file.read() << 8;                            // pos 22
-        img.h += file.read();                                 // pos 23
+        img.w = file.read() << 24;                                // pos 16
+        img.w += file.read() << 16;                               // pos 17
+        img.w += file.read() << 8;                                // pos 18
+        img.w += file.read();                                     // pos 19
+        img.h = file.read() << 24;                                // pos 20
+        img.h += file.read() << 16;                               // pos 21
+        img.h += file.read() << 8;                                // pos 22
+        img.h += file.read();                                     // pos 23
         // bitDepth  = header[24];  // Position 24 = Bit-Tiefe
         // colorType = header[25];  // Position 25 = Farbtyp
         // log_w("w %i, h %i", m_w, m_h);
@@ -97,7 +97,6 @@ imgSize GetImageSize(ps_ptr<char> picturePath) {
     MWR_LOG_ERROR("unknown picture format %s", picturePath);
     return img;
 }
-
 
 class slider : public RegisterTable {
   private:
@@ -148,9 +147,9 @@ class slider : public RegisterTable {
         m_h = h; // high
         m_padding_left = paddig_left;
         m_padding_right = paddig_right;
-        m_padding_top = paddig_top;                                                     // unused
-        m_padding_bottom = paddig_bottom;                                               // unused
-        m_leftStop = m_x + m_padding_left + m_spotRadius + 10;                          // x pos left stop
+        m_padding_top = paddig_top;                                    // unused
+        m_padding_bottom = paddig_bottom;                              // unused
+        m_leftStop = m_x + m_padding_left + m_spotRadius + 10;         // x pos left stop
         m_rightStop = m_x + m_w - m_padding_right - m_spotRadius - 10; // x pos right stop
         m_enabled = false;
         m_middle_h = m_y + (m_h / 2);
@@ -207,7 +206,7 @@ class slider : public RegisterTable {
         (void)h;
         int r = 2;
         if (m_backgroundTransparency) {
-            if (m_saveBackground){
+            if (m_saveBackground) {
                 tft.copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
             } else {
                 tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
@@ -222,7 +221,7 @@ class slider : public RegisterTable {
     void disable() { m_enabled = false; }
     void enable() { m_enabled = true; }
     void hide() {
-        if(!m_show) return;
+        if (!m_show) return;
         if (m_backgroundTransparency) {
             if (m_saveBackground)
                 tft.copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
@@ -617,7 +616,7 @@ class inputbox : public RegisterTable {
         m_borderColor = TFT_BLACK;
         m_fontSize = 1;
     }
-    ~inputbox() { }
+    ~inputbox() {}
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom) {
         m_x = x; // x pos
         m_y = y; // y pos
@@ -1447,7 +1446,7 @@ class wifiSettings : public RegisterTable {
     int16_t      m_w = 0;
     int16_t      m_h = 0;
     uint8_t      m_fontSize = 0;
-    uint8_t      m_padding_left = 0;  // left margin
+    uint8_t      m_padding_left = 0;   // left margin
     uint8_t      m_padding_right = 0;  // right margin
     uint8_t      m_padding_top = 0;    // top margin
     uint8_t      m_padding_bottom = 0; // bottom margin
@@ -1614,7 +1613,7 @@ class wifiSettings : public RegisterTable {
             m_winKeybrd.pr = 1;
             m_winKeybrd.pt = 1;
             m_winKeybrd.pb = 1; // keyboard
-        } else if (w == 1024) {  // l 1024x600
+        } else if (w == 1024) { // l 1024x600
             m_winSelect.x = m_x + m_w / 30;
             m_winSelect.y = m_y + 70;
             m_winSelect.w = m_w - (2 * m_w / 30);
@@ -1624,7 +1623,7 @@ class wifiSettings : public RegisterTable {
             m_winSelect.pt = 1;
             m_winSelect.pb = 1; // selectbox
             m_winPWD.x = m_x + m_w / 30;
-            m_winPWD.y = m_winSelect.y + m_winSelect.h +10;
+            m_winPWD.y = m_winSelect.y + m_winSelect.h + 10;
             m_winPWD.w = m_w - (2 * m_w / 30);
             m_winPWD.h = 50;
             m_winPWD.pl = 3;
@@ -1639,8 +1638,7 @@ class wifiSettings : public RegisterTable {
             m_winKeybrd.pr = 1;
             m_winKeybrd.pt = 1;
             m_winKeybrd.pb = 1; // keyboard
-        }
-        else {
+        } else {
             MWR_LOG_WARN("unsupported resolution width %i px", w);
             return;
         }
@@ -1759,9 +1757,9 @@ class wifiSettings : public RegisterTable {
         if (m_keyboard->released()) { /*log_e("keyboard released")*/
             ;
         }
-        if (m_keyboard->getVal() == 0x0D) {                              // enter
-            m_ra.arg1 = m_credentials[m_credentials_idx].ssid;           // ssid
-            m_ra.arg2 = m_credentials[m_credentials_idx].password;      // password
+        if (m_keyboard->getVal() == 0x0D) {                        // enter
+            m_ra.arg1 = m_credentials[m_credentials_idx].ssid;     // ssid
+            m_ra.arg2 = m_credentials[m_credentials_idx].password; // password
             // log_w("enter pressed ssid %s, password %s", m_ssid[m_pwd_idx], m_password[m_pwd_idx]);
             if (graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name.c_get(), m_ra);
         }
@@ -1977,7 +1975,7 @@ class button1state : public RegisterTable { // click button
         m_backgroundTransparency = backgroundTransparency;
     }
     ps_ptr<char> getName() { return m_name; }
-    void enable() { m_enabled = true; }
+    void         enable() { m_enabled = true; }
     bool         isEnabled() { return m_enabled; }
     void         show(bool inactive = false) {
         m_clicked = false;
@@ -2121,7 +2119,7 @@ class button2state : public RegisterTable { // on off switch
         m_active = true;
     }
     ps_ptr<char> getName() { return m_name; }
-    void enable() { m_enabled = true; }
+    void         enable() { m_enabled = true; }
     bool         isEnabled() { return m_enabled; }
     void         show() {
         m_clicked = false;
@@ -2300,11 +2298,16 @@ class numbersBox : public RegisterTable { // range 000...999
     ps_ptr<char> getName() { return m_name; }
 
     bool show(uint16_t color) {
-        if     (color == TFT_BLUE) m_color = "blue";
-        else if(color == TFT_ORANGE) m_color = "orange";
-        else if(color == TFT_GREEN) m_color = "green";
-        else if(color == TFT_RED) m_color = "red";
-        else m_color = "orange";
+        if (color == TFT_BLUE)
+            m_color = "blue";
+        else if (color == TFT_ORANGE)
+            m_color = "orange";
+        else if (color == TFT_GREEN)
+            m_color = "green";
+        else if (color == TFT_RED)
+            m_color = "red";
+        else
+            m_color = "orange";
         ps_ptr<char> path;
         for (uint8_t i = 0; i < 3; i++) {
             path.assignf("%s%c%s.jpg", m_root, m_numbers[i], m_color);
@@ -2341,11 +2344,12 @@ class numbersBox : public RegisterTable { // range 000...999
         if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
         return true;
     }
-private:
-    void placingDigits(uint16_t w, uint16_t h){
 
-       imgSize img = GetImageSize("/digits/s/0green.jpg"); // get size of digit '0'
-        if(img.w == 0 || img.h == 0){
+  private:
+    void placingDigits(uint16_t w, uint16_t h) {
+
+        imgSize img = GetImageSize("/digits/s/0green.jpg"); // get size of digit '0'
+        if (img.w == 0 || img.h == 0) {
             MWR_LOG_ERROR("cannot get digit size");
             return;
         }
@@ -2402,8 +2406,10 @@ class offTimerBox : public RegisterTable { // range 000...999
     ps_ptr<char> getName() { return m_name; }
 
     bool show(uint16_t time) {
-        if(!time) m_color = "red";
-        else      m_color = "green";
+        if (!time)
+            m_color = "red";
+        else
+            m_color = "green";
         ps_ptr<char> numbers;
         numbers.assignf("%dc%02d", time / 60, time % 60);
         m_path.assignf("/digits/s/x%s.jpg", m_color);
@@ -2446,11 +2452,12 @@ class offTimerBox : public RegisterTable { // range 000...999
         if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
         return true;
     }
-private:
-    void placingDigits(uint16_t w, uint16_t h){
 
-       imgSize img = GetImageSize("/digits/s/0green.jpg"); // get size of digit '0'
-        if(img.w == 0 || img.h == 0){
+  private:
+    void placingDigits(uint16_t w, uint16_t h) {
+
+        imgSize img = GetImageSize("/digits/s/0green.jpg"); // get size of digit '0'
+        if (img.w == 0 || img.h == 0) {
             MWR_LOG_ERROR("cannot get digit size");
             return;
         }
@@ -2459,7 +2466,7 @@ private:
         m_digitsHigh = img.h;
 
         img = GetImageSize("/digits/s/cgreen.jpg"); // get size of colon
-        if(img.w == 0 || img.h == 0){
+        if (img.w == 0 || img.h == 0) {
             MWR_LOG_ERROR("cannot get colon size");
             return;
         }
@@ -2488,7 +2495,7 @@ class pictureBox : public RegisterTable {
     uint16_t     m_image_h = 0;
     uint16_t     m_image_x = 0;
     uint16_t     m_image_y = 0;
-    uint8_t      m_padding_left = 0;  // left margin
+    uint8_t      m_padding_left = 0;   // left margin
     uint8_t      m_padding_right = 0;  // right margin
     uint8_t      m_padding_top = 0;    // top margin
     uint8_t      m_padding_bottom = 0; // bottom margin
@@ -2509,7 +2516,7 @@ class pictureBox : public RegisterTable {
         setPicturePath(NULL);
         setAlternativPicturePath(NULL);
     }
-    ~pictureBox() { }
+    ~pictureBox() {}
 
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t padding_left, uint8_t padding_right, uint8_t padding_top, uint8_t padding_bottom) {
         m_x = x; // x pos
@@ -2572,15 +2579,21 @@ class pictureBox : public RegisterTable {
         m_image_w = img.w;
         m_image_h = img.h;
     }
-    void setAlternativPicturePath(ps_ptr<char> path) {
-        m_altPicturePath = path;
-    }
+    void setAlternativPicturePath(ps_ptr<char> path) { m_altPicturePath = path; }
 
-    void align(bool h, bool v){
-        if(h){ m_padding_left = 0; m_padding_right = 0; m_image_x = (m_w - m_image_w) / 2; }
-        else m_image_x = 0;
-        if(v){ m_padding_top = 0; m_padding_bottom = 0; m_image_y = (m_h - m_image_h) / 2; }
-        else m_image_y = 0;
+    void align(bool h, bool v) {
+        if (h) {
+            m_padding_left = 0;
+            m_padding_right = 0;
+            m_image_x = (m_w - m_image_w) / 2;
+        } else
+            m_image_x = 0;
+        if (v) {
+            m_padding_top = 0;
+            m_padding_bottom = 0;
+            m_image_y = (m_h - m_image_h) / 2;
+        } else
+            m_image_y = 0;
     }
 
     bool positionXY(uint16_t x, uint16_t y) {
@@ -2662,7 +2675,7 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
         m_enabled = false;
         pic_clock24_digitsH10->begin(m_x + m_h10.x, m_y + m_h10.y, m_h10.w, m_h10.h, m_h10.pl, m_h10.pr, m_h10.pt, m_h10.pb);
         pic_clock24_digitsH01->begin(m_x + m_h01.x, m_y + m_h01.y, m_h01.w, m_h01.h, m_h01.pl, m_h01.pr, m_h01.pt, m_h01.pb);
-        pic_clock24_digitsColon->begin(m_x + m_c.x, m_y + m_c.y,   m_c.w,   m_c.h,   m_c.pl,   m_c.pr,   m_c.pt,   m_c.pb);
+        pic_clock24_digitsColon->begin(m_x + m_c.x, m_y + m_c.y, m_c.w, m_c.h, m_c.pl, m_c.pr, m_c.pt, m_c.pb);
         pic_clock24_digitsM10->begin(m_x + m_m10.x, m_y + m_m10.y, m_m10.w, m_m10.h, m_m10.pl, m_m10.pr, m_m10.pt, m_m10.pb);
         pic_clock24_digitsM01->begin(m_x + m_m01.x, m_y + m_m01.y, m_m01.w, m_m10.h, m_m01.pl, m_m01.pr, m_m01.pt, m_m01.pb);
     }
@@ -2757,12 +2770,13 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
         m_clicked = false;
         return true;
     }
-private:
-    void placingDigits(uint16_t w, uint16_t h){
+
+  private:
+    void placingDigits(uint16_t w, uint16_t h) {
         uint16_t digits_y = 0, digits_w = 0, colon_w = 0, digits_h = 0, paddig_l = 0;
 
         imgSize img = GetImageSize("/digits/l/0green.jpg"); // get size of digit '0'
-        if(img.w == 0 || img.h == 0){
+        if (img.w == 0 || img.h == 0) {
             MWR_LOG_ERROR("cannot get digit size");
             return;
         }
@@ -2771,7 +2785,7 @@ private:
         digits_h = img.h;
 
         img = GetImageSize("/digits/l/cgreen.jpg"); // get size of colon
-        if(img.w == 0 || img.h == 0){
+        if (img.w == 0 || img.h == 0) {
             MWR_LOG_ERROR("cannot get colon size");
             return;
         }
@@ -2787,10 +2801,10 @@ private:
         m_h01.y = digits_y;
         m_h01.w = digits_w;
         m_h01.h = digits_h;
-        m_c.x   = m_h01.x + digits_w;
-        m_c.y   = digits_y;
-        m_c.w   = colon_w;
-        m_c.h   = digits_h;
+        m_c.x = m_h01.x + digits_w;
+        m_c.y = digits_y;
+        m_c.w = colon_w;
+        m_c.h = digits_h;
         m_m10.x = m_c.x + colon_w;
         m_m10.y = digits_y;
         m_m10.w = digits_w;
@@ -2862,7 +2876,7 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
         m_enabled = false;
         pic_clock24_digitsH10->begin(m_x + m_h10.x, m_y + m_h10.y, m_h10.w, m_h10.h, m_h10.pl, m_h10.pr, m_h10.pt, m_h10.pb);
         pic_clock24_digitsH01->begin(m_x + m_h01.x, m_y + m_h01.y, m_h01.w, m_h01.h, m_h01.pl, m_h01.pr, m_h01.pt, m_h01.pb);
-        pic_clock24_digitsColon->begin(m_x + m_c.x, m_y + m_c.y,   m_c.w,   m_c.h,   m_c.pl,   m_c.pr,   m_c.pt,   m_c.pb);
+        pic_clock24_digitsColon->begin(m_x + m_c.x, m_y + m_c.y, m_c.w, m_c.h, m_c.pl, m_c.pr, m_c.pt, m_c.pb);
         pic_clock24_digitsM10->begin(m_x + m_m10.x, m_y + m_m10.y, m_m10.w, m_m10.h, m_m10.pl, m_m10.pr, m_m10.pt, m_m10.pb);
         pic_clock24_digitsM01->begin(m_x + m_m01.x, m_y + m_m01.y, m_m01.w, m_m10.h, m_m01.pl, m_m01.pr, m_m01.pt, m_m01.pb);
     }
@@ -2957,12 +2971,13 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
         m_clicked = false;
         return true;
     }
-private:
-    void placingDigits(uint16_t w, uint16_t h){
+
+  private:
+    void placingDigits(uint16_t w, uint16_t h) {
         uint16_t digits_y = 0, digits_w = 0, colon_w = 0, digits_h = 0, paddig_l = 0;
 
         imgSize img = GetImageSize("/digits/s/0green.jpg"); // get size of digit '0'
-        if(img.w == 0 || img.h == 0){
+        if (img.w == 0 || img.h == 0) {
             MWR_LOG_ERROR("cannot get digit size");
             return;
         }
@@ -2971,7 +2986,7 @@ private:
         digits_h = img.h;
 
         img = GetImageSize("/digits/s/cgreen.jpg"); // get size of colon
-        if(img.w == 0 || img.h == 0){
+        if (img.w == 0 || img.h == 0) {
             MWR_LOG_ERROR("cannot get colon size");
             return;
         }
@@ -2987,10 +3002,10 @@ private:
         m_h01.y = digits_y;
         m_h01.w = digits_w;
         m_h01.h = digits_h;
-        m_c.x   = m_h01.x + digits_w;
-        m_c.y   = digits_y;
-        m_c.w   = colon_w;
-        m_c.h   = digits_h;
+        m_c.x = m_h01.x + digits_w;
+        m_c.y = digits_y;
+        m_c.w = colon_w;
+        m_c.h = digits_h;
         m_m10.x = m_c.x + colon_w;
         m_m10.y = digits_y;
         m_m10.w = digits_w;
@@ -3014,10 +3029,10 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
     textbox*    txt_alarm_time = new textbox[7]{textbox("txt_alarm_time0"), textbox("txt_alarm_time1"), textbox("txt_alarm_time2"), textbox("txt_alarm_time3"),
                                                 textbox("txt_alarm_time4"), textbox("txt_alarm_time5"), textbox("txt_alarm_time6")}; // time of the day
 
-    int16_t  m_x = 0;
-    int16_t  m_y = 0;
-    int16_t  m_w = 0;
-    int16_t  m_h = 0;
+    int16_t m_x = 0;
+    int16_t m_y = 0;
+    int16_t m_w = 0;
+    int16_t m_h = 0;
     struct pos {
         uint16_t x;
         uint16_t y;
@@ -3035,7 +3050,7 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
     uint16_t     m_alarmdaysYoffset = 0;
     uint16_t     m_alarmdaysW = 0;
     uint16_t     m_alarmdaysH = 0;
-    uint16_t     m_fontSize   = 0; // auto
+    uint16_t     m_fontSize = 0; // auto
     uint32_t     m_bgColor = 0;
     bool         m_enabled = false;
     bool         m_clicked = false;
@@ -3085,10 +3100,9 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
         m_alarmtimeYPos = m_alarmdaysYPos + m_alarmdaysH + 1;
         pic_alarm_digitsH10->begin(m_x + s_h10.x, m_y + s_h10.y, s_h10.w, s_h10.h, s_h10.pl, s_h10.pr, s_h10.pt, s_h10.pb);
         pic_alarm_digitsH01->begin(m_x + s_h01.x, m_y + s_h01.y, s_h01.w, s_h01.h, s_h01.pl, s_h01.pr, s_h01.pt, s_h01.pb);
-        pic_alarm_digitsColon->begin(m_x + s_c.x, m_y + s_c.y,   s_c.w, s_c.h, s_c.pl, s_c.pr, s_c.pt, s_c.pb);
+        pic_alarm_digitsColon->begin(m_x + s_c.x, m_y + s_c.y, s_c.w, s_c.h, s_c.pl, s_c.pr, s_c.pt, s_c.pb);
         pic_alarm_digitsM10->begin(m_x + s_m10.x, m_y + s_m10.y, s_m10.w, s_m10.h, s_m10.pl, s_m10.pr, s_m10.pt, s_m10.pb);
         pic_alarm_digitsM01->begin(m_x + s_m01.x, m_y + s_m01.y, s_m01.w, s_m10.h, s_m01.pl, s_m01.pr, s_m01.pt, s_m01.pb);
-
 
         for (uint8_t i = 0; i < 7; i++) {
             txt_alarm_days[i].begin(m_alarmdaysXPos[i], m_alarmdaysYPos, m_alarmdaysW, m_alarmdaysH, 0, 0, 0, 0);
@@ -3331,12 +3345,12 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
             txt_alarm_time[idx].show(m_backgroundTransparency, false);
         }
     }
-    void placingDigits(uint16_t w, uint16_t h){
+    void placingDigits(uint16_t w, uint16_t h) {
         uint16_t digits_y = 0, digits_w = 0, colon_w = 0, digits_h = 0, digits_paddig_l = 0, alarmdays_padding_l = 0;
         uint16_t h4 = h / 4; // [1/4 days, time + 3/4 digits]
 
-       imgSize img = GetImageSize("/digits/m/0green.jpg"); // get size of digit '0'
-        if(img.w == 0 || img.h == 0){
+        imgSize img = GetImageSize("/digits/m/0green.jpg"); // get size of digit '0'
+        if (img.w == 0 || img.h == 0) {
             MWR_LOG_ERROR("cannot get digit size");
             return;
         }
@@ -3345,7 +3359,7 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
         digits_h = img.h;
 
         img = GetImageSize("/digits/m/cred.jpg"); // get size of colon
-        if(img.w == 0 || img.h == 0){
+        if (img.w == 0 || img.h == 0) {
             MWR_LOG_ERROR("cannot get colon size");
             return;
         }
@@ -3356,7 +3370,7 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
 
         m_alarmdaysW = w / 8;
         alarmdays_padding_l = m_alarmdaysW / 2;
-        for(int i = 0; i < 7; i++) {m_alarmdaysXPos[i] = alarmdays_padding_l + i * m_alarmdaysW;}
+        for (int i = 0; i < 7; i++) { m_alarmdaysXPos[i] = alarmdays_padding_l + i * m_alarmdaysW; }
         m_alarmdaysYoffset = 2;
         m_alarmdaysH = h4 / 2;
 
@@ -3368,10 +3382,10 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
         s_h01.y = digits_y;
         s_h01.w = digits_w;
         s_h01.h = digits_h;
-        s_c.x   = s_h01.x + digits_w;
-        s_c.y   = digits_y;
-        s_c.w   = digits_w;
-        s_c.h   = digits_h;
+        s_c.x = s_h01.x + digits_w;
+        s_c.y = digits_y;
+        s_c.w = digits_w;
+        s_c.h = digits_h;
         s_m10.x = s_c.x + colon_w;
         s_m10.y = digits_y;
         s_m10.w = digits_w;
@@ -3428,7 +3442,7 @@ class uniList {
         m_lineHight = m_h / 10;
         m_buff = x_ps_malloc(1024);
     }
-    void setMode(uint8_t mode, const char*  tftSize, uint8_t fontSize) {
+    void setMode(uint8_t mode, const char* tftSize, uint8_t fontSize) {
         if (mode == RADIO) { m_mode = RADIO; }
         if (mode == PLAYER) { m_mode = PLAYER; }
         if (mode == DLNA) { m_mode = DLNA; }
@@ -3652,7 +3666,7 @@ class dlnaList : public RegisterTable {
     DLNA_Client*                               m_dlna;
     dlnaHistory_s*                             m_dlnaHistory = NULL;
     releasedArg                                m_ra;
-    enum DLNA_Action { DLNA_NONE = 0, DLNA_FILE = 1, DLNA_SERVERLIST = 2, DLNA_PREV_LEVEL = 3, DLNA_NEXT_LEVEL = 4, DLNA_WIPE = 5};
+    enum DLNA_Action { DLNA_NONE = 0, DLNA_FILE = 1, DLNA_SERVERLIST = 2, DLNA_PREV_LEVEL = 3, DLNA_NEXT_LEVEL = 4, DLNA_WIPE = 5 };
 
   public:
     dlnaList(const char* name) {
@@ -3685,7 +3699,6 @@ class dlnaList : public RegisterTable {
         m_enabled = false;
         m_lineHight = m_h / 10;
         m_tftSize = tftSize;
-
     }
     void client_and_history(DLNA_Client* dlna, dlnaHistory_s* dh, uint8_t historySize) {
         m_dlna = dlna;
@@ -3743,16 +3756,16 @@ class dlnaList : public RegisterTable {
         m_clicked = false;
 
         if (m_chptr || (m_itemListPos == 0 && (*m_dlnaLevel) > 0)) {
-            if(m_itemListPos_last != m_itemListPos) drawItem(m_itemListPos_last, false); // redraw old line, make default color
-            bool res = drawItem(m_itemListPos, true); // make cyan or magenta
-        //    m_itemListPos_last = m_itemListPos;
+            if (m_itemListPos_last != m_itemListPos) drawItem(m_itemListPos_last, false); // redraw old line, make default color
+            bool res = drawItem(m_itemListPos, true);                                     // make cyan or magenta
+                                                                                          //    m_itemListPos_last = m_itemListPos;
             m_chptr = NULL;
-            if(res == false) return false;
+            if (res == false) return false;
             vTaskDelay(300);
         }
 
-        if (m_browseOnRelease == DLNA_NONE) { ; } // nothing todo
-        if (m_browseOnRelease == DLNA_FILE) { ; } // file
+        if (m_browseOnRelease == DLNA_NONE) { ; }   // nothing todo
+        if (m_browseOnRelease == DLNA_FILE) { ; }   // file
         if (m_browseOnRelease == DLNA_SERVERLIST) { // get serverlist
             (*m_dlnaLevel)++;
             m_dlna->browseServer(m_currDLNAsrvNr, "0", 0, 9);
@@ -3763,7 +3776,7 @@ class dlnaList : public RegisterTable {
         }
         if (m_browseOnRelease == DLNA_NEXT_LEVEL) { // folder, next level
             (*m_dlnaLevel)++;
-            if( m_dlnaHistory[*m_dlnaLevel].childCount == 0) return false;
+            if (m_dlnaHistory[*m_dlnaLevel].childCount == 0) return false;
             m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId.c_get(), 0, 9);
         }
         if (m_browseOnRelease == DLNA_WIPE) { m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId.c_get(), m_viewPoint, 9); } // scroll up / down
@@ -3803,28 +3816,42 @@ class dlnaList : public RegisterTable {
 
     bool drawItem(int8_t pos, bool selectedLine = false) { // pos 0 is parent, pos 1...9 are itens, selectedLine means released (ok)
 
-        if (pos < 0 || pos > 9) { MWR_LOG_WARN("pos oor %i", pos); return false; } // guard
-        if (*m_dlnaLevel == 0 && pos > m_dlnaServer->size()) { /* log_e("pos too high %i", pos);*/ return false; } // guard
-        if (*m_dlnaLevel > 0 && pos > m_srvContent->size()) { /* log_e("pos too high %i", pos);*/  return false; } // guard
+        if (pos < 0 || pos > 9) {
+            MWR_LOG_WARN("pos oor %i", pos);
+            return false;
+        }                                                      // guard
+        if (*m_dlnaLevel == 0 && pos > m_dlnaServer->size()) { /* log_e("pos too high %i", pos);*/
+            return false;
+        }                                                     // guard
+        if (*m_dlnaLevel > 0 && pos > m_srvContent->size()) { /* log_e("pos too high %i", pos);*/
+            return false;
+        } // guard
 
-        char         extension[15] = {0};
-        char         dummy[] = "";
-        bool         isAudio = false;
-        bool         isURL = false;
-        bool         isServer = false;
-        bool         res = false;
-        const char *item = dummy, *itemURL = dummy; (void)itemURL;
+        char        extension[15] = {0};
+        char        dummy[] = "";
+        bool        isAudio = false;
+        bool        isURL = false;
+        bool        isServer = false;
+        bool        res = false;
+        const char *item = dummy, *itemURL = dummy;
+        (void)itemURL;
         ps_ptr<char> color = ANSI_ESC_WHITE;
         ps_ptr<char> duration = "?";
         int32_t      itemSize = 0;
         int16_t      childCount = 0;
 
         if (pos == 0) {
-            if (pos + m_viewPoint == m_currItemNr[*m_dlnaLevel] + 1) { color = ANSI_ESC_MAGENTA; }
-            else                                                     { color = ANSI_ESC_ORANGE; }
-            if (selectedLine)                                        { color = ANSI_ESC_CYAN; res = true; }
+            if (pos + m_viewPoint == m_currItemNr[*m_dlnaLevel] + 1) {
+                color = ANSI_ESC_MAGENTA;
+            } else {
+                color = ANSI_ESC_ORANGE;
+            }
+            if (selectedLine) {
+                color = ANSI_ESC_CYAN;
+                res = true;
+            }
             myList.drawLine(pos, m_dlnaHistory[*m_dlnaLevel].name.c_get(), "", "", color.c_get(), 1);
-            if(color == ANSI_ESC_MAGENTA) m_itemListPos_last = pos;
+            if (color == ANSI_ESC_MAGENTA) m_itemListPos_last = pos;
             return res;
         }
         if (*m_dlnaLevel == 0) { // is list of server
@@ -3846,16 +3873,31 @@ class dlnaList : public RegisterTable {
             }
         }
 
-        if ((pos - 1) + m_viewPoint == m_currItemNr[*m_dlnaLevel])      { color = ANSI_ESC_MAGENTA;} // is current item
-        else if (isURL && isAudio)                                      { color = ANSI_ESC_YELLOW; } // is audiofile
-        else                                                            { color = ANSI_ESC_WHITE; }  // all other
-        if (selectedLine && childCount > 0)                             { color = ANSI_ESC_CYAN; res = true; }    // is folder with childs
-        if (selectedLine && isServer)                                   { color = ANSI_ESC_CYAN; res = true; }    // is server
-        if (selectedLine && isURL && isAudio)                           { color = ANSI_ESC_CYAN; res = true; }    // is file
-        if (childCount)                                                 { sprintf(extension, "%i", childCount); } // only folders have childCount
-        if (itemSize)                                                   { sprintf(extension, "%li", itemSize);  } // only files have itemsize
-        if (!duration.equals("?"))                                      { sprintf(extension, "%s", duration.c_get()); } // must be a audiofile
-        if(color == ANSI_ESC_MAGENTA) { m_itemListPos_last = pos; }
+        if ((pos - 1) + m_viewPoint == m_currItemNr[*m_dlnaLevel]) {
+            color = ANSI_ESC_MAGENTA;
+        } // is current item
+        else if (isURL && isAudio) {
+            color = ANSI_ESC_YELLOW;
+        } // is audiofile
+        else {
+            color = ANSI_ESC_WHITE;
+        } // all other
+        if (selectedLine && childCount > 0) {
+            color = ANSI_ESC_CYAN;
+            res = true;
+        } // is folder with childs
+        if (selectedLine && isServer) {
+            color = ANSI_ESC_CYAN;
+            res = true;
+        } // is server
+        if (selectedLine && isURL && isAudio) {
+            color = ANSI_ESC_CYAN;
+            res = true;
+        }                                                                          // is file
+        if (childCount) { sprintf(extension, "%i", childCount); }                  // only folders have childCount
+        if (itemSize) { sprintf(extension, "%li", itemSize); }                     // only files have itemsize
+        if (!duration.equals("?")) { sprintf(extension, "%s", duration.c_get()); } // must be a audiofile
+        if (color == ANSI_ESC_MAGENTA) { m_itemListPos_last = pos; }
         myList.drawLine(pos, item, extension, itemURL, color.c_get(), 1);
         return res;
     }
@@ -3980,7 +4022,7 @@ class dlnaList : public RegisterTable {
         return;
     }
 
-  public: // -------------------------- IR actions --------------------------------------------------------------
+  public:             // -------------------------- IR actions --------------------------------------------------------------
     void prevPage() { // from IR control
         if (m_viewPoint == 0) return;
         if (m_viewPoint > 9)
@@ -4052,8 +4094,11 @@ class dlnaList : public RegisterTable {
 
     void nextItem() { // from IR control, scroll down
         int maxItems = -1;
-        if(*m_dlnaLevel == 0) { maxItems = m_dlnaMaxServers; }
-        else                  { maxItems = m_dlnaMaxItems;   }
+        if (*m_dlnaLevel == 0) {
+            maxItems = m_dlnaMaxServers;
+        } else {
+            maxItems = m_dlnaMaxItems;
+        }
         MWR_LOG_INFO("m_itemListPos_last %i, m_displayed_lines %i, maxItems %i, m_currItemNr[*m_dlnaLevel] %i", m_itemListPos_last, m_displayed_lines, maxItems, m_currItemNr[*m_dlnaLevel]);
         if (maxItems - 1 <= m_currItemNr[*m_dlnaLevel]) return;
         m_currItemNr[*m_dlnaLevel]++;
@@ -4110,8 +4155,10 @@ class dlnaList : public RegisterTable {
             m_dlnaMaxItems = m_dlnaHistory[*m_dlnaLevel].maxItems;
             m_viewPoint = 0;
             m_currItemNr[*m_dlnaLevel] = 0;
-            if(*m_dlnaLevel == 0)  m_dlna->browseServer(m_currDLNAsrvNr, "0", 0, 9);
-            else                   m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId.c_get(), m_viewPoint, 9);
+            if (*m_dlnaLevel == 0)
+                m_dlna->browseServer(m_currDLNAsrvNr, "0", 0, 9);
+            else
+                m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId.c_get(), m_viewPoint, 9);
             m_dlna->loop();
             while (m_dlna->getState() != m_dlna->IDLE) {
                 m_dlna->loop();
@@ -4194,9 +4241,8 @@ class fileList : public RegisterTable {
     bool         m_state = false;
     ps_ptr<char> m_name;
     ps_ptr<char> m_curAudioFolder;
-    char*        m_curAudioPath = NULL;
-    char*        m_curAudioName = NULL;
-    char*        m_fileItemsPos = NULL;
+    ps_ptr<char> m_curAudioPath;
+    ps_ptr<char> m_curAudioName;
     const char*  m_tftSize = "";
     const char*  m_rootColor = ANSI_ESC_LIGHTBROWN;
     const char*  m_folderColor = ANSI_ESC_ORANGE;
@@ -4210,9 +4256,9 @@ class fileList : public RegisterTable {
     fileList(const char* name) {
         register_object(this);
         m_name = name;
-        m_fileItemsPos = x_ps_malloc(30);
-        m_curAudioPath = x_ps_malloc(1024);
-        m_curAudioName = x_ps_malloc(1024);
+        m_curAudioFolder = "";
+        m_curAudioPath = "";
+        m_curAudioName = "";
         m_bgColor = TFT_BLACK;
         m_enabled = false;
         m_clicked = false;
@@ -4222,11 +4268,7 @@ class fileList : public RegisterTable {
         m_ra.val1 = 0;
         m_ra.val2 = 0;
     }
-    ~fileList() {
-        x_ps_free(&m_fileItemsPos);
-        x_ps_free(&m_curAudioName); //   song.mp3
-        x_ps_free(&m_curAudioPath); //   /audiofiles/folder1/song.mp3
-    }
+    ~fileList() {}
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const char* tftSize, uint8_t fontSize) {
         m_x = x; // x pos
         m_y = y; // y pos
@@ -4336,7 +4378,7 @@ class fileList : public RegisterTable {
         }
         if (m_browseOnRelease == 5) {
             m_viewPos += m_fileListPos; // play file
-            myList.drawLine(pos, m_curAudioName, "", "", ANSI_ESC_CYAN, -1);
+            myList.drawLine(pos, m_curAudioName.c_get(), "", "", ANSI_ESC_CYAN, -1);
             vTaskDelay(300 / portTICK_PERIOD_MS);
             m_ra.arg1 = m_curAudioFolder; // fileFolder
             m_ra.arg2 = m_curAudioName;   // fileName
@@ -4442,7 +4484,7 @@ class fileList : public RegisterTable {
         if (s_SD_content.isDir(m_curAudioFileNr)) { // is child folder
             myList.colourLine(m_y, m_selectColor);
             vTaskDelay(300 / portTICK_PERIOD_MS);
-            strcpy(m_curAudioPath, s_SD_content.getFilePathByIndex(m_curAudioFileNr));
+            m_curAudioPath = s_SD_content.getFilePathByIndex(m_curAudioFileNr);
             show(m_curAudioPath, 0);
             return NULL;
         }
@@ -4537,13 +4579,18 @@ class fileList : public RegisterTable {
             if (m_fileListPos + m_viewPos > s_SD_content.getSize()) goto exit; // ----------------- next folder
             int idx = m_viewPos + m_fileListPos - 1;
             if (s_SD_content.isDir(idx)) {
-                strcpy(m_curAudioName, "");
+                m_curAudioName = "";
                 m_curAudioFolder = s_SD_content.getFileFolderByIndex(idx);
                 m_browseOnRelease = 4;
             } else { // -------------------------------------------------------------------------- playfile
-                strcpy(m_curAudioName, s_SD_content.getFileNameByIndex(idx));
+                log_e("hier");
+                log_e("idx %i", idx);
+                log_e("fileName %s", s_SD_content.getFileNameByIndex(idx));
+                log_e("fileFolder %s", s_SD_content.getFileFolderByIndex(idx));
+                log_e("filePath %s", s_SD_content.getFilePathByIndex(idx));
+                m_curAudioName = s_SD_content.getFileNameByIndex(idx);
                 m_curAudioFolder = s_SD_content.getFileFolderByIndex(idx);
-                strcpy(m_curAudioPath, s_SD_content.getFilePathByIndex(idx));
+                m_curAudioPath = s_SD_content.getFilePathByIndex(idx);
                 m_browseOnRelease = 5;
             }
         }
@@ -4849,7 +4896,7 @@ class vuMeter : public RegisterTable {
         uint16_t frame_h = m_h - paddig_top - paddig_bottom;
         m_segm_w = ((frame_w - 3 * m_frameSize) / 2) - m_frameSize;  // 2 columns + 3 frameSizes
         m_segm_h = ((frame_h - 2 * m_frameSize) / 12) - m_frameSize; // 12 rows + 2 frameSizes
-        m_frame_w = 2  * m_segm_w + 3 * m_frameSize;
+        m_frame_w = 2 * m_segm_w + 3 * m_frameSize;
         m_frame_h = 12 * m_segm_h + 13 * m_frameSize;
     }
     ps_ptr<char> getName() { return m_name; }
@@ -4880,7 +4927,7 @@ class vuMeter : public RegisterTable {
         m_enabled = false;
     }
     void disable() { m_enabled = false; }
-    void enable()  { m_enabled = true; }
+    void enable() { m_enabled = true; }
     void setBGcolor(uint32_t color) { m_bgColor = color; }
     void update(uint16_t vum) {
         if (!m_enabled) return;
@@ -5017,9 +5064,9 @@ class displayHeader : public RegisterTable {
         uint8_t  pr = 0;
         uint8_t  pt = 0;
         uint8_t  pb = 0;
-    } const s_time;      // time object
+    } const s_time; // time object
     //------------------------------------------------------------------------------------------------------------------------------------------------
-#elif TFT_CONTROLLER < 7 // 480 x 320px
+#elif TFT_CONTROLLER < 7                           // 480 x 320px
     //------------------------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
     struct w_i {
         uint16_t x = 0;
@@ -5062,7 +5109,7 @@ class displayHeader : public RegisterTable {
         uint8_t  pb = 0;
     } const s_time; // time object
     //------------------------------------------------------------------------------------------------------------------------------------------------
-#elif TFT_CONTROLLER == 7                 // 800 x 480px
+#elif TFT_CONTROLLER == 7                          // 800 x 480px
     //------------------------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
     struct w_i {
         uint16_t x = 0;
@@ -5105,7 +5152,7 @@ class displayHeader : public RegisterTable {
         uint8_t  pb = 0;
     } const s_time; // time object
     //------------------------------------------------------------------------------------------------------------------------------------------------
-#elif (TFT_CONTROLLER == 8 || TFT_CONTROLLER == 9)                 // 1024 x 600px
+#elif (TFT_CONTROLLER == 8 || TFT_CONTROLLER == 9) // 1024 x 600px
     //------------------------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
     struct w_i {
         uint16_t x = 0;
@@ -5187,8 +5234,10 @@ class displayHeader : public RegisterTable {
 
     void show(bool transparency = false) {
         m_backgroundTransparency = transparency;
-        if(m_backgroundTransparency) tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
-        else                         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        if (m_backgroundTransparency)
+            tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+        else
+            tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         m_timeStringObject->show(m_backgroundTransparency, false);
         m_enabled = true;
         m_clicked = false;
@@ -5203,7 +5252,10 @@ class displayHeader : public RegisterTable {
         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         m_enabled = false;
     }
-    void enable() { m_enabled = true; m_timeStringObject->enable(); }
+    void enable() {
+        m_enabled = true;
+        m_timeStringObject->enable();
+    }
     void disable() { m_enabled = false; }
     void setBGcolor(uint32_t color) { m_bgColor = color; }
     void updateItem(ps_ptr<char> hl_item) { // radio, clock, audioplayer...
@@ -5378,7 +5430,7 @@ class displayFooter : public RegisterTable {
         uint8_t  pb = 0;
     } const s_IPaddr;
     //-----------------------------------------------------------------------------------------------------------------------------------
-#elif TFT_CONTROLLER < 7 // 480 x 320px
+#elif TFT_CONTROLLER < 7                           // 480 x 320px
     //-----------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
     struct w_a {
         uint16_t x = 1;
@@ -5437,7 +5489,7 @@ class displayFooter : public RegisterTable {
         uint8_t  pb = 0;
     } const s_IPaddr;
     //-----------------------------------------------------------------------------------------------------------------------------------
-#elif  TFT_CONTROLLER == 7                  // 800 x 480px
+#elif TFT_CONTROLLER == 7                          // 800 x 480px
     //-----------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
     struct w_a {
         uint16_t x = 0;
@@ -5496,7 +5548,7 @@ class displayFooter : public RegisterTable {
         uint8_t  pb = 0;
     } const s_IPaddr;
     //-----------------------------------------------------------------------------------------------------------------------------------
-#elif  (TFT_CONTROLLER == 8 || TFT_CONTROLLER == 9)                  // 1024 x 600px
+#elif (TFT_CONTROLLER == 8 || TFT_CONTROLLER == 9) // 1024 x 600px
     //-----------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
     struct w_a { // antenna
         uint16_t x = 0;
@@ -5506,7 +5558,7 @@ class displayFooter : public RegisterTable {
         uint8_t  pt = 1;
         uint8_t  pb = 0;
     } const s_Antenna; // Antenna.png: 55 x 56 px
-    struct w_s { // station number
+    struct w_s {       // station number
         uint16_t x = 80;
         uint16_t w = 100;
         uint8_t  pl = 5;
@@ -5604,10 +5656,12 @@ class displayFooter : public RegisterTable {
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
 
-    void         show(bool transparency = false) {
+    void show(bool transparency = false) {
         m_backgroundTransparency = transparency;
-        if(m_backgroundTransparency) tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
-        else                         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        if (m_backgroundTransparency)
+            tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+        else
+            tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         m_enabled = true;
         m_clicked = false;
         pic_Antenna->show(m_backgroundTransparency, false);

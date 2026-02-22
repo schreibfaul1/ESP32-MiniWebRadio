@@ -27,11 +27,11 @@ KCX_BT_Emitter::~KCX_BT_Emitter() {}
 void KCX_BT_Emitter::begin() {
     KCX_LOG_DEBUG("KCX_BT_Emitter begin");
     if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;
-    digitalWrite(BT_CONNECT_PIN, LOW); // awake if POWER_OFF
-    m_connect_pin = LOW;
-    vTaskDelay(200);
-    digitalWrite(BT_CONNECT_PIN, HIGH);
-    m_connect_pin = HIGH;
+    // digitalWrite(BT_CONNECT_PIN, LOW); // awake if POWER_OFF
+    // m_connect_pin = LOW;
+    // vTaskDelay(200);
+    // digitalWrite(BT_CONNECT_PIN, HIGH);
+    // m_connect_pin = HIGH;
     Serial2.begin(115200, SERIAL_8N1, BT_TX_PIN, BT_RX_PIN);
     add_tx_queue_item("AT+");
     m_bt_found = false;
@@ -163,6 +163,7 @@ void KCX_BT_Emitter::parseATcmds() {
         m_msg.e = evt_power_off;
         if (m_bt_callback) { m_bt_callback(m_msg); }
     } else if (item.starts_with("OK+VERS:")) { // OK+VERS:KCX_BT_RTX_V1.4
+        m_bt_mode = "TX";
         m_bt_version.copy_from(item.get() + 8);
         m_msg.arg = m_bt_version.c_get();
         m_msg.e = evt_version;
@@ -369,21 +370,6 @@ void KCX_BT_Emitter::setMode_intern(ps_ptr<char> mode) {
         return;
     }
     add_tx_queue_item("AT+RESET");
-}
-void KCX_BT_Emitter::changeMode() {
-    if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;
-    if (!m_power) {
-        m_msg.e = evt_info;
-        m_msg.arg = "Power On  first";
-        if (m_bt_callback) m_bt_callback(m_msg);
-        return;
-    }
-    if (m_bt_mode.equals("RX")) {
-        m_bt_mode = "AT+MODE_TX";
-    } else {
-        m_bt_mode = "AT+MODE_RX";
-    }
-    add_tx_queue_item(m_bt_mode);
 }
 void KCX_BT_Emitter::pauseResume() {
     if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;

@@ -2,7 +2,7 @@
  * KCX_BT_Emitter.cpp
  *
  *  Created on: 21.01.2024
- *  updated on: 09.12.2024
+ *  updated on: 22.02.2026
  *      Author: Wolle
  */
 
@@ -60,7 +60,7 @@ class KCX_BT_Emitter {
 
     // callbacks ---------------------------------------------------------
   public:
-    typedef enum { evt_info = 0, evt_found, evt_connect, evt_disconnect, evt_reset, evt_power_on, evt_power_off, evt_scan, evt_volume, evt_version, evt_mode, evt_pause, evt_play} event_t;
+    typedef enum { evt_info = 0, evt_found, evt_connect, evt_disconnect, evt_reset, evt_power_on, evt_power_off, evt_scan, evt_volume, evt_version, evt_mode, evt_pause, evt_play } event_t;
     struct msg_s { // used in info(audio_info_callback());
         const char* msg = nullptr;
         const char* s = nullptr;
@@ -87,10 +87,9 @@ class KCX_BT_Emitter {
 
     bool         isConnected() { return m_f_connected; }
     uint8_t      getVolume() { return m_bt_volume; }
-    void         setVolume(uint8_t vol);           // 0 ... 31
+    void         setVolume(uint8_t vol);         // 0 ... 31
     ps_ptr<char> getMode() { return m_bt_mode; } // 0: RECEIVER, 1: EMITTER
-    void         setMode(ps_ptr<char> mode);       // RX: RECEIVER, TX: EMITTER
-    void         changeMode();
+    void         setMode(ps_ptr<char> mode);     // RX: RECEIVER, TX: EMITTER
     void         pauseResume();
     void         downvolume();
     void         upvolume();

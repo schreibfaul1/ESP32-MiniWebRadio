@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.1.1 - Feb 20, 2026                                                                                                               ";
+    Version 4.1.1a - Feb 22, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -194,9 +194,6 @@ std::deque<ps_ptr<char>> s_PLS_content;
 std::deque<ps_ptr<char>> s_logBuffer;
 
 const char* codecname[10] = {"unknown", "WAV", "MP3", "AAC", "M4A", "FLAC", "AACP", "OPUS", "OGG", "VORBIS"};
-
-
-
 
 #if TFT_CONTROLLER < 7 // ⏹⏹⏹⏹
 TFT_SPI tft(spiBus, TFT_CS);
@@ -795,7 +792,7 @@ bool connectToWiFi() {
         wifiMulti.run();
         vTaskDelay(100);
         i++;
-        if (i > 50) break;
+        if (i > 20) break;
     }
     if (!WiFi.isConnected()) {
         SerialPrintfln("WiFI_info:   " ANSI_ESC_RED "WiFi credentials are not correct" ANSI_ESC_RESET "  ");
@@ -2269,6 +2266,8 @@ void loop() {
             } else {
                 if (bt_emitter.get_power_state()) { bt_emitter.power_off(); }
             }
+            if (bt_emitter.getMode().equals("NA")) {} // not ready yet
+            else if (!bt_emitter.getMode().equals(s_bt_emitter.mode)) { bt_emitter.setMode(s_bt_emitter.mode); }
         }
     } //  END s_f_1sec
     //------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2292,11 +2291,11 @@ void loop() {
             if (!s_sleeptime) fall_asleep();
             dispFooter.updateOffTime(s_sleeptime);
         }
-        static uint8_t btEmitterCnt = 0;
-        if (!s_bt_emitter.found && btEmitterCnt < 1) {
-            btEmitterCnt++;
-            bt_emitter.begin(); // if the emitter has not yet responded
-        }
+        // static uint8_t btEmitterCnt = 0;
+        // if (!s_bt_emitter.found && btEmitterCnt < 1) {
+        //     btEmitterCnt++;
+        //     bt_emitter.begin(); // if the emitter has not yet responded
+        // }
     }
 
     //-------------------------------------------------DEBUG / WIFI_SETTINGS ----------------------------------------------------------------------------------
@@ -2402,6 +2401,15 @@ void loop() {
                 MWR_LOG_INFO("mute on");
             else
                 MWR_LOG_INFO("mute off");
+        }
+        if (r.startsWith("o48")) { // output48KHz
+            static bool f_o48 = false;
+            f_o48 = !f_o48;
+            audio.setOutput48KHz(f_o48);
+            if (f_o48)
+                MWR_LOG_INFO("output 48KHz");
+            else
+                MWR_LOG_INFO("normal output %i Hz", audio.getSampleRate());
         }
         if (r.startsWith("btp")) { // bluetooth RX/TX protocol
             bt_emitter.list_protokol();
@@ -3457,7 +3465,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
     CMD_EQUALS("KCX_BT_mem"){           bt_emitter.getVMlinks(); return;}
     CMD_EQUALS("KCX_BT_scanned"){       webSrv.send("KCX_BT_SCANNED=", bt_emitter.stringifyScannedItems()); return;}
     CMD_EQUALS("KCX_BT_getMode"){       webSrv.send("KCX_BT_MODE=", bt_emitter.getMode().c_get()); return;}
-    CMD_EQUALS("KCX_BT_changeMode"){    bt_emitter.changeMode(); return;}
+    CMD_EQUALS("KCX_BT_changeMode"){    if(s_bt_emitter.mode.equals("RX")) s_bt_emitter.mode = "TX"; else  s_bt_emitter.mode = "RX"; return;}
     CMD_EQUALS("KCX_BT_pause"){         bt_emitter.pauseResume(); return;}
     CMD_EQUALS("KCX_BT_downvolume"){    bt_emitter.downvolume(); return;}
     CMD_EQUALS("KCX_BT_upvolume"){      bt_emitter.upvolume();   return;}
@@ -3559,7 +3567,6 @@ void on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg) {
         bt_emitter.userCommand("AT+PAUSE?");               // pause or play?
         bt_emitter.userCommand("AT+NAME+BT-MiniWebRadio"); // set BT receiver name
         bt_emitter.setVolume(s_bt_emitter.volume);
-        if (!bt_emitter.getMode().equals(s_bt_emitter.mode)) { bt_emitter.setMode(s_bt_emitter.mode); }
     }
     if (msg.e == KCX_BT_Emitter::evt_connect) {
         s_bt_emitter.connect = true;
@@ -3943,7 +3950,7 @@ void graphicObjects_OnClick(ps_ptr<char> name, uint8_t val) { // val = 0 --> is 
         if (val && name.equals("btn_BT_radio"))   { goto exit; }
         if (val && name.equals("btn_BT_volDown")) { bt_emitter.downvolume(); goto exit; }
         if (val && name.equals("btn_BT_volUp"))   { bt_emitter.upvolume();   goto exit; }
-        if (val && name.equals("btn_BT_mode"))    { bt_emitter.changeMode(); goto exit; }
+        if (val && name.equals("btn_BT_mode"))    { if(s_bt_emitter.mode.equals("RX")) s_bt_emitter.mode = "TX"; else s_bt_emitter.mode = "RX"; goto exit; }
         if (val && name.equals("btn_BT_power"))   { goto exit; }
         if (val && name.equals("txt_BT_mode"))    { goto exit; }
     }
@@ -3998,7 +4005,7 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
     if (s_state == PLAYER) {
         if (name.equals("btn_PL_mute"))     { muteChanged(btn_PL_mute.getValue()); goto exit; }
         if (name.equals("btn_PL_pause"))    { if (s_f_isFSConnected) { s_f_pauseResume = audio.pauseResume(); } goto exit; }
-        if (name.equals("btn_PL_cancel"))   { changeState(PLAYER, 0); if(s_f_ok_from_ir) { s_ir_btn_select = 0; set_ir_pos_PL(0); } goto exit; }
+        if (name.equals("btn_PL_cancel"))   { stopSong(); changeState(PLAYER, 0); if(s_f_ok_from_ir) { s_ir_btn_select = 0; set_ir_pos_PL(0); } goto exit; }
         if (name.equals("btn_PL_prevFile")) { if(s_ir_btn_select == 0) set_ir_pos_PL(0); goto exit; }
         if (name.equals("btn_PL_nextFile")) { if(s_ir_btn_select == 1) set_ir_pos_PL(0); goto exit; }
         if (name.equals("btn_PL_ready"))    { SD_playFile(s_cur_AudioFolder.c_get(), s_SD_content.getColouredSStringByIndex(s_cur_AudioFileNr));
