@@ -2103,7 +2103,6 @@ void loop() {
             s_f_stationsChanged = false;
             staMgnt.updateStationsList();
         }
-        dispHeader.updateRSSI(WiFi.RSSI());
         //------------------------------------------UPDATE DISPLAY------------------------------------------------------------------------------------
         if (!s_f_sleeping || s_state == RINGING) {
             dispHeader.updateTime(s_time_s.c_get(), false);
@@ -2241,6 +2240,8 @@ void loop() {
                 if (s_state == RADIO) audio.connecttohost(s_settings.lastconnectedhost.get());
             }
         }
+        s_f_WiFi_lost == false ? dispHeader.updateRSSI(WiFi.RSSI()) : dispHeader.updateRSSI(-86);
+        dispFooter.updateAntenna(s_f_WiFi_lost);
         //------------------------------------------GET AUDIO FILE ITEMS------------------------------------------------------------------------------
         if (s_f_isFSConnected) {
             //    uint32_t t = 0;

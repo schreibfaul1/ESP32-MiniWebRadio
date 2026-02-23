@@ -451,7 +451,7 @@ class textbox : public RegisterTable {
     releasedArg  m_ra;
 
   public:
-    textbox(const char* name) {
+    textbox(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
         m_bgColor = TFT_BLACK;
@@ -606,7 +606,7 @@ class inputbox : public RegisterTable {
     releasedArg  m_ra;
 
   public:
-    inputbox(const char* name) {
+    inputbox(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
         m_bgColor = TFT_BLACK;
@@ -762,7 +762,7 @@ class textbutton : public RegisterTable {
     uint32_t     m_fgColor = 0;
     uint32_t     m_borderColor = 0;
     uint32_t     m_clickColor = 0;
-    char*        m_text = NULL;
+    ps_ptr<char> m_text;
     ps_ptr<char> m_name;
     bool         m_enabled = false;
     bool         m_clicked = false;
@@ -774,7 +774,7 @@ class textbutton : public RegisterTable {
     releasedArg  m_ra;
 
   public:
-    textbutton(const char* name) {
+    textbutton(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
         m_bgColor = TFT_BLACK;
@@ -782,7 +782,6 @@ class textbutton : public RegisterTable {
         m_borderColor = TFT_BLACK;
         m_fontSize = 1;
     }
-    ~textbutton() { x_ps_free(&m_text); }
     void drawTriangeUp() {
         int16_t  x0 = m_x + m_padding_left;
         int16_t  y0 = m_y + m_h - m_paddig_bottom;
@@ -846,7 +845,6 @@ class textbutton : public RegisterTable {
         m_saveBackground = saveBackground;
         m_enabled = true;
         m_clicked = false;
-        if (!m_text) { m_text = strdup(""); }
         if (m_backgroundTransparency) {
             if (m_saveBackground)
                 tft.copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
@@ -855,7 +853,7 @@ class textbutton : public RegisterTable {
         } else {
             tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         }
-        writeText(m_text);
+        writeText(m_text.c_get());
     }
     void hide() {
         if (m_backgroundTransparency) {
@@ -897,7 +895,7 @@ class textbutton : public RegisterTable {
         if (x > m_x + m_w) return false;
         if (y > m_y + m_h) return false;
         if (m_enabled) m_clicked = true;
-        writeText(m_text);
+        writeText(m_text.c_get());
         if (graphicObjects_OnClick) graphicObjects_OnClick(m_name, m_enabled);
         if (!m_enabled) return false;
 
@@ -907,27 +905,24 @@ class textbutton : public RegisterTable {
         if (!m_enabled) return false;
         if (!m_clicked) return false;
         m_clicked = false;
-        writeText(m_text);
+        writeText(m_text.c_get());
         if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
         return true;
     }
-    void setText(const char* txt, bool narrow = false, bool noWrap = false) { // prepare a text, wait of show() to write it
+    void setText(ps_ptr<char> txt, bool narrow = false, bool noWrap = false) { // prepare a text, wait of show() to write it
         if (!txt) { txt = strdup(""); }
-        x_ps_free(&m_text);
-        m_text = x_ps_strdup(txt);
+        m_text = txt;
         m_narrow = narrow;
         m_noWrap = noWrap;
     }
-    const char* getText() { return m_text; }
+    ps_ptr<char> getText() { return m_text; }
     void        setAlign(uint8_t h_align, uint8_t v_align) {
         m_h_align = h_align;
         m_v_align = v_align;
     }
-    void writeText(const char* txt) {
-        if (!txt) { txt = strdup(""); }
+    void writeText(ps_ptr<char> txt) {
         if (txt != m_text) { // no self copy
-            x_ps_free(&m_text);
-            m_text = x_ps_strdup(txt);
+            m_text = txt;
         }
         if (m_enabled) {
             uint16_t txtColor_tmp = tft.getTextColor();
@@ -957,16 +952,16 @@ class textbutton : public RegisterTable {
                 if (m_borderWidth > 0) { tft.drawRoundRect(m_x, m_y, m_w, m_h, m_r, m_clickColor); }
                 if (m_borderWidth > 1) { tft.drawRoundRect(m_x + 1, m_y + 1, m_w - 2, m_h - 2, m_r, m_clickColor); }
             }
-            if (strcmp(m_text, "/l") == 0) {
+            if (m_text.equals("/l"))  {
                 drawTriangeLeft();
-            } else if (strcmp(m_text, "/r") == 0) {
+            } else if (m_text.equals("/r")) {
                 drawTriangeRight();
-            } else if (strcmp(m_text, "/u") == 0) {
+            } else if (m_text.equals("/u")) {
                 drawTriangeUp();
-            } else if (strcmp(m_text, "/d") == 0) {
+            } else if (m_text.equals("/d")) {
                 drawTriangeDown();
             } else
-                tft.writeText(m_text, x, y, w, h, m_h_align, m_v_align, m_narrow, m_noWrap, m_autoSize);
+                tft.writeText(m_text.c_get(), x, y, w, h, m_h_align, m_v_align, m_narrow, m_noWrap, m_autoSize);
             tft.setTextColor(txtColor_tmp);
             tft.setBackGoundColor(bgColor_tmp);
         }
@@ -1007,10 +1002,10 @@ class selectbox : public RegisterTable {
     textbutton*        m_txt_btn_down = new textbutton("select_txtbtn_down");
     textbutton*        m_txt_btn_up = new textbutton("select_txtbtn_up");
     textbox*           m_txt_btn_idx = new textbox("select_txtbox_idx");
-    std::vector<char*> m_selContent;
+    std::vector<ps_ptr<char>> m_selContent;
 
   public:
-    selectbox(const char* name, uint8_t fontSize) {
+    selectbox(ps_ptr<char> name, uint8_t fontSize) {
         register_object(this);
         m_name = name;
         m_bgColor = TFT_BLACK;
@@ -1019,7 +1014,6 @@ class selectbox : public RegisterTable {
         setFontSize(fontSize);
     }
     ~selectbox() {
-        vector_clear_and_shrink(m_selContent);
         delete m_txt_select;
         delete m_txt_btn_down;
         delete m_txt_btn_up;
@@ -1171,27 +1165,27 @@ class selectbox : public RegisterTable {
         m_clicked = false;
         return ret;
     }
-    void addText(const char* txt) {
-        if (!txt) { return; }
+    void addText(ps_ptr<char> txt) {
+        if (txt.strlen() == 0) { return; }
         if (m_selContent.size() > 0) {
             for (uint8_t i = 0; i < m_selContent.size(); i++) {
-                if (strcmp(txt, m_selContent[i]) == 0) {
+                if (txt == m_selContent[i]) {
                     //    MWR_LOG_WARN("addText: %s already in list", txt);
                     return;
                 }
             }
         }
-        m_selContent.push_back(x_ps_strdup(txt));
+        m_selContent.push_back(x_ps_strdup(txt.get()));
     }
-    void clearText() { vector_clear_and_shrink(m_selContent); }
+    void clearText() { m_selContent.clear(); }
     void writeText(uint8_t idx) {
-        char* txt = NULL;
+        ps_ptr<char> txt;
         if (idx >= m_selContent.size()) {
-            txt = strdup("");
+            txt = "";
         } else
             txt = m_selContent[idx];
         if (m_enabled) {
-            MWR_LOG_DEBUG("writeText: %s", txt);
+            MWR_LOG_DEBUG("writeText: %s", txt.c_get());
             m_txt_select->setText(txt, m_narrow, m_noWrap);
             m_txt_select->show(m_backgroundTransparency, m_saveBackground);
             char c_idx[5] = {0};
@@ -1200,9 +1194,9 @@ class selectbox : public RegisterTable {
             m_txt_btn_idx->show(m_backgroundTransparency, m_saveBackground);
         }
     }
-    char* getSelectedText() {
+    ps_ptr<char> getSelectedText() {
         if (m_selContent.size() > 0) { return m_selContent[m_idx]; }
-        return NULL;
+        return "";
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -1224,7 +1218,7 @@ class keyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     bool         m_backgroundTransparency = false;
     bool         m_saveBackground = false;
     ps_ptr<char> m_name;
-    const char*  m_txt = NULL;
+    ps_ptr<char> m_txt;
     float        m_row1[12] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
     float        m_row2[11] = {1.5, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.6};
     float        m_row3[11] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.1};
@@ -1358,22 +1352,22 @@ class keyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
             if (txt_btn_array[i].positionXY(x, y)) m_txt = txt_btn_array[i].getText();
         }
         if (m_txt) {
-            if (strcmp(m_txt, "BS") == 0) {
+            if (m_txt.equals("BS")) {
                 m_val = 8;
             } // BS
-            else if (strcmp(m_txt, "RET") == 0) {
+            else if (m_txt.equals("RET")) {
                 m_val = 13;
             } // CR
-            else if (strcmp(m_txt, "   ") == 0) {
+            else if (m_txt.equals("   ")) {
                 m_val = 32;
             } // space
-            else if (strcmp(m_txt, "1..") == 0) {
+            else if (m_txt.equals("1..")) {
                 m_val = 0;
-            } else if (strcmp(m_txt, "a..") == 0) {
+            } else if (m_txt.equals("a..")) {
                 m_val = 0;
-            } else if (strcmp(m_txt, "A..") == 0) {
+            } else if (m_txt.equals("A..")) {
                 m_val = 0;
-            } else if (strcmp(m_txt, "#..") == 0) {
+            } else if (m_txt.equals("#..")) {
                 m_val = 0;
             } else
                 m_val = m_txt[0];
@@ -1389,28 +1383,28 @@ class keyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
         // if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
         for (int i = 0; i < 34; i++) {
             if (txt_btn_array[i].released()) {
-                if (strcmp(txt_btn_array[i].getText(), "A..") == 0) { // upcase
+                if (txt_btn_array[i].getText().equals("A..")) { // upcase
                     for (int j = 0; j < 12; j++) { txt_btn_array[j].setText(m_Alpha1[j]); }
                     for (int j = 0; j < 11; j++) { txt_btn_array[j + 12].setText(m_Alpha2[j]); }
                     for (int j = 0; j < 11; j++) { txt_btn_array[j + 23].setText(m_Alpha3[j]); }
                     for (int j = 0; j < 34; j++) { txt_btn_array[j].show(m_backgroundTransparency, m_saveBackground); }
                     break;
                 }
-                if (strcmp(txt_btn_array[i].getText(), "a..") == 0) { // lowcase
+                if (txt_btn_array[i].getText().equals("a..")) { // lowcase
                     for (int j = 0; j < 12; j++) { txt_btn_array[j].setText(m_alpha1[j]); }
                     for (int j = 0; j < 11; j++) { txt_btn_array[j + 12].setText(m_alpha2[j]); }
                     for (int j = 0; j < 11; j++) { txt_btn_array[j + 23].setText(m_alpha3[j]); }
                     for (int j = 0; j < 34; j++) { txt_btn_array[j].show(m_backgroundTransparency, m_saveBackground); }
                     break;
                 }
-                if (strcmp(txt_btn_array[i].getText(), "1..") == 0) { // special
+                if (txt_btn_array[i].getText().equals("1..")) { // special
                     for (int j = 0; j < 12; j++) { txt_btn_array[j].setText(m_special1[j]); }
                     for (int j = 0; j < 11; j++) { txt_btn_array[j + 12].setText(m_special2[j]); }
                     for (int j = 0; j < 11; j++) { txt_btn_array[j + 23].setText(m_special3[j]); }
                     for (int j = 0; j < 34; j++) { txt_btn_array[j].show(m_backgroundTransparency, m_saveBackground); }
                     break;
                 }
-                if (strcmp(txt_btn_array[i].getText(), "#..") == 0) { // Special
+                if (txt_btn_array[i].getText().equals("#..")) { // Special
                     for (int j = 0; j < 12; j++) { txt_btn_array[j].setText(m_Special1[j]); }
                     for (int j = 0; j < 11; j++) { txt_btn_array[j + 12].setText(m_Special2[j]); }
                     for (int j = 0; j < 11; j++) { txt_btn_array[j + 23].setText(m_Special3[j]); }
@@ -1470,7 +1464,7 @@ class wifiSettings : public RegisterTable {
         ps_ptr<char> ssid;
         ps_ptr<char> password;
 
-        credentials(const char* s, const char* p) : ssid(s), password(p) {}
+        credentials(ps_ptr<char> s, ps_ptr<char> p) : ssid(s), password(p) {}
     };
     deque<credentials> m_credentials;
 
@@ -1506,7 +1500,7 @@ class wifiSettings : public RegisterTable {
     } m_winKeybrd;
 
   public:
-    wifiSettings(const char* name, uint8_t fontSize) {
+    wifiSettings(ps_ptr<char> name, uint8_t fontSize) {
         register_object(this);
         m_name = name;
         m_bgColor = TFT_BLACK;
@@ -1720,7 +1714,7 @@ class wifiSettings : public RegisterTable {
         if (x > m_x + m_w) return false;
         if (y > m_y + m_h) return false;
         if (m_enabled) m_clicked = true;
-        if (graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name.c_get(), m_enabled);
+        if (graphicObjects_OnClick) graphicObjects_OnClick(m_name, m_enabled);
         if (m_sel_ssid->positionXY(x, y)) { ; }
         if (m_in_password->positionXY(x, y)) { ; }
         if (m_keyboard->positionXY(x, y)) {
@@ -1737,11 +1731,11 @@ class wifiSettings : public RegisterTable {
         if (!m_enabled) return false;
         if (!m_clicked) return false;
         if (m_sel_ssid->released()) {
-            const char* selTxt = m_sel_ssid->getSelectedText();
-            if (selTxt) {
+            ps_ptr<char> selTxt = m_sel_ssid->getSelectedText();
+            if (selTxt.strlen() > 0) {
                 for (int i = 0; i < m_credentials.size(); i++) {
                     if (m_credentials[i].ssid.equals(selTxt)) {
-                        m_in_password->setText(m_credentials[i].password.c_get());
+                        m_in_password->setText(m_credentials[i].password);
                         m_in_password->show(m_backgroundTransparency, m_saveBackground);
                         m_credentials_idx = i;
                     }
@@ -1759,7 +1753,7 @@ class wifiSettings : public RegisterTable {
             m_ra.arg1 = m_credentials[m_credentials_idx].ssid;     // ssid
             m_ra.arg2 = m_credentials[m_credentials_idx].password; // password
             // log_w("enter pressed ssid %s, password %s", m_ssid[m_pwd_idx], m_password[m_pwd_idx]);
-            if (graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name.c_get(), m_ra);
+            if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
         }
         m_clicked = false;
         return ret;
@@ -1772,10 +1766,6 @@ class wifiSettings : public RegisterTable {
     void clearText() {
         m_sel_ssid->clearText();
         m_in_password->setText("");
-    }
-    char* getSelectedText() {
-        //    if(m_selContent.size() > 0){return m_selContent[m_idx];}
-        return NULL;
     }
 
   private:
@@ -1809,7 +1799,7 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     uint32_t     m_fgColor = 0;
     uint32_t     m_borderColor = 0;
     ps_ptr<char> m_name;
-    char         m_time[10] = "00:00:00";
+    ps_ptr<char> m_time = "00:00:00";
     bool         m_enabled = false;
     bool         m_backgroundTransparency = false;
     bool         m_saveBackground = false;
@@ -1818,7 +1808,7 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     textbox*     txt_time = new textbox[8]{textbox("txt_timeH10"), textbox("txt_timeH01"), textbox("txt_timeC1"),  textbox("txt_timeM10"),
                                            textbox("txt_timeM01"), textbox("txt_timeC2"),  textbox("txt_timeS10"), textbox("txt_timeS01")}; // time of the day
   public:
-    timeString(const char* name, uint8_t fontSize) {
+    timeString(ps_ptr<char> name, uint8_t fontSize) {
         register_object(this);
         m_name = name;
         m_bgColor = TFT_BLACK;
@@ -1884,11 +1874,10 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     }
     void setBGcolor(uint32_t color) { m_bgColor = color; }
     void setBorderColor(uint32_t color) { m_borderColor = color; }
-    void updateTime(const char* hl_time, bool complete = true) {
-        if (!hl_time) return;
-        if (strlen(hl_time) != 8) return;
+    void updateTime(ps_ptr<char> hl_time, bool complete = true) {
+        if (hl_time.strlen() != 8) return;
         if (!m_enabled) return;
-        memcpy(m_time, hl_time, 8);     // hhmmss
+        m_time = hl_time;     // hhmmss
         static char oldtime[8] = {255}; // hhmmss
         tft.setFont(m_fontSize);
         tft.setTextColor(m_fgColor);
@@ -5004,7 +4993,7 @@ class displayHeader : public RegisterTable {
     uint32_t     m_bgColor = TFT_BLACK;
     ps_ptr<char> m_name;
     ps_ptr<char> m_item;
-    char         m_time[10] = "00:00:00";
+    ps_ptr<char> m_time = "00:00:00";
     bool         m_enabled = false;
     bool         m_clicked = false;
     bool         m_speakerOn = false;
@@ -5303,9 +5292,9 @@ class displayHeader : public RegisterTable {
             pic_RSSID->show(m_backgroundTransparency, false);
         }
     }
-    void updateTime(const char* hl_time, bool complete = true) {
+    void updateTime(ps_ptr<char> hl_time, bool complete = true) {
         if (!m_enabled) return;
-        memcpy(m_time, hl_time, 8); // hhmmss
+        m_time = hl_time; // hhmmss
         m_timeStringObject->updateTime(m_time, false);
     }
     void setTimeColor(uint16_t timeColor) {
@@ -5358,12 +5347,14 @@ class displayFooter : public RegisterTable {
     uint16_t     m_ipAddrColor = TFT_GREENYELLOW;
     ps_ptr<char> m_name;
     ps_ptr<char> m_fileNr;
-    char*        m_ipAddr = NULL;
+    ps_ptr<char> m_ipAddr = "";
     bool         m_enabled = false;
     bool         m_clicked = false;
     bool         m_backgroundTransparency = false;
     releasedArg  m_ra;
-    const char   m_stationSymbol[22] = "/common/Antenna.png";
+    const char   m_Antenna_red[27] =    "/common/Antenna_red.png";
+    const char   m_Antenna_green[27] = "/common/Antenna_green.png";
+    bool         m_WiFi_lost = true;
     const char   m_hourGlassymbol[2][27] = {"/common/Hourglass_blue.png", "/common/Hourglass_red.png"};
     //-----------------------------------------------------------------------------------------------------------------------------------
 #if TFT_CONTROLLER < 2 // 320 x 240px
@@ -5636,7 +5627,7 @@ class displayFooter : public RegisterTable {
     //-----------------------------------------------------------------------------------------------------------------------------------
 #endif
   public:
-    displayFooter(const char* name, uint8_t fontSize) {
+    displayFooter(ps_ptr<char> name, uint8_t fontSize) {
         register_object(this);
         m_name = name;
         m_bgColor = TFT_BLACK;
@@ -5644,7 +5635,6 @@ class displayFooter : public RegisterTable {
         m_fileNr = "000/000";
     }
     ~displayFooter() {
-        x_ps_free(&m_ipAddr);
         delete pic_Antenna;
         delete txt_StaNr;
         delete pic_Flag;
@@ -5681,7 +5671,7 @@ class displayFooter : public RegisterTable {
         txt_IpAddr->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
         txt_IpAddr->setTextColor(m_ipAddrColor);
         txt_IpAddr->setFont(m_fontSize); // 0 -> auto
-        pic_Antenna->setPicturePath(m_stationSymbol);
+        pic_Antenna->setPicturePath(m_Antenna_red);
         txt_IpAddr->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
         txt_FileNr->setTextColor(TFT_ORANGE);
         txt_FileNr->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
@@ -5702,10 +5692,7 @@ class displayFooter : public RegisterTable {
         updateStation(m_staNr);
         updateOffTime(m_offTime);
         updateBitRate(m_bitRate);
-        if (m_ipAddr)
-            writeIpAddr(m_ipAddr);
-        else
-            writeIpAddr("");
+        writeIpAddr(m_ipAddr);
     }
     void hide() {
         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
@@ -5714,6 +5701,20 @@ class displayFooter : public RegisterTable {
     void enable() { m_enabled = true; }
     void disable() { m_enabled = false; }
     void setBGcolor(uint32_t color) { m_bgColor = color; }
+
+    void updateAntenna(bool WiFi_lost){
+        if(WiFi_lost && !m_WiFi_lost){
+            pic_Antenna->setPicturePath(m_Antenna_red);
+            m_WiFi_lost = true;
+            pic_Antenna->show(m_backgroundTransparency, false);
+        }
+        if(!WiFi_lost && m_WiFi_lost){
+            pic_Antenna->setPicturePath(m_Antenna_green);
+            m_WiFi_lost = false;
+            pic_Antenna->show(m_backgroundTransparency, false);
+        }
+    }
+
     void updateStation(uint16_t staNr) {
         if(txt_FileNr->isEnabled()) txt_FileNr->hide();
         m_staNr = staNr;
@@ -5798,15 +5799,12 @@ class displayFooter : public RegisterTable {
         txt_BitRate->setBorderColor(m_bitRateColor);
         txt_BitRate->setTextColor(m_bitRateColor);
     }
-    void setIpAddr(const char* ipAddr) {
-        if (!ipAddr) return;
-        x_ps_free(&m_ipAddr);
-        m_ipAddr = strdup(ipAddr);
+    void setIpAddr(ps_ptr<char> ipAddr) {
+        m_ipAddr = ipAddr;
     }
-    void writeIpAddr(const char* ipAddr) {
-        char myIP[30] = "IP:";
-        strcat(myIP, ipAddr);
-        txt_IpAddr->setText(myIP, true, true);
+    void writeIpAddr(ps_ptr<char>ipAddr) {
+        ipAddr.insert("IP:", 0);
+        txt_IpAddr->setText(ipAddr, true, true);
         txt_IpAddr->show(m_backgroundTransparency, false);
     }
     void setIpAddrColor(uint16_t ipAddrColor) {
@@ -5903,7 +5901,7 @@ class messageBox : public RegisterTable {
 #endif
 
   public:
-    messageBox(const char* name) {
+    messageBox(ps_ptr<char> name) {
         m_name = name;
         m_x = m_win.w;
         m_y = m_win.y;
@@ -5927,7 +5925,7 @@ class messageBox : public RegisterTable {
     void         disable() { m_enabled = false; }
     void         setBGcolor(uint32_t color) { m_bgColor = color; }
 
-    void setText(const char* txt, bool narrow = false, bool noWrap = true) { // prepare a text, wait of show() to write it
+    void setText(ps_ptr<char> txt, bool narrow = false, bool noWrap = true) { // prepare a text, wait of show() to write it
         m_text = txt;
         m_narrow = narrow;
         m_noWrap = noWrap;
@@ -5964,7 +5962,7 @@ class messageBox : public RegisterTable {
         if (!m_enabled) return false;
         if (!m_clicked) return false;
         m_clicked = false;
-        if (graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name.c_get(), m_ra);
+        if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
         return true;
     }
 };
