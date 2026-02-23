@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.1.1a - Feb 22, 2026                                                                                                               ";
+    Version 4.1.1b - Feb 23, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -584,17 +584,15 @@ void showFileName(const char* fname) {
 }
 
 void showPlsFileNumber() {
-    txt_PL_fNumber.setTextColor(TFT_ORANGE);
     char buf[15];
     sprintf(buf, "%03u/%03u", s_plsCurPos, s_PLS_content.size());
-    txt_PL_fNumber.writeText(buf);
+    dispFooter.updateFileNr(buf);
 }
 
 void showAudioFileNumber() {
-    txt_PL_fNumber.setTextColor(TFT_ORANGE);
     char buf[15];
     sprintf(buf, "%03u/%03u", s_cur_AudioFileNr + 1, s_SD_content.getSize());
-    txt_PL_fNumber.writeText(buf);
+    dispFooter.updateFileNr(buf);
 }
 
 void display_sleeptime(int8_t ud) { // set sleeptimer
@@ -705,7 +703,7 @@ start:
     if (s_f_isFSConnected || s_f_isWebConnected) {
         SerialPrintflnCut("Playlist:    ", ANSI_ESC_YELLOW, path.c_get());
         webSrv.send("SD_playFile=", path);
-        txt_PL_fNumber.writeText(playlist.get_coloured_index().c_get());
+        if(s_state == PLAYER) dispFooter.updateFileNr(playlist.get_coloured_index().c_get());
         txt_PL_fName.writeText(playlist.get_items().c_get());
     } else {
         SerialPrintfln("Playlist:    " ANSI_ESC_YELLOW "can't connect to %s" ANSI_ESC_RESET "  ", path.c_get());
@@ -790,9 +788,9 @@ bool connectToWiFi() {
     int i = 0;
     while (!WiFi.isConnected()) {
         wifiMulti.run();
-        vTaskDelay(100);
+        vTaskDelay(1000);
         i++;
-        if (i > 20) break;
+        if (i > 20) break; // max 20s
     }
     if (!WiFi.isConnected()) {
         SerialPrintfln("WiFI_info:   " ANSI_ESC_RED "WiFi credentials are not correct" ANSI_ESC_RESET "  ");
@@ -1342,7 +1340,7 @@ void setStation(uint16_t sta) {
     old_cur_station = sta;
     showLogoAndStationName(true);
     if (s_cur_station == 0) {
-        dispFooter.updateFlag(NULL);
+        dispFooter.updateFlag("");
     } else {
         dispFooter.updateFlag(getFlagPath(s_cur_station));
     }
@@ -1362,7 +1360,7 @@ void setStationViaURL(const char* url, const char* extension) {
     changeState(RADIO, 0);
     clearStreamTitle();
     showLogoAndStationName(true);
-    dispFooter.updateFlag(NULL);
+    dispFooter.updateFlag("");
     dispFooter.updateStation(0); // set 000
 }
 
@@ -1658,7 +1656,7 @@ void changeState(int8_t state, int8_t subState) {
 
     s_f_volBarVisible = false;
     dispHeader.updateItem(_hl_item[state]);
-    if (state != RADIO) { dispFooter.updateFlag(NULL); }
+    if (state != RADIO) { dispFooter.updateFlag(""); }
 
     switch (state) {
         case RADIO: {
@@ -1748,7 +1746,6 @@ void changeState(int8_t state, int8_t subState) {
                 txt_PL_fName.show(true, false);
                 pgb_PL_progress.hide();
                 sdr_PL_volume.hide();
-                txt_PL_fNumber.show(true, false);
                 showAudioFileNumber();
                 btn_PL_prevFile.show(); btn_PL_nextFile.show(); btn_PL_ready.show(); btn_PL_playAll.show();
                 btn_PL_shuffle.show();  btn_PL_fileList.show(); btn_PL_radio.show(); btn_PL_off.show();
@@ -1759,16 +1756,14 @@ void changeState(int8_t state, int8_t subState) {
                 if(newSubState){
                     btn_PL_fileList.hide(); btn_PL_radio.hide(); btn_PL_off.hide();
                     pgb_PL_progress.show(true, false);
-                    sdr_PL_volume.show(true, true);
+                    sdr_PL_volume.show(true, false);
                     txt_PL_fName.show(true, false);
-                    txt_PL_fNumber.show(true, false);
                     btn_PL_mute.show(); btn_PL_pause.setOff(); btn_PL_pause.show(); btn_PL_cancel.show(); btn_PL_playPrev.show(); btn_PL_playNext.show();
                 }
                 else{
                     pgb_PL_progress.enable();
                     sdr_PL_volume.enable();
                     txt_PL_fName.enable();
-                    txt_PL_fNumber.enable();
                     btn_PL_mute.enable(); btn_PL_pause.enable(); btn_PL_pause.enable(); btn_PL_cancel.enable();  btn_PL_playPrev.enable(); btn_PL_playNext.enable();
                 }
             }
@@ -1894,10 +1889,9 @@ void changeState(int8_t state, int8_t subState) {
             else                                { txt_BT_mode.writeText("EMITTER"); }
             txt_BT_mode.setBGcolor(TFT_BROWN);
             txt_BT_mode.show(true, false);
-            char c[10];
-            sprintf(c, "Vol: %02i", bt_emitter.getVolume());
-            txt_BT_volume.writeText(c);
-            txt_BT_volume.show(true, false);
+            ps_ptr<char> v;
+            v.assignf("Vol: %02i", bt_emitter.getVolume());
+            dispFooter.updateFileNr(v);
             if (s_state != BLUETOOTH) webSrv.send("changeState=", "BLUETOOTH");
             break;
         }
@@ -2578,28 +2572,26 @@ void my_audio_info(Audio::msg_t m) {
 }
 
 // ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void audio_process_i2s(int16_t* outBuff, int32_t validSamples, bool* continueI2S) {
+// void audio_process_i2s(int32_t* outBuff, int16_t validSamples, bool* continueI2S) {
 
-    // int16_t sineWaveTable[44] = {
-    //      0,   3743,   7377,  10793,  14082,  17136,  19848,  22113,  23825,  24908,
-    //   25311,  24908,  23825,  22113,  19848,  17136,  14082,  10793,   7377,   3743,
-    //      0,  -3743,  -7377, -10793, -14082, -17136, -19848, -22113, -23825, -24908,
-    //  -25311, -24908, -23825, -22113, -19848, -17136, -14082, -10793,  -7377,  -3743
-    // };
+//     int16_t* buff16 = reinterpret_cast<int16_t*>(outBuff);
 
-    // static uint8_t tabPtr = 0;
-    // int16_t* sample[2]; // assume 2 channels, 16bit
-    // for(int i= 0; i < validSamples; i++){
-    //     *(sample + 0) = outBuff + i * 2;     // channel left
-    //     *(sample + 1) = outBuff + i * 2 + 1; // channel right
+//     int16_t sineWaveTable[44] = {
+//          0,   3743,   7377,  10793,  14082,  17136,  19848,  22113,  23825,  24908,
+//       25311,  24908,  23825,  22113,  19848,  17136,  14082,  10793,   7377,   3743,
+//          0,  -3743,  -7377, -10793, -14082, -17136, -19848, -22113, -23825, -24908,
+//      -25311, -24908, -23825, -22113, -19848, -17136, -14082, -10793,  -7377,  -3743
+//     };
 
-    //     *(*sample + 0) = (sineWaveTable[tabPtr] /50 + *(*sample + 0));
-    //     *(*sample + 1) = (sineWaveTable[tabPtr] /50 + *(*sample + 1));
-    //     tabPtr++;
-    //     if(tabPtr == 44) tabPtr = 0;
-    // }
-    *continueI2S = true;
-}
+//     static uint8_t tabPtr = 0;
+//     for(int i= 0; i < validSamples; i++){
+//        buff16[i * 4 + 1] += sineWaveTable[tabPtr] /50; // channel left
+//        buff16[i * 4 + 3] += sineWaveTable[tabPtr] /50; // channel right
+//         tabPtr++;
+//         if(tabPtr == 44) tabPtr = 0;
+//     }
+//     *continueI2S = true;
+// }
 // ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void on_BH1750(int32_t ambVal) { //--AMBIENT LIGHT SENSOR BH1750--
     int16_t bh1750Value = 0;
@@ -3620,8 +3612,8 @@ void on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg) {
     if (msg.e == KCX_BT_Emitter::evt_volume) {
         s_bt_emitter.volume = msg.val;
         ps_ptr<char> v;
-        v.assignf("%i", s_bt_emitter.volume);
-        txt_BT_volume.writeText(v);
+        v.assignf("Vol: %02i", s_bt_emitter.volume);
+        if(s_state == BLUETOOTH) dispFooter.updateFileNr(v);
         SerialPrintfln("BT-Emitter:  %s " ANSI_ESC_YELLOW "%i" ANSI_ESC_RESET "  ", "volume", msg.val);
     }
     if (msg.e == KCX_BT_Emitter::evt_version) {

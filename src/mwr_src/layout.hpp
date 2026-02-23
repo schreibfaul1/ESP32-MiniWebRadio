@@ -36,7 +36,6 @@ struct Layout {
     const coor& winHeader;
     const coor& winLogo;
     const coor& winName;
-    const coor& winFileNr;
     const coor& winProgbar;
     const coor& winTitle;
     const coor& winSTitle;
@@ -117,7 +116,6 @@ constexpr uint16_t h_EQ = (2 * h_area - hw_btn) / 4;
 constexpr coor winHeader = coor().pos(0, 0).size(h_res, h_footer);
 constexpr coor winLogo = coor().pos(0, h_footer).size(h_area, h_area).pad(1, 1, 1, 1);
 constexpr coor winName = coor().pos(h_area, h_footer).size(h_res - h_area, h_area).pad(1, 1, 0, 0); // StationName
-constexpr coor winFileNr = coor().pos(0, y_area2).size(h_area, h_footer).pad(0, 1, 0, 1);
 constexpr coor winProgbar = coor().pos(0, y_progbar).size(h_res, h_progBar).pad(5, 5, 0, 0); // or volume slider
 constexpr coor winTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(0, 5, 0, 3);
 constexpr coor winSTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(0, 4, 0, 3);
@@ -204,7 +202,6 @@ constexpr uint16_t h_EQ = (2 * h_area - hw_btn) / 4;
 constexpr coor winHeader = coor().pos(0, 0).size(h_res, h_footer);
 constexpr coor winLogo = coor().pos(0, h_footer).size(h_area, h_area).pad(1, 1, 1, 1);
 constexpr coor winName = coor().pos(h_area, h_footer).size(h_res - h_area, h_area).pad(1, 1, 0, 0); // StationName
-constexpr coor winFileNr = coor().pos(0, y_area2).size(h_area, h_footer).pad(0, 1, 0, 1);
 constexpr coor winProgbar = coor().pos(0, y_progbar).size(h_res, h_progBar).pad(5, 5, 0, 0); // or volume slider
 constexpr coor winTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(0, 5, 0, 3);
 constexpr coor winSTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(0, 4, 0, 3);
@@ -293,7 +290,6 @@ constexpr uint16_t h_EQ = (2 * h_area - hw_btn) / 4;
 constexpr coor winHeader = coor().pos(0, 0).size(h_res, h_footer);
 constexpr coor winLogo = coor().pos(0, h_footer).size(h_area, h_area).pad(4, 4, 4, 4);
 constexpr coor winName = coor().pos(h_area, h_footer).size(h_res - h_area, h_area).pad(15, 5, 0, 0); // StationName
-constexpr coor winFileNr = coor().pos(0, y_area2).size(h_area, h_footer).pad(0, 4, 0, 0);
 constexpr coor winProgbar = coor().pos(0, y_progbar).size(h_res, h_progBar).pad(5, 5, 0, 0); // or volume slider
 constexpr coor winTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(0, 5, 0, 3);
 constexpr coor winSTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(10, 5, 2, 2);
@@ -378,7 +374,6 @@ constexpr uint16_t h_EQ = (2 * h_area - hw_btn) / 4;
 constexpr coor winHeader = coor().pos(0, 0).size(h_res, h_footer);
 constexpr coor winLogo = coor().pos(0, h_footer).size(h_area, h_area).pad(4, 4, 4, 4);
 constexpr coor winName = coor().pos(h_area, h_footer).size(h_res - h_area, h_area).pad(15, 5, 0, 0); // StationName
-constexpr coor winFileNr = coor().pos(0, y_area2).size(h_area, h_footer).pad(0, 4, 0, 0);
 constexpr coor winProgbar = coor().pos(0, y_progbar).size(h_res, h_progBar).pad(5, 5, 0, 0); // or volume slider
 constexpr coor winTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(0, 5, 0, 3);
 constexpr coor winSTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(10, 5, 2, 2);
@@ -442,7 +437,7 @@ inline Layout makeLayout() {
 #else
     #error "Unsupported TFT_CONTROLLER"
 #endif
-    return {winHeader, winLogo, winName, winFileNr, winProgbar, winTitle, winSTitle, winVUmeter, winFooter, winButton, winDigits,
+    return {winHeader, winLogo, winName, winProgbar, winTitle, winSTitle, winVUmeter, winFooter, winButton, winDigits,
             winWoHF,   sdrHP,   sdrBP,   sdrLP,    sdrBAL,    btnHP,     btnBP,      btnLP,    btnBAL,    txtHP,      txtBP,     txtLP,     txtBAL};
 }
 
@@ -495,7 +490,6 @@ button1state btn_PL_playAll("btn_PL_playAll"), btn_PL_fileList("btn_PL_fileList"
 button1state btn_PL_prevFile("btn_PL_prevFile"), btn_PL_nextFile("btn_PL_nextFile"), btn_PL_off("btn_PL_off");
 button1state btn_PL_playNext("btn_PL_playNext"), btn_PL_playPrev("btn_PL_playPrev");
 textbox      txt_PL_fName("txt_PL_fName");
-textbox      txt_PL_fNumber("txt_PL_fNumber");
 slider       sdr_PL_volume("sdr_PL_volume");
 pictureBox   pic_PL_logo("pic_PL_logo");
 progressbar  pgb_PL_progress("pgb_PL_progress");
@@ -546,7 +540,6 @@ button2state btn_BT_pause("btn_BT_pause"), btn_BT_power("btn_BT_power");
 button1state btn_BT_volDown("btn_BT_volDown"), btn_BT_volUp("btn_BT_volUp"), btn_BT_radio("btn_BT_radio"), btn_BT_mode("btn_BT_mode");
 pictureBox   pic_BT_mode("pic_BT_mode");
 textbox      txt_BT_mode("txt_BT_mode");
-textbox      txt_BT_volume("txt_BT_volume");
 // IR_SETTINGS
 button1state btn_IR_radio("btn_IR_radio");
 // WIFI_SETTINGS
@@ -687,9 +680,6 @@ void placingGraphicObjects() { // and initialize them
     txt_PL_fName.begin(layout.winName.x, layout.winName.y, layout.winName.w, layout.winName.h, layout.winName.pl, layout.winName.pr, layout.winName.pt, layout.winName.pb);
     txt_PL_fName.setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
     txt_PL_fName.setFont(0); // 0 -> auto
-    txt_PL_fNumber.begin(layout.winFileNr.x, layout.winFileNr.y, layout.winFileNr.w, layout.winFileNr.h, layout.winFileNr.pl, layout.winFileNr.pr, layout.winFileNr.pt, layout.winFileNr.pb);
-    txt_PL_fNumber.setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
-    txt_PL_fNumber.setFont(displayConfig.fileNumberFontSize);
     pic_PL_logo.begin(layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h, layout.winLogo.pl, layout.winLogo.pr, layout.winLogo.pt, layout.winLogo.pb);
     pgb_PL_progress.begin(layout.winProgbar.x, layout.winProgbar.y, layout.winProgbar.w, layout.winProgbar.h, layout.winProgbar.pl, layout.winProgbar.pr, layout.winProgbar.pt, layout.winProgbar.pb, 0, 30);
     pgb_PL_progress.setValue(0);
@@ -919,9 +909,6 @@ void placingGraphicObjects() { // and initialize them
     pic_BT_mode.setPicturePath("/common/BTnc.png");
     pic_BT_mode.begin(layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h, layout.winLogo.pl, layout.winLogo.pr, layout.winLogo.pt, layout.winLogo.pb);
     pic_BT_mode.setAlternativPicturePath("/common/BTnc.png");
-    txt_BT_volume.begin(layout.winFileNr.x, layout.winFileNr.y, layout.winFileNr.w, layout.winFileNr.h, layout.winFileNr.pl, layout.winFileNr.pr, layout.winFileNr.pt, layout.winFileNr.pb);
-    txt_BT_volume.setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
-    txt_BT_volume.setFont(displayConfig.fonts[2]);
     txt_BT_mode.begin(layout.winName.x, layout.winName.y, layout.winName.w, layout.winName.h, layout.winName.pl, layout.winName.pr, layout.winName.pt, layout.winName.pb);
     txt_BT_mode.setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
     txt_BT_mode.setFont(displayConfig.fonts[5]);

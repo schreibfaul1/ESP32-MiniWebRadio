@@ -89,9 +89,6 @@ imgSize GetImageSize(ps_ptr<char> picturePath) {
         img.h += file.read() << 16;                               // pos 21
         img.h += file.read() << 8;                                // pos 22
         img.h += file.read();                                     // pos 23
-        // bitDepth  = header[24];  // Position 24 = Bit-Tiefe
-        // colorType = header[25];  // Position 25 = Farbtyp
-        // log_w("w %i, h %i", m_w, m_h);
         return img;
     }
     MWR_LOG_ERROR("unknown picture format %s", picturePath);
@@ -163,7 +160,8 @@ class slider : public RegisterTable {
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
-    bool         positionXY(uint16_t x, uint16_t y) {
+
+    bool positionXY(uint16_t x, uint16_t y) {
         if (x < m_x) return false;
         if (y < m_y) return false;
         if (x > m_x + m_w) return false;
@@ -221,7 +219,7 @@ class slider : public RegisterTable {
     void disable() { m_enabled = false; }
     void enable() { m_enabled = true; }
     void hide() {
-        if (!m_show) return;
+    //    if (!m_show) return;
         if (m_backgroundTransparency) {
             if (m_saveBackground)
                 tft.copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
@@ -3819,10 +3817,10 @@ class dlnaList : public RegisterTable {
         if (pos < 0 || pos > 9) {
             MWR_LOG_WARN("pos oor %i", pos);
             return false;
-        }                                                      // guard
+        } // guard
         if (*m_dlnaLevel == 0 && pos > m_dlnaServer->size()) { /* log_e("pos too high %i", pos);*/
             return false;
-        }                                                     // guard
+        } // guard
         if (*m_dlnaLevel > 0 && pos > m_srvContent->size()) { /* log_e("pos too high %i", pos);*/
             return false;
         } // guard
@@ -3893,7 +3891,7 @@ class dlnaList : public RegisterTable {
         if (selectedLine && isURL && isAudio) {
             color = ANSI_ESC_CYAN;
             res = true;
-        }                                                                          // is file
+        } // is file
         if (childCount) { sprintf(extension, "%i", childCount); }                  // only folders have childCount
         if (itemSize) { sprintf(extension, "%li", itemSize); }                     // only files have itemsize
         if (!duration.equals("?")) { sprintf(extension, "%s", duration.c_get()); } // must be a audiofile
@@ -4583,11 +4581,6 @@ class fileList : public RegisterTable {
                 m_curAudioFolder = s_SD_content.getFileFolderByIndex(idx);
                 m_browseOnRelease = 4;
             } else { // -------------------------------------------------------------------------- playfile
-                log_e("hier");
-                log_e("idx %i", idx);
-                log_e("fileName %s", s_SD_content.getFileNameByIndex(idx));
-                log_e("fileFolder %s", s_SD_content.getFileFolderByIndex(idx));
-                log_e("filePath %s", s_SD_content.getFilePathByIndex(idx));
                 m_curAudioName = s_SD_content.getFileNameByIndex(idx);
                 m_curAudioFolder = s_SD_content.getFileFolderByIndex(idx);
                 m_curAudioPath = s_SD_content.getFilePathByIndex(idx);
@@ -5348,6 +5341,7 @@ class displayFooter : public RegisterTable {
     textbox*     txt_OffTimer = new textbox("footer_OffTimer");      // off timer
     textbox*     txt_BitRate = new textbox("footer_BitRate");        // bit rate
     textbox*     txt_IpAddr = new textbox("footer_IPaddr");          // ip address
+    textbox*     txt_FileNr = new textbox("footer_FileNr");           // fileNr
     int16_t      m_x = 0;
     int16_t      m_y = 0;
     int16_t      m_w = 0;
@@ -5363,6 +5357,7 @@ class displayFooter : public RegisterTable {
     uint16_t     m_bitRateColor = TFT_LAVENDER;
     uint16_t     m_ipAddrColor = TFT_GREENYELLOW;
     ps_ptr<char> m_name;
+    ps_ptr<char> m_fileNr;
     char*        m_ipAddr = NULL;
     bool         m_enabled = false;
     bool         m_clicked = false;
@@ -5397,6 +5392,14 @@ class displayFooter : public RegisterTable {
         uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_Flag; // Flags:  33...40 x 20 px
+    struct w_fn{
+        uint16_t x = 25;
+        uint16_t w = 72; // s_StaNr.w + s_Flag.w
+        uint8_t  pl = 0;
+        uint8_t  pr = 0;
+        uint8_t  pt = 0;
+        uint8_t  pb = 0;
+    } const s_FileNr; // FileNumber "030/432"
     struct w_h {
         uint16_t x = 100;
         uint16_t w = 20;
@@ -5456,6 +5459,14 @@ class displayFooter : public RegisterTable {
         uint8_t  pt = 3;
         uint8_t  pb = 0;
     } const s_Flag; // Flags:  40...48 x 24 px
+    struct w_fn{
+        uint16_t x = 30;
+        uint16_t w = 98; // s_StaNr.w + s_Flag.w
+        uint8_t  pl = 0;
+        uint8_t  pr = 0;
+        uint8_t  pt = 0;
+        uint8_t  pb = 0;
+    } const s_FileNr; // FileNumber "030/432"
     struct w_h {
         uint16_t x = 132;
         uint16_t w = 24;
@@ -5515,6 +5526,14 @@ class displayFooter : public RegisterTable {
         uint8_t  pt = 5;
         uint8_t  pb = 0;
     } const s_Flag; // Flags:  60...80 x 40 px
+    struct w_fn{
+        uint16_t x = 51;
+        uint16_t w = 164; // s_StaNr.w + s_Flag.w
+        uint8_t  pl = 0;
+        uint8_t  pr = 0;
+        uint8_t  pt = 0;
+        uint8_t  pb = 0;
+    } const s_FileNr; // FileNumber "030/432"
     struct w_h {
         uint16_t x = 225;
         uint16_t w = 40;
@@ -5574,6 +5593,14 @@ class displayFooter : public RegisterTable {
         uint8_t  pt = 5;
         uint8_t  pb = 0;
     } const s_Flag; // Flags:  max 100 x 50 px
+    struct w_fn{
+        uint16_t x = 80;
+        uint16_t w = 210; // s_StaNr.w + s_Flag.w
+        uint8_t  pl = 0;
+        uint8_t  pr = 0;
+        uint8_t  pt = 0;
+        uint8_t  pb = 0;
+    } const s_FileNr; // FileNumber "030/432"
     struct w_h {
         uint16_t x = 300;
         uint16_t w = 40;
@@ -5614,6 +5641,7 @@ class displayFooter : public RegisterTable {
         m_name = name;
         m_bgColor = TFT_BLACK;
         m_fontSize = fontSize;
+        m_fileNr = "000/000";
     }
     ~displayFooter() {
         x_ps_free(&m_ipAddr);
@@ -5624,6 +5652,7 @@ class displayFooter : public RegisterTable {
         delete txt_OffTimer;
         delete txt_BitRate;
         delete txt_IpAddr;
+        delete txt_FileNr;
     }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
         m_x = x; // x pos
@@ -5637,6 +5666,7 @@ class displayFooter : public RegisterTable {
         txt_OffTimer->begin(s_OffTimer.x, m_y, s_OffTimer.w, m_h, s_OffTimer.pl, s_OffTimer.pr, s_OffTimer.pt, s_OffTimer.pb);
         txt_BitRate->begin(s_BitRate.x, m_y, s_BitRate.w, m_h, s_BitRate.pl, s_BitRate.pr, s_BitRate.pt, s_BitRate.pb);
         txt_IpAddr->begin(s_IPaddr.x, m_y, s_IPaddr.w, m_h, s_IPaddr.pl, s_IPaddr.pr, s_IPaddr.pt, s_IPaddr.pb);
+        txt_FileNr->begin(s_FileNr.x, m_y, s_FileNr.w, m_h, s_FileNr.pl, s_FileNr.pr, s_FileNr.pt, s_FileNr.pb);
 
         txt_StaNr->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
         txt_StaNr->setTextColor(m_stationColor);
@@ -5652,6 +5682,10 @@ class displayFooter : public RegisterTable {
         txt_IpAddr->setTextColor(m_ipAddrColor);
         txt_IpAddr->setFont(m_fontSize); // 0 -> auto
         pic_Antenna->setPicturePath(m_stationSymbol);
+        txt_IpAddr->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+        txt_FileNr->setTextColor(TFT_ORANGE);
+        txt_FileNr->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+        txt_FileNr->setFont(m_fontSize); // 0 -> auto
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
@@ -5681,15 +5715,23 @@ class displayFooter : public RegisterTable {
     void disable() { m_enabled = false; }
     void setBGcolor(uint32_t color) { m_bgColor = color; }
     void updateStation(uint16_t staNr) {
+        if(txt_FileNr->isEnabled()) txt_FileNr->hide();
         m_staNr = staNr;
         char buff[10];
         sprintf(buff, "%03d", m_staNr);
         txt_StaNr->setText(buff);
         txt_StaNr->show(m_backgroundTransparency, false);
     }
+    void updateFileNr(ps_ptr<char>fNr) { // or BT Volume
+        if(txt_StaNr->isEnabled()) txt_StaNr->hide();
+        if(pic_Flag->isEnabled()) pic_Flag->hide();
+        m_fileNr = fNr;
+        txt_FileNr->setText(m_fileNr);
+        txt_FileNr->show(m_backgroundTransparency, false);
+    }
     void setStationNrColor(uint16_t stationColor) { m_stationColor = stationColor; }
-    void updateFlag(const char* flag) {
-        if (flag) {
+    void updateFlag(ps_ptr<char> flag) {
+        if (flag.strlen() > 0) {
             pic_Flag->setAlternativPicturePath("/flags/unknown.jpg");
             pic_Flag->setPicturePath(flag);
             pic_Flag->show(m_backgroundTransparency, false);
