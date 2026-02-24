@@ -1891,13 +1891,18 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
-    void         show(bool backgroundTransparency, bool saveBackground) {
-        m_backgroundTransparency = backgroundTransparency;
-        m_saveBackground = saveBackground;
+
+    void show() {
         m_enabled = true;
         if (m_saveBackground) tft.copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
         updateTime(m_time, true);
     }
+
+    void setTransparency(bool backgroundTransparency, bool saveBackground) {
+        m_backgroundTransparency = backgroundTransparency;
+        m_saveBackground = saveBackground;
+    }
+
     void hide() {
         if (m_backgroundTransparency) {
             if (m_saveBackground)
@@ -1981,6 +1986,7 @@ class button1state : public RegisterTable { // click button
     bool         m_enabled = false;
     bool         m_clicked = false;
     bool         m_backgroundTransparency = false;
+    bool         m_saveBackground = false;
     ps_ptr<char> m_name;
     releasedArg  m_ra;
 
@@ -1997,18 +2003,18 @@ class button1state : public RegisterTable { // click button
         setAlternativePicturePath("");
     }
     ~button1state() {}
-    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool backgroundTransparency = false) {
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w; // width
         m_h = h; // high
         m_enabled = false;
-        m_backgroundTransparency = backgroundTransparency;
     }
     ps_ptr<char> getName() { return m_name; }
     void         enable() { m_enabled = true; }
     bool         isEnabled() { return m_enabled; }
-    void         show(bool inactive = false) {
+
+    void show(bool inactive = false) {
         m_clicked = false;
         if (inactive) {
             setInactive();
@@ -2017,6 +2023,12 @@ class button1state : public RegisterTable { // click button
         drawImage(m_defaultPicturePath, m_x, m_y, m_w, m_h);
         m_enabled = true;
     }
+
+    void setTransparency(bool backgroundTransparency, bool saveBackground) {
+        m_backgroundTransparency = backgroundTransparency;
+        m_saveBackground = saveBackground;
+    }
+
     void hide() {
         if (m_backgroundTransparency) {
             tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
@@ -2112,6 +2124,8 @@ class button2state : public RegisterTable { // on off switch
     bool         m_active = true;
     bool         m_clicked = false;
     bool         m_state = false;
+    bool         m_backgroundTransparency = false;
+    bool         m_saveBackground = false;
     ps_ptr<char> m_name;
     releasedArg  m_ra;
 
@@ -2154,6 +2168,12 @@ class button2state : public RegisterTable { // on off switch
             drawImage(m_inactivePicturePath, m_x, m_y, m_w, m_h);
         }
     }
+
+    void setTransparency(bool backgroundTransparency, bool saveBackground) {
+        m_backgroundTransparency = backgroundTransparency;
+        m_saveBackground = saveBackground;
+    }
+
     void showClickedPic() {
         if (m_state) {
             drawImage(m_clickedOnPicturePath, m_x, m_y, m_w, m_h);
@@ -2260,6 +2280,8 @@ class numbersBox : public RegisterTable { // range 000...999
     int16_t      m_box_h = 0;
     uint32_t     m_bgColor = TFT_BLACK;
     bool         m_clicked = false;
+    bool         m_backgroundTransparency = false; // unused yet
+    bool         m_saveBackground = false;         // unused yet
     releasedArg  m_ra;
     ps_ptr<char> m_name;
     ps_ptr<char> m_color = "blue";
@@ -2301,6 +2323,12 @@ class numbersBox : public RegisterTable { // range 000...999
         m_enabled = true;
         return true;
     }
+
+    void setTransparency(bool backgroundTransparency, bool saveBackground) {
+        m_backgroundTransparency = backgroundTransparency;
+        m_saveBackground = saveBackground;
+    }
+
     void hide() {
         tft.fillRect(m_x + m_box_x, m_y + m_box_y, m_box_w, m_box_h, m_bgColor);
         m_enabled = false;
@@ -2369,6 +2397,8 @@ class offTimerBox : public RegisterTable { // range 000...999
     uint16_t     m_offColor = TFT_RED;
     uint16_t     m_onColor = TFT_GREEN;
     bool         m_clicked = false;
+    bool         m_backgroundTransparency = false; // unused yet
+    bool         m_saveBackground = false;         // unused yet
     releasedArg  m_ra;
     ps_ptr<char> m_name;
     ps_ptr<char> m_path;
@@ -2410,6 +2440,12 @@ class offTimerBox : public RegisterTable { // range 000...999
         m_enabled = true;
         return true;
     }
+
+    void setTransparency(bool backgroundTransparency, bool saveBackground) {
+        m_backgroundTransparency = backgroundTransparency;
+        m_saveBackground = saveBackground;
+    }
+
     void hide() {
         tft.fillRect(m_x + m_box_x, m_y + m_box_y, m_box_w, m_box_h, m_bgColor);
         m_enabled = false;
@@ -2518,9 +2554,7 @@ class pictureBox : public RegisterTable {
 
     bool isEnabled() { return m_enabled; }
 
-    bool show(bool backgroundTransparency, bool saveBackground) {
-        m_backgroundTransparency = backgroundTransparency;
-        m_saveBackground = saveBackground;
+    bool show() {
         int x = m_x + m_padding_left + m_image_x;
         int y = m_y + m_padding_top + m_image_y;
         int w = m_w - (m_padding_right + m_padding_left);
@@ -2539,6 +2573,12 @@ class pictureBox : public RegisterTable {
             return m_enabled;
         }
     }
+
+    void setTransparency(bool backgroundTransparency, bool saveBackground) {
+        m_backgroundTransparency = backgroundTransparency;
+        m_saveBackground = saveBackground;
+    }
+
     void hide() {
         if (m_saveBackground) {
             tft.copyFramebuffer(2, 1, m_x, m_y, m_w, m_h); // restore background
@@ -2706,19 +2746,23 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
                 m_pathBuff.assignf("/digits/l/%igreen.jpg", time[i]);
                 if (i == 0) {
                     pic_clock24_digitsH10->setPicturePath(m_pathBuff);
-                    pic_clock24_digitsH10->show(m_backgroundTransparency, false);
+                    pic_clock24_digitsH10->setTransparency(m_backgroundTransparency, false);
+                    pic_clock24_digitsH10->show();
                 }
                 if (i == 1) {
                     pic_clock24_digitsH01->setPicturePath(m_pathBuff);
-                    pic_clock24_digitsH01->show(m_backgroundTransparency, false);
+                    pic_clock24_digitsH01->setTransparency(m_backgroundTransparency, false);
+                    pic_clock24_digitsH01->show();
                 }
                 if (i == 2) {
                     pic_clock24_digitsM10->setPicturePath(m_pathBuff);
-                    pic_clock24_digitsM10->show(m_backgroundTransparency, false);
+                    pic_clock24_digitsM10->setTransparency(m_backgroundTransparency, false);
+                    pic_clock24_digitsM10->show();
                 }
                 if (i == 3) {
                     pic_clock24_digitsM01->setPicturePath(m_pathBuff);
-                    pic_clock24_digitsM01->show(m_backgroundTransparency, false);
+                    pic_clock24_digitsM01->setTransparency(m_backgroundTransparency, false);
+                    pic_clock24_digitsM01->show();
                 }
             }
             oldTime[i] = time[i];
@@ -2727,10 +2771,12 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
         k = !k;
         if (k) {
             pic_clock24_digitsColon->setPicturePath("/digits/l/cgreen.jpg");
-            pic_clock24_digitsColon->show(m_backgroundTransparency, false);
+            pic_clock24_digitsColon->setTransparency(m_backgroundTransparency, false);
+            pic_clock24_digitsColon->show();
         } else {
             pic_clock24_digitsColon->setPicturePath("/digits/l/cgreen_dk.jpg");
-            pic_clock24_digitsColon->show(m_backgroundTransparency, false);
+            pic_clock24_digitsColon->setTransparency(m_backgroundTransparency, false);
+            pic_clock24_digitsColon->show();
         }
         m_showAll = false;
     }
@@ -2905,19 +2951,23 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
                 m_pathBuff.assignf("/digits/s/%ired.jpg", time[i]);
                 if (i == 0) {
                     pic_clock24_digitsH10->setPicturePath(m_pathBuff);
-                    pic_clock24_digitsH10->show(m_backgroundTransparency, false);
+                    pic_clock24_digitsH10->setTransparency(m_backgroundTransparency, false);
+                    pic_clock24_digitsH10->show();
                 }
                 if (i == 1) {
                     pic_clock24_digitsH01->setPicturePath(m_pathBuff);
-                    pic_clock24_digitsH01->show(m_backgroundTransparency, false);
+                    pic_clock24_digitsH01->setTransparency(m_backgroundTransparency, false);
+                    pic_clock24_digitsH01->show();
                 }
                 if (i == 2) {
                     pic_clock24_digitsM10->setPicturePath(m_pathBuff);
-                    pic_clock24_digitsM10->show(m_backgroundTransparency, false);
+                    pic_clock24_digitsM10->setTransparency(m_backgroundTransparency, false);
+                    pic_clock24_digitsM10->show();
                 }
                 if (i == 3) {
                     pic_clock24_digitsM01->setPicturePath(m_pathBuff);
-                    pic_clock24_digitsM01->show(m_backgroundTransparency, false);
+                    pic_clock24_digitsM01->setTransparency(m_backgroundTransparency, false);
+                    pic_clock24_digitsM01->show();
                 }
             }
             oldTime[i] = time[i];
@@ -2926,10 +2976,12 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
         k = !k;
         if (k) {
             pic_clock24_digitsColon->setPicturePath("/digits/s/cred.jpg");
-            pic_clock24_digitsColon->show(m_backgroundTransparency, false);
+            pic_clock24_digitsColon->setTransparency(m_backgroundTransparency, false);
+            pic_clock24_digitsColon->show();
         } else {
             pic_clock24_digitsColon->setPicturePath("/digits/s/cred_dk.jpg");
-            pic_clock24_digitsColon->show(m_backgroundTransparency, false);
+            pic_clock24_digitsColon->setTransparency(m_backgroundTransparency, false);
+            pic_clock24_digitsColon->show();
         }
         m_showAll = false;
     }
@@ -3257,26 +3309,31 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
 
                 if (i == 0) {
                     pic_alarm_digitsH10->setPicturePath(m_pathBuff.c_get());
-                    pic_alarm_digitsH10->show(m_backgroundTransparency, false);
+                    pic_alarm_digitsH10->setTransparency(m_backgroundTransparency, false);
+                    pic_alarm_digitsH10->show();
                 }
                 if (i == 1) {
                     pic_alarm_digitsH01->setPicturePath(m_pathBuff.c_get());
-                    pic_alarm_digitsH01->show(m_backgroundTransparency, false);
+                    pic_alarm_digitsH01->setTransparency(m_backgroundTransparency, false);
+                    pic_alarm_digitsH01->show();
                 }
                 if (i == 2) {
                     pic_alarm_digitsM10->setPicturePath(m_pathBuff.c_get());
-                    pic_alarm_digitsM10->show(m_backgroundTransparency, false);
+                    pic_alarm_digitsM10->setTransparency(m_backgroundTransparency, false);
+                    pic_alarm_digitsM10->show();
                 }
                 if (i == 3) {
                     pic_alarm_digitsM01->setPicturePath(m_pathBuff.c_get());
-                    pic_alarm_digitsM01->show(m_backgroundTransparency, false);
+                    pic_alarm_digitsM01->setTransparency(m_backgroundTransparency, false);
+                    pic_alarm_digitsM01->show();
                 }
             }
             m_oldAlarmDigits[i] = m_alarmDigits[i];
         }
         if (m_showAll) {
             pic_alarm_digitsColon->setPicturePath("/digits/m/cred.jpg");
-            pic_alarm_digitsColon->show(m_backgroundTransparency, false);
+            pic_alarm_digitsColon->setTransparency(m_backgroundTransparency, false);
+            pic_alarm_digitsColon->show();
         }
     }
     void updateAlarmDaysAndTime() {
@@ -5178,11 +5235,13 @@ class displayHeader : public RegisterTable {
 
     void show(bool transparency = false) {
         m_backgroundTransparency = transparency;
-        if (m_backgroundTransparency)
+        if (m_backgroundTransparency) {
             tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
-        else
+        } else {
             tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        m_timeStringObject->show(m_backgroundTransparency, false);
+        }
+        m_timeStringObject->setTransparency(m_backgroundTransparency, false);
+        m_timeStringObject->show();
         m_enabled = true;
         m_clicked = false;
         m_old_rssi = -1;
@@ -5218,7 +5277,8 @@ class displayHeader : public RegisterTable {
         m_speakerOn = on;
         if (!m_enabled) return;
         pic_Speaker->setPicturePath(m_speakerSymbol[m_speakerOn]);
-        pic_Speaker->show(m_backgroundTransparency, false);
+        pic_Speaker->setTransparency(m_backgroundTransparency, false);
+        pic_Speaker->show();
     }
     void updateVolume(uint8_t vol) {
         m_volume = vol;
@@ -5253,7 +5313,8 @@ class displayHeader : public RegisterTable {
         }
         if (show) {
             pic_RSSID->setPicturePath(m_rssiSymbol[new_rssi]);
-            pic_RSSID->show(m_backgroundTransparency, false);
+            pic_RSSID->setTransparency(m_backgroundTransparency, false);
+            pic_RSSID->show();
         }
     }
     void updateTime(ps_ptr<char> hl_time, bool complete = true) {
@@ -5652,7 +5713,8 @@ class displayFooter : public RegisterTable {
             tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         m_enabled = true;
         m_clicked = false;
-        pic_Antenna->show(m_backgroundTransparency, false);
+        pic_Antenna->setTransparency(m_backgroundTransparency, false);
+        pic_Antenna->show();
         updateStation(m_staNr);
         updateOffTime(m_offTime);
         updateBitRate(m_bitRate);
@@ -5670,12 +5732,14 @@ class displayFooter : public RegisterTable {
         if (WiFi_lost && !m_WiFi_lost) {
             pic_Antenna->setPicturePath(m_Antenna_red);
             m_WiFi_lost = true;
-            pic_Antenna->show(m_backgroundTransparency, false);
+            pic_Antenna->setTransparency(m_backgroundTransparency, false);
+            pic_Antenna->show();
         }
         if (!WiFi_lost && m_WiFi_lost) {
             pic_Antenna->setPicturePath(m_Antenna_green);
             m_WiFi_lost = false;
-            pic_Antenna->show(m_backgroundTransparency, false);
+            pic_Antenna->setTransparency(m_backgroundTransparency, false);
+            pic_Antenna->show();
         }
     }
 
@@ -5701,7 +5765,8 @@ class displayFooter : public RegisterTable {
         if (flag.strlen() > 0) {
             pic_Flag->setAlternativPicturePath("/flags/unknown.jpg");
             pic_Flag->setPicturePath(flag);
-            pic_Flag->show(m_backgroundTransparency, false);
+            pic_Flag->setTransparency(m_backgroundTransparency, false);
+            pic_Flag->show();
         } else {
             pic_Flag->hide();
         }
@@ -5717,14 +5782,16 @@ class displayFooter : public RegisterTable {
             txt_OffTimer->setTransparency(m_backgroundTransparency, false);
             txt_OffTimer->show();
             pic_Hourglass->setPicturePath(m_hourGlassymbol[1]);
-            pic_Hourglass->show(m_backgroundTransparency, false);
+            pic_Hourglass->setTransparency(m_backgroundTransparency, false);
+            pic_Hourglass->show();
         } else {
             txt_OffTimer->setTextColor(TFT_DEEPSKYBLUE);
             txt_OffTimer->setText(buff);
             txt_OffTimer->setTransparency(m_backgroundTransparency, false);
             txt_OffTimer->show();
             pic_Hourglass->setPicturePath(m_hourGlassymbol[0]);
-            pic_Hourglass->show(m_backgroundTransparency, false);
+            pic_Hourglass->setTransparency(m_backgroundTransparency, false);
+            pic_Hourglass->show();
         }
     }
     void updateTC(uint8_t timeCounter) {

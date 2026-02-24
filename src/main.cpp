@@ -519,7 +519,7 @@ void showLogoAndStationName(bool force) {
         txt_RA_staName.setText(SN_utf8.c_get());
         txt_RA_staName.show();
         pic_RA_logo.setPicturePath(path.c_get());
-        pic_RA_logo.show(true, false);
+        pic_RA_logo.show();
         staNr.assignf("%i", s_cur_station);
     }
     webSrv.send("stationLogo=", path.c_get());
@@ -538,14 +538,14 @@ void showFileLogo(int8_t state, int8_t subState) {
             logo = "/common/" + (String)codecname[s_cur_Codec] + ".png";
         pic_RA_logo.setPicturePath(logo.c_str());
         pic_RA_logo.setAlternativPicturePath("/common/unknown.png");
-        pic_RA_logo.show(true, false);
+        pic_RA_logo.show();
         webSrv.send("stationLogo=", logo.c_str());
         return;
     } else if (state == DLNA) {
         logo = "/common/DLNA.jpg";
         pic_DL_logo.setPicturePath(logo.c_str());
         pic_DL_logo.setAlternativPicturePath("/common/unknown.png");
-        pic_DL_logo.show(true, false);
+        pic_DL_logo.show();
         webSrv.send("stationLogo=", logo.c_str());
         return;
     }
@@ -558,21 +558,21 @@ void showFileLogo(int8_t state, int8_t subState) {
             logo = "/common/" + (String)codecname[s_cur_Codec] + ".png";
         pic_PL_logo.setPicturePath(logo.c_str());
         pic_PL_logo.setAlternativPicturePath("/common/unknown.png");
-        pic_PL_logo.show(true, false);
+        pic_PL_logo.show();
         return;
     }
     if (state == SETTINGS) {
         logo = "/common/Settings.png";
         pic_SE_logo.setPicturePath(logo.c_str());
         pic_SE_logo.setAlternativPicturePath("/common/unknown.png");
-        pic_SE_logo.show(true, false);
+        pic_SE_logo.show();
         return;
     }
     if (state == RINGING) {
         logo = "/common/Alarm.png";
         pic_RI_logo.setPicturePath(logo.c_str());
         pic_RI_logo.setAlternativPicturePath("/common/unknown.png");
-        pic_RI_logo.show(true, false);
+        pic_RI_logo.show();
         return;
     }
 }
@@ -1827,7 +1827,7 @@ void changeState(int8_t state, int8_t subState) {
                 otb_SL_stime.show(s_sleeptime);
                 pic_SL_logo.setPicturePath("/common/Night_Gown.jpg");
                 pic_SL_logo.align(true, true);
-                pic_SL_logo.show(false, false);
+                pic_SL_logo.show();
             }
             btn_SL_up.show(); btn_SL_up.show(); btn_SL_down.show(); btn_SL_ready.show(); btn_SL_cancel.show();
             break;
@@ -1846,7 +1846,7 @@ void changeState(int8_t state, int8_t subState) {
             dispHeader.enable(); dispFooter.enable();
             if (newState) {
                 clearWithOutHeaderFooter();
-                pic_BR_logo.show(false, false);
+                pic_BR_logo.show();
                 sdr_BR_value.setValue(s_brightness);
                 sdr_BR_value.show();
                 txt_BR_value.setText(int2str(s_brightness));
@@ -1883,7 +1883,7 @@ void changeState(int8_t state, int8_t subState) {
             clearWithOutHeaderFooter();
             btn_BT_volUp.show(); btn_BT_volDown.show(); btn_BT_pause.show(); btn_BT_mode.show();
             btn_BT_radio.show(); btn_BT_power.show();
-            pic_BT_mode.show(true, false);
+            pic_BT_mode.show();
             if (s_bt_emitter.mode.equals("RX")) { txt_BT_mode.writeText("RECEIVER");}
             else                                { txt_BT_mode.writeText("EMITTER"); }
             txt_BT_mode.setBGcolor(TFT_BROWN);
@@ -3565,13 +3565,13 @@ void on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg) {
         if (s_bt_emitter.mode.equals("TX")) {
             if (s_state == BLUETOOTH) {
                 pic_BT_mode.setPicturePath("/common/BT_TX.png");
-                pic_BT_mode.show(true, false);
+                pic_BT_mode.show();
             }
             webSrv.send("KCX_BT_MODE=", "TX");
         } else {
             if (s_state == BLUETOOTH) {
                 pic_BT_mode.setPicturePath("/common/BT_RX.png");
-                pic_BT_mode.show(true, false);
+                pic_BT_mode.show();
             }
             webSrv.send("KCX_BT_MODE=", "RX");
         }
@@ -3581,7 +3581,7 @@ void on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg) {
     if (msg.e == KCX_BT_Emitter::evt_disconnect) {
         SerialPrintfln("BT-Emitter:  %s ", "disconnected");
         pic_BT_mode.setPicturePath("/common/BTnc.png"); // not connected
-        if (s_state == BLUETOOTH) pic_BT_mode.show(true, false);
+        if (s_state == BLUETOOTH) pic_BT_mode.show();
         webSrv.send("KCX_BT_connected=", "0");
     }
     if (msg.e == KCX_BT_Emitter::evt_reset) {
@@ -3593,7 +3593,7 @@ void on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg) {
         webSrv.send("KCX_BT_connected=", "0");
         btn_BT_power.setValue(true);
         pic_BT_mode.setPicturePath("/common/BTnc.png");
-        if (s_state == BLUETOOTH) pic_BT_mode.show(true, false);
+        if (s_state == BLUETOOTH) pic_BT_mode.show();
         SerialPrintfln("BT-Emitter:  %s ", "power on");
         bt_emitter.userCommand("AT+BT_MODE?");
     }
@@ -3602,7 +3602,7 @@ void on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg) {
         webSrv.send("KCX_BT_connected=", "-1");
         btn_BT_power.setValue(false);
         pic_BT_mode.setPicturePath("/common/BToff.png");
-        if (s_state == BLUETOOTH) pic_BT_mode.show(true, false);
+        if (s_state == BLUETOOTH) pic_BT_mode.show();
         SerialPrintfln("BT-Emitter:  %s ", "power off");
     }
     if (msg.e == KCX_BT_Emitter::evt_scan) {
