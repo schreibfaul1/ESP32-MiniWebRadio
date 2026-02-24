@@ -3011,7 +3011,7 @@ void ir_short_key(int8_t key) {
                 break;
             }
             if(s_state == DLNAITEMSLIST) {
-                const char* r = lst_DLNA.getSelectedURL();
+                ps_ptr<char> r = lst_DLNA.getSelectedURL();
                 if(r) { txt_DL_fName.setTextColor(TFT_CYAN); txt_DL_fName.setText(lst_DLNA.getSelectedTitle()); changeState(DLNA, 0); connecttohost(r); }
                 else setTimeCounter(2);
                 break;

@@ -2012,13 +2012,8 @@ class button1state : public RegisterTable { // click button
             m_inactivePicturePath = "inactivePicturePath is not set";
         }
     }
-    void setAlternativePicturePath(ps_ptr<char> path) {
-        if (path.strlen() > 0) {
-            m_alternativePicturePath = path;
-        } else {
-            m_alternativePicturePath = "alternativePicturePath is not set";
-        }
-    }
+    void setAlternativePicturePath(ps_ptr<char> path) { m_alternativePicturePath = path; }
+
     bool click() { // e.g. from IR
         if (!m_enabled) { return false; }
         drawImage(m_clickedPicturePath, m_x, m_y, m_w, m_h);
@@ -2057,13 +2052,13 @@ class button2state : public RegisterTable { // on off switch
     int16_t      m_w = 0;
     int16_t      m_h = 0;
     uint32_t     m_bgColor = 0;
-    char*        m_offPicturePath = NULL;
-    char*        m_onPicturePath = NULL;
-    char*        m_clickedOffPicturePath = NULL;
-    char*        m_clickedOnPicturePath = NULL;
-    char*        m_inactivePicturePath = NULL;
-    char*        m_alternativeOnPicturePath = NULL;
-    char*        m_alternativeOffPicturePath = NULL;
+    ps_ptr<char> m_offPicturePath;
+    ps_ptr<char> m_onPicturePath;
+    ps_ptr<char> m_clickedOffPicturePath;
+    ps_ptr<char> m_clickedOnPicturePath;
+    ps_ptr<char> m_inactivePicturePath;
+    ps_ptr<char> m_alternativeOnPicturePath;
+    ps_ptr<char> m_alternativeOffPicturePath;
     bool         m_enabled = false;
     bool         m_active = true;
     bool         m_clicked = false;
@@ -2079,19 +2074,14 @@ class button2state : public RegisterTable { // on off switch
         m_enabled = false;
         m_clicked = false;
         m_state = false;
-        setOffPicturePath(NULL);
-        setOnPicturePath(NULL);
-        setClickedOffPicturePath(NULL);
-        setClickedOnPicturePath(NULL);
-        setInactivePicturePath(NULL);
+        setOffPicturePath("");
+        setOnPicturePath("");
+        setClickedOffPicturePath("");
+        setClickedOnPicturePath("");
+        setInactivePicturePath("");
     }
-    ~button2state() {
-        x_ps_free(&m_offPicturePath);
-        x_ps_free(&m_onPicturePath);
-        x_ps_free(&m_clickedOffPicturePath);
-        x_ps_free(&m_clickedOnPicturePath);
-        x_ps_free(&m_inactivePicturePath);
-    }
+    ~button2state() {}
+
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
         m_x = x; // x pos
         m_y = y; // y pos
@@ -2129,20 +2119,8 @@ class button2state : public RegisterTable { // on off switch
             drawImage(m_alternativeOffPicturePath, m_x, m_y, m_w, m_h);
         }
     }
-    void setAlternativeOnPicturePath(const char* path) {
-        x_ps_free(&m_alternativeOnPicturePath);
-        if (path)
-            m_alternativeOnPicturePath = x_ps_strdup(path);
-        else
-            m_alternativeOnPicturePath = x_ps_strdup("alternativePicturePath is not set");
-    }
-    void setAlternativeOffPicturePath(const char* path) {
-        x_ps_free(&m_alternativeOffPicturePath);
-        if (path)
-            m_alternativeOffPicturePath = x_ps_strdup(path);
-        else
-            m_alternativeOffPicturePath = x_ps_strdup("alternativePicturePath is not set");
-    }
+    void setAlternativeOnPicturePath(const char* path) { m_alternativeOnPicturePath = path; }
+    void setAlternativeOffPicturePath(const char* path) { m_alternativeOffPicturePath = path; }
     void hide() {
         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         m_enabled = false;
@@ -2163,41 +2141,17 @@ class button2state : public RegisterTable { // on off switch
     void setActive(bool act) { m_active = act; }
     bool getActive() { return m_active; }
 
-    void setOffPicturePath(const char* path) {
-        x_ps_free(&m_offPicturePath);
-        if (path)
-            m_offPicturePath = x_ps_strdup(path);
-        else
-            m_offPicturePath = x_ps_strdup("defaultPicturePath is not set");
+    void setOffPicturePath(ps_ptr<char> path) {
+        if (path.strlen() > 0) {
+            m_offPicturePath = path;
+        } else {
+            m_offPicturePath = "defaultPicturePath is not set";
+        }
     }
-    void setClickedOffPicturePath(const char* path) {
-        x_ps_free(&m_clickedOffPicturePath);
-        if (path)
-            m_clickedOffPicturePath = x_ps_strdup(path);
-        else
-            m_clickedOffPicturePath = x_ps_strdup("clickedOffPicturePath is not set");
-    }
-    void setClickedOnPicturePath(const char* path) {
-        x_ps_free(&m_clickedOnPicturePath);
-        if (path)
-            m_clickedOnPicturePath = x_ps_strdup(path);
-        else
-            m_clickedOnPicturePath = x_ps_strdup("clickedOnPicturePath is not set");
-    }
-    void setOnPicturePath(const char* path) {
-        x_ps_free(&m_onPicturePath);
-        if (path)
-            m_onPicturePath = x_ps_strdup(path);
-        else
-            m_onPicturePath = x_ps_strdup("clickedPicturePath is not set");
-    }
-    void setInactivePicturePath(const char* path) {
-        x_ps_free(&m_inactivePicturePath);
-        if (path)
-            m_inactivePicturePath = x_ps_strdup(path);
-        else
-            m_inactivePicturePath = x_ps_strdup("inactivePicturePath is not set");
-    }
+    void setClickedOffPicturePath(ps_ptr<char> path) { m_clickedOffPicturePath = path; }
+    void setClickedOnPicturePath(ps_ptr<char> path) { m_clickedOnPicturePath = path; }
+    void setOnPicturePath(ps_ptr<char> path) { m_onPicturePath = path; }
+    void setInactivePicturePath(ps_ptr<char> path) { m_inactivePicturePath = path; }
 
     bool click() {
         if (!m_enabled) return false;
@@ -2259,7 +2213,7 @@ class numbersBox : public RegisterTable { // range 000...999
     bool         m_clicked = false;
     releasedArg  m_ra;
     ps_ptr<char> m_name;
-    const char*  m_color = "blue";
+    ps_ptr<char> m_color = "blue";
     char         m_root[20] = "/digits/s/";
     char         m_numbers[4] = "000";
 
@@ -2292,7 +2246,7 @@ class numbersBox : public RegisterTable { // range 000...999
             m_color = "orange";
         ps_ptr<char> path;
         for (uint8_t i = 0; i < 3; i++) {
-            path.assignf("%s%c%s.jpg", m_root, m_numbers[i], m_color);
+            path.assignf("%s%c%s.jpg", m_root, m_numbers[i], m_color.c_get());
             if (!drawImage(path.c_get(), m_x + m_box_x + i * m_segmWidth, m_y + m_box_y)) return false;
         }
         m_enabled = true;
@@ -2362,7 +2316,7 @@ class offTimerBox : public RegisterTable { // range 000...999
     int16_t      m_box_w = 0;
     int16_t      m_box_h = 0;
     uint32_t     m_bgColor = 0;
-    const char*  m_color = "green";
+    ps_ptr<char> m_color = "green";
     uint16_t     m_offColor = TFT_RED;
     uint16_t     m_onColor = TFT_GREEN;
     bool         m_clicked = false;
@@ -2394,7 +2348,7 @@ class offTimerBox : public RegisterTable { // range 000...999
             m_color = "green";
         ps_ptr<char> numbers;
         numbers.assignf("%dc%02d", time / 60, time % 60);
-        m_path.assignf("/digits/s/x%s.jpg", m_color);
+        m_path.assignf("/digits/s/x%s.jpg", m_color.c_get());
 
         m_path[10] = numbers[0];
         drawImage(m_path.c_get(), m_x + m_digitsXpos[0], m_y + m_box_y);
@@ -3395,10 +3349,10 @@ class uniList {
     uint8_t      m_indentContent = 0;
     uint8_t      m_indentDirectory = 0;
     ps_ptr<char> m_name;
-    char*        m_buff = NULL;
-    char*        m_txt[10] = {0};
-    char*        m_ext1[10] = {0};
-    char*        m_ext2[10] = {0};
+    ps_ptr<char> m_buff;
+    ps_ptr<char> m_txt[10];
+    ps_ptr<char> m_ext1[10];
+    ps_ptr<char> m_ext2[10];
     bool         m_enabled = false;
 
   public:
@@ -3406,14 +3360,8 @@ class uniList {
         m_name = name;
         m_bgColor = TFT_BLACK;
     }
-    ~uniList() {
-        x_ps_free(&m_buff);
-        for (int i = 0; i < 10; i++) {
-            x_ps_free(&m_txt[i]);
-            x_ps_free(&m_ext1[i]);
-            x_ps_free(&m_ext2[i]);
-        }
-    }
+    ~uniList() {}
+
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t fontSize) {
         m_x = x;               // x pos
         m_y = y;               // y pos
@@ -3422,7 +3370,6 @@ class uniList {
         m_fontSize = fontSize; // default font size
         m_enabled = false;
         m_lineHight = m_h / 10;
-        m_buff = x_ps_malloc(1024);
     }
     void setMode(uint8_t mode, const char* tftSize, uint8_t fontSize) {
         if (mode == RADIO) { m_mode = RADIO; }
@@ -3494,92 +3441,74 @@ class uniList {
     }
     void clearList() {
         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        for (int i = 0; i < 10; i++) {
-            x_ps_free(&m_txt[i]);
-            x_ps_free(&m_ext1[i]);
-            x_ps_free(&m_ext2[i]);
-            m_nr[i] = -1;
-        }
+        m_txt->clear();
+        m_ext1->clear();
+        m_ext2->clear();
+        for (int i = 0; i < 10; i++) { m_nr[i] = -1; }
     }
-    void drawLine(uint8_t pos, const char* txt, const char* ext1 = NULL, const char* ext2 = NULL, const char* color = ANSI_ESC_WHITE, int32_t nr = -1) {
+    void drawLine(uint8_t pos, ps_ptr<char> txt, ps_ptr<char> ext1 = "", ps_ptr<char> ext2 = "", ps_ptr<char> color = ANSI_ESC_WHITE, int32_t nr = -1) {
         if (pos > 9) return;
-        if (!txt) return;
         tft.setFont(m_fontSize);
         if (m_mode == RADIO) {
-            sprintf(m_buff, ANSI_ESC_YELLOW "%03li %s%s", nr, color, txt);
-            if (txt) {
-                x_ps_free(&m_txt[pos]);
-                m_txt[pos] = strdup(txt);
-            }
-            if (ext1) {
-                x_ps_free(&m_ext1[pos]);
-                m_ext1[pos] = strdup(ext1);
-            }
-            if (ext2) {
-                x_ps_free(&m_ext2[pos]);
-                m_ext2[pos] = strdup(ext2);
-            }
+            m_buff.assignf(ANSI_ESC_YELLOW "%03li %s%s", nr, color.c_get(), txt.c_get());
+            if (txt != "") { m_txt[pos] = txt; }
+            if (ext1 != "") { m_ext1[pos] = ext1; }
+            if (ext2 != "") { m_ext2[pos] = ext2; }
             m_nr[pos] = nr;
         }
         if (m_mode == DLNA) {
-            if (!txt) {
-                MWR_LOG_WARN("txt is NULL");
+            if (txt == "") {
+                MWR_LOG_WARN("txt is empty");
                 return;
             }
-            if (!ext1)
-                sprintf(m_buff, "%s%s", color, txt);
+            if (ext1 == "")
+                m_buff.assignf("%s%s", color.c_get(), txt.c_get());
             else if (ext1[0] == '\0')
-                sprintf(m_buff, "%s%s", color, txt);
+                m_buff.assignf("%s%s", color.c_get(), txt.c_get());
             else
-                sprintf(m_buff, "%s%s " ANSI_ESC_CYAN "(%s)", color, txt, ext1);
-            if (txt) {
-                x_ps_free(&m_txt[pos]);
-                m_txt[pos] = strdup(txt);
+                m_buff.assignf("%s%s " ANSI_ESC_CYAN "(%s)", color.c_get(), txt.c_get(), ext1.c_get());
+            if (txt != "") {
+                m_txt[pos] = txt;
                 m_nr[pos] = 1;
             }
-            if (ext1) {
-                x_ps_free(&m_ext1[pos]);
-                m_ext1[pos] = strdup(ext1);
-            }
-            if (ext2) {
-                x_ps_free(&m_ext2[pos]);
-                m_ext2[pos] = strdup(ext2);
-            }
+            if (ext1 != "") { m_ext1[pos] = ext1; }
+            if (ext2 != "") { m_ext2[pos] = ext2; }
         }
         if (m_mode == PLAYER) {
-            if (!txt) {
-                MWR_LOG_WARN("txt is NULL");
+            if (txt == "") {
+                MWR_LOG_WARN("txt is empty");
                 return;
             }
             if (nr <= 0)
-                sprintf(m_buff, "%s%s", color, txt);
+                m_buff.assignf("%s%s", color.c_get(), txt.c_get());
             else
-                sprintf(m_buff, "%s%s" ANSI_ESC_YELLOW " %li", color, txt, nr);
+                m_buff.assignf("%s%s" ANSI_ESC_YELLOW " %li", color.c_get(), txt.c_get(), nr);
             if (txt) {
-                x_ps_free(&m_txt[pos]);
-                m_txt[pos] = strdup(txt);
+                m_txt[pos] = txt;
                 m_nr[pos] = nr;
             }
         }
-        tft.writeText(m_buff, pos ? m_indentContent : m_indentDirectory, m_y + pos * m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+        uint16_t indent = pos ? m_indentContent : m_indentDirectory;
+        tft.writeText(m_buff.c_get(), indent, m_y + pos * m_lineHight, m_w - indent, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
     }
-    void drawPosInfo(int16_t firstVal, int16_t secondVal, int16_t total, const char* color) { // e.g. 1-9/65
-        sprintf(m_buff, "%s%i-%i-%i", color, firstVal, secondVal, total);
-        tft.writeText(m_buff, 0, m_y, m_w, m_lineHight, TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER, true, true, false);
+    void drawPosInfo(int16_t firstVal, int16_t secondVal, int16_t total, ps_ptr<char> color) { // e.g. 1-9/65
+        m_buff.assignf("%s%i-%i-%i", color.c_get(), firstVal, secondVal, total);
+        tft.writeText(m_buff.c_get(), 0, m_y, m_w, m_lineHight, TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER, true, true, false);
     }
-    void colourLine(uint8_t pos, const char* color = ANSI_ESC_WHITE) {
+    void colourLine(uint8_t pos, ps_ptr<char> color = ANSI_ESC_WHITE) {
         if (pos > 9) return;
         tft.setFont(m_fontSize);
-        if (m_mode == RADIO) { sprintf(m_buff, ANSI_ESC_YELLOW "%03li %s%s", m_nr[pos], color, m_txt[pos]); }
+        if (m_mode == RADIO) { m_buff.assignf(ANSI_ESC_YELLOW "%03li %s%s", m_nr[pos], color.c_get(), m_txt[pos].c_get()); }
         if (m_mode == PLAYER) {
             if (m_nr[pos])
-                sprintf(m_buff, "%s%s" ANSI_ESC_YELLOW " %li", color, m_txt[pos], m_nr[pos]); // file
+                m_buff.assignf("%s%s" ANSI_ESC_YELLOW " %li", color.c_get(), m_txt[pos].c_get(), m_nr[pos]); // file
             else
-                sprintf(m_buff, "%s%s", color, m_txt[pos]); // directory
+                m_buff.assignf("%s%s", color.c_get(), m_txt[pos].c_get()); // directory
         }
-        tft.writeText(m_buff, pos ? m_indentContent : m_indentDirectory, m_y + pos * m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+        uint16_t indent = pos ? m_indentContent : m_indentDirectory;
+        tft.writeText(m_buff.c_get(), indent, m_y + pos * m_lineHight, m_w - indent, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
     }
-    const char* getTxtByPos(uint8_t pos) { return m_txt[pos]; }
+    const char* getTxtByPos(uint8_t pos) { return m_txt[pos].c_get(); }
     int16_t     getNumberByPos(uint8_t pos) { return m_nr[pos]; }
     void        drawTriangeUp() {
         auto triangleUp = [&](int16_t x, int16_t y, uint8_t s) { tft.fillTriangle(x + s, y + 0, x + 0, y + 2 * s, x + 2 * s, y + 2 * s, TFT_RED); };
@@ -3638,7 +3567,7 @@ class dlnaList : public RegisterTable {
     bool                                       m_state = false;
     bool                                       m_isAudio = false;
     bool                                       m_isURL = false;
-    char*                                      m_name = NULL;
+    ps_ptr<char>                               m_name;
     char*                                      m_pathBuff = NULL;
     const char*                                m_chptr = NULL;
     char*                                      m_buff = NULL;
@@ -3646,17 +3575,18 @@ class dlnaList : public RegisterTable {
     const std::deque<DLNA_Client::dlnaServer>* m_dlnaServer;
     const std::deque<DLNA_Client ::srvItem>*   m_srvContent;
     DLNA_Client*                               m_dlna;
-    dlnaHistory_s*                             m_dlnaHistory = NULL;
+    dlnaHistory_s*                             m_dlnaHistory = {};
     releasedArg                                m_ra;
     enum DLNA_Action { DLNA_NONE = 0, DLNA_FILE = 1, DLNA_SERVERLIST = 2, DLNA_PREV_LEVEL = 3, DLNA_NEXT_LEVEL = 4, DLNA_WIPE = 5 };
 
   public:
-    dlnaList(const char* name) {
+    dlnaList(ps_ptr<char> name) {
         register_object(this);
-        if (name)
-            m_name = x_ps_strdup(name);
-        else
-            m_name = x_ps_strdup("dlnaList");
+        if (name != "") {
+            m_name = name;
+        } else {
+            m_name = "dlnaList";
+        }
         m_buff = x_ps_malloc(512);
         m_bgColor = TFT_BLACK;
         m_enabled = false;
@@ -3668,10 +3598,7 @@ class dlnaList : public RegisterTable {
         m_ra.val1 = 0;
         m_ra.val2 = 0;
     }
-    ~dlnaList() {
-        x_ps_free(&m_name);
-        x_ps_free(&m_buff);
-    }
+    ~dlnaList() { x_ps_free(&m_buff); }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const char* tftSize, uint8_t fontSize) {
         m_x = x; // x pos
         m_y = y; // y pos
@@ -3727,7 +3654,7 @@ class dlnaList : public RegisterTable {
             m_oldY = y;
         }
         if (m_enabled) m_clicked = true;
-        if (graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_enabled);
+        if (graphicObjects_OnClick) graphicObjects_OnClick(m_name, m_enabled);
         if (!m_enabled) return false;
         return true;
     }
@@ -3766,7 +3693,7 @@ class dlnaList : public RegisterTable {
         m_browseOnRelease = DLNA_NONE;
         m_oldX = 0;
         m_oldY = 0;
-        if (graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
+        if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
         m_ra.val1 = 0;
         return true;
     }
@@ -4059,7 +3986,7 @@ class dlnaList : public RegisterTable {
             m_viewPoint -= 9;
             if (m_viewPoint < 0) m_viewPoint = 0;
             m_chptr = NULL;
-            m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId.c_get(), m_viewPoint, 9);
+            m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_viewPoint, 9);
             m_dlna->loop();
             while (m_dlna->getState() != m_dlna->IDLE) {
                 m_dlna->loop();
@@ -4081,7 +4008,7 @@ class dlnaList : public RegisterTable {
         } else {
             maxItems = m_dlnaMaxItems;
         }
-        MWR_LOG_INFO("m_itemListPos_last %i, m_displayed_lines %i, maxItems %i, m_currItemNr[*m_dlnaLevel] %i", m_itemListPos_last, m_displayed_lines, maxItems, m_currItemNr[*m_dlnaLevel]);
+        MWR_LOG_DEBUG("m_itemListPos_last %i, m_displayed_lines %i, maxItems %i, m_currItemNr[*m_dlnaLevel] %i", m_itemListPos_last, m_displayed_lines, maxItems, m_currItemNr[*m_dlnaLevel]);
         if (maxItems - 1 <= m_currItemNr[*m_dlnaLevel]) return;
         m_currItemNr[*m_dlnaLevel]++;
         if (m_currItemNr[*m_dlnaLevel] >= m_viewPoint + 9) {
@@ -4101,8 +4028,8 @@ class dlnaList : public RegisterTable {
         drawItem(m_currItemNr[*m_dlnaLevel] - 1 - m_viewPoint + 1); // std colour
     }
 
-    const char* getSelectedURL() { // ok from IR
-        if (*m_dlnaLevel == 0) {   //------------------------------------------------------------------------------------------------------- choose server
+    ps_ptr<char> getSelectedURL() { // ok from IR
+        if (*m_dlnaLevel == 0) {    //------------------------------------------------------------------------------------------------------- choose server
             // log_e("server %s", m_dlnaServer.friendlyName[m_currItemNr[0]]);
             m_chptr = m_dlnaServer->at(m_currItemNr[0]).friendlyName.c_get();
             m_currDLNAsrvNr = m_currItemNr[0];
@@ -4110,10 +4037,10 @@ class dlnaList : public RegisterTable {
             drawItem(m_currItemNr[*m_dlnaLevel] + m_viewPoint + 1, true); // make cyan
             vTaskDelay(300);
             (*m_dlnaLevel)++;
-            if (m_dlnaServer->at(m_currItemNr[0]).friendlyName.c_get() == NULL) {
+            if (m_dlnaServer->at(m_currItemNr[0]).friendlyName == "") {
                 MWR_LOG_ERROR("invalid pointer in dlna history");
                 m_dlnaHistory[*m_dlnaLevel].name = "dummy";
-                return NULL;
+                return "";
             }
             m_dlnaHistory[*m_dlnaLevel].name = m_dlnaServer->at(m_currItemNr[0]).friendlyName;
             m_dlna->browseServer(m_currDLNAsrvNr, "0", 0, 9);
@@ -4127,7 +4054,7 @@ class dlnaList : public RegisterTable {
             m_dlnaHistory[*m_dlnaLevel].maxItems = m_dlnaMaxItems; // level 1
             // log_e("m_dlnaMaxItems %i, level %i", m_dlnaMaxItems, (*m_dlnaLevel));
             dlnaItemsList();
-            return NULL;
+            return "";
         }
         if (m_currItemNr[*m_dlnaLevel] + 1 == m_viewPoint) { // DLNA history, parent item ---------------------------------------------- back to parent
             // log_e("%s", m_dlnaHistory[*m_dlnaLevel].name);
@@ -4148,7 +4075,7 @@ class dlnaList : public RegisterTable {
             } // wait of browse rady
             m_srvContent = &m_dlna->getBrowseResult();
             dlnaItemsList();
-            return NULL;
+            return "";
         }
         if (strcmp(m_srvContent->at(m_currItemNr[*m_dlnaLevel] - m_viewPoint).itemURL.c_get(), "?") == 0) { // --------------------------------------- choose folder
             drawItem(m_currItemNr[*m_dlnaLevel] - m_viewPoint + 1, true);                                   // make cyan
@@ -4174,16 +4101,16 @@ class dlnaList : public RegisterTable {
                 m_currItemNr[*m_dlnaLevel]--;
                 drawItem(m_currItemNr[*m_dlnaLevel] + 0 - m_viewPoint + 1); // make magenta
             }
-            return NULL;
+            return "";
         }
         if (startsWith(m_srvContent->at(m_currItemNr[*m_dlnaLevel] - m_viewPoint).itemURL.c_get(), "http") != 0) { // ---------------------------------- choose file
             drawItem(m_currItemNr[*m_dlnaLevel] - m_viewPoint + 1, true);                                          // make cyan
             vTaskDelay(300);
-            return m_srvContent->at(m_currItemNr[*m_dlnaLevel] - m_viewPoint).itemURL.c_get();
+            return m_srvContent->at(m_currItemNr[*m_dlnaLevel] - m_viewPoint).itemURL;
         }
-        return NULL;
+        return "";
     }
-    const char* getSelectedTitle() { return m_srvContent->at(m_currItemNr[*m_dlnaLevel] - m_viewPoint).title.c_get(); }
+    ps_ptr<char> getSelectedTitle() { return m_srvContent->at(m_currItemNr[*m_dlnaLevel] - m_viewPoint).title; }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 /*
@@ -4615,7 +4542,7 @@ class stationsList : public RegisterTable {
     char*        m_pathBuff = NULL;
     char*        m_buff = NULL;
     releasedArg  m_ra;
-    const char*  m_colorToDraw = NULL;
+    ps_ptr<char> m_colorToDraw;
     const char*  m_staNameToDraw = NULL;
     const char*  m_tftSize = "";
     uint16_t     m_staNrToDraw = 0;
@@ -4724,7 +4651,7 @@ class stationsList : public RegisterTable {
 
             m_staNameToDraw = staMgnt.getStationName(pos + m_firstStationsLineNr + 1); // the station name
             m_staNrToDraw = pos + m_firstStationsLineNr + 1;                           // the station number
-            myList.drawLine(pos, m_staNameToDraw, NULL, NULL, m_colorToDraw, m_staNrToDraw);
+            myList.drawLine(pos, m_staNameToDraw, NULL, NULL, m_colorToDraw.c_get(), m_staNrToDraw);
             if (pos == 1 && m_firstStationsLineNr > 0 && staMgnt.getSumStations()) { myList.drawTriangeUp(); }
             if (pos == 9 && m_firstStationsLineNr + 10 < staMgnt.getSumStations()) { myList.drawTriangeDown(); }
         }

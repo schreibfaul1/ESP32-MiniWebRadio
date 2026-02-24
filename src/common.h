@@ -18,11 +18,11 @@
 #include "settings.h"
 
 #if TFT_CONTROLLER < 7
-#include "tft_spi.h"
+    #include "tft_spi.h"
 #elif TFT_CONTROLLER == 7
-#include "tft_rgb.h"
+    #include "tft_rgb.h"
 #elif (TFT_CONTROLLER == 8 || TFT_CONTROLLER == 9)
-#include "tft_dsi.h"
+    #include "tft_dsi.h"
 #endif
 
 #include "tp_ft6x36.h"
@@ -141,13 +141,7 @@ enum status {
     UNDEFINED = -1
 };
 
-enum ir_shift {
-    IR_RIGHT = +100,
-    IR_LEFT = -100,
-    IR_UP = +101,
-    IR_DOWN = - 101,
-    IR_RESET = -127
-};
+enum ir_shift { IR_RIGHT = +100, IR_LEFT = -100, IR_UP = +101, IR_DOWN = -101, IR_RESET = -127 };
 
 static bool                     newLine = false;
 extern SemaphoreHandle_t        mutex_rtc;
@@ -222,15 +216,15 @@ int log_redirect_handler(const char* format, va_list args) {
 struct dlnaHistory_s {
     ps_ptr<char> objId;
     ps_ptr<char> name;
-    int16_t     maxItems = -1;
-    int16_t     childCount = -1;
+    int16_t      maxItems = -1;
+    int16_t      childCount = -1;
 };
 struct releasedArg {
     ps_ptr<char> arg1;
     ps_ptr<char> arg2;
     ps_ptr<char> arg3;
-    int16_t     val1 = 0;
-    int16_t     val2 = 0;
+    int16_t      val1 = 0;
+    int16_t      val2 = 0;
 };
 struct timecounter_s {
     uint8_t timer = 0;
@@ -457,7 +451,7 @@ inline int rfind(const char* str, char ch, int start = -1) { // same as indexof(
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 inline int replacestr(char* line, const char* search, const char* replace, int depth = 0) { /* returns number of strings replaced.*/
-    const int MAX_RECURSION_DEPTH = 100;  // Prevent stack overflow from excessive recursion
+    const int MAX_RECURSION_DEPTH = 100;                                                    // Prevent stack overflow from excessive recursion
     if (depth > MAX_RECURSION_DEPTH) {
         log_w("replacestr: max recursion depth reached");
         return 0;
@@ -649,7 +643,7 @@ inline void SerialPrintflnCut(const char* item, const char* color, const char* s
 extern TFT_SPI tft;
 #elif TFT_CONTROLLER == 7
 extern TFT_RGB tft;
-#elif (TFT_CONTROLLER == 8 ||  TFT_CONTROLLER == 9)
+#elif (TFT_CONTROLLER == 8 || TFT_CONTROLLER == 9)
 extern TFT_DSI tft;
 #else
 #endif

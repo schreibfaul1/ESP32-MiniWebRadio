@@ -85,7 +85,7 @@ class DLNA_Client {
     int8_t                        listServer();
     const std::deque<dlnaServer>& getServer() const;
     const std::deque<srvItem>&    getBrowseResult() const;
-    int8_t                        browseServer(uint8_t srvNr, const char* objectId, const uint16_t startingIndex = 0, const uint16_t maxCount = 50);
+    int8_t                        browseServer(uint8_t srvNr, ps_ptr<char> objectId, const uint16_t startingIndex = 0, const uint16_t maxCount = 50);
     const char*                   stringifyContent();
     const char*                   stringifyServer();
     uint8_t                       getState();
@@ -113,12 +113,12 @@ class DLNA_Client {
     bool    readHttpHeader();
     int32_t getChunkSize(uint16_t* readedBytes);
     bool    readContent();
-    bool    srvPost(uint8_t srvNr, const char* objectId, const uint16_t startingIndex, const uint16_t maxCount);
+    bool    srvPost(uint8_t srvNr, ps_ptr<char> objectId, const uint16_t startingIndex, const uint16_t maxCount);
 
   private:
     bool     m_chunked = false;
     bool     m_skipCRLF = false;
-    char     m_objectId[60];
+    ps_ptr<char> m_objectId;
     uint8_t  m_srvNr = 0;
     uint32_t m_contentlength = 0;
     uint16_t m_startingIndex = 0;
