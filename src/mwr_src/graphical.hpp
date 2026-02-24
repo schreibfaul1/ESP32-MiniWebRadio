@@ -2580,7 +2580,7 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
     bool         m_backgroundTransparency = false;
     bool         m_showAll = false;
     ps_ptr<char> m_name;
-    char*        m_pathBuff = NULL;
+    ps_ptr<char> m_pathBuff;
     uint8_t      m_min = 0, m_hour = 0, m_weekday = 0;
     releasedArg  m_ra;
 
@@ -2592,10 +2592,8 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
         m_enabled = false;
         m_clicked = false;
         m_state = false;
-        m_pathBuff = x_ps_malloc(50);
     }
     ~imgClock24() {
-        x_ps_free(&m_pathBuff);
         delete pic_clock24_digitsH10;
         delete pic_clock24_digitsH01;
         delete pic_clock24_digitsColon;
@@ -2656,7 +2654,7 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
 
         for (uint8_t i = 0; i < 4; i++) {
             if ((time[i] != oldTime[i]) || m_showAll) {
-                sprintf(m_pathBuff, "/digits/l/%igreen.jpg", time[i]);
+                m_pathBuff.assignf("/digits/l/%igreen.jpg", time[i]);
                 if (i == 0) {
                     pic_clock24_digitsH10->setPicturePath(m_pathBuff);
                     pic_clock24_digitsH10->show(m_backgroundTransparency, false);
@@ -2769,8 +2767,8 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
     bool         m_state = false;
     bool         m_backgroundTransparency = false;
     bool         m_showAll = false;
-    ps_ptr<char> m_name = NULL;
-    char*        m_pathBuff = NULL;
+    ps_ptr<char> m_name;
+    ps_ptr<char> m_pathBuff;
     uint8_t      m_min = 0, m_hour = 0, m_weekday = 0;
     releasedArg  m_ra;
 
@@ -2793,10 +2791,8 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
         m_enabled = false;
         m_clicked = false;
         m_state = false;
-        m_pathBuff = x_ps_malloc(50);
     }
     ~imgClock24small() {
-        x_ps_free(&m_pathBuff);
         delete pic_clock24_digitsH10;
         delete pic_clock24_digitsH01;
         delete pic_clock24_digitsColon;
@@ -2857,7 +2853,7 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
 
         for (uint8_t i = 0; i < 4; i++) {
             if ((time[i] != oldTime[i]) || m_showAll) {
-                sprintf(m_pathBuff, "/digits/s/%ired.jpg", time[i]);
+                m_pathBuff.assignf("/digits/s/%ired.jpg", time[i]);
                 if (i == 0) {
                     pic_clock24_digitsH10->setPicturePath(m_pathBuff);
                     pic_clock24_digitsH10->show(m_backgroundTransparency, false);
@@ -3002,8 +2998,6 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
     int8_t       m_btnAlarmTime = -1;
     int8_t       m_idx = 0;
     uint8_t      m_alarmDigits[4] = {0};
-    const char*  m_p1 = "/digits/m/"; // path
-    uint8_t      m_p1Len = 21;
     const char   m_WD[7][4] = {"SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"};
     releasedArg  m_ra;
 
@@ -3199,7 +3193,7 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
         static uint8_t m_oldAlarmDigits[4] = {0};
         for (uint8_t i = 0; i < 4; i++) {
             if (m_oldAlarmDigits[i] != m_alarmDigits[i] || m_showAll) {
-                m_pathBuff.assignf("%s%i", m_p1, m_alarmDigits[i]);
+                m_pathBuff.assignf("/digits/m/%i", m_alarmDigits[i]);
 
                 if (i == m_idx) {
                     m_pathBuff.append("orange.jpg");
@@ -3356,7 +3350,7 @@ class uniList {
     bool         m_enabled = false;
 
   public:
-    uniList(const char* name) {
+    uniList(ps_ptr<char> name) {
         m_name = name;
         m_bgColor = TFT_BLACK;
     }
@@ -3371,15 +3365,15 @@ class uniList {
         m_enabled = false;
         m_lineHight = m_h / 10;
     }
-    void setMode(uint8_t mode, const char* tftSize, uint8_t fontSize) {
+    void setMode(uint8_t mode, ps_ptr<char> tftSize, uint8_t fontSize) {
         if (mode == RADIO) { m_mode = RADIO; }
         if (mode == PLAYER) { m_mode = PLAYER; }
         if (mode == DLNA) { m_mode = DLNA; }
         m_fontSize = fontSize;
-        if (strcmp(tftSize, "s") == 0) m_tftSize = 1;
-        if (strcmp(tftSize, "m") == 0) m_tftSize = 2;
-        if (strcmp(tftSize, "l") == 0) m_tftSize = 3;
-        if (strcmp(tftSize, "xl") == 0) m_tftSize = 4;
+        if (tftSize.equals("s")) m_tftSize = 1;
+        if (tftSize.equals("m")) m_tftSize = 2;
+        if (tftSize.equals("l")) m_tftSize = 3;
+        if (tftSize.equals("xl")) m_tftSize = 4;
         switch (m_tftSize) {
             case 1:
                 if (m_mode == RADIO) {
@@ -3508,9 +3502,9 @@ class uniList {
         uint16_t indent = pos ? m_indentContent : m_indentDirectory;
         tft.writeText(m_buff.c_get(), indent, m_y + pos * m_lineHight, m_w - indent, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
     }
-    const char* getTxtByPos(uint8_t pos) { return m_txt[pos].c_get(); }
-    int16_t     getNumberByPos(uint8_t pos) { return m_nr[pos]; }
-    void        drawTriangeUp() {
+    ps_ptr<char> getTxtByPos(uint8_t pos) { return m_txt[pos]; }
+    int16_t      getNumberByPos(uint8_t pos) { return m_nr[pos]; }
+    void         drawTriangeUp() {
         auto triangleUp = [&](int16_t x, int16_t y, uint8_t s) { tft.fillTriangle(x + s, y + 0, x + 0, y + 2 * s, x + 2 * s, y + 2 * s, TFT_RED); };
         int  line = 1;
         if (m_mode == RADIO) line = 0;
@@ -3568,9 +3562,8 @@ class dlnaList : public RegisterTable {
     bool                                       m_isAudio = false;
     bool                                       m_isURL = false;
     ps_ptr<char>                               m_name;
-    char*                                      m_pathBuff = NULL;
-    const char*                                m_chptr = NULL;
-    char*                                      m_buff = NULL;
+    ps_ptr<char>                               m_chptr;
+    ps_ptr<char>                               m_buff;
     const char*                                m_tftSize = "";
     const std::deque<DLNA_Client::dlnaServer>* m_dlnaServer;
     const std::deque<DLNA_Client ::srvItem>*   m_srvContent;
@@ -3587,18 +3580,16 @@ class dlnaList : public RegisterTable {
         } else {
             m_name = "dlnaList";
         }
-        m_buff = x_ps_malloc(512);
         m_bgColor = TFT_BLACK;
         m_enabled = false;
         m_clicked = false;
         m_state = false;
-        m_pathBuff = x_ps_malloc(50);
         m_ra.arg1 = "";
         m_ra.arg2 = "";
         m_ra.val1 = 0;
         m_ra.val2 = 0;
     }
-    ~dlnaList() { x_ps_free(&m_buff); }
+    ~dlnaList() { }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const char* tftSize, uint8_t fontSize) {
         m_x = x; // x pos
         m_y = y; // y pos
@@ -3664,11 +3655,11 @@ class dlnaList : public RegisterTable {
         hasReleased(x - m_x, y - m_y);
         m_clicked = false;
 
-        if (m_chptr || (m_itemListPos == 0 && (*m_dlnaLevel) > 0)) {
+        if (m_chptr != "" || (m_itemListPos == 0 && (*m_dlnaLevel) > 0)) {
             if (m_itemListPos_last != m_itemListPos) drawItem(m_itemListPos_last, false); // redraw old line, make default color
             bool res = drawItem(m_itemListPos, true);                                     // make cyan or magenta
                                                                                           //    m_itemListPos_last = m_itemListPos;
-            m_chptr = NULL;
+            m_chptr = "";
             if (res == false) return false;
             vTaskDelay(300);
         }
@@ -3717,9 +3708,9 @@ class dlnaList : public RegisterTable {
             drawItem(pos);
             m_displayed_lines++;
         }
-        sprintf(m_buff, "%i-%i/%i", m_viewPoint + 1, m_viewPoint + (pos - 1), m_dlnaMaxItems); // shows the current items pos e.g. "30-39/210"
+        m_buff.assignf("%i-%i/%i", m_viewPoint + 1, m_viewPoint + (pos - 1), m_dlnaMaxItems); // shows the current items pos e.g. "30-39/210"
         tft.setTextColor(TFT_ORANGE);
-        tft.writeText(m_buff, 10, m_y, m_w - 10, m_lineHight, TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER, true, true);
+        tft.writeText(m_buff.c_get(), 10, m_y, m_w - 10, m_lineHight, TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER, true, true);
         return;
     }
 
@@ -3838,7 +3829,7 @@ class dlnaList : public RegisterTable {
             else
                 m_viewPoint = 0;
             m_browseOnRelease = DLNA_WIPE;
-            m_chptr = NULL;
+            m_chptr = "";
             goto exit;
         }
 
@@ -3850,7 +3841,7 @@ class dlnaList : public RegisterTable {
             else
                 m_viewPoint = 0;
             m_browseOnRelease = DLNA_WIPE;
-            m_chptr = NULL;
+            m_chptr = "";
             goto exit;
         }
 
@@ -3863,7 +3854,7 @@ class dlnaList : public RegisterTable {
             else
                 m_viewPoint += diff;
             m_browseOnRelease = DLNA_WIPE;
-            m_chptr = NULL;
+            m_chptr = "";
             goto exit;
         }
 
@@ -3872,7 +3863,7 @@ class dlnaList : public RegisterTable {
             if (m_viewPoint + 9 >= m_dlnaMaxItems - 1) goto exit;
             m_viewPoint += 9;
             m_browseOnRelease = DLNA_WIPE;
-            m_chptr = NULL;
+            m_chptr = "";
             goto exit;
         }
 
@@ -3904,8 +3895,7 @@ class dlnaList : public RegisterTable {
             if (startsWith(m_srvContent->at(m_itemListPos - 1).itemURL.c_get(), "http")) {
                 m_currItemNr[*m_dlnaLevel] = m_itemListPos - 1;
                 if (m_srvContent->at(m_itemListPos - 1).isAudio) {
-                    sprintf(m_buff, "%s", m_srvContent->at(m_itemListPos - 1).title.c_get());
-                    m_chptr = m_buff;
+                    m_chptr.assignf("%s", m_srvContent->at(m_itemListPos - 1).title.c_get());
                     m_ra.arg1 = m_srvContent->at(m_itemListPos - 1).itemURL; // url --> connecttohost()
                     m_ra.arg2 = m_srvContent->at(m_itemListPos - 1).title;   // filename --> showFileName()
                     if (m_ra.arg1.strlen() > 0 && m_ra.arg2.strlen() > 0) m_ra.val1 = 1;
@@ -3917,9 +3907,8 @@ class dlnaList : public RegisterTable {
 
         if (guard3) { // is folder
             m_viewPoint = 0;
-            sprintf(m_buff, "%s (%d)", m_srvContent->at(m_itemListPos - 1).title.c_get(), m_srvContent->at(m_itemListPos - 1).childCount);
             m_currItemNr[*m_dlnaLevel] = m_itemListPos - 1;
-            m_chptr = m_buff;
+            m_chptr.assignf("%s (%d)", m_srvContent->at(m_itemListPos - 1).title.c_get(), m_srvContent->at(m_itemListPos - 1).childCount);
             m_dlnaHistory[(*m_dlnaLevel) + 1].objId = m_srvContent->at(m_itemListPos - 1).objectId;
             m_dlnaHistory[(*m_dlnaLevel) + 1].name = m_srvContent->at(m_itemListPos - 1).title;
             m_dlnaHistory[(*m_dlnaLevel) + 1].childCount = m_srvContent->at(m_itemListPos - 1).childCount;
@@ -3943,7 +3932,7 @@ class dlnaList : public RegisterTable {
         } else {
             m_currItemNr[*m_dlnaLevel] = 0;
         }
-        m_chptr = NULL;
+        m_chptr = "";
         m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId.c_get(), m_viewPoint, 9);
         m_dlna->loop();
         while (m_dlna->getState() != m_dlna->IDLE) {
@@ -3967,7 +3956,7 @@ class dlnaList : public RegisterTable {
         } else {
             m_currItemNr[*m_dlnaLevel] = m_dlnaMaxItems - 1;
         }
-        m_chptr = NULL;
+        m_chptr = "";
         m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId.c_get(), m_viewPoint, 9);
         m_dlna->loop();
         while (m_dlna->getState() != m_dlna->IDLE) {
@@ -3985,7 +3974,7 @@ class dlnaList : public RegisterTable {
         if (m_currItemNr[*m_dlnaLevel] < m_viewPoint) {
             m_viewPoint -= 9;
             if (m_viewPoint < 0) m_viewPoint = 0;
-            m_chptr = NULL;
+            m_chptr = "";
             m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_viewPoint, 9);
             m_dlna->loop();
             while (m_dlna->getState() != m_dlna->IDLE) {
@@ -4013,7 +4002,7 @@ class dlnaList : public RegisterTable {
         m_currItemNr[*m_dlnaLevel]++;
         if (m_currItemNr[*m_dlnaLevel] >= m_viewPoint + 9) {
             m_viewPoint += 9;
-            m_chptr = NULL;
+            m_chptr = "";
             m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId.c_get(), m_viewPoint, 9);
             m_dlna->loop();
             while (m_dlna->getState() != m_dlna->IDLE) {
@@ -4539,7 +4528,6 @@ class stationsList : public RegisterTable {
     bool         m_clicked = false;
     bool         m_state = false;
     ps_ptr<char> m_name;
-    char*        m_pathBuff = NULL;
     char*        m_buff = NULL;
     releasedArg  m_ra;
     ps_ptr<char> m_colorToDraw;
@@ -4555,7 +4543,6 @@ class stationsList : public RegisterTable {
         m_enabled = false;
         m_clicked = false;
         m_state = false;
-        m_pathBuff = x_ps_malloc(50);
         m_ra.arg1 = "";
         m_ra.arg2 = "";
         m_ra.val1 = 0;
