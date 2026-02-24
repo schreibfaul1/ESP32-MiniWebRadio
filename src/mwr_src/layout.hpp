@@ -100,13 +100,13 @@ constexpr uint16_t h_res = 320, v_res = 240; // horizontal - vertical resolution
 constexpr uint16_t h_footer = 20;            // footer height
 constexpr uint16_t hw_btn = 40 + 0;          // 40x40 + padding, normal buttons
 constexpr uint16_t hw_btn_s = 32 + 2;        // 32x32 + padding, small buttons
-constexpr uint16_t h_progBar = 11;           // height progressBar and volumeSlider
 constexpr uint16_t w_vuMeter = 24;           // width vuMeter
 
 constexpr uint16_t h_area = (v_res - 2 * h_footer) / 2;                      // 100, height area1 and  area2
 constexpr uint16_t y_area2 = v_res - h_footer - h_area;                      // 240 - 20 - 100, yPos area2
 constexpr uint16_t y_btn = y_area2 + h_area / 2 + (h_area / 4 - hw_btn / 2); // center in the lower half of area2
-constexpr uint16_t y_progbar = y_btn - 2 * h_progBar;
+constexpr uint16_t h_progBar = (h_area / 2);                                 // height progressBar and volumeSlider = half of y_area - 20%
+constexpr uint16_t y_progbar = y_area2;                                      // y_area2 + 10%
 constexpr uint16_t h_EQ = (2 * h_area - hw_btn) / 4;
 
 // -----------------------------------------------------------------------------------
@@ -186,13 +186,13 @@ constexpr uint16_t h_res = 480, v_res = 320; // horizontal - vertical resolution
 constexpr uint16_t h_footer = 30;            // footer height
 constexpr uint16_t hw_btn = 56 + 2;          // 56x56 + padding, normal buttons
 constexpr uint16_t hw_btn_s = 44 + 2;        // 44x45 + padding, small buttons
-constexpr uint16_t h_progBar = 14;           // height progressBar and volumeSlider
 constexpr uint16_t w_vuMeter = 32;           // width vuMeter
 
 constexpr uint16_t h_area = (v_res - 2 * h_footer) / 2;                      // 130, height area1 and  area2
 constexpr uint16_t y_area2 = v_res - h_footer - h_area;                      // 320 - 30 - 130, yPos area2
 constexpr uint16_t y_btn = y_area2 + h_area / 2 + (h_area / 4 - hw_btn / 2); // center in the lower half of area2
-constexpr uint16_t y_progbar = y_btn - 2 * h_progBar;
+constexpr uint16_t h_progBar = (h_area / 2);                                 // height progressBar and volumeSlider = half of y_area
+constexpr uint16_t y_progbar = y_area2;                                      // y_area2
 constexpr uint16_t h_EQ = (2 * h_area - hw_btn) / 4;
 
 // -----------------------------------------------------------------------------------
@@ -271,13 +271,13 @@ constexpr uint16_t h_res = 800, v_res = 480; // horizontal - vertical resolution
 constexpr uint16_t h_footer = 50;            // footer height
 constexpr uint16_t hw_btn = 76 + 2;          // 76x76 + padding, normal buttons
 constexpr uint16_t hw_btn_s = 65 + 2;        // 65x65 + padding, small buttons
-constexpr uint16_t h_progBar = 24;           // height progressBar and volumeSlider
 constexpr uint16_t w_vuMeter = 40;           // width vuMeter
 
 constexpr uint16_t h_area = (v_res - 2 * h_footer) / 2;                      // 130, height area1 and  area2
 constexpr uint16_t y_area2 = v_res - h_footer - h_area;                      // 320 - 30 - 130, yPos area2
 constexpr uint16_t y_btn = y_area2 + h_area / 2 + (h_area / 4 - hw_btn / 2); // center in the lower half of area2
-constexpr uint16_t y_progbar = y_btn - 2 * h_progBar;
+constexpr uint16_t h_progBar = (h_area / 2);                                 // height progressBar and volumeSlider = half of y_area
+constexpr uint16_t y_progbar = y_area2;                                      // y_area2
 constexpr uint16_t h_EQ = (2 * h_area - hw_btn) / 4;
 
 // -----------------------------------------------------------------------------------
@@ -287,7 +287,7 @@ constexpr uint16_t h_EQ = (2 * h_area - hw_btn) / 4;
 constexpr coor winHeader = coor().pos(0, 0).size(h_res, h_footer);
 constexpr coor winLogo = coor().pos(0, h_footer).size(h_area, h_area).pad(4, 4, 4, 4);
 constexpr coor winName = coor().pos(h_area, h_footer).size(h_res - h_area, h_area).pad(15, 5, 0, 0); // StationName
-constexpr coor winProgbar = coor().pos(0, y_progbar).size(h_res, h_progBar).pad(5, 5, 0, 0);         // or volume slider
+constexpr coor winProgbar = coor().pos(0, y_progbar).size(h_res, h_progBar).pad(15, 15, 0, 0);       // or volume slider
 constexpr coor winTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(0, 5, 0, 3);
 constexpr coor winSTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(10, 5, 2, 2);
 constexpr coor winVUmeter = coor().pos(h_res - w_vuMeter, y_area2).size(w_vuMeter, h_area);
@@ -360,8 +360,8 @@ constexpr uint16_t w_vuMeter = 50;            // width vuMeter
 constexpr uint16_t h_area = (v_res - 2 * h_footer) / 2;                      // 240, height area1 and  area2
 constexpr uint16_t y_area2 = v_res - h_footer - h_area;                      // 600 - 60 - 240, yPos area2
 constexpr uint16_t y_btn = y_area2 + h_area / 2 + (h_area / 4 - hw_btn / 2); // center in the lower half of area2
-constexpr uint16_t h_progBar = (h_area / 2) - (h_area / 5);                  // height progressBar and volumeSlider = half of y_area - 20%
-constexpr uint16_t y_progbar = y_area2 + (h_area / 10);                      // y_area2 + 10%
+constexpr uint16_t h_progBar = (h_area / 2);                                 // height progressBar and volumeSlider = half of y_area
+constexpr uint16_t y_progbar = y_area2;                                      // y_area2
 constexpr uint16_t h_EQ = (2 * h_area - hw_btn) / 4;
 
 // -----------------------------------------------------------------------------------
@@ -371,7 +371,7 @@ constexpr uint16_t h_EQ = (2 * h_area - hw_btn) / 4;
 constexpr coor winHeader = coor().pos(0, 0).size(h_res, h_footer);
 constexpr coor winLogo = coor().pos(0, h_footer).size(h_area, h_area).pad(4, 4, 4, 4);
 constexpr coor winName = coor().pos(h_area, h_footer).size(h_res - h_area, h_area).pad(15, 5, 0, 0); // StationName
-constexpr coor winProgbar = coor().pos(0, y_progbar).size(h_res, h_progBar).pad(5, 5, 0, 0);         // or volume slider
+constexpr coor winProgbar = coor().pos(0, y_progbar).size(h_res, h_progBar).pad(5, 5, 20, 20);       // or volume slider
 constexpr coor winTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(0, 5, 0, 3);
 constexpr coor winSTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(10, 5, 2, 2);
 constexpr coor winVUmeter = coor().pos(h_res - w_vuMeter, y_area2).size(w_vuMeter, h_area).pad(5, 5, 5, 5);

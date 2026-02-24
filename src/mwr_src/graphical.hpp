@@ -324,8 +324,8 @@ class progressbar : public RegisterTable {
         m_padding_right = padding_right;
         m_padding_top = padding_top;
         m_padding_bottom = padding_bottom;
-        m_railHight = m_h / 2;
-        m_rail_y_pos = m_y + m_h / 4;
+        m_railHight = m_h / 4;
+        m_rail_y_pos = m_y + m_h / 2;
         m_minVal = minVal;
         m_maxVal = maxVal;
         m_enabled = false;
