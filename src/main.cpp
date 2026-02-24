@@ -2993,8 +2993,8 @@ void ir_short_key(int8_t key) {
                 break;
             }
             if (s_state == AUDIOFILESLIST) {
-                const char* r = lst_PLAYER.getSelectedFile();
-                if (r) {
+                ps_ptr<char> r = lst_PLAYER.getSelectedFile();
+                if (r != "") {
                     stopSong();
                     SD_playFile(lst_PLAYER.getSelectedFilePath(), 0, true);
                     s_cur_AudioFileNr = lst_PLAYER.getSelectedFileNr();

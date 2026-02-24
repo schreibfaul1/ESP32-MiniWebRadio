@@ -1942,10 +1942,10 @@ class button1state : public RegisterTable { // click button
         m_bgColor = TFT_BLACK;
         m_enabled = false;
         m_clicked = false;
-        setDefaultPicturePath(NULL);
-        setClickedPicturePath(NULL);
-        setInactivePicturePath(NULL);
-        setAlternativePicturePath(NULL);
+        setDefaultPicturePath("");
+        setClickedPicturePath("");
+        setInactivePicturePath("");
+        setAlternativePicturePath("");
     }
     ~button1state() {}
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool backgroundTransparency = false) {
@@ -2067,7 +2067,7 @@ class button2state : public RegisterTable { // on off switch
     releasedArg  m_ra;
 
   public:
-    button2state(const char* name) {
+    button2state(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
         m_bgColor = TFT_BLACK;
@@ -2119,8 +2119,8 @@ class button2state : public RegisterTable { // on off switch
             drawImage(m_alternativeOffPicturePath, m_x, m_y, m_w, m_h);
         }
     }
-    void setAlternativeOnPicturePath(const char* path) { m_alternativeOnPicturePath = path; }
-    void setAlternativeOffPicturePath(const char* path) { m_alternativeOffPicturePath = path; }
+    void setAlternativeOnPicturePath(ps_ptr<char> path) { m_alternativeOnPicturePath = path; }
+    void setAlternativeOffPicturePath(ps_ptr<char> path) { m_alternativeOffPicturePath = path; }
     void hide() {
         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         m_enabled = false;
@@ -2218,7 +2218,7 @@ class numbersBox : public RegisterTable { // range 000...999
     char         m_numbers[4] = "000";
 
   public:
-    numbersBox(const char* name) {
+    numbersBox(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
     }
@@ -2326,7 +2326,7 @@ class offTimerBox : public RegisterTable { // range 000...999
     char         m_numbers[10] = "000";
 
   public:
-    offTimerBox(const char* name) {
+    offTimerBox(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
     }
@@ -2446,11 +2446,11 @@ class pictureBox : public RegisterTable {
     releasedArg  m_ra;
 
   public:
-    pictureBox(const char* name) {
+    pictureBox(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
-        setPicturePath(NULL);
-        setAlternativPicturePath(NULL);
+        setPicturePath("");
+        setAlternativPicturePath("");
     }
     ~pictureBox() {}
 
@@ -2585,7 +2585,7 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
     releasedArg  m_ra;
 
   public:
-    imgClock24(const char* name) {
+    imgClock24(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
         m_bgColor = TFT_BLACK;
@@ -2784,7 +2784,7 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
     } m_h10, m_h01, m_c, m_m10, m_m01;
 
   public:
-    imgClock24small(const char* name) {
+    imgClock24small(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
         m_bgColor = TFT_BLACK;
@@ -2991,8 +2991,8 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
     bool         m_backgroundTransparency = false;
     ps_ptr<char> m_name;
     ps_ptr<char> m_pathBuff;
-    uint8_t*     m_alarmDays = NULL;
-    int16_t*     m_alarmTime = NULL;
+    uint8_t*     m_alarmDays;
+    int16_t*     m_alarmTime;
     uint8_t      m_min = 0, m_hour = 0, m_weekday = 0;
     int8_t       m_btnAlarmDay = -1;
     int8_t       m_btnAlarmTime = -1;
@@ -3002,7 +3002,7 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
     releasedArg  m_ra;
 
   public:
-    alarmClock(const char* name) {
+    alarmClock(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
         m_bgColor = TFT_BLACK;
@@ -3564,7 +3564,7 @@ class dlnaList : public RegisterTable {
     ps_ptr<char>                               m_name;
     ps_ptr<char>                               m_chptr;
     ps_ptr<char>                               m_buff;
-    const char*                                m_tftSize = "";
+    ps_ptr<char>                               m_tftSize = "";
     const std::deque<DLNA_Client::dlnaServer>* m_dlnaServer;
     const std::deque<DLNA_Client ::srvItem>*   m_srvContent;
     DLNA_Client*                               m_dlna;
@@ -3589,8 +3589,8 @@ class dlnaList : public RegisterTable {
         m_ra.val1 = 0;
         m_ra.val2 = 0;
     }
-    ~dlnaList() { }
-    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const char* tftSize, uint8_t fontSize) {
+    ~dlnaList() {}
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, ps_ptr<char> tftSize, uint8_t fontSize) {
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w; // width
@@ -3879,7 +3879,7 @@ class dlnaList : public RegisterTable {
                 m_chptr = m_dlnaServer->at(m_itemListPos - 1).friendlyName.c_get();
                 m_currDLNAsrvNr = m_itemListPos - 1;
                 m_currItemNr[*m_dlnaLevel] = m_itemListPos - 1;
-                if (m_dlnaServer->at(m_itemListPos - 1).friendlyName.c_get() == NULL) {
+                if (m_dlnaServer->at(m_itemListPos - 1).friendlyName == "") {
                     MWR_LOG_WARN("invalid pointer in dlna history");
                     m_dlnaHistory[(*m_dlnaLevel) + 1].name = "dummy";
                     goto exit;
@@ -4141,17 +4141,17 @@ class fileList : public RegisterTable {
     ps_ptr<char> m_curAudioFolder;
     ps_ptr<char> m_curAudioPath;
     ps_ptr<char> m_curAudioName;
-    const char*  m_tftSize = "";
-    const char*  m_rootColor = ANSI_ESC_LIGHTBROWN;
-    const char*  m_folderColor = ANSI_ESC_ORANGE;
-    const char*  m_fileColor = ANSI_ESC_WHITE;
-    const char*  m_selectColor = ANSI_ESC_CYAN;
-    const char*  m_irColor = ANSI_ESC_MAGENTA;
-    const char*  m_currentColor = ANSI_ESC_MAGENTA;
+    ps_ptr<char> m_tftSize = "";
+    ps_ptr<char> m_rootColor = ANSI_ESC_LIGHTBROWN;
+    ps_ptr<char> m_folderColor = ANSI_ESC_ORANGE;
+    ps_ptr<char> m_fileColor = ANSI_ESC_WHITE;
+    ps_ptr<char> m_selectColor = ANSI_ESC_CYAN;
+    ps_ptr<char> m_irColor = ANSI_ESC_MAGENTA;
+    ps_ptr<char> m_currentColor = ANSI_ESC_MAGENTA;
     releasedArg  m_ra;
 
   public:
-    fileList(const char* name) {
+    fileList(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
         m_curAudioFolder = "";
@@ -4167,7 +4167,7 @@ class fileList : public RegisterTable {
         m_ra.val2 = 0;
     }
     ~fileList() {}
-    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const char* tftSize, uint8_t fontSize) {
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, ps_ptr<char> tftSize, uint8_t fontSize) {
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w; // width
@@ -4220,8 +4220,6 @@ class fileList : public RegisterTable {
         hasReleased(x - m_x, y - m_y);
         m_clicked = false;
         int pos = (y - m_y) / m_lineHight;
-
-        char* fileName = NULL;
 
         if (m_browseOnRelease == 1) {
             if (m_viewPos + 9 >= s_SD_content.getSize()) {
@@ -4289,7 +4287,6 @@ class fileList : public RegisterTable {
         m_oldX = 0;
         m_oldY = 0;
         if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
-        x_ps_free(&fileName);
         m_ra.val1 = 0;
         m_ra.arg1 = "";
         m_ra.arg2 = "";
@@ -4331,7 +4328,7 @@ class fileList : public RegisterTable {
             return;
         }
         int         pos = m_curAudioFileNr - m_viewPos + 1;
-        const char* color = m_fileColor;                                 // assume is file
+        ps_ptr<char> color = m_fileColor;                                 // assume is file
         if (s_SD_content.isDir(m_curAudioFileNr)) color = m_folderColor; // is folder
         myList.colourLine(pos, color);
         m_curAudioFileNr--;
@@ -4348,7 +4345,7 @@ class fileList : public RegisterTable {
             audioFileslist(m_viewPos);
             return;
         }
-        const char* color;
+        ps_ptr<char> color;
         int         pos = m_curAudioFileNr - m_viewPos + 1;
         if (m_curAudioFileNr == -1) {
             color = m_rootColor;
@@ -4363,9 +4360,9 @@ class fileList : public RegisterTable {
         m_curAudioFileNr++;
         myList.colourLine(pos + 1, m_irColor);
     }
-    const char* getSelectedFile() {
+    ps_ptr<char> getSelectedFile() {
         if (m_curAudioFileNr == -1) {                                 // get parent folder
-            if (m_curAudioFolder.equals("/audiofiles/")) return NULL; // is already the root
+            if (m_curAudioFolder.equals("/audiofiles/")) return ""; // is already the root
             myList.colourLine(m_y, m_selectColor);
             vTaskDelay(300 / portTICK_PERIOD_MS);
             int lastSlash = m_curAudioFolder.last_index_of('/');
@@ -4377,21 +4374,21 @@ class fileList : public RegisterTable {
             m_viewPos = 0;
             s_SD_content.listFilesInDir(m_curAudioFolder.c_get(), true, false);
             show(m_curAudioFolder.c_get(), 0);
-            return NULL;
+            return "";
         }
         if (s_SD_content.isDir(m_curAudioFileNr)) { // is child folder
             myList.colourLine(m_y, m_selectColor);
             vTaskDelay(300 / portTICK_PERIOD_MS);
             m_curAudioPath = s_SD_content.getFilePathByIndex(m_curAudioFileNr);
             show(m_curAudioPath, 0);
-            return NULL;
+            return "";
         }
         myList.colourLine(m_y, m_selectColor);
         vTaskDelay(300 / portTICK_PERIOD_MS);
         return s_SD_content.getFilePathByIndex(m_curAudioFileNr);
     }
-    const char* getSelectedFileName() { return s_SD_content.getFileNameByIndex(m_curAudioFileNr); }
-    const char* getSelectedFilePath() {
+    ps_ptr<char>  getSelectedFileName() { return s_SD_content.getFileNameByIndex(m_curAudioFileNr); }
+    ps_ptr<char>  getSelectedFilePath() {
         myList.colourLine(m_curAudioFileNr - m_viewPos + 1, m_selectColor);
         vTaskDelay(300 / portTICK_PERIOD_MS);
         return s_SD_content.getFilePathByIndex(m_curAudioFileNr);
@@ -4408,7 +4405,7 @@ class fileList : public RegisterTable {
         tft.setFont(m_fontSize);
         myList.setMode(PLAYER, m_tftSize, m_fontSize);
         myList.clearList();
-        const char* color;
+        ps_ptr<char> color;
 
         color = m_folderColor;
         if (m_curAudioFolder.equals("/audiofiles/")) color = m_rootColor; // is root
@@ -4518,7 +4515,7 @@ class stationsList : public RegisterTable {
     int16_t      m_oldY = 0;
     uint8_t      m_lineHight = 0;
     uint16_t     m_firstStationsLineNr = 0;
-    uint16_t*    m_curSstationNr = NULL;
+    uint16_t*    m_curSstationNr = 0;
     uint16_t     m_curStaNrCpy = 0;
     uint8_t      m_browseOnRelease = 0;
     uint8_t      m_fontSize = 0;
@@ -4528,15 +4525,14 @@ class stationsList : public RegisterTable {
     bool         m_clicked = false;
     bool         m_state = false;
     ps_ptr<char> m_name;
-    char*        m_buff = NULL;
     releasedArg  m_ra;
     ps_ptr<char> m_colorToDraw;
-    const char*  m_staNameToDraw = NULL;
-    const char*  m_tftSize = "";
+    ps_ptr<char> m_staNameToDraw;
+    ps_ptr<char> m_tftSize = "";
     uint16_t     m_staNrToDraw = 0;
 
   public:
-    stationsList(const char* name) {
+    stationsList(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
         m_bgColor = TFT_BLACK;
@@ -4548,8 +4544,8 @@ class stationsList : public RegisterTable {
         m_ra.val1 = 0;
         m_ra.val2 = 0;
     }
-    ~stationsList() { x_ps_free(&m_buff); }
-    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const char* tftSize, uint8_t fontSize) {
+    ~stationsList() {}
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, ps_ptr<char> tftSize, uint8_t fontSize) {
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w; // width
@@ -4604,7 +4600,6 @@ class stationsList : public RegisterTable {
         m_oldX = 0;
         m_oldY = 0;
         if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
-        x_ps_free(&m_buff);
         m_ra.val1 = 0;
         m_ra.arg1 = "";
         return true;
@@ -4638,7 +4633,7 @@ class stationsList : public RegisterTable {
 
             m_staNameToDraw = staMgnt.getStationName(pos + m_firstStationsLineNr + 1); // the station name
             m_staNrToDraw = pos + m_firstStationsLineNr + 1;                           // the station number
-            myList.drawLine(pos, m_staNameToDraw, NULL, NULL, m_colorToDraw.c_get(), m_staNrToDraw);
+            myList.drawLine(pos, m_staNameToDraw, "", "", m_colorToDraw.c_get(), m_staNrToDraw);
             if (pos == 1 && m_firstStationsLineNr > 0 && staMgnt.getSumStations()) { myList.drawTriangeUp(); }
             if (pos == 9 && m_firstStationsLineNr + 10 < staMgnt.getSumStations()) { myList.drawTriangeDown(); }
         }
@@ -4770,7 +4765,7 @@ class vuMeter : public RegisterTable {
     uint16_t     m_frame_h = 0;
 
   public:
-    vuMeter(const char* name) {
+    vuMeter(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
         m_bgColor = TFT_BLACK;
@@ -4890,7 +4885,7 @@ class displayHeader : public RegisterTable {
     pictureBox*  pic_Speaker = new pictureBox("header_Speaker"); // loudspeaker symbol
     textbox*     txt_Volume = new textbox("header_Volume");      // volume
     pictureBox*  pic_RSSID = new pictureBox("header_RSSID");     // RSSID symbol
-    timeString*  m_timeStringObject = NULL;
+    timeString*  m_timeStringObject;
     int16_t      m_x = 0;
     int16_t      m_y = 0;
     int16_t      m_w = 0;
@@ -5087,7 +5082,7 @@ class displayHeader : public RegisterTable {
     } const s_time; // time object
 #endif
   public:
-    displayHeader(const char* name, uint8_t fontSize) {
+    displayHeader(ps_ptr<char> name, uint8_t fontSize) {
         register_object(this);
         m_name = name;
         m_bgColor = TFT_BLACK;

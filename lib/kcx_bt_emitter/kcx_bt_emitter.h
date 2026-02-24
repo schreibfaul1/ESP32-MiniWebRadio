@@ -153,7 +153,7 @@ class KCX_BT_Emitter {
     void writeCommand(ps_ptr<char> cmd);
 
     void stringifyMemItems();
-    void protocol_addElement(const char* RX_TX, const char* str);
+    void protocol_addElement(ps_ptr<char> RX_TX, ps_ptr<char> str);
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // Macro for comfortable calls
