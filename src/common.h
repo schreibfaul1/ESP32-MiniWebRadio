@@ -290,7 +290,7 @@ void         showFileName(const char* fname);
 void         showPlsFileNumber();
 void         showAudioFileNumber();
 void         display_sleeptime(int8_t ud = 0);
-boolean      drawImage(const char* path, uint16_t posX, uint16_t posY, uint16_t maxWidth = 0, uint16_t maxHeigth = 0);
+boolean      drawImage(ps_ptr<char> path, uint16_t posX, uint16_t posY, uint16_t maxWidth = 0, uint16_t maxHeigth = 0);
 boolean      isAudio(File file);
 boolean      isAudio(const char* path);
 boolean      isPlaylist(File file);

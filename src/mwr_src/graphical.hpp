@@ -219,7 +219,7 @@ class slider : public RegisterTable {
     void disable() { m_enabled = false; }
     void enable() { m_enabled = true; }
     void hide() {
-    //    if (!m_show) return;
+        //    if (!m_show) return;
         if (m_backgroundTransparency) {
             if (m_saveBackground)
                 tft.copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
@@ -916,7 +916,7 @@ class textbutton : public RegisterTable {
         m_noWrap = noWrap;
     }
     ps_ptr<char> getText() { return m_text; }
-    void        setAlign(uint8_t h_align, uint8_t v_align) {
+    void         setAlign(uint8_t h_align, uint8_t v_align) {
         m_h_align = h_align;
         m_v_align = v_align;
     }
@@ -952,7 +952,7 @@ class textbutton : public RegisterTable {
                 if (m_borderWidth > 0) { tft.drawRoundRect(m_x, m_y, m_w, m_h, m_r, m_clickColor); }
                 if (m_borderWidth > 1) { tft.drawRoundRect(m_x + 1, m_y + 1, m_w - 2, m_h - 2, m_r, m_clickColor); }
             }
-            if (m_text.equals("/l"))  {
+            if (m_text.equals("/l")) {
                 drawTriangeLeft();
             } else if (m_text.equals("/r")) {
                 drawTriangeRight();
@@ -975,33 +975,33 @@ class selectbox : public RegisterTable {
           —————————————————————————————————————————————————————————————————————————————
     */
   private:
-    int16_t            m_x = 0;
-    int16_t            m_y = 0;
-    int16_t            m_w = 0;
-    int16_t            m_h = 0;
-    uint8_t            m_fontSize = 0;
-    uint8_t            m_padding_left = 0;  // left margin
-    uint8_t            m_paddig_right = 0;  // right margin
-    uint8_t            m_paddig_top = 0;    // top margin
-    uint8_t            m_paddig_bottom = 0; // bottom margin
-    uint8_t            m_borderWidth = 0;
-    int8_t             m_idx = 0;
-    uint32_t           m_bgColor = 0;
-    uint32_t           m_fgColor = 0;
-    uint32_t           m_borderColor = 0;
-    ps_ptr<char>       m_name;
-    bool               m_enabled = false;
-    bool               m_clicked = false;
-    bool               m_autoSize = false;
-    bool               m_narrow = false;
-    bool               m_noWrap = false;
-    bool               m_backgroundTransparency = false;
-    bool               m_saveBackground = false;
-    releasedArg        m_ra;
-    textbox*           m_txt_select = new textbox("select_txtbox_ssid");
-    textbutton*        m_txt_btn_down = new textbutton("select_txtbtn_down");
-    textbutton*        m_txt_btn_up = new textbutton("select_txtbtn_up");
-    textbox*           m_txt_btn_idx = new textbox("select_txtbox_idx");
+    int16_t                   m_x = 0;
+    int16_t                   m_y = 0;
+    int16_t                   m_w = 0;
+    int16_t                   m_h = 0;
+    uint8_t                   m_fontSize = 0;
+    uint8_t                   m_padding_left = 0;  // left margin
+    uint8_t                   m_paddig_right = 0;  // right margin
+    uint8_t                   m_paddig_top = 0;    // top margin
+    uint8_t                   m_paddig_bottom = 0; // bottom margin
+    uint8_t                   m_borderWidth = 0;
+    int8_t                    m_idx = 0;
+    uint32_t                  m_bgColor = 0;
+    uint32_t                  m_fgColor = 0;
+    uint32_t                  m_borderColor = 0;
+    ps_ptr<char>              m_name;
+    bool                      m_enabled = false;
+    bool                      m_clicked = false;
+    bool                      m_autoSize = false;
+    bool                      m_narrow = false;
+    bool                      m_noWrap = false;
+    bool                      m_backgroundTransparency = false;
+    bool                      m_saveBackground = false;
+    releasedArg               m_ra;
+    textbox*                  m_txt_select = new textbox("select_txtbox_ssid");
+    textbutton*               m_txt_btn_down = new textbutton("select_txtbtn_down");
+    textbutton*               m_txt_btn_up = new textbutton("select_txtbtn_up");
+    textbox*                  m_txt_btn_idx = new textbox("select_txtbox_idx");
     std::vector<ps_ptr<char>> m_selContent;
 
   public:
@@ -1249,7 +1249,7 @@ class keyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
                                                     textbutton("txt_btn30"), textbutton("txt_btn31"), textbutton("txt_btn32"), textbutton("txt_btn33")};
 
   public:
-    keyBoard(const char* name, uint8_t fontSize) {
+    keyBoard(ps_ptr<char> name, uint8_t fontSize) {
         register_object(this);
         m_name = name;
         m_bgColor = TFT_BLACK;
@@ -1380,7 +1380,7 @@ class keyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
         if (!m_enabled) return false;
         if (!m_clicked) return false;
         m_clicked = false;
-        // if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
+        // if(graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
         for (int i = 0; i < 34; i++) {
             if (txt_btn_array[i].released()) {
                 if (txt_btn_array[i].getText().equals("A..")) { // upcase
@@ -1877,7 +1877,7 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     void updateTime(ps_ptr<char> hl_time, bool complete = true) {
         if (hl_time.strlen() != 8) return;
         if (!m_enabled) return;
-        m_time = hl_time;     // hhmmss
+        m_time = hl_time;               // hhmmss
         static char oldtime[8] = {255}; // hhmmss
         tft.setFont(m_fontSize);
         tft.setTextColor(m_fgColor);
@@ -1925,10 +1925,10 @@ class button1state : public RegisterTable { // click button
     int16_t      m_w = 0;
     int16_t      m_h = 0;
     uint32_t     m_bgColor = 0;
-    char*        m_defaultPicturePath = NULL;
-    char*        m_clickedPicturePath = NULL;
-    char*        m_inactivePicturePath = NULL;
-    char*        m_alternativePicturePath = NULL; // e.g. IR select
+    ps_ptr<char> m_defaultPicturePath;
+    ps_ptr<char> m_clickedPicturePath;
+    ps_ptr<char> m_inactivePicturePath;
+    ps_ptr<char> m_alternativePicturePath; // e.g. IR select
     bool         m_enabled = false;
     bool         m_clicked = false;
     bool         m_backgroundTransparency = false;
@@ -1936,7 +1936,7 @@ class button1state : public RegisterTable { // click button
     releasedArg  m_ra;
 
   public:
-    button1state(const char* name) {
+    button1state(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
         m_bgColor = TFT_BLACK;
@@ -1947,12 +1947,7 @@ class button1state : public RegisterTable { // click button
         setInactivePicturePath(NULL);
         setAlternativePicturePath(NULL);
     }
-    ~button1state() {
-        x_ps_free(&m_defaultPicturePath);
-        x_ps_free(&m_clickedPicturePath);
-        x_ps_free(&m_inactivePicturePath);
-        x_ps_free(&m_alternativePicturePath);
-    }
+    ~button1state() {}
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool backgroundTransparency = false) {
         m_x = x; // x pos
         m_y = y; // y pos
@@ -1996,33 +1991,33 @@ class button1state : public RegisterTable { // click button
         drawImage(m_alternativePicturePath, m_x, m_y, m_w, m_h);
     }
     void showClickedPic() { drawImage(m_clickedPicturePath, m_x, m_y, m_w, m_h); }
-    void setDefaultPicturePath(const char* path) {
-        x_ps_free(&m_defaultPicturePath);
-        if (path)
-            m_defaultPicturePath = x_ps_strdup(path);
-        else
-            m_defaultPicturePath = x_ps_strdup("defaultPicturePath is not set");
+    void setDefaultPicturePath(ps_ptr<char> path) {
+        if (path.strlen() > 0) {
+            m_defaultPicturePath = path;
+        } else {
+            m_defaultPicturePath = "defaultPicturePath is not set";
+        }
     }
-    void setClickedPicturePath(const char* path) {
-        x_ps_free(&m_clickedPicturePath);
-        if (path)
-            m_clickedPicturePath = x_ps_strdup(path);
-        else
-            m_clickedPicturePath = x_ps_strdup("clickedPicturePath is not set");
+    void setClickedPicturePath(ps_ptr<char> path) {
+        if (path.strlen() > 0) {
+            m_clickedPicturePath = path;
+        } else {
+            m_clickedPicturePath = "clickedPicturePath is not set";
+        }
     }
-    void setInactivePicturePath(const char* path) {
-        x_ps_free(&m_inactivePicturePath);
-        if (path)
-            m_inactivePicturePath = x_ps_strdup(path);
-        else
-            m_inactivePicturePath = x_ps_strdup("inactivePicturePath is not set");
+    void setInactivePicturePath(ps_ptr<char> path) {
+        if (path.strlen() > 0) {
+            m_inactivePicturePath = path;
+        } else {
+            m_inactivePicturePath = "inactivePicturePath is not set";
+        }
     }
-    void setAlternativePicturePath(const char* path) {
-        x_ps_free(&m_alternativePicturePath);
-        if (path)
-            m_alternativePicturePath = x_ps_strdup(path);
-        else
-            m_alternativePicturePath = x_ps_strdup("alternativePicturePath is not set");
+    void setAlternativePicturePath(ps_ptr<char> path) {
+        if (path.strlen() > 0) {
+            m_alternativePicturePath = path;
+        } else {
+            m_alternativePicturePath = "alternativePicturePath is not set";
+        }
     }
     bool click() { // e.g. from IR
         if (!m_enabled) { return false; }
@@ -5330,7 +5325,7 @@ class displayFooter : public RegisterTable {
     textbox*     txt_OffTimer = new textbox("footer_OffTimer");      // off timer
     textbox*     txt_BitRate = new textbox("footer_BitRate");        // bit rate
     textbox*     txt_IpAddr = new textbox("footer_IPaddr");          // ip address
-    textbox*     txt_FileNr = new textbox("footer_FileNr");           // fileNr
+    textbox*     txt_FileNr = new textbox("footer_FileNr");          // fileNr
     int16_t      m_x = 0;
     int16_t      m_y = 0;
     int16_t      m_w = 0;
@@ -5352,7 +5347,7 @@ class displayFooter : public RegisterTable {
     bool         m_clicked = false;
     bool         m_backgroundTransparency = false;
     releasedArg  m_ra;
-    const char   m_Antenna_red[27] =    "/common/Antenna_red.png";
+    const char   m_Antenna_red[27] = "/common/Antenna_red.png";
     const char   m_Antenna_green[27] = "/common/Antenna_green.png";
     bool         m_WiFi_lost = true;
     const char   m_hourGlassymbol[2][27] = {"/common/Hourglass_blue.png", "/common/Hourglass_red.png"};
@@ -5383,7 +5378,7 @@ class displayFooter : public RegisterTable {
         uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_Flag; // Flags:  33...40 x 20 px
-    struct w_fn{
+    struct w_fn {
         uint16_t x = 25;
         uint16_t w = 72; // s_StaNr.w + s_Flag.w
         uint8_t  pl = 0;
@@ -5450,7 +5445,7 @@ class displayFooter : public RegisterTable {
         uint8_t  pt = 3;
         uint8_t  pb = 0;
     } const s_Flag; // Flags:  40...48 x 24 px
-    struct w_fn{
+    struct w_fn {
         uint16_t x = 30;
         uint16_t w = 98; // s_StaNr.w + s_Flag.w
         uint8_t  pl = 0;
@@ -5517,7 +5512,7 @@ class displayFooter : public RegisterTable {
         uint8_t  pt = 5;
         uint8_t  pb = 0;
     } const s_Flag; // Flags:  60...80 x 40 px
-    struct w_fn{
+    struct w_fn {
         uint16_t x = 51;
         uint16_t w = 164; // s_StaNr.w + s_Flag.w
         uint8_t  pl = 0;
@@ -5584,7 +5579,7 @@ class displayFooter : public RegisterTable {
         uint8_t  pt = 5;
         uint8_t  pb = 0;
     } const s_Flag; // Flags:  max 100 x 50 px
-    struct w_fn{
+    struct w_fn {
         uint16_t x = 80;
         uint16_t w = 210; // s_StaNr.w + s_Flag.w
         uint8_t  pl = 0;
@@ -5702,13 +5697,13 @@ class displayFooter : public RegisterTable {
     void disable() { m_enabled = false; }
     void setBGcolor(uint32_t color) { m_bgColor = color; }
 
-    void updateAntenna(bool WiFi_lost){
-        if(WiFi_lost && !m_WiFi_lost){
+    void updateAntenna(bool WiFi_lost) {
+        if (WiFi_lost && !m_WiFi_lost) {
             pic_Antenna->setPicturePath(m_Antenna_red);
             m_WiFi_lost = true;
             pic_Antenna->show(m_backgroundTransparency, false);
         }
-        if(!WiFi_lost && m_WiFi_lost){
+        if (!WiFi_lost && m_WiFi_lost) {
             pic_Antenna->setPicturePath(m_Antenna_green);
             m_WiFi_lost = false;
             pic_Antenna->show(m_backgroundTransparency, false);
@@ -5716,16 +5711,16 @@ class displayFooter : public RegisterTable {
     }
 
     void updateStation(uint16_t staNr) {
-        if(txt_FileNr->isEnabled()) txt_FileNr->hide();
+        if (txt_FileNr->isEnabled()) txt_FileNr->hide();
         m_staNr = staNr;
         char buff[10];
         sprintf(buff, "%03d", m_staNr);
         txt_StaNr->setText(buff);
         txt_StaNr->show(m_backgroundTransparency, false);
     }
-    void updateFileNr(ps_ptr<char>fNr) { // or BT Volume
-        if(txt_StaNr->isEnabled()) txt_StaNr->hide();
-        if(pic_Flag->isEnabled()) pic_Flag->hide();
+    void updateFileNr(ps_ptr<char> fNr) { // or BT Volume
+        if (txt_StaNr->isEnabled()) txt_StaNr->hide();
+        if (pic_Flag->isEnabled()) pic_Flag->hide();
         m_fileNr = fNr;
         txt_FileNr->setText(m_fileNr);
         txt_FileNr->show(m_backgroundTransparency, false);
@@ -5799,10 +5794,8 @@ class displayFooter : public RegisterTable {
         txt_BitRate->setBorderColor(m_bitRateColor);
         txt_BitRate->setTextColor(m_bitRateColor);
     }
-    void setIpAddr(ps_ptr<char> ipAddr) {
-        m_ipAddr = ipAddr;
-    }
-    void writeIpAddr(ps_ptr<char>ipAddr) {
+    void setIpAddr(ps_ptr<char> ipAddr) { m_ipAddr = ipAddr; }
+    void writeIpAddr(ps_ptr<char> ipAddr) {
         ipAddr.insert("IP:", 0);
         txt_IpAddr->setText(ipAddr, true, true);
         txt_IpAddr->show(m_backgroundTransparency, false);

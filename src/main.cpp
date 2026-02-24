@@ -615,9 +615,8 @@ void display_sleeptime(int8_t ud) { // set sleeptimer
     otb_SL_stime.show(s_sleeptime);
 }
 
-boolean drawImage(const char* path, uint16_t posX, uint16_t posY, uint16_t maxWidth, uint16_t maxHeigth) {
-    ps_ptr<char> p = path;
-    auto         scImg = scaleImage(p);
+boolean drawImage(ps_ptr<char> path, uint16_t posX, uint16_t posY, uint16_t maxWidth, uint16_t maxHeigth) {
+    auto scImg = scaleImage(path);
     if (!SD_MMC.exists(scImg.c_get())) {
         if (scImg.index_of("/.", 0) > 0) return false; // empty filename
         SerialPrintfln("AUDIO_info:  " ANSI_ESC_RED "file \"%s\" not found" ANSI_ESC_RESET "  ", scImg.c_get());
