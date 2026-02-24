@@ -517,7 +517,7 @@ void showLogoAndStationName(bool force) {
         old_SN_utf8 = SN_utf8;
         txt_RA_staName.setTextColor(TFT_CYAN);
         txt_RA_staName.setText(SN_utf8.c_get());
-        txt_RA_staName.show(true, false);
+        txt_RA_staName.show();
         pic_RA_logo.setPicturePath(path.c_get());
         pic_RA_logo.show(true, false);
         staNr.assignf("%i", s_cur_station);
@@ -1676,7 +1676,7 @@ void changeState(int8_t state, int8_t subState) {
                 if(newSubState) {
                     VUmeter_RA.show(true);
                     txt_RA_sTitle.setText("");
-                    txt_RA_sTitle.show(true, false);
+                    txt_RA_sTitle.show();
                     s_f_newIcyDescription = true;
                     s_f_newStreamTitle = true;
                 }
@@ -1691,7 +1691,7 @@ void changeState(int8_t state, int8_t subState) {
                 if(newSubState) {
                     txt_RA_sTitle.hide();
                     VUmeter_RA.hide();
-                    sdr_RA_volume.show(true, false);
+                    sdr_RA_volume.show();
                     btn_RA_mute.show(); btn_RA_prevSta.show(); btn_RA_nextSta.show();
                     setTimeCounter(2);
                 }
@@ -1742,7 +1742,7 @@ void changeState(int8_t state, int8_t subState) {
                 s_cur_Codec = 0;
                 showFileLogo(PLAYER, subState);
                 showFileName(s_SD_content.getColouredSStringByIndex(s_cur_AudioFileNr));
-                txt_PL_fName.show(true, false);
+                txt_PL_fName.show();
                 pgb_PL_progress.hide();
                 sdr_PL_volume.hide();
                 showAudioFileNumber();
@@ -1754,9 +1754,9 @@ void changeState(int8_t state, int8_t subState) {
                 showFileName(s_SD_content.getColouredSStringByIndex(s_cur_AudioFileNr));
                 if(newSubState){
                     btn_PL_fileList.hide(); btn_PL_radio.hide(); btn_PL_off.hide();
-                    pgb_PL_progress.show(true, false);
-                    sdr_PL_volume.show(true, false);
-                    txt_PL_fName.show(true, false);
+                    pgb_PL_progress.show();
+                    sdr_PL_volume.show();
+                    txt_PL_fName.show();
                     btn_PL_mute.show(); btn_PL_pause.setOff(); btn_PL_pause.show(); btn_PL_cancel.show(); btn_PL_playPrev.show(); btn_PL_playNext.show();
                 }
                 else{
@@ -1782,13 +1782,13 @@ void changeState(int8_t state, int8_t subState) {
             dispHeader.enable();
             dispFooter.enable();
             pgb_DL_progress.setValue(0);
-            pgb_DL_progress.show(true, false);
-            txt_DL_fName.show(true, false);
+            pgb_DL_progress.show();
+            txt_DL_fName.show();
             showFileLogo(DLNA, subState);
             webSrv.send("changeState=", "DLNA");
             if (audio.isRunning()) btn_DL_pause.setActive(true);
             else                   btn_DL_pause.setActive(false);
-            sdr_DL_volume.show(true, false);
+            sdr_DL_volume.show();
             btn_DL_pause.show(); btn_DL_mute.show(); btn_DL_cancel.show(); btn_DL_fileList.show(); btn_DL_radio.show();
             break;
         }
@@ -1807,7 +1807,7 @@ void changeState(int8_t state, int8_t subState) {
             }
             if (subState == 1) {
                 setTimeCounter(2);
-                sdr_CL_volume.show(false, false);
+                sdr_CL_volume.show();
                 btn_CL_mute.show(); btn_CL_alarm.show(); btn_CL_radio.show(); btn_CL_off.show();
             }
             s_subState_clock = subState;
@@ -1848,9 +1848,9 @@ void changeState(int8_t state, int8_t subState) {
                 clearWithOutHeaderFooter();
                 pic_BR_logo.show(false, false);
                 sdr_BR_value.setValue(s_brightness);
-                sdr_BR_value.show(true, true);
+                sdr_BR_value.show();
                 txt_BR_value.setText(int2str(s_brightness));
-                txt_BR_value.show(true, true);
+                txt_BR_value.show();
             } else {
                 sdr_BR_value.enable();
                 txt_BR_value.enable();
@@ -1861,20 +1861,20 @@ void changeState(int8_t state, int8_t subState) {
         case EQUALIZER:
             dispHeader.enable(); dispFooter.enable();
             if (newState) clearWithOutHeaderFooter();
-            sdr_EQ_lowPass.show(true, false);
-            sdr_EQ_bandPass.show(true, false);
-            sdr_EQ_highPass.show(true, false);
-            sdr_EQ_balance.show(true, false);
+            sdr_EQ_lowPass.show();
+            sdr_EQ_bandPass.show();
+            sdr_EQ_highPass.show();
+            sdr_EQ_balance.show();
             btn_EQ_lowPass.show();
             btn_EQ_bandPass.show();
             btn_EQ_highPass.show();
             btn_EQ_balance.show();
             btn_EQ_Player.show();
             btn_EQ_mute.show();
-            txt_EQ_lowPass.show(true, false);
-            txt_EQ_bandPass.show(true, false);
-            txt_EQ_highPass.show(true, false);
-            txt_EQ_balance.show(true, false);
+            txt_EQ_lowPass.show();
+            txt_EQ_bandPass.show();
+            txt_EQ_highPass.show();
+            txt_EQ_balance.show();
             btn_EQ_Radio.show();
             break;
 
@@ -1887,7 +1887,7 @@ void changeState(int8_t state, int8_t subState) {
             if (s_bt_emitter.mode.equals("RX")) { txt_BT_mode.writeText("RECEIVER");}
             else                                { txt_BT_mode.writeText("EMITTER"); }
             txt_BT_mode.setBGcolor(TFT_BROWN);
-            txt_BT_mode.show(true, false);
+            txt_BT_mode.show();
             ps_ptr<char> v;
             v.assignf("Vol: %02i", bt_emitter.getVolume());
             dispFooter.updateFileNr(v);
@@ -1930,7 +1930,7 @@ void changeState(int8_t state, int8_t subState) {
                 ps_ptr<char> pw = get_WiFi_PW(WiFi.SSID(i).c_str());
                 cls_wifiSettings.add_WiFi_Items(WiFi.SSID(i).c_str(), pw.c_get());
             }
-            cls_wifiSettings.show(false, false);
+            cls_wifiSettings.show();
             break;
     }
     s_ir_btn_select = UNDEFINED;
@@ -2022,17 +2022,17 @@ void loop() {
                     if (s_f_sleeping) return; // tc is active by pressing a button, but do nothing if "off"
 
                     if (s_state == RADIO) {
-                        if (!txt_RA_staName.isEnabled()) { txt_RA_staName.show(true, false); } // assume volBox is shown
+                        if (!txt_RA_staName.isEnabled()) { txt_RA_staName.show(); } // assume volBox is shown
                         if (s_subState_radio == 1) { changeState(RADIO, 0); }                  // Mute, Vol+, Vol-, Sta+, Sta-, StaList
                         if (s_subState_radio == 2) { changeState(RADIO, 0); }                  // Player, DLNA, Clock, SleepTime, Brightness, EQ, BT, Off
                     } else if (s_state == STATIONSLIST) {
                         changeState(RADIO, 0);
                     } else if (s_state == PLAYER) {
-                        if (!txt_PL_fName.isEnabled()) { txt_PL_fName.show(true, false); } // assume volBox is shown
+                        if (!txt_PL_fName.isEnabled()) { txt_PL_fName.show(); } // assume volBox is shown
                     } else if (s_state == AUDIOFILESLIST) {
                         changeState(PLAYER, 0);
                     } else if (s_state == DLNA) {
-                        if (!txt_DL_fName.isEnabled()) { txt_DL_fName.show(true, false); } // assume volBox is shown
+                        if (!txt_DL_fName.isEnabled()) { txt_DL_fName.show(); } // assume volBox is shown
                     } else if (s_state == DLNAITEMSLIST) {
                         changeState(DLNA, 0);
                     } else if (s_state == CLOCK) {
@@ -2511,7 +2511,7 @@ void my_audio_info(Audio::msg_t m) {
             if (s_state == RADIO) {}
             if (s_state == DLNA) {
                 txt_DL_fName.setText("");
-                txt_DL_fName.show(true, false);
+                txt_DL_fName.show();
                 btn_DL_pause.setActive(false);
                 btn_DL_pause.show();
             }
@@ -4036,7 +4036,7 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
         if (name.equals("btn_DL_pause"))    { s_f_pauseResume = audio.pauseResume(); if(s_ir_btn_select == 1) set_ir_pos_DL(0); goto exit; }
         if (name.equals("btn_DL_cancel"))   { stopSong();
                                               txt_DL_fName.setText("");
-                                              txt_DL_fName.show(true, false);
+                                              txt_DL_fName.show();
                                               pgb_DL_progress.reset();
                                               btn_DL_pause.setActive(false);
                                               btn_DL_pause.show();
