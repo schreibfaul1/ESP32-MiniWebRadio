@@ -99,13 +99,13 @@ namespace layout_320x240 {
 constexpr uint16_t h_res = 320, v_res = 240; // horizontal - vertical resolution
 constexpr uint16_t h_footer = 20;            // footer height
 constexpr uint16_t hw_btn = 40 + 0;          // 40x40 + padding, normal buttons
-constexpr uint16_t hw_btn_s  = 32 + 2;       // 32x32 + padding, small buttons
+constexpr uint16_t hw_btn_s = 32 + 2;        // 32x32 + padding, small buttons
 constexpr uint16_t h_progBar = 11;           // height progressBar and volumeSlider
 constexpr uint16_t w_vuMeter = 24;           // width vuMeter
 
-constexpr uint16_t h_area = (v_res - 2 * h_footer) / 2;                                // 100, height area1 and  area2
-constexpr uint16_t y_area2 = v_res - h_footer - h_area;                                // 240 - 20 - 100, yPos area2
-constexpr uint16_t y_btn = y_area2 + h_area / 2 + (h_area / 4 - hw_btn / 2);           // center in the lower half of area2
+constexpr uint16_t h_area = (v_res - 2 * h_footer) / 2;                      // 100, height area1 and  area2
+constexpr uint16_t y_area2 = v_res - h_footer - h_area;                      // 240 - 20 - 100, yPos area2
+constexpr uint16_t y_btn = y_area2 + h_area / 2 + (h_area / 4 - hw_btn / 2); // center in the lower half of area2
 constexpr uint16_t y_progbar = y_btn - 2 * h_progBar;
 constexpr uint16_t h_EQ = (2 * h_area - hw_btn) / 4;
 
@@ -116,7 +116,7 @@ constexpr uint16_t h_EQ = (2 * h_area - hw_btn) / 4;
 constexpr coor winHeader = coor().pos(0, 0).size(h_res, h_footer);
 constexpr coor winLogo = coor().pos(0, h_footer).size(h_area, h_area).pad(1, 1, 1, 1);
 constexpr coor winName = coor().pos(h_area, h_footer).size(h_res - h_area, h_area).pad(1, 1, 0, 0); // StationName
-constexpr coor winProgbar = coor().pos(0, y_progbar).size(h_res, h_progBar).pad(5, 5, 0, 0); // or volume slider
+constexpr coor winProgbar = coor().pos(0, y_progbar).size(h_res, h_progBar).pad(5, 5, 0, 0);        // or volume slider
 constexpr coor winTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(0, 5, 0, 3);
 constexpr coor winSTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(0, 4, 0, 3);
 constexpr coor winVUmeter = coor().pos(h_res - w_vuMeter, y_area2).size(w_vuMeter, h_area);
@@ -125,24 +125,23 @@ constexpr coor winButton = coor().pos(0, y_btn).size(hw_btn, hw_btn);
 constexpr coor winDigits = coor().pos(0, h_footer).size(h_res, y_btn - h_footer); // clock24, alarmclock
 constexpr coor winWoHF = coor().pos(0, h_footer).size(h_res, 2 * h_area);
 
-
 // -----------------------------------------------------------------------------------
 // window derived (calculated from others)
 // -----------------------------------------------------------------------------------
 
-constexpr coor btnHP = coor().pos(  10, h_footer + 0 * h_EQ).size(hw_btn_s, hw_btn_s);
-constexpr coor btnBP = coor().pos(  10, h_footer + 1 * h_EQ).size(hw_btn_s, hw_btn_s);
-constexpr coor btnLP = coor().pos(  10, h_footer + 2 * h_EQ).size(hw_btn_s, hw_btn_s);
-constexpr coor btnBAL = coor().pos( 10, h_footer + 3 * h_EQ).size(hw_btn_s, hw_btn_s);
+constexpr coor btnHP = coor().pos(10, h_footer + 0 * h_EQ).size(hw_btn_s, hw_btn_s);
+constexpr coor btnBP = coor().pos(10, h_footer + 1 * h_EQ).size(hw_btn_s, hw_btn_s);
+constexpr coor btnLP = coor().pos(10, h_footer + 2 * h_EQ).size(hw_btn_s, hw_btn_s);
+constexpr coor btnBAL = coor().pos(10, h_footer + 3 * h_EQ).size(hw_btn_s, hw_btn_s);
 
-constexpr coor sdrHP = coor().pos( 55, h_footer + 0 * h_EQ).size(150, h_EQ).pad(0, 0, 8, 8);
-constexpr coor sdrBP = coor().pos( 55, h_footer + 1 * h_EQ).size(150, h_EQ).pad(0, 0, 8, 8);
-constexpr coor sdrLP = coor().pos( 55, h_footer + 2 * h_EQ).size(150, h_EQ).pad(0, 0, 8, 8);
+constexpr coor sdrHP = coor().pos(55, h_footer + 0 * h_EQ).size(150, h_EQ).pad(0, 0, 8, 8);
+constexpr coor sdrBP = coor().pos(55, h_footer + 1 * h_EQ).size(150, h_EQ).pad(0, 0, 8, 8);
+constexpr coor sdrLP = coor().pos(55, h_footer + 2 * h_EQ).size(150, h_EQ).pad(0, 0, 8, 8);
 constexpr coor sdrBAL = coor().pos(55, h_footer + 3 * h_EQ).size(150, h_EQ).pad(0, 0, 8, 8);
 
-constexpr coor txtHP = coor().pos( 210, h_footer + 0 * h_EQ).size(105, h_EQ).pad(0, 0, 1, 1);
-constexpr coor txtBP = coor().pos( 210, h_footer + 1 * h_EQ).size(105, h_EQ).pad(0, 0, 1, 1);
-constexpr coor txtLP = coor().pos( 210, h_footer + 2 * h_EQ).size(105, h_EQ).pad(0, 0, 1, 1);
+constexpr coor txtHP = coor().pos(210, h_footer + 0 * h_EQ).size(105, h_EQ).pad(0, 0, 1, 1);
+constexpr coor txtBP = coor().pos(210, h_footer + 1 * h_EQ).size(105, h_EQ).pad(0, 0, 1, 1);
+constexpr coor txtLP = coor().pos(210, h_footer + 2 * h_EQ).size(105, h_EQ).pad(0, 0, 1, 1);
 constexpr coor txtBAL = coor().pos(210, h_footer + 3 * h_EQ).size(105, h_EQ).pad(0, 0, 1, 1);
 
 inline constexpr uint8_t fonts[13] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66, 81, 96};
@@ -186,13 +185,13 @@ namespace layout_480x320 {
 constexpr uint16_t h_res = 480, v_res = 320; // horizontal - vertical resolution
 constexpr uint16_t h_footer = 30;            // footer height
 constexpr uint16_t hw_btn = 56 + 2;          // 56x56 + padding, normal buttons
-constexpr uint16_t hw_btn_s  = 44 + 2;       // 44x45 + padding, small buttons
+constexpr uint16_t hw_btn_s = 44 + 2;        // 44x45 + padding, small buttons
 constexpr uint16_t h_progBar = 14;           // height progressBar and volumeSlider
 constexpr uint16_t w_vuMeter = 32;           // width vuMeter
 
-constexpr uint16_t h_area = (v_res - 2 * h_footer) / 2;                                // 130, height area1 and  area2
-constexpr uint16_t y_area2 = v_res - h_footer - h_area;                                // 320 - 30 - 130, yPos area2
-constexpr uint16_t y_btn = y_area2 + h_area / 2 + (h_area / 4 - hw_btn / 2);           // center in the lower half of area2
+constexpr uint16_t h_area = (v_res - 2 * h_footer) / 2;                      // 130, height area1 and  area2
+constexpr uint16_t y_area2 = v_res - h_footer - h_area;                      // 320 - 30 - 130, yPos area2
+constexpr uint16_t y_btn = y_area2 + h_area / 2 + (h_area / 4 - hw_btn / 2); // center in the lower half of area2
 constexpr uint16_t y_progbar = y_btn - 2 * h_progBar;
 constexpr uint16_t h_EQ = (2 * h_area - hw_btn) / 4;
 
@@ -202,33 +201,32 @@ constexpr uint16_t h_EQ = (2 * h_area - hw_btn) / 4;
 constexpr coor winHeader = coor().pos(0, 0).size(h_res, h_footer);
 constexpr coor winLogo = coor().pos(0, h_footer).size(h_area, h_area).pad(1, 1, 1, 1);
 constexpr coor winName = coor().pos(h_area, h_footer).size(h_res - h_area, h_area).pad(1, 1, 0, 0); // StationName
-constexpr coor winProgbar = coor().pos(0, y_progbar).size(h_res, h_progBar).pad(5, 5, 0, 0); // or volume slider
+constexpr coor winProgbar = coor().pos(0, y_progbar).size(h_res, h_progBar).pad(5, 5, 0, 0);        // or volume slider
 constexpr coor winTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(0, 5, 0, 3);
 constexpr coor winSTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(0, 4, 0, 3);
 constexpr coor winVUmeter = coor().pos(h_res - w_vuMeter, y_area2).size(w_vuMeter, h_area);
 constexpr coor winFooter = coor().pos(0, v_res - h_footer).size(h_res, h_footer);
 constexpr coor winButton = coor().pos(0, y_btn).size(hw_btn, hw_btn);
 constexpr coor winDigits = coor().pos(0, h_footer).size(h_res, y_btn - h_footer); // clock24, alarmclock
-constexpr coor winWoHF = coor().pos(0, h_footer).size(h_res, 2 * h_area); // window without header and footer
-
+constexpr coor winWoHF = coor().pos(0, h_footer).size(h_res, 2 * h_area);         // window without header and footer
 
 // -----------------------------------------------------------------------------------
 // window derived (calculated from others)
 // -----------------------------------------------------------------------------------
 
-constexpr coor btnHP = coor().pos(  40, h_footer + 0 * h_EQ).size(hw_btn_s, hw_btn_s);
-constexpr coor btnBP = coor().pos(  40, h_footer + 1 * h_EQ).size(hw_btn_s, hw_btn_s);
-constexpr coor btnLP = coor().pos(  40, h_footer + 2 * h_EQ).size(hw_btn_s, hw_btn_s);
-constexpr coor btnBAL = coor().pos( 40, h_footer + 3 * h_EQ).size(hw_btn_s, hw_btn_s);
+constexpr coor btnHP = coor().pos(40, h_footer + 0 * h_EQ).size(hw_btn_s, hw_btn_s);
+constexpr coor btnBP = coor().pos(40, h_footer + 1 * h_EQ).size(hw_btn_s, hw_btn_s);
+constexpr coor btnLP = coor().pos(40, h_footer + 2 * h_EQ).size(hw_btn_s, hw_btn_s);
+constexpr coor btnBAL = coor().pos(40, h_footer + 3 * h_EQ).size(hw_btn_s, hw_btn_s);
 
-constexpr coor sdrHP = coor().pos( 110, h_footer + 0 * h_EQ).size(200, h_EQ).pad(0, 0, 8, 8);
-constexpr coor sdrBP = coor().pos( 110, h_footer + 1 * h_EQ).size(200, h_EQ).pad(0, 0, 8, 8);
-constexpr coor sdrLP = coor().pos( 110, h_footer + 2 * h_EQ).size(200, h_EQ).pad(0, 0, 8, 8);
+constexpr coor sdrHP = coor().pos(110, h_footer + 0 * h_EQ).size(200, h_EQ).pad(0, 0, 8, 8);
+constexpr coor sdrBP = coor().pos(110, h_footer + 1 * h_EQ).size(200, h_EQ).pad(0, 0, 8, 8);
+constexpr coor sdrLP = coor().pos(110, h_footer + 2 * h_EQ).size(200, h_EQ).pad(0, 0, 8, 8);
 constexpr coor sdrBAL = coor().pos(110, h_footer + 3 * h_EQ).size(200, h_EQ).pad(0, 0, 8, 8);
 
-constexpr coor txtHP = coor().pos( 320, h_footer + 0 * h_EQ).size(150, h_EQ).pad(0, 0, 3, 3);
-constexpr coor txtBP = coor().pos( 320, h_footer + 1 * h_EQ).size(150, h_EQ).pad(0, 0, 3, 3);
-constexpr coor txtLP = coor().pos( 320, h_footer + 2 * h_EQ).size(150, h_EQ).pad(0, 0, 3, 3);
+constexpr coor txtHP = coor().pos(320, h_footer + 0 * h_EQ).size(150, h_EQ).pad(0, 0, 3, 3);
+constexpr coor txtBP = coor().pos(320, h_footer + 1 * h_EQ).size(150, h_EQ).pad(0, 0, 3, 3);
+constexpr coor txtLP = coor().pos(320, h_footer + 2 * h_EQ).size(150, h_EQ).pad(0, 0, 3, 3);
 constexpr coor txtBAL = coor().pos(320, h_footer + 3 * h_EQ).size(150, h_EQ).pad(0, 0, 3, 3);
 
 inline constexpr uint8_t fonts[13] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66, 81, 96};
@@ -270,18 +268,17 @@ namespace layout_800x480 {
 //                                             800
 
 constexpr uint16_t h_res = 800, v_res = 480; // horizontal - vertical resolution
-constexpr uint16_t h_footer  = 50;           // footer height
-constexpr uint16_t hw_btn    = 76 + 2;       // 76x76 + padding, normal buttons
-constexpr uint16_t hw_btn_s  = 65 + 2;       // 65x65 + padding, small buttons
+constexpr uint16_t h_footer = 50;            // footer height
+constexpr uint16_t hw_btn = 76 + 2;          // 76x76 + padding, normal buttons
+constexpr uint16_t hw_btn_s = 65 + 2;        // 65x65 + padding, small buttons
 constexpr uint16_t h_progBar = 24;           // height progressBar and volumeSlider
 constexpr uint16_t w_vuMeter = 40;           // width vuMeter
 
-constexpr uint16_t h_area = (v_res - 2 * h_footer) / 2;                                // 130, height area1 and  area2
-constexpr uint16_t y_area2 = v_res - h_footer - h_area;                                // 320 - 30 - 130, yPos area2
-constexpr uint16_t y_btn = y_area2 + h_area / 2 + (h_area / 4 - hw_btn / 2);           // center in the lower half of area2
+constexpr uint16_t h_area = (v_res - 2 * h_footer) / 2;                      // 130, height area1 and  area2
+constexpr uint16_t y_area2 = v_res - h_footer - h_area;                      // 320 - 30 - 130, yPos area2
+constexpr uint16_t y_btn = y_area2 + h_area / 2 + (h_area / 4 - hw_btn / 2); // center in the lower half of area2
 constexpr uint16_t y_progbar = y_btn - 2 * h_progBar;
 constexpr uint16_t h_EQ = (2 * h_area - hw_btn) / 4;
-
 
 // -----------------------------------------------------------------------------------
 // window definitions .pos(x, y) .size(w, h) .padding(l, r, t, b)
@@ -290,7 +287,7 @@ constexpr uint16_t h_EQ = (2 * h_area - hw_btn) / 4;
 constexpr coor winHeader = coor().pos(0, 0).size(h_res, h_footer);
 constexpr coor winLogo = coor().pos(0, h_footer).size(h_area, h_area).pad(4, 4, 4, 4);
 constexpr coor winName = coor().pos(h_area, h_footer).size(h_res - h_area, h_area).pad(15, 5, 0, 0); // StationName
-constexpr coor winProgbar = coor().pos(0, y_progbar).size(h_res, h_progBar).pad(5, 5, 0, 0); // or volume slider
+constexpr coor winProgbar = coor().pos(0, y_progbar).size(h_res, h_progBar).pad(5, 5, 0, 0);         // or volume slider
 constexpr coor winTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(0, 5, 0, 3);
 constexpr coor winSTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(10, 5, 2, 2);
 constexpr coor winVUmeter = coor().pos(h_res - w_vuMeter, y_area2).size(w_vuMeter, h_area);
@@ -302,19 +299,19 @@ constexpr coor winWoHF = coor().pos(0, h_footer).size(h_res, 2 * h_area);
 // -----------------------------------------------------------------------------------
 // window derived (calculated from others)
 // -----------------------------------------------------------------------------------
-constexpr coor btnHP = coor().pos( 100, h_footer + 0 * h_EQ).size(hw_btn_s, hw_btn_s);
-constexpr coor btnBP = coor().pos( 100, h_footer + 1 * h_EQ).size(hw_btn_s, hw_btn_s);
-constexpr coor btnLP = coor().pos( 100, h_footer + 2 * h_EQ).size(hw_btn_s, hw_btn_s);
+constexpr coor btnHP = coor().pos(100, h_footer + 0 * h_EQ).size(hw_btn_s, hw_btn_s);
+constexpr coor btnBP = coor().pos(100, h_footer + 1 * h_EQ).size(hw_btn_s, hw_btn_s);
+constexpr coor btnLP = coor().pos(100, h_footer + 2 * h_EQ).size(hw_btn_s, hw_btn_s);
 constexpr coor btnBAL = coor().pos(100, h_footer + 3 * h_EQ).size(hw_btn_s, hw_btn_s);
 
-constexpr coor sdrHP = coor().pos( 180, h_footer + 0 * h_EQ).size(380, h_EQ).pad(0, 0, 8, 8);
-constexpr coor sdrBP = coor().pos( 180, h_footer + 1 * h_EQ).size(380, h_EQ).pad(0, 0, 8, 8);
-constexpr coor sdrLP = coor().pos( 180, h_footer + 2 * h_EQ).size(380, h_EQ).pad(0, 0, 8, 8);
+constexpr coor sdrHP = coor().pos(180, h_footer + 0 * h_EQ).size(380, h_EQ).pad(0, 0, 8, 8);
+constexpr coor sdrBP = coor().pos(180, h_footer + 1 * h_EQ).size(380, h_EQ).pad(0, 0, 8, 8);
+constexpr coor sdrLP = coor().pos(180, h_footer + 2 * h_EQ).size(380, h_EQ).pad(0, 0, 8, 8);
 constexpr coor sdrBAL = coor().pos(180, h_footer + 3 * h_EQ).size(380, h_EQ).pad(0, 0, 8, 8);
 
-constexpr coor txtHP = coor().pos( 570, h_footer + 0 * h_EQ).size(200, h_EQ).pad(0, 0, 6, 6);
-constexpr coor txtBP = coor().pos( 570, h_footer + 1 * h_EQ).size(200, h_EQ).pad(0, 0, 6, 6);
-constexpr coor txtLP = coor().pos( 570, h_footer + 2 * h_EQ).size(200, h_EQ).pad(0, 0, 6, 6);
+constexpr coor txtHP = coor().pos(570, h_footer + 0 * h_EQ).size(200, h_EQ).pad(0, 0, 6, 6);
+constexpr coor txtBP = coor().pos(570, h_footer + 1 * h_EQ).size(200, h_EQ).pad(0, 0, 6, 6);
+constexpr coor txtLP = coor().pos(570, h_footer + 2 * h_EQ).size(200, h_EQ).pad(0, 0, 6, 6);
 constexpr coor txtBAL = coor().pos(570, h_footer + 3 * h_EQ).size(200, h_EQ).pad(0, 0, 6, 6);
 
 inline constexpr uint8_t fonts[13] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66, 81, 96};
@@ -357,14 +354,14 @@ namespace layout_1024x600 {
 constexpr uint16_t h_res = 1024, v_res = 600; // horizontal - vertical resolution
 constexpr uint16_t h_footer = 60;             // footer height
 constexpr uint16_t hw_btn = 96 + 4;           // 96x96 + padding, normal buttons
-constexpr uint16_t hw_btn_s  = 80 + 2;        // 80x80 + padding, small buttons
-constexpr uint16_t h_progBar = 30;            // height progressBar and volumeSlider
+constexpr uint16_t hw_btn_s = 80 + 2;         // 80x80 + padding, small buttons
 constexpr uint16_t w_vuMeter = 50;            // width vuMeter
 
-constexpr uint16_t h_area = (v_res - 2 * h_footer) / 2;                                // 240, height area1 and  area2
-constexpr uint16_t y_area2 = v_res - h_footer - h_area;                                // 600 - 60 - 240, yPos area2
-constexpr uint16_t y_btn = y_area2 + h_area / 2 + (h_area / 4 - hw_btn / 2);           // center in the lower half of area2
-constexpr uint16_t y_progbar = y_btn - 2 * h_progBar;
+constexpr uint16_t h_area = (v_res - 2 * h_footer) / 2;                      // 240, height area1 and  area2
+constexpr uint16_t y_area2 = v_res - h_footer - h_area;                      // 600 - 60 - 240, yPos area2
+constexpr uint16_t y_btn = y_area2 + h_area / 2 + (h_area / 4 - hw_btn / 2); // center in the lower half of area2
+constexpr uint16_t h_progBar = (h_area / 2) - (h_area / 5);                  // height progressBar and volumeSlider = half of y_area - 20%
+constexpr uint16_t y_progbar = y_area2 + (h_area / 10);                      // y_area2 + 10%
 constexpr uint16_t h_EQ = (2 * h_area - hw_btn) / 4;
 
 // -----------------------------------------------------------------------------------
@@ -374,7 +371,7 @@ constexpr uint16_t h_EQ = (2 * h_area - hw_btn) / 4;
 constexpr coor winHeader = coor().pos(0, 0).size(h_res, h_footer);
 constexpr coor winLogo = coor().pos(0, h_footer).size(h_area, h_area).pad(4, 4, 4, 4);
 constexpr coor winName = coor().pos(h_area, h_footer).size(h_res - h_area, h_area).pad(15, 5, 0, 0); // StationName
-constexpr coor winProgbar = coor().pos(0, y_progbar).size(h_res, h_progBar).pad(5, 5, 0, 0); // or volume slider
+constexpr coor winProgbar = coor().pos(0, y_progbar).size(h_res, h_progBar).pad(5, 5, 0, 0);         // or volume slider
 constexpr coor winTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(0, 5, 0, 3);
 constexpr coor winSTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(10, 5, 2, 2);
 constexpr coor winVUmeter = coor().pos(h_res - w_vuMeter, y_area2).size(w_vuMeter, h_area).pad(5, 5, 5, 5);
@@ -387,22 +384,20 @@ constexpr coor winWoHF = coor().pos(0, h_footer).size(h_res, 2 * h_area);
 // window derived (calculated from others)
 // -----------------------------------------------------------------------------------
 
-constexpr coor btnHP = coor().pos( 100, h_footer + 0 * h_EQ).size(hw_btn_s, hw_btn_s);
-constexpr coor btnBP = coor().pos( 100, h_footer + 1 * h_EQ).size(hw_btn_s, hw_btn_s);
-constexpr coor btnLP = coor().pos( 100, h_footer + 2 * h_EQ).size(hw_btn_s, hw_btn_s);
+constexpr coor btnHP = coor().pos(100, h_footer + 0 * h_EQ).size(hw_btn_s, hw_btn_s);
+constexpr coor btnBP = coor().pos(100, h_footer + 1 * h_EQ).size(hw_btn_s, hw_btn_s);
+constexpr coor btnLP = coor().pos(100, h_footer + 2 * h_EQ).size(hw_btn_s, hw_btn_s);
 constexpr coor btnBAL = coor().pos(100, h_footer + 3 * h_EQ).size(hw_btn_s, hw_btn_s);
 
-constexpr coor sdrHP = coor().pos( 220, h_footer + 0 * h_EQ).size(500, h_EQ).pad(0, 0, 8, 8);
-constexpr coor sdrBP = coor().pos( 220, h_footer + 1 * h_EQ).size(500, h_EQ).pad(0, 0, 8, 8);
-constexpr coor sdrLP = coor().pos( 220, h_footer + 2 * h_EQ).size(500, h_EQ).pad(0, 0, 8, 8);
+constexpr coor sdrHP = coor().pos(220, h_footer + 0 * h_EQ).size(500, h_EQ).pad(0, 0, 8, 8);
+constexpr coor sdrBP = coor().pos(220, h_footer + 1 * h_EQ).size(500, h_EQ).pad(0, 0, 8, 8);
+constexpr coor sdrLP = coor().pos(220, h_footer + 2 * h_EQ).size(500, h_EQ).pad(0, 0, 8, 8);
 constexpr coor sdrBAL = coor().pos(220, h_footer + 3 * h_EQ).size(500, h_EQ).pad(0, 0, 8, 8);
 
-constexpr coor txtHP = coor().pos( 730, h_footer + 0 * h_EQ).size(260, h_EQ).pad(0, 0, 4, 4);
-constexpr coor txtBP = coor().pos( 730, h_footer + 1 * h_EQ).size(260, h_EQ).pad(0, 0, 4, 4);
-constexpr coor txtLP = coor().pos( 730, h_footer + 2 * h_EQ).size(260, h_EQ).pad(0, 0, 4, 4);
+constexpr coor txtHP = coor().pos(730, h_footer + 0 * h_EQ).size(260, h_EQ).pad(0, 0, 4, 4);
+constexpr coor txtBP = coor().pos(730, h_footer + 1 * h_EQ).size(260, h_EQ).pad(0, 0, 4, 4);
+constexpr coor txtLP = coor().pos(730, h_footer + 2 * h_EQ).size(260, h_EQ).pad(0, 0, 4, 4);
 constexpr coor txtBAL = coor().pos(730, h_footer + 3 * h_EQ).size(260, h_EQ).pad(0, 0, 4, 4);
-
-
 
 inline constexpr uint8_t fonts[13] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66, 81, 96};
 
@@ -437,8 +432,8 @@ inline Layout makeLayout() {
 #else
     #error "Unsupported TFT_CONTROLLER"
 #endif
-    return {winHeader, winLogo, winName, winProgbar, winTitle, winSTitle, winVUmeter, winFooter, winButton, winDigits,
-            winWoHF,   sdrHP,   sdrBP,   sdrLP,    sdrBAL,    btnHP,     btnBP,      btnLP,    btnBAL,    txtHP,      txtBP,     txtLP,     txtBAL};
+    return {winHeader, winLogo, winName, winProgbar, winTitle, winSTitle, winVUmeter, winFooter, winButton, winDigits, winWoHF, sdrHP,
+            sdrBP,     sdrLP,   sdrBAL,  btnHP,      btnBP,    btnLP,     btnBAL,     txtHP,     txtBP,     txtLP,     txtBAL};
 }
 
 // global constant - finished initialized
@@ -642,7 +637,8 @@ void placingGraphicObjects() { // and initialize them
     btn_PL_cancel.setClickedPicturePath("/btn/Button_Cancel_Yellow.png");
     btn_PL_cancel.setAlternativePicturePath("/btn/Button_Cancel_Magenta.png");
     sdr_PL_volume.setTransparency(true, false);
-    sdr_PL_volume.begin(5 * layout.winButton.w + 10, layout.winButton.y, displayConfig.dispWidth - (5 * layout.winButton.w + 20), layout.winButton.h, layout.winButton.pl, layout.winButton.pr, layout.winButton.pt, layout.winButton.pb);
+    sdr_PL_volume.begin(5 * layout.winButton.w + 10, layout.winButton.y, displayConfig.dispWidth - (5 * layout.winButton.w + 20), layout.winButton.h, layout.winButton.pl, layout.winButton.pr,
+                        layout.winButton.pt, layout.winButton.pb);
     btn_PL_prevFile.begin(0 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_PL_prevFile.setDefaultPicturePath("/btn/Button_Left_Blue.png");
     btn_PL_prevFile.setClickedPicturePath("/btn/Button_Left_Yellow.png");
@@ -693,7 +689,8 @@ void placingGraphicObjects() { // and initialize them
     pic_PL_logo.setTransparency(true, false);
     pic_PL_logo.begin(layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h, layout.winLogo.pl, layout.winLogo.pr, layout.winLogo.pt, layout.winLogo.pb);
     pgb_PL_progress.setTransparency(true, false);
-    pgb_PL_progress.begin(layout.winProgbar.x, layout.winProgbar.y, layout.winProgbar.w, layout.winProgbar.h, layout.winProgbar.pl, layout.winProgbar.pr, layout.winProgbar.pt, layout.winProgbar.pb, 0, 30);
+    pgb_PL_progress.begin(layout.winProgbar.x, layout.winProgbar.y, layout.winProgbar.w, layout.winProgbar.h, layout.winProgbar.pl, layout.winProgbar.pr, layout.winProgbar.pt, layout.winProgbar.pb, 0,
+                          30);
     pgb_PL_progress.setValue(0);
     // AUDIOFILESLIST-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     lst_PLAYER.begin(layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, displayConfig.tftSize, displayConfig.listFontSize);
@@ -727,8 +724,8 @@ void placingGraphicObjects() { // and initialize them
     btn_DL_radio.setClickedPicturePath("/btn/Button_Radio_Yellow.png");
     btn_DL_radio.setAlternativePicturePath("/btn/Button_Radio_Magenta.png");
     sdr_DL_volume.setTransparency(true, false);
-    sdr_DL_volume.begin(5 * layout.winButton.w + 10, layout.winButton.y, displayConfig.dispWidth - (5 * layout.winButton.w + 20), layout.winButton.h, layout.winButton.pl, layout.winButton.pr, layout.winButton.pt,
-                        layout.winButton.pb);
+    sdr_DL_volume.begin(5 * layout.winButton.w + 10, layout.winButton.y, displayConfig.dispWidth - (5 * layout.winButton.w + 20), layout.winButton.h, layout.winButton.pl, layout.winButton.pr,
+                        layout.winButton.pt, layout.winButton.pb);
     txt_DL_fName.setTransparency(true, false);
     txt_DL_fName.begin(layout.winName.x, layout.winName.y, layout.winName.w, layout.winName.h, layout.winName.pl, layout.winName.pr, layout.winName.pt, layout.winName.pb);
     txt_DL_fName.setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
@@ -811,7 +808,7 @@ void placingGraphicObjects() { // and initialize them
     btn_SL_cancel.setDefaultPicturePath("/btn/Button_Cancel_Blue.png");
     btn_SL_cancel.setClickedPicturePath("/btn/Button_Cancel_Yellow.png");
     btn_SL_cancel.setAlternativePicturePath("/btn/Button_Cancel_Magenta.png");
-    otb_SL_stime.begin(0,                     layout.winFooter.h, layout.winFooter.w / 2, layout.winButton.y - layout.winHeader.h);
+    otb_SL_stime.begin(0, layout.winFooter.h, layout.winFooter.w / 2, layout.winButton.y - layout.winHeader.h);
     pic_SL_logo.setTransparency(false, false);
     pic_SL_logo.begin(layout.winFooter.w / 2, layout.winFooter.h, layout.winFooter.w / 2, layout.winButton.y - layout.winHeader.h, 0, 0, 10, 0);
     // SETTINGS ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -982,7 +979,7 @@ void set_ir_pos_RA(int lr) { // RADIO   -100 left, +100 right, -127 reset
         s_ir_btn_select++;
         if (s_ir_btn_select == 8) s_ir_btn_select = 0;
     }
-    if(lr == IR_RESET) return;
+    if (lr == IR_RESET) return;
     switch (s_ir_btn_select) {
         case 0: btn_RA_staList.showAlternativePic(); break;
         case 1: btn_RA_player.showAlternativePic(); break;
@@ -1017,7 +1014,7 @@ void set_ir_pos_PL(int lr) { // PLAYER   -100 left, +100 right, -127 reset
             s_ir_btn_select++;
             if (s_ir_btn_select == 8) s_ir_btn_select = 0;
         }
-        if(lr == IR_RESET) return;
+        if (lr == IR_RESET) return;
         switch (s_ir_btn_select) {
             case 0: btn_PL_prevFile.showAlternativePic(); break;
             case 1: btn_PL_nextFile.showAlternativePic(); break;
@@ -1047,7 +1044,7 @@ void set_ir_pos_PL(int lr) { // PLAYER   -100 left, +100 right, -127 reset
             s_ir_btn_select++;
             if (s_ir_btn_select == 5) s_ir_btn_select = 0;
         }
-        if(lr == IR_RESET) return;
+        if (lr == IR_RESET) return;
         switch (s_ir_btn_select) {
             case 0: btn_PL_mute.showAlternativePic(); break;
             case 1: btn_PL_pause.showAlternativePic(); break;
@@ -1076,7 +1073,7 @@ void set_ir_pos_DL(int lr) { // DLNA   -100 left, +100 right, -127 reset
         s_ir_btn_select++;
         if (s_ir_btn_select == 5) s_ir_btn_select = 0;
     }
-    if(lr == IR_RESET) return;
+    if (lr == IR_RESET) return;
     switch (s_ir_btn_select) {
         case 0: btn_DL_mute.showAlternativePic(); break;
         case 1: btn_DL_pause.showAlternativePic(); break;
@@ -1103,7 +1100,7 @@ void set_ir_pos_CL(int lr) { // CLOCK   -100 left, +100 right, -127 reset
         s_ir_btn_select++;
         if (s_ir_btn_select == 4) s_ir_btn_select = 0;
     }
-    if(lr == IR_RESET) return;
+    if (lr == IR_RESET) return;
     switch (s_ir_btn_select) {
         case 0: btn_CL_alarm.showAlternativePic(); break;
         case 1: btn_CL_radio.showAlternativePic(); break;
@@ -1130,7 +1127,7 @@ void set_ir_pos_AC(int lr) { // ALARMCLOCK   -100 left, +100 right, -127 reset
         s_ir_btn_select++;
         if (s_ir_btn_select == 5) s_ir_btn_select = 0;
     }
-    if(lr == IR_RESET) return;
+    if (lr == IR_RESET) return;
     switch (s_ir_btn_select) {
         case 0: btn_AC_left.showAlternativePic(); break;
         case 1: btn_AC_right.showAlternativePic(); break;
@@ -1157,7 +1154,7 @@ void set_ir_pos_SL(int lr) { // SLEEPTIMER   -100 left, +100 right, -127 reset
         s_ir_btn_select++;
         if (s_ir_btn_select == 4) s_ir_btn_select = 0;
     }
-    if(lr == IR_RESET) return;
+    if (lr == IR_RESET) return;
     switch (s_ir_btn_select) {
         case 0: btn_SL_up.showAlternativePic(); break;
         case 1: btn_SL_down.showAlternativePic(); break;
@@ -1183,7 +1180,7 @@ void set_ir_pos_SE(int lr) { // SETTINGS   -100 left, +100 right, -127 reset
         s_ir_btn_select++;
         if (s_ir_btn_select == 4) s_ir_btn_select = 0;
     }
-    if(lr == IR_RESET) return;
+    if (lr == IR_RESET) return;
     switch (s_ir_btn_select) {
         case 0: btn_SE_bright.showAlternativePic(); break;
         case 1: btn_SE_equal.showAlternativePic(); break;
@@ -1206,7 +1203,7 @@ void set_ir_pos_BR(int lr) { // SETTINGS   -100 left, +100 right, -127 reset
         s_ir_btn_select++;
         if (s_ir_btn_select == 4) s_ir_btn_select = 0;
     }
-    if(lr == IR_RESET) return;
+    if (lr == IR_RESET) return;
     switch (s_ir_btn_select) {
         case 0: btn_BR_ready.showAlternativePic(); break;
     }
@@ -1233,8 +1230,10 @@ void set_ir_pos_EQ(int lr) { // EQUALIZER   -1 left, +1 right
         if (s_ir_btn_select == 3) s_ir_btn_select = 0;
     }
     if (lr == IR_UP) {
-        if(s_ir_btn_select < 3) s_ir_btn_select = 3;
-        else {s_ir_btn_select++;
+        if (s_ir_btn_select < 3)
+            s_ir_btn_select = 3;
+        else {
+            s_ir_btn_select++;
             if (s_ir_btn_select == 7) s_ir_btn_select = 3;
         }
     }
@@ -1242,7 +1241,7 @@ void set_ir_pos_EQ(int lr) { // EQUALIZER   -1 left, +1 right
         s_ir_btn_select--;
         if (s_ir_btn_select == 2) s_ir_btn_select = 0;
     }
-    if(lr == IR_RESET) return;
+    if (lr == IR_RESET) return;
     switch (s_ir_btn_select) {
         case 0: btn_EQ_Radio.showAlternativePic(); break;
         case 1: btn_EQ_Player.showAlternativePic(); break;
@@ -1273,7 +1272,7 @@ void set_ir_pos_BT(int lr) { // BLUETOOTH   -1 left, +1 right
         s_ir_btn_select++;
         if (s_ir_btn_select == 6) s_ir_btn_select = 0;
     }
-    if(lr == IR_RESET) return;
+    if (lr == IR_RESET) return;
     switch (s_ir_btn_select) {
         case 0: btn_BT_volDown.showAlternativePic(); break;
         case 1: btn_BT_volUp.showAlternativePic(); break;

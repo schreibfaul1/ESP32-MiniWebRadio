@@ -146,6 +146,8 @@ class slider : public RegisterTable {
         m_padding_right = paddig_right;
         m_padding_top = paddig_top;                                    // unused
         m_padding_bottom = paddig_bottom;                              // unused
+        m_railHigh = m_h / 8;
+        m_spotRadius = m_h / 4;
         m_leftStop = m_x + m_padding_left + m_spotRadius + 10;         // x pos left stop
         m_rightStop = m_x + m_w - m_padding_right - m_spotRadius - 10; // x pos right stop
         m_enabled = false;
@@ -200,7 +202,7 @@ class slider : public RegisterTable {
         int w = m_w - m_padding_left - m_padding_right;
         int h = m_railHigh;
         (void)h;
-        int r = 2;
+        int r = m_railHigh/ 4;
         if (m_backgroundTransparency) {
             if (m_saveBackground) {
                 tft.copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
@@ -289,6 +291,8 @@ class progressbar : public RegisterTable {
     uint16_t     m_padding_right = 0;
     uint16_t     m_padding_top = 0;
     uint16_t     m_padding_bottom = 0;
+    uint16_t     m_railHight = 0;
+    uint16_t     m_rail_y_pos = 0;
     uint32_t     m_bgColor = 0;
     uint32_t     m_frameColor = 0;
     uint32_t     m_railColorLeft = 0;
@@ -298,7 +302,6 @@ class progressbar : public RegisterTable {
     bool         m_objectInit = false;
     bool         m_backgroundTransparency = true;
     bool         m_saveBackground = false;
-    uint8_t      m_railHigh = 0;
     ps_ptr<char> m_name;
     releasedArg  m_ra;
 
@@ -306,7 +309,6 @@ class progressbar : public RegisterTable {
     progressbar(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
-        m_railHigh = 6;
         m_bgColor = TFT_BLACK;
         m_frameColor = TFT_WHITE;
         m_railColorLeft = TFT_RED;
@@ -322,6 +324,8 @@ class progressbar : public RegisterTable {
         m_padding_right = padding_right;
         m_padding_top = padding_top;
         m_padding_bottom = padding_bottom;
+        m_railHight = m_h / 2;
+        m_rail_y_pos = m_y + m_h / 4;
         m_minVal = minVal;
         m_maxVal = maxVal;
         m_enabled = false;
@@ -363,7 +367,7 @@ class progressbar : public RegisterTable {
         } else {
             tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         }
-        tft.drawRect(m_x + m_padding_left, m_y, m_w - m_padding_left - m_padding_right, m_h, m_frameColor);
+        tft.drawRect(m_x + m_padding_left, m_rail_y_pos, m_w - m_padding_left - m_padding_right, m_railHight, m_frameColor); // draw border
         drawNewValue();
         m_enabled = true;
     }
@@ -396,7 +400,7 @@ class progressbar : public RegisterTable {
     }
     void reset() {
         m_val = m_minVal;
-        tft.fillRect(m_x, m_y + 1, m_w - m_h - 1, m_h - 2, m_railColorRight);
+        tft.fillRect(m_x, m_rail_y_pos + 1, m_w - m_railHight - 1, m_railHight - 2, m_railColorRight);
     }
 
   private:
@@ -414,8 +418,8 @@ class progressbar : public RegisterTable {
         int      x = m_x + 1 + m_padding_left;
         int      w = m_w - 1 - m_padding_right;
         uint16_t pos = map_l(m_val, m_minVal, m_maxVal, x, x + w);
-        tft.fillRect(x, m_y + 1, pos, m_h - 2, m_railColorLeft);
-        tft.fillRect(pos, m_y + 1, w - pos, m_h - 2, m_railColorRight);
+        tft.fillRect(x, m_rail_y_pos + 1, pos, m_railHight - 2, m_railColorLeft);
+        tft.fillRect(pos, m_rail_y_pos + 1, w - pos, m_railHight - 2, m_railColorRight);
         m_oldPos = pos;
         if (graphicObjects_OnChange) graphicObjects_OnChange(m_name, m_val);
     }
@@ -423,8 +427,8 @@ class progressbar : public RegisterTable {
         int      x = m_x + 1 + m_padding_left;
         int      w = m_w - 1 - m_padding_right;
         uint16_t pos = map_l(m_val, m_minVal, m_maxVal, x, x + w);
-        if (pos > m_oldPos) { tft.fillRect(m_oldPos, m_y + 1, pos - m_oldPos, m_h - 2, m_railColorLeft); }
-        if (pos < m_oldPos) { tft.fillRect(pos, m_y + 1, m_oldPos - pos, m_h - 2, m_railColorRight); }
+        if (pos > m_oldPos) { tft.fillRect(m_oldPos, m_rail_y_pos + 1, pos - m_oldPos, m_railHight - 2, m_railColorLeft); }
+        if (pos < m_oldPos) { tft.fillRect(pos, m_rail_y_pos + 1, m_oldPos - pos, m_railHight - 2, m_railColorRight); }
         m_oldPos = pos;
         if (graphicObjects_OnChange) graphicObjects_OnChange(m_name, m_val);
     }
