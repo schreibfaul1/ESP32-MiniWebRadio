@@ -1229,7 +1229,6 @@ void setup() {
         ArduinoOTA.setHostname("MiniWebRadio");
         ArduinoOTA.begin();
         ftpSrv.begin(SD_MMC, FTP_USERNAME, FTP_PASSWORD); // username, password for ftp.
-        setRTC(s_TZString);
         s_f_dlnaSeekServer = true;
     } else {
         s_state = UNDEFINED;
@@ -1247,6 +1246,7 @@ void setup() {
         }
     }
     if (BT_EMITTER_RX >= 0) bt_emitter.begin();
+    setRTC(s_TZString);
 }
 /*****************************************************************************************************************************************************
  *                                                                   C O M M O N                                                                     *
