@@ -531,17 +531,7 @@ void showLogoAndStationName(bool force) {
 
 void showFileLogo(int8_t state, int8_t subState) {
     String logo;
-    if (state == RADIO) {
-        if (s_stationURL.ends_with("m3u8"))
-            logo = "/common/" + (String) "M3U8" + ".png";
-        else
-            logo = "/common/" + (String)codecname[s_cur_Codec] + ".png";
-        pic_RA_logo.setPicturePath(logo.c_str());
-        pic_RA_logo.setAlternativPicturePath("/common/unknown.png");
-        pic_RA_logo.show();
-        webSrv.send("stationLogo=", logo.c_str());
-        return;
-    } else if (state == DLNA) {
+    if (state == DLNA) {
         logo = "/common/DLNA.jpg";
         pic_DL_logo.setPicturePath(logo.c_str());
         pic_DL_logo.setAlternativPicturePath("/common/unknown.png");
@@ -2195,14 +2185,10 @@ void loop() {
         //------------------------------------------DETERMINE AUDIOCODEC------------------------------------------------------------------------------
         if (s_cur_Codec == 0) {
             uint8_t c = audio.getCodec();
-            if (c != 0 && c != 8 && c < 10) { // unknown or OGG, guard: c {1 ... 7, 9}
+            if (c != 0 && c < 8) { // unknown or OGG, guard: c {1 ... 7, 9}
                 s_cur_Codec = c;
                 SerialPrintfln("Audiocodec:  " ANSI_ESC_YELLOW "%s" ANSI_ESC_RESET "  ", codecname[c]);
                 if (s_state == PLAYER) showFileLogo(PLAYER, s_subState_player);
-                // if (s_state == RADIO && s_f_logoUnknown == true) {
-                //     s_f_logoUnknown = false;
-                //     showFileLogo(s_state, s_subState_radio);
-                // }
             }
         }
         //------------------------------------------CONNECT TO LASTHOST-------------------------------------------------------------------------------
