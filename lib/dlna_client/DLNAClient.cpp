@@ -597,7 +597,7 @@ bool DLNA_Client::browseResult() {
     return true;
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-bool DLNA_Client::srvPost(uint8_t srvNr, const char* objectId, const uint16_t startingIndex, const uint16_t maxCount) {
+bool DLNA_Client::srvPost(uint8_t srvNr, ps_ptr<char> objectId, const uint16_t startingIndex, const uint16_t maxCount) {
 
     bool         ret;
     uint8_t      cnt = 0;
@@ -647,7 +647,7 @@ bool DLNA_Client::srvPost(uint8_t srvNr, const char* objectId, const uint16_t st
                     "</s:Body>\r\n"
                     "</s:Envelope>\r\n"
                     "\r\n", /* end message */
-                    objectId, startingIndex, maxCount);
+                    objectId.c_get(), startingIndex, maxCount);
 
     uint16_t msgLength = message.size();
     char     tmp[10];
@@ -670,9 +670,9 @@ bool DLNA_Client::srvPost(uint8_t srvNr, const char* objectId, const uint16_t st
     return true;
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-int8_t DLNA_Client::browseServer(uint8_t srvNr, const char* objectId, const uint16_t startingIndex, const uint16_t maxCount) {
-    if (!objectId) {
-        DLNA_LOG_ERROR("objectId is NULL");
+int8_t DLNA_Client::browseServer(uint8_t srvNr, ps_ptr<char> objectId, const uint16_t startingIndex, const uint16_t maxCount) {
+    if (objectId.strlen() == 0) {
+        DLNA_LOG_ERROR("objectId is empty");
         return -1;
     } // no objectId given
     if (srvNr >= m_dlnaServer.size()) {
@@ -685,7 +685,7 @@ int8_t DLNA_Client::browseServer(uint8_t srvNr, const char* objectId, const uint
     }
 
     m_srvNr = srvNr;
-    strcpy(m_objectId, objectId);
+    m_objectId = objectId;
     m_startingIndex = startingIndex;
     m_maxCount = maxCount;
     m_state = BROWSE_SERVER;

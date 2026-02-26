@@ -278,10 +278,10 @@ void KCX_BT_Emitter::parseATcmds() {
     return;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void KCX_BT_Emitter::protocol_addElement(const char* RX_TX, const char* str) {
+void KCX_BT_Emitter::protocol_addElement(ps_ptr<char> RX_TX, ps_ptr<char> str) {
     if (!str) return;
     ps_ptr<char> buff;
-    buff.assign(RX_TX);
+    buff = RX_TX;
     buff.append(": ");
     buff.append(str);
     m_RX_TX_protocol.push_back(buff);

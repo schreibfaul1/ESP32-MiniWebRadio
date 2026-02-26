@@ -34,6 +34,28 @@ void make_hardcopy_on_sd() {
         0x00, 0x00, 0x00, 0x00                                      // Alpha mask (optional, empty)
     };
 
+    const uint8_t bmp1024x600[70] = {
+        0x42, 0x4D,             // 'BM'
+        0x46, 0xC0, 0x12, 0x00, // File size: 1,228,870
+        0x00, 0x00, 0x00, 0x00, // Reserved
+        0x46, 0x00, 0x00, 0x00, // Pixel data offset (70)
+        0x28, 0x00, 0x00, 0x00, // DIB header size (40)
+        0x00, 0x04, 0x00, 0x00, // Width: 1024
+        0x58, 0x02, 0x00, 0x00, // Height: 600
+        0x01, 0x00,             // Planes
+        0x10, 0x00,             // BitCount: 16 (RGB565)
+        0x03, 0x00, 0x00, 0x00, // Compression: BI_BITFIELDS
+        0x00, 0xC0, 0x12, 0x00, // Image size
+        0x23, 0x2E, 0x00, 0x00, // X pixels per meter
+        0x23, 0x2E, 0x00, 0x00, // Y pixels per meter
+        0x00, 0x00, 0x00, 0x00, // Colors used
+        0x00, 0x00, 0x00, 0x00, // Important colors
+        0x00, 0xF8, 0x00, 0x00, // Red mask
+        0xE0, 0x07, 0x00, 0x00, // Green mask
+        0x1F, 0x00, 0x00, 0x00, // Blue mask
+        0x00, 0x00, 0x00, 0x00  // Alpha mask
+    };
+
     File hc = SD_MMC.open("/hardcopy.bmp", "w", true);
     if (TFT_CONTROLLER < 2) {
         hc.write(bmp320x240, sizeof(bmp320x240));
@@ -51,12 +73,20 @@ void make_hardcopy_on_sd() {
             hc.write((uint8_t*)buff, 480 * 2);
         }
         hc.close();
-    } else {
+    } else if (TFT_CONTROLLER == 7) {
         hc.write(bmp800x480, sizeof(bmp800x480));
         uint16_t buff[800];
         for (int i = 480; i > 0; i--) {
             tft.readRect(0, i - 1, 800, 1, buff);
             hc.write((uint8_t*)buff, 800 * 2);
+        }
+        hc.close();
+    } else if (TFT_CONTROLLER > 7) {
+        hc.write(bmp1024x600, sizeof(bmp1024x600));
+        uint16_t buff[1024];
+        for (int i = 600; i > 0; i--) {
+            tft.readRect(0, i - 1, 1024, 1, buff);
+            hc.write((uint8_t*)buff, 1024 * 2);
         }
         hc.close();
     }
@@ -68,7 +98,7 @@ void GetRunTimeStats(char* pcWriteBuffer) {
     uint8_t       ulStatsAsPercentage;
     uint64_t      ulTotalRunTime;
     char          leftSpace[] = "             |";
-    const size_t  MAX_WRITE_BUFFER_SIZE = 8192;  // Assume at least 8KB buffer
+    const size_t  MAX_WRITE_BUFFER_SIZE = 8192; // Assume at least 8KB buffer
     size_t        current_len = 0;
 
     // Take a snapshot of the number of tasks in case it changes while this function is executing.
@@ -124,7 +154,7 @@ void GetRunTimeStats(char* pcWriteBuffer) {
                     strlcat(pcWriteBuffer, "\n", MAX_WRITE_BUFFER_SIZE);
                 } else {
                     log_w("GetRunTimeStats: buffer overflow prevented");
-                    break;  // Stop adding more tasks if buffer is full
+                    break; // Stop adding more tasks if buffer is full
                 }
             }
             x_ps_free(&tmpBuff);
@@ -145,9 +175,7 @@ void GetRunTimeStats(char* pcWriteBuffer) {
         tmpBuff[90] = '\0';
         strlcat(tmpBuff, ANSI_ESC_YELLOW "|\n", 130);
         current_len = strlen(pcWriteBuffer);
-        if (current_len + strlen(tmpBuff) < MAX_WRITE_BUFFER_SIZE) {
-            strlcat(pcWriteBuffer, tmpBuff, MAX_WRITE_BUFFER_SIZE);
-        }
+        if (current_len + strlen(tmpBuff) < MAX_WRITE_BUFFER_SIZE) { strlcat(pcWriteBuffer, tmpBuff, MAX_WRITE_BUFFER_SIZE); }
         x_ps_free(&tmpBuff);
 #endif
         strlcat(pcWriteBuffer, "             |---------------------+----------------+-----------------+------+-------|\n", MAX_WRITE_BUFFER_SIZE);
