@@ -133,7 +133,7 @@ void make_hardcopy_on_sd() {
     }
     hc.close();
     #endif
-#elifndef TFT_LAYOUT_XL
+#elifdef TFT_LAYOUT_XL
     hc.write(bmp1024x600, sizeof(bmp1024x600));
     uint16_t buff[1024];
     for (int i = 600; i > 0; i--) {
@@ -141,6 +141,8 @@ void make_hardcopy_on_sd() {
         hc.write((uint8_t*)buff, 1024 * 2);
     }
     hc.close();
+#else
+
 #endif
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

@@ -1529,7 +1529,7 @@ void wake_up() {
 }
 
 void setRTC(ps_ptr<char> TZString) {
-    rtc.stop();
+    //  rtc.stop();
     rtc.begin(TZString.c_get());
 }
 
