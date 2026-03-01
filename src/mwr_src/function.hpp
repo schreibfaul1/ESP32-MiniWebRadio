@@ -124,14 +124,13 @@ void make_hardcopy_on_sd() {
     uint16_t src[800]; // eine Zeile aus dem TFT
     uint16_t dst[800]; // eine BMP-Zeile (nach Rotation)
     for (int y = 0; y < 480; y++) {
-        // read row completely from TFT
-        tft.readRect(y, 0, 1, 800, src);
-        // copy bmp line
-     //   for (int x = 0; x < 800; x++) { dst[x] = src[x]; }
+    //     // read row completely from TFT
+        tft.readRect(0, y, 800, 1, src);
+    //     // copy bmp line
+    //  //   for (int x = 0; x < 800; x++) { dst[x] = src[x]; }
 
         hc.write((uint8_t*)src, 800 * 2);
     }
-
     hc.close();
     #endif
 #elifndef TFT_LAYOUT_XL

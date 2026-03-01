@@ -2302,7 +2302,7 @@ bool TFT_DSI::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, 
 
             // Korrekt: mapRotation mit QUELL-Dimensionen aufrufen
             size_t rotX, rotY;
-            mapRotation(m_rotation, i_x, i_y, srcDisplayWidth, srcDisplayHeight, rotX, rotY);
+            mapRotation(m_rotation, i_x, i_y, rotX, rotY);
 
             const size_t dstX = x + rotX;
             const size_t dstY = y + rotY;
@@ -3302,7 +3302,7 @@ void TFT_DSI::drawJPEG_90deg(int16_t x, int16_t y, uint16_t w, uint16_t h, uint1
         for (int16_t sx = 0; sx < w; ++sx) {
 
             size_t rx, ry;
-            mapRotation(1, sx, sy, w, h, rx, ry);
+            mapRotation(1, sx, sy, rx, ry);
 
             const int16_t dx = x + rx;
             const int16_t dy = y + ry;

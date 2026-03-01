@@ -203,7 +203,7 @@ class TFT_DSI {
     bool                      m_invert = false;
 
     //-------------------------------------------------------------------------------------------------------------------
-    inline void mapRotation(uint8_t rot, size_t srcX, size_t srcY, size_t W, size_t H, size_t& dstX, size_t& dstY) {
+    inline void mapRotation(uint8_t rot, size_t srcX, size_t srcY, size_t& dstX, size_t& dstY) {
         switch (rot & 3) {
             default:
             case 0: // 0°
@@ -212,18 +212,18 @@ class TFT_DSI {
                 break;
 
             case 1: // 90° CW
-                dstX = H - 1 - srcY;
+                dstX = m_h_res - 1 - srcY;
                 dstY = srcX;
                 break;
 
             case 2: // 180°
-                dstX = W - 1 - srcX;
-                dstY = H - 1 - srcY;
+                dstX = m_v_res - 1 - srcX;
+                dstY = m_h_res - 1 - srcY;
                 break;
 
             case 3: // 270° CW
                 dstX = srcY;
-                dstY = W - 1 - srcX;
+                dstY = m_v_res - 1 - srcX;
                 break;
         }
     }
