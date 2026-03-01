@@ -3,8 +3,7 @@
 
 #include "Arduino.h"
 #ifdef CONFIG_IDF_TARGET_ESP32P4
-#include "tft_dsi.h"
-
+    #include "tft_dsi.h"
 
     #define __malloc_heap_psram(size) heap_caps_malloc_prefer(size, 2, MALLOC_CAP_DEFAULT | MALLOC_CAP_SPIRAM, MALLOC_CAP_DEFAULT | MALLOC_CAP_INTERNAL)
 
@@ -21,15 +20,15 @@ TFT_DSI::TFT_DSI() { // Constructor
     xSemaphoreGive(m_vsync_semaphore);
 }
 void TFT_DSI::loop() {
-   GIF_loop();
+    GIF_loop();
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_DSI::begin(const Timing& newTiming) {
 
     // Hintergrundbeleuchtung einschalten
     if (TFT_BL >= 0) {
-    //    gpio_set_direction((gpio_num_t)TFT_BL, GPIO_MODE_OUTPUT);
-    //    gpio_set_level((gpio_num_t)TFT_BL, 1); // Enable backlight
+        //    gpio_set_direction((gpio_num_t)TFT_BL, GPIO_MODE_OUTPUT);
+        //    gpio_set_level((gpio_num_t)TFT_BL, 1); // Enable backlight
     }
     m_timing = newTiming;
     m_h_res = m_timing.h_res;
@@ -77,7 +76,7 @@ void TFT_DSI::begin(const Timing& newTiming) {
     if (m_err != 0) { log_e("can't create DBI-IO, err: %i\n", m_err); }
     m_mipi_dbi_io = mipi_dbi_io;
 
-#if TFT_CONTROLLER == 8
+    #if TFT_CONTROLLER == 8
     // --------------------------------------------------
     // 4. Init Display-Controller (EK97001)
     // --------------------------------------------------
@@ -115,9 +114,9 @@ void TFT_DSI::begin(const Timing& newTiming) {
 
     esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x11, (uint8_t[]){0x00}, 0); // exit sleep
     vTaskDelay(pdMS_TO_TICKS(100));
-#endif // TFT_CONTROLLER == 8
+    #endif // TFT_CONTROLLER == 8
 
-#if TFT_CONTROLLER == 9
+    #if TFT_CONTROLLER == 9
     // --------------------------------------------------
     // 4. Init Display-Controller (JD9165)
     // --------------------------------------------------
@@ -126,7 +125,7 @@ void TFT_DSI::begin(const Timing& newTiming) {
 
      */
     esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x30, (uint8_t[]){0x00}, 1);
-    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0xF7, (uint8_t[]){0x49,0x61,0x02,0x00}, 4);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0xF7, (uint8_t[]){0x49, 0x61, 0x02, 0x00}, 4);
 
     esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x30, (uint8_t[]){0x01}, 1);
     esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x04, (uint8_t[]){0x0C}, 1);
@@ -150,19 +149,19 @@ void TFT_DSI::begin(const Timing& newTiming) {
     esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x04, (uint8_t[]){0x00}, 1);
     esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x05, (uint8_t[]){0x64}, 1);
     esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x0A, (uint8_t[]){0x08}, 1);
-    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x0B, (uint8_t[]){0x0A,0x1A,0x0B,0x0D,0x0D,0x11,0x10,0x06,0x08,0x1F,0x1D}, 11);
-    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x0C, (uint8_t[]){0x0D,0x0D,0x0D,0x0D,0x0D,0x0D,0x0D,0x0D,0x0D,0x0D,0x0D}, 11);
-    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x0D, (uint8_t[]){0x16,0x1B,0x0B,0x0D,0x0D,0x11,0x10,0x07,0x09,0x1E,0x1C}, 11);
-    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x0E, (uint8_t[]){0x0D,0x0D,0x0D,0x0D,0x0D,0x0D,0x0D,0x0D,0x0D,0x0D,0x0D}, 11);
-    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x0F, (uint8_t[]){0x16,0x1B,0x0D,0x0B,0x0D,0x11,0x10,0x1C,0x1E,0x09,0x07}, 11);
-    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x10, (uint8_t[]){0x0D,0x0D,0x0D,0x0D,0x0D,0x0D,0x0D,0x0D,0x0D,0x0D,0x0D}, 11);
-    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x11, (uint8_t[]){0x0A,0x1A,0x0D,0x0B,0x0D,0x11,0x10,0x1D,0x1F,0x08,0x06}, 11);
-    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x12, (uint8_t[]){0x0D,0x0D,0x0D,0x0D,0x0D,0x0D,0x0D,0x0D,0x0D,0x0D,0x0D}, 11);
-    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x14, (uint8_t[]){0x00,0x00,0x11,0x11}, 4);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x0B, (uint8_t[]){0x0A, 0x1A, 0x0B, 0x0D, 0x0D, 0x11, 0x10, 0x06, 0x08, 0x1F, 0x1D}, 11);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x0C, (uint8_t[]){0x0D, 0x0D, 0x0D, 0x0D, 0x0D, 0x0D, 0x0D, 0x0D, 0x0D, 0x0D, 0x0D}, 11);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x0D, (uint8_t[]){0x16, 0x1B, 0x0B, 0x0D, 0x0D, 0x11, 0x10, 0x07, 0x09, 0x1E, 0x1C}, 11);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x0E, (uint8_t[]){0x0D, 0x0D, 0x0D, 0x0D, 0x0D, 0x0D, 0x0D, 0x0D, 0x0D, 0x0D, 0x0D}, 11);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x0F, (uint8_t[]){0x16, 0x1B, 0x0D, 0x0B, 0x0D, 0x11, 0x10, 0x1C, 0x1E, 0x09, 0x07}, 11);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x10, (uint8_t[]){0x0D, 0x0D, 0x0D, 0x0D, 0x0D, 0x0D, 0x0D, 0x0D, 0x0D, 0x0D, 0x0D}, 11);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x11, (uint8_t[]){0x0A, 0x1A, 0x0D, 0x0B, 0x0D, 0x11, 0x10, 0x1D, 0x1F, 0x08, 0x06}, 11);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x12, (uint8_t[]){0x0D, 0x0D, 0x0D, 0x0D, 0x0D, 0x0D, 0x0D, 0x0D, 0x0D, 0x0D, 0x0D}, 11);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x14, (uint8_t[]){0x00, 0x00, 0x11, 0x11}, 4);
     esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x18, (uint8_t[]){0x99}, 1);
     esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x30, (uint8_t[]){0x06}, 1);
-    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x12, (uint8_t[]){0x36,0x2C,0x2E,0x3C,0x38,0x35,0x35,0x32,0x2E,0x1D,0x2B,0x21,0x16,0x29}, 14);
-    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x13, (uint8_t[]){0x36,0x2C,0x2E,0x3C,0x38,0x35,0x35,0x32,0x2E,0x1D,0x2B,0x21,0x16,0x29}, 14);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x12, (uint8_t[]){0x36, 0x2C, 0x2E, 0x3C, 0x38, 0x35, 0x35, 0x32, 0x2E, 0x1D, 0x2B, 0x21, 0x16, 0x29}, 14);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x13, (uint8_t[]){0x36, 0x2C, 0x2E, 0x3C, 0x38, 0x35, 0x35, 0x32, 0x2E, 0x1D, 0x2B, 0x21, 0x16, 0x29}, 14);
 
     esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x30, (uint8_t[]){0x0A}, 1);
     esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x02, (uint8_t[]){0x4F}, 1);
@@ -184,7 +183,66 @@ void TFT_DSI::begin(const Timing& newTiming) {
     vTaskDelay(pdMS_TO_TICKS(100));
     vTaskDelay(pdMS_TO_TICKS(100));
 
-#endif // TFT_CONTROLLER == 9
+    #endif // TFT_CONTROLLER == 9
+
+    #if TFT_CONTROLLER == 10
+    // --------------------------------------------------
+    // 4. Init Display-Controller (ST7701)
+    // --------------------------------------------------
+    const char* controller = "ST7701";
+    /*
+
+     */
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0xFF, (uint8_t[]){0x77, 0x01, 0x00, 0x00, 0x13}, 5);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0xEF, (uint8_t[]){0x08}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0xFF, (uint8_t[]){0x77, 0x01, 0x00, 0x00, 0x10}, 5);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0xC0, (uint8_t[]){0x63, 0x00}, 2);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0xC1, (uint8_t[]){0x0D, 0x02}, 2);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0xC2, (uint8_t[]){0x10, 0x08}, 2);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0xCC, (uint8_t[]){0x10}, 1);
+
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0xB0, (uint8_t[]){0x80, 0x09, 0x53, 0x0C, 0xD0, 0x07, 0x0C, 0x09, 0x09, 0x28, 0x06, 0xD4, 0x13, 0x69, 0x2B, 0x71}, 16);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0xB1, (uint8_t[]){0x80, 0x94, 0x5A, 0x10, 0xD3, 0x06, 0x0A, 0x08, 0x08, 0x25, 0x03, 0xD3, 0x12, 0x66, 0x6A, 0x0D}, 16);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0xFF, (uint8_t[]){0x77, 0x01, 0x00, 0x00, 0x11}, 5);
+
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0xB0, (uint8_t[]){0x5D}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0xB1, (uint8_t[]){0x58}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0xB2, (uint8_t[]){0x87}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0xB3, (uint8_t[]){0x80}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0xB5, (uint8_t[]){0x4E}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0xB7, (uint8_t[]){0x85}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0xB8, (uint8_t[]){0x21}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0xB9, (uint8_t[]){0x10, 0x1F}, 2);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0xBB, (uint8_t[]){0x03}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0xBC, (uint8_t[]){0x00}, 1);
+
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0xC1, (uint8_t[]){0x78}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0xC2, (uint8_t[]){0x78}, 1);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0xD0, (uint8_t[]){0x88}, 1);
+
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0xE0, (uint8_t[]){0x00, 0x3A, 0x02}, 3);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0xE1, (uint8_t[]){0x04, 0xA0, 0x00, 0xA0, 0x05, 0xA0, 0x00, 0xA0, 0x00, 0x40, 0x40}, 11);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0xE2, (uint8_t[]){0x30, 0x00, 0x40, 0x40, 0x32, 0xA0, 0x00, 0xA0, 0x00, 0xA0, 0x00, 0xA0, 0x00}, 13);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0xE3, (uint8_t[]){0x00, 0x00, 0x33, 0x33}, 4);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0xE4, (uint8_t[]){0x44, 0x44}, 2);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0xE5, (uint8_t[]){0x09, 0x2E, 0xA0, 0xA0, 0x0B, 0x30, 0xA0, 0xA0, 0x05, 0x2A, 0xA0, 0xA0, 0x07, 0x2C, 0xA0, 0xA0}, 16);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0xE6, (uint8_t[]){0x00, 0x00, 0x33, 0x33}, 4);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0xE7, (uint8_t[]){0x44, 0x44}, 2);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0xE8, (uint8_t[]){0x08, 0x2D, 0xA0, 0xA0, 0x0A, 0x2F, 0xA0, 0xA0, 0x04, 0x29, 0xA0, 0xA0, 0x06, 0x2B, 0xA0, 0xA0}, 16);
+
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0xEB, (uint8_t[]){0x00, 0x00, 0x4E, 0x4E, 0x00, 0x00, 0x00}, 7);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0xEC, (uint8_t[]){0x08, 0x01}, 2);
+
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0xED, (uint8_t[]){0xB0, 0x2B, 0x98, 0xA4, 0x56, 0x7F, 0xFF, 0xFF, 0xFF, 0xFF, 0xF7, 0x65, 0x4A, 0x89, 0xB2, 0x0B}, 16);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0xEF, (uint8_t[]){0x08, 0x08, 0x08, 0x45, 0x3F, 0x54}, 6);
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0xFF, (uint8_t[]){0x77, 0x01, 0x00, 0x00, 0x00}, 5);
+
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x11, (uint8_t[]){0x00}, 1);
+    vTaskDelay(pdMS_TO_TICKS(120));
+    esp_lcd_panel_io_tx_param(mipi_dbi_io, 0x29, (uint8_t[]){0x00}, 1);
+    vTaskDelay(pdMS_TO_TICKS(100));
+    vTaskDelay(pdMS_TO_TICKS(100));
+    #endif // TFT_CONTROLLER == 10
 
     // --------------------------------------------------
     // 5. Create DPI-Panel
@@ -220,8 +278,9 @@ void TFT_DSI::begin(const Timing& newTiming) {
     if (m_err != 0) { log_e("can't create new panel, err: %i\n", m_err); }
 
     m_err = esp_lcd_panel_init(m_panel);
-    if (m_err != 0) { log_e("init panel, err: %i\n", m_err); }
-    else if (tft_info){
+    if (m_err != 0) {
+        log_e("init panel, err: %i\n", m_err);
+    } else if (tft_info) {
         char buff[100];
         sprintf(buff, "TFT Controller: " ANSI_ESC_CYAN "%s" ANSI_ESC_RESET " initialized", controller);
         tft_info(buff);
@@ -237,21 +296,10 @@ void TFT_DSI::begin(const Timing& newTiming) {
     m_framebuffer[1] = (uint16_t*)fb1;
     m_framebuffer[2] = (uint16_t*)fb2;
     char buff[256];
+
     sprintf(buff, "Resolution: " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET " x " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET, m_h_res, m_v_res);
     if (tft_info) tft_info(buff);
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_DSI::reset() {
@@ -278,7 +326,17 @@ bool TFT_DSI::panelDrawBitmap(int16_t x0, int16_t y0, int16_t x1, int16_t y1, co
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_DSI::setDisplayInversion(bool invert) {
-    m_invert = invert; // todo
+    if (m_invert == invert) return;
+    m_invert = invert;
+    esp_lcd_panel_invert_color(m_panel, invert);
+}
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_DSI::setRotation(uint8_t r) {
+    if (TFT_CONTROLLER == 10)
+        m_rotation = r;
+    else
+        m_rotation = r - 1;
+    if (m_rotation == -1) m_rotation = 3;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
@@ -336,7 +394,7 @@ void TFT_DSI::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t colo
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_DSI::fillScreen(uint16_t color) {
-log_w("%i, %i, %i, %i, %i", 0, 0, m_h_res, m_v_res, color);
+    log_w("%i, %i, %i, %i, %i", 0, 0, m_h_res, m_v_res, color);
     fillRect(0, 0, m_h_res, m_v_res, color);
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -677,8 +735,14 @@ void TFT_DSI::copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, u
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_DSI::readRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t* data) {
-    memcpy(data, m_framebuffer[0] + y * m_h_res + x, w * sizeof(uint16_t));
-    return;
+    uint16_t* dst = data;
+    uint16_t* src = m_framebuffer[0] + y * m_h_res + x;
+
+    for (int32_t row = 0; row < h; row++) {
+        memcpy(dst, src, w * sizeof(uint16_t));
+        src += m_h_res; // next line in framebuffer
+        dst += w;       // next line i dest_buffer
+    }
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_DSI::setFont(uint16_t font) {
@@ -2080,7 +2144,7 @@ size_t TFT_DSI::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16
         // charsToDraw = fitinline(idx, pW, &usedPxLength);
         charsToDraw = fitinline(utfPosArr, strChLength, idx, pW, &usedPxLength, narrow, noWrap);
 
-        if (h_align == TFT_ALIGN_RIGHT) { pX += win_W - (usedPxLength) - 2; }
+        if (h_align == TFT_ALIGN_RIGHT) { pX += win_W - (usedPxLength)-2; }
         if (h_align == TFT_ALIGN_CENTER) { pX += (win_W - usedPxLength) / 2; }
         uint16_t cnt = 0;
         while (true) { // inner while
@@ -2133,9 +2197,10 @@ exit:
     return charsDrawn;
 }
 
-    // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-    //    ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  B I T M A P  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫              *
-    // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//         ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  B I T M A P  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫              *
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
     #define bmpRead32(d, o) (d[o] | (uint16_t)(d[(o) + 1]) << 8 | (uint32_t)(d[(o) + 2]) << 16 | (uint32_t)(d[(o) + 3]) << 24)
     #define bmpRead16(d, o) (d[o] | (uint16_t)(d[(o) + 1]) << 8)
 
@@ -2194,63 +2259,63 @@ bool TFT_DSI::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, 
     const size_t scaledWidth = bmpWidth * scale;
     const size_t scaledHeight = bmpHeight * scale;
 
-    // Wenn maxWidth oder maxHeight 0 ist, wird der Wert ignoriert
+    // If maxWidth or maxHeight is 0, the value is ignored
     const size_t effectiveMaxWidth = (maxWidth == 0) ? scaledWidth : maxWidth;
     const size_t effectiveMaxHeight = (maxHeight == 0) ? scaledHeight : maxHeight;
 
-    // Begrenzen der tatsächlichen Darstellungsgröße auf den verfügbaren Ausschnitt
-    const size_t displayWidth = std::min(effectiveMaxWidth, scaledWidth);
-    const size_t displayHeight = std::min(effectiveMaxHeight, scaledHeight);
+    // Quell-Dimensionen (unrotiert)
+    const size_t srcDisplayWidth = std::min(effectiveMaxWidth, scaledWidth);
+    const size_t srcDisplayHeight = std::min(effectiveMaxHeight, scaledHeight);
+
+    // Ziel-Dimensionen nach Rotation berechnen
+    size_t dstWidth, dstHeight;
+    if (m_rotation & 1) {
+        dstWidth = srcDisplayHeight; // 90°/270°: Breite = Höhe
+        dstHeight = srcDisplayWidth; //             Höhe = Breite
+    } else {
+        dstWidth = srcDisplayWidth;
+        dstHeight = srcDisplayHeight;
+    }
 
     const size_t rowSize = ((bmpWidth * bitsPerPixel / 8 + 3) & ~3);
     uint8_t*     rowBuffer = new uint8_t[rowSize];
 
-    for (size_t i_y = 0; i_y < displayHeight; ++i_y) {
+    for (size_t i_y = 0; i_y < srcDisplayHeight; ++i_y) {
         const float  srcY = i_y / scale;
         const size_t srcRow = bmpHeight - 1 - (size_t)srcY;
 
-        if (srcRow >= bmpHeight) continue;
-
         bmp_file.seek(dataOffset + srcRow * rowSize);
-        if (bmp_file.read(rowBuffer, rowSize) != rowSize) {
-            log_e("Failed to read BMP row data");
-            delete[] rowBuffer;
-            bmp_file.close();
-            return false;
-        }
+        bmp_file.read(rowBuffer, rowSize);
 
-        for (size_t i_x = 0; i_x < displayWidth; ++i_x) {
-            const float  srcX = i_x / scale;
-            const size_t srcCol = (size_t)srcX;
-
-            if (srcCol >= bmpWidth) continue;
-
+        for (size_t i_x = 0; i_x < srcDisplayWidth; ++i_x) {
+            const float    srcX = i_x / scale;
+            const size_t   srcCol = (size_t)srcX;
             const uint8_t* pixelPtr = rowBuffer + srcCol * (bitsPerPixel / 8);
-            uint16_t       color;
 
+            uint16_t color = 0;
             switch (bitsPerPixel) {
                 case 16: color = bmpColor16(pixelPtr); break;
                 case 24: color = bmpColor24(pixelPtr); break;
                 case 32: color = bmpColor32(pixelPtr); break;
-                default:
-                    log_e("Unsupported bitsPerPixel: %d", bitsPerPixel);
-                    delete[] rowBuffer;
-                    bmp_file.close();
-                    return false;
+                default: /* ... */ break;
             }
 
-            const size_t xPos = x + i_x;
-            const size_t yPos = y + i_y;
+            // Korrekt: mapRotation mit QUELL-Dimensionen aufrufen
+            size_t rotX, rotY;
+            mapRotation(m_rotation, i_x, i_y, srcDisplayWidth, srcDisplayHeight, rotX, rotY);
 
-            if (xPos < m_h_res && yPos < m_v_res) { m_framebuffer[0][yPos * m_h_res + xPos] = color; }
+            const size_t dstX = x + rotX;
+            const size_t dstY = y + rotY;
+
+            if (dstX < m_h_res && dstY < m_v_res) { m_framebuffer[0][dstY * m_h_res + dstX] = color; }
         }
     }
 
     delete[] rowBuffer;
     bmp_file.close();
 
-    // Nur den betroffenen Bereich auf dem Display aktualisieren
-    panelDrawBitmap(x, y, x + displayWidth, y + displayHeight, m_framebuffer[0]);
+    // Refresh mit ZIEL-Dimensionen
+    panelDrawBitmap(x, y, x + dstWidth, y + dstHeight, m_framebuffer[0]);
     return true;
 }
 
@@ -3228,42 +3293,88 @@ int TFT_DSI::JPEG_jd_output(JDEC* jdec, void* bitmap, JRECT* jrect) {
     return r;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_DSI::drawJPEG_0deg(uint16_t* src_ptr, uint16_t* dest_ptr, int16_t visible_w) {
+    memcpy(dest_ptr, src_ptr, visible_w * sizeof(uint16_t));
+}
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_DSI::drawJPEG_90deg(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t* bitmap) {
+    for (int16_t sy = 0; sy < h; ++sy) {
+        for (int16_t sx = 0; sx < w; ++sx) {
+
+            size_t rx, ry;
+            mapRotation(1, sx, sy, w, h, rx, ry);
+
+            const int16_t dx = x + rx;
+            const int16_t dy = y + ry;
+
+            if (dx < 0 || dy < 0 || dx >= m_h_res || dy >= m_v_res) continue;
+
+            m_framebuffer[0][dy * m_h_res + dx] = bitmap[sy * w + sx];
+        }
+    }
+}
+
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// bool TFT_DSI::JPEG_tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t* bitmap) {
+//     if (!bitmap || w <= 0 || h <= 0) { // Check for valid parameters
+//         log_e("Invalid parameters: bitmap is null or width/height is zero.");
+//         return false;
+//     }
+//     // Clip the rectangle to ensure it doesn't exceed framebuffer boundaries
+//     int16_t x_end = std::min((int16_t)(x + w), (int16_t)m_h_res);   // End of rectangle in x-direction
+//     int16_t y_end = std::min((int16_t)(y + h), (int16_t)(m_v_res)); // End of rectangle in y-direction
+
+//     if (x >= m_h_res || y >= m_v_res || x_end <= 0 || y_end <= 0) {
+//         log_e("Rectangle is completely outside the framebuffer boundaries.");
+//         return false;
+//     }
+
+//     // Adjust start coordinates if they are out of bounds
+//     int16_t start_x = max((int16_t)0, x); // Sichtbarer Startpunkt in x-Richtung
+//     int16_t start_y = max((int16_t)0, y); // Sichtbarer Startpunkt in y-Richtung
+//     int16_t clip_x_offset = start_x - x;  // Offset im Bitmap in x-Richtung
+//     int16_t clip_y_offset = start_y - y;  // Offset im Bitmap in y-Richtung
+
+//     // Calculation of visible width and height
+//     int16_t visible_w = x_end - start_x; // Sichtbare Breite
+//     int16_t visible_h = y_end - start_y; // Sichtbare Höhe
+
+//     // Zeilenweises Kopieren mit Clipping
+//     for (int16_t j = 0; j < visible_h; ++j) {
+//         // Quelle im Bitmap: Berechne die richtige Zeilenposition
+//         uint16_t* src_ptr = bitmap + (clip_y_offset + j) * w + clip_x_offset;
+
+//         // Ziel im Framebuffer: Berechne die richtige Zeilenposition
+//         uint16_t* dest_ptr = m_framebuffer[0] + (start_y + j) * m_h_res + start_x;
+
+//         switch (m_rotation & 3) {
+//             case 0: drawJPEG_0deg(src_ptr, dest_ptr, visible_w); break;
+//             case 1:
+//                 drawJPEG_90deg(src_ptr, dest_ptr, visible_w);
+//                 break;
+//                 //  case 2: drawJPEG_180deg(...); break;
+//             default:
+//                 //     drawJPEG_rotated(...); // 90° / 270°
+//                 break;
+//         }
+//     }
+//     // log_w("Bitmap erfolgreich mit Clipping gezeichnet bei x: %d, y: %d, sichtbare Breite: %d, sichtbare Höhe: %d", start_x, start_y, visible_w, visible_h);
+//     return true;
+// }
+
 bool TFT_DSI::JPEG_tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t* bitmap) {
-    if (!bitmap || w <= 0 || h <= 0) { // Check for valid parameters
-        log_e("Invalid parameters: bitmap is null or width/height is zero.");
-        return false;
+    if (!bitmap || w == 0 || h == 0) return false;
+
+    switch (m_rotation & 3) {
+        case 0:
+            // dein bestehender memcpy-Code
+            //   drawJPEG_0deg(x, y, w, h, bitmap);
+            break;
+
+        case 1: drawJPEG_90deg(x, y, w, h, bitmap); break;
+
+        default: return false;
     }
-    // Clip the rectangle to ensure it doesn't exceed framebuffer boundaries
-    int16_t x_end = std::min((int16_t)(x + w), (int16_t)m_h_res);   // End of rectangle in x-direction
-    int16_t y_end = std::min((int16_t)(y + h), (int16_t)(m_v_res)); // End of rectangle in y-direction
-
-    if (x >= m_h_res || y >= m_v_res || x_end <= 0 || y_end <= 0) {
-        log_e("Rectangle is completely outside the framebuffer boundaries.");
-        return false;
-    }
-
-    // Adjust start coordinates if they are out of bounds
-    int16_t start_x = max((int16_t)0, x); // Sichtbarer Startpunkt in x-Richtung
-    int16_t start_y = max((int16_t)0, y); // Sichtbarer Startpunkt in y-Richtung
-    int16_t clip_x_offset = start_x - x;  // Offset im Bitmap in x-Richtung
-    int16_t clip_y_offset = start_y - y;  // Offset im Bitmap in y-Richtung
-
-    // Berechnung der sichtbaren Breite und Höhe
-    int16_t visible_w = x_end - start_x; // Sichtbare Breite
-    int16_t visible_h = y_end - start_y; // Sichtbare Höhe
-
-    // Zeilenweises Kopieren mit Clipping
-    for (int16_t j = 0; j < visible_h; ++j) {
-        // Quelle im Bitmap: Berechne die richtige Zeilenposition
-        uint16_t* src_ptr = bitmap + (clip_y_offset + j) * w + clip_x_offset;
-
-        // Ziel im Framebuffer: Berechne die richtige Zeilenposition
-        uint16_t* dest_ptr = m_framebuffer[0] + (start_y + j) * m_h_res + start_x;
-
-        // Kopiere nur die sichtbare Breite
-        memcpy(dest_ptr, src_ptr, visible_w * sizeof(uint16_t));
-    }
-    // log_w("Bitmap erfolgreich mit Clipping gezeichnet bei x: %d, y: %d, sichtbare Breite: %d, sichtbare Höhe: %d", start_x, start_y, visible_w, visible_h);
     return true;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

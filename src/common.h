@@ -20,11 +20,13 @@
 
 #if (TFT_CONTROLLER == 8 || TFT_CONTROLLER == 9)
     #define TFT_MODE_DSI
+    #define TFT_ALIGN_LANDSCAPE
     #define TFT_LAYOUT_XL
 #endif
 
 #if (TFT_CONTROLLER == 10)
     #define TFT_MODE_DSI
+    #define TFT_ALIGN_PORTRAIT
     #define TFT_LAYOUT_L
 #endif
 

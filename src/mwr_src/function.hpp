@@ -2,6 +2,14 @@
 
 #pragma once
 
+#ifdef TFT_MODE_SPI // ⏹⏹⏹⏹
+extern TFT_SPI tft(spiBus, TFT_CS);
+#elifdef TFT_MODE_RGB
+extern TFT_RGB tft;
+#elifdef TFT_MODE_DSI
+extern TFT_DSI tft;
+#endif
+
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void make_hardcopy_on_sd() {
     const uint8_t bmp320x240[70] = {
@@ -9,11 +17,15 @@ void make_hardcopy_on_sd() {
         0x00, 0x00, 0x01, 0x00, 0x10, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x58, 0x02, 0x00, 0x23, 0x2E, 0x00, 0x00, 0x23, 0x2E, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF8, 0x00, 0x00, 0xE0, 0x07, 0x00, 0x00, 0x1F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     };
+    (void)bmp320x240;
+
     const uint8_t bmp480x320[70] = {
         0x42, 0x4D, 0x46, 0xB0, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46, 0x00, 0x00, 0x00, 0x38, 0x00, 0x00, 0x00, 0xE0, 0x01, 0x00, 0x00, 0x40, 0x01,
         0x00, 0x00, 0x01, 0x00, 0x10, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0xB0, 0x04, 0x00, 0x23, 0x2E, 0x00, 0x00, 0x23, 0x2E, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF8, 0x00, 0x00, 0xE0, 0x07, 0x00, 0x00, 0x1F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     };
+    (void)bmp480x320;
+
     const uint8_t bmp800x480[70] = {
         0x42, 0x4D, 0x46, 0xC4, 0x0B, 0x00, 0x00, 0x00, 0x00, 0x00, // BM + File size 768070
         0x46, 0x00, 0x00, 0x00,                                     // Pixel data offset (70 bytes)
@@ -33,6 +45,30 @@ void make_hardcopy_on_sd() {
         0x1F, 0x00, 0x00, 0x00,                                     // Blue mask
         0x00, 0x00, 0x00, 0x00                                      // Alpha mask (optional, empty)
     };
+    (void)bmp800x480;
+
+    const uint8_t bmp480x800[70] = {
+        0x42, 0x4D,             // 'BM'
+        0x46, 0xB0, 0x0B, 0x00, // File size: 768070
+        0x00, 0x00, 0x00, 0x00, // Reserved
+        0x46, 0x00, 0x00, 0x00, // Pixel data offset (70)
+        0x28, 0x00, 0x00, 0x00, // DIB header size (40)
+        0xE0, 0x01, 0x00, 0x00, // Width: 480
+        0x20, 0x03, 0x00, 0x00, // Height: 800
+        0x01, 0x00,             // Planes
+        0x10, 0x00,             // BitCount: 16 (RGB565)
+        0x03, 0x00, 0x00, 0x00, // Compression: BI_BITFIELDS
+        0x00, 0xB0, 0x0B, 0x00, // Image size
+        0x23, 0x2E, 0x00, 0x00, // X pixels per meter
+        0x23, 0x2E, 0x00, 0x00, // Y pixels per meter
+        0x00, 0x00, 0x00, 0x00, // Colors used
+        0x00, 0x00, 0x00, 0x00, // Important colors
+        0x00, 0xF8, 0x00, 0x00, // Red mask
+        0xE0, 0x07, 0x00, 0x00, // Green mask
+        0x1F, 0x00, 0x00, 0x00, // Blue mask
+        0x00, 0x00, 0x00, 0x00  // Alpha mask
+    };
+    (void)bmp480x800;
 
     const uint8_t bmp1024x600[70] = {
         0x42, 0x4D,             // 'BM'
@@ -55,136 +91,149 @@ void make_hardcopy_on_sd() {
         0x1F, 0x00, 0x00, 0x00, // Blue mask
         0x00, 0x00, 0x00, 0x00  // Alpha mask
     };
-
-    (void) bmp320x240;
-    (void) bmp480x320;
-    (void) bmp800x480;
-    (void) bmp1024x600;
+    (void)bmp1024x600;
 
     File hc = SD_MMC.open("/hardcopy.bmp", "w", true);
-    #ifdef TFT_LAYOUT_S
-        hc.write(bmp320x240, sizeof(bmp320x240));
-        uint16_t buff[320];
-        for (int i = 240; i > 0; i--) {
-            tft.readRect(0, i - 1, 320, 1, buff);
-            hc.write((uint8_t*)buff, 320 * 2);
-        }
-        hc.close();
-    #elifdef TFT_LAYOUT_M
-        hc.write(bmp480x320, sizeof(bmp480x320));
-        uint16_t buff[480];
-        for (int i = 320; i > 0; i--) {
-            tft.readRect(0, i - 1, 480, 1, buff);
-            hc.write((uint8_t*)buff, 480 * 2);
-        }
-        hc.close();
-    #elifdef TFT_LAYOUT_L
-        hc.write(bmp800x480, sizeof(bmp800x480));
-        uint16_t buff[800];
-        for (int i = 480; i > 0; i--) {
-            tft.readRect(0, i - 1, 800, 1, buff);
-            hc.write((uint8_t*)buff, 800 * 2);
-        }
-        hc.close();
-    #elifndef TFT_LAYOUT_XL
-        hc.write(bmp1024x600, sizeof(bmp1024x600));
-        uint16_t buff[1024];
-        for (int i = 600; i > 0; i--) {
-            tft.readRect(0, i - 1, 1024, 1, buff);
-            hc.write((uint8_t*)buff, 1024 * 2);
-        }
-        hc.close();
+#ifdef TFT_LAYOUT_S
+    hc.write(bmp320x240, sizeof(bmp320x240));
+    uint16_t buff[320];
+    for (int i = 240; i > 0; i--) {
+        tft.readRect(0, i - 1, 320, 1, buff);
+        hc.write((uint8_t*)buff, 320 * 2);
+    }
+    hc.close();
+#elifdef TFT_LAYOUT_M
+    hc.write(bmp480x320, sizeof(bmp480x320));
+    uint16_t buff[480];
+    for (int i = 320; i > 0; i--) {
+        tft.readRect(0, i - 1, 480, 1, buff);
+        hc.write((uint8_t*)buff, 480 * 2);
+    }
+    hc.close();
+#elifdef TFT_LAYOUT_L
+    #ifdef TFT_ALIGN_LANDSCAPE
+    hc.write(bmp800x480, sizeof(bmp800x480));
+    uint16_t buff[800];
+    for (int i = 480; i > 0; i--) {
+        tft.readRect(0, i - 1, 800, 1, buff);
+        hc.write((uint8_t*)buff, 800 * 2);
+    }
+    hc.close();
+    #elifdef TFT_ALIGN_PORTRAIT
+    hc.write(bmp480x800, sizeof(bmp480x800));
+    uint16_t src[800]; // eine Zeile aus dem TFT
+    uint16_t dst[800]; // eine BMP-Zeile (nach Rotation)
+    for (int y = 0; y < 480; y++) {
+        // read row completely from TFT
+        tft.readRect(y, 0, 1, 800, src);
+        // copy bmp line
+     //   for (int x = 0; x < 800; x++) { dst[x] = src[x]; }
+
+        hc.write((uint8_t*)src, 800 * 2);
+    }
+
+    hc.close();
     #endif
+#elifndef TFT_LAYOUT_XL
+    hc.write(bmp1024x600, sizeof(bmp1024x600));
+    uint16_t buff[1024];
+    for (int i = 600; i > 0; i--) {
+        tft.readRect(0, i - 1, 1024, 1, buff);
+        hc.write((uint8_t*)buff, 1024 * 2);
+    }
+    hc.close();
+#endif
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void GetRunTimeStats(char* pcWriteBuffer) {
-//     TaskStatus_t* pxTaskStatusArray;
-//     UBaseType_t   uxArraySize;
-//     uint8_t       ulStatsAsPercentage;
-//     uint64_t      ulTotalRunTime;
-//     char          leftSpace[] = "             |";
-//     const size_t  MAX_WRITE_BUFFER_SIZE = 8192; // Assume at least 8KB buffer
-//     size_t        current_len = 0;
+    //     TaskStatus_t* pxTaskStatusArray;
+    //     UBaseType_t   uxArraySize;
+    //     uint8_t       ulStatsAsPercentage;
+    //     uint64_t      ulTotalRunTime;
+    //     char          leftSpace[] = "             |";
+    //     const size_t  MAX_WRITE_BUFFER_SIZE = 8192; // Assume at least 8KB buffer
+    //     size_t        current_len = 0;
 
-//     // Take a snapshot of the number of tasks in case it changes while this function is executing.
-//     uxArraySize = uxTaskGetNumberOfTasks();
+    //     // Take a snapshot of the number of tasks in case it changes while this function is executing.
+    //     uxArraySize = uxTaskGetNumberOfTasks();
 
-//     // Allocate a TaskStatus_t structure for each task.  An array could be allocated statically at compile time.
-//     pxTaskStatusArray = (TaskStatus_t*)pvPortMalloc(uxArraySize * sizeof(TaskStatus_t));
+    //     // Allocate a TaskStatus_t structure for each task.  An array could be allocated statically at compile time.
+    //     pxTaskStatusArray = (TaskStatus_t*)pvPortMalloc(uxArraySize * sizeof(TaskStatus_t));
 
-//     if (pxTaskStatusArray != NULL) {
-//         // Generate raw status information about each task.
-//         uxArraySize = uxTaskGetSystemState(pxTaskStatusArray, (UBaseType_t)uxArraySize, &ulTotalRunTime);
+    //     if (pxTaskStatusArray != NULL) {
+    //         // Generate raw status information about each task.
+    //         uxArraySize = uxTaskGetSystemState(pxTaskStatusArray, (UBaseType_t)uxArraySize, &ulTotalRunTime);
 
-//         // For percentage calculations.
-//         ulTotalRunTime /= 100UL;
+    //         // For percentage calculations.
+    //         ulTotalRunTime /= 100UL;
 
-//         char* tmpBuff = x_ps_malloc(100);
-//         strlcpy(pcWriteBuffer, leftSpace, MAX_WRITE_BUFFER_SIZE);
-//         current_len = strlen(pcWriteBuffer);
-//         strlcat(pcWriteBuffer, ANSI_ESC_YELLOW " TASKNAME            | RUNTIMECOUNTER | TOTALRUNTIME[%] | CORE | PRIO  |\n", MAX_WRITE_BUFFER_SIZE);
-//         current_len = strlen(pcWriteBuffer);
-//         strlcat(pcWriteBuffer, leftSpace, MAX_WRITE_BUFFER_SIZE);
-//         current_len = strlen(pcWriteBuffer);
-//         strlcat(pcWriteBuffer, "---------------------+----------------+-----------------+------+-------|\n", MAX_WRITE_BUFFER_SIZE);
+    //         char* tmpBuff = x_ps_malloc(100);
+    //         strlcpy(pcWriteBuffer, leftSpace, MAX_WRITE_BUFFER_SIZE);
+    //         current_len = strlen(pcWriteBuffer);
+    //         strlcat(pcWriteBuffer, ANSI_ESC_YELLOW " TASKNAME            | RUNTIMECOUNTER | TOTALRUNTIME[%] | CORE | PRIO  |\n", MAX_WRITE_BUFFER_SIZE);
+    //         current_len = strlen(pcWriteBuffer);
+    //         strlcat(pcWriteBuffer, leftSpace, MAX_WRITE_BUFFER_SIZE);
+    //         current_len = strlen(pcWriteBuffer);
+    //         strlcat(pcWriteBuffer, "---------------------+----------------+-----------------+------+-------|\n", MAX_WRITE_BUFFER_SIZE);
 
-//         // Avoid divide by zero errors.
-//         if (ulTotalRunTime > 0) {
-//             // For each populated position in the pxTaskStatusArray array, format the raw data as human readable ASCII data
-//             for (int x = 0; x < uxArraySize; x++) {
-//                 // What percentage of the total run time has the task used? This will always be rounded down to the nearest integer.
-//                 // ulTotalRunTimeDiv100 has already been divided by 100.
-//                 ulStatsAsPercentage = pxTaskStatusArray[x].ulRunTimeCounter / ulTotalRunTime;
-//                 memset(tmpBuff, 0x20, 100);
-//                 memcpy(tmpBuff, pxTaskStatusArray[x].pcTaskName, strlen(pxTaskStatusArray[x].pcTaskName));
-//                 tmpBuff[20] = '|';
-//                 int8_t  core = (pxTaskStatusArray[x].xCoreID);
-//                 uint8_t prio = (pxTaskStatusArray[x].uxBasePriority);
-//                 if (ulStatsAsPercentage) {
-//                     sprintf(tmpBuff + 23, "%12lu  |       %02lu%%       |%4i  |%5d  |", (long unsigned int)pxTaskStatusArray[x].ulRunTimeCounter, (long unsigned int)ulStatsAsPercentage, core, prio);
-//                 } else {
-//                     sprintf(tmpBuff + 23, "%12lu  |       <1%%       |%4i  |%5d  |", (long unsigned int)pxTaskStatusArray[x].ulRunTimeCounter, core, prio);
-//                 }
-//                 uint8_t i = 23;
-//                 while (tmpBuff[i] == '0') {
-//                     tmpBuff[i] = ' ';
-//                     i++;
-//                 }
-//                 if (tmpBuff[45] == '0') tmpBuff[45] = ' ';
-//                 current_len = strlen(pcWriteBuffer);
-//                 if (current_len + strlen(leftSpace) + strlen(tmpBuff) + 5 < MAX_WRITE_BUFFER_SIZE) {
-//                     strlcat(pcWriteBuffer, leftSpace, MAX_WRITE_BUFFER_SIZE);
-//                     strlcat(pcWriteBuffer, " ", MAX_WRITE_BUFFER_SIZE);
-//                     strlcat(pcWriteBuffer, tmpBuff, MAX_WRITE_BUFFER_SIZE);
-//                     strlcat(pcWriteBuffer, "\n", MAX_WRITE_BUFFER_SIZE);
-//                 } else {
-//                     log_w("GetRunTimeStats: buffer overflow prevented");
-//                     break; // Stop adding more tasks if buffer is full
-//                 }
-//             }
-//             x_ps_free(&tmpBuff);
-//         }
-//         // The array is no longer needed, free the memory it consumes.
-//         vPortFree(pxTaskStatusArray);
+    //         // Avoid divide by zero errors.
+    //         if (ulTotalRunTime > 0) {
+    //             // For each populated position in the pxTaskStatusArray array, format the raw data as human readable ASCII data
+    //             for (int x = 0; x < uxArraySize; x++) {
+    //                 // What percentage of the total run time has the task used? This will always be rounded down to the nearest integer.
+    //                 // ulTotalRunTimeDiv100 has already been divided by 100.
+    //                 ulStatsAsPercentage = pxTaskStatusArray[x].ulRunTimeCounter / ulTotalRunTime;
+    //                 memset(tmpBuff, 0x20, 100);
+    //                 memcpy(tmpBuff, pxTaskStatusArray[x].pcTaskName, strlen(pxTaskStatusArray[x].pcTaskName));
+    //                 tmpBuff[20] = '|';
+    //                 int8_t  core = (pxTaskStatusArray[x].xCoreID);
+    //                 uint8_t prio = (pxTaskStatusArray[x].uxBasePriority);
+    //                 if (ulStatsAsPercentage) {
+    //                     sprintf(tmpBuff + 23, "%12lu  |       %02lu%%       |%4i  |%5d  |", (long unsigned int)pxTaskStatusArray[x].ulRunTimeCounter, (long unsigned int)ulStatsAsPercentage, core,
+    //                     prio);
+    //                 } else {
+    //                     sprintf(tmpBuff + 23, "%12lu  |       <1%%       |%4i  |%5d  |", (long unsigned int)pxTaskStatusArray[x].ulRunTimeCounter, core, prio);
+    //                 }
+    //                 uint8_t i = 23;
+    //                 while (tmpBuff[i] == '0') {
+    //                     tmpBuff[i] = ' ';
+    //                     i++;
+    //                 }
+    //                 if (tmpBuff[45] == '0') tmpBuff[45] = ' ';
+    //                 current_len = strlen(pcWriteBuffer);
+    //                 if (current_len + strlen(leftSpace) + strlen(tmpBuff) + 5 < MAX_WRITE_BUFFER_SIZE) {
+    //                     strlcat(pcWriteBuffer, leftSpace, MAX_WRITE_BUFFER_SIZE);
+    //                     strlcat(pcWriteBuffer, " ", MAX_WRITE_BUFFER_SIZE);
+    //                     strlcat(pcWriteBuffer, tmpBuff, MAX_WRITE_BUFFER_SIZE);
+    //                     strlcat(pcWriteBuffer, "\n", MAX_WRITE_BUFFER_SIZE);
+    //                 } else {
+    //                     log_w("GetRunTimeStats: buffer overflow prevented");
+    //                     break; // Stop adding more tasks if buffer is full
+    //                 }
+    //             }
+    //             x_ps_free(&tmpBuff);
+    //         }
+    //         // The array is no longer needed, free the memory it consumes.
+    //         vPortFree(pxTaskStatusArray);
 
-// #if TFT_CONTROLLER == 7
-//         extern uint64_t s_totalRuntime;
-//         tmpBuff = x_ps_malloc(130);
-//         if (s_totalRuntime > 0) {
-//             sprintf(tmpBuff, "%s" ANSI_ESC_LIGHTGREEN " time since start: %llus, VSYNCS: %llu  ==> fps: %llu", leftSpace, s_totalRuntime, tft.getVsyncCounter(),
-//                     tft.getVsyncCounter() / s_totalRuntime);
-//         } else {
-//             sprintf(tmpBuff, "%s" ANSI_ESC_LIGHTGREEN " time since start: %llus, VSYNCS: %llu  ==> fps: <1", leftSpace, s_totalRuntime, tft.getVsyncCounter());
-//         }
-//         strlcat(tmpBuff, "                                   ", 130);
-//         tmpBuff[90] = '\0';
-//         strlcat(tmpBuff, ANSI_ESC_YELLOW "|\n", 130);
-//         current_len = strlen(pcWriteBuffer);
-//         if (current_len + strlen(tmpBuff) < MAX_WRITE_BUFFER_SIZE) { strlcat(pcWriteBuffer, tmpBuff, MAX_WRITE_BUFFER_SIZE); }
-//         x_ps_free(&tmpBuff);
-// #endif
-//         strlcat(pcWriteBuffer, "             |---------------------+----------------+-----------------+------+-------|\n", MAX_WRITE_BUFFER_SIZE);
-//     }
+    // #if TFT_CONTROLLER == 7
+    //         extern uint64_t s_totalRuntime;
+    //         tmpBuff = x_ps_malloc(130);
+    //         if (s_totalRuntime > 0) {
+    //             sprintf(tmpBuff, "%s" ANSI_ESC_LIGHTGREEN " time since start: %llus, VSYNCS: %llu  ==> fps: %llu", leftSpace, s_totalRuntime, tft.getVsyncCounter(),
+    //                     tft.getVsyncCounter() / s_totalRuntime);
+    //         } else {
+    //             sprintf(tmpBuff, "%s" ANSI_ESC_LIGHTGREEN " time since start: %llus, VSYNCS: %llu  ==> fps: <1", leftSpace, s_totalRuntime, tft.getVsyncCounter());
+    //         }
+    //         strlcat(tmpBuff, "                                   ", 130);
+    //         tmpBuff[90] = '\0';
+    //         strlcat(tmpBuff, ANSI_ESC_YELLOW "|\n", 130);
+    //         current_len = strlen(pcWriteBuffer);
+    //         if (current_len + strlen(tmpBuff) < MAX_WRITE_BUFFER_SIZE) { strlcat(pcWriteBuffer, tmpBuff, MAX_WRITE_BUFFER_SIZE); }
+    //         x_ps_free(&tmpBuff);
+    // #endif
+    //         strlcat(pcWriteBuffer, "             |---------------------+----------------+-----------------+------+-------|\n", MAX_WRITE_BUFFER_SIZE);
+    //     }
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool get_esp_items(uint8_t* s_resetReason, bool* s_f_FFatFound) {
@@ -1980,7 +2029,8 @@ void wavWriterTask(void*) {
             fileOpen = false;
             writeBufferFill = 0;
             recorder.running = false;
-            SerialPrintfln("recorder: .  " ANSI_ESC_YELLOW "Recording stopped. Total bytes: " ANSI_ESC_CYAN "%u" ANSI_ESC_YELLOW ", Overflows: " ANSI_ESC_CYAN "%u" ANSI_ESC_RESET, recorder.totalBytes, recorder.overflowCount);
+            SerialPrintfln("recorder: .  " ANSI_ESC_YELLOW "Recording stopped. Total bytes: " ANSI_ESC_CYAN "%u" ANSI_ESC_YELLOW ", Overflows: " ANSI_ESC_CYAN "%u" ANSI_ESC_RESET, recorder.totalBytes,
+                           recorder.overflowCount);
         }
 
         // Small delay to feed watchdog and release CPU
@@ -1990,7 +2040,5 @@ void wavWriterTask(void*) {
 }
 
 void audio_process_raw_samples(int32_t* outBuff, int16_t validSamples) {
-    if (recorder.running == true) {
-        recorder.push16(outBuff, validSamples);
-    }
+    if (recorder.running == true) { recorder.push16(outBuff, validSamples); }
 }

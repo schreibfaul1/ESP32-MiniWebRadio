@@ -1109,10 +1109,6 @@ void setup() {
     setI2STone();
 
     ticker100ms.attach(0.1, timer100ms);
-#ifdef TFT_MODE_RGB
-    tft.clearVsyncCounter(); // clear the vsync counter and start them
-#endif
-
     tft.fillScreen(TFT_BLACK);                                                          // Clear screen
     drawImage("/common/Wallpaper.jpg", 0, 0);                                           // Wallpaper
     tft.copyFramebuffer(0, 1, 0, 0, displayConfig.dispWidth, displayConfig.dispHeight); // copy wallpaper to background
@@ -1199,8 +1195,11 @@ void set_display_items(){
     tft.setDisplayInversion(false);
     vTaskDelay(100 / portTICK_PERIOD_MS); // wait for TFT to be ready
     tft.reset();
+    vTaskDelay(100 / portTICK_PERIOD_MS); // wait for TFT to be ready
+    tft.clearVsyncCounter(); // clear the vsync counter and start them
 #elifdef TFT_MODE_DSI
     tft.begin(DSI_TIMING);
+    tft.setRotation(TFT_ROTATION);
     vTaskDelay(100 / portTICK_PERIOD_MS); // wait for TFT to be ready
 #endif
 

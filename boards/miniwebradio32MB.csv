@@ -3,5 +3,5 @@
   nvs,      data,   nvs,       0x10000,  0x40000,
   app0,     app,    ota_0,     0x50000,  0x600000,
   app1,     app,    ota_1,     0x650000, 0x600000,
-  ffat,     data,   fat,       0xC50000, 0x13A0000,
-  coredump, data,   coredump,  0x1FF0000, 0x10000,
+  ffat,     data,   fat,       0xC50000, 0x1380000,
+  coredump, data,   coredump,  0x1FD0000, 0x30000,

@@ -3,147 +3,147 @@
 
 #include "Arduino.h"
 #ifdef CONFIG_IDF_TARGET_ESP32P4
-#pragma once
-#include "../../src/settings.h"
-#include "tft_structures.h"
-#include "FS.h"
-#include "SD.h"
-#include "SD_MMC.h"
-#include "SPI.h"
-#include "Wire.h"
-#include "driver/gpio.h"
-#include "esp_lcd_mipi_dsi.h"
-#include "esp_lcd_panel_commands.h"
-#include "esp_lcd_panel_dev.h"
-#include "esp_lcd_panel_interface.h"
-#include "esp_lcd_panel_io.h"
-#include "esp_lcd_panel_ops.h"
-#include "esp_lcd_panel_vendor.h"
-#include "esp_ldo_regulator.h"
-#include "esp_log.h"
-#include "fonts/Arial.h"
-#include "fonts/BigNumbers.h"
-#include "fonts/FreeSerifItalic.h"
-#include "fonts/Garamond.h"
-#include "fonts/TimesNewRoman.h"
-#include "fonts/Z003.h"
-#include "fonts/fontsdef.h"
-#include "vector"
+    #pragma once
+    #include "../../src/settings.h"
+    #include "FS.h"
+    #include "SD.h"
+    #include "SD_MMC.h"
+    #include "SPI.h"
+    #include "Wire.h"
+    #include "driver/gpio.h"
+    #include "esp_lcd_mipi_dsi.h"
+    #include "esp_lcd_panel_commands.h"
+    #include "esp_lcd_panel_dev.h"
+    #include "esp_lcd_panel_interface.h"
+    #include "esp_lcd_panel_io.h"
+    #include "esp_lcd_panel_ops.h"
+    #include "esp_lcd_panel_vendor.h"
+    #include "esp_ldo_regulator.h"
+    #include "esp_log.h"
+    #include "fonts/Arial.h"
+    #include "fonts/BigNumbers.h"
+    #include "fonts/FreeSerifItalic.h"
+    #include "fonts/Garamond.h"
+    #include "fonts/TimesNewRoman.h"
+    #include "fonts/Z003.h"
+    #include "fonts/fontsdef.h"
+    #include "tft_structures.h"
+    #include "vector"
 
 using namespace std;
 
 extern __attribute__((weak)) void tft_info(const char*);
 
-#define ANSI_ESC_RESET "\033[0m"
+    #define ANSI_ESC_RESET "\033[0m"
 
-#define ANSI_ESC_BLACK   "\033[30m"
-#define ANSI_ESC_RED     "\033[31m"
-#define ANSI_ESC_GREEN   "\033[32m"
-#define ANSI_ESC_YELLOW  "\033[33m"
-#define ANSI_ESC_BLUE    "\033[34m"
-#define ANSI_ESC_MAGENTA "\033[35m"
-#define ANSI_ESC_CYAN    "\033[36m"
-#define ANSI_ESC_WHITE   "\033[37m"
+    #define ANSI_ESC_BLACK   "\033[30m"
+    #define ANSI_ESC_RED     "\033[31m"
+    #define ANSI_ESC_GREEN   "\033[32m"
+    #define ANSI_ESC_YELLOW  "\033[33m"
+    #define ANSI_ESC_BLUE    "\033[34m"
+    #define ANSI_ESC_MAGENTA "\033[35m"
+    #define ANSI_ESC_CYAN    "\033[36m"
+    #define ANSI_ESC_WHITE   "\033[37m"
 
-#define ANSI_ESC_GREY         "\033[90m"
-#define ANSI_ESC_LIGHTRED     "\033[91m"
-#define ANSI_ESC_LIGHTGREEN   "\033[92m"
-#define ANSI_ESC_LIGHTYELLOW  "\033[93m"
-#define ANSI_ESC_LIGHTBLUE    "\033[94m"
-#define ANSI_ESC_LIGHTMAGENTA "\033[95m"
-#define ANSI_ESC_LIGHTCYAN    "\033[96m"
-#define ANSI_ESC_LIGHTGREY    "\033[97m"
+    #define ANSI_ESC_GREY         "\033[90m"
+    #define ANSI_ESC_LIGHTRED     "\033[91m"
+    #define ANSI_ESC_LIGHTGREEN   "\033[92m"
+    #define ANSI_ESC_LIGHTYELLOW  "\033[93m"
+    #define ANSI_ESC_LIGHTBLUE    "\033[94m"
+    #define ANSI_ESC_LIGHTMAGENTA "\033[95m"
+    #define ANSI_ESC_LIGHTCYAN    "\033[96m"
+    #define ANSI_ESC_LIGHTGREY    "\033[97m"
 
-#define ANSI_ESC_DARKRED     "\033[38;5;52m"
-#define ANSI_ESC_DARKGREEN   "\033[38;5;22m"
-#define ANSI_ESC_DARKYELLOW  "\033[38;5;136m"
-#define ANSI_ESC_DARKBLUE    "\033[38;5;17m"
-#define ANSI_ESC_DARKMAGENTA "\033[38;5;53m"
-#define ANSI_ESC_DARKCYAN    "\033[38;5;23m"
-#define ANSI_ESC_DARKGREY    "\033[38;5;240m"
+    #define ANSI_ESC_DARKRED     "\033[38;5;52m"
+    #define ANSI_ESC_DARKGREEN   "\033[38;5;22m"
+    #define ANSI_ESC_DARKYELLOW  "\033[38;5;136m"
+    #define ANSI_ESC_DARKBLUE    "\033[38;5;17m"
+    #define ANSI_ESC_DARKMAGENTA "\033[38;5;53m"
+    #define ANSI_ESC_DARKCYAN    "\033[38;5;23m"
+    #define ANSI_ESC_DARKGREY    "\033[38;5;240m"
 
-#define ANSI_ESC_BROWN       "\033[38;5;130m"
-#define ANSI_ESC_ORANGE      "\033[38;5;214m"
-#define ANSI_ESC_DARKORANGE  "\033[38;5;166m"
-#define ANSI_ESC_LIGHTORANGE "\033[38;5;215m"
-#define ANSI_ESC_PURPLE      "\033[38;5;129m"
-#define ANSI_ESC_PINK        "\033[38;5;213m"
-#define ANSI_ESC_LIME        "\033[38;5;190m"
-#define ANSI_ESC_NAVY        "\033[38;5;25m"
-#define ANSI_ESC_AQUAMARINE  "\033[38;5;51m"
-#define ANSI_ESC_LAVENDER    "\033[38;5;189m"
+    #define ANSI_ESC_BROWN       "\033[38;5;130m"
+    #define ANSI_ESC_ORANGE      "\033[38;5;214m"
+    #define ANSI_ESC_DARKORANGE  "\033[38;5;166m"
+    #define ANSI_ESC_LIGHTORANGE "\033[38;5;215m"
+    #define ANSI_ESC_PURPLE      "\033[38;5;129m"
+    #define ANSI_ESC_PINK        "\033[38;5;213m"
+    #define ANSI_ESC_LIME        "\033[38;5;190m"
+    #define ANSI_ESC_NAVY        "\033[38;5;25m"
+    #define ANSI_ESC_AQUAMARINE  "\033[38;5;51m"
+    #define ANSI_ESC_LAVENDER    "\033[38;5;189m"
 
-// RGB565 Color definitions            R    G    B
-#define TFT_RED          0xF800 // 255,   0,   0
-#define TFT_DARKRED      0x8000 // 128,   0,   0
-#define TFT_LIGHTRED     0xFBEF // 255, 127, 127
-#define TFT_GREEN        0x07E0 //   0, 255,   0
-#define TFT_DARKGREEN    0x0400 //   0, 128,   0
-#define TFT_LIGHTGREEN   0x7FE0 // 127, 255, 127
-#define TFT_BLUE         0x001F //   0,   0, 255
-#define TFT_DARKBLUE     0x0010 //   0,   0, 128
-#define TFT_LIGHTBLUE    0x7BFF // 127, 127, 255
-#define TFT_CYAN         0x07FF //   0, 255, 255
-#define TFT_DARKCYAN     0x0410 //   0, 128, 128
-#define TFT_LIGHTCYAN    0x7FFF // 127, 255, 255
-#define TFT_MAGENTA      0xF81F // 255,   0, 255
-#define TFT_DARKMAGENTA  0x8010 // 128,   0, 128
-#define TFT_LIGHTMAGENTA 0xF97F // 255, 127, 255
-#define TFT_YELLOW       0xFFE0 // 255, 255,   0
-#define TFT_DARKYELLOW   0x8400 // 128, 128,   0
-#define TFT_LIGHTYELLOW  0xFFF7 // 255, 255, 127
-#define TFT_WHITE        0xFFFF // 255, 255, 255
-#define TFT_BLACK        0x0000 //   0,   0,   0
-#define TFT_GREY         0x8410 // 128, 128, 128
-#define TFT_LIGHTGREY    0xC618 // 192, 192, 192
-#define TFT_DARKGREY     0xAD55 //  64,  64,  64
-#define TFT_BROWN        0xA145 // 165,  42,  42
-#define TFT_DARKBROWN    0x8200 // 128,  64,   0
-#define TFT_LIGHTBROWN   0xFDB2 // 254, 198, 125
+    // RGB565 Color definitions            R    G    B
+    #define TFT_RED          0xF800 // 255,   0,   0
+    #define TFT_DARKRED      0x8000 // 128,   0,   0
+    #define TFT_LIGHTRED     0xFBEF // 255, 127, 127
+    #define TFT_GREEN        0x07E0 //   0, 255,   0
+    #define TFT_DARKGREEN    0x0400 //   0, 128,   0
+    #define TFT_LIGHTGREEN   0x7FE0 // 127, 255, 127
+    #define TFT_BLUE         0x001F //   0,   0, 255
+    #define TFT_DARKBLUE     0x0010 //   0,   0, 128
+    #define TFT_LIGHTBLUE    0x7BFF // 127, 127, 255
+    #define TFT_CYAN         0x07FF //   0, 255, 255
+    #define TFT_DARKCYAN     0x0410 //   0, 128, 128
+    #define TFT_LIGHTCYAN    0x7FFF // 127, 255, 255
+    #define TFT_MAGENTA      0xF81F // 255,   0, 255
+    #define TFT_DARKMAGENTA  0x8010 // 128,   0, 128
+    #define TFT_LIGHTMAGENTA 0xF97F // 255, 127, 255
+    #define TFT_YELLOW       0xFFE0 // 255, 255,   0
+    #define TFT_DARKYELLOW   0x8400 // 128, 128,   0
+    #define TFT_LIGHTYELLOW  0xFFF7 // 255, 255, 127
+    #define TFT_WHITE        0xFFFF // 255, 255, 255
+    #define TFT_BLACK        0x0000 //   0,   0,   0
+    #define TFT_GREY         0x8410 // 128, 128, 128
+    #define TFT_LIGHTGREY    0xC618 // 192, 192, 192
+    #define TFT_DARKGREY     0xAD55 //  64,  64,  64
+    #define TFT_BROWN        0xA145 // 165,  42,  42
+    #define TFT_DARKBROWN    0x8200 // 128,  64,   0
+    #define TFT_LIGHTBROWN   0xFDB2 // 254, 198, 125
 
-#define TFT_AQUAMARINE      0x7FFA // 127, 255, 212
-#define TFT_BEIGE           0xF7BB // 245, 245, 220
-#define TFT_CHOCOLATE       0xD342 // 210, 105,  30
-#define TFT_CORNSILK        0xFFDB // 255, 248, 220
-#define TFT_DEEPSKYBLUE     0x05FF //   0, 191, 255
-#define TFT_GREENYELLOW     0xAFE5 // 173, 255,  47
-#define TFT_GOLD            0xFEA0 // 255, 215,   0
-#define TFT_HOTPINK         0xFB56 // 255, 105, 180
-#define TFT_LAVENDER        0xE73F // 230, 230, 250
-#define TFT_LAWNGREEN       0x7FE0 // 124, 252,   0
-#define TFT_LIME            0x07E0 //   0. 255,   0
-#define TFT_MAROON          0x7800 // 128,   0,   0
-#define TFT_MEDIUMVIOLETRED 0xC0B0 // 199,  21, 133
-#define TFT_NAVY            0x000F //   0,   0, 128
-#define TFT_OLIVE           0x7BE0 // 128, 128,   0
-#define TFT_ORANGE          0xFD20 // 255, 165,   0
-#define TFT_LIGHTORANGE     0xFDB8 // 255, 200, 124
-#define TFT_DARKORANGE      0xFC00 // 255, 140,   0
-#define TFT_PINK            0xFE19 // 255, 192, 203
-#define TFT_PURPLE          0x780F // 128,   0, 128
-#define TFT_SANDYBROWN      0xF52C // 244, 164,  96
-#define TFT_TURQUOISE       0x471A //  64, 224, 208
-#define TFT_VIOLET          0x801F // 128,   0, 255
+    #define TFT_AQUAMARINE      0x7FFA // 127, 255, 212
+    #define TFT_BEIGE           0xF7BB // 245, 245, 220
+    #define TFT_CHOCOLATE       0xD342 // 210, 105,  30
+    #define TFT_CORNSILK        0xFFDB // 255, 248, 220
+    #define TFT_DEEPSKYBLUE     0x05FF //   0, 191, 255
+    #define TFT_GREENYELLOW     0xAFE5 // 173, 255,  47
+    #define TFT_GOLD            0xFEA0 // 255, 215,   0
+    #define TFT_HOTPINK         0xFB56 // 255, 105, 180
+    #define TFT_LAVENDER        0xE73F // 230, 230, 250
+    #define TFT_LAWNGREEN       0x7FE0 // 124, 252,   0
+    #define TFT_LIME            0x07E0 //   0. 255,   0
+    #define TFT_MAROON          0x7800 // 128,   0,   0
+    #define TFT_MEDIUMVIOLETRED 0xC0B0 // 199,  21, 133
+    #define TFT_NAVY            0x000F //   0,   0, 128
+    #define TFT_OLIVE           0x7BE0 // 128, 128,   0
+    #define TFT_ORANGE          0xFD20 // 255, 165,   0
+    #define TFT_LIGHTORANGE     0xFDB8 // 255, 200, 124
+    #define TFT_DARKORANGE      0xFC00 // 255, 140,   0
+    #define TFT_PINK            0xFE19 // 255, 192, 203
+    #define TFT_PURPLE          0x780F // 128,   0, 128
+    #define TFT_SANDYBROWN      0xF52C // 244, 164,  96
+    #define TFT_TURQUOISE       0x471A //  64, 224, 208
+    #define TFT_VIOLET          0x801F // 128,   0, 255
 
-#if TFT_FONT == 0
-    #define TFT_GARAMOND
-#elif TFT_FONT == 1
-    #define TFT_TIMES_NEW_ROMAN
-#elif TFT_FONT == 2
-    #define TFT_FREE_SERIF_ITALIC
-#elif TFT_FONT == 3
-    #define TFT_ARIAL
-#elif TFT_FONT == 4
-    #define TFT_Z003
-#else
-    #define TFT_GARAMOND // if nothing is chosen
-#endif
+    #if TFT_FONT == 0
+        #define TFT_GARAMOND
+    #elif TFT_FONT == 1
+        #define TFT_TIMES_NEW_ROMAN
+    #elif TFT_FONT == 2
+        #define TFT_FREE_SERIF_ITALIC
+    #elif TFT_FONT == 3
+        #define TFT_ARIAL
+    #elif TFT_FONT == 4
+        #define TFT_Z003
+    #else
+        #define TFT_GARAMOND // if nothing is chosen
+    #endif
 
-#define TFT_ALIGN_RIGHT  (1)
-#define TFT_ALIGN_LEFT   (2)
-#define TFT_ALIGN_CENTER (3)
-#define TFT_ALIGN_TOP    (4)
-#define TFT_ALIGN_DOWN   (5)
+    #define TFT_ALIGN_RIGHT  (1)
+    #define TFT_ALIGN_LEFT   (2)
+    #define TFT_ALIGN_CENTER (3)
+    #define TFT_ALIGN_TOP    (4)
+    #define TFT_ALIGN_DOWN   (5)
 
 class TFT_DSI {
   public:
@@ -160,6 +160,7 @@ class TFT_DSI {
     uint64_t getVsyncCounter() { return m_vsyncCounter; }
     void     clearVsyncCounter() { m_vsyncCounter = 0; }
     void     begin(const Timing& newTiming);
+    void     setRotation(uint8_t r);
     void     setDisplayInversion(bool i);
     // Recommended Non-Transaction
     void            drawLine(int16_t Xpos0, int16_t Ypos0, int16_t Xpos1, int16_t Ypos1, uint16_t color);
@@ -197,8 +198,36 @@ class TFT_DSI {
     uint16_t*                 m_framebuffer[3];
     SemaphoreHandle_t         m_vsync_semaphore;
     TaskHandle_t              m_refresh_task_handle = NULL;
+    int8_t                    m_rotation = 0;
     bool                      m_refresh = false;
     bool                      m_invert = false;
+
+    //-------------------------------------------------------------------------------------------------------------------
+    inline void mapRotation(uint8_t rot, size_t srcX, size_t srcY, size_t W, size_t H, size_t& dstX, size_t& dstY) {
+        switch (rot & 3) {
+            default:
+            case 0: // 0°
+                dstX = srcX;
+                dstY = srcY;
+                break;
+
+            case 1: // 90° CW
+                dstX = H - 1 - srcY;
+                dstY = srcX;
+                break;
+
+            case 2: // 180°
+                dstX = W - 1 - srcX;
+                dstY = H - 1 - srcY;
+                break;
+
+            case 3: // 270° CW
+                dstX = srcY;
+                dstY = W - 1 - srcX;
+                break;
+        }
+    }
+    //-------------------------------------------------------------------------------------------------------------------
 
   private:
     File gif_file;
@@ -322,27 +351,27 @@ class TFT_DSI {
             return b;
     }
 
-// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-//  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫   J P E G   ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
-// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-#define LDB_WORD(ptr) (uint16_t)(((uint16_t)*((uint8_t*)(ptr)) << 8) | (uint16_t)*(uint8_t*)((ptr) + 1))
-#define JD_SZBUF      512 /* Specifies size of stream input buffer */
-#define JD_FORMAT     1   /* Specifies output pixel format. 0: RGB888 (24-bit/pix) 1: RGB565 (16-bit/pix) 2: Grayscale (8-bit/pix) */
-#define JD_USE_SCALE  1   /* Switches output descaling feature. 0: Disable 1: Enable */
-#define JD_TBLCLIP    0   /* Use table conversion for saturation arithmetic. A bit faster, but increases 1 KB of code size. 0: Disable 1: Enable */
-#define JD_FASTDECODE 1   /* Optimization level  0: Basic optimization. Suitable for 8/16-bit MCUs. Workspace of 3100 bytes needed. */
-                          /*                                1: + 32-bit barrel shifter. Suitable for 32-bit MCUs. Workspace of 3480 bytes needed.*/
-                          /*                              2: + Table conversion for huffman decoding (wants 6 << HUFF_BIT bytes of RAM). Workspace of 9644 bytes needed. */
-// Do not change this, it is the minimum size in bytes of the workspace needed by the decoder
-#if JD_FASTDECODE == 0
-    #define TJPGD_WORKSPACE_SIZE 3100
-#endif
-#if JD_FASTDECODE == 1
-    #define TJPGD_WORKSPACE_SIZE 3500
-#endif
-#if JD_FASTDECODE == 2
-    #define TJPGD_WORKSPACE_SIZE (3500 + 6144)
-#endif
+    // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+    //  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫   J P E G   ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
+    // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+    #define LDB_WORD(ptr) (uint16_t)(((uint16_t)*((uint8_t*)(ptr)) << 8) | (uint16_t)*(uint8_t*)((ptr) + 1))
+    #define JD_SZBUF      512 /* Specifies size of stream input buffer */
+    #define JD_FORMAT     1   /* Specifies output pixel format. 0: RGB888 (24-bit/pix) 1: RGB565 (16-bit/pix) 2: Grayscale (8-bit/pix) */
+    #define JD_USE_SCALE  1   /* Switches output descaling feature. 0: Disable 1: Enable */
+    #define JD_TBLCLIP    0   /* Use table conversion for saturation arithmetic. A bit faster, but increases 1 KB of code size. 0: Disable 1: Enable */
+    #define JD_FASTDECODE 1   /* Optimization level  0: Basic optimization. Suitable for 8/16-bit MCUs. Workspace of 3100 bytes needed. */
+                              /*                                1: + 32-bit barrel shifter. Suitable for 32-bit MCUs. Workspace of 3480 bytes needed.*/
+                              /*                              2: + Table conversion for huffman decoding (wants 6 << HUFF_BIT bytes of RAM). Workspace of 9644 bytes needed. */
+    // Do not change this, it is the minimum size in bytes of the workspace needed by the decoder
+    #if JD_FASTDECODE == 0
+        #define TJPGD_WORKSPACE_SIZE 3100
+    #endif
+    #if JD_FASTDECODE == 1
+        #define TJPGD_WORKSPACE_SIZE 3500
+    #endif
+    #if JD_FASTDECODE == 2
+        #define TJPGD_WORKSPACE_SIZE (3500 + 6144)
+    #endif
 
   private:
     enum { TJPG_ARRAY = 0, TJPG_FS_FILE, TJPG_SD_FILE };
@@ -358,11 +387,11 @@ class TFT_DSI {
                JDR_FMT2,   /* 7: Right format but not supported */
                JDR_FMT3    /* 8: Not supported JPEG standard */
     };
-#if JD_FASTDECODE >= 1
+    #if JD_FASTDECODE >= 1
     typedef int16_t jd_yuv_t;
-#else
+    #else
     typedef uint8_t jd_yuv_t;
-#endif
+    #endif
 
     typedef struct {     /* Rectangular region in the output image */
         uint16_t left;   /* Left end */
@@ -387,15 +416,15 @@ class TFT_DSI {
         uint16_t* huffcode[2][2]; /* Huffman code word tables [id][dcac] */
         uint8_t*  huffdata[2][2]; /* Huffman decoded data tables [id][dcac] */
         int32_t*  qttbl[4];       /* Dequantizer tables [id] */
-#if JD_FASTDECODE >= 1
+    #if JD_FASTDECODE >= 1
         uint32_t wreg;   /* Working shift register */
         uint8_t  marker; /* Detected marker (0:None) */
-    #if JD_FASTDECODE == 2
+        #if JD_FASTDECODE == 2
         uint8_t   longofs[2][2]; /* Table offset of long code [id][dcac] */
         uint16_t* hufflut_ac[2]; /* Fast huffman decode tables for AC short code [id] */
         uint8_t*  hufflut_dc[2]; /* Fast huffman decode tables for DC short code [id] */
+        #endif
     #endif
-#endif
         void*     workbuf; /* Working buffer for IDCT and RGB output */
         jd_yuv_t* mcubuf;  /* Working buffer for the MCU */
         void*     pool;    /* Pointer to available memory pool */
@@ -428,6 +457,8 @@ class TFT_DSI {
 
   private:
     int          JPEG_jd_output(JDEC* jdec, void* bitmap, JRECT* jrect);
+    void         drawJPEG_0deg(uint16_t* src_ptr, uint16_t* dest_ptr, int16_t visible_w);
+    void         drawJPEG_90deg(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t* bitmap);
     bool         JPEG_tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t* bitmap);
     unsigned int JPEG_jd_input(JDEC* jdec, uint8_t* buf, unsigned int len);
     void*        JPEG_alloc_pool(JDEC* jd, size_t ndata);
@@ -443,44 +474,44 @@ class TFT_DSI {
     uint8_t      JPEG_jd_decomp(JDEC* jd, uint8_t scale);
 
   private:
-#if JD_TBLCLIP == 0 /* JD_TBLCLIP */
+    #if JD_TBLCLIP == 0 /* JD_TBLCLIP */
     uint8_t JPEG_BYTECLIP(int val);
-#endif
+    #endif
 
     // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
     //  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫   P N G   ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
     // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-#define MAKE_BYTE(b)           ((b) & 0xFF)
-#define MAKE_DWORD(a, b, c, d) ((MAKE_BYTE(a) << 24) | (MAKE_BYTE(b) << 16) | (MAKE_BYTE(c) << 8) | MAKE_BYTE(d))
-#define MAKE_DWORD_PTR(p)      MAKE_DWORD((p)[0], (p)[1], (p)[2], (p)[3])
+    #define MAKE_BYTE(b)           ((b) & 0xFF)
+    #define MAKE_DWORD(a, b, c, d) ((MAKE_BYTE(a) << 24) | (MAKE_BYTE(b) << 16) | (MAKE_BYTE(c) << 8) | MAKE_BYTE(d))
+    #define MAKE_DWORD_PTR(p)      MAKE_DWORD((p)[0], (p)[1], (p)[2], (p)[3])
 
-#define CHUNK_IHDR MAKE_DWORD('I', 'H', 'D', 'R')
-#define CHUNK_IDAT MAKE_DWORD('I', 'D', 'A', 'T')
-#define CHUNK_IEND MAKE_DWORD('I', 'E', 'N', 'D')
+    #define CHUNK_IHDR MAKE_DWORD('I', 'H', 'D', 'R')
+    #define CHUNK_IDAT MAKE_DWORD('I', 'D', 'A', 'T')
+    #define CHUNK_IEND MAKE_DWORD('I', 'E', 'N', 'D')
 
-#define FIRST_LENGTH_CODE_INDEX 257
-#define LAST_LENGTH_CODE_INDEX  285
+    #define FIRST_LENGTH_CODE_INDEX 257
+    #define LAST_LENGTH_CODE_INDEX  285
 
-#define NUM_DEFLATE_CODE_SYMBOLS 288 /*256 literals, the end code, some length codes, and 2 unused codes */
-#define NUM_DISTANCE_SYMBOLS     32  /*the distance codes have their own symbols, 30 used, 2 unused */
-#define NUM_CODE_LENGTH_CODES    19  /*the code length codes. 0-15: code lengths, 16: copy previous 3-6 times, 17: 3-10 zeros, 18: 11-138 zeros */
-#define MAX_SYMBOLS              288 /* largest number of symbols used by any tree type */
+    #define NUM_DEFLATE_CODE_SYMBOLS 288 /*256 literals, the end code, some length codes, and 2 unused codes */
+    #define NUM_DISTANCE_SYMBOLS     32  /*the distance codes have their own symbols, 30 used, 2 unused */
+    #define NUM_CODE_LENGTH_CODES    19  /*the code length codes. 0-15: code lengths, 16: copy previous 3-6 times, 17: 3-10 zeros, 18: 11-138 zeros */
+    #define MAX_SYMBOLS              288 /* largest number of symbols used by any tree type */
 
-#define DEFLATE_CODE_BITLEN 15
-#define DISTANCE_BITLEN     15
-#define CODE_LENGTH_BITLEN  7
-#define MAX_BIT_LENGTH      15 /* largest bitlen used by any tree type */
+    #define DEFLATE_CODE_BITLEN 15
+    #define DISTANCE_BITLEN     15
+    #define CODE_LENGTH_BITLEN  7
+    #define MAX_BIT_LENGTH      15 /* largest bitlen used by any tree type */
 
-#define DEFLATE_CODE_BUFFER_SIZE (NUM_DEFLATE_CODE_SYMBOLS * 2)
-#define DISTANCE_BUFFER_SIZE     (NUM_DISTANCE_SYMBOLS * 2)
-#define CODE_LENGTH_BUFFER_SIZE  (NUM_DISTANCE_SYMBOLS * 2)
+    #define DEFLATE_CODE_BUFFER_SIZE (NUM_DEFLATE_CODE_SYMBOLS * 2)
+    #define DISTANCE_BUFFER_SIZE     (NUM_DISTANCE_SYMBOLS * 2)
+    #define CODE_LENGTH_BUFFER_SIZE  (NUM_DISTANCE_SYMBOLS * 2)
 
     // #define SET_ERROR(upng,code) do { (upng)->error = (code); (upng)->error_line = __LINE__; } while (0)
 
-#define upng_chunk_length(chunk)   MAKE_DWORD_PTR(chunk)
-#define upng_chunk_type(chunk)     MAKE_DWORD_PTR((chunk) + 4)
-#define upng_chunk_critical(chunk) (((chunk)[4] & 32) == 0)
+    #define upng_chunk_length(chunk)   MAKE_DWORD_PTR(chunk)
+    #define upng_chunk_type(chunk)     MAKE_DWORD_PTR((chunk) + 4)
+    #define upng_chunk_critical(chunk) (((chunk)[4] & 32) == 0)
 
   private:
     char*    png_buffer = NULL; // contains the input data
