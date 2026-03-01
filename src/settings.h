@@ -1,9 +1,9 @@
 #pragma once
 #include "tft_structures.h"
 
-#define _SSID             "*******" // Your WiFi credentials here
-#define _PW               "*******" //
-#define TFT_CONTROLLER    8 // (0)SPI-ILI9341[320x240], (3)SPI-ILI9486[480x320], (4)SPI-ILI9488[480x320], (5)SPI-ST7796[480x320], (7)RGB[800x480], (8)DSI-EK97001[1024x600], (9)DSI-JD9165[1024x600], (10)DSI-ST7701[800x480]
+#define _SSID             "**" // Your WiFi credentials here
+#define _PW               "**" //
+#define TFT_CONTROLLER    10 // (0)SPI-ILI9341[320x240], (3)SPI-ILI9486[480x320], (4)SPI-ILI9488[480x320], (5)SPI-ST7796[480x320], (7)RGB[800x480], (8)DSI-EK97001[1024x600], (9)DSI-JD9165[1024x600], (10)DSI-ST7701[800x480]
 #define DISPLAY_INVERSION 0 // only SPI displays, (0) off (1) on
 #define TFT_ROTATION      1 // only SPI displays, 1 or 3 (landscape)
 #define TFT_FREQUENCY     40000000 // only SPI displays, 80000000, 40000000, 27000000, 20000000, 10000000

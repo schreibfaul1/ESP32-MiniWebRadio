@@ -47,29 +47,6 @@ void make_hardcopy_on_sd() {
     };
     (void)bmp800x480;
 
-    const uint8_t bmp480x800[70] = {
-        0x42, 0x4D,             // 'BM'
-        0x46, 0xB0, 0x0B, 0x00, // File size: 768070
-        0x00, 0x00, 0x00, 0x00, // Reserved
-        0x46, 0x00, 0x00, 0x00, // Pixel data offset (70)
-        0x28, 0x00, 0x00, 0x00, // DIB header size (40)
-        0xE0, 0x01, 0x00, 0x00, // Width: 480
-        0x20, 0x03, 0x00, 0x00, // Height: 800
-        0x01, 0x00,             // Planes
-        0x10, 0x00,             // BitCount: 16 (RGB565)
-        0x03, 0x00, 0x00, 0x00, // Compression: BI_BITFIELDS
-        0x00, 0xB0, 0x0B, 0x00, // Image size
-        0x23, 0x2E, 0x00, 0x00, // X pixels per meter
-        0x23, 0x2E, 0x00, 0x00, // Y pixels per meter
-        0x00, 0x00, 0x00, 0x00, // Colors used
-        0x00, 0x00, 0x00, 0x00, // Important colors
-        0x00, 0xF8, 0x00, 0x00, // Red mask
-        0xE0, 0x07, 0x00, 0x00, // Green mask
-        0x1F, 0x00, 0x00, 0x00, // Blue mask
-        0x00, 0x00, 0x00, 0x00  // Alpha mask
-    };
-    (void)bmp480x800;
-
     const uint8_t bmp1024x600[70] = {
         0x42, 0x4D,             // 'BM'
         0x46, 0xC0, 0x12, 0x00, // File size: 1,228,870
@@ -120,16 +97,11 @@ void make_hardcopy_on_sd() {
     }
     hc.close();
     #elifdef TFT_ALIGN_PORTRAIT
-    hc.write(bmp480x800, sizeof(bmp480x800));
-    uint16_t src[800]; // eine Zeile aus dem TFT
-    uint16_t dst[800]; // eine BMP-Zeile (nach Rotation)
-    for (int y = 0; y < 480; y++) {
-    //     // read row completely from TFT
-        tft.readRect(0, y, 800, 1, src);
-    //     // copy bmp line
-    //  //   for (int x = 0; x < 800; x++) { dst[x] = src[x]; }
-
-        hc.write((uint8_t*)src, 800 * 2);
+    hc.write(bmp800x480, sizeof(bmp800x480));
+    uint16_t row[800];
+    for (int bmp_y = 0; bmp_y < 480; bmp_y++) {
+        tft.readRect(bmp_y, 0, 1, 800, row);
+        hc.write((uint8_t*)row, 800 * 2);
     }
     hc.close();
     #endif
