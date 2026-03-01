@@ -1,9 +1,11 @@
 // first release on 09/2019
 // updated on Apr 26 2025
 
+#include "common.h"
+
 #include "tft_spi.h"
 #include "Arduino.h"
-#if TFT_CONTROLLER < 7
+
 SPIClass*   SPItransfer;
 
 #define __malloc_heap_psram(size) heap_caps_malloc_prefer(size, 2, MALLOC_CAP_DEFAULT | MALLOC_CAP_SPIRAM, MALLOC_CAP_DEFAULT | MALLOC_CAP_INTERNAL)
@@ -5742,4 +5744,3 @@ void TFT_SPI::setAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
     }
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-#endif // TFT_CONTROLLER < 7

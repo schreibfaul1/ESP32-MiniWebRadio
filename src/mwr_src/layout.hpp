@@ -421,16 +421,16 @@ inline constexpr DisplayConfig config = {
 
 // Factory-Funktion (Compile-Time)
 inline Layout makeLayout() {
-#if TFT_CONTROLLER == 0 || TFT_CONTROLLER == 1
+#ifdef TFT_LAYOUT_S
     using namespace layout_320x240;
-#elif TFT_CONTROLLER == 2 || TFT_CONTROLLER == 3 || TFT_CONTROLLER == 4 || TFT_CONTROLLER == 5 || TFT_CONTROLLER == 6
+#elifdef TFT_LAYOUT_M
     using namespace layout_480x320;
-#elif TFT_CONTROLLER == 7
+#elifdef TFT_LAYOUT_L
     using namespace layout_800x480;
-#elif TFT_CONTROLLER == 8 || TFT_CONTROLLER == 9
+#elifdef TFT_LAYOUT_XL
     using namespace layout_1024x600;
 #else
-    #error "Unsupported TFT_CONTROLLER"
+    printf()"Unsupported TFT_LAYOUT\n"
 #endif
     return {winHeader, winLogo, winName, winProgbar, winTitle, winSTitle, winVUmeter, winFooter, winButton, winDigits, winWoHF, sdrHP,
             sdrBP,     sdrLP,   sdrBAL,  btnHP,      btnBP,    btnLP,     btnBAL,     txtHP,     txtBP,     txtLP,     txtBAL};
@@ -440,16 +440,16 @@ inline Layout makeLayout() {
 inline const Layout layout = makeLayout();
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 inline DisplayConfig makeDisplayConfig() {
-#if TFT_CONTROLLER == 0 || TFT_CONTROLLER == 1
+#ifdef TFT_LAYOUT_S
     using namespace layout_320x240;
-#elif TFT_CONTROLLER >= 2 && TFT_CONTROLLER <= 6
+#elifdef TFT_LAYOUT_M
     using namespace layout_480x320;
-#elif TFT_CONTROLLER == 7
+#elifdef TFT_LAYOUT_L
     using namespace layout_800x480;
-#elif (TFT_CONTROLLER == 8 || TFT_CONTROLLER == 9)
+#elifdef TFT_LAYOUT_XL
     using namespace layout_1024x600;
 #else
-    #error "Unsupported TFT_CONTROLLER"
+    printf("Unsupported TFT_LAYOUT\n");
 #endif
     return config;
 }
@@ -467,6 +467,7 @@ numbersBox    volBox("volBox");
 uniList       myList("myList");
 // RADIO
 button2state btn_RA_mute("btn_RA_mute");
+button2state btn_RA_recorder("btn_RA_recorder");
 button1state btn_RA_prevSta("btn_RA_prevSta"), btn_RA_nextSta("btn_RA_nextSta");
 button1state btn_RA_staList("btn_RA_staList"), btn_RA_player("btn_RA_player"), btn_RA_dlna("btn_RA_dlna"), btn_RA_clock("btn_RA_clock");
 button1state btn_RA_sleep("btn_RA_sleep"), btn_RA_bt("btn_RA_bt");
@@ -564,6 +565,11 @@ void placingGraphicObjects() { // and initialize them
     btn_RA_nextSta.begin(2 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_RA_nextSta.setDefaultPicturePath("/btn/Button_Next_Green.png");
     btn_RA_nextSta.setClickedPicturePath("/btn/Button_Next_Yellow.png");
+    btn_RA_recorder.begin(3 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
+    btn_RA_recorder.setOffPicturePath("/btn/Button_Recorder_Blue.png");
+    btn_RA_recorder.setOnPicturePath("/btn/Button_Recorder_Red.png");
+    btn_RA_recorder.setClickedOffPicturePath("/btn/Button_Recorder_Yellow.png");
+    btn_RA_recorder.setClickedOnPicturePath("/btn/Button_Recorder_Yellow.png");
     btn_RA_staList.begin(0 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_RA_staList.setDefaultPicturePath("/btn/Button_List_Green.png");
     btn_RA_staList.setClickedPicturePath("/btn/Button_List_Yellow.png");

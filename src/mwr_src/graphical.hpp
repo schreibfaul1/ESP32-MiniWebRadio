@@ -144,8 +144,8 @@ class slider : public RegisterTable {
         m_h = h; // high
         m_padding_left = paddig_left;
         m_padding_right = paddig_right;
-        m_padding_top = paddig_top;                                    // unused
-        m_padding_bottom = paddig_bottom;                              // unused
+        m_padding_top = paddig_top;       // unused
+        m_padding_bottom = paddig_bottom; // unused
         m_railHigh = m_h / 8;
         m_spotRadius = m_h / 4;
         m_leftStop = m_x + m_padding_left + m_spotRadius + 10;         // x pos left stop
@@ -202,7 +202,7 @@ class slider : public RegisterTable {
         int w = m_w - m_padding_left - m_padding_right;
         int h = m_railHigh;
         (void)h;
-        int r = m_railHigh/ 4;
+        int r = m_railHigh / 4;
         if (m_backgroundTransparency) {
             if (m_saveBackground) {
                 tft.copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
@@ -5053,7 +5053,7 @@ class displayHeader : public RegisterTable {
     uint16_t     m_volumeColor = TFT_DEEPSKYBLUE;
     uint16_t     m_timeColor = TFT_GREENYELLOW;
     //------------------------------------------------------------------------------------------------------------------------------------------------
-#if TFT_CONTROLLER < 2 // 320 x 240px
+#ifdef TFT_LAYOUT_S // 320 x 240px
     //------------------------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
     struct w_i {
         uint16_t x = 0;
@@ -5096,7 +5096,7 @@ class displayHeader : public RegisterTable {
         uint8_t  pb = 0;
     } const s_time; // time object
     //------------------------------------------------------------------------------------------------------------------------------------------------
-#elif TFT_CONTROLLER < 7                           // 480 x 320px
+#elifdef TFT_LAYOUT_M                           // 480 x 320px
     //------------------------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
     struct w_i {
         uint16_t x = 0;
@@ -5139,7 +5139,7 @@ class displayHeader : public RegisterTable {
         uint8_t  pb = 0;
     } const s_time; // time object
     //------------------------------------------------------------------------------------------------------------------------------------------------
-#elif TFT_CONTROLLER == 7                          // 800 x 480px
+#elifdef TFT_LAYOUT_L                          // 800 x 480px
     //------------------------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
     struct w_i {
         uint16_t x = 0;
@@ -5182,7 +5182,7 @@ class displayHeader : public RegisterTable {
         uint8_t  pb = 0;
     } const s_time; // time object
     //------------------------------------------------------------------------------------------------------------------------------------------------
-#elif (TFT_CONTROLLER == 8 || TFT_CONTROLLER == 9) // 1024 x 600px
+#elifdef TFT_LAYOUT_XL // 1024 x 600px
     //------------------------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
     struct w_i {
         uint16_t x = 0;
@@ -5417,7 +5417,7 @@ class displayFooter : public RegisterTable {
     bool         m_WiFi_lost = true;
     const char   m_hourGlassymbol[2][27] = {"/common/Hourglass_blue.png", "/common/Hourglass_red.png"};
     //-----------------------------------------------------------------------------------------------------------------------------------
-#if TFT_CONTROLLER < 2 // 320 x 240px
+#ifdef TFT_LAYOUT_S // 320 x 240px
     //-----------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
     struct w_a {
         uint16_t x = 0;
@@ -5484,7 +5484,7 @@ class displayFooter : public RegisterTable {
         uint8_t  pb = 0;
     } const s_IPaddr;
     //-----------------------------------------------------------------------------------------------------------------------------------
-#elif TFT_CONTROLLER < 7                           // 480 x 320px
+#elifdef TFT_LAYOUT_M                           // 480 x 320px
     //-----------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
     struct w_a {
         uint16_t x = 1;
@@ -5551,7 +5551,7 @@ class displayFooter : public RegisterTable {
         uint8_t  pb = 0;
     } const s_IPaddr;
     //-----------------------------------------------------------------------------------------------------------------------------------
-#elif TFT_CONTROLLER == 7                          // 800 x 480px
+#elifdef TFT_LAYOUT_L                          // 800 x 480px
     //-----------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
     struct w_a {
         uint16_t x = 0;
@@ -5618,7 +5618,7 @@ class displayFooter : public RegisterTable {
         uint8_t  pb = 0;
     } const s_IPaddr;
     //-----------------------------------------------------------------------------------------------------------------------------------
-#elif (TFT_CONTROLLER == 8 || TFT_CONTROLLER == 9) // 1024 x 600px
+#elifdef TFT_LAYOUT_XL // 1024 x 600px
     //-----------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
     struct w_a { // antenna
         uint16_t x = 0;
@@ -5935,7 +5935,7 @@ class messageBox : public RegisterTable {
     bool         m_saveBackground = false;
     textbox*     txt_msgBox = new textbox("msgBox txt");
 
-#if TFT_CONTROLLER < 2 // 320 x 240px
+#ifdef TFT_LAYOUT_S // 320 x 240px
 
     struct p {
         uint16_t x = 320 / 4;
@@ -5948,7 +5948,7 @@ class messageBox : public RegisterTable {
         uint8_t  pb = 5;
     } const m_win;
 
-#elif TFT_CONTROLLER < 7 // 480 x 320px
+#elifdef TFT_LAYOUT_M // 480 x 320px
     struct p {
         uint16_t x = 480 / 4;
         uint16_t y = 320 / 4;
@@ -5959,7 +5959,7 @@ class messageBox : public RegisterTable {
         uint8_t  pt = 10;
         uint8_t  pb = 10;
     } const m_win;
-#else                    // 800 x 480px
+#elifdef TFT_LAYOUT_L // 800 x 480px
     struct p {
         uint16_t x = 800 / 4;
         uint16_t y = 480 / 4;
@@ -5969,6 +5969,17 @@ class messageBox : public RegisterTable {
         uint8_t  pr = 20;
         uint8_t  pt = 20;
         uint8_t  pb = 20;
+    } const m_win;
+#elifdef TFT_LAYOUT_XL
+    struct p { // 1024x600
+        uint16_t x = 1024 / 4;
+        uint16_t y = 6000 / 4;
+        uint16_t w = 1024 / 2;
+        uint16_t h = 6000 / 2;
+        uint8_t  pl = 30;
+        uint8_t  pr = 30;
+        uint8_t  pt = 30;
+        uint8_t  pb = 30;
     } const m_win;
 #endif
 

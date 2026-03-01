@@ -1,12 +1,10 @@
 // first release on 01/2025
-// updated on Dec 16 2025
+// updated on Mar 01 2026
 
 #include "Arduino.h"
-#include "../../src/settings.h"
-
-#if TFT_CONTROLLER == 7
+#ifdef CONFIG_IDF_TARGET_ESP32S3
 #pragma once
-
+#include "../../src/settings.h"
 #include "tft_structures.h"
 #include "FS.h"
 #include "SPI.h"
@@ -693,6 +691,6 @@ class TFT_RGB {
     void          png_draw_into_Framebuffer(uint16_t x, uint16_t y, uint16_t w, uint16_t h, char* rgbaBuffer, uint32_t png_outbuff_size, uint8_t png_format);
 };
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-#endif // TFT_CONTROLLER == 7
+#endif // CONFIG_IDF_TARGET_ESP32S3
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 

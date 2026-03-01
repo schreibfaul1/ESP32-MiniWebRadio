@@ -1,10 +1,11 @@
 // first release on 01/2025
-// updated on Apr 26 2025
+// updated on Mar 01 2026
 
-
-#include "tft_dsi.h"
+#include "Arduino.h"
 #ifdef CONFIG_IDF_TARGET_ESP32P4
-#if (TFT_CONTROLLER == 8 || TFT_CONTROLLER == 9)
+#include "tft_dsi.h"
+
+
     #define __malloc_heap_psram(size) heap_caps_malloc_prefer(size, 2, MALLOC_CAP_DEFAULT | MALLOC_CAP_SPIRAM, MALLOC_CAP_DEFAULT | MALLOC_CAP_INTERNAL)
 
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -5369,6 +5370,5 @@ void TFT_DSI::png_draw_into_Framebuffer(uint16_t x, uint16_t y, uint16_t w, uint
     panelDrawBitmap(x, y, x + w, y + h, m_framebuffer[0]);
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-#endif // (TFT_CONTROLLER == 8 || TFT_CONTROLLER == 9)
 #endif // CONFIG_IDF_TARGET_ESP32P4
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

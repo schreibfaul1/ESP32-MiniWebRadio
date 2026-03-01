@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.1.1b - Feb 23, 2026                                                                                                               ";
+    Version 4.1.1c - Mar 01, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -150,6 +150,7 @@ bool s_f_10sec = false;
 bool s_f_1min = false;
 bool s_f_mute = false;
 bool s_f_muteIsPressed = false;
+bool s_f_recording = false;
 bool s_f_sleeping = false;
 bool s_f_isWebConnected = false;
 bool s_f_WiFi_lost = false;
@@ -195,24 +196,24 @@ std::deque<ps_ptr<char>> s_logBuffer;
 
 const char* codecname[10] = {"unknown", "WAV", "MP3", "AAC", "M4A", "FLAC", "AACP", "OPUS", "OGG", "VORBIS"};
 
-#if TFT_CONTROLLER < 7 // ⏹⏹⏹⏹
+#ifdef TFT_MODE_SPI // ⏹⏹⏹⏹
 TFT_SPI tft(spiBus, TFT_CS);
-#elif TFT_CONTROLLER == 7
+#elifdef TFT_MODE_RGB
 TFT_RGB tft;
-#elif TFT_CONTROLLER > 7
+#elifdef TFT_MODE_DSI
 TFT_DSI tft;
 #else
-    #error "wrong TFT_CONTROLLER"
+printf("wrong TFT_CONTROLLER\n");
 #endif
 
-#if TP_CONTROLLER < 7 // ⏹⏹⏹⏹
+#ifdef TP_MODE_XPT2046 // ⏹⏹⏹⏹
 TP_XPT2046 tp(spiBus, TP_CS);
-#elif TP_CONTROLLER == 7
+#elifdef TP_MODE_GT911
 TP_GT911 tp;
-#elif TP_CONTROLLER == 8
+#elifdef TP_MODE_FT6X63
 FT6x36 tp;
 #else
-    #error "wrong TP_CONTROLLER"
+printf("wrong TP_CONTROLLER\n");
 #endif
 
 stationManagement staMgnt(&s_cur_station);
@@ -704,10 +705,11 @@ start:
     return;
 }
 
-/*****************************************************************************************************************************************************
- *                                                        C O N N E C T   TO   W I F I                                                               *
- *****************************************************************************************************************************************************/
-bool connectToWiFi() {
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// 📌📌📌  C O N N E C T   TO   W I F I   📌📌📌
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
+ bool connectToWiFi() {
 
     MWR_LOG_DEBUG("Connecting to WiFi...");
     ps_ptr<char> line(512);
@@ -903,7 +905,6 @@ exit:
     if (state == 3) { SerialPrintfln("WiFI_info:   " ANSI_ESC_RED "No more memory to save the credentials for: %s" ANSI_ESC_RESET "  ", ssid.c_get()); }
     return;
 }
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 /*****************************************************************************************************************************************************
  *                                                                     A U D I O                                                                     *
@@ -995,134 +996,55 @@ void stopSong() {
     s_playlistPath.reset();
 }
 
-/*****************************************************************************************************************************************************
- *                                                                    S E T U P                                                                      *
- *****************************************************************************************************************************************************/
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// 📌📌📌  S E T U P  📌📌📌
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 void setup() {
+
+    //---- BEGIN ---------
     Serial.begin(MONITOR_SPEED);
+    vTaskDelay(1500); // wait for Serial to be ready
+    printf("\n\n");
+    trim(Version);
+    SerialPrintfln("");
+    SerialPrintfln("             " ANSI_ESC_BG_MAGENTA " ***************************************************** " ANSI_ESC_RESET "   ");
+    SerialPrintfln("             " ANSI_ESC_BG_MAGENTA " *     MiniWebRadio % 29s    * " ANSI_ESC_RESET "      ", Version);
+    SerialPrintfln("             " ANSI_ESC_BG_MAGENTA " ***************************************************** " ANSI_ESC_RESET "    ");
+    SerialPrintfln(ANSI_ESC_RESET "   ");
+
+    mutex_rtc = xSemaphoreCreateMutex();
+    mutex_display = xSemaphoreCreateMutex();
     Audio::audio_info_callback = my_audio_info; // audio callback
     dlna.dlna_client_callbak(on_dlna_client);   // dlna callback
     bt_emitter.kcx_bt_emitter_callback(on_kcx_bt_emitter);
     webSrv.websrv_callbak(on_websrv);
     esp_log_level_set("*", ESP_LOG_DEBUG);
     esp_log_set_vprintf(log_redirect_handler);
+    if (!get_esp_items(&s_resetReason, &s_f_FFatFound)) return;
+    pref.begin("Pref", false); // instance of preferences from AccessPoint (SSID, PW ...)
 
-    vTaskDelay(1500); // wait for Serial to be ready
-    mutex_rtc = xSemaphoreCreateMutex();
-    mutex_display = xSemaphoreCreateMutex();
-    Serial.print("\n\n");
-    trim(Version);
-
+    //---- I2C, BL, IR ---------
     if (I2C_SDA >= 0) {
         i2cBusOne.end();
         i2cBusOne.flush();
         i2cBusOne.begin(I2C_SDA, I2C_SCL, 100000);
     }
-
-    Serial.println("");
-    Serial.println("             " ANSI_ESC_BG_MAGENTA " ***************************************************** " ANSI_ESC_RESET "   ");
-    Serial.printf("             " ANSI_ESC_BG_MAGENTA " *     MiniWebRadio % 29s    * " ANSI_ESC_RESET "    \n", Version);
-    Serial.println("             " ANSI_ESC_BG_MAGENTA " ***************************************************** " ANSI_ESC_RESET "    ");
-    Serial.println(ANSI_ESC_RESET "   ");
-
-    if (!get_esp_items(&s_resetReason, &s_f_FFatFound)) return;
-    pref.begin("Pref", false); // instance of preferences from AccessPoint (SSID, PW ...)
-
-#if TFT_CONTROLLER < 7
-    if (TFT_CONTROLLER == 0) {
-        s_h_resolution = 320;
-        s_v_resolution = 240;
-    } else {
-        s_h_resolution = 480;
-        s_v_resolution = 320;
-    }
-    spiBus.begin(TFT_SCK, TFT_MISO, TFT_MOSI, -1); // SPI1 for TFT
-    tft.setTFTcontroller(TFT_CONTROLLER);
-    tft.setDiaplayInversion(DISPLAY_INVERSION);
-    tft.begin(TFT_DC); // Init TFT interface
-    tft.setFrequency(TFT_FREQUENCY);
-    tft.setRotation(TFT_ROTATION);
-    tft.setBackGoundColor(TFT_BLACK);
-    if (TFT_BL >= 0) {
-        s_f_brightnessIsChangeable = true;
-        setupBacklight(TFT_BL, 512);
-    }
-#elif TFT_CONTROLLER == 7
-    s_h_resolution = 800;
-    s_v_resolution = 480;
-    tft.begin(RGB_PINS, RGB_TIMING);
-    tft.setDisplayInversion(false);
-    vTaskDelay(100 / portTICK_PERIOD_MS); // wait for TFT to be ready
-    tft.reset();
-    if (TFT_BL >= 0) {
-        s_f_brightnessIsChangeable = true;
-        setupBacklight(TFT_BL, 512);
-    }
-#elif TFT_CONTROLLER > 7
-    s_h_resolution = 1024;
-    s_v_resolution = 600;
-    tft.begin(DSI_TIMING);
-    vTaskDelay(100 / portTICK_PERIOD_MS); // wait for TFT to be ready
     if (TFT_BL >= 0) {
         s_f_brightnessIsChangeable = true;
         setupBacklight(TFT_BL, 512);
         setTFTbrightness(5);
     }
-#else
-    #error "wrong TFT_CONTROLLER"
-#endif
-
-#if TP_CONTROLLER < 7 // XPT2046
-    tp.begin(TP_IRQ, s_h_resolution, s_v_resolution);
-    tp.setVersion(TP_CONTROLLER);
-    tp.setRotation(TP_ROTATION);
-    tp.setMirror(TP_H_MIRROR, TP_V_MIRROR);
-#elif TP_CONTROLLER == 7 // GT911
-    tp.begin(&i2cBusOne, GT911_I2C_ADDRESS, s_h_resolution, s_v_resolution);
-    tp.getProductID();
-    tp.setVersion(TP_GT911::GT911);
-    tp.setRotation(TP_ROTATION);
-    tp.setMirror(TP_H_MIRROR, TP_V_MIRROR);
-#elif TP_CONTROLLER == 8 // FT6x36
-    tp.begin(&i2cBusOne, 0x38, s_h_resolution, s_v_resolution);
-    tp.get_FT6x36_items();
-    tp.setRotation(TP_ROTATION);
-    tp.setMirror(TP_H_MIRROR, TP_V_MIRROR);
-#else
-    #error "wrong TP_CONTROLLER"
-#endif
-
-    if (IR_PIN >= 0) pinMode(IR_PIN, INPUT_PULLUP); // if ir_pin is read only, have a external resistor (~10...40KOhm)
-    SerialPrintfln("setup: ...   Init SD card");
-    pinMode(SD_MMC_D0, INPUT_PULLUP);
-    int32_t sdmmc_frequency = SDMMC_FREQUENCY / 1000; // MHz -> KHz, default is 40MHz
-
-#if CONFIG_IDF_TARGET_ESP32S3
-    SD_MMC.setPins(SD_MMC_CLK, SD_MMC_CMD, SD_MMC_D0);
-    s_f_sd_card_found = SD_MMC.begin("/sdcard", true, false, sdmmc_frequency);
-#endif
-
-#if CONFIG_IDF_TARGET_ESP32P4
-    SD_MMC.setPins(SD_MMC_CLK, SD_MMC_CMD, SD_MMC_D0, SD_MMC_D1, SD_MMC_D2, SD_MMC_D3);
-    s_f_sd_card_found = SD_MMC.begin("/sdcard", false, false, sdmmc_frequency);
-#endif
-
-    if (!s_f_sd_card_found) {
-        clearAll();
-        tft.setFont(displayConfig.fonts[6]);
-        tft.setTextColor(TFT_YELLOW);
-        tft.writeText("SD Card Mount Failed", 0, 50, displayConfig.dispWidth, displayConfig.dispHeight, TFT_ALIGN_CENTER, TFT_ALIGN_TOP, false, false);
-        SerialPrintfln(ANSI_ESC_RED "SD Card Mount Failed" ANSI_ESC_RESET "  ");
-        return;
+    if (IR_PIN >= 0) {
+        pinMode(IR_PIN, INPUT_PULLUP); // if ir_pin is read only, have a external resistor (~10...40KOhm)
     }
-    float cardSize = ((float)SD_MMC.cardSize()) / (1024 * 1024);
-    float freeSize = ((float)SD_MMC.cardSize() - SD_MMC.usedBytes()) / (1024 * 1024);
-    SerialPrintfln(ANSI_ESC_WHITE "setup: ....  SD card found, %.1f MB by %.1f MB free" ANSI_ESC_RESET "   ", freeSize, cardSize);
-    defaultsettings();
-    if (ESP.getFlashChipSize() > 80000000) { FFat.begin(); }
 
-    if (TFT_CONTROLLER > 9) SerialPrintfln(ANSI_ESC_RED "The value in TFT_CONTROLLER is invalid" ANSI_ESC_RESET "   ");
+    set_display_items(); // TFT, TP, Resolotion
+    if(!init_SD_card()) return;
+
+    defaultsettings();
+
+    if (ESP.getFlashChipSize() > 80000000) { FFat.begin(); }
 
     drawImage("/common/MiniWebRadioV4.jpg", 0, 0); // Welcomescreen
     updateSettings();
@@ -1187,7 +1109,7 @@ void setup() {
     setI2STone();
 
     ticker100ms.attach(0.1, timer100ms);
-#if TFT_CONTROLLER == 7
+#ifdef TFT_MODE_RGB
     tft.clearVsyncCounter(); // clear the vsync counter and start them
 #endif
 
@@ -1237,10 +1159,98 @@ void setup() {
     }
     if (BT_EMITTER_RX >= 0) bt_emitter.begin();
     setRTC(s_TZString);
+    rec_buffer.alloc_array(REC_BUFFER_SIZE, "rec_buffer");                             // allocate in PSRAM
+    writeBuffer.alloc_array(WRITE_CHUNK_SIZE, "writeBuffer");                          // allocate in PSRAM
+    xTaskCreatePinnedToCore(wavWriterTask, "wavWriter", 4096, nullptr, 1, nullptr, 0); // start recorder task
+    SerialPrintfln("recorder task started, Free heap: %u\n", ESP.getFreeHeap());
 }
-/*****************************************************************************************************************************************************
- *                                                                   C O M M O N                                                                     *
- *****************************************************************************************************************************************************/
+
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// 📌📌📌  C O M M O N  📌📌📌
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
+void set_display_items(){
+//---- LAYOUT -----------
+#ifdef TFT_LAYOUT_S
+    s_h_resolution = 320;
+    s_v_resolution = 240;
+#elifdef TFT_LAYOUT_M
+    s_h_resolution = 480;
+    s_v_resolution = 320;
+#elifdef TFT_LAYOUT_L
+    s_h_resolution = 800;
+    s_v_resolution = 480;
+#elifdef TFT_LAYOUT_XL
+    s_h_resolution = 1024;
+    s_v_resolution = 600;
+#endif
+
+//---- TFT_MODE ---------
+#ifdef TFT_MODE_SPI
+    spiBus.begin(TFT_SCK, TFT_MISO, TFT_MOSI, -1); // SPI1 for TFT
+    tft.setTFTcontroller(TFT_CONTROLLER);
+    tft.setDiaplayInversion(DISPLAY_INVERSION);
+    tft.begin(TFT_DC); // Init TFT interface
+    tft.setFrequency(TFT_FREQUENCY);
+    tft.setRotation(TFT_ROTATION);
+    tft.setBackGoundColor(TFT_BLACK);
+#elifdef TFT_MODE_RGB
+    tft.begin(RGB_PINS, RGB_TIMING);
+    tft.setDisplayInversion(false);
+    vTaskDelay(100 / portTICK_PERIOD_MS); // wait for TFT to be ready
+    tft.reset();
+#elifdef TFT_MODE_DSI
+    tft.begin(DSI_TIMING);
+    vTaskDelay(100 / portTICK_PERIOD_MS); // wait for TFT to be ready
+#endif
+
+//---- TP_MODE ---------
+#ifdef TP_MODE_XPT2046 // XPT2046
+    tp.begin(TP_IRQ, s_h_resolution, s_v_resolution);
+    tp.setVersion(TP_CONTROLLER);
+    tp.setRotation(TP_ROTATION);
+    tp.setMirror(TP_H_MIRROR, TP_V_MIRROR);
+#elifdef TP_MODE_GT911 // GT911
+    tp.begin(&i2cBusOne, GT911_I2C_ADDRESS, s_h_resolution, s_v_resolution);
+    tp.getProductID();
+    tp.setVersion(TP_GT911::GT911);
+    tp.setRotation(TP_ROTATION);
+    tp.setMirror(TP_H_MIRROR, TP_V_MIRROR);
+#elifdef TP_MODE_FT6X63// FT6x36
+    tp.begin(&i2cBusOne, 0x38, s_h_resolution, s_v_resolution);
+    tp.get_FT6x36_items();
+    tp.setRotation(TP_ROTATION);
+    tp.setMirror(TP_H_MIRROR, TP_V_MIRROR);
+#endif
+}
+
+//---------------------------------------------------------------------------------------
+bool init_SD_card() {
+    SerialPrintfln("setup: ...   Init SD card");
+    pinMode(SD_MMC_D0, INPUT_PULLUP);
+    int32_t sdmmc_frequency = SDMMC_FREQUENCY / 1000; // MHz -> KHz, default is 40MHz
+#ifdef CONFIG_IDF_TARGET_ESP32S3
+    SD_MMC.setPins(SD_MMC_CLK, SD_MMC_CMD, SD_MMC_D0);
+    s_f_sd_card_found = SD_MMC.begin("/sdcard", true, false, sdmmc_frequency);
+#elifdef CONFIG_IDF_TARGET_ESP32P4
+    SD_MMC.setPins(SD_MMC_CLK, SD_MMC_CMD, SD_MMC_D0, SD_MMC_D1, SD_MMC_D2, SD_MMC_D3);
+    s_f_sd_card_found = SD_MMC.begin("/sdcard", false, false, sdmmc_frequency);
+#endif
+    if (!s_f_sd_card_found) {
+        clearAll();
+        tft.setFont(displayConfig.fonts[6]);
+        tft.setTextColor(TFT_YELLOW);
+        tft.writeText("SD Card Mount Failed", 0, 50, displayConfig.dispWidth, displayConfig.dispHeight, TFT_ALIGN_CENTER, TFT_ALIGN_TOP, false, false);
+        SerialPrintfln(ANSI_ESC_RED "SD Card Mount Failed" ANSI_ESC_RESET "  ");
+        return false;
+    }
+    float cardSize = ((float)SD_MMC.cardSize()) / (1024 * 1024);
+    float freeSize = ((float)SD_MMC.cardSize() - SD_MMC.usedBytes()) / (1024 * 1024);
+    SerialPrintfln(ANSI_ESC_WHITE "setup: ....  SD card found, %.1f MB by %.1f MB free" ANSI_ESC_RESET "   ", freeSize, cardSize);
+    return true;
+}
+
+//---------------------------------------------------------------------------------------
 
 ps_ptr<char> scaleImage(ps_ptr<char> path) {
     MWR_LOG_DEBUG("path %s", path.c_get());
@@ -1610,9 +1620,9 @@ void setTimeCounter(uint8_t sec) {
     }
 }
 
-/*         ╔═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
-           ║                                                                              C H A N G E    S T A T E                                                                       ║
-           ╚═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝   */
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// 📌📌📌  C H A N G E   S T A T E  📌📌📌
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // clang-format off
 /*🟢🟡🔴*/
 void changeState(int8_t state, int8_t subState) {
@@ -1684,12 +1694,12 @@ void changeState(int8_t state, int8_t subState) {
                     txt_RA_sTitle.hide();
                     VUmeter_RA.hide();
                     sdr_RA_volume.show();
-                    btn_RA_mute.show(); btn_RA_prevSta.show(); btn_RA_nextSta.show();
+                    btn_RA_mute.show(); btn_RA_prevSta.show(); btn_RA_nextSta.show(); btn_RA_recorder.show();
                     setTimeCounter(2);
                 }
                 else{
                     sdr_RA_volume.enable();
-                    btn_RA_mute.enable(); btn_RA_prevSta.enable(); btn_RA_nextSta.enable();
+                    btn_RA_mute.enable(); btn_RA_prevSta.enable(); btn_RA_nextSta.enable(); btn_RA_recorder.enable();
                 }
             }
             if (subState == 2){ // Player, DLNA, Clock, SleepTime, Brightness, EQ, BT, Off
@@ -2195,6 +2205,25 @@ void loop() {
         if (s_f_connectToLastStation) { // not used yet
             s_f_connectToLastStation = false;
             setStation(s_cur_station);
+        }
+        //----------------------------------------------SD RECORDER-----------------------------------------------------------------------------------
+        if (s_f_recording) {
+            MWR_LOG_WARN("recording");
+            if (audio.isRunning()) {
+                if (!recorder.running) {
+                    recorder.startRequested = true;
+                    recorder.running = true;
+                    SerialPrintfln("Start recording");
+                }
+            }
+        }
+        else {
+            if (recorder.running) {
+                recorder.sampleRate = audio.getSampleRate();
+                SerialPrintfln("Stop recording");
+                recorder.stopRequested = true;
+                recorder.running = false;
+            }
         }
         //------------------------------------------RECONNECT AFTER FAIL------------------------------------------------------------------------------
         if (s_f_reconnect && !s_f_isWiFiConnected) { // not used yet
@@ -3714,7 +3743,7 @@ void tp_released(uint16_t x, uint16_t y){
         case RADIO:
             VUmeter_RA.released();    sdr_RA_volume.released(); btn_RA_mute.released();  btn_RA_prevSta.released(); btn_RA_nextSta.released();
             btn_RA_player.released(); btn_RA_dlna.released();   btn_RA_clock.released(); btn_RA_sleep.released();   btn_RA_settings.released();
-            btn_RA_bt.released();     btn_RA_off.released();    btn_RA_staList.released();
+            btn_RA_bt.released();     btn_RA_off.released();    btn_RA_staList.released(); btn_RA_recorder.released();
             break;
         case STATIONSLIST:
             lst_RADIO.released();
@@ -3813,6 +3842,7 @@ void graphicObjects_OnClick(ps_ptr<char> name, uint8_t val) { // val = 0 --> is 
 
     if (s_state == RADIO) {
         if (val && name.equals("btn_RA_mute"))     { setTimeCounter(2); if (!s_f_mute) s_f_muteIsPressed = true; goto exit; }
+        if (val && name.equals("btn_RA_recorder")) { goto exit; }
         if (val && name.equals("btn_RA_prevSta"))  { setTimeCounter(2); goto exit; }
         if (val && name.equals("btn_RA_nextSta"))  { setTimeCounter(2); goto exit; }
         if (val && name.equals("btn_RA_staList"))  { goto exit; }
@@ -3965,6 +3995,7 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
 
     if (s_state == RADIO) {
         if (name.equals("btn_RA_mute"))     { muteChanged(btn_RA_mute.getValue()); goto exit; }
+        if (name.equals("btn_RA_recorder")) { s_f_recording = btn_RA_recorder.getValue(); goto exit; }
         if (name.equals("btn_RA_prevSta"))  { prevFavStation(); dispFooter.updateStation(s_cur_station); goto exit; }
         if (name.equals("btn_RA_nextSta"))  { nextFavStation(); dispFooter.updateStation(s_cur_station); goto exit; }
         if (name.equals("btn_RA_staList"))  { changeState(STATIONSLIST, 0); goto exit; }

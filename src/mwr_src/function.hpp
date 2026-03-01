@@ -56,8 +56,13 @@ void make_hardcopy_on_sd() {
         0x00, 0x00, 0x00, 0x00  // Alpha mask
     };
 
+    (void) bmp320x240;
+    (void) bmp480x320;
+    (void) bmp800x480;
+    (void) bmp1024x600;
+
     File hc = SD_MMC.open("/hardcopy.bmp", "w", true);
-    if (TFT_CONTROLLER < 2) {
+    #ifdef TFT_LAYOUT_S
         hc.write(bmp320x240, sizeof(bmp320x240));
         uint16_t buff[320];
         for (int i = 240; i > 0; i--) {
@@ -65,7 +70,7 @@ void make_hardcopy_on_sd() {
             hc.write((uint8_t*)buff, 320 * 2);
         }
         hc.close();
-    } else if (TFT_CONTROLLER < 7) {
+    #elifdef TFT_LAYOUT_M
         hc.write(bmp480x320, sizeof(bmp480x320));
         uint16_t buff[480];
         for (int i = 320; i > 0; i--) {
@@ -73,7 +78,7 @@ void make_hardcopy_on_sd() {
             hc.write((uint8_t*)buff, 480 * 2);
         }
         hc.close();
-    } else if (TFT_CONTROLLER == 7) {
+    #elifdef TFT_LAYOUT_L
         hc.write(bmp800x480, sizeof(bmp800x480));
         uint16_t buff[800];
         for (int i = 480; i > 0; i--) {
@@ -81,7 +86,7 @@ void make_hardcopy_on_sd() {
             hc.write((uint8_t*)buff, 800 * 2);
         }
         hc.close();
-    } else if (TFT_CONTROLLER > 7) {
+    #elifndef TFT_LAYOUT_XL
         hc.write(bmp1024x600, sizeof(bmp1024x600));
         uint16_t buff[1024];
         for (int i = 600; i > 0; i--) {
@@ -89,132 +94,131 @@ void make_hardcopy_on_sd() {
             hc.write((uint8_t*)buff, 1024 * 2);
         }
         hc.close();
-    }
+    #endif
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void GetRunTimeStats(char* pcWriteBuffer) {
-    TaskStatus_t* pxTaskStatusArray;
-    UBaseType_t   uxArraySize;
-    uint8_t       ulStatsAsPercentage;
-    uint64_t      ulTotalRunTime;
-    char          leftSpace[] = "             |";
-    const size_t  MAX_WRITE_BUFFER_SIZE = 8192; // Assume at least 8KB buffer
-    size_t        current_len = 0;
+//     TaskStatus_t* pxTaskStatusArray;
+//     UBaseType_t   uxArraySize;
+//     uint8_t       ulStatsAsPercentage;
+//     uint64_t      ulTotalRunTime;
+//     char          leftSpace[] = "             |";
+//     const size_t  MAX_WRITE_BUFFER_SIZE = 8192; // Assume at least 8KB buffer
+//     size_t        current_len = 0;
 
-    // Take a snapshot of the number of tasks in case it changes while this function is executing.
-    uxArraySize = uxTaskGetNumberOfTasks();
+//     // Take a snapshot of the number of tasks in case it changes while this function is executing.
+//     uxArraySize = uxTaskGetNumberOfTasks();
 
-    // Allocate a TaskStatus_t structure for each task.  An array could be allocated statically at compile time.
-    pxTaskStatusArray = (TaskStatus_t*)pvPortMalloc(uxArraySize * sizeof(TaskStatus_t));
+//     // Allocate a TaskStatus_t structure for each task.  An array could be allocated statically at compile time.
+//     pxTaskStatusArray = (TaskStatus_t*)pvPortMalloc(uxArraySize * sizeof(TaskStatus_t));
 
-    if (pxTaskStatusArray != NULL) {
-        // Generate raw status information about each task.
-        uxArraySize = uxTaskGetSystemState(pxTaskStatusArray, (UBaseType_t)uxArraySize, &ulTotalRunTime);
+//     if (pxTaskStatusArray != NULL) {
+//         // Generate raw status information about each task.
+//         uxArraySize = uxTaskGetSystemState(pxTaskStatusArray, (UBaseType_t)uxArraySize, &ulTotalRunTime);
 
-        // For percentage calculations.
-        ulTotalRunTime /= 100UL;
+//         // For percentage calculations.
+//         ulTotalRunTime /= 100UL;
 
-        char* tmpBuff = x_ps_malloc(100);
-        strlcpy(pcWriteBuffer, leftSpace, MAX_WRITE_BUFFER_SIZE);
-        current_len = strlen(pcWriteBuffer);
-        strlcat(pcWriteBuffer, ANSI_ESC_YELLOW " TASKNAME            | RUNTIMECOUNTER | TOTALRUNTIME[%] | CORE | PRIO  |\n", MAX_WRITE_BUFFER_SIZE);
-        current_len = strlen(pcWriteBuffer);
-        strlcat(pcWriteBuffer, leftSpace, MAX_WRITE_BUFFER_SIZE);
-        current_len = strlen(pcWriteBuffer);
-        strlcat(pcWriteBuffer, "---------------------+----------------+-----------------+------+-------|\n", MAX_WRITE_BUFFER_SIZE);
+//         char* tmpBuff = x_ps_malloc(100);
+//         strlcpy(pcWriteBuffer, leftSpace, MAX_WRITE_BUFFER_SIZE);
+//         current_len = strlen(pcWriteBuffer);
+//         strlcat(pcWriteBuffer, ANSI_ESC_YELLOW " TASKNAME            | RUNTIMECOUNTER | TOTALRUNTIME[%] | CORE | PRIO  |\n", MAX_WRITE_BUFFER_SIZE);
+//         current_len = strlen(pcWriteBuffer);
+//         strlcat(pcWriteBuffer, leftSpace, MAX_WRITE_BUFFER_SIZE);
+//         current_len = strlen(pcWriteBuffer);
+//         strlcat(pcWriteBuffer, "---------------------+----------------+-----------------+------+-------|\n", MAX_WRITE_BUFFER_SIZE);
 
-        // Avoid divide by zero errors.
-        if (ulTotalRunTime > 0) {
-            // For each populated position in the pxTaskStatusArray array, format the raw data as human readable ASCII data
-            for (int x = 0; x < uxArraySize; x++) {
-                // What percentage of the total run time has the task used? This will always be rounded down to the nearest integer.
-                // ulTotalRunTimeDiv100 has already been divided by 100.
-                ulStatsAsPercentage = pxTaskStatusArray[x].ulRunTimeCounter / ulTotalRunTime;
-                memset(tmpBuff, 0x20, 100);
-                memcpy(tmpBuff, pxTaskStatusArray[x].pcTaskName, strlen(pxTaskStatusArray[x].pcTaskName));
-                tmpBuff[20] = '|';
-                int8_t  core = (pxTaskStatusArray[x].xCoreID);
-                uint8_t prio = (pxTaskStatusArray[x].uxBasePriority);
-                if (ulStatsAsPercentage) {
-                    sprintf(tmpBuff + 23, "%12lu  |       %02lu%%       |%4i  |%5d  |", (long unsigned int)pxTaskStatusArray[x].ulRunTimeCounter, (long unsigned int)ulStatsAsPercentage, core, prio);
-                } else {
-                    sprintf(tmpBuff + 23, "%12lu  |       <1%%       |%4i  |%5d  |", (long unsigned int)pxTaskStatusArray[x].ulRunTimeCounter, core, prio);
-                }
-                uint8_t i = 23;
-                while (tmpBuff[i] == '0') {
-                    tmpBuff[i] = ' ';
-                    i++;
-                }
-                if (tmpBuff[45] == '0') tmpBuff[45] = ' ';
-                current_len = strlen(pcWriteBuffer);
-                if (current_len + strlen(leftSpace) + strlen(tmpBuff) + 5 < MAX_WRITE_BUFFER_SIZE) {
-                    strlcat(pcWriteBuffer, leftSpace, MAX_WRITE_BUFFER_SIZE);
-                    strlcat(pcWriteBuffer, " ", MAX_WRITE_BUFFER_SIZE);
-                    strlcat(pcWriteBuffer, tmpBuff, MAX_WRITE_BUFFER_SIZE);
-                    strlcat(pcWriteBuffer, "\n", MAX_WRITE_BUFFER_SIZE);
-                } else {
-                    log_w("GetRunTimeStats: buffer overflow prevented");
-                    break; // Stop adding more tasks if buffer is full
-                }
-            }
-            x_ps_free(&tmpBuff);
-        }
-        // The array is no longer needed, free the memory it consumes.
-        vPortFree(pxTaskStatusArray);
+//         // Avoid divide by zero errors.
+//         if (ulTotalRunTime > 0) {
+//             // For each populated position in the pxTaskStatusArray array, format the raw data as human readable ASCII data
+//             for (int x = 0; x < uxArraySize; x++) {
+//                 // What percentage of the total run time has the task used? This will always be rounded down to the nearest integer.
+//                 // ulTotalRunTimeDiv100 has already been divided by 100.
+//                 ulStatsAsPercentage = pxTaskStatusArray[x].ulRunTimeCounter / ulTotalRunTime;
+//                 memset(tmpBuff, 0x20, 100);
+//                 memcpy(tmpBuff, pxTaskStatusArray[x].pcTaskName, strlen(pxTaskStatusArray[x].pcTaskName));
+//                 tmpBuff[20] = '|';
+//                 int8_t  core = (pxTaskStatusArray[x].xCoreID);
+//                 uint8_t prio = (pxTaskStatusArray[x].uxBasePriority);
+//                 if (ulStatsAsPercentage) {
+//                     sprintf(tmpBuff + 23, "%12lu  |       %02lu%%       |%4i  |%5d  |", (long unsigned int)pxTaskStatusArray[x].ulRunTimeCounter, (long unsigned int)ulStatsAsPercentage, core, prio);
+//                 } else {
+//                     sprintf(tmpBuff + 23, "%12lu  |       <1%%       |%4i  |%5d  |", (long unsigned int)pxTaskStatusArray[x].ulRunTimeCounter, core, prio);
+//                 }
+//                 uint8_t i = 23;
+//                 while (tmpBuff[i] == '0') {
+//                     tmpBuff[i] = ' ';
+//                     i++;
+//                 }
+//                 if (tmpBuff[45] == '0') tmpBuff[45] = ' ';
+//                 current_len = strlen(pcWriteBuffer);
+//                 if (current_len + strlen(leftSpace) + strlen(tmpBuff) + 5 < MAX_WRITE_BUFFER_SIZE) {
+//                     strlcat(pcWriteBuffer, leftSpace, MAX_WRITE_BUFFER_SIZE);
+//                     strlcat(pcWriteBuffer, " ", MAX_WRITE_BUFFER_SIZE);
+//                     strlcat(pcWriteBuffer, tmpBuff, MAX_WRITE_BUFFER_SIZE);
+//                     strlcat(pcWriteBuffer, "\n", MAX_WRITE_BUFFER_SIZE);
+//                 } else {
+//                     log_w("GetRunTimeStats: buffer overflow prevented");
+//                     break; // Stop adding more tasks if buffer is full
+//                 }
+//             }
+//             x_ps_free(&tmpBuff);
+//         }
+//         // The array is no longer needed, free the memory it consumes.
+//         vPortFree(pxTaskStatusArray);
 
-#if TFT_CONTROLLER == 7
-        extern uint64_t s_totalRuntime;
-        tmpBuff = x_ps_malloc(130);
-        if (s_totalRuntime > 0) {
-            sprintf(tmpBuff, "%s" ANSI_ESC_LIGHTGREEN " time since start: %llus, VSYNCS: %llu  ==> fps: %llu", leftSpace, s_totalRuntime, tft.getVsyncCounter(),
-                    tft.getVsyncCounter() / s_totalRuntime);
-        } else {
-            sprintf(tmpBuff, "%s" ANSI_ESC_LIGHTGREEN " time since start: %llus, VSYNCS: %llu  ==> fps: <1", leftSpace, s_totalRuntime, tft.getVsyncCounter());
-        }
-        strlcat(tmpBuff, "                                   ", 130);
-        tmpBuff[90] = '\0';
-        strlcat(tmpBuff, ANSI_ESC_YELLOW "|\n", 130);
-        current_len = strlen(pcWriteBuffer);
-        if (current_len + strlen(tmpBuff) < MAX_WRITE_BUFFER_SIZE) { strlcat(pcWriteBuffer, tmpBuff, MAX_WRITE_BUFFER_SIZE); }
-        x_ps_free(&tmpBuff);
-#endif
-        strlcat(pcWriteBuffer, "             |---------------------+----------------+-----------------+------+-------|\n", MAX_WRITE_BUFFER_SIZE);
-    }
+// #if TFT_CONTROLLER == 7
+//         extern uint64_t s_totalRuntime;
+//         tmpBuff = x_ps_malloc(130);
+//         if (s_totalRuntime > 0) {
+//             sprintf(tmpBuff, "%s" ANSI_ESC_LIGHTGREEN " time since start: %llus, VSYNCS: %llu  ==> fps: %llu", leftSpace, s_totalRuntime, tft.getVsyncCounter(),
+//                     tft.getVsyncCounter() / s_totalRuntime);
+//         } else {
+//             sprintf(tmpBuff, "%s" ANSI_ESC_LIGHTGREEN " time since start: %llus, VSYNCS: %llu  ==> fps: <1", leftSpace, s_totalRuntime, tft.getVsyncCounter());
+//         }
+//         strlcat(tmpBuff, "                                   ", 130);
+//         tmpBuff[90] = '\0';
+//         strlcat(tmpBuff, ANSI_ESC_YELLOW "|\n", 130);
+//         current_len = strlen(pcWriteBuffer);
+//         if (current_len + strlen(tmpBuff) < MAX_WRITE_BUFFER_SIZE) { strlcat(pcWriteBuffer, tmpBuff, MAX_WRITE_BUFFER_SIZE); }
+//         x_ps_free(&tmpBuff);
+// #endif
+//         strlcat(pcWriteBuffer, "             |---------------------+----------------+-----------------+------+-------|\n", MAX_WRITE_BUFFER_SIZE);
+//     }
 }
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool get_esp_items(uint8_t* s_resetReason, bool* s_f_FFatFound) {
 
     ps_ptr<char> chipModel = ESP.getChipModel();
     uint8_t      avMajor = ESP_ARDUINO_VERSION_MAJOR;
     uint8_t      avMinor = ESP_ARDUINO_VERSION_MINOR;
     uint8_t      avPatch = ESP_ARDUINO_VERSION_PATCH;
-    Serial.printf("ESP32 Chip: %s\n", chipModel.c_get());
-    Serial.printf("Arduino Version: %d.%d.%d\n", avMajor, avMinor, avPatch);
+    SerialPrintfln("ESP32 Chip: %s", chipModel.c_get());
+    SerialPrintfln("Arduino Version: %d.%d.%d", avMajor, avMinor, avPatch);
     uint8_t idfMajor = ESP_IDF_VERSION_MAJOR;
     uint8_t idfMinor = ESP_IDF_VERSION_MINOR;
     uint8_t idfPatch = ESP_IDF_VERSION_PATCH;
-    Serial.printf("ESP-IDF Version: %d.%d.%d\n", idfMajor, idfMinor, idfPatch);
-
-    Serial.printf("ARDUINO_LOOP_STACK_SIZE %d words (32 bit)\n", CONFIG_ARDUINO_LOOP_STACK_SIZE);
-    Serial.printf("FLASH size %lu bytes, speed %lu MHz\n", (long unsigned)ESP.getFlashChipSize(), (long unsigned)ESP.getFlashChipSpeed() / 1000000);
-    Serial.printf("CPU speed %lu MHz\n", (long unsigned)ESP.getCpuFreqMHz());
-    Serial.printf("SDMMC speed %d MHz\n", SDMMC_FREQUENCY / 1000000);
-    Serial.printf("TFT speed %d MHz\n", TFT_FREQUENCY / 1000000);
+    SerialPrintfln("ESP-IDF Version: %d.%d.%d", idfMajor, idfMinor, idfPatch);
+    SerialPrintfln("ARDUINO_LOOP_STACK_SIZE %d words (32 bit)", CONFIG_ARDUINO_LOOP_STACK_SIZE);
+    SerialPrintfln("FLASH size %lu bytes, speed %lu MHz", (long unsigned)ESP.getFlashChipSize(), (long unsigned)ESP.getFlashChipSpeed() / 1000000);
+    SerialPrintfln("CPU speed %lu MHz", (long unsigned)ESP.getCpuFreqMHz());
+    SerialPrintfln("SDMMC speed %d MHz", SDMMC_FREQUENCY / 1000000);
+    SerialPrintfln("TFT speed %d MHz", TFT_FREQUENCY / 1000000);
 
     if (!psramInit()) {
-        Serial.printf(ANSI_ESC_RED "PSRAM not found! MiniWebRadio doesn't work properly without PSRAM!" ANSI_ESC_WHITE);
+        SerialPrintfln(ANSI_ESC_RED "PSRAM not found! MiniWebRadio doesn't work properly without PSRAM!" ANSI_ESC_WHITE);
     } else {
-        Serial.printf("PSRAM total size: %lu bytes\n", (long unsigned)ESP.getPsramSize());
+        SerialPrintfln("PSRAM total size: %lu bytes", (long unsigned)ESP.getPsramSize());
     }
     if (ESP.getFlashChipSize() > 80000000) {
         if (!FFat.begin()) {
-            if (!FFat.format()) Serial.printf("FFat Mount Failed\n");
+            if (!FFat.format()) SerialPrintfln("FFat Mount Failed\n");
         } else {
-            Serial.printf("FFat total space: %d bytes, free space: %d bytes", FFat.totalBytes(), FFat.freeBytes());
+            SerialPrintfln("FFat total space: %d bytes, free space: %d bytes", FFat.totalBytes(), FFat.freeBytes());
             *s_f_FFatFound = true;
         }
     }
-    Serial.printf("Arduino is pinned to core %d\n", xPortGetCoreID());
+    SerialPrintfln("Arduino is pinned to core %d", xPortGetCoreID());
     const char* rr = NULL;
     *s_resetReason = (esp_reset_reason_t)esp_reset_reason();
     switch (*s_resetReason) {
@@ -233,9 +237,7 @@ bool get_esp_items(uint8_t* s_resetReason, bool* s_f_FFatFound) {
         case ESP_RST_BROWNOUT: rr = "Brownout reset (software or hardware)"; break;
         case ESP_RST_SDIO: rr = "Reset over SDIO"; break;
     }
-    Serial.printf("RESET_REASON: %s\n", rr);
-    Serial.print("\n");
-
+    SerialPrintfln("RESET_REASON: %s", rr);
     if (chipModel.equals("ESP32-S3")) {
     } // ...  okay
     else if (chipModel.equals("ESP32-P4")) {
@@ -244,7 +246,7 @@ bool get_esp_items(uint8_t* s_resetReason, bool* s_f_FFatFound) {
         SerialPrintfln(ANSI_ESC_RED "MiniWebRadio does not work with %s", chipModel.c_get());
         return false;
     }
-    Serial.print("\n");
+    SerialPrintfln("");
     return true;
 }
 
@@ -809,9 +811,9 @@ const char* aes_decrypt(const char* input) {
     mbedtls_aes_free(&aes);
     return output;
 }
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // 📌📌📌  I R _ B U T T O N S  📌📌📌
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class IR_buttons {
   private:
     settings_s* m_settings;
@@ -1778,3 +1780,217 @@ class Playlist {
 
     uint16_t get_size() { return m_content_file.size(); }
 };
+
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// 📌📌📌   R E C O R D E R     📌📌📌
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
+struct WAVHeader {
+    char     riff[4] = {'R', 'I', 'F', 'F'};
+    uint32_t size;
+    char     wave[4] = {'W', 'A', 'V', 'E'};
+    char     fmt[4] = {'f', 'm', 't', ' '};
+    uint32_t fmtSize = 16;
+    uint16_t format = 1;
+    uint16_t channels = 2;
+    uint32_t sampleRate;
+    uint32_t byteRate;
+    uint16_t blockAlign;
+    uint16_t bits;
+    char     data[4] = {'d', 'a', 't', 'a'};
+    uint32_t dataSize;
+};
+
+constexpr size_t REC_BUFFER_SIZE = 512 * 1024; // 512KB für 2-3 Sekunden Puffer
+constexpr size_t WRITE_CHUNK_SIZE = 1024;      // not too big!
+constexpr size_t SD_FLUSH_INTERVAL = 65536;    // Alle 64KB flush
+ps_ptr<uint8_t>  rec_buffer;
+ps_ptr<uint8_t>  writeBuffer;
+
+class AudioRecorder {
+  public:
+    std::atomic<size_t> writePos{0};
+    std::atomic<size_t> readPos{0};
+    uint32_t            totalBytes = 0;
+    uint16_t            sampleRate = 44100;
+    uint32_t            overflowCount = 0;
+
+    volatile bool startRequested = false;
+    volatile bool stopRequested = false;
+    volatile bool running = false;
+
+    bool push16(const int32_t* data, size_t frames) {
+        // frames = Stereo-Frames
+        size_t bytes16 = frames * 2 * sizeof(int16_t);
+
+        size_t currentWrite = writePos.load(std::memory_order_relaxed);
+        size_t currentRead = readPos.load(std::memory_order_acquire);
+
+        size_t free = (currentRead + REC_BUFFER_SIZE - currentWrite - 1) % REC_BUFFER_SIZE;
+
+        if (bytes16 > free) {
+            overflowCount++;
+            return false;
+        }
+
+        for (size_t i = 0; i < frames * 2; i++) {
+            // 32 → 16 Bit (High word)
+            int32_t v = data[i] >> 16;
+
+            // Optional Clipping (sicher)
+            if (v > 32767) v = 32767;
+            if (v < -32768) v = -32768;
+
+            int16_t s = (int16_t)v;
+
+            // Write byte by byte (LE)
+            rec_buffer[currentWrite] = s & 0xFF;
+            currentWrite = (currentWrite + 1) % REC_BUFFER_SIZE;
+            rec_buffer[currentWrite] = (s >> 8) & 0xFF;
+            currentWrite = (currentWrite + 1) % REC_BUFFER_SIZE;
+        }
+
+        writePos.store(currentWrite, std::memory_order_release);
+        return true;
+    }
+
+    // Copies data to dest, returns bytes actually read
+    size_t pop(uint8_t* dest, size_t maxLen) {
+        size_t currentRead = readPos.load(std::memory_order_relaxed);
+        size_t currentWrite = writePos.load(std::memory_order_acquire);
+
+        if (currentRead == currentWrite) return 0;
+
+        size_t avail = (currentWrite > currentRead) ? (currentWrite - currentRead) : (REC_BUFFER_SIZE - currentRead);
+
+        size_t toRead = std::min(avail, maxLen);
+
+        // Wrap-around handling
+        size_t firstChunk = std::min(toRead, REC_BUFFER_SIZE - currentRead);
+        memcpy(dest, &rec_buffer[currentRead], firstChunk);
+        if (toRead > firstChunk) { memcpy(dest + firstChunk, &rec_buffer[0], toRead - firstChunk); }
+
+        readPos.store((currentRead + toRead) % REC_BUFFER_SIZE, std::memory_order_release);
+        return toRead;
+    }
+
+    // For external access to buffers (e.g. for pop with pointer math, but not recommended)
+    size_t available() {
+        size_t w = writePos.load(std::memory_order_acquire);
+        size_t r = readPos.load(std::memory_order_acquire);
+        return (w >= r) ? (w - r) : (REC_BUFFER_SIZE - r + w);
+    }
+};
+
+AudioRecorder recorder;
+
+void wavWriterTask(void*) {
+    File      file;
+    WAVHeader hdr;
+    bool      fileOpen = false;
+
+    size_t   writeBufferFill = 0;
+    uint32_t bytesSinceFlush = 0;
+
+    while (true) {
+        // --- START REQUEST ---
+        if (recorder.startRequested && !fileOpen) {
+            recorder.startRequested = false;
+
+            // Datei mit Zeitstempel erstellen
+            char filename[64];
+            snprintf(filename, sizeof(filename), "/audiofiles/recording.wav");
+
+            file = SD_MMC.open(filename, FILE_WRITE);
+            if (!file) {
+                MWR_LOG_ERROR("Failed to open file! \"/audiofiles/recording.wav\"");
+                continue;
+            }
+
+            // prepeare header
+            hdr.sampleRate = recorder.sampleRate;
+            hdr.byteRate = recorder.sampleRate * 2 * 2; // Stereo, 16-bit
+            hdr.blockAlign = 2 * 2;                     // 8 bytes per frame
+            hdr.bits = 16;
+            hdr.dataSize = 0;
+            hdr.size = 36; // 44 - 8 (RIFF header)
+
+            file.write((uint8_t*)&hdr, sizeof(hdr));
+            recorder.totalBytes = 0;
+            writeBufferFill = 0;
+            bytesSinceFlush = 0;
+            fileOpen = true;
+            recorder.running = true;
+            rec_buffer.clear();
+            writeBuffer.clear();
+            SerialPrintfln("recorder: .  " ANSI_ESC_YELLOW "Recording started: " ANSI_ESC_CYAN "%s" ANSI_ESC_RESET, filename);
+        }
+
+        // --- WRITE DATA ---
+        if (fileOpen) {
+            // fill local buffer
+            while (writeBufferFill < WRITE_CHUNK_SIZE) {
+                size_t spaceInLocalBuffer = WRITE_CHUNK_SIZE - writeBufferFill;
+                size_t bytesRead = recorder.pop(writeBuffer + writeBufferFill, spaceInLocalBuffer);
+
+                if (bytesRead == 0) break; // ringbuffer is empty
+
+                writeBufferFill += bytesRead;
+            }
+
+            // write full block to SD
+            if (writeBufferFill >= WRITE_CHUNK_SIZE) {
+                size_t written = file.write(writeBuffer.get(), WRITE_CHUNK_SIZE);
+                if (written != WRITE_CHUNK_SIZE) {
+                    MWR_LOG_ERROR("SD write error!");
+                    // Optional: Fehlerbehandlung, Buffer zurückhalten?
+                }
+
+                recorder.totalBytes += written;
+                bytesSinceFlush += written;
+                writeBufferFill = 0; // buffer is empty (or move remaining data)
+
+                // Periodischer Flush für Datenintegrität
+                if (bytesSinceFlush >= SD_FLUSH_INTERVAL) {
+                    file.flush();
+                    bytesSinceFlush = 0;
+                }
+            }
+        }
+
+        // --- STOP REQUEST ---
+        if (recorder.stopRequested && fileOpen) {
+            recorder.stopRequested = false;
+
+            // Write remaining data to local buffer
+            if (writeBufferFill > 0) {
+                file.write(writeBuffer.get(), writeBufferFill);
+                recorder.totalBytes += writeBufferFill;
+            }
+
+            // Update header
+            hdr.dataSize = recorder.totalBytes;
+            hdr.size = recorder.totalBytes + 36;
+
+            file.seek(0);
+            file.write((uint8_t*)&hdr, sizeof(hdr));
+            file.flush();
+            file.close();
+
+            fileOpen = false;
+            writeBufferFill = 0;
+            recorder.running = false;
+            SerialPrintfln("recorder: .  " ANSI_ESC_YELLOW "Recording stopped. Total bytes: " ANSI_ESC_CYAN "%u" ANSI_ESC_YELLOW ", Overflows: " ANSI_ESC_CYAN "%u" ANSI_ESC_RESET, recorder.totalBytes, recorder.overflowCount);
+        }
+
+        // Small delay to feed watchdog and release CPU
+        // But not too long, so that the ring buffer does not overflow!
+        vTaskDelay(pdMS_TO_TICKS(1)); // 1ms = ~176 Bytes bei 44.1kHz Stereo 32-bit
+    }
+}
+
+void audio_process_raw_samples(int32_t* outBuff, int16_t validSamples) {
+    if (recorder.running == true) {
+        recorder.push16(outBuff, validSamples);
+    }
+}

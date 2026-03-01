@@ -1,6 +1,45 @@
 // created: 10.02.2022
 // updated: 23.11.2025
 
+#include "settings.h"
+
+#if TFT_CONTROLLER == 0
+    #define TFT_MODE_SPI
+    #define TFT_LAYOUT_S
+#endif
+
+#if (TFT_CONTROLLER == 3 || TFT_CONTROLLER == 4 || TFT_CONTROLLER == 5)
+    #define TFT_MODE_SPI
+    #define TFT_LAYOUT_M
+#endif
+
+#if (TFT_CONTROLLER == 7)
+    #define TFT_MODE_RGB
+    #define TFT_LAYOUT_L
+#endif
+
+#if (TFT_CONTROLLER == 8 || TFT_CONTROLLER == 9)
+    #define TFT_MODE_DSI
+    #define TFT_LAYOUT_XL
+#endif
+
+#if (TFT_CONTROLLER == 10)
+    #define TFT_MODE_DSI
+    #define TFT_LAYOUT_L
+#endif
+
+#if (TP_CONTROLLER == 0 || TP_CONTROLLER == 3 || TP_CONTROLLER == 4 | TP_CONTROLLER == 5)
+    #define TP_MODE_XPT2046
+#endif
+
+#if (TP_CONTROLLER == 7)
+#define TP_MODE_GT911
+#endif
+
+#if (TP_CONTROLLER == 8)
+#define TP_MODE_FT6X63
+#endif
+
 #pragma once
 
 #include "Audio.h"
@@ -16,18 +55,6 @@
 #include "mbedtls/sha1.h"
 #include "rtime.h"
 #include "settings.h"
-
-#if TFT_CONTROLLER < 7
-    #include "tft_spi.h"
-#elif TFT_CONTROLLER == 7
-    #include "tft_rgb.h"
-#elif (TFT_CONTROLLER == 8 || TFT_CONTROLLER == 9)
-    #include "tft_dsi.h"
-#endif
-
-#include "tp_ft6x36.h"
-#include "tp_gt911.h"
-#include "tp_xpt2046.h"
 #include "websrv.h"
 #include <Arduino.h>
 #include <ArduinoOTA.h>
@@ -45,6 +72,26 @@
 #include <mbedtls/aes.h>
 #include <mbedtls/base64.h>
 #include <vector>
+
+#ifdef TFT_MODE_SPI
+    #include "tft_spi.h"
+#elifdef TFT_MODE_RGB
+    #include "tft_rgb.h"
+#elifdef TFT_MODE_DSI
+    #include "tft_dsi.h"
+#else
+    printf("unknown TFT_CONTROLLER\n")
+#endif
+
+#ifdef TP_MODE_XPT2046
+    #include "tp_xpt2046.h"
+#elifdef TP_MODE_GT911
+    #include "tp_gt911.h"
+#elifdef TP_MODE_FT6X63
+    #include "tp_ft6x36.h"
+#else
+    printf("unknown TP_CONTROLLER\n")
+#endif
 
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 //  output on serial terminal
@@ -165,7 +212,7 @@ void SerialPrintfln(const char* fmt, ...) {
     myLog.appendf_va(fmt, args);
     va_end(args);
     myLog.append("\033[0m\r\n");
-    Serial.printf("%s", myLog.c_get());
+    printf("%s", myLog.c_get());
     s_logBuffer.insert(s_logBuffer.begin(), std::move(myLog)); // send to webSrv in loop()
     myLog.reset();
 }
@@ -291,6 +338,8 @@ boolean      isPlaylist(File file);
 bool         connectToWiFi();
 void         setWiFiCredentials(ps_ptr<char> ssid, ps_ptr<char> password);
 ps_ptr<char> scaleImage(ps_ptr<char> path);
+void         set_display_items();
+bool         init_SD_card();
 void         setVolume(uint8_t vol);
 uint8_t      downvolume();
 uint8_t      upvolume();

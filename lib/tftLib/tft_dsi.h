@@ -1,11 +1,11 @@
 // first release on 11/2025
-// updated on Nov 26 2025
+// updated on Mar 01 2026
+
+#include "Arduino.h"
+#ifdef CONFIG_IDF_TARGET_ESP32P4
 #pragma once
-#include "Arduino.h"
 #include "../../src/settings.h"
-#if (TFT_CONTROLLER == 8 || TFT_CONTROLLER == 9)
 #include "tft_structures.h"
-#include "Arduino.h"
 #include "FS.h"
 #include "SD.h"
 #include "SD_MMC.h"
@@ -664,5 +664,5 @@ class TFT_DSI {
     void          png_draw_into_Framebuffer(uint16_t x, uint16_t y, uint16_t w, uint16_t h, char* rgbaBuffer, uint32_t png_outbuff_size, uint8_t png_format);
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-#endif // (TFT_CONTROLLER == 8 || TFT_CONTROLLER == 9)
+#endif // TFT_MODE_DSI
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

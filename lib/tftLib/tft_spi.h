@@ -1,12 +1,10 @@
 // first release on 09/2019
 // updated on Apr 19 2025
 
-
 #pragma once
 
 #include "Arduino.h"
 #include "../../src/settings.h"
-#if TFT_CONTROLLER < 7
 #include "Audio.h"
 #include "driver/gpio.h"
 #include "fonts/fontsdef.h"
@@ -17,15 +15,7 @@
 #include "fonts/Arial.h"
 #include "fonts/Z003.h"
 
-#ifdef CONFIG_IDF_TARGET_ESP32S3
-#include "esp_lcd_panel_io.h"
-#include "esp_lcd_panel_rgb.h"
-#include "esp_lcd_panel_ops.h"
-#include "esp_lcd_panel_interface.h"
-#endif
-
 using namespace std;
-
 
 extern __attribute__((weak)) void tft_info(const char*);
 
@@ -849,6 +839,3 @@ class TFT_SPI {
     void          png_draw_into_AddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, char* rgbaBuffer, uint32_t png_outbuff_size, uint8_t png_format);
 };
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-#endif // TFT_CONTROLLER < 7
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
