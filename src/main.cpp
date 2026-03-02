@@ -1047,7 +1047,8 @@ void setup() {
     if (ESP.getFlashChipSize() > 80000000) { FFat.begin(); }
 
     drawImage("/common/MiniWebRadioV4.jpg", 0, 0); // Welcomescreen
-    drawImage("/common/Recorder.png", 20, 70);
+    vTaskDelay(2000);
+    drawImage("/common/BT_TX.gif", 0, 0);
     updateSettings();
 
     if (s_volume.volumeSteps < 21) s_volume.volumeSteps = 21;

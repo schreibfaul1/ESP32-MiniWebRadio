@@ -340,6 +340,90 @@ void TFT_DSI::setRotation(uint8_t r) {
     if (m_rotation == -1) m_rotation = 3;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+bool TFT_DSI::renderRGB565(int16_t x, int16_t y, uint16_t w, uint16_t h, const uint16_t* src) {
+    if (!src || w == 0 || h == 0) return false;
+
+    size_t minX = m_h_res;
+    size_t minY = m_v_res;
+    size_t maxX = 0;
+    size_t maxY = 0;
+
+    for (uint16_t row = 0; row < h; row++) {
+        for (uint16_t col = 0; col < w; col++) {
+
+            size_t rotX, rotY;
+
+            mapRotation(m_rotation, x + col, y + row, rotX, rotY);
+
+            if (rotX >= m_h_res || rotY >= m_v_res) continue;
+
+            m_framebuffer[0][rotY * m_h_res + rotX] = src[row * w + col];
+
+            if (rotX < minX) minX = rotX;
+            if (rotY < minY) minY = rotY;
+            if (rotX > maxX) maxX = rotX;
+            if (rotY > maxY) maxY = rotY;
+        }
+    }
+
+    if (maxX > minX && maxY > minY) { panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]); }
+
+    return true;
+}
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+bool TFT_DSI::renderRGBA8888(int16_t x, int16_t y, uint16_t w, uint16_t h, const uint8_t* src) {
+    if (!src) return false;
+
+    size_t minX = m_h_res;
+    size_t minY = m_v_res;
+    size_t maxX = 0;
+    size_t maxY = 0;
+
+    for (uint16_t row = 0; row < h; row++) {
+        for (uint16_t col = 0; col < w; col++) {
+
+            size_t rotX, rotY;
+            mapRotation(m_rotation, x + col, y + row, rotX, rotY);
+
+            if (rotX >= m_h_res || rotY >= m_v_res) continue;
+
+            const size_t idx = (row * w + col) * 4;
+
+            uint8_t r = src[idx];
+            uint8_t g = src[idx + 1];
+            uint8_t b = src[idx + 2];
+            uint8_t a = src[idx + 3];
+
+            if (a == 0) continue;
+
+            size_t fbIndex = rotY * m_h_res + rotX;
+
+            if (a < 255) {
+                uint16_t old = m_framebuffer[0][fbIndex];
+
+                uint8_t oldR = ((old >> 11) & 0x1F) << 3;
+                uint8_t oldG = ((old >> 5) & 0x3F) << 2;
+                uint8_t oldB = (old & 0x1F) << 3;
+
+                r = ((r * a) + (oldR * (255 - a))) / 255;
+                g = ((g * a) + (oldG * (255 - a))) / 255;
+                b = ((b * a) + (oldB * (255 - a))) / 255;
+            }
+
+            m_framebuffer[0][fbIndex] = ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
+
+            if (rotX < minX) minX = rotX;
+            if (rotY < minY) minY = rotY;
+            if (rotX > maxX) maxX = rotX;
+            if (rotY > maxY) maxY = rotY;
+        }
+    }
+
+    if (maxX > minX && maxY > minY) { panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]); }
+
+    return true;
+}
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_DSI::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color) {
     // Calculate differences
     int16_t dx = abs(x1 - x0);
@@ -2213,116 +2297,6 @@ exit:
     #define bmpColor24(c) (((uint16_t)(((uint8_t*)(c))[2] & 0xF8) << 8) | ((uint16_t)(((uint8_t*)(c))[1] & 0xFC) << 3) | ((((uint8_t*)(c))[0] & 0xF8) >> 3))
     #define bmpColor32(c) (((uint16_t)(((uint8_t*)(c))[3] & 0xF8) << 8) | ((uint16_t)(((uint8_t*)(c))[2] & 0xFC) << 3) | ((((uint8_t*)(c))[1] & 0xF8) >> 3))
 
-// bool TFT_DSI::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight, float scale) {
-//     if (scale <= 0) {
-//         log_e("Invalid scale value: %f", scale);
-//         return false;
-//     }
-
-//     if (!fs.exists(path)) {
-//         log_e("file %s does not exist", path);
-//         return false;
-//     }
-
-//     File bmp_file = fs.open(path);
-//     if (!bmp_file) {
-//         log_e("Failed to open file for reading: %s", path);
-//         return false;
-//     }
-
-//     constexpr size_t headerLen = 0x36; // BMP-Header-Größe
-//     uint8_t          headerBuf[headerLen];
-
-//     if (bmp_file.size() < headerLen || bmp_file.read(headerBuf, headerLen) < headerLen) {
-//         log_e("Failed to read the file's header");
-//         bmp_file.close();
-//         return false;
-//     }
-
-//     if (headerBuf[0] != 'B' || headerBuf[1] != 'M') {
-//         log_e("Invalid BMP file format");
-//         bmp_file.close();
-//         return false;
-//     }
-
-//     const uint32_t dataOffset = bmpRead32(headerBuf, 0x0A);
-//     const int32_t  bmpWidthI = bmpRead32(headerBuf, 0x12);
-//     const int32_t  bmpHeightI = bmpRead32(headerBuf, 0x16);
-//     const uint16_t bitsPerPixel = bmpRead16(headerBuf, 0x1C);
-//     const uint32_t compression = bmpRead32(headerBuf, 0x1E);
-
-//     if (compression != 0) {
-//         log_e("Compressed BMP files are not supported");
-//         bmp_file.close();
-//         return false;
-//     }
-
-//     const size_t bmpWidth = abs(bmpWidthI);
-//     const size_t bmpHeight = abs(bmpHeightI);
-
-//     const size_t scaledWidth = bmpWidth * scale;
-//     const size_t scaledHeight = bmpHeight * scale;
-
-//     // Wenn maxWidth oder maxHeight 0 ist, wird der Wert ignoriert
-//     const size_t effectiveMaxWidth = (maxWidth == 0) ? scaledWidth : maxWidth;
-//     const size_t effectiveMaxHeight = (maxHeight == 0) ? scaledHeight : maxHeight;
-
-//     // Begrenzen der tatsächlichen Darstellungsgröße auf den verfügbaren Ausschnitt
-//     const size_t displayWidth = std::min(effectiveMaxWidth, scaledWidth);
-//     const size_t displayHeight = std::min(effectiveMaxHeight, scaledHeight);
-
-//     const size_t rowSize = ((bmpWidth * bitsPerPixel / 8 + 3) & ~3);
-//     uint8_t*     rowBuffer = new uint8_t[rowSize];
-
-//     for (size_t i_y = 0; i_y < displayHeight; ++i_y) {
-//         const float  srcY = i_y / scale;
-//         const size_t srcRow = bmpHeight - 1 - (size_t)srcY;
-
-//         if (srcRow >= bmpHeight) continue;
-
-//         bmp_file.seek(dataOffset + srcRow * rowSize);
-//         if (bmp_file.read(rowBuffer, rowSize) != rowSize) {
-//             log_e("Failed to read BMP row data");
-//             delete[] rowBuffer;
-//             bmp_file.close();
-//             return false;
-//         }
-
-//         for (size_t i_x = 0; i_x < displayWidth; ++i_x) {
-//             const float  srcX = i_x / scale;
-//             const size_t srcCol = (size_t)srcX;
-
-//             if (srcCol >= bmpWidth) continue;
-
-//             const uint8_t* pixelPtr = rowBuffer + srcCol * (bitsPerPixel / 8);
-//             uint16_t       color;
-
-//             switch (bitsPerPixel) {
-//                 case 16: color = bmpColor16(pixelPtr); break;
-//                 case 24: color = bmpColor24(pixelPtr); break;
-//                 case 32: color = bmpColor32(pixelPtr); break;
-//                 default:
-//                     log_e("Unsupported bitsPerPixel: %d", bitsPerPixel);
-//                     delete[] rowBuffer;
-//                     bmp_file.close();
-//                     return false;
-//             }
-
-//             const size_t xPos = x + i_x;
-//             const size_t yPos = y + i_y;
-
-//             if (xPos < m_h_res && yPos < m_v_res) { m_framebuffer[0][yPos * m_h_res + xPos] = color; }
-//         }
-//     }
-
-//     delete[] rowBuffer;
-//     bmp_file.close();
-
-//     // Nur den betroffenen Bereich auf dem Display aktualisieren
-//     panelDrawBitmap(x, y, x + displayWidth, y + displayHeight, m_framebuffer[0]);
-//     return true;
-// }
-
 bool TFT_DSI::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight, float scale) {
     if (scale <= 0.0f) return false;
 
@@ -3180,22 +3154,38 @@ bool TFT_DSI::GIF_ReadImage(uint16_t x, uint16_t y) {
         }
     }
 
-    // Copy from gif_imagebuffer in m framebuffer (only part of the current picture)
+    // Copy from gif_ImageBuffer → rotated into framebuffer
+    size_t minX = m_h_res;
+    size_t minY = m_v_res;
+    size_t maxX = 0;
+    size_t maxY = 0;
+    log_w("gif.ImageHeight %i, gif.ImageWidth %i, xpos %i, ypos %i", gif.ImageHeight, gif.ImageWidth, xpos, ypos);
     for (uint16_t row = 0; row < gif.ImageHeight; row++) {
         for (uint16_t col = 0; col < gif.ImageWidth; col++) {
-            uint16_t fb_x = xpos + col;
-            uint16_t fb_y = ypos + row;
+
+            uint16_t src_global_x = xpos + col;
+            uint16_t src_global_y = ypos + row;
 
             uint16_t buf_x = gif.ImageLeftPosition + col;
             uint16_t buf_y = gif.ImageTopPosition + row;
 
-            if (fb_x < m_h_res && fb_y < m_v_res && buf_x < gif.LogicalScreenWidth && buf_y < gif.LogicalScreenHeight) {
-                m_framebuffer[0][fb_y * m_h_res + fb_x] = gif_ImageBuffer[buf_y * gif.LogicalScreenWidth + buf_x];
-            }
+            if (buf_x >= gif.LogicalScreenWidth || buf_y >= gif.LogicalScreenHeight) continue;
+
+            size_t rotX, rotY;
+            mapRotation(m_rotation, src_global_x, src_global_y, rotX, rotY);
+
+            if (rotX >= m_h_res || rotY >= m_v_res) continue;
+
+            m_framebuffer[0][rotY * m_h_res + rotX] = gif_ImageBuffer[buf_y * gif.LogicalScreenWidth + buf_x];
+
+            if (rotX < minX) minX = rotX;
+            if (rotY < minY) minY = rotY;
+            if (rotX > maxX) maxX = rotX;
+            if (rotY > maxY) maxY = rotY;
         }
     }
 
-    panelDrawBitmap(xpos, ypos, xpos + gif.ImageWidth, ypos + gif.ImageHeight, m_framebuffer[0]);
+    if (maxX > minX && maxY > minY) { panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]); }
 
     return true;
 }
