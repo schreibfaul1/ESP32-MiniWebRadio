@@ -33,6 +33,7 @@ void TFT_DSI::begin(const Timing& newTiming) {
     m_timing = newTiming;
     m_h_res = m_timing.h_res;
     m_v_res = m_timing.v_res;
+    m_rowBuffer = (uint8_t*)ps_malloc(m_ROWBUFFERSIZE);
 
     // --------------------------------------------------
     // 1. Acquire Channel
@@ -2212,49 +2213,142 @@ exit:
     #define bmpColor24(c) (((uint16_t)(((uint8_t*)(c))[2] & 0xF8) << 8) | ((uint16_t)(((uint8_t*)(c))[1] & 0xFC) << 3) | ((((uint8_t*)(c))[0] & 0xF8) >> 3))
     #define bmpColor32(c) (((uint16_t)(((uint8_t*)(c))[3] & 0xF8) << 8) | ((uint16_t)(((uint8_t*)(c))[2] & 0xFC) << 3) | ((((uint8_t*)(c))[1] & 0xF8) >> 3))
 
+// bool TFT_DSI::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight, float scale) {
+//     if (scale <= 0) {
+//         log_e("Invalid scale value: %f", scale);
+//         return false;
+//     }
+
+//     if (!fs.exists(path)) {
+//         log_e("file %s does not exist", path);
+//         return false;
+//     }
+
+//     File bmp_file = fs.open(path);
+//     if (!bmp_file) {
+//         log_e("Failed to open file for reading: %s", path);
+//         return false;
+//     }
+
+//     constexpr size_t headerLen = 0x36; // BMP-Header-Größe
+//     uint8_t          headerBuf[headerLen];
+
+//     if (bmp_file.size() < headerLen || bmp_file.read(headerBuf, headerLen) < headerLen) {
+//         log_e("Failed to read the file's header");
+//         bmp_file.close();
+//         return false;
+//     }
+
+//     if (headerBuf[0] != 'B' || headerBuf[1] != 'M') {
+//         log_e("Invalid BMP file format");
+//         bmp_file.close();
+//         return false;
+//     }
+
+//     const uint32_t dataOffset = bmpRead32(headerBuf, 0x0A);
+//     const int32_t  bmpWidthI = bmpRead32(headerBuf, 0x12);
+//     const int32_t  bmpHeightI = bmpRead32(headerBuf, 0x16);
+//     const uint16_t bitsPerPixel = bmpRead16(headerBuf, 0x1C);
+//     const uint32_t compression = bmpRead32(headerBuf, 0x1E);
+
+//     if (compression != 0) {
+//         log_e("Compressed BMP files are not supported");
+//         bmp_file.close();
+//         return false;
+//     }
+
+//     const size_t bmpWidth = abs(bmpWidthI);
+//     const size_t bmpHeight = abs(bmpHeightI);
+
+//     const size_t scaledWidth = bmpWidth * scale;
+//     const size_t scaledHeight = bmpHeight * scale;
+
+//     // Wenn maxWidth oder maxHeight 0 ist, wird der Wert ignoriert
+//     const size_t effectiveMaxWidth = (maxWidth == 0) ? scaledWidth : maxWidth;
+//     const size_t effectiveMaxHeight = (maxHeight == 0) ? scaledHeight : maxHeight;
+
+//     // Begrenzen der tatsächlichen Darstellungsgröße auf den verfügbaren Ausschnitt
+//     const size_t displayWidth = std::min(effectiveMaxWidth, scaledWidth);
+//     const size_t displayHeight = std::min(effectiveMaxHeight, scaledHeight);
+
+//     const size_t rowSize = ((bmpWidth * bitsPerPixel / 8 + 3) & ~3);
+//     uint8_t*     rowBuffer = new uint8_t[rowSize];
+
+//     for (size_t i_y = 0; i_y < displayHeight; ++i_y) {
+//         const float  srcY = i_y / scale;
+//         const size_t srcRow = bmpHeight - 1 - (size_t)srcY;
+
+//         if (srcRow >= bmpHeight) continue;
+
+//         bmp_file.seek(dataOffset + srcRow * rowSize);
+//         if (bmp_file.read(rowBuffer, rowSize) != rowSize) {
+//             log_e("Failed to read BMP row data");
+//             delete[] rowBuffer;
+//             bmp_file.close();
+//             return false;
+//         }
+
+//         for (size_t i_x = 0; i_x < displayWidth; ++i_x) {
+//             const float  srcX = i_x / scale;
+//             const size_t srcCol = (size_t)srcX;
+
+//             if (srcCol >= bmpWidth) continue;
+
+//             const uint8_t* pixelPtr = rowBuffer + srcCol * (bitsPerPixel / 8);
+//             uint16_t       color;
+
+//             switch (bitsPerPixel) {
+//                 case 16: color = bmpColor16(pixelPtr); break;
+//                 case 24: color = bmpColor24(pixelPtr); break;
+//                 case 32: color = bmpColor32(pixelPtr); break;
+//                 default:
+//                     log_e("Unsupported bitsPerPixel: %d", bitsPerPixel);
+//                     delete[] rowBuffer;
+//                     bmp_file.close();
+//                     return false;
+//             }
+
+//             const size_t xPos = x + i_x;
+//             const size_t yPos = y + i_y;
+
+//             if (xPos < m_h_res && yPos < m_v_res) { m_framebuffer[0][yPos * m_h_res + xPos] = color; }
+//         }
+//     }
+
+//     delete[] rowBuffer;
+//     bmp_file.close();
+
+//     // Nur den betroffenen Bereich auf dem Display aktualisieren
+//     panelDrawBitmap(x, y, x + displayWidth, y + displayHeight, m_framebuffer[0]);
+//     return true;
+// }
+
 bool TFT_DSI::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight, float scale) {
-    if (scale <= 0) {
-        log_e("Invalid scale value: %f", scale);
-        return false;
-    }
+    if (scale <= 0.0f) return false;
 
-    if (!fs.exists(path)) {
-        log_e("file %s does not exist", path);
-        return false;
-    }
+    if (!fs.exists(path)) return false;
 
-    File bmp_file = fs.open(path);
-    if (!bmp_file) {
-        log_e("Failed to open file for reading: %s", path);
-        return false;
-    }
+    File bmp = fs.open(path);
+    if (!bmp) return false;
 
-    constexpr size_t headerLen = 0x36; // BMP-Header-Größe
-    uint8_t          headerBuf[headerLen];
+    constexpr size_t headerLen = 54;
+    uint8_t          header[headerLen];
 
-    if (bmp_file.size() < headerLen || bmp_file.read(headerBuf, headerLen) < headerLen) {
-        log_e("Failed to read the file's header");
-        bmp_file.close();
-        return false;
-    }
+    if (bmp.read(header, headerLen) != headerLen) return false;
 
-    if (headerBuf[0] != 'B' || headerBuf[1] != 'M') {
-        log_e("Invalid BMP file format");
-        bmp_file.close();
-        return false;
-    }
+    if (header[0] != 'B' || header[1] != 'M') return false;
 
-    const uint32_t dataOffset = bmpRead32(headerBuf, 0x0A);
-    const int32_t  bmpWidthI = bmpRead32(headerBuf, 0x12);
-    const int32_t  bmpHeightI = bmpRead32(headerBuf, 0x16);
-    const uint16_t bitsPerPixel = bmpRead16(headerBuf, 0x1C);
-    const uint32_t compression = bmpRead32(headerBuf, 0x1E);
+    const uint32_t dataOffset = bmpRead32(header, 0x0A);
+    const int32_t  bmpWidthI = bmpRead32(header, 0x12);
+    const int32_t  bmpHeightI = bmpRead32(header, 0x16);
+    const uint16_t bpp = bmpRead16(header, 0x1C);
+    const uint32_t compression = bmpRead32(header, 0x1E);
 
-    if (compression != 0) {
-        log_e("Compressed BMP files are not supported");
-        bmp_file.close();
-        return false;
-    }
+    if (compression != 0) return false;
+
+    if (!(bpp == 16 || bpp == 24 || bpp == 32)) return false;
+
+    const bool bottomUp = (bmpHeightI > 0);
 
     const size_t bmpWidth = abs(bmpWidthI);
     const size_t bmpHeight = abs(bmpHeightI);
@@ -2262,63 +2356,58 @@ bool TFT_DSI::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, 
     const size_t scaledWidth = bmpWidth * scale;
     const size_t scaledHeight = bmpHeight * scale;
 
-    // Wenn maxWidth oder maxHeight 0 ist, wird der Wert ignoriert
-    const size_t effectiveMaxWidth = (maxWidth == 0) ? scaledWidth : maxWidth;
-    const size_t effectiveMaxHeight = (maxHeight == 0) ? scaledHeight : maxHeight;
+    const size_t drawWidth = (maxWidth == 0) ? scaledWidth : std::min((size_t)maxWidth, scaledWidth);
+    const size_t drawHeight = (maxHeight == 0) ? scaledHeight : std::min((size_t)maxHeight, scaledHeight);
 
-    // Begrenzen der tatsächlichen Darstellungsgröße auf den verfügbaren Ausschnitt
-    const size_t displayWidth = std::min(effectiveMaxWidth, scaledWidth);
-    const size_t displayHeight = std::min(effectiveMaxHeight, scaledHeight);
+    size_t dstWidth = (m_rotation & 1) ? drawHeight : drawWidth;
+    size_t dstHeight = (m_rotation & 1) ? drawWidth : drawHeight;
 
-    const size_t rowSize = ((bmpWidth * bitsPerPixel / 8 + 3) & ~3);
-    uint8_t*     rowBuffer = new uint8_t[rowSize];
+    // --- Clipping auf Display ---
+    if (x >= m_h_res || y >= m_v_res) return false;
 
-    for (size_t i_y = 0; i_y < displayHeight; ++i_y) {
-        const float  srcY = i_y / scale;
-        const size_t srcRow = bmpHeight - 1 - (size_t)srcY;
+    if (x + dstWidth > m_h_res) dstWidth = m_h_res - x;
 
-        if (srcRow >= bmpHeight) continue;
+    if (y + dstHeight > m_v_res) dstHeight = m_v_res - y;
 
-        bmp_file.seek(dataOffset + srcRow * rowSize);
-        if (bmp_file.read(rowBuffer, rowSize) != rowSize) {
-            log_e("Failed to read BMP row data");
-            delete[] rowBuffer;
-            bmp_file.close();
-            return false;
-        }
+    const size_t rowSize = ((bmpWidth * bpp / 8 + 3) & ~3);
 
-        for (size_t i_x = 0; i_x < displayWidth; ++i_x) {
-            const float  srcX = i_x / scale;
-            const size_t srcCol = (size_t)srcX;
+    if (rowSize > m_ROWBUFFERSIZE) return false; // Schutz gegen zu große BMPs
 
-            if (srcCol >= bmpWidth) continue;
+    for (size_t dy = 0; dy < drawHeight; ++dy) {
+        // Integer Scaling
+        const size_t srcYScaled = (dy * bmpHeight) / scaledHeight;
 
-            const uint8_t* pixelPtr = rowBuffer + srcCol * (bitsPerPixel / 8);
-            uint16_t       color;
+        const size_t srcRow = bottomUp ? (bmpHeight - 1 - srcYScaled) : srcYScaled;
 
-            switch (bitsPerPixel) {
+        bmp.seek(dataOffset + srcRow * rowSize);
+        bmp.read(m_rowBuffer, rowSize);
+
+        for (size_t dx = 0; dx < drawWidth; ++dx) {
+            const size_t srcXScaled = (dx * bmpWidth) / scaledWidth;
+
+            const uint8_t* pixelPtr = m_rowBuffer + srcXScaled * (bpp / 8);
+
+            uint16_t color = 0;
+
+            switch (bpp) {
                 case 16: color = bmpColor16(pixelPtr); break;
                 case 24: color = bmpColor24(pixelPtr); break;
                 case 32: color = bmpColor32(pixelPtr); break;
-                default:
-                    log_e("Unsupported bitsPerPixel: %d", bitsPerPixel);
-                    delete[] rowBuffer;
-                    bmp_file.close();
-                    return false;
             }
 
-            const size_t xPos = x + i_x;
-            const size_t yPos = y + i_y;
+            size_t rotX, rotY;
+            mapRotation(m_rotation, dx, dy, rotX, rotY);
 
-            if (xPos < m_h_res && yPos < m_v_res) { m_framebuffer[0][yPos * m_h_res + xPos] = color; }
+            const size_t dstX = x + rotX;
+            const size_t dstY = y + rotY;
+
+            if (dstX < m_h_res && dstY < m_v_res) m_framebuffer[0][dstY * m_h_res + dstX] = color;
         }
     }
 
-    delete[] rowBuffer;
-    bmp_file.close();
+    panelDrawBitmap(x, y, x + dstWidth, y + dstHeight, m_framebuffer[0]);
 
-    // Nur den betroffenen Bereich auf dem Display aktualisieren
-    panelDrawBitmap(x, y, x + displayWidth, y + displayHeight, m_framebuffer[0]);
+    bmp.close();
     return true;
 }
 

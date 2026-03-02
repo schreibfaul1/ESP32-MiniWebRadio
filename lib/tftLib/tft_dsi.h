@@ -201,6 +201,8 @@ class TFT_DSI {
     int8_t                    m_rotation = 0;
     bool                      m_refresh = false;
     bool                      m_invert = false;
+    const uint16_t            m_ROWBUFFERSIZE = 4096;
+    uint8_t*                  m_rowBuffer = nullptr;
 
     //-------------------------------------------------------------------------------------------------------------------
     inline void mapRotation(uint8_t rot, size_t srcX, size_t srcY, size_t& dstX, size_t& dstY) {
