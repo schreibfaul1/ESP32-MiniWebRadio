@@ -450,6 +450,7 @@ class TFT_DSI {
     uint16_t       m_jpgHeight = 0;
     uint16_t       m_jpgWidthMax = 0;
     uint16_t       m_jpgHeightMax = 0;
+    uint16_t*      m_jpegPixelBuffer = nullptr;
 
   public:
     void    JPEG_setJpgScale(uint8_t scale);

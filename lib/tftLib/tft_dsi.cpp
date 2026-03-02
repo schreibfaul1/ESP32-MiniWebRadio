@@ -2345,7 +2345,6 @@ bool TFT_DSI::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, 
 
     if (rowSize > m_ROWBUFFERSIZE) return false; // Schutz gegen zu große BMPs
 
-
     uint16_t* pixelBuffer = (uint16_t*)ps_malloc(drawWidth * drawHeight * 2);
     for (size_t dy = 0; dy < drawHeight; ++dy) {
 
@@ -2374,6 +2373,7 @@ bool TFT_DSI::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, 
     }
     renderRGB565(x, y, drawWidth, drawHeight, pixelBuffer);
     bmp.close();
+    free(pixelBuffer);
     return true;
 }
 
@@ -2752,43 +2752,43 @@ uint8_t TFT_DSI::GIF_readPlainTextExtension(char* buf) {
 
 uint8_t TFT_DSI::GIF_readApplicationExtension(char* buf) {
 
-    //     7 6 5 4 3 2 1 0        Field Name                    Type
-    //    +---------------+
-    // 0  |               |       Block Size                    Byte
-    //    +---------------+
-    // 1  |               |
-    //    +-             -+
-    // 2  |               |
-    //    +-             -+
-    // 3  |               |       Application Identifier        8 Bytes
-    //    +-             -+
-    // 4  |               |
-    //    +-             -+
-    // 5  |               |
-    //    +-             -+
-    // 6  |               |
-    //    +-             -+
-    // 7  |               |
-    //    +-             -+
-    // 8  |               |
-    //    +---------------+
-    // 9  |               |
-    //    +-             -+
+    //      7 6 5 4 3 2 1 0        Field Name                    Type
+    //     +---------------+
+    // 0   |               |       Block Size                    Byte
+    //     +---------------+
+    // 1   |               |
+    //     +-             -+
+    // 2   |               |
+    //     +-             -+
+    // 3   |               |       Application Identifier        8 Bytes
+    //     +-             -+
+    // 4   |               |
+    //     +-             -+
+    // 5   |               |
+    //     +-             -+
+    // 6   |               |
+    //     +-             -+
+    // 7   |               |
+    //     +-             -+
+    // 8   |               |
+    //     +---------------+
+    // 9   |               |
+    //     +-             -+
     // 10  |               |       Appl. Authentication Code     3 Bytes
-    //    +-             -+
+    //     +-             -+
     // 11  |               |
-    //    +---------------+
+    //     +---------------+
     //
-    //    +===============+
-    //    |               |
-    //    |               |       Application Data              Data Sub-blocks
-    //    |               |
-    //    |               |
-    //    +===============+
+    //     +===============+
+    //     |               |
+    //     |               |       Application Data              Data Sub-blocks
+    //     |               |
+    //     |               |
+    //     +===============+
     //
-    //    +---------------+
-    // 0  |               |       Block Terminator              Byte
-    //    +---------------+
+    //     +---------------+
+    // 0   |               |       Block Terminator              Byte
+    //     +---------------+
 
     uint8_t BlockSize = 0, numBytes = 0;
     BlockSize = gif_file.read();
@@ -2803,15 +2803,15 @@ uint8_t TFT_DSI::GIF_readApplicationExtension(char* buf) {
 uint8_t TFT_DSI::GIF_readCommentExtension(char* buf) {
 
     //    7 6 5 4 3 2 1 0        Field Name                    Type
-    //  +===============+
-    //  |               |
+    //   +===============+
+    //   |               |
     // N |               |       Comment Data                  Data Sub-blocks
-    //  |               |
-    //  +===============+
+    //   |               |
+    //   +===============+
     //
-    //  +---------------+
+    //   +---------------+
     // 0 |               |       Block Terminator              Byte
-    //  +---------------+
+    //   +---------------+
 
     uint8_t numBytes = 0;
     numBytes = GIF_readDataSubBlock(buf);
@@ -3146,38 +3146,34 @@ bool TFT_DSI::GIF_ReadImage(uint16_t x, uint16_t y) {
         }
     }
 
-    // Copy from gif_ImageBuffer → rotated into framebuffer
-    size_t minX = m_h_res;
-    size_t minY = m_v_res;
-    size_t maxX = 0;
-    size_t maxY = 0;
-    log_w("gif.ImageHeight %i, gif.ImageWidth %i, xpos %i, ypos %i", gif.ImageHeight, gif.ImageWidth, xpos, ypos);
-    for (uint16_t row = 0; row < gif.ImageHeight; row++) {
-        for (uint16_t col = 0; col < gif.ImageWidth; col++) {
+    // --- Build contiguous RGB565 block for this frame ---
 
-            uint16_t src_global_x = xpos + col;
-            uint16_t src_global_y = ypos + row;
+    const uint16_t frameW = gif.ImageWidth;
+    const uint16_t frameH = gif.ImageHeight;
+
+    uint16_t* pixelBuffer = (uint16_t*)ps_malloc(frameW * frameH * sizeof(uint16_t));
+
+    if (!pixelBuffer) return false;
+
+    for (uint16_t row = 0; row < frameH; row++) {
+        for (uint16_t col = 0; col < frameW; col++) {
 
             uint16_t buf_x = gif.ImageLeftPosition + col;
             uint16_t buf_y = gif.ImageTopPosition + row;
 
-            if (buf_x >= gif.LogicalScreenWidth || buf_y >= gif.LogicalScreenHeight) continue;
+            if (buf_x >= gif.LogicalScreenWidth || buf_y >= gif.LogicalScreenHeight) {
+                pixelBuffer[row * frameW + col] = 0x0000;
+                continue;
+            }
 
-            size_t rotX, rotY;
-            mapRotation(m_rotation, src_global_x, src_global_y, rotX, rotY);
-
-            if (rotX >= m_h_res || rotY >= m_v_res) continue;
-
-            m_framebuffer[0][rotY * m_h_res + rotX] = gif_ImageBuffer[buf_y * gif.LogicalScreenWidth + buf_x];
-
-            if (rotX < minX) minX = rotX;
-            if (rotY < minY) minY = rotY;
-            if (rotX > maxX) maxX = rotX;
-            if (rotY > maxY) maxY = rotY;
+            pixelBuffer[row * frameW + col] = gif_ImageBuffer[buf_y * gif.LogicalScreenWidth + buf_x];
         }
     }
 
-    if (maxX > minX && maxY > minY) { panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]); }
+    // --- Unified render path ---
+    renderRGB565(xpos, ypos, frameW, frameH, pixelBuffer);
+
+    free(pixelBuffer);
 
     return true;
 }
@@ -3312,11 +3308,16 @@ bool TFT_DSI::drawJpgFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, 
         return false;
     }
     JPEG_getSdJpgSize(&m_jpgWidth, &m_jpgHeight);
-    int res = JPEG_drawSdJpg(x, y);
+    m_jpegPixelBuffer = (uint16_t*)ps_calloc(m_jpgWidth * m_jpgHeight, 2);
+
+    int res = JPEG_drawSdJpg(0, 0);
     (void)res;
     // log_w("path %s, res %i, x %i, y %i, m_jpgWidth %i, m_jpgHeight %i", path, res, x, y, m_jpgWidth, m_jpgHeight);
     m_jpgSdFile.close();
-    panelDrawBitmap(x, y, x + m_jpgWidth, y + m_jpgHeight, m_framebuffer[0]);
+
+    renderRGB565(x, y, m_jpgWidth, m_jpgHeight, m_jpegPixelBuffer);
+
+    free(m_jpegPixelBuffer);
     return true;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -3370,25 +3371,18 @@ int TFT_DSI::JPEG_jd_output(JDEC* jdec, void* bitmap, JRECT* jrect) {
 bool TFT_DSI::JPEG_tft_output(int16_t blockX, int16_t blockY, uint16_t w, uint16_t h, uint16_t* bitmap) {
     if (!bitmap || w == 0 || h == 0) return false;
 
+    // Write MCU block into linear JPEG pixel buffer (no rotation!)
     for (uint16_t localY = 0; localY < h; ++localY) {
         for (uint16_t localX = 0; localX < w; ++localX) {
-            // 1. Calculate absolute image coordinates
-            int32_t srcX = blockX + localX;
-            int32_t srcY = blockY + localY;
 
-            // 2. Rotate
-            size_t dstX = 0;
-            size_t dstY = 0;
-            mapRotation(m_rotation, srcX, srcY, dstX, dstY);
+            int32_t dstX = blockX + localX;
+            int32_t dstY = blockY + localY;
 
-            // 3. Security check (Framebuffer Bounds)
-            if (dstX >= m_h_res || dstY >= m_v_res) continue;
+            if (dstX >= m_jpgWidth || dstY >= m_jpgHeight) continue;
 
-            // 4. Write pixel
-            m_framebuffer[0][dstY * m_h_res + dstX] = bitmap[localY * w + localX];
+            m_jpegPixelBuffer[dstY * m_jpgWidth + dstX] = bitmap[localY * w + localX];
         }
     }
-
     return true;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -5436,60 +5430,10 @@ void TFT_DSI::png_rgb16btouint32(uint32_t* dst, png_s_rgb16b* src) {
     memcpy(dst, src, sizeof(png_s_rgb16b));
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_DSI::png_draw_into_Framebuffer(uint16_t x, uint16_t y, uint16_t w, uint16_t h, char* rgbaBuffer, uint32_t png_outbuff_size, uint8_t png_format) {
+void TFT_DSI::png_draw_into_Framebuffer(uint16_t x, uint16_t y, uint16_t w, uint16_t h, char* rgbaBuffer, uint32_t /*png_outbuff_size*/, uint8_t /*png_format*/) {
+    if (!rgbaBuffer || w == 0 || h == 0) return;
 
-    if (!rgbaBuffer) return;
-
-    size_t minX = m_h_res;
-    size_t minY = m_v_res;
-    size_t maxX = 0;
-    size_t maxY = 0;
-
-    for (uint16_t row = 0; row < h; row++) {
-        for (uint16_t col = 0; col < w; col++) {
-            size_t rotX, rotY;
-            mapRotation(m_rotation, col + x, row + y, rotX, rotY);
-
-            uint16_t screen_x = rotX;
-            uint16_t screen_y = rotY;
-
-            if (screen_x >= m_h_res || screen_y >= m_v_res) continue;
-
-            const int rgbaIndex = (row * w + col) * 4;
-
-            const uint8_t r = rgbaBuffer[rgbaIndex];
-            const uint8_t g = rgbaBuffer[rgbaIndex + 1];
-            const uint8_t b = rgbaBuffer[rgbaIndex + 2];
-            const uint8_t a = rgbaBuffer[rgbaIndex + 3];
-
-            if (a == 0) continue;
-
-            const size_t fbIndex = screen_y * m_h_res + screen_x;
-
-            if (a < 255) {
-                uint16_t oldColor = m_framebuffer[0][fbIndex];
-
-                uint8_t oldR = ((oldColor >> 11) & 0x1F) << 3;
-                uint8_t oldG = ((oldColor >> 5) & 0x3F) << 2;
-                uint8_t oldB = (oldColor & 0x1F) << 3;
-
-                uint8_t newR = ((r * a) + (oldR * (255 - a))) / 255;
-                uint8_t newG = ((g * a) + (oldG * (255 - a))) / 255;
-                uint8_t newB = ((b * a) + (oldB * (255 - a))) / 255;
-
-                m_framebuffer[0][fbIndex] = ((newR >> 3) << 11) | ((newG >> 2) << 5) | (newB >> 3);
-            } else {
-                m_framebuffer[0][fbIndex] = ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
-            }
-
-            if (screen_x < minX) minX = screen_x;
-            if (screen_y < minY) minY = screen_y;
-            if (screen_x > maxX) maxX = screen_x;
-            if (screen_y > maxY) maxY = screen_y;
-        }
-    }
-
-    if (maxX >= minX && maxY >= minY) { panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]); }
+    renderRGBA8888(x, y, w, h, reinterpret_cast<uint8_t*>(rgbaBuffer));
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 #endif // CONFIG_IDF_TARGET_ESP32P4
