@@ -15,6 +15,7 @@
 
 #if (TFT_CONTROLLER == 7)
     #define TFT_MODE_RGB
+    #define TFT_ALIGN_LANDSCAPE
     #define TFT_LAYOUT_L
 #endif
 

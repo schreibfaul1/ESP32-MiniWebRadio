@@ -210,17 +210,14 @@ class TFT_DSI {
                 dstX = srcX;
                 dstY = srcY;
                 break;
-
             case 1: // 90° CW
                 dstX = m_h_res - 1 - srcY;
                 dstY = srcX;
                 break;
-
             case 2: // 180°
                 dstX = m_v_res - 1 - srcX;
                 dstY = m_h_res - 1 - srcY;
                 break;
-
             case 3: // 270° CW
                 dstX = srcY;
                 dstY = m_v_res - 1 - srcX;
@@ -457,8 +454,6 @@ class TFT_DSI {
 
   private:
     int          JPEG_jd_output(JDEC* jdec, void* bitmap, JRECT* jrect);
-    void         drawJPEG_0deg(uint16_t* src_ptr, uint16_t* dest_ptr, int16_t visible_w);
-    void         drawJPEG_90deg(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t* bitmap);
     bool         JPEG_tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t* bitmap);
     unsigned int JPEG_jd_input(JDEC* jdec, uint8_t* buf, unsigned int len);
     void*        JPEG_alloc_pool(JDEC* jd, size_t ndata);

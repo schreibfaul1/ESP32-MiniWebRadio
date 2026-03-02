@@ -332,14 +332,13 @@ void TFT_DSI::setDisplayInversion(bool invert) {
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_DSI::setRotation(uint8_t r) {
-    if (TFT_CONTROLLER == 10)
+    if (TFT_CONTROLLER == 10) // orientation is portrait
         m_rotation = r;
-    else
+    else // orientation is already landscape
         m_rotation = r - 1;
     if (m_rotation == -1) m_rotation = 3;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
 void TFT_DSI::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color) {
     // Calculate differences
     int16_t dx = abs(x1 - x0);
@@ -737,7 +736,7 @@ void TFT_DSI::copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, u
 void TFT_DSI::readRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t* data) {
     // Check whether parameters are within the valid range
     if (x < 0 || y < 0 || w <= 0 || h <= 0) return;
-    if (x + w > m_h_res || y + h > m_v_res) return;  // m_v_res = vertical resolution
+    if (x + w > m_h_res || y + h > m_v_res) return; // m_v_res = vertical resolution
     if (!data || !m_framebuffer[0]) return;
 
     uint16_t* dst = data;
@@ -2215,48 +2214,31 @@ exit:
     #define bmpColor32(c) (((uint16_t)(((uint8_t*)(c))[3] & 0xF8) << 8) | ((uint16_t)(((uint8_t*)(c))[2] & 0xFC) << 3) | ((((uint8_t*)(c))[1] & 0xF8) >> 3))
 
 bool TFT_DSI::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight, float scale) {
-    if (scale <= 0) {
-        log_e("Invalid scale value: %f", scale);
-        return false;
-    }
+    if (scale <= 0.0f) return false;
 
-    if (!fs.exists(path)) {
-        log_e("file %s does not exist", path);
-        return false;
-    }
+    if (!fs.exists(path)) return false;
 
-    File bmp_file = fs.open(path);
-    if (!bmp_file) {
-        log_e("Failed to open file for reading: %s", path);
-        return false;
-    }
+    File bmp = fs.open(path);
+    if (!bmp) return false;
 
-    constexpr size_t headerLen = 0x36; // BMP-Header-Größe
-    uint8_t          headerBuf[headerLen];
+    constexpr size_t headerLen = 54;
+    uint8_t          header[headerLen];
 
-    if (bmp_file.size() < headerLen || bmp_file.read(headerBuf, headerLen) < headerLen) {
-        log_e("Failed to read the file's header");
-        bmp_file.close();
-        return false;
-    }
+    if (bmp.read(header, headerLen) != headerLen) return false;
 
-    if (headerBuf[0] != 'B' || headerBuf[1] != 'M') {
-        log_e("Invalid BMP file format");
-        bmp_file.close();
-        return false;
-    }
+    if (header[0] != 'B' || header[1] != 'M') return false;
 
-    const uint32_t dataOffset = bmpRead32(headerBuf, 0x0A);
-    const int32_t  bmpWidthI = bmpRead32(headerBuf, 0x12);
-    const int32_t  bmpHeightI = bmpRead32(headerBuf, 0x16);
-    const uint16_t bitsPerPixel = bmpRead16(headerBuf, 0x1C);
-    const uint32_t compression = bmpRead32(headerBuf, 0x1E);
+    const uint32_t dataOffset = bmpRead32(header, 0x0A);
+    const int32_t  bmpWidthI = bmpRead32(header, 0x12);
+    const int32_t  bmpHeightI = bmpRead32(header, 0x16);
+    const uint16_t bpp = bmpRead16(header, 0x1C);
+    const uint32_t compression = bmpRead32(header, 0x1E);
 
-    if (compression != 0) {
-        log_e("Compressed BMP files are not supported");
-        bmp_file.close();
-        return false;
-    }
+    if (compression != 0) return false;
+
+    if (!(bpp == 16 || bpp == 24 || bpp == 32)) return false;
+
+    const bool bottomUp = (bmpHeightI > 0);
 
     const size_t bmpWidth = abs(bmpWidthI);
     const size_t bmpHeight = abs(bmpHeightI);
@@ -2264,63 +2246,59 @@ bool TFT_DSI::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, 
     const size_t scaledWidth = bmpWidth * scale;
     const size_t scaledHeight = bmpHeight * scale;
 
-    // If maxWidth or maxHeight is 0, the value is ignored
-    const size_t effectiveMaxWidth = (maxWidth == 0) ? scaledWidth : maxWidth;
-    const size_t effectiveMaxHeight = (maxHeight == 0) ? scaledHeight : maxHeight;
+    const size_t drawWidth = (maxWidth == 0) ? scaledWidth : std::min((size_t)maxWidth, scaledWidth);
+    const size_t drawHeight = (maxHeight == 0) ? scaledHeight : std::min((size_t)maxHeight, scaledHeight);
 
-    // Quell-Dimensionen (unrotiert)
-    const size_t srcDisplayWidth = std::min(effectiveMaxWidth, scaledWidth);
-    const size_t srcDisplayHeight = std::min(effectiveMaxHeight, scaledHeight);
+    size_t dstWidth = (m_rotation & 1) ? drawHeight : drawWidth;
+    size_t dstHeight = (m_rotation & 1) ? drawWidth : drawHeight;
 
-    // Ziel-Dimensionen nach Rotation berechnen
-    size_t dstWidth, dstHeight;
-    if (m_rotation & 1) {
-        dstWidth = srcDisplayHeight; // 90°/270°: Breite = Höhe
-        dstHeight = srcDisplayWidth; //             Höhe = Breite
-    } else {
-        dstWidth = srcDisplayWidth;
-        dstHeight = srcDisplayHeight;
-    }
+    // --- Clipping auf Display ---
+    if (x >= m_h_res || y >= m_v_res) return false;
 
-    const size_t rowSize = ((bmpWidth * bitsPerPixel / 8 + 3) & ~3);
-    uint8_t*     rowBuffer = new uint8_t[rowSize];
+    if (x + dstWidth > m_h_res) dstWidth = m_h_res - x;
 
-    for (size_t i_y = 0; i_y < srcDisplayHeight; ++i_y) {
-        const float  srcY = i_y / scale;
-        const size_t srcRow = bmpHeight - 1 - (size_t)srcY;
+    if (y + dstHeight > m_v_res) dstHeight = m_v_res - y;
 
-        bmp_file.seek(dataOffset + srcRow * rowSize);
-        bmp_file.read(rowBuffer, rowSize);
+    const size_t rowSize = ((bmpWidth * bpp / 8 + 3) & ~3);
 
-        for (size_t i_x = 0; i_x < srcDisplayWidth; ++i_x) {
-            const float    srcX = i_x / scale;
-            const size_t   srcCol = (size_t)srcX;
-            const uint8_t* pixelPtr = rowBuffer + srcCol * (bitsPerPixel / 8);
+    static uint8_t rowBuffer[4096];                // ausreichend für 1024*2 bytes + padding
+    if (rowSize > sizeof(rowBuffer)) return false; // Schutz gegen zu große BMPs
+
+    for (size_t dy = 0; dy < drawHeight; ++dy) {
+        // Integer Scaling
+        const size_t srcYScaled = (dy * bmpHeight) / scaledHeight;
+
+        const size_t srcRow = bottomUp ? (bmpHeight - 1 - srcYScaled) : srcYScaled;
+
+        bmp.seek(dataOffset + srcRow * rowSize);
+        bmp.read(rowBuffer, rowSize);
+
+        for (size_t dx = 0; dx < drawWidth; ++dx) {
+            const size_t srcXScaled = (dx * bmpWidth) / scaledWidth;
+
+            const uint8_t* pixelPtr = rowBuffer + srcXScaled * (bpp / 8);
 
             uint16_t color = 0;
-            switch (bitsPerPixel) {
+
+            switch (bpp) {
                 case 16: color = bmpColor16(pixelPtr); break;
                 case 24: color = bmpColor24(pixelPtr); break;
                 case 32: color = bmpColor32(pixelPtr); break;
-                default: /* ... */ break;
             }
 
-            // Korrekt: mapRotation mit QUELL-Dimensionen aufrufen
             size_t rotX, rotY;
-            mapRotation(m_rotation, i_x, i_y, rotX, rotY);
+            mapRotation(m_rotation, dx, dy, rotX, rotY);
 
             const size_t dstX = x + rotX;
             const size_t dstY = y + rotY;
 
-            if (dstX < m_h_res && dstY < m_v_res) { m_framebuffer[0][dstY * m_h_res + dstX] = color; }
+            if (dstX < m_h_res && dstY < m_v_res) m_framebuffer[0][dstY * m_h_res + dstX] = color;
         }
     }
 
-    delete[] rowBuffer;
-    bmp_file.close();
-
-    // Refresh mit ZIEL-Dimensionen
     panelDrawBitmap(x, y, x + dstWidth, y + dstHeight, m_framebuffer[0]);
+
+    bmp.close();
     return true;
 }
 
@@ -3298,88 +3276,28 @@ int TFT_DSI::JPEG_jd_output(JDEC* jdec, void* bitmap, JRECT* jrect) {
     return r;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_DSI::drawJPEG_0deg(uint16_t* src_ptr, uint16_t* dest_ptr, int16_t visible_w) {
-    memcpy(dest_ptr, src_ptr, visible_w * sizeof(uint16_t));
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_DSI::drawJPEG_90deg(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t* bitmap) {
-    for (int16_t sy = 0; sy < h; ++sy) {
-        for (int16_t sx = 0; sx < w; ++sx) {
-
-            size_t rx, ry;
-            mapRotation(1, sx, sy, rx, ry);
-
-            const int16_t dx = x + rx;
-            const int16_t dy = y + ry;
-
-            if (dx < 0 || dy < 0 || dx >= m_h_res || dy >= m_v_res) continue;
-
-            m_framebuffer[0][dy * m_h_res + dx] = bitmap[sy * w + sx];
-        }
-    }
-}
-
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-// bool TFT_DSI::JPEG_tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t* bitmap) {
-//     if (!bitmap || w <= 0 || h <= 0) { // Check for valid parameters
-//         log_e("Invalid parameters: bitmap is null or width/height is zero.");
-//         return false;
-//     }
-//     // Clip the rectangle to ensure it doesn't exceed framebuffer boundaries
-//     int16_t x_end = std::min((int16_t)(x + w), (int16_t)m_h_res);   // End of rectangle in x-direction
-//     int16_t y_end = std::min((int16_t)(y + h), (int16_t)(m_v_res)); // End of rectangle in y-direction
-
-//     if (x >= m_h_res || y >= m_v_res || x_end <= 0 || y_end <= 0) {
-//         log_e("Rectangle is completely outside the framebuffer boundaries.");
-//         return false;
-//     }
-
-//     // Adjust start coordinates if they are out of bounds
-//     int16_t start_x = max((int16_t)0, x); // Sichtbarer Startpunkt in x-Richtung
-//     int16_t start_y = max((int16_t)0, y); // Sichtbarer Startpunkt in y-Richtung
-//     int16_t clip_x_offset = start_x - x;  // Offset im Bitmap in x-Richtung
-//     int16_t clip_y_offset = start_y - y;  // Offset im Bitmap in y-Richtung
-
-//     // Calculation of visible width and height
-//     int16_t visible_w = x_end - start_x; // Sichtbare Breite
-//     int16_t visible_h = y_end - start_y; // Sichtbare Höhe
-
-//     // Zeilenweises Kopieren mit Clipping
-//     for (int16_t j = 0; j < visible_h; ++j) {
-//         // Quelle im Bitmap: Berechne die richtige Zeilenposition
-//         uint16_t* src_ptr = bitmap + (clip_y_offset + j) * w + clip_x_offset;
-
-//         // Ziel im Framebuffer: Berechne die richtige Zeilenposition
-//         uint16_t* dest_ptr = m_framebuffer[0] + (start_y + j) * m_h_res + start_x;
-
-//         switch (m_rotation & 3) {
-//             case 0: drawJPEG_0deg(src_ptr, dest_ptr, visible_w); break;
-//             case 1:
-//                 drawJPEG_90deg(src_ptr, dest_ptr, visible_w);
-//                 break;
-//                 //  case 2: drawJPEG_180deg(...); break;
-//             default:
-//                 //     drawJPEG_rotated(...); // 90° / 270°
-//                 break;
-//         }
-//     }
-//     // log_w("Bitmap erfolgreich mit Clipping gezeichnet bei x: %d, y: %d, sichtbare Breite: %d, sichtbare Höhe: %d", start_x, start_y, visible_w, visible_h);
-//     return true;
-// }
-
-bool TFT_DSI::JPEG_tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t* bitmap) {
+bool TFT_DSI::JPEG_tft_output(int16_t blockX, int16_t blockY, uint16_t w, uint16_t h, uint16_t* bitmap) {
     if (!bitmap || w == 0 || h == 0) return false;
 
-    switch (m_rotation & 3) {
-        case 0:
-            // dein bestehender memcpy-Code
-            //   drawJPEG_0deg(x, y, w, h, bitmap);
-            break;
+    for (uint16_t localY = 0; localY < h; ++localY) {
+        for (uint16_t localX = 0; localX < w; ++localX) {
+            // 1. Calculate absolute image coordinates
+            int32_t srcX = blockX + localX;
+            int32_t srcY = blockY + localY;
 
-        case 1: drawJPEG_90deg(x, y, w, h, bitmap); break;
+            // 2. Rotate
+            size_t dstX = 0;
+            size_t dstY = 0;
+            mapRotation(m_rotation, srcX, srcY, dstX, dstY);
 
-        default: return false;
+            // 3. Security check (Framebuffer Bounds)
+            if (dstX >= m_h_res || dstY >= m_v_res) continue;
+
+            // 4. Write pixel
+            m_framebuffer[0][dstY * m_h_res + dstX] = bitmap[localY * w + localX];
+        }
     }
+
     return true;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
