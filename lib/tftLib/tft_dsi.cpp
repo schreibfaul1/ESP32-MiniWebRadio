@@ -340,86 +340,212 @@ void TFT_DSI::setRotation(uint8_t r) {
     if (m_rotation == -1) m_rotation = 3;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-bool TFT_DSI::renderRGB565(int16_t x, int16_t y, uint16_t w, uint16_t h, const uint16_t* src) {
-    if (!src || w == 0 || h == 0) return false;
+bool TFT_DSI::renderRGB565(int16_t x, int16_t y, uint16_t w, uint16_t h, const uint16_t* rgb, const uint8_t* alpha) {
+    if (!rgb || w == 0 || h == 0) return false;
 
     size_t minX = m_h_res;
     size_t minY = m_v_res;
     size_t maxX = 0;
     size_t maxY = 0;
 
-    for (uint16_t row = 0; row < h; row++) {
-        for (uint16_t col = 0; col < w; col++) {
+    switch (m_rotation & 3) {
+        // --------------------------------------------------
+        case 0: // 0°
+        {
+            for (uint16_t row = 0; row < h; row++) {
+                for (uint16_t col = 0; col < w; col++) {
 
-            size_t rotX, rotY;
+                    uint16_t dstX = x + col;
+                    uint16_t dstY = y + row;
 
-            mapRotation(m_rotation, x + col, y + row, rotX, rotY);
+                    if (dstX >= m_h_res || dstY >= m_v_res) continue;
 
-            if (rotX >= m_h_res || rotY >= m_v_res) continue;
+                    size_t fbIndex = dstY * m_h_res + dstX;
+                    size_t srcIndex = row * w + col;
 
-            m_framebuffer[0][rotY * m_h_res + rotX] = src[row * w + col];
+                    uint16_t newColor = rgb[srcIndex];
 
-            if (rotX < minX) minX = rotX;
-            if (rotY < minY) minY = rotY;
-            if (rotX > maxX) maxX = rotX;
-            if (rotY > maxY) maxY = rotY;
-        }
-    }
+                    if (alpha) {
+                        uint8_t a = alpha[srcIndex];
+                        if (a == 0) continue;
+                        if (a < 255) {
+                            uint16_t old = m_framebuffer[0][fbIndex];
 
-    if (maxX > minX && maxY > minY) { panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]); }
+                            uint16_t invA = 255 - a;
 
-    return true;
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-bool TFT_DSI::renderRGBA8888(int16_t x, int16_t y, uint16_t w, uint16_t h, const uint8_t* src) {
-    if (!src) return false;
+                            uint8_t r = ((newColor >> 11) & 0x1F) << 3;
+                            uint8_t g = ((newColor >> 5) & 0x3F) << 2;
+                            uint8_t b = (newColor & 0x1F) << 3;
 
-    size_t minX = m_h_res;
-    size_t minY = m_v_res;
-    size_t maxX = 0;
-    size_t maxY = 0;
+                            uint8_t oldR = ((old >> 11) & 0x1F) << 3;
+                            uint8_t oldG = ((old >> 5) & 0x3F) << 2;
+                            uint8_t oldB = (old & 0x1F) << 3;
 
-    for (uint16_t row = 0; row < h; row++) {
-        for (uint16_t col = 0; col < w; col++) {
+                            r = (r * a + oldR * invA + 128) >> 8;
+                            g = (g * a + oldG * invA + 128) >> 8;
+                            b = (b * a + oldB * invA + 128) >> 8;
 
-            size_t rotX, rotY;
-            mapRotation(m_rotation, x + col, y + row, rotX, rotY);
+                            newColor = ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
+                        }
+                    }
 
-            if (rotX >= m_h_res || rotY >= m_v_res) continue;
+                    m_framebuffer[0][fbIndex] = newColor;
 
-            const size_t idx = (row * w + col) * 4;
-
-            uint8_t r = src[idx];
-            uint8_t g = src[idx + 1];
-            uint8_t b = src[idx + 2];
-            uint8_t a = src[idx + 3];
-
-            if (a == 0) continue;
-
-            size_t fbIndex = rotY * m_h_res + rotX;
-
-            if (a < 255) {
-                uint16_t old = m_framebuffer[0][fbIndex];
-
-                uint8_t oldR = ((old >> 11) & 0x1F) << 3;
-                uint8_t oldG = ((old >> 5) & 0x3F) << 2;
-                uint8_t oldB = (old & 0x1F) << 3;
-
-                r = ((r * a) + (oldR * (255 - a))) / 255;
-                g = ((g * a) + (oldG * (255 - a))) / 255;
-                b = ((b * a) + (oldB * (255 - a))) / 255;
+                    if (dstX < minX) minX = dstX;
+                    if (dstY < minY) minY = dstY;
+                    if (dstX > maxX) maxX = dstX;
+                    if (dstY > maxY) maxY = dstY;
+                }
             }
+        } break;
 
-            m_framebuffer[0][fbIndex] = ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
+        // --------------------------------------------------
+        case 1: // 90° CW
+        {
+            for (uint16_t row = 0; row < h; row++) {
+                for (uint16_t col = 0; col < w; col++) {
 
-            if (rotX < minX) minX = rotX;
-            if (rotY < minY) minY = rotY;
-            if (rotX > maxX) maxX = rotX;
-            if (rotY > maxY) maxY = rotY;
-        }
+                    uint16_t dstX = m_h_res - 1 - (y + row);
+                    uint16_t dstY = x + col;
+
+                    if (dstX >= m_h_res || dstY >= m_v_res) continue;
+
+                    size_t fbIndex = dstY * m_h_res + dstX;
+                    size_t srcIndex = row * w + col;
+
+                    uint16_t newColor = rgb[srcIndex];
+
+                    if (alpha) {
+                        uint8_t a = alpha[srcIndex];
+                        if (a == 0) continue;
+                        if (a < 255) {
+                            uint16_t old = m_framebuffer[0][fbIndex];
+                            uint16_t invA = 255 - a;
+
+                            uint8_t r = ((newColor >> 11) & 0x1F) << 3;
+                            uint8_t g = ((newColor >> 5) & 0x3F) << 2;
+                            uint8_t b = (newColor & 0x1F) << 3;
+
+                            uint8_t oldR = ((old >> 11) & 0x1F) << 3;
+                            uint8_t oldG = ((old >> 5) & 0x3F) << 2;
+                            uint8_t oldB = (old & 0x1F) << 3;
+
+                            r = (r * a + oldR * invA + 128) >> 8;
+                            g = (g * a + oldG * invA + 128) >> 8;
+                            b = (b * a + oldB * invA + 128) >> 8;
+
+                            newColor = ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
+                        }
+                    }
+
+                    m_framebuffer[0][fbIndex] = newColor;
+
+                    if (dstX < minX) minX = dstX;
+                    if (dstY < minY) minY = dstY;
+                    if (dstX > maxX) maxX = dstX;
+                    if (dstY > maxY) maxY = dstY;
+                }
+            }
+        } break;
+        // --------------------------------------------------
+        case 2: // 180° CW
+        {
+            for (uint16_t row = 0; row < h; row++) {
+                for (uint16_t col = 0; col < w; col++) {
+
+                    uint16_t dstX = m_v_res - 1 - (x + col);
+                    uint16_t dstY = m_h_res - 1 - (y + row);
+
+                    if (dstX >= m_h_res || dstY >= m_v_res) continue;
+
+                    size_t fbIndex = dstY * m_h_res + dstX;
+                    size_t srcIndex = row * w + col;
+
+                    uint16_t newColor = rgb[srcIndex];
+
+                    if (alpha) {
+                        uint8_t a = alpha[srcIndex];
+                        if (a == 0) continue;
+                        if (a < 255) {
+                            uint16_t old = m_framebuffer[0][fbIndex];
+                            uint16_t invA = 255 - a;
+
+                            uint8_t r = ((newColor >> 11) & 0x1F) << 3;
+                            uint8_t g = ((newColor >> 5) & 0x3F) << 2;
+                            uint8_t b = (newColor & 0x1F) << 3;
+
+                            uint8_t oldR = ((old >> 11) & 0x1F) << 3;
+                            uint8_t oldG = ((old >> 5) & 0x3F) << 2;
+                            uint8_t oldB = (old & 0x1F) << 3;
+
+                            r = (r * a + oldR * invA + 128) >> 8;
+                            g = (g * a + oldG * invA + 128) >> 8;
+                            b = (b * a + oldB * invA + 128) >> 8;
+
+                            newColor = ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
+                        }
+                    }
+
+                    m_framebuffer[0][fbIndex] = newColor;
+
+                    if (dstX < minX) minX = dstX;
+                    if (dstY < minY) minY = dstY;
+                    if (dstX > maxX) maxX = dstX;
+                    if (dstY > maxY) maxY = dstY;
+                }
+            }
+        } break;
+        // --------------------------------------------------
+        case 3: // 270° CW
+        {
+            for (uint16_t row = 0; row < h; row++) {
+                for (uint16_t col = 0; col < w; col++) {
+
+                    uint16_t dstX = y + row;
+                    uint16_t dstY = m_v_res - 1 - (x + col);
+
+                    if (dstX >= m_h_res || dstY >= m_v_res) continue;
+
+                    size_t fbIndex = dstY * m_h_res + dstX;
+                    size_t srcIndex = row * w + col;
+
+                    uint16_t newColor = rgb[srcIndex];
+
+                    if (alpha) {
+                        uint8_t a = alpha[srcIndex];
+                        if (a == 0) continue;
+                        if (a < 255) {
+                            uint16_t old = m_framebuffer[0][fbIndex];
+                            uint16_t invA = 255 - a;
+
+                            uint8_t r = ((newColor >> 11) & 0x1F) << 3;
+                            uint8_t g = ((newColor >> 5) & 0x3F) << 2;
+                            uint8_t b = (newColor & 0x1F) << 3;
+
+                            uint8_t oldR = ((old >> 11) & 0x1F) << 3;
+                            uint8_t oldG = ((old >> 5) & 0x3F) << 2;
+                            uint8_t oldB = (old & 0x1F) << 3;
+
+                            r = (r * a + oldR * invA + 128) >> 8;
+                            g = (g * a + oldG * invA + 128) >> 8;
+                            b = (b * a + oldB * invA + 128) >> 8;
+
+                            newColor = ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
+                        }
+                    }
+
+                    m_framebuffer[0][fbIndex] = newColor;
+
+                    if (dstX < minX) minX = dstX;
+                    if (dstY < minY) minY = dstY;
+                    if (dstX > maxX) maxX = dstX;
+                    if (dstY > maxY) maxY = dstY;
+                }
+            }
+        } break;
     }
 
-    if (maxX > minX && maxY > minY) { panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]); }
+    if (maxX > minX && maxY > minY) panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
 
     return true;
 }
@@ -2371,7 +2497,7 @@ bool TFT_DSI::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, 
             pixelBuffer[dy * drawWidth + dx] = color;
         }
     }
-    renderRGB565(x, y, drawWidth, drawHeight, pixelBuffer);
+    renderRGB565(x, y, drawWidth, drawHeight, pixelBuffer, NULL);
     bmp.close();
     free(pixelBuffer);
     return true;
@@ -3171,7 +3297,7 @@ bool TFT_DSI::GIF_ReadImage(uint16_t x, uint16_t y) {
     }
 
     // --- Unified render path ---
-    renderRGB565(xpos, ypos, frameW, frameH, pixelBuffer);
+    renderRGB565(xpos, ypos, frameW, frameH, pixelBuffer, NULL);
 
     free(pixelBuffer);
 
@@ -3315,7 +3441,7 @@ bool TFT_DSI::drawJpgFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, 
     // log_w("path %s, res %i, x %i, y %i, m_jpgWidth %i, m_jpgHeight %i", path, res, x, y, m_jpgWidth, m_jpgHeight);
     m_jpgSdFile.close();
 
-    renderRGB565(x, y, m_jpgWidth, m_jpgHeight, m_jpegPixelBuffer);
+    renderRGB565(x, y, m_jpgWidth, m_jpgHeight, m_jpegPixelBuffer, NULL);
 
     free(m_jpegPixelBuffer);
     return true;
@@ -5430,10 +5556,30 @@ void TFT_DSI::png_rgb16btouint32(uint32_t* dst, png_s_rgb16b* src) {
     memcpy(dst, src, sizeof(png_s_rgb16b));
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_DSI::png_draw_into_Framebuffer(uint16_t x, uint16_t y, uint16_t w, uint16_t h, char* rgbaBuffer, uint32_t /*png_outbuff_size*/, uint8_t /*png_format*/) {
+void TFT_DSI::png_draw_into_Framebuffer(uint16_t x, uint16_t y, uint16_t w, uint16_t h, char* rgbaBuffer, uint32_t, uint8_t) {
     if (!rgbaBuffer || w == 0 || h == 0) return;
 
-    renderRGBA8888(x, y, w, h, reinterpret_cast<uint8_t*>(rgbaBuffer));
+    uint16_t* rgbBuffer = (uint16_t*)ps_malloc(w * h * sizeof(uint16_t));
+
+    uint8_t* alphaBuffer = (uint8_t*)ps_malloc(w * h);
+
+    if (!rgbBuffer || !alphaBuffer) return;
+
+    for (uint32_t i = 0; i < w * h; i++) {
+        uint8_t r = rgbaBuffer[i * 4 + 0];
+        uint8_t g = rgbaBuffer[i * 4 + 1];
+        uint8_t b = rgbaBuffer[i * 4 + 2];
+        uint8_t a = rgbaBuffer[i * 4 + 3];
+
+        rgbBuffer[i] = ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
+
+        alphaBuffer[i] = a;
+    }
+
+    renderRGB565(x, y, w, h, rgbBuffer, alphaBuffer);
+
+    free(rgbBuffer);
+    free(alphaBuffer);
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 #endif // CONFIG_IDF_TARGET_ESP32P4
