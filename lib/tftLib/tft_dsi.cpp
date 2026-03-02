@@ -2396,7 +2396,7 @@ bool TFT_DSI::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, 
             }
 
             size_t rotX, rotY;
-            mapRotation(m_rotation, dx, dy, rotX, rotY);
+            mapRotation(m_rotation, dx + x, dy + y, rotX, rotY);
 
             const size_t dstX = x + rotX;
             const size_t dstY = y + rotY;
@@ -5456,61 +5456,58 @@ void TFT_DSI::png_rgb16btouint32(uint32_t* dst, png_s_rgb16b* src) {
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_DSI::png_draw_into_Framebuffer(uint16_t x, uint16_t y, uint16_t w, uint16_t h, char* rgbaBuffer, uint32_t png_outbuff_size, uint8_t png_format) {
 
-    for (int row = 0; row < h; row++) {
-        for (int col = 0; col < w; col++) {
-            // Berechne die Zielposition im Framebuffer
-            uint16_t screen_x = x + col;
-            uint16_t screen_y = y + row;
+    if (!rgbaBuffer) return;
 
-            // Prüfe, ob das Pixel innerhalb des Bildschirms liegt
-            if (screen_x >= m_h_res || screen_y >= m_v_res) { continue; }
+    size_t minX = m_h_res;
+    size_t minY = m_v_res;
+    size_t maxX = 0;
+    size_t maxY = 0;
 
-            // Berechne den Index im RGBA-Buffer (basierend auf Bildbreite w)
-            int rgbaIndex = (row * w + col) * 4; // 4 Bytes pro Pixel (RGBA)
+    for (uint16_t row = 0; row < h; row++) {
+        for (uint16_t col = 0; col < w; col++) {
+            size_t rotX, rotY;
+            mapRotation(m_rotation, col + x, row + y, rotX, rotY);
 
-            uint8_t r = rgbaBuffer[rgbaIndex];     // Rot (8 Bit)
-            uint8_t g = rgbaBuffer[rgbaIndex + 1]; // Grün (8 Bit)
-            uint8_t b = rgbaBuffer[rgbaIndex + 2]; // Blau (8 Bit)
-            uint8_t a = rgbaBuffer[rgbaIndex + 3]; // Alpha (8 Bit)
+            uint16_t screen_x = rotX;
+            uint16_t screen_y = rotY;
 
-            if (a == 0) {
-                // Falls Alpha 0 ist → Pixel bleibt unverändert
-                continue;
-            }
+            if (screen_x >= m_h_res || screen_y >= m_v_res) continue;
 
-            // Berechne den Framebuffer-Index mit x- und y-Versatz
-            int fbIndex = screen_y * m_h_res + screen_x;
+            const int rgbaIndex = (row * w + col) * 4;
+
+            const uint8_t r = rgbaBuffer[rgbaIndex];
+            const uint8_t g = rgbaBuffer[rgbaIndex + 1];
+            const uint8_t b = rgbaBuffer[rgbaIndex + 2];
+            const uint8_t a = rgbaBuffer[rgbaIndex + 3];
+
+            if (a == 0) continue;
+
+            const size_t fbIndex = screen_y * m_h_res + screen_x;
 
             if (a < 255) {
-                // **Alpha-Blending mit vorhandenem Framebuffer-Wert**
-
-                // 1. read old color from framebuffer
                 uint16_t oldColor = m_framebuffer[0][fbIndex];
 
-                // 2. convert old color back into RGB888
                 uint8_t oldR = ((oldColor >> 11) & 0x1F) << 3;
                 uint8_t oldG = ((oldColor >> 5) & 0x3F) << 2;
                 uint8_t oldB = (oldColor & 0x1F) << 3;
 
-                // 3. calculate new color with alpha blending
                 uint8_t newR = ((r * a) + (oldR * (255 - a))) / 255;
                 uint8_t newG = ((g * a) + (oldG * (255 - a))) / 255;
                 uint8_t newB = ((b * a) + (oldB * (255 - a))) / 255;
 
-                // 4. Convert new color back into RGB565
-                m_framebuffer[0][fbIndex] = ((newR >> 3) << 11) | // 8->5 Bit (red)
-                                            ((newG >> 2) << 5) |  // 8->6 Bit (green)
-                                            (newB >> 3);          // 8->5 Bit (blue)
+                m_framebuffer[0][fbIndex] = ((newR >> 3) << 11) | ((newG >> 2) << 5) | (newB >> 3);
             } else {
-                // **Normal RGB565 conversion (no blending necessary, full opacity)**
-                m_framebuffer[0][fbIndex] = ((r >> 3) << 11) | // 8->5 Bit (red)
-                                            ((g >> 2) << 5) |  // 8->6 Bit (green)
-                                            (b >> 3);          // 8->5 Bit (blue)
+                m_framebuffer[0][fbIndex] = ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
             }
+
+            if (screen_x < minX) minX = screen_x;
+            if (screen_y < minY) minY = screen_y;
+            if (screen_x > maxX) maxX = screen_x;
+            if (screen_y > maxY) maxY = screen_y;
         }
     }
-    // Only draw the changed area
-    panelDrawBitmap(x, y, x + w, y + h, m_framebuffer[0]);
+
+    if (maxX >= minX && maxY >= minY) { panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]); }
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 #endif // CONFIG_IDF_TARGET_ESP32P4
