@@ -3,12 +3,12 @@
 
 #define _SSID             "SSID"           // Your WiFi credentials here
 #define _PW               "PW"             //
-#define TFT_CONTROLLER    5                // (0)SPI-ILI9341[320x240], (3)SPI-ILI9486[480x320], (4)SPI-ILI9488[480x320], (5)SPI-ST7796[480x320], (7)RGB[800x480], (8)DSI-EK97001[1024x600], (9)DSI-JD9165[1024x600]
+#define TFT_CONTROLLER    8                // (0)SPI-ILI9341[320x240], (3)SPI-ILI9486[480x320], (4)SPI-ILI9488[480x320], (5)SPI-ST7796[480x320], (7)RGB[800x480], (8)DSI-EK97001[1024x600], (9)DSI-JD9165[1024x600]
 #define DISPLAY_INVERSION 0                // only SPI displays, (0) off (1) on
 #define TFT_ROTATION      1                // only SPI displays, 1 or 3 (landscape)
 #define TFT_FREQUENCY     40000000         // only SPI displays, 80000000, 40000000, 27000000, 20000000, 10000000
-#define TP_CONTROLLER     5                // (0)ILI9341, (3)ILI9486, (4)ILI9488, (5)ST7796, (7)GT911, (8)FT6x63
-#define TP_ROTATION       1                // 1 or 3 (landscape)
+#define TP_CONTROLLER     7                // (0)ILI9341, (3)ILI9486, (4)ILI9488, (5)ST7796, (7)GT911, (8)FT6x63
+#define TP_ROTATION       3                // 1 or 3 (landscape)
 #define TP_H_MIRROR       0                // (0) default, (1) mirror up <-> down
 #define TP_V_MIRROR       0                // (0) default, (1) mirror left <-> right
 #define LIGHT_SENSOR      1                // (0) none, (1) BH1750
@@ -350,6 +350,55 @@ const Timing DSI_TIMING = {.h_res = 1024,
         #define AMP_ENABLED -1 //control pin for extenal amplifier (if available)
 
         #define I2C_SDA 7 // I2C dala line for capacitive touchpad
+        #define I2C_SCL 8 // I2C clock line for capacitive touchpad
+    #endif
+#endif
+
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// 📌📌📌 DSI-DISPLAY [480x800] ESP32-P4 GUITION 4.3" 📌📌📌 JC4880P443
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+#if 1                        // 0 deactivated, 1 activated
+    #if TFT_CONTROLLER == 10 // RGB display
+
+const Timing DSI_TIMING = {.h_res = 480,
+                           .v_res = 800,
+                           .pixel_clock_mhz = 34,
+                           .hsync_pulse_width = 12,
+                           .hsync_back_porch = 42,
+                           .hsync_front_porch = 42,
+                           .vsync_pulse_width = 2,
+                           .vsync_back_porch = 8,
+                           .vsync_front_porch = 166,
+                           .lane_bit_rate_mbps = 500};
+
+        #define TP_IRQ -1
+
+        #define SD_MMC_D0  39
+        #define SD_MMC_D1  40
+        #define SD_MMC_D2  41
+        #define SD_MMC_D3  42
+        #define SD_MMC_CLK 43
+        #define SD_MMC_CMD 44
+
+        #define GT911_I2C_ADDRESS 0x5D // default I2C-address of GT911
+
+        #define I2S_DOUT 29
+        #define I2S_BCLK 30
+        #define I2S_LRC  31
+        #define I2S_MCLK -1 // important, don't change!
+
+        #define IR_PIN             -1 // IR Receiver (if available)
+        #define BT_EMITTER_RX      -1
+        #define BT_EMITTER_TX      -1
+        #define BT_EMITTER_LINK    -1
+        #define BT_EMITTER_MODE    -1
+        #define BT_EMITTER_CONNECT -1
+
+        #define LCD_RESET   5  // geändert Alfons 26.02.2026
+        #define TFT_BL      23 // geändert Alfons 26.02.2026
+        #define AMP_ENABLED -1 // control pin for external amplifier (if available)
+
+        #define I2C_SDA 7 // I2C data line for capacitive touchpad
         #define I2C_SCL 8 // I2C clock line for capacitive touchpad
     #endif
 #endif
