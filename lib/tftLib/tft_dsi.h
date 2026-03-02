@@ -204,8 +204,8 @@ class TFT_DSI {
     const uint16_t            m_ROWBUFFERSIZE = 4096;
     uint8_t*                  m_rowBuffer = nullptr;
 
-    bool TFT_DSI::renderRGB565(int16_t x, int16_t y, uint16_t w, uint16_t h, const uint16_t* src);  // render and rotate
-    bool TFT_DSI::renderRGBA8888(int16_t x, int16_t y, uint16_t w, uint16_t h, const uint8_t* src); // render and rotata
+    bool renderRGB565(int16_t x, int16_t y, uint16_t w, uint16_t h, const uint16_t* src);  // render and rotate
+    bool renderRGBA8888(int16_t x, int16_t y, uint16_t w, uint16_t h, const uint8_t* src); // render and rotata
 
     //-------------------------------------------------------------------------------------------------------------------
     inline void mapRotation(uint8_t rot, size_t srcX, size_t srcY, size_t& dstX, size_t& dstY) {

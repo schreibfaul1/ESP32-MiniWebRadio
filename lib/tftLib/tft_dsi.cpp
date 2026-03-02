@@ -2338,25 +2338,25 @@ bool TFT_DSI::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, 
 
     // --- Clipping auf Display ---
     if (x >= m_h_res || y >= m_v_res) return false;
-
     if (x + dstWidth > m_h_res) dstWidth = m_h_res - x;
-
     if (y + dstHeight > m_v_res) dstHeight = m_v_res - y;
 
     const size_t rowSize = ((bmpWidth * bpp / 8 + 3) & ~3);
 
     if (rowSize > m_ROWBUFFERSIZE) return false; // Schutz gegen zu große BMPs
 
-    for (size_t dy = 0; dy < drawHeight; ++dy) {
-        // Integer Scaling
-        const size_t srcYScaled = (dy * bmpHeight) / scaledHeight;
 
+    uint16_t* pixelBuffer = (uint16_t*)ps_malloc(drawWidth * drawHeight * 2);
+    for (size_t dy = 0; dy < drawHeight; ++dy) {
+
+        const size_t srcYScaled = (dy * bmpHeight) / scaledHeight;
         const size_t srcRow = bottomUp ? (bmpHeight - 1 - srcYScaled) : srcYScaled;
 
         bmp.seek(dataOffset + srcRow * rowSize);
         bmp.read(m_rowBuffer, rowSize);
 
         for (size_t dx = 0; dx < drawWidth; ++dx) {
+
             const size_t srcXScaled = (dx * bmpWidth) / scaledWidth;
 
             const uint8_t* pixelPtr = m_rowBuffer + srcXScaled * (bpp / 8);
@@ -2369,18 +2369,10 @@ bool TFT_DSI::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, 
                 case 32: color = bmpColor32(pixelPtr); break;
             }
 
-            size_t rotX, rotY;
-            mapRotation(m_rotation, dx + x, dy + y, rotX, rotY);
-
-            const size_t dstX = x + rotX;
-            const size_t dstY = y + rotY;
-
-            if (dstX < m_h_res && dstY < m_v_res) m_framebuffer[0][dstY * m_h_res + dstX] = color;
+            pixelBuffer[dy * drawWidth + dx] = color;
         }
     }
-
-    panelDrawBitmap(x, y, x + dstWidth, y + dstHeight, m_framebuffer[0]);
-
+    renderRGB565(x, y, drawWidth, drawHeight, pixelBuffer);
     bmp.close();
     return true;
 }
