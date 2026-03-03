@@ -31,9 +31,7 @@ class TP_GT911 {
 
     struct __attribute__((packed)) GTInfo {
         char     productId[4];
-        uint16_t fwId;
-        uint16_t xResolution;
-        uint16_t yResolution;
+        uint16_t fwId; // firmware version
         uint8_t  vendorId;
     } m_info;
 
@@ -44,11 +42,12 @@ class TP_GT911 {
     TP_GT911();
     bool     begin(TwoWire* twi, uint8_t addr, uint16_t h_resolution, uint16_t v_resolution);
     void     loop();
-    void     setVersion(uint8_t v);
     void     setRotation(uint8_t m);
     void     setMirror(bool h, bool v);
-    bool     getProductID();
+    uint16_t readXResolution();
+    uint16_t readYResolution();
     uint8_t  touched();
+    void     transform(uint16_t& x, uint16_t& y);
     GTPoint  getPoint(uint8_t num);
     GTPoint* getPoints();
     bool     readTouchPoints();
@@ -62,7 +61,6 @@ class TP_GT911 {
     int8_t   m_intPin;
     int8_t   m_rstPin;
     uint8_t  m_rotation = 0;
-    uint8_t  m_version = GT911;
     uint16_t m_touch_h_resolution = 0;
     uint16_t m_touch_v_resolution = 0;
     uint16_t m_disp_h_resolution = 0;

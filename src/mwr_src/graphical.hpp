@@ -171,6 +171,20 @@ class slider : public RegisterTable {
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
 
+    void draw() override {
+        if (!m_enabled) return;
+        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
+        // writeText(m_text);
+    }
+
+    void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
+        x = m_x;
+        y = m_y;
+        w = m_w;
+        h = m_h;
+    }
+
     bool positionXY(uint16_t x, uint16_t y) {
         if (x < m_x) return false;
         if (y < m_y) return false;
@@ -341,6 +355,21 @@ class progressbar : public RegisterTable {
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
+
+    void draw() override {
+        if (!m_enabled) return;
+        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
+        // writeText(m_text);
+    }
+
+    void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
+        x = m_x;
+        y = m_y;
+        w = m_w;
+        h = m_h;
+    }
+
     bool         positionXY(uint16_t x, uint16_t y) {
         if (x < m_x) return false;
         if (y < m_y) return false;
@@ -492,6 +521,20 @@ class textbox : public RegisterTable {
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
+
+    void draw() override {
+        if (!m_enabled) return;
+        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
+        // writeText(m_text);
+    }
+
+    void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
+        x = m_x;
+        y = m_y;
+        w = m_w;
+        h = m_h;
+    }
 
     void show() {
         m_enabled = true;
@@ -651,6 +694,20 @@ class inputbox : public RegisterTable {
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
+
+    void draw() override {
+        if (!m_enabled) return;
+        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
+        // writeText(m_text);
+    }
+
+    void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
+        x = m_x;
+        y = m_y;
+        w = m_w;
+        h = m_h;
+    }
 
     void show() {
         m_enabled = true;
@@ -868,6 +925,20 @@ class textbutton : public RegisterTable {
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
 
+    void draw() override {
+        if (!m_enabled) return;
+        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
+        // writeText(m_text);
+    }
+
+    void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
+        x = m_x;
+        y = m_y;
+        w = m_w;
+        h = m_h;
+    }
+
     void show() {
         m_enabled = true;
         m_clicked = false;
@@ -1079,6 +1150,20 @@ class selectbox : public RegisterTable {
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
+
+    void draw() override {
+        if (!m_enabled) return;
+        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
+        // writeText(m_text);
+    }
+
+    void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
+        x = m_x;
+        y = m_y;
+        w = m_w;
+        h = m_h;
+    }
 
     void show() {
         m_txt_select->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
@@ -1361,6 +1446,20 @@ class keyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
+
+    void draw() override {
+        if (!m_enabled) return;
+        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
+        // writeText(m_text);
+    }
+
+    void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
+        x = m_x;
+        y = m_y;
+        w = m_w;
+        h = m_h;
+    }
 
     void show() {
         m_enabled = true;
@@ -1694,6 +1793,20 @@ class wifiSettings : public RegisterTable {
 
     bool isEnabled() { return m_enabled; }
 
+    void draw() override {
+        if (!m_enabled) return;
+        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
+        // writeText(m_text);
+    }
+
+    void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
+        x = m_x;
+        y = m_y;
+        w = m_w;
+        h = m_h;
+    }
+
     void show() {
         m_in_password->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
         m_sel_ssid->show();
@@ -1904,6 +2017,20 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
 
+    void draw() override {
+        if (!m_enabled) return;
+        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
+        // writeText(m_text);
+    }
+
+    void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
+        x = m_x;
+        y = m_y;
+        w = m_w;
+        h = m_h;
+    }
+
     void show() {
         m_enabled = true;
         if (m_saveBackground) getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
@@ -2025,6 +2152,20 @@ class button1state : public RegisterTable { // click button
     ps_ptr<char> getName() { return m_name; }
     void         enable() { m_enabled = true; }
     bool         isEnabled() { return m_enabled; }
+
+    void draw() override {
+        if (!m_enabled) return;
+        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
+        // writeText(m_text);
+    }
+
+    void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
+        x = m_x;
+        y = m_y;
+        w = m_w;
+        h = m_h;
+    }
 
     void show(bool inactive = false) {
         m_clicked = false;
@@ -2168,7 +2309,22 @@ class button2state : public RegisterTable { // on off switch
     ps_ptr<char> getName() { return m_name; }
     void         enable() { m_enabled = true; }
     bool         isEnabled() { return m_enabled; }
-    void         show() {
+
+    void draw() override {
+        if (!m_enabled) return;
+        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
+        // writeText(m_text);
+    }
+
+    void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
+        x = m_x;
+        y = m_y;
+        w = m_w;
+        h = m_h;
+    }
+
+    void show() {
         m_clicked = false;
         if (m_active) {
             if (m_state)
@@ -2316,6 +2472,20 @@ class numbersBox : public RegisterTable { // range 000...999
     }
     ps_ptr<char> getName() { return m_name; }
 
+    void draw() override {
+        if (!m_enabled) return;
+        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
+        // writeText(m_text);
+    }
+
+    void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
+        x = m_x;
+        y = m_y;
+        w = m_w;
+        h = m_h;
+    }
+
     bool show(uint16_t color) {
         if (color == TFT_BLUE)
             m_color = "blue";
@@ -2431,6 +2601,20 @@ class offTimerBox : public RegisterTable { // range 000...999
         m_enabled = false;
     }
     ps_ptr<char> getName() { return m_name; }
+
+    void draw() override {
+        if (!m_enabled) return;
+        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
+        // writeText(m_text);
+    }
+
+    void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
+        x = m_x;
+        y = m_y;
+        w = m_w;
+        h = m_h;
+    }
 
     bool show(uint16_t time) {
         if (!time)
@@ -2565,6 +2749,20 @@ class pictureBox : public RegisterTable {
     ps_ptr<char> getName() { return m_name; }
 
     bool isEnabled() { return m_enabled; }
+
+    void draw() override {
+        if (!m_enabled) return;
+        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
+        // writeText(m_text);
+    }
+
+    void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
+        x = m_x;
+        y = m_y;
+        w = m_w;
+        h = m_h;
+    }
 
     bool show() {
         int x = m_x + m_padding_left + m_image_x;
@@ -2717,6 +2915,20 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
+
+    void draw() override {
+        if (!m_enabled) return;
+        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
+        // writeText(m_text);
+    }
+
+    void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
+        x = m_x;
+        y = m_y;
+        w = m_w;
+        h = m_h;
+    }
 
     void show(bool inactive = false) {
         m_clicked = false;
@@ -2930,6 +3142,20 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
+
+    void draw() override {
+        if (!m_enabled) return;
+        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
+        // writeText(m_text);
+    }
+
+    void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
+        x = m_x;
+        y = m_y;
+        w = m_w;
+        h = m_h;
+    }
 
     void show(bool inactive = false) {
         m_clicked = false;
@@ -3178,6 +3404,20 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
+
+    void draw() override {
+        if (!m_enabled) return;
+        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
+        // writeText(m_text);
+    }
+
+    void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
+        x = m_x;
+        y = m_y;
+        w = m_w;
+        h = m_h;
+    }
 
     void show(bool inactive = false) {
         m_clicked = false;
@@ -3760,6 +4000,20 @@ class dlnaList : public RegisterTable {
 
     bool isEnabled() { return m_enabled; }
 
+    void draw() override {
+        if (!m_enabled) return;
+        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
+        // writeText(m_text);
+    }
+
+    void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
+        x = m_x;
+        y = m_y;
+        w = m_w;
+        h = m_h;
+    }
+
     void show(int8_t number, const std::deque<DLNA_Client::dlnaServer>& dlnaServer, const std::deque<DLNA_Client::srvItem>& srvContent, uint8_t* dlnaLevel, int16_t maxItems, int16_t maxServers) {
         m_browseOnRelease = DLNA_NONE;
         m_dlnaServer = &dlnaServer;
@@ -4323,7 +4577,22 @@ class fileList : public RegisterTable {
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
-    void         show(ps_ptr<char> cur_AudioFolder, uint16_t curAudioFileNr) {
+
+    void draw() override {
+        if (!m_enabled) return;
+        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
+        // writeText(m_text);
+    }
+
+    void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
+        x = m_x;
+        y = m_y;
+        w = m_w;
+        h = m_h;
+    }
+
+    void show(ps_ptr<char> cur_AudioFolder, uint16_t curAudioFileNr) {
         m_browseOnRelease = 0;
         m_clicked = false;
         m_enabled = true;
@@ -4702,7 +4971,22 @@ class stationsList : public RegisterTable {
     void         currentStationNr(uint16_t* curStationNr) { m_curSstationNr = curStationNr; }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
-    void         show() {
+
+    void draw() override {
+        if (!m_enabled) return;
+        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
+        // writeText(m_text);
+    }
+
+    void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
+        x = m_x;
+        y = m_y;
+        w = m_w;
+        h = m_h;
+    }
+
+    void show() {
         m_clicked = false;
         m_enabled = true;
         m_browseOnRelease = 0;
@@ -4933,6 +5217,20 @@ class vuMeter : public RegisterTable {
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
 
+    void draw() override {
+        if (!m_enabled) return;
+        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
+        // writeText(m_text);
+    }
+
+    void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
+        x = m_x;
+        y = m_y;
+        w = m_w;
+        h = m_h;
+    }
+
     void show() {
         m_enabled = true;
         m_clicked = false;
@@ -5104,7 +5402,7 @@ class displayHeader : public RegisterTable {
         uint8_t  pb = 0;
     } const s_time; // time object
     //------------------------------------------------------------------------------------------------------------------------------------------------
-#elifdef TFT_LAYOUT_M                           // 480 x 320px
+#elifdef TFT_LAYOUT_M  // 480 x 320px
     //------------------------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
     struct w_i {
         uint16_t x = 0;
@@ -5147,7 +5445,7 @@ class displayHeader : public RegisterTable {
         uint8_t  pb = 0;
     } const s_time; // time object
     //------------------------------------------------------------------------------------------------------------------------------------------------
-#elifdef TFT_LAYOUT_L                          // 800 x 480px
+#elifdef TFT_LAYOUT_L  // 800 x 480px
     //------------------------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
     struct w_i {
         uint16_t x = 0;
@@ -5269,6 +5567,20 @@ class displayHeader : public RegisterTable {
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
+
+    void draw() override {
+        if (!m_enabled) return;
+        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
+        // writeText(m_text);
+    }
+
+    void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
+        x = m_x;
+        y = m_y;
+        w = m_w;
+        h = m_h;
+    }
 
     void show() {
         if (m_backgroundTransparency) {
@@ -5492,7 +5804,7 @@ class displayFooter : public RegisterTable {
         uint8_t  pb = 0;
     } const s_IPaddr;
     //-----------------------------------------------------------------------------------------------------------------------------------
-#elifdef TFT_LAYOUT_M                           // 480 x 320px
+#elifdef TFT_LAYOUT_M  // 480 x 320px
     //-----------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
     struct w_a {
         uint16_t x = 1;
@@ -5559,7 +5871,7 @@ class displayFooter : public RegisterTable {
         uint8_t  pb = 0;
     } const s_IPaddr;
     //-----------------------------------------------------------------------------------------------------------------------------------
-#elifdef TFT_LAYOUT_L                          // 800 x 480px
+#elifdef TFT_LAYOUT_L  // 800 x 480px
     //-----------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
     struct w_a {
         uint16_t x = 0;
@@ -5747,6 +6059,20 @@ class displayFooter : public RegisterTable {
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
+
+    void draw() override {
+        if (!m_enabled) return;
+        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
+        // writeText(m_text);
+    }
+
+    void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
+        x = m_x;
+        y = m_y;
+        w = m_w;
+        h = m_h;
+    }
 
     void show() {
         if (m_backgroundTransparency)
@@ -6016,6 +6342,25 @@ class messageBox : public RegisterTable {
     void         disable() { m_enabled = false; }
     void         setBGcolor(uint32_t color) { m_bgColor = color; }
 
+    void show() {
+        txt_msgBox->setTransparency(m_backgroundTransparency, m_saveBackground);
+        txt_msgBox->show();
+    }
+
+    void draw() override {
+        if (!m_enabled) return;
+        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
+        // writeText(m_text);
+    }
+
+    void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
+        x = m_x;
+        y = m_y;
+        w = m_w;
+        h = m_h;
+    }
+
     void setText(ps_ptr<char> txt, bool narrow = false, bool noWrap = true) { // prepare a text, wait of show() to write it
         m_text = txt;
         m_narrow = narrow;
@@ -6023,11 +6368,6 @@ class messageBox : public RegisterTable {
         txt_msgBox->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
         txt_msgBox->setFont(0); // auto
         txt_msgBox->setText(m_text.c_get(), m_narrow, m_noWrap);
-    }
-
-    void show() {
-        txt_msgBox->setTransparency(m_backgroundTransparency, m_saveBackground);
-        txt_msgBox->show();
     }
 
     void setTransparency(bool backgroundTransparency, bool saveBackground) {

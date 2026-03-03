@@ -1219,8 +1219,6 @@ void set_display_items(){
     getTP().setMirror(TP_H_MIRROR, TP_V_MIRROR);
 #elifdef TP_MODE_GT911 // GT911
     getTP().begin(&i2cBusOne, GT911_I2C_ADDRESS, s_h_resolution, s_v_resolution);
-    getTP().getProductID();
-    getTP().setVersion(TP_GT911::GT911);
     getTP().setRotation(TP_ROTATION);
     getTP().setMirror(TP_H_MIRROR, TP_V_MIRROR);
 #elifdef TP_MODE_FT6X63// FT6x36
