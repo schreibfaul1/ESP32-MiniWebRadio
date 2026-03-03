@@ -340,6 +340,16 @@ void TFT_DSI::setRotation(uint8_t r) {
     if (m_rotation == -1) m_rotation = 3;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+uint16_t TFT_DSI::logicalWidth() const {
+    if (m_rotation & 1) return m_v_res;
+    return m_h_res;
+}
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+uint16_t TFT_DSI::logicalHeight() const {
+    if (m_rotation & 1) return m_h_res;
+    return m_v_res;
+}
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool TFT_DSI::renderRGB565(int16_t x, int16_t y, uint16_t w, uint16_t h, const uint16_t* rgb, const uint8_t* alpha) {
     if (!rgb || w == 0 || h == 0) return false;
 
@@ -814,39 +824,29 @@ void TFT_DSI::fillCircle(int16_t cx, int16_t cy, uint16_t r, uint16_t color) {
 bool TFT_DSI::copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
     if (w == 0 || h == 0) return false;
 
-    int32_t minX = m_h_res;
-    int32_t minY = m_v_res;
-    int32_t maxX = -1;
-    int32_t maxY = -1;
+    uint16_t lw = logicalWidth();
+    uint16_t lh = logicalHeight();
+
+    if (x >= lw || y >= lh) return false;
+
+    if (x + w > lw) w = lw - x;
+
+    if (y + h > lh) h = lh - y;
 
     for (uint16_t row = 0; row < h; ++row) {
         for (uint16_t col = 0; col < w; ++col) {
-            int32_t srcX = x + col;
-            int32_t srcY = y + row;
+            int32_t physX, physY;
 
-            if (srcX < 0 || srcY < 0) continue;
+            // 🔥 rotate here only
+            mapRotation(m_rotation, x + col, y + row, physX, physY);
 
-            if (srcX >= m_h_res || srcY >= m_v_res) continue;
+            if (physX < 0 || physY < 0 || physX >= m_h_res || physY >= m_v_res) continue;
 
-            int32_t dstX, dstY;
-            mapRotation(m_rotation, srcX, srcY, dstX, dstY);
-
-            if (dstX < 0 || dstY < 0) continue;
-
-            if (dstX >= m_h_res || dstY >= m_v_res) continue;
-
-            uint16_t pixel = m_framebuffer[source][srcY * m_h_res + srcX];
-
-            m_framebuffer[destination][dstY * m_h_res + dstX] = pixel;
-
-            if (dstX < minX) minX = dstX;
-            if (dstY < minY) minY = dstY;
-            if (dstX > maxX) maxX = dstX;
-            if (dstY > maxY) maxY = dstY;
+            m_framebuffer[destination][physY * m_h_res + physX] = m_framebuffer[source][physY * m_h_res + physX];
         }
     }
 
-    if (destination == 0 && maxX >= minX && maxY >= minY) { panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]); }
+    if (destination == 0) panelDrawBitmap(0, 0, m_h_res, m_v_res, m_framebuffer[0]);
 
     return true;
 }

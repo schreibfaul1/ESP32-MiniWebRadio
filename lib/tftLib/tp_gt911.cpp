@@ -224,15 +224,18 @@ void TP_GT911::transform(uint16_t& x, uint16_t& y) {
     uint16_t touch_w = m_touch_h_resolution;
     uint16_t touch_h = m_touch_v_resolution;
 
-    // 1️⃣ Mirror im nativen Raum
+    // 1️⃣ Mirror in native space
     if (m_mirror_h) x = touch_w - 1 - x;
     if (m_mirror_v) y = touch_h - 1 - y;
 
     uint16_t xr = x;
     uint16_t yr = y;
 
-    // 2️⃣ Rotation im nativen Raum
-    switch (m_rotation) {
+    int8_t r = m_rotation + 1;
+    if (r == 4) r = 0;
+
+    // 2️⃣ Rotation in native space
+    switch (r) {
         case 0: // 0°
             break;
 
@@ -254,7 +257,7 @@ void TP_GT911::transform(uint16_t& x, uint16_t& y) {
             break;
     }
 
-    // 3️⃣ Skalierung
+    // 3️⃣ Scale
     x = (uint32_t)xr * (m_disp_h_resolution - 1) / (touch_w - 1);
     y = (uint32_t)yr * (m_disp_v_resolution - 1) / (touch_h - 1);
 }
@@ -268,9 +271,6 @@ TP_GT911::GTPoint TP_GT911::getPoint(uint8_t num) {
     m_points[num].x = constrain(x, 0, m_disp_h_resolution - 1);
     m_points[num].y = constrain(y, 0, m_disp_v_resolution - 1);
 
-    if (m_mirror_h) m_points[num].x = m_touch_h_resolution - m_points[num].x;
-    if (m_mirror_v) m_points[num].y = m_touch_v_resolution - m_points[num].y;
-
     transform(x, y);
 
     m_points[num].x = x;
@@ -281,8 +281,6 @@ TP_GT911::GTPoint TP_GT911::getPoint(uint8_t num) {
 TP_GT911::GTPoint* TP_GT911::getPoints() {
     uint16_t x = 0, y = 0;
     for (uint8_t num = 0; num < GT911_MAX_CONTACTS; num++) {
-        if (m_mirror_h) m_points[num].x = m_touch_h_resolution - m_points[num].x;
-        if (m_mirror_v) m_points[num].y = m_touch_v_resolution - m_points[num].y;
 
         transform(x, y);
 

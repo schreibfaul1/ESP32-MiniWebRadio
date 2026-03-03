@@ -161,6 +161,8 @@ class TFT_DSI {
     void     clearVsyncCounter() { m_vsyncCounter = 0; }
     void     begin(const Timing& newTiming);
     void     setRotation(uint8_t r);
+    uint16_t logicalWidth() const;
+    uint16_t logicalHeight() const;
     void     setDisplayInversion(bool i);
     // Recommended Non-Transaction
     void            drawLine(int16_t Xpos0, int16_t Ypos0, int16_t Xpos1, int16_t Ypos1, uint16_t color);
