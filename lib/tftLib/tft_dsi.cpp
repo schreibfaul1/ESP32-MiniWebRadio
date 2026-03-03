@@ -811,9 +811,44 @@ void TFT_DSI::fillCircle(int16_t cx, int16_t cy, uint16_t r, uint16_t color) {
     if (maxX > minX && maxY > minY) panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_DSI::copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
-    for (uint16_t j = y; j < y + h; j++) { memcpy(m_framebuffer[destination] + j * m_h_res + x, m_framebuffer[source] + j * m_h_res + x, w * 2); }
-    if (destination == 0) panelDrawBitmap(x, y, x + w, y + h, m_framebuffer[0]); // just draw when copied in fb0
+bool TFT_DSI::copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
+    if (w == 0 || h == 0) return false;
+
+    int32_t minX = m_h_res;
+    int32_t minY = m_v_res;
+    int32_t maxX = -1;
+    int32_t maxY = -1;
+
+    for (uint16_t row = 0; row < h; ++row) {
+        for (uint16_t col = 0; col < w; ++col) {
+            int32_t srcX = x + col;
+            int32_t srcY = y + row;
+
+            if (srcX < 0 || srcY < 0) continue;
+
+            if (srcX >= m_h_res || srcY >= m_v_res) continue;
+
+            int32_t dstX, dstY;
+            mapRotation(m_rotation, srcX, srcY, dstX, dstY);
+
+            if (dstX < 0 || dstY < 0) continue;
+
+            if (dstX >= m_h_res || dstY >= m_v_res) continue;
+
+            uint16_t pixel = m_framebuffer[source][srcY * m_h_res + srcX];
+
+            m_framebuffer[destination][dstY * m_h_res + dstX] = pixel;
+
+            if (dstX < minX) minX = dstX;
+            if (dstY < minY) minY = dstY;
+            if (dstX > maxX) maxX = dstX;
+            if (dstY > maxY) maxY = dstY;
+        }
+    }
+
+    if (destination == 0 && maxX >= minX && maxY >= minY) { panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]); }
+
+    return true;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_DSI::readRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t* data) {
