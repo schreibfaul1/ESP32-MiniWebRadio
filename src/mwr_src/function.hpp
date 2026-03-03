@@ -3,10 +3,10 @@
 #pragma once
 
 #ifdef TFT_MODE_SPI // ⏹⏹⏹⏹
-extern TFT_SPI tft(spiBus, TFT_CS);
-#elifdef TFT_MODE_RGB
+extern TFT_SPI tft;
+#elif defined (TFT_MODE_RGB)
 extern TFT_RGB tft;
-#elifdef TFT_MODE_DSI
+#elif defined (TFT_MODE_DSI)
 extern TFT_DSI tft;
 #endif
 

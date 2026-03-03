@@ -201,29 +201,11 @@ class TFT_DSI {
     int8_t                    m_rotation = 0;
     bool                      m_refresh = false;
     bool                      m_invert = false;
+    const uint16_t            m_ROWBUFFERSIZE = 4096;
+    uint8_t*                  m_rowBuffer = nullptr;
 
-    //-------------------------------------------------------------------------------------------------------------------
-    inline void mapRotation(uint8_t rot, size_t srcX, size_t srcY, size_t& dstX, size_t& dstY) {
-        switch (rot & 3) {
-            default:
-            case 0: // 0°
-                dstX = srcX;
-                dstY = srcY;
-                break;
-            case 1: // 90° CW
-                dstX = m_h_res - 1 - srcY;
-                dstY = srcX;
-                break;
-            case 2: // 180°
-                dstX = m_v_res - 1 - srcX;
-                dstY = m_h_res - 1 - srcY;
-                break;
-            case 3: // 270° CW
-                dstX = srcY;
-                dstY = m_v_res - 1 - srcX;
-                break;
-        }
-    }
+    bool renderRGB565(int16_t x, int16_t y, uint16_t w, uint16_t h, const uint16_t* rgb, const uint8_t* alpha);  // render and rotate
+    inline void mapRotation(uint8_t rot, int32_t srcX, int32_t srcY, int32_t& dstX, int32_t& dstY) const;
     //-------------------------------------------------------------------------------------------------------------------
 
   private:
@@ -445,6 +427,7 @@ class TFT_DSI {
     uint16_t       m_jpgHeight = 0;
     uint16_t       m_jpgWidthMax = 0;
     uint16_t       m_jpgHeightMax = 0;
+    uint16_t*      m_jpegPixelBuffer = nullptr;
 
   public:
     void    JPEG_setJpgScale(uint8_t scale);

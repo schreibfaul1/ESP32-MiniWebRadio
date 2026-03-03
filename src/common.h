@@ -691,13 +691,12 @@ inline void SerialPrintflnCut(const char* item, const char* color, const char* s
     }
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-#if TFT_CONTROLLER < 7 // ⏹⏹⏹⏹
+#ifdef TFT_MODE_SPI // ⏹⏹⏹⏹
 extern TFT_SPI tft;
-#elif TFT_CONTROLLER == 7
+#elif defined (TFT_MODE_RGB)
 extern TFT_RGB tft;
-#elif (TFT_CONTROLLER == 8 || TFT_CONTROLLER == 9)
+#elif defined (TFT_MODE_DSI)
 extern TFT_DSI tft;
-#else
 #endif
 
 inline void x_ps_free(char** b) {

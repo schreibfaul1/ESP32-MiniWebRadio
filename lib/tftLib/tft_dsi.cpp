@@ -33,6 +33,7 @@ void TFT_DSI::begin(const Timing& newTiming) {
     m_timing = newTiming;
     m_h_res = m_timing.h_res;
     m_v_res = m_timing.v_res;
+    m_rowBuffer = (uint8_t*)ps_malloc(m_ROWBUFFERSIZE);
 
     // --------------------------------------------------
     // 1. Acquire Channel
@@ -339,57 +340,153 @@ void TFT_DSI::setRotation(uint8_t r) {
     if (m_rotation == -1) m_rotation = 3;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+bool TFT_DSI::renderRGB565(int16_t x, int16_t y, uint16_t w, uint16_t h, const uint16_t* rgb, const uint8_t* alpha) {
+    if (!rgb || w == 0 || h == 0) return false;
+
+    int32_t minX = m_h_res;
+    int32_t minY = m_v_res;
+    int32_t maxX = -1;
+    int32_t maxY = -1;
+
+    for (uint16_t row = 0; row < h; ++row) {
+        for (uint16_t col = 0; col < w; ++col) {
+            int32_t srcX = x + col;
+            int32_t srcY = y + row;
+
+            int32_t dstX, dstY;
+            mapRotation(m_rotation, srcX, srcY, dstX, dstY);
+
+            if (dstX < 0 || dstY < 0) continue;
+
+            if (dstX >= m_h_res || dstY >= m_v_res) continue;
+
+            const size_t fbIndex = dstY * m_h_res + dstX;
+            const size_t srcIndex = row * w + col;
+
+            uint16_t newColor = rgb[srcIndex];
+
+            if (alpha) {
+                uint8_t a = alpha[srcIndex];
+
+                if (a == 0) continue;
+
+                if (a < 255) {
+                    uint16_t old = m_framebuffer[0][fbIndex];
+                    uint16_t invA = 255 - a;
+
+                    uint8_t r = ((newColor >> 11) & 0x1F) << 3;
+                    uint8_t g = ((newColor >> 5) & 0x3F) << 2;
+                    uint8_t b = (newColor & 0x1F) << 3;
+
+                    uint8_t oldR = ((old >> 11) & 0x1F) << 3;
+                    uint8_t oldG = ((old >> 5) & 0x3F) << 2;
+                    uint8_t oldB = (old & 0x1F) << 3;
+
+                    r = (r * a + oldR * invA + 128) >> 8;
+                    g = (g * a + oldG * invA + 128) >> 8;
+                    b = (b * a + oldB * invA + 128) >> 8;
+
+                    newColor = ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
+                }
+            }
+
+            m_framebuffer[0][fbIndex] = newColor;
+
+            if (dstX < minX) minX = dstX;
+            if (dstY < minY) minY = dstY;
+            if (dstX > maxX) maxX = dstX;
+            if (dstY > maxY) maxY = dstY;
+        }
+    }
+
+    if (maxX >= minX && maxY >= minY) { panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]); }
+
+    return true;
+}
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+inline void TFT_DSI::mapRotation(uint8_t rot, int32_t srcX, int32_t srcY, int32_t& dstX, int32_t& dstY) const {
+    switch (rot & 3) {
+        case 0:
+            dstX = srcX;
+            dstY = srcY;
+            break;
+
+        case 1: // 90° CW
+            dstX = m_h_res - 1 - srcY;
+            dstY = srcX;
+            break;
+
+        case 2: // 180°
+            dstX = m_h_res - 1 - srcX;
+            dstY = m_v_res - 1 - srcY;
+            break;
+
+        case 3: // 270° CW
+            dstX = srcY;
+            dstY = m_v_res - 1 - srcX;
+            break;
+    }
+}
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_DSI::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color) {
-    // Calculate differences
     int16_t dx = abs(x1 - x0);
     int16_t dy = abs(y1 - y0);
 
-    // Determine directions
     int16_t sx = (x0 < x1) ? 1 : -1;
     int16_t sy = (y0 < y1) ? 1 : -1;
 
-    int16_t err = dx - dy; // Fehlerterm
+    int16_t err = dx - dy;
+
+    size_t minX = m_h_res;
+    size_t minY = m_v_res;
+    size_t maxX = 0;
+    size_t maxY = 0;
 
     while (true) {
-        // Set point in framebuffer if within bounds
-        if (x0 >= 0 && x0 < m_h_res && y0 >= 0 && y0 < m_v_res) { m_framebuffer[0][y0 * m_h_res + x0] = color; }
+        int32_t rotX, rotY;
+        mapRotation(m_rotation, x0, y0, rotX, rotY);
 
-        // Wenn Endpunkt erreicht, beenden
+        if (rotX < m_h_res && rotY < m_v_res) {
+            m_framebuffer[0][rotY * m_h_res + rotX] = color;
+
+            if (rotX < minX) minX = rotX;
+            if (rotY < minY) minY = rotY;
+            if (rotX > maxX) maxX = rotX;
+            if (rotY > maxY) maxY = rotY;
+        }
+
         if (x0 == x1 && y0 == y1) break;
 
-        // Add error term twice and correct errors
-        int16_t e2 = err * 2;
+        int16_t e2 = err << 1;
+
         if (e2 > -dy) {
             err -= dy;
             x0 += sx;
         }
+
         if (e2 < dx) {
             err += dx;
             y0 += sy;
         }
     }
 
-    // Update on the display (only the drawn area)
-    int16_t update_x0 = std::min(x0, x1);
-    int16_t update_y0 = std::min(y0, y1);
-    int16_t update_x1 = std::max(x0, x1) + 1;
-    int16_t update_y1 = std::max(y0, y1) + 1;
-    panelDrawBitmap(update_x0, update_y0, update_x1, update_y1, m_framebuffer[0]);
+    if (maxX > minX && maxY > minY) panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_DSI::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
-    // Clipping: Rechteck-Koordinaten auf den Framebuffer-Bereich beschränken
-    int16_t x0 = max((int16_t)0, x);
-    int16_t y0 = max((int16_t)0, y);
-    int16_t x1 = min((int)m_h_res, x + w); // Rechte Grenze
-    int16_t y1 = min((int)m_v_res, y + h); // Untere Grenze
-    // Zeichnen des Rechtecks nur im gültigen Bereich
-    for (int16_t j = y0; j < y1; ++j) {     // Zeilen iterieren
-        for (int16_t i = x0; i < x1; ++i) { // Spalten iterieren
-            m_framebuffer[0][j * m_h_res + i] = color;
-        }
-    }
-    panelDrawBitmap(x0, y0, x1, y1, m_framebuffer[0]);
+    if (w <= 0 || h <= 0) return;
+
+    // Optional: grobes Clipping gegen Displaygrenzen
+    if (x >= m_h_res || y >= m_v_res) return;
+
+    if (x + w < 0 || y + h < 0) return;
+
+    // Lokaler Line-Buffer auf dem Stack
+    uint16_t lineBuffer[w];
+
+    for (int16_t i = 0; i < w; ++i) lineBuffer[i] = color;
+
+    for (int16_t row = 0; row < h; ++row) { renderRGB565(x, y + row, w, 1, lineBuffer, nullptr); }
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_DSI::fillScreen(uint16_t color) {
@@ -398,53 +495,13 @@ void TFT_DSI::fillScreen(uint16_t color) {
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_DSI::drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color) {
-
-    auto drawLine = [](int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color, uint16_t* m_framebuffer[0], uint16_t m_h_res) {
-        // Bresenham-Algorithmus für Linien
-        int16_t dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
-        int16_t dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
-        int16_t err = dx + dy, e2; // Fehlerwert
-
-        while (true) {
-            m_framebuffer[0][y0 * m_h_res + x0] = color; // Pixel setzen
-            if (x0 == x1 && y0 == y1) break;
-            e2 = 2 * err;
-            if (e2 >= dy) {
-                err += dy;
-                x0 += sx;
-            }
-            if (e2 <= dx) {
-                err += dx;
-                y0 += sy;
-            }
-        }
-    };
-
-    // Zeichne die drei Linien des Dreiecks
-    drawLine(x0, y0, x1, y1, color, &m_framebuffer[0], m_h_res); // Linie von Punkt 0 nach Punkt 1
-    drawLine(x1, y1, x2, y2, color, &m_framebuffer[0], m_h_res); // Linie von Punkt 1 nach Punkt 2
-    drawLine(x2, y2, x0, y0, color, &m_framebuffer[0], m_h_res); // Linie von Punkt 2 nach Punkt 0
-
-    // Aktualisierung des gezeichneten Bereichs
-    int16_t x_min = std::min({x0, x1, x2});
-    int16_t y_min = std::min({y0, y1, y2});
-    int16_t x_max = std::max({x0, x1, x2});
-    int16_t y_max = std::max({y0, y1, y2});
-    panelDrawBitmap(x_min, y_min, x_max + 1, y_max + 1, m_framebuffer[0]);
+    drawLine(x0, y0, x1, y1, color);
+    drawLine(x1, y1, x2, y2, color);
+    drawLine(x2, y2, x0, y0, color);
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_DSI::fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color) {
-    // Helferfunktion zum Zeichnen einer horizontalen Linie
-    auto drawHorizontalLine = [&](int16_t x_start, int16_t x_end, int16_t y) {
-        if (y >= 0 && y < m_v_res) { // Clipping in y-Richtung
-            if (x_start > x_end) std::swap(x_start, x_end);
-            x_start = std::max((int16_t)0, x_start); // Clipping in x-Richtung
-            x_end = std::min((int16_t)(m_h_res - 1), x_end);
-            for (int16_t x = x_start; x <= x_end; ++x) { m_framebuffer[0][y * m_h_res + x] = color; }
-        }
-    };
-
-    // Punkte nach ihrer y-Koordinate sortieren
+    // Sort vertices by y
     if (y0 > y1) {
         std::swap(y0, y1);
         std::swap(x0, x1);
@@ -458,213 +515,220 @@ void TFT_DSI::fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16
         std::swap(x0, x1);
     }
 
-    // Variablen zur Begrenzung des aktualisierten Bereichs
-    int16_t x_min = std::min({x0, x1, x2});
-    int16_t x_max = std::max({x0, x1, x2});
-    int16_t y_min = std::min({y0, y1, y2});
-    int16_t y_max = std::max({y0, y1, y2});
+    size_t minX = m_h_res;
+    size_t minY = m_v_res;
+    size_t maxX = 0;
+    size_t maxY = 0;
 
-    // Clipping auf Framebuffer-Grenzen
-    x_min = std::max((int16_t)0, x_min);
-    x_max = std::min((int16_t)(m_h_res - 1), x_max);
-    y_min = std::max((int16_t)0, y_min);
-    y_max = std::min((int16_t)(m_v_res - 1), y_max);
+    auto drawSpan = [&](int16_t xs, int16_t xe, int16_t y) {
+        if (xs > xe) std::swap(xs, xe);
 
-    // Dreieck in zwei Teile zerlegen (oben und unten)
-    if (y1 == y2) { // Sonderfall: flaches unteres Dreieck
-        for (int16_t y = y0; y <= y1; ++y) {
-            int16_t x_start = x0 + (x1 - x0) * (y - y0) / (y1 - y0);
-            int16_t x_end = x0 + (x2 - x0) * (y - y0) / (y2 - y0);
-            drawHorizontalLine(x_start, x_end, y);
-        }
-    } else if (y0 == y1) { // Sonderfall: flaches oberes Dreieck
-        for (int16_t y = y0; y <= y2; ++y) {
-            int16_t x_start = x0 + (x2 - x0) * (y - y0) / (y2 - y0);
-            int16_t x_end = x1 + (x2 - x1) * (y - y1) / (y2 - y1);
-            drawHorizontalLine(x_start, x_end, y);
-        }
-    } else {                                 // Allgemeiner Fall: Dreieck wird in zwei Teile aufgeteilt
-        for (int16_t y = y0; y <= y1; ++y) { // Unterer Teil
-            int16_t x_start = x0 + (x1 - x0) * (y - y0) / (y1 - y0);
-            int16_t x_end = x0 + (x2 - x0) * (y - y0) / (y2 - y0);
-            drawHorizontalLine(x_start, x_end, y);
-        }
-        for (int16_t y = y1; y <= y2; ++y) { // Oberer Teil
-            int16_t x_start = x1 + (x2 - x1) * (y - y1) / (y2 - y1);
-            int16_t x_end = x0 + (x2 - x0) * (y - y0) / (y2 - y0);
-            drawHorizontalLine(x_start, x_end, y);
-        }
-    }
+        for (int16_t x = xs; x <= xe; ++x) {
+            int32_t rotX, rotY;
+            mapRotation(m_rotation, x, y, rotX, rotY);
 
-    // Aktualisierung nur des geänderten Bereichs
-    panelDrawBitmap(x_min, y_min, x_max + 1, y_max + 1, m_framebuffer[0]);
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_DSI::drawRect(int16_t Xpos, int16_t Ypos, uint16_t Width, uint16_t Height, uint16_t Color) {
-    if (Xpos < 0 || Xpos >= m_h_res || Ypos < 0 || Ypos >= m_v_res) return;
-    if (Width == 0 || Height == 0) return;
-    if (Width > m_h_res - Xpos) Width = m_h_res - Xpos;
-    if (Height > m_v_res - Ypos) Height = m_v_res - Ypos;
+            if (rotX >= m_h_res || rotY >= m_v_res) continue;
 
-    auto drawLine = [](int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color, uint16_t* fb, uint16_t m_h_res) {
-        // Bresenham-Algorithmus für Linien
-        int16_t dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
-        int16_t dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
-        int16_t err = dx + dy, e2; // Fehlerwert
+            m_framebuffer[0][rotY * m_h_res + rotX] = color;
 
-        while (true) {
-            fb[y0 * m_h_res + x0] = color; // Pixel setzen
-            if (x0 == x1 && y0 == y1) break;
-            e2 = 2 * err;
-            if (e2 >= dy) {
-                err += dy;
-                x0 += sx;
-            }
-            if (e2 <= dx) {
-                err += dx;
-                y0 += sy;
-            }
+            if (rotX < minX) minX = rotX;
+            if (rotY < minY) minY = rotY;
+            if (rotX > maxX) maxX = rotX;
+            if (rotY > maxY) maxY = rotY;
         }
     };
 
-    // Zeichne die vier Linien des Rechtecks
-    drawLine(Xpos, Ypos, Xpos + Width - 1, Ypos, Color, m_framebuffer[0], m_h_res);                           // Oben
-    drawLine(Xpos + Width - 1, Ypos, Xpos + Width - 1, Ypos + Height - 1, Color, m_framebuffer[0], m_h_res);  // Rechts
-    drawLine(Xpos, Ypos + Height - 1, Xpos + Width - 1, Ypos + Height - 1, Color, m_framebuffer[0], m_h_res); // Unten
-    drawLine(Xpos, Ypos + Height - 1, Xpos, Ypos, Color, m_framebuffer[0], m_h_res);                          // Links
+    if (y1 == y2) // flat-bottom
+    {
+        for (int16_t y = y0; y <= y1; ++y) {
+            int16_t xa = x0 + (x1 - x0) * (y - y0) / (y1 - y0);
+            int16_t xb = x0 + (x2 - x0) * (y - y0) / (y2 - y0);
+            drawSpan(xa, xb, y);
+        }
+    } else if (y0 == y1) // flat-top
+    {
+        for (int16_t y = y0; y <= y2; ++y) {
+            int16_t xa = x0 + (x2 - x0) * (y - y0) / (y2 - y0);
+            int16_t xb = x1 + (x2 - x1) * (y - y1) / (y2 - y1);
+            drawSpan(xa, xb, y);
+        }
+    } else {
+        for (int16_t y = y0; y <= y1; ++y) {
+            int16_t xa = x0 + (x1 - x0) * (y - y0) / (y1 - y0);
+            int16_t xb = x0 + (x2 - x0) * (y - y0) / (y2 - y0);
+            drawSpan(xa, xb, y);
+        }
 
-    // Aktualisierung des gezeichneten Bereichs
-    int16_t x0 = std::min((int)Xpos, Xpos + Width);
-    int16_t y0 = std::min((int)Ypos, Ypos + Height);
-    int16_t x1 = std::max((int)Xpos, Xpos + Width);
-    int16_t y1 = std::max((int)Ypos, Ypos + Height);
+        for (int16_t y = y1; y <= y2; ++y) {
+            int16_t xa = x1 + (x2 - x1) * (y - y1) / (y2 - y1);
+            int16_t xb = x0 + (x2 - x0) * (y - y0) / (y2 - y0);
+            drawSpan(xa, xb, y);
+        }
+    }
 
-    panelDrawBitmap(x0, y0, x1, y1, m_framebuffer[0]);
+    if (maxX > minX && maxY > minY) panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
+}
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_DSI::drawRect(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t color) {
+    if (w == 0 || h == 0) return;
+
+    drawLine(x, y, x + w - 1, y, color);                 // Top
+    drawLine(x + w - 1, y, x + w - 1, y + h - 1, color); // Right
+    drawLine(x + w - 1, y + h - 1, x, y + h - 1, color); // Bottom
+    drawLine(x, y + h - 1, x, y, color);                 // Left
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_DSI::drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color) {
-    // Helferfunktion: Kreislinie für die Ecken berechnen
-    auto drawCircleQuadrant = [&](int16_t cx, int16_t cy, int16_t r, uint8_t quadrant) {
-        int16_t f = 1 - r;
-        int16_t ddF_x = 1;
-        int16_t ddF_y = -2 * r;
-        int16_t x = 0;
-        int16_t y = r;
+    if (w <= 0 || h <= 0 || r <= 0) return;
 
-        while (x <= y) {
-            if (quadrant & 0x1) m_framebuffer[0][(cy - y) * m_h_res + (cx + x)] = color; // oben rechts
-            if (quadrant & 0x2) m_framebuffer[0][(cy + y) * m_h_res + (cx + x)] = color; // unten rechts
-            if (quadrant & 0x4) m_framebuffer[0][(cy + y) * m_h_res + (cx - x)] = color; // unten links
-            if (quadrant & 0x8) m_framebuffer[0][(cy - y) * m_h_res + (cx - x)] = color; // oben links
+    if (r > w / 2) r = w / 2;
+    if (r > h / 2) r = h / 2;
 
-            if (quadrant & 0x10) m_framebuffer[0][(cy - x) * m_h_res + (cx + y)] = color; // oben rechts (90° gedreht)
-            if (quadrant & 0x20) m_framebuffer[0][(cy + x) * m_h_res + (cx + y)] = color; // unten rechts (90° gedreht)
-            if (quadrant & 0x40) m_framebuffer[0][(cy + x) * m_h_res + (cx - y)] = color; // unten links (90° gedreht)
-            if (quadrant & 0x80) m_framebuffer[0][(cy - x) * m_h_res + (cx - y)] = color; // oben links (90° gedreht)
+    // Gerade Linien
+    drawLine(x + r, y, x + w - r - 1, y, color);                 // top
+    drawLine(x + r, y + h - 1, x + w - r - 1, y + h - 1, color); // bottom
+    drawLine(x, y + r, x, y + h - r - 1, color);                 // left
+    drawLine(x + w - 1, y + r, x + w - 1, y + h - r - 1, color); // right
 
-            if (f >= 0) {
-                y--;
-                ddF_y += 2;
-                f += ddF_y;
-            }
-            x++;
-            ddF_x += 2;
-            f += ddF_x;
+    // Midpoint circle algorithm (nur Pixel setzen via mapRotation)
+    int16_t f = 1 - r;
+    int16_t ddF_x = 1;
+    int16_t ddF_y = -2 * r;
+    int16_t cx = 0;
+    int16_t cy = r;
+
+    while (cx <= cy) {
+        auto plot = [&](int16_t px, int16_t py) {
+            int32_t rotX, rotY;
+            mapRotation(m_rotation, px, py, rotX, rotY);
+
+            if (rotX < m_h_res && rotY < m_v_res) m_framebuffer[0][rotY * m_h_res + rotX] = color;
+        };
+
+        // 4 Ecken
+        plot(x + w - r - 1 + cx, y + r - cy); // top-right
+        plot(x + w - r - 1 + cy, y + r - cx);
+
+        plot(x + w - r - 1 + cx, y + h - r - 1 + cy); // bottom-right
+        plot(x + w - r - 1 + cy, y + h - r - 1 + cx);
+
+        plot(x + r - cx, y + h - r - 1 + cy); // bottom-left
+        plot(x + r - cy, y + h - r - 1 + cx);
+
+        plot(x + r - cx, y + r - cy); // top-left
+        plot(x + r - cy, y + r - cx);
+
+        if (f >= 0) {
+            cy--;
+            ddF_y += 2;
+            f += ddF_y;
         }
-    };
 
-    // Rechteckseiten zeichnen (ohne die abgerundeten Ecken)
-    for (int16_t i = x + r; i < x + w - r; i++) {            // Obere und untere horizontale Linien
-        m_framebuffer[0][y * m_h_res + i] = color;           // Oben
-        m_framebuffer[0][(y + h - 1) * m_h_res + i] = color; // Unten
-    }
-    for (int16_t i = y + r; i < y + h - r; i++) {            // Linke und rechte vertikale Linien
-        m_framebuffer[0][i * m_h_res + x] = color;           // Links
-        m_framebuffer[0][i * m_h_res + (x + w - 1)] = color; // Rechts
+        cx++;
+        ddF_x += 2;
+        f += ddF_x;
     }
 
-    // Abgerundete Ecken zeichnen
-    drawCircleQuadrant(x + w - r - 1, y + r, r, 0x1 | 0x10);         // Oben rechts
-    drawCircleQuadrant(x + w - r - 1, y + h - r - 1, r, 0x2 | 0x20); // Unten rechts
-    drawCircleQuadrant(x + r, y + h - r - 1, r, 0x4 | 0x40);         // Unten links
-    drawCircleQuadrant(x + r, y + r, r, 0x8 | 0x80);                 // Oben links
-
-    // Aktualisierung des gezeichneten Bereichs
-    panelDrawBitmap(x, y, x + w, y + h, m_framebuffer[0]);
+    // A common refresh (rotated bounding box optionally computable)
+    panelDrawBitmap(0, 0, m_h_res, m_v_res, m_framebuffer[0]);
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_DSI::fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color) {
-    // Helferfunktion: Kreisfüllung für die Ecken berechnen
-    auto fillCircleQuadrant = [&](int16_t cx, int16_t cy, int16_t r, uint8_t quadrant) {
-        int16_t f = 1 - r;
-        int16_t ddF_x = 1;
-        int16_t ddF_y = -2 * r;
-        int16_t x = 0;
-        int16_t y = r;
+    if (w <= 0 || h <= 0) return;
 
-        while (x <= y) {
-            for (int16_t i = 0; i <= x; i++) {
-                if (quadrant & 0x1) m_framebuffer[0][(cy - y) * m_h_res + (cx + i)] = color; // oben rechts
-                if (quadrant & 0x2) m_framebuffer[0][(cy + y) * m_h_res + (cx + i)] = color; // unten rechts
-                if (quadrant & 0x4) m_framebuffer[0][(cy + y) * m_h_res + (cx - i)] = color; // unten links
-                if (quadrant & 0x8) m_framebuffer[0][(cy - y) * m_h_res + (cx - i)] = color; // oben links
-            }
-            for (int16_t i = 0; i <= y; i++) {
-                if (quadrant & 0x10) m_framebuffer[0][(cy - x) * m_h_res + (cx + i)] = color; // oben rechts (gedreht)
-                if (quadrant & 0x20) m_framebuffer[0][(cy + x) * m_h_res + (cx + i)] = color; // unten rechts (gedreht)
-                if (quadrant & 0x40) m_framebuffer[0][(cy + x) * m_h_res + (cx - i)] = color; // unten links (gedreht)
-                if (quadrant & 0x80) m_framebuffer[0][(cy - x) * m_h_res + (cx - i)] = color; // oben links (gedreht)
-            }
+    if (r > w / 2) r = w / 2;
+    if (r > h / 2) r = h / 2;
 
-            if (f >= 0) {
-                y--;
-                ddF_y += 2;
-                f += ddF_y;
-            }
-            x++;
-            ddF_x += 2;
-            f += ddF_x;
-        }
+    size_t minX = m_h_res;
+    size_t minY = m_v_res;
+    size_t maxX = 0;
+    size_t maxY = 0;
+
+    auto plot = [&](int16_t px, int16_t py) {
+        int32_t rotX, rotY;
+        mapRotation(m_rotation, px, py, rotX, rotY);
+
+        if (rotX >= m_h_res || rotY >= m_v_res) return;
+
+        m_framebuffer[0][rotY * m_h_res + rotX] = color;
+
+        if (rotX < minX) minX = rotX;
+        if (rotY < minY) minY = rotY;
+        if (rotX > maxX) maxX = rotX;
+        if (rotY > maxY) maxY = rotY;
     };
 
-    // Horizontale Bereiche zwischen den oberen und unteren Viertelkreisen füllen
-    for (int16_t i = y; i < y + r; i++) { // Bereich oberhalb der Viertelkreise
-        for (int16_t j = x + r; j < x + w - r; j++) { m_framebuffer[0][i * m_h_res + j] = color; }
-    }
-    for (int16_t i = y + h - r; i < y + h; i++) { // Bereich unterhalb der Viertelkreise
-        for (int16_t j = x + r; j < x + w - r; j++) { m_framebuffer[0][i * m_h_res + j] = color; }
-    }
+    auto drawSpan = [&](int16_t xs, int16_t xe, int16_t py) {
+        if (xs > xe) std::swap(xs, xe);
+        for (int16_t px = xs; px <= xe; ++px) plot(px, py);
+    };
 
-    // Vertikaler Bereich zwischen den Viertelkreisen füllen
-    for (int16_t i = y + r; i < y + h - r; i++) { // Vertikaler Bereich
-        for (int16_t j = x; j < x + w; j++) {     // Horizontaler Bereich
-            m_framebuffer[0][i * m_h_res + j] = color;
+    // Mittleres Rechteck
+    for (int16_t py = y + r; py < y + h - r; ++py) drawSpan(x, x + w - 1, py);
+
+    // obere + untere Rundbereiche
+    int16_t f = 1 - r;
+    int16_t ddF_x = 1;
+    int16_t ddF_y = -2 * r;
+    int16_t cx = 0;
+    int16_t cy = r;
+
+    while (cx <= cy) {
+        // obere Rundung
+        drawSpan(x + r - cx, x + w - r - 1 + cx, y + r - cy);
+        drawSpan(x + r - cy, x + w - r - 1 + cy, y + r - cx);
+
+        // untere Rundung
+        drawSpan(x + r - cx, x + w - r - 1 + cx, y + h - r - 1 + cy);
+        drawSpan(x + r - cy, x + w - r - 1 + cy, y + h - r - 1 + cx);
+
+        if (f >= 0) {
+            cy--;
+            ddF_y += 2;
+            f += ddF_y;
         }
+
+        cx++;
+        ddF_x += 2;
+        f += ddF_x;
     }
 
-    // Viertelkreise in den Ecken füllen
-    fillCircleQuadrant(x + w - r - 1, y + r, r, 0x1 | 0x10);         // Oben rechts
-    fillCircleQuadrant(x + w - r - 1, y + h - r - 1, r, 0x2 | 0x20); // Unten rechts
-    fillCircleQuadrant(x + r, y + h - r - 1, r, 0x4 | 0x40);         // Unten links
-    fillCircleQuadrant(x + r, y + r, r, 0x8 | 0x80);                 // Oben links
-
-    // Aktualisierung des gezeichneten Bereichs
-    panelDrawBitmap(x, y, x + w, y + h, m_framebuffer[0]);
+    if (maxX > minX && maxY > minY) panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_DSI::drawCircle(int16_t cx, int16_t cy, int16_t r, uint16_t color) {
-    // Bresenham-Algorithmus für Kreise
+    if (r <= 0) return;
+
     int16_t f = 1 - r;
     int16_t ddF_x = 1;
     int16_t ddF_y = -2 * r;
     int16_t x = 0;
     int16_t y = r;
 
-    // Setze die Anfangspunkte (Symmetrieachsen)
-    m_framebuffer[0][(cy + r) * m_h_res + cx] = color; // Oben
-    m_framebuffer[0][(cy - r) * m_h_res + cx] = color; // Unten
-    m_framebuffer[0][cy * m_h_res + (cx + r)] = color; // Rechts
-    m_framebuffer[0][cy * m_h_res + (cx - r)] = color; // Links
+    size_t minX = m_h_res;
+    size_t minY = m_v_res;
+    size_t maxX = 0;
+    size_t maxY = 0;
+
+    auto plot = [&](int16_t px, int16_t py) {
+        int32_t rotX, rotY;
+        mapRotation(m_rotation, px, py, rotX, rotY);
+
+        if (rotX >= m_h_res || rotY >= m_v_res) return;
+
+        m_framebuffer[0][rotY * m_h_res + rotX] = color;
+
+        if (rotX < minX) minX = rotX;
+        if (rotY < minY) minY = rotY;
+        if (rotX > maxX) maxX = rotX;
+        if (rotY > maxY) maxY = rotY;
+    };
+
+    // Achsenpunkte
+    plot(cx, cy + r);
+    plot(cx, cy - r);
+    plot(cx + r, cy);
+    plot(cx - r, cy);
 
     while (x < y) {
         if (f >= 0) {
@@ -672,60 +736,79 @@ void TFT_DSI::drawCircle(int16_t cx, int16_t cy, int16_t r, uint16_t color) {
             ddF_y += 2;
             f += ddF_y;
         }
+
         x++;
         ddF_x += 2;
         f += ddF_x;
 
-        // Punkte in den acht Symmetrieachsen zeichnen
-        m_framebuffer[0][(cy + y) * m_h_res + (cx + x)] = color; // Quadrant 1
-        m_framebuffer[0][(cy + y) * m_h_res + (cx - x)] = color; // Quadrant 2
-        m_framebuffer[0][(cy - y) * m_h_res + (cx + x)] = color; // Quadrant 3
-        m_framebuffer[0][(cy - y) * m_h_res + (cx - x)] = color; // Quadrant 4
-        m_framebuffer[0][(cy + x) * m_h_res + (cx + y)] = color; // Quadrant 5
-        m_framebuffer[0][(cy + x) * m_h_res + (cx - y)] = color; // Quadrant 6
-        m_framebuffer[0][(cy - x) * m_h_res + (cx + y)] = color; // Quadrant 7
-        m_framebuffer[0][(cy - x) * m_h_res + (cx - y)] = color; // Quadrant 8
+        plot(cx + x, cy + y);
+        plot(cx - x, cy + y);
+        plot(cx + x, cy - y);
+        plot(cx - x, cy - y);
+        plot(cx + y, cy + x);
+        plot(cx - y, cy + x);
+        plot(cx + y, cy - x);
+        plot(cx - y, cy - x);
     }
 
-    // Aktualisierung des gezeichneten Bereichs
-    panelDrawBitmap(cx - r, cy - r, cx + r + 1, cy + r + 1, m_framebuffer[0]);
+    if (maxX > minX && maxY > minY) panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_DSI::fillCircle(int16_t Xm, int16_t Ym, uint16_t r, uint16_t color) {
-    // void TFT_DSI::drawFilledCircle(int16_t cx, int16_t cy, int16_t r, uint16_t color) {
-    //  Bresenham-Algorithmus für Kreise
+void TFT_DSI::fillCircle(int16_t cx, int16_t cy, uint16_t r, uint16_t color) {
+    if (r == 0) return;
+
     int16_t f = 1 - r;
     int16_t ddF_x = 1;
     int16_t ddF_y = -2 * r;
     int16_t x = 0;
     int16_t y = r;
 
-    // Fülle die erste vertikale Linie durch den Mittelpunkt
-    for (int16_t i = Ym - r; i <= Ym + r; i++) { m_framebuffer[0][i * m_h_res + Xm] = color; }
+    size_t minX = m_h_res;
+    size_t minY = m_v_res;
+    size_t maxX = 0;
+    size_t maxY = 0;
+
+    auto plot = [&](int16_t px, int16_t py) {
+        int32_t rotX, rotY;
+        mapRotation(m_rotation, px, py, rotX, rotY);
+
+        if (rotX >= m_h_res || rotY >= m_v_res) return;
+
+        m_framebuffer[0][rotY * m_h_res + rotX] = color;
+
+        if (rotX < minX) minX = rotX;
+        if (rotY < minY) minY = rotY;
+        if (rotX > maxX) maxX = rotX;
+        if (rotY > maxY) maxY = rotY;
+    };
+
+    auto drawSpan = [&](int16_t xs, int16_t xe, int16_t py) {
+        if (xs > xe) std::swap(xs, xe);
+        for (int16_t px = xs; px <= xe; ++px) plot(px, py);
+    };
+
+    // Mittlere vertikale Linie
+    drawSpan(cx, cx, cy - r);
+    drawSpan(cx, cx, cy + r);
 
     while (x <= y) {
-        // Fülle horizontale Linien für alle acht Symmetrieachsen
-        for (int16_t i = Xm - x; i <= Xm + x; i++) {
-            m_framebuffer[0][(Ym + y) * m_h_res + i] = color; // Unten +y
-            m_framebuffer[0][(Ym - y) * m_h_res + i] = color; // Oben -y
-        }
-        for (int16_t i = Xm - y; i <= Xm + y; i++) {
-            m_framebuffer[0][(Ym + x) * m_h_res + i] = color; // Rechts +x
-            m_framebuffer[0][(Ym - x) * m_h_res + i] = color; // Links -x
-        }
+        drawSpan(cx - x, cx + x, cy + y);
+        drawSpan(cx - x, cx + x, cy - y);
+        drawSpan(cx - y, cx + y, cy + x);
+        drawSpan(cx - y, cx + y, cy - x);
 
         if (f >= 0) {
             y--;
             ddF_y += 2;
             f += ddF_y;
         }
+
         x++;
         ddF_x += 2;
         f += ddF_x;
     }
 
-    // Aktualisierung des gezeichneten Bereichs
-    panelDrawBitmap(Xm - r, Ym - r, Xm + r + 1, Ym + r + 1, m_framebuffer[0]);
+    if (maxX > minX && maxY > minY) panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_DSI::copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
@@ -1556,38 +1639,60 @@ void TFT_DSI::setFont(uint16_t font) {
 //    ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫    T E X T    ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ *
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_DSI::writeTheFramebuffer(const uint8_t* bmi, uint16_t posX, uint16_t posY, uint16_t width, uint16_t height) {
+    if (!bmi || width == 0 || height == 0) return;
 
-    auto bitreader = [&](const uint8_t* bm) { // lambda
-        static uint16_t       bmi = 0;
-        static uint8_t        idx = 0;
-        static const uint8_t* bitmap = NULL;
+    auto bitreader = [&](const uint8_t* bm) {
+        static uint16_t       byteIndex = 0;
+        static uint8_t        bitMask = 0;
+        static const uint8_t* bitmap = nullptr;
+
         if (bm) {
             bitmap = bm;
-            idx = 0x80;
-            bmi = 0;
+            byteIndex = 0;
+            bitMask = 0x80;
             return (int32_t)0;
         }
-        bool bit = *(bitmap + bmi) & idx;
-        idx >>= 1;
-        if (idx == 0) {
-            bmi++;
-            idx = 0x80;
+
+        bool bit = bitmap[byteIndex] & bitMask;
+
+        bitMask >>= 1;
+        if (bitMask == 0) {
+            bitMask = 0x80;
+            byteIndex++;
         }
-        if (bit) { return (int32_t)m_textColor; }
-        return (int32_t)-1; // _backColor, -1 is transparent
+
+        return bit ? (int32_t)m_textColor : (int32_t)-1;
     };
 
     bitreader(bmi);
 
-    for (int16_t j = posY; j < posY + height; j++) {
-        for (int16_t i = posX; i < posX + width; i++) {
-            int32_t color = bitreader(0);
-            if (color == -1) { continue; }
-            m_framebuffer[0][j * m_h_res + i] = color;
+    uint16_t* rgbBuffer = (uint16_t*)ps_malloc(width * height * sizeof(uint16_t));
+
+    uint8_t* alphaBuffer = (uint8_t*)ps_malloc(width * height);
+
+    if (!rgbBuffer || !alphaBuffer) return;
+
+    for (uint16_t row = 0; row < height; row++) {
+        for (uint16_t col = 0; col < width; col++) {
+
+            int32_t color = bitreader(nullptr);
+
+            size_t idx = row * width + col;
+
+            if (color == -1) {
+                rgbBuffer[idx] = 0;
+                alphaBuffer[idx] = 0; // transparent
+            } else {
+                rgbBuffer[idx] = (uint16_t)color;
+                alphaBuffer[idx] = 255;
+            }
         }
     }
-    if (width == 0 || height == 0) return; // nothing to draw
-    panelDrawBitmap(posX, posY, posX + width, posY + height, m_framebuffer[0]);
+
+    renderRGB565(posX, posY, width, height, rgbBuffer, alphaBuffer);
+
+    free(rgbBuffer);
+    free(alphaBuffer);
 }
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // The function is passed a string and two arrays of length strlen(str + 1). This is definitely enough, since ANSI sequences or non-ASCII UTF-8 characters are always greater than 1.
@@ -2213,48 +2318,31 @@ exit:
     #define bmpColor32(c) (((uint16_t)(((uint8_t*)(c))[3] & 0xF8) << 8) | ((uint16_t)(((uint8_t*)(c))[2] & 0xFC) << 3) | ((((uint8_t*)(c))[1] & 0xF8) >> 3))
 
 bool TFT_DSI::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight, float scale) {
-    if (scale <= 0) {
-        log_e("Invalid scale value: %f", scale);
-        return false;
-    }
+    if (scale <= 0.0f) return false;
 
-    if (!fs.exists(path)) {
-        log_e("file %s does not exist", path);
-        return false;
-    }
+    if (!fs.exists(path)) return false;
 
-    File bmp_file = fs.open(path);
-    if (!bmp_file) {
-        log_e("Failed to open file for reading: %s", path);
-        return false;
-    }
+    File bmp = fs.open(path);
+    if (!bmp) return false;
 
-    constexpr size_t headerLen = 0x36; // BMP-Header-Größe
-    uint8_t          headerBuf[headerLen];
+    constexpr size_t headerLen = 54;
+    uint8_t          header[headerLen];
 
-    if (bmp_file.size() < headerLen || bmp_file.read(headerBuf, headerLen) < headerLen) {
-        log_e("Failed to read the file's header");
-        bmp_file.close();
-        return false;
-    }
+    if (bmp.read(header, headerLen) != headerLen) return false;
 
-    if (headerBuf[0] != 'B' || headerBuf[1] != 'M') {
-        log_e("Invalid BMP file format");
-        bmp_file.close();
-        return false;
-    }
+    if (header[0] != 'B' || header[1] != 'M') return false;
 
-    const uint32_t dataOffset = bmpRead32(headerBuf, 0x0A);
-    const int32_t  bmpWidthI = bmpRead32(headerBuf, 0x12);
-    const int32_t  bmpHeightI = bmpRead32(headerBuf, 0x16);
-    const uint16_t bitsPerPixel = bmpRead16(headerBuf, 0x1C);
-    const uint32_t compression = bmpRead32(headerBuf, 0x1E);
+    const uint32_t dataOffset = bmpRead32(header, 0x0A);
+    const int32_t  bmpWidthI = bmpRead32(header, 0x12);
+    const int32_t  bmpHeightI = bmpRead32(header, 0x16);
+    const uint16_t bpp = bmpRead16(header, 0x1C);
+    const uint32_t compression = bmpRead32(header, 0x1E);
 
-    if (compression != 0) {
-        log_e("Compressed BMP files are not supported");
-        bmp_file.close();
-        return false;
-    }
+    if (compression != 0) return false;
+
+    if (!(bpp == 16 || bpp == 24 || bpp == 32)) return false;
+
+    const bool bottomUp = (bmpHeightI > 0);
 
     const size_t bmpWidth = abs(bmpWidthI);
     const size_t bmpHeight = abs(bmpHeightI);
@@ -2262,63 +2350,50 @@ bool TFT_DSI::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, 
     const size_t scaledWidth = bmpWidth * scale;
     const size_t scaledHeight = bmpHeight * scale;
 
-    // Wenn maxWidth oder maxHeight 0 ist, wird der Wert ignoriert
-    const size_t effectiveMaxWidth = (maxWidth == 0) ? scaledWidth : maxWidth;
-    const size_t effectiveMaxHeight = (maxHeight == 0) ? scaledHeight : maxHeight;
+    const size_t drawWidth = (maxWidth == 0) ? scaledWidth : std::min((size_t)maxWidth, scaledWidth);
+    const size_t drawHeight = (maxHeight == 0) ? scaledHeight : std::min((size_t)maxHeight, scaledHeight);
 
-    // Begrenzen der tatsächlichen Darstellungsgröße auf den verfügbaren Ausschnitt
-    const size_t displayWidth = std::min(effectiveMaxWidth, scaledWidth);
-    const size_t displayHeight = std::min(effectiveMaxHeight, scaledHeight);
+    size_t dstWidth = (m_rotation & 1) ? drawHeight : drawWidth;
+    size_t dstHeight = (m_rotation & 1) ? drawWidth : drawHeight;
 
-    const size_t rowSize = ((bmpWidth * bitsPerPixel / 8 + 3) & ~3);
-    uint8_t*     rowBuffer = new uint8_t[rowSize];
+    // --- Clipping auf Display ---
+    if (x >= m_h_res || y >= m_v_res) return false;
+    if (x + dstWidth > m_h_res) dstWidth = m_h_res - x;
+    if (y + dstHeight > m_v_res) dstHeight = m_v_res - y;
 
-    for (size_t i_y = 0; i_y < displayHeight; ++i_y) {
-        const float  srcY = i_y / scale;
-        const size_t srcRow = bmpHeight - 1 - (size_t)srcY;
+    const size_t rowSize = ((bmpWidth * bpp / 8 + 3) & ~3);
 
-        if (srcRow >= bmpHeight) continue;
+    if (rowSize > m_ROWBUFFERSIZE) return false; // Schutz gegen zu große BMPs
 
-        bmp_file.seek(dataOffset + srcRow * rowSize);
-        if (bmp_file.read(rowBuffer, rowSize) != rowSize) {
-            log_e("Failed to read BMP row data");
-            delete[] rowBuffer;
-            bmp_file.close();
-            return false;
-        }
+    uint16_t* pixelBuffer = (uint16_t*)ps_malloc(drawWidth * drawHeight * 2);
+    for (size_t dy = 0; dy < drawHeight; ++dy) {
 
-        for (size_t i_x = 0; i_x < displayWidth; ++i_x) {
-            const float  srcX = i_x / scale;
-            const size_t srcCol = (size_t)srcX;
+        const size_t srcYScaled = (dy * bmpHeight) / scaledHeight;
+        const size_t srcRow = bottomUp ? (bmpHeight - 1 - srcYScaled) : srcYScaled;
 
-            if (srcCol >= bmpWidth) continue;
+        bmp.seek(dataOffset + srcRow * rowSize);
+        bmp.read(m_rowBuffer, rowSize);
 
-            const uint8_t* pixelPtr = rowBuffer + srcCol * (bitsPerPixel / 8);
-            uint16_t       color;
+        for (size_t dx = 0; dx < drawWidth; ++dx) {
 
-            switch (bitsPerPixel) {
+            const size_t srcXScaled = (dx * bmpWidth) / scaledWidth;
+
+            const uint8_t* pixelPtr = m_rowBuffer + srcXScaled * (bpp / 8);
+
+            uint16_t color = 0;
+
+            switch (bpp) {
                 case 16: color = bmpColor16(pixelPtr); break;
                 case 24: color = bmpColor24(pixelPtr); break;
                 case 32: color = bmpColor32(pixelPtr); break;
-                default:
-                    log_e("Unsupported bitsPerPixel: %d", bitsPerPixel);
-                    delete[] rowBuffer;
-                    bmp_file.close();
-                    return false;
             }
 
-            const size_t xPos = x + i_x;
-            const size_t yPos = y + i_y;
-
-            if (xPos < m_h_res && yPos < m_v_res) { m_framebuffer[0][yPos * m_h_res + xPos] = color; }
+            pixelBuffer[dy * drawWidth + dx] = color;
         }
     }
-
-    delete[] rowBuffer;
-    bmp_file.close();
-
-    // Nur den betroffenen Bereich auf dem Display aktualisieren
-    panelDrawBitmap(x, y, x + displayWidth, y + displayHeight, m_framebuffer[0]);
+    renderRGB565(x, y, drawWidth, drawHeight, pixelBuffer, NULL);
+    bmp.close();
+    free(pixelBuffer);
     return true;
 }
 
@@ -2697,43 +2772,43 @@ uint8_t TFT_DSI::GIF_readPlainTextExtension(char* buf) {
 
 uint8_t TFT_DSI::GIF_readApplicationExtension(char* buf) {
 
-    //     7 6 5 4 3 2 1 0        Field Name                    Type
-    //    +---------------+
-    // 0  |               |       Block Size                    Byte
-    //    +---------------+
-    // 1  |               |
-    //    +-             -+
-    // 2  |               |
-    //    +-             -+
-    // 3  |               |       Application Identifier        8 Bytes
-    //    +-             -+
-    // 4  |               |
-    //    +-             -+
-    // 5  |               |
-    //    +-             -+
-    // 6  |               |
-    //    +-             -+
-    // 7  |               |
-    //    +-             -+
-    // 8  |               |
-    //    +---------------+
-    // 9  |               |
-    //    +-             -+
+    //      7 6 5 4 3 2 1 0        Field Name                    Type
+    //     +---------------+
+    // 0   |               |       Block Size                    Byte
+    //     +---------------+
+    // 1   |               |
+    //     +-             -+
+    // 2   |               |
+    //     +-             -+
+    // 3   |               |       Application Identifier        8 Bytes
+    //     +-             -+
+    // 4   |               |
+    //     +-             -+
+    // 5   |               |
+    //     +-             -+
+    // 6   |               |
+    //     +-             -+
+    // 7   |               |
+    //     +-             -+
+    // 8   |               |
+    //     +---------------+
+    // 9   |               |
+    //     +-             -+
     // 10  |               |       Appl. Authentication Code     3 Bytes
-    //    +-             -+
+    //     +-             -+
     // 11  |               |
-    //    +---------------+
+    //     +---------------+
     //
-    //    +===============+
-    //    |               |
-    //    |               |       Application Data              Data Sub-blocks
-    //    |               |
-    //    |               |
-    //    +===============+
+    //     +===============+
+    //     |               |
+    //     |               |       Application Data              Data Sub-blocks
+    //     |               |
+    //     |               |
+    //     +===============+
     //
-    //    +---------------+
-    // 0  |               |       Block Terminator              Byte
-    //    +---------------+
+    //     +---------------+
+    // 0   |               |       Block Terminator              Byte
+    //     +---------------+
 
     uint8_t BlockSize = 0, numBytes = 0;
     BlockSize = gif_file.read();
@@ -2748,15 +2823,15 @@ uint8_t TFT_DSI::GIF_readApplicationExtension(char* buf) {
 uint8_t TFT_DSI::GIF_readCommentExtension(char* buf) {
 
     //    7 6 5 4 3 2 1 0        Field Name                    Type
-    //  +===============+
-    //  |               |
+    //   +===============+
+    //   |               |
     // N |               |       Comment Data                  Data Sub-blocks
-    //  |               |
-    //  +===============+
+    //   |               |
+    //   +===============+
     //
-    //  +---------------+
+    //   +---------------+
     // 0 |               |       Block Terminator              Byte
-    //  +---------------+
+    //   +---------------+
 
     uint8_t numBytes = 0;
     numBytes = GIF_readDataSubBlock(buf);
@@ -3091,22 +3166,34 @@ bool TFT_DSI::GIF_ReadImage(uint16_t x, uint16_t y) {
         }
     }
 
-    // Copy from gif_imagebuffer in m framebuffer (only part of the current picture)
-    for (uint16_t row = 0; row < gif.ImageHeight; row++) {
-        for (uint16_t col = 0; col < gif.ImageWidth; col++) {
-            uint16_t fb_x = xpos + col;
-            uint16_t fb_y = ypos + row;
+    // --- Build contiguous RGB565 block for this frame ---
+
+    const uint16_t frameW = gif.ImageWidth;
+    const uint16_t frameH = gif.ImageHeight;
+
+    uint16_t* pixelBuffer = (uint16_t*)ps_malloc(frameW * frameH * sizeof(uint16_t));
+
+    if (!pixelBuffer) return false;
+
+    for (uint16_t row = 0; row < frameH; row++) {
+        for (uint16_t col = 0; col < frameW; col++) {
 
             uint16_t buf_x = gif.ImageLeftPosition + col;
             uint16_t buf_y = gif.ImageTopPosition + row;
 
-            if (fb_x < m_h_res && fb_y < m_v_res && buf_x < gif.LogicalScreenWidth && buf_y < gif.LogicalScreenHeight) {
-                m_framebuffer[0][fb_y * m_h_res + fb_x] = gif_ImageBuffer[buf_y * gif.LogicalScreenWidth + buf_x];
+            if (buf_x >= gif.LogicalScreenWidth || buf_y >= gif.LogicalScreenHeight) {
+                pixelBuffer[row * frameW + col] = 0x0000;
+                continue;
             }
+
+            pixelBuffer[row * frameW + col] = gif_ImageBuffer[buf_y * gif.LogicalScreenWidth + buf_x];
         }
     }
 
-    panelDrawBitmap(xpos, ypos, xpos + gif.ImageWidth, ypos + gif.ImageHeight, m_framebuffer[0]);
+    // --- Unified render path ---
+    renderRGB565(xpos, ypos, frameW, frameH, pixelBuffer, NULL);
+
+    free(pixelBuffer);
 
     return true;
 }
@@ -3241,11 +3328,16 @@ bool TFT_DSI::drawJpgFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, 
         return false;
     }
     JPEG_getSdJpgSize(&m_jpgWidth, &m_jpgHeight);
-    int res = JPEG_drawSdJpg(x, y);
+    m_jpegPixelBuffer = (uint16_t*)ps_calloc(m_jpgWidth * m_jpgHeight, 2);
+
+    int res = JPEG_drawSdJpg(0, 0);
     (void)res;
     // log_w("path %s, res %i, x %i, y %i, m_jpgWidth %i, m_jpgHeight %i", path, res, x, y, m_jpgWidth, m_jpgHeight);
     m_jpgSdFile.close();
-    panelDrawBitmap(x, y, x + m_jpgWidth, y + m_jpgHeight, m_framebuffer[0]);
+
+    renderRGB565(x, y, m_jpgWidth, m_jpgHeight, m_jpegPixelBuffer, NULL);
+
+    free(m_jpegPixelBuffer);
     return true;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -3299,25 +3391,18 @@ int TFT_DSI::JPEG_jd_output(JDEC* jdec, void* bitmap, JRECT* jrect) {
 bool TFT_DSI::JPEG_tft_output(int16_t blockX, int16_t blockY, uint16_t w, uint16_t h, uint16_t* bitmap) {
     if (!bitmap || w == 0 || h == 0) return false;
 
+    // Write MCU block into linear JPEG pixel buffer (no rotation!)
     for (uint16_t localY = 0; localY < h; ++localY) {
         for (uint16_t localX = 0; localX < w; ++localX) {
-            // 1. Calculate absolute image coordinates
-            int32_t srcX = blockX + localX;
-            int32_t srcY = blockY + localY;
 
-            // 2. Rotate
-            size_t dstX = 0;
-            size_t dstY = 0;
-            mapRotation(m_rotation, srcX, srcY, dstX, dstY);
+            int32_t dstX = blockX + localX;
+            int32_t dstY = blockY + localY;
 
-            // 3. Security check (Framebuffer Bounds)
-            if (dstX >= m_h_res || dstY >= m_v_res) continue;
+            if (dstX >= m_jpgWidth || dstY >= m_jpgHeight) continue;
 
-            // 4. Write pixel
-            m_framebuffer[0][dstY * m_h_res + dstX] = bitmap[localY * w + localX];
+            m_jpegPixelBuffer[dstY * m_jpgWidth + dstX] = bitmap[localY * w + localX];
         }
     }
-
     return true;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -5365,63 +5450,30 @@ void TFT_DSI::png_rgb16btouint32(uint32_t* dst, png_s_rgb16b* src) {
     memcpy(dst, src, sizeof(png_s_rgb16b));
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_DSI::png_draw_into_Framebuffer(uint16_t x, uint16_t y, uint16_t w, uint16_t h, char* rgbaBuffer, uint32_t png_outbuff_size, uint8_t png_format) {
+void TFT_DSI::png_draw_into_Framebuffer(uint16_t x, uint16_t y, uint16_t w, uint16_t h, char* rgbaBuffer, uint32_t, uint8_t) {
+    if (!rgbaBuffer || w == 0 || h == 0) return;
 
-    for (int row = 0; row < h; row++) {
-        for (int col = 0; col < w; col++) {
-            // Berechne die Zielposition im Framebuffer
-            uint16_t screen_x = x + col;
-            uint16_t screen_y = y + row;
+    uint16_t* rgbBuffer = (uint16_t*)ps_malloc(w * h * sizeof(uint16_t));
 
-            // Prüfe, ob das Pixel innerhalb des Bildschirms liegt
-            if (screen_x >= m_h_res || screen_y >= m_v_res) { continue; }
+    uint8_t* alphaBuffer = (uint8_t*)ps_malloc(w * h);
 
-            // Berechne den Index im RGBA-Buffer (basierend auf Bildbreite w)
-            int rgbaIndex = (row * w + col) * 4; // 4 Bytes pro Pixel (RGBA)
+    if (!rgbBuffer || !alphaBuffer) return;
 
-            uint8_t r = rgbaBuffer[rgbaIndex];     // Rot (8 Bit)
-            uint8_t g = rgbaBuffer[rgbaIndex + 1]; // Grün (8 Bit)
-            uint8_t b = rgbaBuffer[rgbaIndex + 2]; // Blau (8 Bit)
-            uint8_t a = rgbaBuffer[rgbaIndex + 3]; // Alpha (8 Bit)
+    for (uint32_t i = 0; i < w * h; i++) {
+        uint8_t r = rgbaBuffer[i * 4 + 0];
+        uint8_t g = rgbaBuffer[i * 4 + 1];
+        uint8_t b = rgbaBuffer[i * 4 + 2];
+        uint8_t a = rgbaBuffer[i * 4 + 3];
 
-            if (a == 0) {
-                // Falls Alpha 0 ist → Pixel bleibt unverändert
-                continue;
-            }
+        rgbBuffer[i] = ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
 
-            // Berechne den Framebuffer-Index mit x- und y-Versatz
-            int fbIndex = screen_y * m_h_res + screen_x;
-
-            if (a < 255) {
-                // **Alpha-Blending mit vorhandenem Framebuffer-Wert**
-
-                // 1. read old color from framebuffer
-                uint16_t oldColor = m_framebuffer[0][fbIndex];
-
-                // 2. convert old color back into RGB888
-                uint8_t oldR = ((oldColor >> 11) & 0x1F) << 3;
-                uint8_t oldG = ((oldColor >> 5) & 0x3F) << 2;
-                uint8_t oldB = (oldColor & 0x1F) << 3;
-
-                // 3. calculate new color with alpha blending
-                uint8_t newR = ((r * a) + (oldR * (255 - a))) / 255;
-                uint8_t newG = ((g * a) + (oldG * (255 - a))) / 255;
-                uint8_t newB = ((b * a) + (oldB * (255 - a))) / 255;
-
-                // 4. Convert new color back into RGB565
-                m_framebuffer[0][fbIndex] = ((newR >> 3) << 11) | // 8->5 Bit (red)
-                                            ((newG >> 2) << 5) |  // 8->6 Bit (green)
-                                            (newB >> 3);          // 8->5 Bit (blue)
-            } else {
-                // **Normal RGB565 conversion (no blending necessary, full opacity)**
-                m_framebuffer[0][fbIndex] = ((r >> 3) << 11) | // 8->5 Bit (red)
-                                            ((g >> 2) << 5) |  // 8->6 Bit (green)
-                                            (b >> 3);          // 8->5 Bit (blue)
-            }
-        }
+        alphaBuffer[i] = a;
     }
-    // Only draw the changed area
-    panelDrawBitmap(x, y, x + w, y + h, m_framebuffer[0]);
+
+    renderRGB565(x, y, w, h, rgbBuffer, alphaBuffer);
+
+    free(rgbBuffer);
+    free(alphaBuffer);
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 #endif // CONFIG_IDF_TARGET_ESP32P4
