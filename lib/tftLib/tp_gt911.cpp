@@ -26,6 +26,10 @@ bool TP_GT911::begin(TwoWire* twi, uint8_t addr, uint16_t h_resolution, uint16_t
                     m_disp_h_resolution, m_disp_v_resolution);
             if (tp_info) tp_info(buff);
         }
+        else {
+            sprintf(buff, "TP resolution " ANSI_ESC_CYAN "%dx%d" ANSI_ESC_RESET, m_touch_h_resolution, m_touch_v_resolution);
+            if (tp_info) tp_info(buff);
+        }
         m_touch_h_resolution = m_info.xResolution;
         m_touch_v_resolution = m_info.yResolution;
         return true;
@@ -55,9 +59,9 @@ void TP_GT911::setVersion(uint8_t v) {
                    // case 4: m_version = TP_ILI2510; break; // ILI9488
                    // case 5: m_version = TP_FT5406; break; // FT5446, FT6336U
     }
-    char buff[64] = {0};
-    sprintf(buff, "TP resolution " ANSI_ESC_CYAN "%dx%d" ANSI_ESC_RESET, m_touch_h_resolution, m_touch_v_resolution);
-    if (tp_info) tp_info(buff);
+    // char buff[64] = {0};
+    // sprintf(buff, "TP resolution " ANSI_ESC_CYAN "%dx%d" ANSI_ESC_RESET, m_touch_h_resolution, m_touch_v_resolution);
+    // if (tp_info) tp_info(buff);
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 void TP_GT911::loop() {
@@ -67,7 +71,7 @@ void TP_GT911::loop() {
     uint8_t         t = touched(); // number of touch points
     if (t == 1 && !m_f_isTouch) {
         p = getPoint(0);
-        // log_w("X: %d, Y: %d", p.x, p.y);
+        log_w("X: %d, Y: %d", p.x, p.y);
         if (tp_pressed) tp_pressed(p.x, p.y);
         ts = millis();
         m_f_isTouch = true;
