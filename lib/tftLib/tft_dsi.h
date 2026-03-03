@@ -205,7 +205,7 @@ class TFT_DSI {
     uint8_t*                  m_rowBuffer = nullptr;
 
     bool renderRGB565(int16_t x, int16_t y, uint16_t w, uint16_t h, const uint16_t* rgb, const uint8_t* alpha);  // render and rotate
-    inline void mapRotation(uint8_t rot, int32_t srcX, int32_t srcY, size_t& dstX, size_t& dstY) const;
+    inline void mapRotation(uint8_t rot, int32_t srcX, int32_t srcY, int32_t& dstX, int32_t& dstY) const;
     //-------------------------------------------------------------------------------------------------------------------
 
   private:
