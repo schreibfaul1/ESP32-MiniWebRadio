@@ -205,16 +205,21 @@ TFT_RGB& getTFT() { return tft; }
 #elif defined TFT_MODE_DSI
 TFT_DSI tft;
 TFT_DSI& getTFT() { return tft; }
+#else
+#error "wrong TFT_CONTROLLER"
 #endif
 
 #ifdef TP_MODE_XPT2046 // ⏹⏹⏹⏹
 TP_XPT2046 tp(spiBus, TP_CS);
-#elifdef TP_MODE_GT911
+TP_XPT2046& getTP() { return tp; }
+#elif defined TP_MODE_GT911
 TP_GT911 tp;
-#elifdef TP_MODE_FT6X63
+TP_GT911& getTP() { return tp; }
+#elif defined TP_MODE_FT6X63
 FT6x36 tp;
+FT6x36& getTP() { return tp; }
 #else
-printf("wrong TP_CONTROLLER\n");
+#error "wrong TP_CONTROLLER"
 #endif
 
 stationManagement staMgnt(&s_cur_station);
@@ -1141,7 +1146,7 @@ void setup() {
         }
         ArduinoOTA.setHostname("MiniWebRadio");
         ArduinoOTA.begin();
-        ftpSrv.begin(SD_MMC, FTP_USERNAME, FTP_PASSWORD); // username, password for ftp.
+        ftpSrv.begin(SD_MMC, FTP_USERNAME, FTP_PASSWORD); // username, password for fgetTP().
         s_f_dlnaSeekServer = true;
     } else {
         s_state = UNDEFINED;
@@ -1209,21 +1214,21 @@ void set_display_items(){
 
 //---- TP_MODE ---------
 #ifdef TP_MODE_XPT2046 // XPT2046
-    tp.begin(TP_IRQ, s_h_resolution, s_v_resolution);
-    tp.setVersion(TP_CONTROLLER);
-    tp.setRotation(TP_ROTATION);
-    tp.setMirror(TP_H_MIRROR, TP_V_MIRROR);
+    getTP().begin(TP_IRQ, s_h_resolution, s_v_resolution);
+    getTP().setVersion(TP_CONTROLLER);
+    getTP().setRotation(TP_ROTATION);
+    getTP().setMirror(TP_H_MIRROR, TP_V_MIRROR);
 #elifdef TP_MODE_GT911 // GT911
-    tp.begin(&i2cBusOne, GT911_I2C_ADDRESS, s_h_resolution, s_v_resolution);
-    tp.getProductID();
-    tp.setVersion(TP_GT911::GT911);
-    tp.setRotation(TP_ROTATION);
-    tp.setMirror(TP_H_MIRROR, TP_V_MIRROR);
+    getTP().begin(&i2cBusOne, GT911_I2C_ADDRESS, s_h_resolution, s_v_resolution);
+    getTP().getProductID();
+    getTP().setVersion(TP_GT911::GT911);
+    getTP().setRotation(TP_ROTATION);
+    getTP().setMirror(TP_H_MIRROR, TP_V_MIRROR);
 #elifdef TP_MODE_FT6X63// FT6x36
-    tp.begin(&i2cBusOne, 0x38, s_h_resolution, s_v_resolution);
-    tp.get_FT6x36_items();
-    tp.setRotation(TP_ROTATION);
-    tp.setMirror(TP_H_MIRROR, TP_V_MIRROR);
+    getTP().begin(&i2cBusOne, 0x38, s_h_resolution, s_v_resolution);
+    getTP().get_FT6x36_items();
+    getTP().setRotation(TP_ROTATION);
+    getTP().setMirror(TP_H_MIRROR, TP_V_MIRROR);
 #endif
 }
 
@@ -1975,7 +1980,7 @@ void loop() {
     webSrv.loop();
     ftpSrv.handleFTP();
     ir.loop();
-    tp.loop();
+    getTP().loop();
     ArduinoOTA.handle();
     bt_emitter.loop();
     getTFT().loop();
