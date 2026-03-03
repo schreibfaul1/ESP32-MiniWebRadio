@@ -1117,7 +1117,7 @@ void setup() {
     ticker100ms.attach(0.1, timer100ms);
 
     getTFT().fillScreen(TFT_BLACK);                                                          // Clear screen
-    drawImage("/common/Wallpaper.jpg", 0, 0);                                           // Wallpaper
+    drawImage("/common/Wallpaper.jpg", 0, 0);                                                // Wallpaper
     getTFT().copyFramebuffer(0, 1, 0, 0, displayConfig.dispWidth, displayConfig.dispHeight); // copy wallpaper to background
     muteChanged(s_f_mute);
     dispFooter.setIpAddr(WiFi.localIP().toString().c_str());
