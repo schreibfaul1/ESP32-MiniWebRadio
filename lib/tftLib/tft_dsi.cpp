@@ -2260,8 +2260,8 @@ size_t TFT_DSI::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16
     if (autoSize) { nrOfLines = fitInAddrWindow(utfPosArr, strChLength, win_W, win_H, narrow, noWrap); } // choose perfect fontsize
     if (!strChLength) return 0;
     //----------------------------------------------------------------------
-    if ((win_X + win_W) > logicalHeight()) { win_W = logicalWidth() - win_X; } // Limit, right edge of the display
-    if ((win_Y + win_H) > logicalWidth()) { win_H = logicalHeight() - win_Y; } // Limit, bottom of the display
+    if ((win_X + win_W) > logicalWidth()) { win_W = logicalWidth() - win_X; } // Limit, right edge of the display
+    if ((win_Y + win_H) > logicalHeight()) { win_H = logicalHeight() - win_Y; } // Limit, bottom of the display
 
     idx = 0;
     uint16_t pX = win_X;
@@ -2394,9 +2394,9 @@ bool TFT_DSI::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, 
     size_t dstHeight = (m_rotation & 1) ? drawWidth : drawHeight;
 
     // --- Clipping auf Display ---
-    if (x >= logicalHeight() || y >= logicalWidth()) return false;
-    if (x + dstWidth > logicalHeight()) dstWidth = logicalHeight() - x;
-    if (y + dstHeight > logicalWidth()) dstHeight = logicalWidth() - y;
+    if (x >= logicalWidth() || y >= logicalHeight()) return false;
+    if (x + dstWidth > logicalWidth()) dstWidth = logicalWidth() - x;
+    if (y + dstHeight > logicalHeight()) dstHeight = logicalHeight() - y;
 
     const size_t rowSize = ((bmpWidth * bpp / 8 + 3) & ~3);
 
@@ -3352,11 +3352,11 @@ bool TFT_DSI::drawJpgFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, 
     if (maxWidth)
         m_jpgWidthMax = maxWidth;
     else
-        m_jpgWidthMax = logicalHeight();
+        m_jpgWidthMax = logicalWidth();
     if (maxHeight)
         m_jpgHeightMax = maxHeight;
     else
-        m_jpgHeightMax = logicalWidth();
+        m_jpgHeightMax = logicalHeight();
 
     m_jpgSdFile = fs.open(path, FILE_READ);
     if (!m_jpgSdFile) {
