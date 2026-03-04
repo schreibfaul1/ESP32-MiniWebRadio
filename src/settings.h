@@ -2,8 +2,8 @@
 #include "tft_structures.h"
 
 
-#define _SSID             "****"           // Your WiFi credentials here
-#define _PW               "****"           //
+#define _SSID             "SSID"           // Your WiFi credentials here
+#define _PW               "PW"             //
 #define TFT_CONTROLLER    8                // (0)SPI-ILI9341[320x240], (3)SPI-ILI9486[480x320], (4)SPI-ILI9488[480x320], (5)SPI-ST7796[480x320], (7)RGB[800x480], (8)DSI-EK97001[1024x600], (9)DSI-JD9165[1024x600]
 #define DISPLAY_INVERSION 0                // only SPI displays, (0) off (1) on
 #define TFT_ROTATION      0                // only SPI and DSI displays, (0) none, (1) 90°CW, (2) 180°CW, (3) 270°CW

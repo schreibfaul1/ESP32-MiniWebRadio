@@ -337,7 +337,7 @@ void TFT_DSI::setRotation(uint8_t r) {
     m_rotation = r;
     uint16_t deg = r * 90;
     char     buff[256];
-    sprintf(buff, "Rotation: " ANSI_ESC_CYAN "%d°" ANSI_ESC_RESET "CW, logical width: " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET ", logical height: " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET, deg, logicalWidth(),
+    sprintf(buff, "Rotation: " ANSI_ESC_CYAN "%d° CW" ANSI_ESC_RESET " logical width: " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET " logical height: " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET, deg, logicalWidth(),
             logicalHeight());
     if (tft_info) tft_info(buff);
 }
@@ -459,18 +459,23 @@ bool TFT_DSI::copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, u
             // 🔥 rotate here only
             mapRotation(m_rotation, x + col, y + row, physX, physY);
 
-            if (physX < 0 || physY < 0 || physX >= logicalWidth() || physY >= logicalHeight()) continue;
+            if (physX < 0 || physY < 0 || physX >= logicalHeight() || physY >= logicalWidth()) continue;
 
-            m_framebuffer[destination][physY * m_h_res + physX] = m_framebuffer[source][physY * m_h_res + physX];
+            m_framebuffer[destination][physY * logicalHeight() + physX] = m_framebuffer[source][physY * logicalHeight() + physX];
         }
     }
 
-    if (destination == 0) panelDrawBitmap(x, y, x + w, y + h, m_framebuffer[0]);
+    if (destination == 0) panelDrawBitmap(0, 0, logicalHeight(), logicalWidth(), m_framebuffer[0]);
 
     return true;
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_DSI::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color) {
+void TFT_DSI::drawLine(int16_t x0,
+                       int16_t y0,
+                       int16_t x1,
+                       int16_t y1,
+                       uint16_t color)
+{
     int16_t dx = abs(x1 - x0);
     int16_t dy = abs(y1 - y0);
 
@@ -479,17 +484,19 @@ void TFT_DSI::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t 
 
     int16_t err = dx - dy;
 
-    size_t minX = logicalWidth();
-    size_t minY = logicalHeight();
+    size_t minX = m_h_res;
+    size_t minY = m_v_res;
     size_t maxX = 0;
     size_t maxY = 0;
 
-    while (true) {
+    while (true)
+    {
         int32_t rotX, rotY;
         mapRotation(m_rotation, x0, y0, rotX, rotY);
 
-        if (rotX < logicalWidth() && rotY < logicalHeight()) {
-            m_framebuffer[0][rotY * logicalWidth() + rotX] = color;
+        if (rotX < m_h_res && rotY < m_v_res)
+        {
+            m_framebuffer[0][rotY * m_h_res + rotX] = color;
 
             if (rotX < minX) minX = rotX;
             if (rotY < minY) minY = rotY;
@@ -497,7 +504,8 @@ void TFT_DSI::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t 
             if (rotY > maxY) maxY = rotY;
         }
 
-        if (x0 == x1 && y0 == y1) break;
+        if (x0 == x1 && y0 == y1)
+            break;
 
         int16_t e2 = err << 1;
 
@@ -512,7 +520,8 @@ void TFT_DSI::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t 
         }
     }
 
-    if (maxX > minX && maxY > minY) panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
+    if (maxX > minX && maxY > minY)
+        panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_DSI::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
@@ -557,8 +566,8 @@ void TFT_DSI::fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16
         std::swap(x0, x1);
     }
 
-    size_t minX = logicalWidth();
-    size_t minY = logicalHeight();
+    size_t minX = m_h_res;
+    size_t minY = m_v_res;
     size_t maxX = 0;
     size_t maxY = 0;
 
@@ -569,9 +578,9 @@ void TFT_DSI::fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16
             int32_t rotX, rotY;
             mapRotation(m_rotation, x, y, rotX, rotY);
 
-            if (rotX >= logicalWidth() || rotY >= logicalHeight()) continue;
+            if (rotX >= m_h_res || rotY >= m_v_res) continue;
 
-            m_framebuffer[0][rotY * logicalWidth() + rotX] = color;
+            m_framebuffer[0][rotY * m_h_res + rotX] = color;
 
             if (rotX < minX) minX = rotX;
             if (rotY < minY) minY = rotY;
@@ -644,7 +653,7 @@ void TFT_DSI::drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t 
             int32_t rotX, rotY;
             mapRotation(m_rotation, px, py, rotX, rotY);
 
-            if (rotX < logicalWidth() && rotY < logicalHeight()) m_framebuffer[0][rotY * logicalWidth() + rotX] = color;
+            if (rotX < m_h_res && rotY < m_v_res) m_framebuffer[0][rotY * m_h_res + rotX] = color;
         };
 
         // 4 Ecken
@@ -671,7 +680,7 @@ void TFT_DSI::drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t 
         f += ddF_x;
     }
 
-    // A common refresh (rotated bounding box optionally computable)
+    // Ein gemeinsamer Refresh (rotierte Bounding-Box optional berechenbar)
     panelDrawBitmap(0, 0, m_h_res, m_v_res, m_framebuffer[0]);
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -681,8 +690,8 @@ void TFT_DSI::fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t 
     if (r > w / 2) r = w / 2;
     if (r > h / 2) r = h / 2;
 
-    size_t minX = logicalWidth();
-    size_t minY = logicalHeight();
+    size_t minX = m_h_res;
+    size_t minY = m_v_res;
     size_t maxX = 0;
     size_t maxY = 0;
 
@@ -690,9 +699,9 @@ void TFT_DSI::fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t 
         int32_t rotX, rotY;
         mapRotation(m_rotation, px, py, rotX, rotY);
 
-        if (rotX >= logicalWidth() || rotY >= logicalHeight()) return;
+        if (rotX >= m_h_res || rotY >= m_v_res) return;
 
-        m_framebuffer[0][rotY * logicalWidth() + rotX] = color;
+        m_framebuffer[0][rotY * m_h_res + rotX] = color;
 
         if (rotX < minX) minX = rotX;
         if (rotY < minY) minY = rotY;
@@ -747,8 +756,8 @@ void TFT_DSI::drawCircle(int16_t cx, int16_t cy, int16_t r, uint16_t color) {
     int16_t x = 0;
     int16_t y = r;
 
-    size_t minX = logicalWidth();
-    size_t minY = logicalHeight();
+    size_t minX = m_h_res;
+    size_t minY = m_v_res;
     size_t maxX = 0;
     size_t maxY = 0;
 
@@ -756,9 +765,9 @@ void TFT_DSI::drawCircle(int16_t cx, int16_t cy, int16_t r, uint16_t color) {
         int32_t rotX, rotY;
         mapRotation(m_rotation, px, py, rotX, rotY);
 
-        if (rotX >= logicalWidth() || rotY >= logicalHeight()) return;
+        if (rotX >= m_h_res || rotY >= m_v_res) return;
 
-        m_framebuffer[0][rotY * logicalWidth() + rotX] = color;
+        m_framebuffer[0][rotY * m_h_res + rotX] = color;
 
         if (rotX < minX) minX = rotX;
         if (rotY < minY) minY = rotY;
@@ -805,8 +814,8 @@ void TFT_DSI::fillCircle(int16_t cx, int16_t cy, uint16_t r, uint16_t color) {
     int16_t x = 0;
     int16_t y = r;
 
-    size_t minX = logicalWidth();
-    size_t minY = logicalHeight();
+    size_t minX = m_h_res;
+    size_t minY = m_v_res;
     size_t maxX = 0;
     size_t maxY = 0;
 
@@ -814,9 +823,9 @@ void TFT_DSI::fillCircle(int16_t cx, int16_t cy, uint16_t r, uint16_t color) {
         int32_t rotX, rotY;
         mapRotation(m_rotation, px, py, rotX, rotY);
 
-        if (rotX >= logicalWidth() || rotY >= logicalHeight()) return;
+        if (rotX >= m_h_res || rotY >= m_v_res) return;
 
-        m_framebuffer[0][rotY * logicalWidth() + rotX] = color;
+        m_framebuffer[0][rotY * m_h_res + rotX] = color;
 
         if (rotX < minX) minX = rotX;
         if (rotY < minY) minY = rotY;
@@ -2260,7 +2269,7 @@ size_t TFT_DSI::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16
     if (autoSize) { nrOfLines = fitInAddrWindow(utfPosArr, strChLength, win_W, win_H, narrow, noWrap); } // choose perfect fontsize
     if (!strChLength) return 0;
     //----------------------------------------------------------------------
-    if ((win_X + win_W) > logicalWidth()) { win_W = logicalWidth() - win_X; } // Limit, right edge of the display
+    if ((win_X + win_W) > logicalWidth()) { win_W = logicalWidth() - win_X; }   // Limit, right edge of the display
     if ((win_Y + win_H) > logicalHeight()) { win_H = logicalHeight() - win_Y; } // Limit, bottom of the display
 
     idx = 0;
