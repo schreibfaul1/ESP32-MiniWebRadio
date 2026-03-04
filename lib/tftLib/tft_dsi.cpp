@@ -440,6 +440,30 @@ inline void TFT_DSI::mapRotation(uint8_t rot, int32_t srcX, int32_t srcY, int32_
     }
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_DSI::drawRectLogicalFromFB(uint8_t fb, int16_t x, int16_t y, uint16_t w, uint16_t h) {
+    int32_t px[4], py[4];
+
+    int32_t sx[4] = {x, x + w - 1, x, x + w - 1};
+
+    int32_t sy[4] = {y, y, y + h - 1, y + h - 1};
+
+    int32_t minX = m_h_res;
+    int32_t minY = m_v_res;
+    int32_t maxX = -1;
+    int32_t maxY = -1;
+
+    for (int i = 0; i < 4; i++) {
+        mapRotation(m_rotation, sx[i], sy[i], px[i], py[i]);
+
+        if (px[i] < minX) minX = px[i];
+        if (py[i] < minY) minY = py[i];
+        if (px[i] > maxX) maxX = px[i];
+        if (py[i] > maxY) maxY = py[i];
+    }
+
+    panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[fb]);
+}
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool TFT_DSI::copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
     if (w == 0 || h == 0) return false;
 
@@ -465,17 +489,12 @@ bool TFT_DSI::copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, u
         }
     }
 
-    if (destination == 0) panelDrawBitmap(0, 0, m_h_res, m_v_res, m_framebuffer[0]);
+    if (destination == 0) drawRectLogicalFromFB(0, x,y,w,h);
 
     return true;
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_DSI::drawLine(int16_t x0,
-                       int16_t y0,
-                       int16_t x1,
-                       int16_t y1,
-                       uint16_t color)
-{
+void TFT_DSI::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color) {
     int16_t dx = abs(x1 - x0);
     int16_t dy = abs(y1 - y0);
 
@@ -489,13 +508,11 @@ void TFT_DSI::drawLine(int16_t x0,
     size_t maxX = 0;
     size_t maxY = 0;
 
-    while (true)
-    {
+    while (true) {
         int32_t rotX, rotY;
         mapRotation(m_rotation, x0, y0, rotX, rotY);
 
-        if (rotX < m_h_res && rotY < m_v_res)
-        {
+        if (rotX < m_h_res && rotY < m_v_res) {
             m_framebuffer[0][rotY * m_h_res + rotX] = color;
 
             if (rotX < minX) minX = rotX;
@@ -504,8 +521,7 @@ void TFT_DSI::drawLine(int16_t x0,
             if (rotY > maxY) maxY = rotY;
         }
 
-        if (x0 == x1 && y0 == y1)
-            break;
+        if (x0 == x1 && y0 == y1) break;
 
         int16_t e2 = err << 1;
 
@@ -520,8 +536,7 @@ void TFT_DSI::drawLine(int16_t x0,
         }
     }
 
-    if (maxX > minX && maxY > minY)
-        panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
+    if (maxX > minX && maxY > minY) panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_DSI::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
