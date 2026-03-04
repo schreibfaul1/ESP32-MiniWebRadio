@@ -296,8 +296,8 @@ void TFT_DSI::begin(const Timing& newTiming) {
     m_framebuffer[0] = (uint16_t*)fb0;
     m_framebuffer[1] = (uint16_t*)fb1;
     m_framebuffer[2] = (uint16_t*)fb2;
-    char buff[256];
 
+    char buff[256];
     sprintf(buff, "Resolution: " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET " x " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET, m_h_res, m_v_res);
     if (tft_info) tft_info(buff);
 }
@@ -317,7 +317,7 @@ void TFT_DSI::reset() {
 bool TFT_DSI::panelDrawBitmap(int16_t x0, int16_t y0, int16_t x1, int16_t y1, const void* bitmap) {
     bool res = false;
     if (x0 >= x1 || y0 >= y1) {
-        log_w("x0 %i, y0 %i, x1 %i, y1 %i", x0, y0, x1, y1);
+        log_w("%s %s  x0 %i, y0 %i, x1 %i, y1 %i", __FILE__, __LINE__, x0, y0, x1, y1);
         return false;
     }
     xSemaphoreTake(m_vsync_semaphore, 0.3 * configTICK_RATE_HZ);
@@ -333,11 +333,13 @@ void TFT_DSI::setDisplayInversion(bool invert) {
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_DSI::setRotation(uint8_t r) {
-    if (TFT_CONTROLLER == 10) // orientation is portrait
-        m_rotation = r;
-    else // orientation is already landscape
-        m_rotation = r - 1;
-    if (m_rotation == -1) m_rotation = 3;
+    if (r >= 4) return;
+    m_rotation = r;
+    uint16_t deg = r * 90;
+    char     buff[256];
+    sprintf(buff, "Rotation: " ANSI_ESC_CYAN "%d°" ANSI_ESC_RESET "CW, logical width: " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET ", logical height: " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET, deg, logicalWidth(),
+            logicalHeight());
+    if (tft_info) tft_info(buff);
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 uint16_t TFT_DSI::logicalWidth() const {
@@ -368,9 +370,9 @@ bool TFT_DSI::renderRGB565(int16_t x, int16_t y, uint16_t w, uint16_t h, const u
 
             if (dstX < 0 || dstY < 0) continue;
 
-            if (dstX >= logicalHeight() || dstY >= logicalWidth()) continue;
+            if (dstX >= m_h_res || dstY >= m_v_res) continue;
 
-            const size_t fbIndex = dstY * logicalHeight() + dstX;
+            const size_t fbIndex = dstY * m_h_res + dstX;
             const size_t srcIndex = row * w + col;
 
             uint16_t newColor = rgb[srcIndex];
@@ -842,11 +844,11 @@ bool TFT_DSI::copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, u
 
             if (physX < 0 || physY < 0 || physX >= logicalHeight() || physY >= logicalWidth()) continue;
 
-            m_framebuffer[destination][physY * logicalHeight() + physX] = m_framebuffer[source][physY * logicalHeight() + physX];
+            m_framebuffer[destination][physY * m_h_res + physX] = m_framebuffer[source][physY * m_h_res + physX];
         }
     }
 
-    if (destination == 0) panelDrawBitmap(0, 0, logicalHeight(), logicalWidth(), m_framebuffer[0]);
+    if (destination == 0) panelDrawBitmap(0, 0, m_h_res, m_v_res, m_framebuffer[0]);
 
     return true;
 }
