@@ -459,13 +459,13 @@ bool TFT_DSI::copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, u
             // 🔥 rotate here only
             mapRotation(m_rotation, x + col, y + row, physX, physY);
 
-            if (physX < 0 || physY < 0 || physX >= logicalHeight() || physY >= logicalWidth()) continue;
+            if (physX < 0 || physY < 0 || physX >= m_h_res || physY >= m_v_res) continue;
 
-            m_framebuffer[destination][physY * logicalHeight() + physX] = m_framebuffer[source][physY * logicalHeight() + physX];
+            m_framebuffer[destination][physY * m_h_res + physX] = m_framebuffer[source][physY * m_h_res + physX];
         }
     }
 
-    if (destination == 0) panelDrawBitmap(0, 0, logicalHeight(), logicalWidth(), m_framebuffer[0]);
+    if (destination == 0) panelDrawBitmap(0, 0, m_h_res, m_v_res, m_framebuffer[0]);
 
     return true;
 }
