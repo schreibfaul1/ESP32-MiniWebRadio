@@ -1120,19 +1120,13 @@ void setup() {
     drawImage("/common/Wallpaper.jpg", 0, 0);                                                // Wallpaper
     getTFT().copyFramebuffer(0, 1, 0, 0, displayConfig.dispWidth, displayConfig.dispHeight); // copy wallpaper to background
     muteChanged(s_f_mute);
-    dispFooter.setIpAddr(WiFi.localIP().toString().c_str());
-    dispFooter.updateStation(s_cur_station);
-    dispFooter.updateOffTime(s_sleeptime);
-    dispHeader.updateVolume(s_volume.cur_volume);
-    dispHeader.speakerOnOff(!s_f_mute);
-
     if (s_f_isWiFiConnected) {
         if (s_resetReason == ESP_RST_POWERON ||   // Simply switch on the operating voltage
             s_resetReason == ESP_RST_SW ||        // ESP.restart()
             s_resetReason == ESP_RST_SDIO ||      // The boot button was pressed
             s_resetReason == ESP_RST_DEEPSLEEP) { // Wake up
             s_state = UNDEFINED;
-            setStation(s_cur_station);
+        //    setStation(s_cur_station);
         }
         if (!MDNS.begin("MiniWebRadio")) {
             SerialPrintfln("%s", "WiFI_info:   " ANSI_ESC_YELLOW "Error starting mDNS", ANSI_ESC_RESET);
@@ -1161,11 +1155,20 @@ void setup() {
         }
     }
     if (BT_EMITTER_RX >= 0) bt_emitter.begin();
-    setRTC(s_TZString);
+
     rec_buffer.alloc_array(REC_BUFFER_SIZE, "rec_buffer");                             // allocate in PSRAM
     writeBuffer.alloc_array(WRITE_CHUNK_SIZE, "writeBuffer");                          // allocate in PSRAM
     xTaskCreatePinnedToCore(wavWriterTask, "wavWriter", 4096, nullptr, 1, nullptr, 0); // start recorder task
     SerialPrintfln("recorder task started, Free heap: %u\n", ESP.getFreeHeap());
+
+    setStation(s_cur_station);
+    dispFooter.writeIpAddr(WiFi.localIP().toString().c_str());
+    dispHeader.updateItem(_hl_item[RADIO]);
+    dispFooter.updateStation(s_cur_station);
+    dispFooter.updateOffTime(s_sleeptime);
+    dispHeader.updateVolume(s_volume.cur_volume);
+    dispHeader.speakerOnOff(!s_f_mute);
+    setRTC(s_TZString);
 }
 
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
