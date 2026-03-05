@@ -1161,14 +1161,18 @@ void setup() {
     xTaskCreatePinnedToCore(wavWriterTask, "wavWriter", 4096, nullptr, 1, nullptr, 0); // start recorder task
     SerialPrintfln("recorder task started, Free heap: %u\n", ESP.getFreeHeap());
 
-    setStation(s_cur_station);
-    dispFooter.writeIpAddr(WiFi.localIP().toString().c_str());
+    dispHeader.setTransparency(true, false);
     dispHeader.updateItem(_hl_item[RADIO]);
-    dispFooter.updateStation(s_cur_station);
-    dispFooter.updateOffTime(s_sleeptime);
     dispHeader.updateVolume(s_volume.cur_volume);
     dispHeader.speakerOnOff(!s_f_mute);
+
+    dispFooter.setTransparency(true, false);
+    dispFooter.setIpAddr(WiFi.localIP().toString().c_str());
+    dispFooter.updateStation(s_cur_station);
+    dispFooter.updateOffTime(s_sleeptime);
+
     setRTC(s_TZString);
+    setStation(s_cur_station);
 }
 
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

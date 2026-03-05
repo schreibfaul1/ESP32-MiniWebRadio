@@ -370,7 +370,7 @@ class progressbar : public RegisterTable {
         h = m_h;
     }
 
-    bool         positionXY(uint16_t x, uint16_t y) {
+    bool positionXY(uint16_t x, uint16_t y) {
         if (x < m_x) return false;
         if (y < m_y) return false;
         if (x > m_x + m_w) return false;
@@ -6082,10 +6082,10 @@ class displayFooter : public RegisterTable {
         m_enabled = true;
         m_clicked = false;
         pic_Antenna->show();
+        txt_IpAddr->show();
         updateStation(m_staNr);
         updateOffTime(m_offTime);
         updateBitRate(m_bitRate);
-        writeIpAddr(m_ipAddr);
     }
 
     void setTransparency(bool backgroundTransparency, bool saveBackground) {
@@ -6208,9 +6208,9 @@ class displayFooter : public RegisterTable {
         txt_BitRate->setBorderColor(m_bitRateColor);
         txt_BitRate->setTextColor(m_bitRateColor);
     }
-    void setIpAddr(ps_ptr<char> ipAddr) { m_ipAddr = ipAddr; }
-    void writeIpAddr(ps_ptr<char> ipAddr) {
+    void setIpAddr(ps_ptr<char> ipAddr) {
         ipAddr.insert("IP:", 0);
+        m_ipAddr = ipAddr;
         txt_IpAddr->setText(ipAddr, true, true);
         txt_IpAddr->show();
     }
