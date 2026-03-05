@@ -6141,6 +6141,7 @@ class displayFooter : public RegisterTable {
     void setStationNrColor(uint16_t stationColor) { m_stationColor = stationColor; }
     void updateFlag(ps_ptr<char> flag) {
         if (flag.strlen() > 0) {
+            pic_Flag->hide(); // Don't draw over it, the new flag could be smaller
             pic_Flag->setAlternativPicturePath("/flags/unknown.jpg");
             pic_Flag->setPicturePath(flag);
             pic_Flag->show();

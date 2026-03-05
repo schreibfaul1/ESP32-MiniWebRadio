@@ -429,8 +429,8 @@ inline void TFT_DSI::mapRotation(uint8_t rot, int32_t srcX, int32_t srcY, int32_
             break;
 
         case 2: // 180°
-            dstX = logicalHeight() - 1 - srcX;
-            dstY = logicalWidth() - 1 - srcY;
+            dstX = logicalWidth() - 1 - srcX;
+            dstY = logicalHeight() - 1 - srcY;
             break;
 
         case 3: // 270° CW

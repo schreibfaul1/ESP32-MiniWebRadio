@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.1.1e - Mar 03, 2026                                                                                                               ";
+    Version 4.1.1f - Mar 05, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -1203,6 +1203,7 @@ void set_display_items(){
 #elifdef TFT_MODE_RGB
     getTFT().begin(RGB_PINS, RGB_TIMING);
     getTFT().setDisplayInversion(false);
+    getTFT().setRotation(TFT_ROTATION);
     vTaskDelay(100 / portTICK_PERIOD_MS); // wait for TFT to be ready
     getTFT().reset();
     vTaskDelay(100 / portTICK_PERIOD_MS); // wait for TFT to be ready
