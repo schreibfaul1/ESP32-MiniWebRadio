@@ -880,15 +880,15 @@ void TFT_DSI::fillCircle(int16_t cx, int16_t cy, uint16_t r, uint16_t color) {
 void TFT_DSI::readRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t* data) {
     // Check whether parameters are within the valid range
     if (x < 0 || y < 0 || w <= 0 || h <= 0) return;
-    if (x + w > logicalWidth() || y + h > logicalHeight()) return; // logicalWidth() = vertical resolution
+    if (x + w > m_h_res|| y + h > m_v_res) return; // logicalWidth() = vertical resolution
     if (!data || !m_framebuffer[0]) return;
 
     uint16_t* dst = data;
-    uint16_t* src = m_framebuffer[0] + y * logicalWidth() + x;
+    uint16_t* src = m_framebuffer[0] + y * m_h_res+ x;
 
     for (int32_t row = 0; row < h; row++) {
         memcpy(dst, src, w * sizeof(uint16_t));
-        src += logicalWidth();
+        src += m_h_res;
         dst += w;
     }
 }
