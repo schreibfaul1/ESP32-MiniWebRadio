@@ -21,17 +21,20 @@ bool TP_GT911::begin(TwoWire* twi, uint8_t addr, uint16_t h_resolution, uint16_t
         sprintf(buff, "TouchPad found at " ANSI_ESC_CYAN "0x%02X" ANSI_ESC_RESET, m_addr);
         if (tp_info) tp_info(buff);
         readInfo(); // Need to get resolution to use rotation
-        if (m_disp_v_resolution != m_info.yResolution || m_disp_h_resolution != m_info.xResolution) {
-            sprintf(buff, "Touch resolution " ANSI_ESC_CYAN "%dx%d" ANSI_ESC_RESET " mapped to display " ANSI_ESC_CYAN "%dx%d" ANSI_ESC_RESET "", m_info.xResolution, m_info.yResolution,
-                    m_disp_h_resolution, m_disp_v_resolution);
+        uint16_t x_resolution = readXResolution();
+        uint16_t y_resolution = readYResolution();
+        // log_i("x_resolution %i", x_resolution);
+        // log_i("y_resolution %i", y_resolution);
+        if ((m_disp_v_resolution == x_resolution && m_disp_h_resolution == y_resolution) || (m_disp_v_resolution == y_resolution && m_disp_h_resolution == x_resolution)) {
+            sprintf(buff, "TP resolution " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET " x " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET, x_resolution, y_resolution);
+            if (tp_info) tp_info(buff);
+        } else {
+            sprintf(buff, "Touch resolution " ANSI_ESC_CYAN "%dx%d" ANSI_ESC_RESET " mapped to display " ANSI_ESC_CYAN "%dx%d" ANSI_ESC_RESET "", x_resolution, y_resolution, m_disp_h_resolution,
+                    m_disp_v_resolution);
             if (tp_info) tp_info(buff);
         }
-        else {
-            sprintf(buff, "TP resolution " ANSI_ESC_CYAN "%dx%d" ANSI_ESC_RESET, m_touch_h_resolution, m_touch_v_resolution);
-            if (tp_info) tp_info(buff);
-        }
-        m_touch_h_resolution = m_info.xResolution;
-        m_touch_v_resolution = m_info.yResolution;
+        m_touch_h_resolution = x_resolution;
+        m_touch_v_resolution = y_resolution;
         return true;
     }
     sprintf(buff, ANSI_ESC_RED "TouchPad not found at 0x%02X" ANSI_ESC_RESET, m_addr);
@@ -49,19 +52,6 @@ void TP_GT911::setRotation(uint8_t m) {
 void TP_GT911::setMirror(bool h, bool v) {
     m_mirror_h = h;
     m_mirror_v = v;
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-void TP_GT911::setVersion(uint8_t v) {
-    switch (v) {
-        case GT911:
-            m_version = GT911;
-            break; // GT927, GT928, GT967, GT5688
-                   // case 4: m_version = TP_ILI2510; break; // ILI9488
-                   // case 5: m_version = TP_FT5406; break; // FT5446, FT6336U
-    }
-    // char buff[64] = {0};
-    // sprintf(buff, "TP resolution " ANSI_ESC_CYAN "%dx%d" ANSI_ESC_RESET, m_touch_h_resolution, m_touch_v_resolution);
-    // if (tp_info) tp_info(buff);
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 void TP_GT911::loop() {
@@ -106,14 +96,16 @@ void TP_GT911::loop() {
     }
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
-bool TP_GT911::getProductID() {
-    if (!m_isInit) return false;
-    char buf[64] = {0};
-    strcpy(buf, "Product ID: " ANSI_ESC_CYAN);
-    readBytes(GT911_REG_ID, (uint8_t*)buf + 17, 4);
-    strcat(buf, ANSI_ESC_RESET);
-    if (tp_info) tp_info(buf);
-    return true;
+uint16_t TP_GT911::readXResolution() {
+    uint8_t buf[2];
+    readBytes(0x8048, buf, 2);
+    return buf[0] | (buf[1] << 8);
+}
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+uint16_t TP_GT911::readYResolution() {
+    uint8_t buf[2];
+    readBytes(0x804A, buf, 2);
+    return buf[0] | (buf[1] << 8);
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 void TP_GT911::reset() {
@@ -214,6 +206,10 @@ bool TP_GT911::readTouchPoints() {
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 TP_GT911::GTInfo* TP_GT911::readInfo() {
     readBytes(GT911_REG_DATA, (uint8_t*)&m_info, sizeof(m_info));
+    char buff[128] = {0};
+    sprintf(buff, "TP ProductID: " ANSI_ESC_CYAN "%s," ANSI_ESC_RESET " Firmware version: " ANSI_ESC_CYAN "%d," ANSI_ESC_RESET " VendorID: " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET, m_info.productId,
+            m_info.fwId, m_info.vendorId);
+    if (tp_info) tp_info(buff);
     return &m_info;
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -224,64 +220,72 @@ uint8_t TP_GT911::touched() {
     return contacts;
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
+void TP_GT911::transform(uint16_t& x, uint16_t& y) {
+    uint16_t touch_w = m_touch_h_resolution;
+    uint16_t touch_h = m_touch_v_resolution;
+
+    // 1️⃣ Mirror in native space
+    if (m_mirror_h) x = touch_w - 1 - x;
+    if (m_mirror_v) y = touch_h - 1 - y;
+
+    uint16_t xr = x;
+    uint16_t yr = y;
+
+    int8_t r = m_rotation + 1;
+    if (r == 4) r = 0;
+
+    // 2️⃣ Rotation in native space
+    switch (r) {
+        case 0: // 0°
+            break;
+
+        case 1: // 90°
+            xr = y;
+            yr = touch_w - 1 - x;
+            std::swap(touch_w, touch_h);
+            break;
+
+        case 2: // 180°
+            xr = touch_w - 1 - x;
+            yr = touch_h - 1 - y;
+            break;
+
+        case 3: // 270°
+            xr = touch_h - 1 - y;
+            yr = x;
+            std::swap(touch_w, touch_h);
+            break;
+    }
+
+    // 3️⃣ Scale
+    x = (uint32_t)xr * (m_disp_h_resolution - 1) / (touch_w - 1);
+    y = (uint32_t)yr * (m_disp_v_resolution - 1) / (touch_h - 1);
+}
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 TP_GT911::GTPoint TP_GT911::getPoint(uint8_t num) {
 
     uint16_t x, y;
-    x = (m_points[num].x * m_disp_h_resolution) / m_touch_h_resolution;
-    y = (m_points[num].y * m_disp_v_resolution) / m_touch_v_resolution;
+    x = m_points[num].x;
+    y = m_points[num].y;
 
     m_points[num].x = constrain(x, 0, m_disp_h_resolution - 1);
     m_points[num].y = constrain(y, 0, m_disp_v_resolution - 1);
 
-    int x_new = 0, y_new = 0;
-    if (m_mirror_h) m_points[num].x = m_touch_h_resolution - m_points[num].x;
-    if (m_mirror_v) m_points[num].y = m_touch_v_resolution - m_points[num].y;
+    transform(x, y);
 
-    switch (m_rotation) {
-        case 0: // 90 degree
-            x_new = m_points[num].y;
-            y_new = m_touch_h_resolution - m_points[num].x;
-            break;
-        case 1: return m_points[num]; // 0 degree, no change
-        case 2:                       // -90 degree
-            x_new = m_touch_v_resolution - m_points[num].y;
-            y_new = m_points[num].x;
-            break;
-        case 3: // -180 degree
-            x_new = m_touch_h_resolution - m_points[num].x;
-            y_new = m_touch_v_resolution - m_points[num].y;
-            break;
-    }
-    m_points[num].x = x_new;
-    m_points[num].y = y_new;
+    m_points[num].x = x;
+    m_points[num].y = y;
     return m_points[num];
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 TP_GT911::GTPoint* TP_GT911::getPoints() {
-    int x_new = 0, y_new = 0;
+    uint16_t x = 0, y = 0;
     for (uint8_t num = 0; num < GT911_MAX_CONTACTS; num++) {
-        if (m_mirror_h) m_points[num].x = m_touch_h_resolution - m_points[num].x;
-        if (m_mirror_v) m_points[num].y = m_touch_v_resolution - m_points[num].y;
-        switch (m_rotation) {
-            case 0: // 90 degree
-                x_new = m_points[num].y;
-                y_new = m_touch_h_resolution - m_points[num].x;
-                break;
-            case 1: // 0 degree, no change
-                x_new = m_points[num].x;
-                y_new = m_points[num].y;
-                break;
-            case 2: // -90 degree
-                x_new = m_touch_v_resolution - m_points[num].y;
-                y_new = m_points[num].x;
-                break;
-            case 3: // -180 degree
-                x_new = m_touch_h_resolution - m_points[num].x;
-                y_new = m_touch_v_resolution - m_points[num].y;
-                break;
-        }
-        m_points[num].x = x_new;
-        m_points[num].y = y_new;
+
+        transform(x, y);
+
+        m_points[num].x = x;
+        m_points[num].y = y;
     }
     return m_points;
 }

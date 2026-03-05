@@ -2,12 +2,12 @@
 
 #pragma once
 
-#ifdef TFT_MODE_SPI // ⏹⏹⏹⏹
-extern TFT_SPI tft;
-#elif defined (TFT_MODE_RGB)
-extern TFT_RGB tft;
-#elif defined (TFT_MODE_DSI)
-extern TFT_DSI tft;
+#ifdef TFT_MODE_DSI
+TFT_DSI& getTFT();
+#elif defined(TFT_MODE_SPI)
+TFT_SPI& getTFT();
+#elif defined(TFT_MODE_RGB)
+TFT_RGB& getTFT();
 #endif
 
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -75,7 +75,7 @@ void make_hardcopy_on_sd() {
     hc.write(bmp320x240, sizeof(bmp320x240));
     uint16_t buff[320];
     for (int i = 240; i > 0; i--) {
-        tft.readRect(0, i - 1, 320, 1, buff);
+        getTFT().readRect(0, i - 1, 320, 1, buff);
         hc.write((uint8_t*)buff, 320 * 2);
     }
     hc.close();
@@ -83,7 +83,7 @@ void make_hardcopy_on_sd() {
     hc.write(bmp480x320, sizeof(bmp480x320));
     uint16_t buff[480];
     for (int i = 320; i > 0; i--) {
-        tft.readRect(0, i - 1, 480, 1, buff);
+        getTFT().readRect(0, i - 1, 480, 1, buff);
         hc.write((uint8_t*)buff, 480 * 2);
     }
     hc.close();
@@ -92,7 +92,7 @@ void make_hardcopy_on_sd() {
     hc.write(bmp800x480, sizeof(bmp800x480));
     uint16_t buff[800];
     for (int i = 480; i > 0; i--) {
-        tft.readRect(0, i - 1, 800, 1, buff);
+        getTFT().readRect(0, i - 1, 800, 1, buff);
         hc.write((uint8_t*)buff, 800 * 2);
     }
     hc.close();
@@ -100,7 +100,7 @@ void make_hardcopy_on_sd() {
     hc.write(bmp800x480, sizeof(bmp800x480));
     uint16_t row[800];
     for (int bmp_y = 0; bmp_y < 480; bmp_y++) {
-        tft.readRect(bmp_y, 0, 1, 800, row);
+        getTFT().readRect(bmp_y, 0, 1, 800, row);
         hc.write((uint8_t*)row, 800 * 2);
     }
     hc.close();
@@ -109,7 +109,7 @@ void make_hardcopy_on_sd() {
     hc.write(bmp1024x600, sizeof(bmp1024x600));
     uint16_t buff[1024];
     for (int i = 600; i > 0; i--) {
-        tft.readRect(0, i - 1, 1024, 1, buff);
+        getTFT().readRect(0, i - 1, 1024, 1, buff);
         hc.write((uint8_t*)buff, 1024 * 2);
     }
     hc.close();
@@ -193,10 +193,10 @@ void GetRunTimeStats(char* pcWriteBuffer) {
     //         extern uint64_t s_totalRuntime;
     //         tmpBuff = x_ps_malloc(130);
     //         if (s_totalRuntime > 0) {
-    //             sprintf(tmpBuff, "%s" ANSI_ESC_LIGHTGREEN " time since start: %llus, VSYNCS: %llu  ==> fps: %llu", leftSpace, s_totalRuntime, tft.getVsyncCounter(),
-    //                     tft.getVsyncCounter() / s_totalRuntime);
+    //             sprintf(tmpBuff, "%s" ANSI_ESC_LIGHTGREEN " time since start: %llus, VSYNCS: %llu  ==> fps: %llu", leftSpace, s_totalRuntime, getTFT().getVsyncCounter(),
+    //                     getTFT().getVsyncCounter() / s_totalRuntime);
     //         } else {
-    //             sprintf(tmpBuff, "%s" ANSI_ESC_LIGHTGREEN " time since start: %llus, VSYNCS: %llu  ==> fps: <1", leftSpace, s_totalRuntime, tft.getVsyncCounter());
+    //             sprintf(tmpBuff, "%s" ANSI_ESC_LIGHTGREEN " time since start: %llus, VSYNCS: %llu  ==> fps: <1", leftSpace, s_totalRuntime, getTFT().getVsyncCounter());
     //         }
     //         strlcat(tmpBuff, "                                   ", 130);
     //         tmpBuff[90] = '\0';

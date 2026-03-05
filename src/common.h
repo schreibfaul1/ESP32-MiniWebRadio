@@ -36,11 +36,11 @@
 #endif
 
 #if (TP_CONTROLLER == 7)
-#define TP_MODE_GT911
+    #define TP_MODE_GT911
 #endif
 
 #if (TP_CONTROLLER == 8)
-#define TP_MODE_FT6X63
+    #define TP_MODE_FT6X63
 #endif
 
 #pragma once
@@ -83,7 +83,7 @@
 #elifdef TFT_MODE_DSI
     #include "tft_dsi.h"
 #else
-    printf("unknown TFT_CONTROLLER\n")
+printf("unknown TFT_CONTROLLER\n")
 #endif
 
 #ifdef TP_MODE_XPT2046
@@ -693,9 +693,9 @@ inline void SerialPrintflnCut(const char* item, const char* color, const char* s
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 #ifdef TFT_MODE_SPI // ⏹⏹⏹⏹
 extern TFT_SPI tft;
-#elif defined (TFT_MODE_RGB)
+#elif defined(TFT_MODE_RGB)
 extern TFT_RGB tft;
-#elif defined (TFT_MODE_DSI)
+#elif defined(TFT_MODE_DSI)
 extern TFT_DSI tft;
 #endif
 
@@ -726,6 +726,8 @@ class RegisterTable {
     virtual bool         isEnabled() = 0;
     virtual void         disable() = 0;
     virtual bool         positionXY(uint16_t, uint16_t) = 0;
+    virtual void         draw() = 0;
+    virtual void         getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) = 0;
     virtual ~RegisterTable() {}
 };
 static std::vector<RegisterTable*> registertable_objects;
@@ -733,9 +735,11 @@ static void                        register_object(RegisterTable* obj) {
     registertable_objects.push_back(obj);
 }
 inline void get_registered_names() {
+    int16_t x= 0, y= 0, w = 0, h = 0;
     for (auto obj : registertable_objects) {
-        printf(ANSI_ESC_WHITE "    registered object:" ANSI_ESC_YELLOW " %-17s" ANSI_ESC_WHITE " is enabled: %-5s" ANSI_ESC_RESET, "\n", obj->getName().c_get(),
-               obj->isEnabled() ? ANSI_ESC_RED "yes" : ANSI_ESC_BLUE "no");
+        obj->getBounds(x, y, w, h);
+        printf(ANSI_ESC_WHITE "    registered object:" ANSI_ESC_YELLOW " %-27s" ANSI_ESC_WHITE " is enabled: %-5s" ANSI_ESC_WHITE " x: %03d, y: %03d, w: %03d, h: %03d" ANSI_ESC_RESET "\n", obj->getName().c_get(),
+               obj->isEnabled() ? ANSI_ESC_RED "yes" : ANSI_ESC_BLUE "no", x, y, w, h);
     }
 }
 inline void disableAllObjects() {

@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.1.1e - Mar 03, 2026                                                                                                               ";
+    Version 4.1.1f - Mar 05, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -198,22 +198,28 @@ const char* codecname[10] = {"unknown", "WAV", "MP3", "AAC", "M4A", "FLAC", "AAC
 
 #ifdef TFT_MODE_SPI // ⏹⏹⏹⏹
 TFT_SPI tft(spiBus, TFT_CS);
-#elifdef TFT_MODE_RGB
+TFT_SPI& getTFT() { return tft; }
+#elif defined TFT_MODE_RGB
 TFT_RGB tft;
-#elifdef TFT_MODE_DSI
+TFT_RGB& getTFT() { return tft; }
+#elif defined TFT_MODE_DSI
 TFT_DSI tft;
+TFT_DSI& getTFT() { return tft; }
 #else
-printf("wrong TFT_CONTROLLER\n");
+#error "wrong TFT_CONTROLLER"
 #endif
 
 #ifdef TP_MODE_XPT2046 // ⏹⏹⏹⏹
 TP_XPT2046 tp(spiBus, TP_CS);
-#elifdef TP_MODE_GT911
+TP_XPT2046& getTP() { return tp; }
+#elif defined TP_MODE_GT911
 TP_GT911 tp;
-#elifdef TP_MODE_FT6X63
+TP_GT911& getTP() { return tp; }
+#elif defined TP_MODE_FT6X63
 FT6x36 tp;
+FT6x36& getTP() { return tp; }
 #else
-printf("wrong TP_CONTROLLER\n");
+#error "wrong TP_CONTROLLER"
 #endif
 
 stationManagement staMgnt(&s_cur_station);
@@ -455,25 +461,25 @@ void timer100ms() {
  *****************************************************************************************************************************************************/
 
 inline void bgColorWithOutHeaderFooter() {
-    tft.fillRect(layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, TFT_BLACK);
+    getTFT().fillRect(layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, TFT_BLACK);
 }
 inline void clearHeader() {
-    tft.copyFramebuffer(1, 0, layout.winHeader.x, layout.winHeader.y, layout.winHeader.w, layout.winHeader.h);
+    getTFT().copyFramebuffer(1, 0, layout.winHeader.x, layout.winHeader.y, layout.winHeader.w, layout.winHeader.h);
 }
 inline void clearLogo() {
-    tft.copyFramebuffer(1, 0, layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h);
+    getTFT().copyFramebuffer(1, 0, layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h);
 }
 inline void clearStationName() {
-    tft.copyFramebuffer(1, 0, layout.winName.x, layout.winName.y, layout.winName.w, layout.winName.h);
+    getTFT().copyFramebuffer(1, 0, layout.winName.x, layout.winName.y, layout.winName.w, layout.winName.h);
 }
 inline void clearStreamTitle() {
-    tft.copyFramebuffer(1, 0, layout.winSTitle.x, layout.winSTitle.y, layout.winSTitle.w, layout.winSTitle.h);
+    getTFT().copyFramebuffer(1, 0, layout.winSTitle.x, layout.winSTitle.y, layout.winSTitle.w, layout.winSTitle.h);
 } // without VUmeter
 inline void clearWithOutHeaderFooter() {
-    tft.copyFramebuffer(1, 0, layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h);
+    getTFT().copyFramebuffer(1, 0, layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h);
 }
 inline void clearAll() {
-    tft.copyFramebuffer(1, 0, 0, 0, displayConfig.dispWidth, displayConfig.dispHeight);
+    getTFT().copyFramebuffer(1, 0, 0, 0, displayConfig.dispWidth, displayConfig.dispHeight);
 }
 
 inline uint16_t txtlen(String str) {
@@ -613,10 +619,10 @@ boolean drawImage(ps_ptr<char> path, uint16_t posX, uint16_t posY, uint16_t maxW
         SerialPrintfln("AUDIO_info:  " ANSI_ESC_RED "file \"%s\" not found" ANSI_ESC_RESET "  ", scImg.c_get());
         return false;
     }
-    if (scImg.ends_with("bmp")) { return tft.drawBmpFile(SD_MMC, scImg.c_get(), posX, posY, maxWidth, maxHeigth, 1.0); }
-    if (scImg.ends_with("jpg")) { return tft.drawJpgFile(SD_MMC, scImg.c_get(), posX, posY, maxWidth, maxHeigth); }
-    if (scImg.ends_with("gif")) { return tft.drawGifFile(SD_MMC, scImg.c_get(), posX, posY, 0); }
-    if (scImg.ends_with("png")) { return tft.drawPngFile(SD_MMC, scImg.c_get(), posX, posY); }
+    if (scImg.ends_with("bmp")) { return getTFT().drawBmpFile(SD_MMC, scImg.c_get(), posX, posY, maxWidth, maxHeigth, 1.0); }
+    if (scImg.ends_with("jpg")) { return getTFT().drawJpgFile(SD_MMC, scImg.c_get(), posX, posY, maxWidth, maxHeigth); }
+    if (scImg.ends_with("gif")) { return getTFT().drawGifFile(SD_MMC, scImg.c_get(), posX, posY, 0); }
+    if (scImg.ends_with("png")) { return getTFT().drawPngFile(SD_MMC, scImg.c_get(), posX, posY); }
 
     SerialPrintfln(ANSI_ESC_RED "the file \"%s\" contains neither a bmp, a gif, a png nor a jpg graphic" ANSI_ESC_RESET "  ", scImg.c_get());
     return false; // neither jpg nor bmp
@@ -1109,27 +1115,18 @@ void setup() {
     setI2STone();
 
     ticker100ms.attach(0.1, timer100ms);
-#ifdef TFT_MODE_RGB
-    tft.clearVsyncCounter(); // clear the vsync counter and start them
-#endif
 
-    tft.fillScreen(TFT_BLACK);                                                          // Clear screen
-    drawImage("/common/Wallpaper.jpg", 0, 0);                                           // Wallpaper
-    tft.copyFramebuffer(0, 1, 0, 0, displayConfig.dispWidth, displayConfig.dispHeight); // copy wallpaper to background
+    getTFT().fillScreen(TFT_BLACK);                                                          // Clear screen
+    drawImage("/common/Wallpaper.jpg", 0, 0);                                                // Wallpaper
+    getTFT().copyFramebuffer(0, 1, 0, 0, displayConfig.dispWidth, displayConfig.dispHeight); // copy wallpaper to background
     muteChanged(s_f_mute);
-    dispFooter.setIpAddr(WiFi.localIP().toString().c_str());
-    dispFooter.updateStation(s_cur_station);
-    dispFooter.updateOffTime(s_sleeptime);
-    dispHeader.updateVolume(s_volume.cur_volume);
-    dispHeader.speakerOnOff(!s_f_mute);
-
     if (s_f_isWiFiConnected) {
         if (s_resetReason == ESP_RST_POWERON ||   // Simply switch on the operating voltage
             s_resetReason == ESP_RST_SW ||        // ESP.restart()
             s_resetReason == ESP_RST_SDIO ||      // The boot button was pressed
             s_resetReason == ESP_RST_DEEPSLEEP) { // Wake up
             s_state = UNDEFINED;
-            setStation(s_cur_station);
+        //    setStation(s_cur_station);
         }
         if (!MDNS.begin("MiniWebRadio")) {
             SerialPrintfln("%s", "WiFI_info:   " ANSI_ESC_YELLOW "Error starting mDNS", ANSI_ESC_RESET);
@@ -1140,7 +1137,7 @@ void setup() {
         }
         ArduinoOTA.setHostname("MiniWebRadio");
         ArduinoOTA.begin();
-        ftpSrv.begin(SD_MMC, FTP_USERNAME, FTP_PASSWORD); // username, password for ftp.
+        ftpSrv.begin(SD_MMC, FTP_USERNAME, FTP_PASSWORD); // username, password for fgetTP().
         s_f_dlnaSeekServer = true;
     } else {
         s_state = UNDEFINED;
@@ -1158,11 +1155,24 @@ void setup() {
         }
     }
     if (BT_EMITTER_RX >= 0) bt_emitter.begin();
-    setRTC(s_TZString);
+
     rec_buffer.alloc_array(REC_BUFFER_SIZE, "rec_buffer");                             // allocate in PSRAM
     writeBuffer.alloc_array(WRITE_CHUNK_SIZE, "writeBuffer");                          // allocate in PSRAM
     xTaskCreatePinnedToCore(wavWriterTask, "wavWriter", 4096, nullptr, 1, nullptr, 0); // start recorder task
     SerialPrintfln("recorder task started, Free heap: %u\n", ESP.getFreeHeap());
+
+    dispHeader.setTransparency(true, false);
+    dispHeader.updateItem(_hl_item[RADIO]);
+    dispHeader.updateVolume(s_volume.cur_volume);
+    dispHeader.speakerOnOff(!s_f_mute);
+
+    dispFooter.setTransparency(true, false);
+    dispFooter.setIpAddr(WiFi.localIP().toString().c_str());
+    dispFooter.updateStation(s_cur_station);
+    dispFooter.updateOffTime(s_sleeptime);
+
+    setRTC(s_TZString);
+    setStation(s_cur_station);
 }
 
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -1188,41 +1198,42 @@ void set_display_items(){
 //---- TFT_MODE ---------
 #ifdef TFT_MODE_SPI
     spiBus.begin(TFT_SCK, TFT_MISO, TFT_MOSI, -1); // SPI1 for TFT
-    tft.setTFTcontroller(TFT_CONTROLLER);
-    tft.setDiaplayInversion(DISPLAY_INVERSION);
-    tft.begin(TFT_DC); // Init TFT interface
-    tft.setFrequency(TFT_FREQUENCY);
-    tft.setRotation(TFT_ROTATION);
-    tft.setBackGoundColor(TFT_BLACK);
+    getTFT().setTFTcontroller(TFT_CONTROLLER);
+    getTFT().setDiaplayInversion(DISPLAY_INVERSION);
+    getTFT().begin(TFT_DC); // Init TFT interface
+    getTFT().setFrequency(TFT_FREQUENCY);
+    getTFT().setRotation(TFT_ROTATION);
+    getTFT().setBackGoundColor(TFT_BLACK);
 #elifdef TFT_MODE_RGB
-    tft.begin(RGB_PINS, RGB_TIMING);
-    tft.setDisplayInversion(false);
+    getTFT().begin(RGB_PINS, RGB_TIMING);
+    getTFT().setDisplayInversion(false);
+    getTFT().setRotation(TFT_ROTATION);
     vTaskDelay(100 / portTICK_PERIOD_MS); // wait for TFT to be ready
-    tft.reset();
+    getTFT().reset();
+    vTaskDelay(100 / portTICK_PERIOD_MS); // wait for TFT to be ready
+    getTFT().clearVsyncCounter(); // clear the vsync counter and start them
 #elifdef TFT_MODE_DSI
-    tft.begin(DSI_TIMING);
-    tft.setRotation(TFT_ROTATION);
-    tft.setDisplayInversion(DISPLAY_INVERSION);
+    getTFT().begin(DSI_TIMING);
+    getTFT().setRotation(TFT_ROTATION);
+    getTFT().setDisplayInversion(DISPLAY_INVERSION);
     vTaskDelay(100 / portTICK_PERIOD_MS); // wait for TFT to be ready
 #endif
 
 //---- TP_MODE ---------
 #ifdef TP_MODE_XPT2046 // XPT2046
-    tp.begin(TP_IRQ, s_h_resolution, s_v_resolution);
-    tp.setVersion(TP_CONTROLLER);
-    tp.setRotation(TP_ROTATION);
-    tp.setMirror(TP_H_MIRROR, TP_V_MIRROR);
+    getTP().begin(TP_IRQ, s_h_resolution, s_v_resolution);
+    getTP().setVersion(TP_CONTROLLER);
+    getTP().setRotation(TP_ROTATION);
+    getTP().setMirror(TP_H_MIRROR, TP_V_MIRROR);
 #elifdef TP_MODE_GT911 // GT911
-    tp.begin(&i2cBusOne, GT911_I2C_ADDRESS, s_h_resolution, s_v_resolution);
-    tp.getProductID();
-    tp.setVersion(TP_GT911::GT911);
-    tp.setRotation(TP_ROTATION);
-    tp.setMirror(TP_H_MIRROR, TP_V_MIRROR);
+    getTP().begin(&i2cBusOne, GT911_I2C_ADDRESS, s_h_resolution, s_v_resolution);
+    getTP().setRotation(TP_ROTATION);
+    getTP().setMirror(TP_H_MIRROR, TP_V_MIRROR);
 #elifdef TP_MODE_FT6X63// FT6x36
-    tp.begin(&i2cBusOne, 0x38, s_h_resolution, s_v_resolution);
-    tp.get_FT6x36_items();
-    tp.setRotation(TP_ROTATION);
-    tp.setMirror(TP_H_MIRROR, TP_V_MIRROR);
+    getTP().begin(&i2cBusOne, 0x38, s_h_resolution, s_v_resolution);
+    getTP().get_FT6x36_items();
+    getTP().setRotation(TP_ROTATION);
+    getTP().setMirror(TP_H_MIRROR, TP_V_MIRROR);
 #endif
 }
 
@@ -1240,9 +1251,9 @@ bool init_SD_card() {
 #endif
     if (!s_f_sd_card_found) {
         clearAll();
-        tft.setFont(displayConfig.fonts[6]);
-        tft.setTextColor(TFT_YELLOW);
-        tft.writeText("SD Card Mount Failed", 0, 50, displayConfig.dispWidth, displayConfig.dispHeight, TFT_ALIGN_CENTER, TFT_ALIGN_TOP, false, false);
+        getTFT().setFont(displayConfig.fonts[6]);
+        getTFT().setTextColor(TFT_YELLOW);
+        getTFT().writeText("SD Card Mount Failed", 0, 50, displayConfig.dispWidth, displayConfig.dispHeight, TFT_ALIGN_CENTER, TFT_ALIGN_TOP, false, false);
         SerialPrintfln(ANSI_ESC_RED "SD Card Mount Failed" ANSI_ESC_RESET "  ");
         return false;
     }
@@ -1974,10 +1985,10 @@ void loop() {
     webSrv.loop();
     ftpSrv.handleFTP();
     ir.loop();
-    tp.loop();
+    getTP().loop();
     ArduinoOTA.handle();
     bt_emitter.loop();
-    tft.loop();
+    getTFT().loop();
     BH1750.loop();
 
     while (s_logBuffer.size() > 0) {
