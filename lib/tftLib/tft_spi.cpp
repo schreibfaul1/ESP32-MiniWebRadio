@@ -1518,60 +1518,65 @@ void TFT_SPI::setFont(uint16_t font) {
         }
     #endif
 }
-/*******************************************************************************************************************************************************************************************************
- *                                                                                                                                                                                                     *
- *        ⏫⏫⏫⏫⏫⏫                                       W R I T E    T E X T    R E L A T E D    F U N C T I O N S                                                      ⏫⏫⏫⏫⏫⏫             *
- *                                                                                                                                                                                                     *
- * *****************************************************************************************************************************************************************************************************
- */
-void TFT_SPI::writeInAddrWindow(const uint8_t* bmi, uint16_t posX, uint16_t posY, uint16_t width, uint16_t height) {
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//    ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫    T E X T    ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ *
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_SPI::writeTheFramebuffer(const uint8_t* bmi, uint16_t posX, uint16_t posY, uint16_t width, uint16_t height) {
+    if (!bmi || width == 0 || height == 0) return;
 
-    auto bitreader = [&](const uint8_t* bm) { // lambda
-        static uint16_t       bmi = 0;
-        static uint8_t        idx = 0;
-        static const uint8_t* bitmap = NULL;
-        if(bm) {
+    auto bitreader = [&](const uint8_t* bm) {
+        static uint16_t       byteIndex = 0;
+        static uint8_t        bitMask = 0;
+        static const uint8_t* bitmap = nullptr;
+
+        if (bm) {
             bitmap = bm;
-            idx = 0x80;
-            bmi = 0;
+            byteIndex = 0;
+            bitMask = 0x80;
             return (int32_t)0;
         }
-        bool bit = *(bitmap + bmi) & idx;
-        idx >>= 1;
-        if(idx == 0) {
-            bmi++;
-            idx = 0x80;
+
+        bool bit = bitmap[byteIndex] & bitMask;
+
+        bitMask >>= 1;
+        if (bitMask == 0) {
+            bitMask = 0x80;
+            byteIndex++;
         }
-        if(bit) { return (int32_t) _textColor;}
-        return (int32_t)-1;  // _backColor, -1 is transparent
+
+        return bit ? (int32_t)m_textColor : (int32_t)-1;
     };
 
     bitreader(bmi);
 
-    if(posX >= m_h_res) {log_e("%s %i posX %i", __FILE__, __LINE__, posX); return;}
-    if(posY >= m_v_res) {log_e("%s %i posY %i", __FILE__, __LINE__, posY); return;}
-    if(posX + width >= m_h_res) {log_e("%s %i posX %i, width %i", __FILE__, __LINE__, posX, width); return;}
-    if(posY + height >= m_v_res) {log_e("%s %i posY %i, height %i", __FILE__, __LINE__, posY, height); return;}
+    uint16_t* rgbBuffer = (uint16_t*)ps_malloc(width * height * sizeof(uint16_t));
 
+    uint8_t* alphaBuffer = (uint8_t*)ps_malloc(width * height);
 
-    for(int16_t j = posY; j < posY + height; j++) {
-        for(int16_t i = posX; i < posX + width; i++) {
-            int32_t color = bitreader(0);
-            if(color == -1) {
-                continue;
+    if (!rgbBuffer || !alphaBuffer) return;
+
+    for (uint16_t row = 0; row < height; row++) {
+        for (uint16_t col = 0; col < width; col++) {
+
+            int32_t color = bitreader(nullptr);
+
+            size_t idx = row * width + col;
+
+            if (color == -1) {
+                rgbBuffer[idx] = 0;
+                alphaBuffer[idx] = 0; // transparent
+            } else {
+                rgbBuffer[idx] = (uint16_t)color;
+                alphaBuffer[idx] = 255;
             }
-            m_framebuffer[0][j * m_h_res + i] = color;
         }
     }
 
-    startWrite();
-    setAddrWindow(posX, posY, width, height);
-    for(int16_t j = posY; j < posY + height; j++) {
-        writePixels(m_framebuffer[0] + j * m_h_res + posX, width);
-    }
-    endWrite();
-}
+    renderRGB565(posX, posY, width, height, rgbBuffer, alphaBuffer);
 
+    free(rgbBuffer);
+    free(alphaBuffer);
+}
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // The function is passed a string and two arrays of length strlen(str + 1). This is definitely enough, since ANSI sequences or non-ASCII UTF-8 characters are always greater than 1.
 // For each printable character found in the LookUp table, the codepoint is written to the next position in the charr. The number of printable characters is increased by one.
@@ -1899,12 +1904,12 @@ size_t TFT_SPI::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16
         x += ofs_x;
         y = y + (m_current_font.line_height - m_current_font.base_line - 1) - box_h - ofs_y;
         if(y > 479) log_e("%s%i y %i idx %i", __FILE__, __LINE__, y, idx);
-        writeInAddrWindow(m_current_font.glyph_bitmap + bitmap_index, x, y, box_w, box_h);
+        writeTheFramebuffer(m_current_font.glyph_bitmap + bitmap_index, x, y, box_w, box_h);
         if(!narrow) adv_w += ofs_x;
         return adv_w;
     };
     //-------------------------------------------------------------------------------------------------------------------
-    strChLength =  analyzeText(str, utfPosArr, colorArr, _textColor); // fill utfPosArr, colorArr, ansiArr
+    strChLength =  analyzeText(str, utfPosArr, colorArr, m_textColor); // fill utfPosArr, colorArr, ansiArr
     // returns the number of chars
     if(autoSize) {nrOfLines = fitInAddrWindow(utfPosArr, strChLength, win_W, win_H, narrow, noWrap);}  // choose perfect fontsize
     if(!strChLength) return 0;
@@ -1996,60 +2001,43 @@ size_t TFT_SPI::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16
 exit:
     return charsDrawn;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-//   ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  B I T M A P  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫              *
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-#define bmpRead32(d, o) (d[o] | (uint16_t)(d[(o) + 1]) << 8 | (uint32_t)(d[(o) + 2]) << 16 | (uint32_t)(d[(o) + 3]) << 24)
-#define bmpRead16(d, o) (d[o] | (uint16_t)(d[(o) + 1]) << 8)
+    // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+    //    ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  B I T M A P  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫              *
+    // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+    #define bmpRead32(d, o) (d[o] | (uint16_t)(d[(o) + 1]) << 8 | (uint32_t)(d[(o) + 2]) << 16 | (uint32_t)(d[(o) + 3]) << 24)
+    #define bmpRead16(d, o) (d[o] | (uint16_t)(d[(o) + 1]) << 8)
 
-#define bmpColor8(c)  (((uint16_t)(((uint8_t*)(c))[0] & 0xE0) << 8) | ((uint16_t)(((uint8_t*)(c))[0] & 0x1C) << 6) | ((((uint8_t*)(c))[0] & 0x3) << 3))
-#define bmpColor16(c) ((((uint8_t*)(c))[0] | ((uint16_t)((uint8_t*)(c))[1]) << 8))
-#define bmpColor24(c) (((uint16_t)(((uint8_t*)(c))[2] & 0xF8) << 8) | ((uint16_t)(((uint8_t*)(c))[1] & 0xFC) << 3) | ((((uint8_t*)(c))[0] & 0xF8) >> 3))
-#define bmpColor32(c) (((uint16_t)(((uint8_t*)(c))[3] & 0xF8) << 8) | ((uint16_t)(((uint8_t*)(c))[2] & 0xFC) << 3) | ((((uint8_t*)(c))[1] & 0xF8) >> 3))
+    #define bmpColor8(c)  (((uint16_t)(((uint8_t*)(c))[0] & 0xE0) << 8) | ((uint16_t)(((uint8_t*)(c))[0] & 0x1C) << 6) | ((((uint8_t*)(c))[0] & 0x3) << 3))
+    #define bmpColor16(c) ((((uint8_t*)(c))[0] | ((uint16_t)((uint8_t*)(c))[1]) << 8))
+    #define bmpColor24(c) (((uint16_t)(((uint8_t*)(c))[2] & 0xF8) << 8) | ((uint16_t)(((uint8_t*)(c))[1] & 0xFC) << 3) | ((((uint8_t*)(c))[0] & 0xF8) >> 3))
+    #define bmpColor32(c) (((uint16_t)(((uint8_t*)(c))[3] & 0xF8) << 8) | ((uint16_t)(((uint8_t*)(c))[2] & 0xFC) << 3) | ((((uint8_t*)(c))[1] & 0xF8) >> 3))
 
 bool TFT_SPI::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight, float scale) {
-    if (scale <= 0) {
-        log_e("Invalid scale value: %f", scale);
-        return false;
-    }
+    if (scale <= 0.0f) return false;
 
-    if (!fs.exists(path)) {
-        log_e("file %s does not exist", path);
-        return false;
-    }
+    if (!fs.exists(path)) return false;
 
-    File bmp_file = fs.open(path);
-    if (!bmp_file) {
-        log_e("Failed to open file for reading: %s", path);
-        return false;
-    }
+    File bmp = fs.open(path);
+    if (!bmp) return false;
 
-    constexpr size_t headerLen = 0x36; // BMP-Header-Größe
-    uint8_t headerBuf[headerLen];
+    constexpr size_t headerLen = 54;
+    uint8_t          header[headerLen];
 
-    if (bmp_file.size() < headerLen || bmp_file.read(headerBuf, headerLen) < headerLen) {
-        log_e("Failed to read the file's header");
-        bmp_file.close();
-        return false;
-    }
+    if (bmp.read(header, headerLen) != headerLen) return false;
 
-    if (headerBuf[0] != 'B' || headerBuf[1] != 'M') {
-        log_e("Invalid BMP file format");
-        bmp_file.close();
-        return false;
-    }
+    if (header[0] != 'B' || header[1] != 'M') return false;
 
-    const uint32_t dataOffset = bmpRead32(headerBuf, 0x0A);
-    const int32_t bmpWidthI = bmpRead32(headerBuf, 0x12);
-    const int32_t bmpHeightI = bmpRead32(headerBuf, 0x16);
-    const uint16_t bitsPerPixel = bmpRead16(headerBuf, 0x1C);
-    const uint32_t compression = bmpRead32(headerBuf, 0x1E);
+    const uint32_t dataOffset = bmpRead32(header, 0x0A);
+    const int32_t  bmpWidthI = bmpRead32(header, 0x12);
+    const int32_t  bmpHeightI = bmpRead32(header, 0x16);
+    const uint16_t bpp = bmpRead16(header, 0x1C);
+    const uint32_t compression = bmpRead32(header, 0x1E);
 
-    if (compression != 0) {
-        log_e("Compressed BMP files are not supported");
-        bmp_file.close();
-        return false;
-    }
+    if (compression != 0) return false;
+
+    if (!(bpp == 16 || bpp == 24 || bpp == 32)) return false;
+
+    const bool bottomUp = (bmpHeightI > 0);
 
     const size_t bmpWidth = abs(bmpWidthI);
     const size_t bmpHeight = abs(bmpHeightI);
@@ -2057,81 +2045,56 @@ bool TFT_SPI::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, 
     const size_t scaledWidth = bmpWidth * scale;
     const size_t scaledHeight = bmpHeight * scale;
 
-    // Wenn maxWidth oder maxHeight 0 ist, wird der Wert ignoriert
-    const size_t effectiveMaxWidth = (maxWidth == 0) ? scaledWidth : maxWidth;
-    const size_t effectiveMaxHeight = (maxHeight == 0) ? scaledHeight : maxHeight;
+    const size_t drawWidth = (maxWidth == 0) ? scaledWidth : std::min((size_t)maxWidth, scaledWidth);
+    const size_t drawHeight = (maxHeight == 0) ? scaledHeight : std::min((size_t)maxHeight, scaledHeight);
 
-    // Begrenzen der tatsächlichen Darstellungsgröße auf den verfügbaren Ausschnitt
-    const size_t displayWidth = std::min(effectiveMaxWidth, scaledWidth);
-    const size_t displayHeight = std::min(effectiveMaxHeight, scaledHeight);
+    size_t dstWidth = (m_rotation & 1) ? drawHeight : drawWidth;
+    size_t dstHeight = (m_rotation & 1) ? drawWidth : drawHeight;
 
-    const size_t rowSize = ((bmpWidth * bitsPerPixel / 8 + 3) & ~3);
-    uint8_t* rowBuffer = new uint8_t[rowSize];
+    // --- Clipping auf Display ---
+    if (x >= logicalWidth() || y >= logicalHeight()) return false;
+    if (x + dstWidth > logicalWidth()) dstWidth = logicalWidth() - x;
+    if (y + dstHeight > logicalHeight()) dstHeight = logicalHeight() - y;
 
-    for (size_t i_y = 0; i_y < displayHeight; ++i_y) {
-        const float srcY = i_y / scale;
-        const size_t srcRow = bmpHeight - 1 - (size_t)srcY;
+    const size_t rowSize = ((bmpWidth * bpp / 8 + 3) & ~3);
 
-        if (srcRow >= bmpHeight) continue;
+    if (rowSize > m_ROWBUFFERSIZE) return false; // Schutz gegen zu große BMPs
 
-        bmp_file.seek(dataOffset + srcRow * rowSize);
-        if (bmp_file.read(rowBuffer, rowSize) != rowSize) {
-            log_e("Failed to read BMP row data");
-            delete[] rowBuffer;
-            bmp_file.close();
-            return false;
-        }
+    uint16_t* pixelBuffer = (uint16_t*)ps_malloc(drawWidth * drawHeight * 2);
+    for (size_t dy = 0; dy < drawHeight; ++dy) {
 
-        for (size_t i_x = 0; i_x < displayWidth; ++i_x) {
-            const float srcX = i_x / scale;
-            const size_t srcCol = (size_t)srcX;
+        const size_t srcYScaled = (dy * bmpHeight) / scaledHeight;
+        const size_t srcRow = bottomUp ? (bmpHeight - 1 - srcYScaled) : srcYScaled;
 
-            if (srcCol >= bmpWidth) continue;
+        bmp.seek(dataOffset + srcRow * rowSize);
+        bmp.read(m_rowBuffer, rowSize);
 
-            const uint8_t* pixelPtr = rowBuffer + srcCol * (bitsPerPixel / 8);
-            uint16_t color;
+        for (size_t dx = 0; dx < drawWidth; ++dx) {
 
-            switch (bitsPerPixel) {
-                case 16:
-                    color = bmpColor16(pixelPtr);
-                    break;
-                case 24:
-                    color = bmpColor24(pixelPtr);
-                    break;
-                case 32:
-                    color = bmpColor32(pixelPtr);
-                    break;
-                default:
-                    log_e("Unsupported bitsPerPixel: %d", bitsPerPixel);
-                    delete[] rowBuffer;
-                    bmp_file.close();
-                    return false;
+            const size_t srcXScaled = (dx * bmpWidth) / scaledWidth;
+
+            const uint8_t* pixelPtr = m_rowBuffer + srcXScaled * (bpp / 8);
+
+            uint16_t color = 0;
+
+            switch (bpp) {
+                case 16: color = bmpColor16(pixelPtr); break;
+                case 24: color = bmpColor24(pixelPtr); break;
+                case 32: color = bmpColor32(pixelPtr); break;
             }
 
-            const size_t xPos = x + i_x;
-            const size_t yPos = y + i_y;
-
-            if (xPos < m_h_res && yPos < m_v_res) {
-                m_framebuffer[0][yPos * m_h_res + xPos] = color;
-            }
+            pixelBuffer[dy * drawWidth + dx] = color;
         }
     }
-
-    delete[] rowBuffer;
-    bmp_file.close();
-
-    startWrite();
-    setAddrWindow(x, y, displayWidth, displayHeight);
-    for(int16_t j = y; j < y + displayHeight; j++) {
-        writePixels(m_framebuffer[0] + j * m_h_res + x, displayWidth);
-    }
-    endWrite();
-
+    renderRGB565(x, y, drawWidth, drawHeight, pixelBuffer, NULL);
+    bmp.close();
+    free(pixelBuffer);
     return true;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-//   ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  G I F  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//    ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  G I F  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool TFT_SPI::drawGifFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint8_t repeat) {
 
     gif.Iterations = repeat;
@@ -2139,49 +2102,60 @@ bool TFT_SPI::drawGifFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, 
     GIF_DecoderReset();
 
     gif_file = fs.open(path);
-    if(!gif_file) {
-        if(tft_info) tft_info("Failed to open file for reading");
+    if (!gif_file) {
+        if (tft_info) tft_info("Failed to open file for reading");
         return false;
     }
     GIF_readGifItems();
     // check it's a gif
-    if(!gif_GifHeader.startsWith("GIF")) {
-        if(tft_info) tft_info("File is not a gif");
+    if (!gif_GifHeader.startsWith("GIF")) {
+        if (tft_info) tft_info("File is not a gif");
         return false;
     }
     // check dimensions
     // { log_w("Width: %i, Height: %i,", gif.LogicalScreenWidth, gif.LogicalScreenHeight); }
-    if(gif.LogicalScreenWidth * gif.LogicalScreenHeight > 155000) {
-        if(tft_info) tft_info("!Image is too big!!");
+    if (gif.LogicalScreenWidth * gif.LogicalScreenHeight > 155000) {
+        if (tft_info) tft_info("!Image is too big!!");
         return false;
     }
 
-    if(psramFound()){gif_ImageBuffer = (uint16_t*) ps_malloc(gif.LogicalScreenWidth * gif.LogicalScreenHeight * sizeof(uint16_t));}
-    else            {gif_ImageBuffer = (uint16_t*)    malloc(gif.LogicalScreenWidth * gif.LogicalScreenHeight * sizeof(uint16_t));}
+    if (psramFound()) {
+        gif_ImageBuffer = (uint16_t*)ps_malloc(gif.LogicalScreenWidth * gif.LogicalScreenHeight * sizeof(uint16_t));
+    } else {
+        gif_ImageBuffer = (uint16_t*)malloc(gif.LogicalScreenWidth * gif.LogicalScreenHeight * sizeof(uint16_t));
+    }
 
-    if(psramFound()){gif_RestoreBuffer = (uint16_t*) ps_malloc(gif.LogicalScreenWidth * gif.LogicalScreenHeight * sizeof(uint16_t));}
-    else            {gif_RestoreBuffer = (uint16_t*)    malloc(gif.LogicalScreenWidth * gif.LogicalScreenHeight * sizeof(uint16_t));}
+    if (psramFound()) {
+        gif_RestoreBuffer = (uint16_t*)ps_malloc(gif.LogicalScreenWidth * gif.LogicalScreenHeight * sizeof(uint16_t));
+    } else {
+        gif_RestoreBuffer = (uint16_t*)malloc(gif.LogicalScreenWidth * gif.LogicalScreenHeight * sizeof(uint16_t));
+    }
 
-    if(!gif_ImageBuffer)   {if(tft_info) tft_info("!Not enough memory!!"); return false;}
-    if(!gif_RestoreBuffer) {if(tft_info) tft_info("!Not enough memory!!"); return false;}
+    if (!gif_ImageBuffer) {
+        if (tft_info) tft_info("!Not enough memory!!");
+        return false;
+    }
+    if (!gif_RestoreBuffer) {
+        if (tft_info) tft_info("!Not enough memory!!");
+        return false;
+    }
 
-    if(GIF_decodeGif(x, y) == false) {
+    if (GIF_decodeGif(x, y) == false) {
         GIF_freeMemory();
         gif_file.close();
         gif.drawNextImage = false;
         log_w("GIF file closed");
         return true;
-    }
-    else {
+    } else {
         gif.drawNextImage = true;
     }
     return true;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-bool TFT_SPI::GIF_loop(){
-    if(!gif.drawNextImage) return false;
-    if(gif.TimeStamp > millis()) return false;
-    if(!GIF_decodeGif(100, 100)){
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+bool TFT_SPI::GIF_loop() {
+    if (!gif.drawNextImage) return false;
+    if (gif.TimeStamp > millis()) return false;
+    if (!GIF_decodeGif(100, 100)) {
         GIF_freeMemory();
         gif_file.close();
         gif.drawNextImage = false;
@@ -2190,7 +2164,7 @@ bool TFT_SPI::GIF_loop(){
     }
     return true;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::GIF_readHeader() {
 
     //      7 6 5 4 3 2 1 0        Field Name                    Type
@@ -2334,10 +2308,10 @@ void TFT_SPI::GIF_readLocalColorTable() {
     gif_LocalColorTable.clear();
     gif_LocalColorTable.shrink_to_fit();
     gif_LocalColorTable.reserve(gif.SizeOfLocalColorTable);
-    if(gif.LocalColorTableFlag == 1) {
+    if (gif.LocalColorTableFlag == 1) {
         char     rgb_buff[3];
         uint16_t i = 0;
-        while(i != gif.SizeOfLocalColorTable) {
+        while (i != gif.SizeOfLocalColorTable) {
             gif_file.readBytes(rgb_buff, 3);
             // fill LocalColorTable, pass 8-bit (each) R,G,B, get back 16-bit packed color
             gif_LocalColorTable.push_back(((rgb_buff[0] & 0xF8) << 8) | ((rgb_buff[1] & 0xFC) << 3) | ((rgb_buff[2] & 0xF8) >> 3));
@@ -2369,10 +2343,10 @@ void TFT_SPI::GIF_readGlobalColorTable() {
     //        7                           256                 768
 
     gif_GlobalColorTable.clear();
-    if(gif.GlobalColorTableFlag == 1) {
+    if (gif.GlobalColorTableFlag == 1) {
         char     rgb_buff[3];
         uint16_t i = 0;
-        while(i != gif.SizeOfGlobalColorTable) {
+        while (i != gif.SizeOfGlobalColorTable) {
             gif_file.readBytes(rgb_buff, 3);
             // fill GlobalColorTable, pass 8-bit (each) R,G,B, get back 16-bit packed color
             gif_GlobalColorTable.push_back(((rgb_buff[0] & 0xF8) << 8) | ((rgb_buff[1] & 0xFC) << 3) | ((rgb_buff[2] & 0xF8) >> 3));
@@ -2387,35 +2361,32 @@ void TFT_SPI::GIF_readGlobalColorTable() {
 
 void TFT_SPI::GIF_readGraphicControlExtension() {
 
-/*     7 6 5 4 3 2 1 0
-   0 | 0x21            | Extension Introducer  - Identifies the beginning of an extension block. This field contains the fixed value 0x21.
-   1 | 0xF9            | Graphic Control Label - Identifies the type of extension block. For the Graphic Control Extension, this field contains the fixed value 0xF9.
-   2 | 0x04            | Block Size - The size of the block, not including the Block Terminator. This field contains the fixed value 0x04.
-   3 | x x x d d d u t | Packed Fields: xxx - reserved, ddd - disposal method, u . user input flag, t - transparent color flag.
-   4 |                 | Delay Time LSB - The delay time in hundredths of a second before the next image is displayed. This field contains the delay time.
-   5 |                 | Delay Time MSB - The delay time in hundredths of a second before the next image is displayed. This field contains the delay time.
-   6 |                 | Transparent Color Index - The index of the transparent color in the color table. This field contains the index of the transparent color.
-   7 | 0x00            | Block Terminator - Marks the end of the Graphic Control Extension. This field contains the fixed value 0x00.
+    /*     7 6 5 4 3 2 1 0
+       0 | 0x21            | Extension Introducer  - Identifies the beginning of an extension block. This field contains the fixed value 0x21.
+       1 | 0xF9            | Graphic Control Label - Identifies the type of extension block. For the Graphic Control Extension, this field contains the fixed value 0xF9.
+       2 | 0x04            | Block Size - The size of the block, not including the Block Terminator. This field contains the fixed value 0x04.
+       3 | x x x d d d u t | Packed Fields: xxx - reserved, ddd - disposal method, u . user input flag, t - transparent color flag.
+       4 |                 | Delay Time LSB - The delay time in hundredths of a second before the next image is displayed. This field contains the delay time.
+       5 |                 | Delay Time MSB - The delay time in hundredths of a second before the next image is displayed. This field contains the delay time.
+       6 |                 | Transparent Color Index - The index of the transparent color in the color table. This field contains the index of the transparent color.
+       7 | 0x00            | Block Terminator - Marks the end of the Graphic Control Extension. This field contains the fixed value 0x00.
 
-   Disposal Method - Indicates the way in which the graphic is to be treated after being displayed
-                       0 -   No disposal specified. The decoder is not required to take any action.
-                       1 -   Do not dispose. The graphic is to be left in place.
-                       2 -   Restore to background color. The area used by the graphic must be restored to the background color.
-                       3 -   Restore to previous. The decoder is required to restore the area overwritten by the graphic with
-   User Input Flag - Indicates whether or not user input is expected before continuing. If the flag is set, processing will continue when user input is entered. The nature of the User input
-                     is determined by the application (Carriage Return, Mouse Button Click, etc.).
-                       0 -   User input is not expected.
-                       1 -   User input is expected.
-   Transparency Flag - Indicates whether a transparency index is given in the Transparent Index field. (This field is the least significant bit of the byte.)
-                       0 -   Transparent Index is not given.
-                       1 -   Transparent Index is given.
-*/
+       Disposal Method - Indicates the way in which the graphic is to be treated after being displayed
+                           0 -   No disposal specified. The decoder is not required to take any action.
+                           1 -   Do not dispose. The graphic is to be left in place.
+                           2 -   Restore to background color. The area used by the graphic must be restored to the background color.
+                           3 -   Restore to previous. The decoder is required to restore the area overwritten by the graphic with
+       User Input Flag - Indicates whether or not user input is expected before continuing. If the flag is set, processing will continue when user input is entered. The nature of the User
+       input is determined by the application (Carriage Return, Mouse Button Click, etc.). 0 -   User input is not expected. 1 -   User input is expected. Transparency Flag - Indicates whether
+       a transparency index is given in the Transparent Index field. (This field is the least significant bit of the byte.) 0 -   Transparent Index is not given. 1 -   Transparent Index is
+       given.
+    */
 
     uint8_t BlockSize = 0;
     gif_file.readBytes(gif_buffer, 1);
     BlockSize = gif_buffer[0]; // Number of bytes in the block, not including the Block Terminator
 
-    if(BlockSize == 0) return;
+    if (BlockSize == 0) return;
     gif_file.readBytes(gif_buffer, BlockSize);
     gif.PackedFields = gif_buffer[0];
     gif.DisposalMethod = (gif.PackedFields & 0x1C) >> 2;
@@ -2473,7 +2444,7 @@ uint8_t TFT_SPI::GIF_readPlainTextExtension(char* buf) {
     uint8_t BlockSize = 0, numBytes = 0;
     BlockSize = gif_file.read();
     // log_i("BlockSize=%i", BlockSize);
-    if(BlockSize > 0) {
+    if (BlockSize > 0) {
         gif_file.readBytes(gif_buffer, BlockSize);
         // log_i("%s", buffer);
     }
@@ -2496,47 +2467,47 @@ uint8_t TFT_SPI::GIF_readPlainTextExtension(char* buf) {
 
 uint8_t TFT_SPI::GIF_readApplicationExtension(char* buf) {
 
-    //     7 6 5 4 3 2 1 0        Field Name                    Type
-    //    +---------------+
-    // 0  |               |       Block Size                    Byte
-    //    +---------------+
-    // 1  |               |
-    //    +-             -+
-    // 2  |               |
-    //    +-             -+
-    // 3  |               |       Application Identifier        8 Bytes
-    //    +-             -+
-    // 4  |               |
-    //    +-             -+
-    // 5  |               |
-    //    +-             -+
-    // 6  |               |
-    //    +-             -+
-    // 7  |               |
-    //    +-             -+
-    // 8  |               |
-    //    +---------------+
-    // 9  |               |
-    //    +-             -+
+    //      7 6 5 4 3 2 1 0        Field Name                    Type
+    //     +---------------+
+    // 0   |               |       Block Size                    Byte
+    //     +---------------+
+    // 1   |               |
+    //     +-             -+
+    // 2   |               |
+    //     +-             -+
+    // 3   |               |       Application Identifier        8 Bytes
+    //     +-             -+
+    // 4   |               |
+    //     +-             -+
+    // 5   |               |
+    //     +-             -+
+    // 6   |               |
+    //     +-             -+
+    // 7   |               |
+    //     +-             -+
+    // 8   |               |
+    //     +---------------+
+    // 9   |               |
+    //     +-             -+
     // 10  |               |       Appl. Authentication Code     3 Bytes
-    //    +-             -+
+    //     +-             -+
     // 11  |               |
-    //    +---------------+
+    //     +---------------+
     //
-    //    +===============+
-    //    |               |
-    //    |               |       Application Data              Data Sub-blocks
-    //    |               |
-    //    |               |
-    //    +===============+
+    //     +===============+
+    //     |               |
+    //     |               |       Application Data              Data Sub-blocks
+    //     |               |
+    //     |               |
+    //     +===============+
     //
-    //    +---------------+
-    // 0  |               |       Block Terminator              Byte
-    //    +---------------+
+    //     +---------------+
+    // 0   |               |       Block Terminator              Byte
+    //     +---------------+
 
     uint8_t BlockSize = 0, numBytes = 0;
     BlockSize = gif_file.read();
-    if(BlockSize > 0) { gif_file.readBytes(gif_buffer, BlockSize); }
+    if (BlockSize > 0) { gif_file.readBytes(gif_buffer, BlockSize); }
     numBytes = GIF_readDataSubBlock(buf);
     gif_file.readBytes(gif_buffer, 1); // BlockTerminator, marks the end of the Graphic Control Extension
     return numBytes;
@@ -2547,20 +2518,20 @@ uint8_t TFT_SPI::GIF_readApplicationExtension(char* buf) {
 uint8_t TFT_SPI::GIF_readCommentExtension(char* buf) {
 
     //    7 6 5 4 3 2 1 0        Field Name                    Type
-    //  +===============+
-    //  |               |
+    //   +===============+
+    //   |               |
     // N |               |       Comment Data                  Data Sub-blocks
-    //  |               |
-    //  +===============+
+    //   |               |
+    //   +===============+
     //
-    //  +---------------+
+    //   +---------------+
     // 0 |               |       Block Terminator              Byte
-    //  +---------------+
+    //   +---------------+
 
     uint8_t numBytes = 0;
     numBytes = GIF_readDataSubBlock(buf);
-    //sprintf(chbuf, "GIF: Comment %s", buf);
-    // if(tft_info) tft_info(chbuf);
+    // sprintf(chbuf, "GIF: Comment %s", buf);
+    //  if(tft_info) tft_info(chbuf);
     gif_file.readBytes(gif_buffer, 1); // BlockTerminator, marks the end of the Graphic Control Extension
     return numBytes;
 }
@@ -2593,11 +2564,11 @@ uint8_t TFT_SPI::GIF_readDataSubBlock(char* buf) {
 
     uint8_t BlockSize = 0;
     BlockSize = gif_file.read();
-    if(BlockSize > 0) {
+    if (BlockSize > 0) {
         gif.ZeroDataBlock = false;
         gif_file.readBytes(buf, BlockSize);
-    }
-    else gif.ZeroDataBlock = true;
+    } else
+        gif.ZeroDataBlock = true;
     return BlockSize;
 }
 
@@ -2605,7 +2576,7 @@ uint8_t TFT_SPI::GIF_readDataSubBlock(char* buf) {
 
 bool TFT_SPI::GIF_readExtension(char Label) {
     char buf[256];
-    switch(Label) {
+    switch (Label) {
         case 0x01:
             // log_w("PlainTextExtension");
             GIF_readPlainTextExtension(buf);
@@ -2654,17 +2625,17 @@ int32_t TFT_SPI::GIF_GetCode(int32_t code_size, int32_t flag) {
     int32_t        i, j, ret;
     uint8_t        count;
 
-    if(flag) {
+    if (flag) {
         curbit = 0;
         lastbit = 0;
         done = false;
         return 0;
     }
 
-    if((curbit + code_size) >= lastbit) {
-        if(done) {
+    if ((curbit + code_size) >= lastbit) {
+        if (done) {
             // log_i("done");
-            if(curbit >= lastbit) { return 0; }
+            if (curbit >= lastbit) { return 0; }
             return -1;
         }
         DSBbuffer[0] = DSBbuffer[last_byte - 2];
@@ -2678,7 +2649,7 @@ int32_t TFT_SPI::GIF_GetCode(int32_t code_size, int32_t flag) {
         count = GIF_readDataSubBlock(&DSBbuffer[2]);
         //    startWrite();
         // log_i("Dtatblocksize %i", count);
-        if(count == 0) done = true;
+        if (count == 0) done = true;
 
         last_byte = 2 + count;
 
@@ -2687,7 +2658,7 @@ int32_t TFT_SPI::GIF_GetCode(int32_t code_size, int32_t flag) {
         lastbit = (2 + count) * 8;
     }
     ret = 0;
-    for(i = curbit, j = 0; j < code_size; ++i, ++j) ret |= ((DSBbuffer[i / 8] & (1 << (i % 8))) != 0) << j;
+    for (i = curbit, j = 0; j < code_size; ++i, ++j) ret |= ((DSBbuffer[i / 8] & (1 << (i % 8))) != 0) << j;
 
     curbit += code_size;
 
@@ -2701,9 +2672,9 @@ int32_t TFT_SPI::GIF_LZWReadByte(bool init) {
     int32_t        code, incode;
     static int32_t firstcode, oldcode;
 
-    if(gif_next.capacity() < (1 << gif_MaxLzwBits)) gif_next.reserve((1 << gif_MaxLzwBits) - gif_next.capacity());
-    if(gif_vals.capacity() < (1 << gif_MaxLzwBits)) gif_vals.reserve((1 << gif_MaxLzwBits) - gif_vals.capacity());
-    if(gif_stack.capacity() < (1 << (gif_MaxLzwBits + 1))) gif_stack.reserve((1 << (gif_MaxLzwBits + 1)) - gif_stack.capacity());
+    if (gif_next.capacity() < (1 << gif_MaxLzwBits)) gif_next.reserve((1 << gif_MaxLzwBits) - gif_next.capacity());
+    if (gif_vals.capacity() < (1 << gif_MaxLzwBits)) gif_vals.reserve((1 << gif_MaxLzwBits) - gif_vals.capacity());
+    if (gif_stack.capacity() < (1 << (gif_MaxLzwBits + 1))) gif_stack.reserve((1 << (gif_MaxLzwBits + 1)) - gif_stack.capacity());
     gif_next.clear();
     gif_vals.clear();
     gif_stack.clear();
@@ -2712,7 +2683,7 @@ int32_t TFT_SPI::GIF_LZWReadByte(bool init) {
 
     int32_t i;
 
-    if(init) {
+    if (init) {
         //    LWZMinCodeSize      ColorCodes      ClearCode       EOICode
         //    2                   #0-#3           #4              #5
         //    3                   #0-#7           #8              #9
@@ -2734,32 +2705,31 @@ int32_t TFT_SPI::GIF_LZWReadByte(bool init) {
 
         fresh = true;
 
-        for(i = 0; i < gif.ClearCode; i++) {
+        for (i = 0; i < gif.ClearCode; i++) {
             gif_next[i] = 0;
             gif_vals[i] = i;
         }
-        for(; i < (1 << gif_MaxLzwBits); i++) gif_next[i] = gif_vals[0] = 0;
+        for (; i < (1 << gif_MaxLzwBits); i++) gif_next[i] = gif_vals[0] = 0;
 
         sp = &gif_stack[0];
 
         return 0;
-    }
-    else if(fresh) {
+    } else if (fresh) {
         fresh = false;
-        do { firstcode = oldcode = GIF_GetCode(gif.CodeSize, false); } while(firstcode == gif.ClearCode);
+        do { firstcode = oldcode = GIF_GetCode(gif.CodeSize, false); } while (firstcode == gif.ClearCode);
 
         return firstcode;
     }
 
-    if(sp > &gif_stack[0]) return *--sp;
+    if (sp > &gif_stack[0]) return *--sp;
 
-    while((code = GIF_GetCode(gif.CodeSize, false)) >= 0) {
-        if(code == gif.ClearCode) {
-            for(i = 0; i < gif.ClearCode; ++i) {
+    while ((code = GIF_GetCode(gif.CodeSize, false)) >= 0) {
+        if (code == gif.ClearCode) {
+            for (i = 0; i < gif.ClearCode; ++i) {
                 gif_next[i] = 0;
                 gif_vals[i] = i;
             }
-            for(; i < (1 << gif_MaxLzwBits); ++i) gif_next[i] = gif_vals[i] = 0;
+            for (; i < (1 << gif_MaxLzwBits); ++i) gif_next[i] = gif_vals[i] = 0;
 
             gif.CodeSize = gif.LZWMinimumCodeSize + 1;
             gif.MaxCodeSize = 2 * gif.ClearCode;
@@ -2768,54 +2738,53 @@ int32_t TFT_SPI::GIF_LZWReadByte(bool init) {
 
             firstcode = oldcode = GIF_GetCode(gif.CodeSize, false);
             return firstcode;
-        }
-        else if(code == gif.EOIcode) {
+        } else if (code == gif.EOIcode) {
             int32_t count;
             char    buf[260];
 
-            if(gif.ZeroDataBlock) return -2;
-            while((count = GIF_readDataSubBlock(buf)) > 0);
+            if (gif.ZeroDataBlock) return -2;
+            while ((count = GIF_readDataSubBlock(buf)) > 0);
 
-            if(count != 0) return -2;
+            if (count != 0) return -2;
         }
 
         incode = code;
 
-        if(code >= gif.MaxCode) {
+        if (code >= gif.MaxCode) {
             *sp++ = firstcode;
             code = oldcode;
         }
 
-        while(code >= gif.ClearCode) {
+        while (code >= gif.ClearCode) {
             *sp++ = gif_vals[code];
-            if(code == (int32_t)gif_next[code]) { return -1; }
+            if (code == (int32_t)gif_next[code]) { return -1; }
             code = gif_next[code];
         }
         *sp++ = firstcode = gif_vals[code];
 
-        if((code = gif.MaxCode) < (1 << gif_MaxLzwBits)) {
+        if ((code = gif.MaxCode) < (1 << gif_MaxLzwBits)) {
             gif_next[code] = oldcode;
             gif_vals[code] = firstcode;
             ++gif.MaxCode;
-            if((gif.MaxCode >= gif.MaxCodeSize) && (gif.MaxCodeSize < (1 << gif_MaxLzwBits))) {
+            if ((gif.MaxCode >= gif.MaxCodeSize) && (gif.MaxCodeSize < (1 << gif_MaxLzwBits))) {
                 gif.MaxCodeSize *= 2;
                 ++gif.CodeSize;
             }
         }
         oldcode = incode;
 
-        if(sp > &gif_stack[0]) return *--sp;
+        if (sp > &gif_stack[0]) return *--sp;
     }
     return code;
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 bool TFT_SPI::GIF_ReadImage(uint16_t x, uint16_t y) {
-    int32_t  color;
-    int32_t  xpos = x + gif.ImageLeftPosition;
-    int32_t  ypos = y + gif.ImageTopPosition;
-    int32_t  max = gif.ImageHeight * gif.ImageWidth;
-    uint32_t i = 0;
-    static uint8_t gif_LastDisposalMethod = 0;
+    int32_t         color;
+    int32_t         xpos = x + gif.ImageLeftPosition;
+    int32_t         ypos = y + gif.ImageTopPosition;
+    int32_t         max = gif.ImageHeight * gif.ImageWidth;
+    uint32_t        i = 0;
+    static uint8_t  gif_LastDisposalMethod = 0;
     static uint16_t gif_LastImageWidth = 0;
     static uint16_t gif_LastImageHeight = 0;
     static uint16_t gif_LastImageLeftPosition = 0;
@@ -2824,8 +2793,7 @@ bool TFT_SPI::GIF_ReadImage(uint16_t x, uint16_t y) {
     gif.LZWMinimumCodeSize = gif_file.read();
     if (GIF_LZWReadByte(true) < 0) return false;
 
-
-    if(gif.DisposalMethod < 2){
+    if (gif.DisposalMethod < 2) {
 
         while (i < max) {
             color = GIF_LZWReadByte(false);
@@ -2854,9 +2822,7 @@ bool TFT_SPI::GIF_ReadImage(uint16_t x, uint16_t y) {
                 uint16_t buf_x = gif.ImageLeftPosition + col;
                 uint16_t buf_y = gif.ImageTopPosition + row;
 
-                if (buf_x < gif.LogicalScreenWidth && buf_y < gif.LogicalScreenHeight) {
-                    gif_ImageBuffer[buf_y * gif.LogicalScreenWidth + buf_x] = gif_LocalColorTable[gif.BackgroundColorIndex];
-                }
+                if (buf_x < gif.LogicalScreenWidth && buf_y < gif.LogicalScreenHeight) { gif_ImageBuffer[buf_y * gif.LogicalScreenWidth + buf_x] = gif_LocalColorTable[gif.BackgroundColorIndex]; }
             }
         }
     }
@@ -2895,30 +2861,34 @@ bool TFT_SPI::GIF_ReadImage(uint16_t x, uint16_t y) {
         }
     }
 
-    // Copy from gif_imagebuffer in m framebuffer (only part of the current picture)
-    for (uint16_t row = 0; row < gif.ImageHeight; row++) {
-        for (uint16_t col = 0; col < gif.ImageWidth; col++) {
-            uint16_t fb_x = xpos + col;
-            uint16_t fb_y = ypos + row;
+    // --- Build contiguous RGB565 block for this frame ---
+
+    const uint16_t frameW = gif.ImageWidth;
+    const uint16_t frameH = gif.ImageHeight;
+
+    uint16_t* pixelBuffer = (uint16_t*)ps_malloc(frameW * frameH * sizeof(uint16_t));
+
+    if (!pixelBuffer) return false;
+
+    for (uint16_t row = 0; row < frameH; row++) {
+        for (uint16_t col = 0; col < frameW; col++) {
 
             uint16_t buf_x = gif.ImageLeftPosition + col;
             uint16_t buf_y = gif.ImageTopPosition + row;
 
-            if (fb_x < m_h_res && fb_y < m_v_res &&
-                buf_x < gif.LogicalScreenWidth && buf_y < gif.LogicalScreenHeight) {
-                m_framebuffer[0][fb_y * m_h_res + fb_x] = gif_ImageBuffer[buf_y * gif.LogicalScreenWidth + buf_x];
+            if (buf_x >= gif.LogicalScreenWidth || buf_y >= gif.LogicalScreenHeight) {
+                pixelBuffer[row * frameW + col] = 0x0000;
+                continue;
             }
+
+            pixelBuffer[row * frameW + col] = gif_ImageBuffer[buf_y * gif.LogicalScreenWidth + buf_x];
         }
     }
 
-    //panelDrawBitmap(xpos, ypos, xpos + gif.ImageWidth, ypos + gif.ImageHeight, m_framebuffer[0]);
+    // --- Unified render path ---
+    renderRGB565(xpos, ypos, frameW, frameH, pixelBuffer, NULL);
 
-    startWrite();
-    setAddrWindow(xpos, ypos, gif.ImageWidth, gif.ImageHeight);
-    for(int16_t j = y; j < ypos + gif.ImageHeight; j++) {
-        writePixels(m_framebuffer[0] + j * m_h_res + xpos, gif.ImageWidth);
-    }
-    endWrite();
+    free(pixelBuffer);
 
     return true;
 }
@@ -2936,16 +2906,16 @@ bool TFT_SPI::GIF_decodeGif(uint16_t x, uint16_t y) {
     char           c = 0;
     static int32_t test = 1;
     char           Label = 0;
-    if(gif.decodeSdFile_firstread == true) GIF_readGlobalColorTable(); // If exists
+    if (gif.decodeSdFile_firstread == true) GIF_readGlobalColorTable(); // If exists
     gif.decodeSdFile_firstread = false;
 
-    while(c != ';') { // Trailer found
+    while (c != ';') { // Trailer found
         c = gif_file.read();
-        if(c == '!') {               // it is a Extension
+        if (c == '!') {              // it is a Extension
             Label = gif_file.read(); // Label
             GIF_readExtension(Label);
         }
-        if(c == ',') {
+        if (c == ',') {
             GIF_readImageDescriptor(); // ImgageDescriptor
             GIF_readLocalColorTable(); // can follow the ImagrDescriptor
             GIF_ReadImage(x, y);       // read Image Data
@@ -2962,61 +2932,72 @@ bool TFT_SPI::GIF_decodeGif(uint16_t x, uint16_t y) {
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT_SPI::GIF_freeMemory() {
-    gif_next.clear();               gif_next.shrink_to_fit();
-    gif_vals.clear();               gif_vals.shrink_to_fit();
-    gif_stack.clear();              gif_stack.shrink_to_fit();
-    gif_GlobalColorTable.clear();   gif_GlobalColorTable.shrink_to_fit();
-    gif_LocalColorTable.clear();    gif_LocalColorTable.shrink_to_fit();
-    if(gif_ImageBuffer){free(gif_ImageBuffer); gif_ImageBuffer = NULL;}
-    if(gif_RestoreBuffer){free(gif_RestoreBuffer); gif_RestoreBuffer = NULL;}
+    gif_next.clear();
+    gif_next.shrink_to_fit();
+    gif_vals.clear();
+    gif_vals.shrink_to_fit();
+    gif_stack.clear();
+    gif_stack.shrink_to_fit();
+    gif_GlobalColorTable.clear();
+    gif_GlobalColorTable.shrink_to_fit();
+    gif_LocalColorTable.clear();
+    gif_LocalColorTable.shrink_to_fit();
+    if (gif_ImageBuffer) {
+        free(gif_ImageBuffer);
+        gif_ImageBuffer = NULL;
+    }
+    if (gif_RestoreBuffer) {
+        free(gif_RestoreBuffer);
+        gif_RestoreBuffer = NULL;
+    }
 }
 
-void TFT_SPI::GIF_DecoderReset(){
-   GIF_freeMemory();
-   gif_file.close();
-   gif.decodeSdFile_firstread = false;
-   gif.GlobalColorTableFlag = false;
-   gif.LocalColorTableFlag = false;
-   gif.SortFlag = false;
-   gif.TransparentColorFlag = false;
-   gif.UserInputFlag = false;
-   gif.ZeroDataBlock = 0;
-   gif.InterlaceFlag = false;
-   gif.drawNextImage = false;
-   gif.BackgroundColorIndex = 0;
-   gif.BlockTerninator = 0;
-   gif.CharacterCellWidth = 0;
-   gif.CharacterCellHeight = 0;
-   gif.CodeSize = 0;
-   gif.ColorResulution = 0;
-   gif.DisposalMethod = 0;
-   gif.ImageSeparator = 0;
-   gif.lenDatablock = 0;
-   gif.LZWMinimumCodeSize = 0;
-   gif.PackedFields = 0;
-   gif.PixelAspectRatio = 0;
-   gif.TextBackgroundColorIndex = 0;
-   gif.TextForegroundColorIndex = 0;
-   gif.TransparentColorIndex = 0;
-   gif.ClearCode = 0;
-   gif.DelayTime = 0;
-   gif.EOIcode = 0; // End Of Information
-   gif.ImageHeight = 0;
-   gif.ImageWidth = 0;
-   gif.ImageLeftPosition = 0;
-   gif.ImageTopPosition = 0;
-   gif.LogicalScreenWidth = 0;
-   gif.LogicalScreenHeight = 0;
-   gif.MaxCode = 0;
-   gif.MaxCodeSize = 0;
-   gif.SizeOfGlobalColorTable = 0;
-   gif.SizeOfLocalColorTable = 0;
-   gif.TextGridLeftPosition = 0;
-   gif.TextGridTopPosition = 0;
-   gif.TextGridWidth = 0;
-   gif.TextGridHeight = 0;
-   gif.TimeStamp = 0;
-   gif.Iterations = 0;
+void TFT_SPI::GIF_DecoderReset() {
+    GIF_freeMemory();
+    gif_file.close();
+    gif.decodeSdFile_firstread = false;
+    gif.GlobalColorTableFlag = false;
+    gif.LocalColorTableFlag = false;
+    gif.SortFlag = false;
+    gif.TransparentColorFlag = false;
+    gif.UserInputFlag = false;
+    gif.ZeroDataBlock = 0;
+    gif.InterlaceFlag = false;
+    gif.drawNextImage = false;
+    gif.BackgroundColorIndex = 0;
+    gif.BlockTerninator = 0;
+    gif.CharacterCellWidth = 0;
+    gif.CharacterCellHeight = 0;
+    gif.CodeSize = 0;
+    gif.ColorResulution = 0;
+    gif.DisposalMethod = 0;
+    gif.ImageSeparator = 0;
+    gif.lenDatablock = 0;
+    gif.LZWMinimumCodeSize = 0;
+    gif.PackedFields = 0;
+    gif.PixelAspectRatio = 0;
+    gif.TextBackgroundColorIndex = 0;
+    gif.TextForegroundColorIndex = 0;
+    gif.TransparentColorIndex = 0;
+    gif.ClearCode = 0;
+    gif.DelayTime = 0;
+    gif.EOIcode = 0; // End Of Information
+    gif.ImageHeight = 0;
+    gif.ImageWidth = 0;
+    gif.ImageLeftPosition = 0;
+    gif.ImageTopPosition = 0;
+    gif.LogicalScreenWidth = 0;
+    gif.LogicalScreenHeight = 0;
+    gif.MaxCode = 0;
+    gif.MaxCodeSize = 0;
+    gif.SizeOfGlobalColorTable = 0;
+    gif.SizeOfLocalColorTable = 0;
+    gif.TextGridLeftPosition = 0;
+    gif.TextGridTopPosition = 0;
+    gif.TextGridWidth = 0;
+    gif.TextGridHeight = 0;
+    gif.TimeStamp = 0;
+    gif.Iterations = 0;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 //    ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ J P E G ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫

@@ -268,7 +268,7 @@ class TFT_SPI {
     bool     drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight, float scale);
     bool     drawGifFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint8_t repeat);
     bool     drawJpgFile(fs::FS& fs, const char* path, uint16_t x = 0, uint16_t y = 0, uint16_t maxWidth = 0, uint16_t maxHeight = 0);
-    void     writeInAddrWindow(const uint8_t* bmi, uint16_t posX, uint16_t poxY, uint16_t width, uint16_t height);
+    void     writeTheFramebuffer(const uint8_t* bmi, uint16_t posX, uint16_t poxY, uint16_t width, uint16_t height);
     uint16_t analyzeText(const char* str, uint16_t* chArr, uint16_t* colorArr, uint16_t startColor);
     uint16_t fitinline(uint16_t* cpArr, uint16_t chLength, uint16_t begin, int16_t win_W, uint16_t* usedPxLength, bool narrow, bool noWrap);
     uint16_t getLineLength(const char* txt, bool narrow);
@@ -278,8 +278,8 @@ class TFT_SPI {
 
     inline void     setBackGoundColor(uint16_t BGcolor) { _backGroundColor = BGcolor; }
     inline uint16_t getBackGroundColor() { return _backGroundColor; }
-    inline void     setTextColor(uint16_t FGcolor) { _textColor = FGcolor; }
-    inline uint16_t getTextColor() { return _textColor; }
+    inline void     setTextColor(uint16_t FGcolor) { m_textColor = FGcolor; }
+    inline uint16_t getTextColor() { return m_textColor; }
     void            setFont(uint16_t font);
     inline void     setTextOrientation(uint16_t orientation = 0) { _textorientation = orientation; } // 0 h other v
     int16_t         height(void) const;
@@ -345,7 +345,7 @@ class TFT_SPI {
     uint8_t  m_rotation;
     uint8_t  _displayInversion;
     uint16_t _backGroundColor = TFT_WHITE;
-    uint16_t _textColor = TFT_BLACK;
+    uint16_t m_textColor = TFT_BLACK;
     uint8_t  _textorientation = 0;
     uint8_t  _TFT_DC = 21; /* Data or Command */
     uint8_t  _TFT_CS = 22; /* SPI Chip select */
