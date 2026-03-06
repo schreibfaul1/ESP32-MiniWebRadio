@@ -32,10 +32,10 @@ void TFT_SPI::loop(){
 void TFT_SPI::setTFTcontroller(uint8_t TFTcontroller) {
     _TFTcontroller = TFTcontroller; // 0=ILI9341, 1=HX8347D, 2=ILI9486(a), 3=ILI9486(b), 4= ILI9488, 5=ST7796
 
-    if(_TFTcontroller == ILI9341)   { m_h_res = 320; m_v_res = 240; _rotation = 0;}
-    if(_TFTcontroller == ILI9486)  { m_h_res = 480; m_v_res = 320; _rotation = 0;}
-    if(_TFTcontroller == ILI9488)   { m_h_res = 480; m_v_res = 320; _rotation = 0;}
-    if(_TFTcontroller == ST7796 )   { m_h_res = 480; m_v_res = 320; _rotation = 0;}
+    if(_TFTcontroller == ILI9341)   { m_h_res = 320; m_v_res = 240; m_rotation = 0;}
+    if(_TFTcontroller == ILI9486)  { m_h_res = 480; m_v_res = 320; m_rotation = 0;}
+    if(_TFTcontroller == ILI9488)   { m_h_res = 480; m_v_res = 320; m_rotation = 0;}
+    if(_TFTcontroller == ST7796 )   { m_h_res = 480; m_v_res = 320; m_rotation = 0;}
 
     m_framebuffer[0] = (uint16_t*)ps_malloc(m_h_res * m_v_res * 2);
     if(!m_framebuffer[0]) {if(tft_info) tft_info("Error allocating memory framebuffer 0"); return; }
@@ -72,9 +72,9 @@ void TFT_SPI::endWrite(void) {
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // Return the size of the display (per current rotation)
-int16_t TFT_SPI::width(void) const { return m_h_res; }
-int16_t TFT_SPI::height(void) const { return m_v_res; }
-uint8_t TFT_SPI::getRotation(void) const { return _rotation; }
+// int16_t TFT_SPI::width(void) const { return m_h_res; }
+// int16_t TFT_SPI::height(void) const { return m_v_res; }
+uint8_t TFT_SPI::getRotation(void) const { return m_rotation; }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool TFT_SPI::panelDrawBitmap(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t* bitmap) {
     bool res = false;
@@ -276,17 +276,72 @@ void TFT_SPI::writePixel(int16_t x, int16_t y, uint16_t color) {
     }
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_SPI::copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
-    for(uint16_t j = y; j < y + h; j++) {
-        memcpy(m_framebuffer[destination] + j * m_h_res + x, m_framebuffer[source] + j * m_h_res + x, w * 2);
+// void TFT_SPI::copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
+//     for(uint16_t j = y; j < y + h; j++) {
+//         memcpy(m_framebuffer[destination] + j * m_h_res + x, m_framebuffer[source] + j * m_h_res + x, w * 2);
+//     }
+//     startWrite();
+//     setAddrWindow(x, y, w, h);
+//     for(int16_t j = y; j < y + h; j++) {
+//         writePixels(m_framebuffer[0] + j * m_h_res + x, w);
+//     }
+//     endWrite();
+// }
+
+void TFT_SPI::drawRectLogicalFromFB(uint8_t fb, int16_t x, int16_t y, uint16_t w, uint16_t h) {
+    int32_t px[4], py[4];
+
+    int32_t sx[4] = {x, x + w - 1, x, x + w - 1};
+
+    int32_t sy[4] = {y, y, y + h - 1, y + h - 1};
+
+    int32_t minX = m_h_res;
+    int32_t minY = m_v_res;
+    int32_t maxX = -1;
+    int32_t maxY = -1;
+
+    for (int i = 0; i < 4; i++) {
+        mapRotation(m_rotation, sx[i], sy[i], px[i], py[i]);
+
+        if (px[i] < minX) minX = px[i];
+        if (py[i] < minY) minY = py[i];
+        if (px[i] > maxX) maxX = px[i];
+        if (py[i] > maxY) maxY = py[i];
     }
-    startWrite();
-    setAddrWindow(x, y, w, h);
-    for(int16_t j = y; j < y + h; j++) {
-        writePixels(m_framebuffer[0] + j * m_h_res + x, w);
-    }
-    endWrite();
+
+    panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[fb]);
 }
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+bool TFT_SPI::copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
+    if (w == 0 || h == 0) return false;
+
+    uint16_t lw = logicalWidth();
+    uint16_t lh = logicalHeight();
+
+    if (x >= lw || y >= lh) return false;
+
+    if (x + w > lw) w = lw - x;
+
+    if (y + h > lh) h = lh - y;
+
+    for (uint16_t row = 0; row < h; ++row) {
+        for (uint16_t col = 0; col < w; ++col) {
+            int32_t physX, physY;
+
+            // 🔥 rotate here only
+            mapRotation(m_rotation, x + col, y + row, physX, physY);
+
+            if (physX < 0 || physY < 0 || physX >= m_h_res || physY >= m_v_res) continue;
+
+            m_framebuffer[destination][physY * m_h_res + physX] = m_framebuffer[source][physY * m_h_res + physX];
+        }
+    }
+
+    if (destination == 0) drawRectLogicalFromFB(0, x,y,w,h);
+
+    return true;
+}
+
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::readRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t* data) {
     // Check whether parameters are within the valid range
@@ -5185,6 +5240,12 @@ void TFT_SPI::init() {
         writeCommand(0x2c);
         writeCommand(0x29); // Display on
         writeCommand(0x2c);
+
+        // uint8_t m = ili9341_rotations[m_rotation].madctl;
+        // m_h_res = ili9341_rotations[m_rotation].width;
+        // m_v_res = ili9341_rotations[m_rotation].height;
+        writeCommand(ILI9341_MADCTL);
+        spi_TFT->write(ILI9341_MADCTL_MV | ILI9341_MADCTL_BGR);
     }
     if(_TFTcontroller == ILI9486) {
         if(tft_info) tft_info("init " ANSI_ESC_CYAN "ILI9486");
@@ -5236,6 +5297,9 @@ void TFT_SPI::init() {
 
         writeCommand(0x29); // Display ON
         delay(150);
+
+        writeCommand(ILI9486_MADCTL);
+        spi_TFT->write16(ILI9486_MADCTL_MV | ILI9486_MADCTL_BGR);
     }
     //==========================================
     if(_TFTcontroller == ILI9488) {
@@ -5282,6 +5346,8 @@ void TFT_SPI::init() {
         delay(120);
         writeCommand(ILI9488_DISPON); // Display on
         delay(25);
+        writeCommand(ILI9488_MADCTL);
+        spi_TFT->write(ILI9488_MADCTL_MV | ILI9488_MADCTL_BGR);
     }
     //==========================================
     if(_TFTcontroller == ST7796) {
@@ -5340,107 +5406,110 @@ void TFT_SPI::init() {
 
         writeCommand(ST7796_DISPON); // Display on
         delay(25);
-    } //===============================================================================
+
+        writeCommand(ST7796_MADCTL);
+        spi_TFT->write(ST7796_MADCTL_MV | ST7796_MADCTL_BGR);
+     } //===============================================================================
 
     endWrite();
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::setRotation(uint8_t m) {
     _rotation = m % 4; // can't be higher than 3
-
-    if(_TFTcontroller == ILI9341) { // ILI9341
-        m = ili9341_rotations[_rotation].madctl;
-        m_h_res = ili9341_rotations[_rotation].width;
-        m_v_res = ili9341_rotations[_rotation].height;
-        startWrite();
-        writeCommand(ILI9341_MADCTL);
-        spi_TFT->write(m);
-        endWrite();
-    }
-    if(_TFTcontroller == ILI9486) {
-        _rotation = m % 4; // can't be higher than 3
-        startWrite();
-        writeCommand(ILI9486_MADCTL);
-        switch(_rotation) {
-            case 0:
-                spi_TFT->write16(ILI9486_MADCTL_MX | ILI9486_MADCTL_BGR);
-                m_h_res = ILI9486_WIDTH;
-                m_v_res = ILI9486_HEIGHT;
-                break;
-            case 1:
-                spi_TFT->write16(ILI9486_MADCTL_MV | ILI9486_MADCTL_BGR);
-                m_v_res = ILI9486_WIDTH;
-                m_h_res = ILI9486_HEIGHT;
-                break;
-            case 2:
-                spi_TFT->write16(ILI9486_MADCTL_MY | ILI9486_MADCTL_BGR);
-                m_h_res = ILI9486_WIDTH;
-                m_v_res = ILI9486_HEIGHT;
-                break;
-            case 3:
-                spi_TFT->write16(ILI9486_MADCTL_MX | ILI9486_MADCTL_MY | ILI9486_MADCTL_MV | ILI9486_MADCTL_BGR);
-                m_v_res = ILI9486_WIDTH;
-                m_h_res = ILI9486_HEIGHT;
-                break;
-        }
-        endWrite();
-    }
-    if(_TFTcontroller == ILI9488) {
-        _rotation = m % 4; // can't be higher than 3
-        startWrite();
-        writeCommand(ILI9488_MADCTL);
-        switch(_rotation) {
-            case 0:
-                spi_TFT->write(ILI9488_MADCTL_MX | ILI9488_MADCTL_BGR);
-                m_h_res = ILI9488_WIDTH;
-                m_v_res = ILI9488_HEIGHT;
-                break;
-            case 1:
-                spi_TFT->write(ILI9488_MADCTL_MV | ILI9488_MADCTL_BGR);
-                m_v_res = ILI9488_WIDTH;
-                m_h_res = ILI9488_HEIGHT;
-                break;
-            case 2:
-                spi_TFT->write(ILI9488_MADCTL_MY | ILI9488_MADCTL_BGR);
-                m_h_res = ILI9488_WIDTH;
-                m_v_res = ILI9488_HEIGHT;
-                break;
-            case 3:
-                spi_TFT->write(ILI9488_MADCTL_MX | ILI9488_MADCTL_MY | ILI9488_MADCTL_MV | ILI9488_MADCTL_BGR);
-                m_v_res = ILI9488_WIDTH;
-                m_h_res = ILI9488_HEIGHT;
-                break;
-        }
-        endWrite();
-    }
-    if(_TFTcontroller == ST7796) {
-        _rotation = m % 4; // can't be higher than 3
-        startWrite();
-        writeCommand(ST7796_MADCTL);
-        switch(_rotation) {
-            case 0:
-                spi_TFT->write(ST7796_MADCTL_MX | ST7796_MADCTL_BGR);
-                m_h_res = ST7796_WIDTH;
-                m_v_res = ST7796_HEIGHT;
-                break;
-            case 1:
-                spi_TFT->write(ST7796_MADCTL_MV | ST7796_MADCTL_BGR);
-                m_v_res = ST7796_WIDTH;
-                m_h_res = ST7796_HEIGHT;
-                break;
-            case 2:
-                spi_TFT->write(ST7796_MADCTL_MY | ST7796_MADCTL_BGR);
-                m_h_res = ST7796_WIDTH;
-                m_v_res = ST7796_HEIGHT;
-                break;
-            case 3:
-                spi_TFT->write(ST7796_MADCTL_MX | ST7796_MADCTL_MY | ST7796_MADCTL_MV | ST7796_MADCTL_BGR);
-                m_v_res = ST7796_WIDTH;
-                m_h_res = ST7796_HEIGHT;
-                break;
-        }
-        endWrite();
-    }
+    m_rotation = m % 4; // can't be higher than 3
+    // if(_TFTcontroller == ILI9341) { // ILI9341
+    //     m = ili9341_rotations[_rotation].madctl;
+    //     m_h_res = ili9341_rotations[_rotation].width;
+    //     m_v_res = ili9341_rotations[_rotation].height;
+    //     startWrite();
+    //     writeCommand(ILI9341_MADCTL);
+    //     spi_TFT->write(m);
+    //     endWrite();
+    // }
+    // if(_TFTcontroller == ILI9486) {
+    //     _rotation = m % 4; // can't be higher than 3
+    //     startWrite();
+    //     writeCommand(ILI9486_MADCTL);
+    //     switch(_rotation) {
+    //         case 0:
+    //             spi_TFT->write16(ILI9486_MADCTL_MX | ILI9486_MADCTL_BGR);
+    //             m_h_res = ILI9486_WIDTH;
+    //             m_v_res = ILI9486_HEIGHT;
+    //             break;
+    //         case 1:
+    //             spi_TFT->write16(ILI9486_MADCTL_MV | ILI9486_MADCTL_BGR);
+    //             m_v_res = ILI9486_WIDTH;
+    //             m_h_res = ILI9486_HEIGHT;
+    //             break;
+    //         case 2:
+    //             spi_TFT->write16(ILI9486_MADCTL_MY | ILI9486_MADCTL_BGR);
+    //             m_h_res = ILI9486_WIDTH;
+    //             m_v_res = ILI9486_HEIGHT;
+    //             break;
+    //         case 3:
+    //             spi_TFT->write16(ILI9486_MADCTL_MX | ILI9486_MADCTL_MY | ILI9486_MADCTL_MV | ILI9486_MADCTL_BGR);
+    //             m_v_res = ILI9486_WIDTH;
+    //             m_h_res = ILI9486_HEIGHT;
+    //             break;
+    //     }
+    //     endWrite();
+    // }
+    // if(_TFTcontroller == ILI9488) {
+    //     _rotation = m % 4; // can't be higher than 3
+    //     startWrite();
+    //     writeCommand(ILI9488_MADCTL);
+    //     switch(_rotation) {
+    //         case 0:
+    //             spi_TFT->write(ILI9488_MADCTL_MX | ILI9488_MADCTL_BGR);
+    //             m_h_res = ILI9488_WIDTH;
+    //             m_v_res = ILI9488_HEIGHT;
+    //             break;
+    //         case 1:
+    //             spi_TFT->write(ILI9488_MADCTL_MV | ILI9488_MADCTL_BGR);
+    //             m_v_res = ILI9488_WIDTH;
+    //             m_h_res = ILI9488_HEIGHT;
+    //             break;
+    //         case 2:
+    //             spi_TFT->write(ILI9488_MADCTL_MY | ILI9488_MADCTL_BGR);
+    //             m_h_res = ILI9488_WIDTH;
+    //             m_v_res = ILI9488_HEIGHT;
+    //             break;
+    //         case 3:
+    //             spi_TFT->write(ILI9488_MADCTL_MX | ILI9488_MADCTL_MY | ILI9488_MADCTL_MV | ILI9488_MADCTL_BGR);
+    //             m_v_res = ILI9488_WIDTH;
+    //             m_h_res = ILI9488_HEIGHT;
+    //             break;
+    //     }
+    //     endWrite();
+    // }
+    // if(_TFTcontroller == ST7796) {
+    //     _rotation = m % 4; // can't be higher than 3
+    //     startWrite();
+    //     writeCommand(ST7796_MADCTL);
+    //     switch(_rotation) {
+    //         case 0:
+    //             spi_TFT->write(ST7796_MADCTL_MX | ST7796_MADCTL_BGR);
+    //             m_h_res = ST7796_WIDTH;
+    //             m_v_res = ST7796_HEIGHT;
+    //             break;
+    //         case 1:
+    //             spi_TFT->write(ST7796_MADCTL_MV | ST7796_MADCTL_BGR);
+    //             m_v_res = ST7796_WIDTH;
+    //             m_h_res = ST7796_HEIGHT;
+    //             break;
+    //         case 2:
+    //             spi_TFT->write(ST7796_MADCTL_MY | ST7796_MADCTL_BGR);
+    //             m_h_res = ST7796_WIDTH;
+    //             m_v_res = ST7796_HEIGHT;
+    //             break;
+    //         case 3:
+    //             spi_TFT->write(ST7796_MADCTL_MX | ST7796_MADCTL_MY | ST7796_MADCTL_MV | ST7796_MADCTL_BGR);
+    //             m_v_res = ST7796_WIDTH;
+    //             m_h_res = ST7796_HEIGHT;
+    //             break;
+    //     }
+    //     endWrite();
+    // }
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::invertDisplay(bool i) {

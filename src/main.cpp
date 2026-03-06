@@ -1199,10 +1199,10 @@ void set_display_items(){
 #ifdef TFT_MODE_SPI
     spiBus.begin(TFT_SCK, TFT_MISO, TFT_MOSI, -1); // SPI1 for TFT
     getTFT().setTFTcontroller(TFT_CONTROLLER);
+    getTFT().setRotation(TFT_ROTATION);
     getTFT().setDiaplayInversion(DISPLAY_INVERSION);
     getTFT().begin(TFT_DC); // Init TFT interface
     getTFT().setFrequency(TFT_FREQUENCY);
-    getTFT().setRotation(TFT_ROTATION);
     getTFT().setBackGoundColor(TFT_BLACK);
 #elifdef TFT_MODE_RGB
     getTFT().begin(RGB_PINS, RGB_TIMING);
