@@ -284,11 +284,17 @@ class TFT_SPI {
     inline void     setTextOrientation(uint16_t orientation = 0) { _textorientation = orientation; } // 0 h other v
     int16_t         height(void) const;
     int16_t         width(void) const;
+    uint16_t        logicalWidth() const;
+    uint16_t        logicalHeight() const;
     uint8_t         getRotation(void) const;
     void            loop();
 
   private:
-    enum Ctrl { ILI9341 = 0, HX8347D = 1, ILI9486a = 2, ILI9486b = 3, ILI9488 = 4, ST7796 = 5, ST7796RPI = 6 };
+    bool renderRGB565(int16_t x, int16_t y, uint16_t w, uint16_t h, const uint16_t* rgb, const uint8_t* alpha);
+    inline void mapRotation(uint8_t rot, int32_t srcX, int32_t srcY, int32_t& dstX, int32_t& dstY) const;
+    bool panelDrawBitmap(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t* bitmap);
+
+    enum Ctrl { ILI9341 = 0, HX8347D = 1, ILI9486 = 2, ILI9488 = 4, ST7796 = 5 };
     uint8_t     _TFTcontroller = ILI9341;
     SPISettings SPIset; // SPI settings for this slave
 
@@ -338,6 +344,7 @@ class TFT_SPI {
 
     uint32_t _freq;
     uint8_t  _rotation;
+    uint8_t  m_rotation;
     uint8_t  _displayInversion;
     uint16_t _backGroundColor = TFT_WHITE;
     uint16_t _textColor = TFT_BLACK;
@@ -836,6 +843,6 @@ class TFT_SPI {
     void          png_rgb24bto16b(png_s_rgb16b* dst, png_s_rgb24b* src);
     void          png_rgb18btouint32(uint32_t* dst, png_s_rgb18b* src);
     void          png_rgb16btouint32(uint32_t* dst, png_s_rgb16b* src);
-    void          png_draw_into_AddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, char* rgbaBuffer, uint32_t png_outbuff_size, uint8_t png_format);
+    void          png_draw_into_Framebuffer(uint16_t x, uint16_t y, uint16_t w, uint16_t h, char* rgbaBuffer, uint32_t png_outbuff_size, uint8_t png_format);
 };
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
