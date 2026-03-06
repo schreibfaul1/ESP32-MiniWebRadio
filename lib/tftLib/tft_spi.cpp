@@ -288,9 +288,19 @@ void TFT_SPI::copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, u
     endWrite();
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_SPI::readRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t* data) {
-    for(uint16_t j = 0; j < h; j++) {
-        memcpy(data + j * w * 2, m_framebuffer[0] + j * m_h_res + x + y * m_h_res, w * sizeof(uint16_t));
+void TFT_SPI::readRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t* data) {
+    // Check whether parameters are within the valid range
+    if (x < 0 || y < 0 || w <= 0 || h <= 0) return;
+    if (x + w > logicalWidth() || y + h > logicalHeight()) return; // logicalWidth() = vertical resolution
+    if (!data || !m_framebuffer[0]) return;
+
+    uint16_t* dst = data;
+    uint16_t* src = m_framebuffer[0] + y * logicalWidth() + x;
+
+    for (int32_t row = 0; row < h; row++) {
+        memcpy(dst, src, w * sizeof(uint16_t));
+        src += logicalWidth();
+        dst += w;
     }
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -707,12 +717,6 @@ void TFT_SPI::fillCircle(int16_t cx, int16_t cy, uint16_t r, uint16_t color){
         writePixels(m_framebuffer[0] + j * m_h_res + x1, w1);
     }
     endWrite();
-}
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_SPI::readRect(int32_t x, int32_t y, int32_t w, uint16_t* data) {
-
-    memcpy(data, m_framebuffer[0] + y * m_h_res + x, w * sizeof(uint16_t));
-    return;
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::setFont(uint16_t font) {
