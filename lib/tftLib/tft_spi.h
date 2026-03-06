@@ -294,7 +294,7 @@ class TFT_SPI {
     inline void mapRotation(uint8_t rot, int32_t srcX, int32_t srcY, int32_t& dstX, int32_t& dstY) const;
     bool panelDrawBitmap(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t* bitmap);
 
-    enum Ctrl { ILI9341 = 0, HX8347D = 1, ILI9486 = 2, ILI9488 = 4, ST7796 = 5 };
+    enum Ctrl { ILI9341 = 0, ILI9486a = 2, ILI9486b = 3, ILI9488 = 4, ST7796 = 5, ST7796RPI = 6 };
     uint8_t     _TFTcontroller = ILI9341;
     SPISettings SPIset; // SPI settings for this slave
 
