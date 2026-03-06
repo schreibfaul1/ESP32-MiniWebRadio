@@ -551,7 +551,7 @@ class TFT_SPI {
     } JDEC;
 
   private:
-    File           m_jpgFile;
+    File           m_jpgSdFile;
     bool           m_swap = false;
     const uint8_t* m_array_data = nullptr;
     uint32_t       m_array_index = 0;
@@ -565,11 +565,15 @@ class TFT_SPI {
     uint16_t       m_jpgHeight = 0;
     uint16_t       m_jpgWidthMax = 0;
     uint16_t       m_jpgHeightMax = 0;
+    const uint16_t m_ROWBUFFERSIZE = 4096;
+    uint8_t*       m_rowBuffer = nullptr;
+    uint16_t*      m_jpegPixelBuffer = nullptr;
+
 
   public:
     void    JPEG_setJpgScale(uint8_t scale);
-    uint8_t JPEG_drawJpg(int32_t x, int32_t y);
-    uint8_t JPEG_getJpgSize(uint16_t* w, uint16_t* h);
+    uint8_t JPEG_drawSdJpg(int32_t x, int32_t y);
+    uint8_t JPEG_getSdJpgSize(uint16_t* w, uint16_t* h);
     void    JPEG_setSwapBytes(bool swap);
 
   private:

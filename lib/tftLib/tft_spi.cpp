@@ -3018,119 +3018,109 @@ void TFT_SPI::GIF_DecoderReset(){
    gif.TimeStamp = 0;
    gif.Iterations = 0;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-//   ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ J P E G ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//    ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ J P E G ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool TFT_SPI::drawJpgFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight) {
-    if(!fs.exists(path)) {log_e("file %s not exists", path); return false; }
-    if(maxWidth) m_jpgWidthMax = maxWidth; else m_jpgWidthMax = m_h_res;
-    if(maxHeight) m_jpgHeightMax = maxHeight; else m_jpgHeightMax = m_v_res;
-
-    m_jpgFile = fs.open(path, FILE_READ);
-    if(!m_jpgFile) {log_e("Failed to open file for reading"); JPEG_setJpgScale(1); return false;}
-    JPEG_getJpgSize(&m_jpgWidth, &m_jpgHeight);
-    int res = JPEG_drawJpg(x, y); (void) res;
-    // log_w("path %s, res %i, x %i, y %i, m_jpgWidth %i, m_jpgHeight %i", path, res, x, y, m_jpgWidth, m_jpgHeight);
-    m_jpgFile.close();
-
-    startWrite();
-    setAddrWindow(x, y, m_jpgWidth, m_jpgHeight);
-    for(int16_t j = y; j < y + m_jpgHeight; j++) {
-        writePixels(m_framebuffer[0] + j * m_h_res + x, m_jpgWidth);
+    if (!fs.exists(path)) {
+        log_e("file %s not exists", path);
+        return false;
     }
-    endWrite();
+    if (maxWidth)
+        m_jpgWidthMax = maxWidth;
+    else
+        m_jpgWidthMax = logicalWidth();
+    if (maxHeight)
+        m_jpgHeightMax = maxHeight;
+    else
+        m_jpgHeightMax = logicalHeight();
 
+    m_jpgSdFile = fs.open(path, FILE_READ);
+    if (!m_jpgSdFile) {
+        log_e("Failed to open file for reading");
+        JPEG_setJpgScale(1);
+        return false;
+    }
+    JPEG_getSdJpgSize(&m_jpgWidth, &m_jpgHeight);
+    m_jpegPixelBuffer = (uint16_t*)ps_calloc(m_jpgWidth * m_jpgHeight, 2);
+
+    int res = JPEG_drawSdJpg(0, 0);
+    (void)res;
+    // log_w("path %s, res %i, x %i, y %i, m_jpgWidth %i, m_jpgHeight %i", path, res, x, y, m_jpgWidth, m_jpgHeight);
+    m_jpgSdFile.close();
+
+    renderRGB565(x, y, m_jpgWidth, m_jpgHeight, m_jpegPixelBuffer, NULL);
+
+    free(m_jpegPixelBuffer);
     return true;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::JPEG_setJpgScale(uint8_t scaleFactor) {
     switch (scaleFactor) {
-        case 1:  m_jpgScale = 0; break;
-        case 2:  m_jpgScale = 1; break;
-        case 4:  m_jpgScale = 2; break;
-        case 8:  m_jpgScale = 3; break;
+        case 1: m_jpgScale = 0; break;
+        case 2: m_jpgScale = 1; break;
+        case 4: m_jpgScale = 2; break;
+        case 8: m_jpgScale = 3; break;
         default: m_jpgScale = 0;
     }
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_SPI::JPEG_setSwapBytes(bool swapBytes){
-  m_swap = swapBytes;
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_SPI::JPEG_setSwapBytes(bool swapBytes) {
+    m_swap = swapBytes;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-unsigned int TFT_SPI::JPEG_jd_input(JDEC* jdec, uint8_t* buf, unsigned int len){
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+unsigned int TFT_SPI::JPEG_jd_input(JDEC* jdec, uint8_t* buf, unsigned int len) {
     uint32_t bytesLeft = 0;
 
-    if (m_jpg_source == TJPG_ARRAY) {  // Handle an array input
+    if (m_jpg_source == TJPG_ARRAY) {                                                   // Handle an array input
         if (m_array_index + len > m_array_size) { len = m_array_size - m_array_index; } // Avoid running off end of array
-        if (buf) memcpy_P(buf, (const uint8_t*)(m_array_data + m_array_index), len); // If buf is valid then copy len bytes to buffer
-        m_array_index += len;  // Move pointer
-    }
-    else if (m_jpg_source == TJPG_SD_FILE) {  // Handle SD library input
-        bytesLeft = m_jpgFile.available();  // Check how many bytes are available
+        if (buf) memcpy_P(buf, (const uint8_t*)(m_array_data + m_array_index), len);    // If buf is valid then copy len bytes to buffer
+        m_array_index += len;                                                           // Move pointer
+    } else if (m_jpg_source == TJPG_SD_FILE) {                                          // Handle SD library input
+        bytesLeft = m_jpgSdFile.available();                                            // Check how many bytes are available
         if (bytesLeft < len) len = bytesLeft;
         if (buf) {
-            m_jpgFile.read(buf, len); // Read into buffer, pointer moved as well
+            m_jpgSdFile.read(buf, len); // Read into buffer, pointer moved as well
         } else {
-            m_jpgFile.seek(m_jpgFile.position() + len); // Buffer is null, so skip data by moving pointer
+            m_jpgSdFile.seek(m_jpgSdFile.position() + len); // Buffer is null, so skip data by moving pointer
         }
     }
     return len;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-// Pass image block back to the sketch for rendering, may be a complete or partial MCU
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//  Pass image block back to the sketch for rendering, may be a complete or partial MCU
 int TFT_SPI::JPEG_jd_output(JDEC* jdec, void* bitmap, JRECT* jrect) {
     jdec = jdec; // Supress warning as ID is not used
 
-    int16_t  x = jrect->left + m_jpeg_x;  // Retrieve rendering parameters and add any offset
+    int16_t  x = jrect->left + m_jpeg_x; // Retrieve rendering parameters and add any offset
     int16_t  y = jrect->top + m_jpeg_y;
     uint16_t w = jrect->right + 1 - jrect->left;
     uint16_t h = jrect->bottom + 1 - jrect->top;
-    if(w > m_jpgWidthMax) return true;  // Clip width and height to the maximum allowed dimensions
-    if(h > m_jpgHeightMax) return true;
+    //    if(x > m_jpgWidthMax) return true;  // Clip width and height to the maximum allowed dimensions
+    //    if(y > m_jpgHeightMax) return true;
     bool r = JPEG_tft_output(x, y, w, h, (uint16_t*)bitmap);
     return r;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-bool TFT_SPI::JPEG_tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t* bitmap) {
-      if (!bitmap || w <= 0 || h <= 0) {  // Check for valid parameters
-        log_e("Invalid parameters: bitmap is null or width/height is zero.");
-        return false;
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+bool TFT_SPI::JPEG_tft_output(int16_t blockX, int16_t blockY, uint16_t w, uint16_t h, uint16_t* bitmap) {
+    if (!bitmap || w == 0 || h == 0) return false;
+
+    // Write MCU block into linear JPEG pixel buffer (no rotation!)
+    for (uint16_t localY = 0; localY < h; ++localY) {
+        for (uint16_t localX = 0; localX < w; ++localX) {
+
+            int32_t dstX = blockX + localX;
+            int32_t dstY = blockY + localY;
+
+            if (dstX >= m_jpgWidth || dstY >= m_jpgHeight) continue;
+
+            m_jpegPixelBuffer[dstY * m_jpgWidth + dstX] = bitmap[localY * w + localX];
+        }
     }
-    // Clip the rectangle to ensure it doesn't exceed framebuffer boundaries
-    int16_t x_end = std::min((int16_t)(x + w), (int16_t)m_h_res); // End of rectangle in x-direction
-    int16_t y_end = std::min((int16_t)(y + h), (int16_t)(m_v_res)); // End of rectangle in y-direction
-
-    if (x >= m_h_res || y >= m_v_res || x_end <= 0 || y_end <= 0) {
-        log_e("Rectangle is completely outside the framebuffer boundaries, x: %d, y: %d, x_end: %d, y_end: %d", x, y, x_end, y_end);
-        return false;
-    }
-
-    // Adjust start coordinates if they are out of bounds
-    int16_t start_x = max((int16_t)0, x);        // Sichtbarer Startpunkt in x-Richtung
-    int16_t start_y = max((int16_t)0, y);        // Sichtbarer Startpunkt in y-Richtung
-    int16_t clip_x_offset = start_x - x;         // Offset im Bitmap in x-Richtung
-    int16_t clip_y_offset = start_y - y;         // Offset im Bitmap in y-Richtung
-
-    // Berechnung der sichtbaren Breite und Höhe
-    int16_t visible_w = x_end - start_x;         // Sichtbare Breite
-    int16_t visible_h = y_end - start_y;         // Sichtbare Höhe
-
-    // Zeilenweises Kopieren mit Clipping
-    for (int16_t j = 0; j < visible_h ; ++j) {
-        // Quelle im Bitmap: Berechne die richtige Zeilenposition
-        uint16_t* src_ptr = bitmap + (clip_y_offset + j) * w + clip_x_offset;
-
-        // Ziel im Framebuffer: Berechne die richtige Zeilenposition
-        uint16_t* dest_ptr = m_framebuffer[0] + (start_y + j) * m_h_res + start_x;
-
-        // Kopiere nur die sichtbare Breite
-        memcpy(dest_ptr, src_ptr, visible_w * sizeof(uint16_t));
-    }
-    // log_w("Bitmap erfolgreich mit Clipping gezeichnet bei x: %d, y: %d, sichtbare Breite: %d, sichtbare Höhe: %d", start_x, start_y, visible_w, visible_h);
     return true;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-uint8_t TFT_SPI::JPEG_drawJpg(int32_t x, int32_t y) {
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+uint8_t TFT_SPI::JPEG_drawSdJpg(int32_t x, int32_t y) {
     JDEC    jdec;
     uint8_t r = JDR_OK;
 
@@ -3142,8 +3132,9 @@ uint8_t TFT_SPI::JPEG_drawJpg(int32_t x, int32_t y) {
     if (r == JDR_OK) { r = JPEG_jd_decomp(&jdec, m_jpgScale); } // Extract image and render
     return r;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-uint8_t TFT_SPI::JPEG_getJpgSize(uint16_t* w, uint16_t* h) {
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+uint8_t TFT_SPI::JPEG_getSdJpgSize(uint16_t* w, uint16_t* h) {
+
     JDEC    jdec;
     uint8_t r = JDR_OK;
     *w = 0;
@@ -3155,105 +3146,89 @@ uint8_t TFT_SPI::JPEG_getJpgSize(uint16_t* w, uint16_t* h) {
         *w = jdec.width;
         *h = jdec.height;
     }
-    m_jpgFile.seek(0);
+    m_jpgSdFile.seek(0);
     return r;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-#if JD_FASTDECODE == 2
-	#define HUFF_BIT  10 /* Bit length to apply fast huffman decode */
-	#define HUFF_LEN  (1 << HUFF_BIT)
-	#define HUFF_MASK (HUFF_LEN - 1)
-#endif
+    // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+    #if JD_FASTDECODE == 2
+        #define HUFF_BIT  10 /* Bit length to apply fast huffman decode */
+        #define HUFF_LEN  (1 << HUFF_BIT)
+        #define HUFF_MASK (HUFF_LEN - 1)
+    #endif
 
 const uint8_t Zig[64] = {/* Zigzag-order to raster-order conversion table */
-								0,  1,  8,  16, 9,  2,  3,  10, 17, 24, 32, 25, 18, 11, 4,  5,  12, 19, 26, 33, 40, 48,
-								41, 34, 27, 20, 13, 6,  7,  14, 21, 28, 35, 42, 49, 56, 57, 50, 43, 36, 29, 22, 15, 23,
-								30, 37, 44, 51, 58, 59, 52, 45, 38, 31, 39, 46, 53, 60, 61, 54, 47, 55, 62, 63};
+                         0,  1,  8,  16, 9,  2,  3,  10, 17, 24, 32, 25, 18, 11, 4,  5,  12, 19, 26, 33, 40, 48, 41, 34, 27, 20, 13, 6,  7,  14, 21, 28,
+                         35, 42, 49, 56, 57, 50, 43, 36, 29, 22, 15, 23, 30, 37, 44, 51, 58, 59, 52, 45, 38, 31, 39, 46, 53, 60, 61, 54, 47, 55, 62, 63};
 
 const uint16_t Ipsf[64] = {/* See also aa_idct.png */
-	 (uint16_t)(1.00000 * 8192), (uint16_t)(1.38704 * 8192), (uint16_t)(1.30656 * 8192), (uint16_t)(1.17588 * 8192),
-	 (uint16_t)(1.00000 * 8192), (uint16_t)(0.78570 * 8192), (uint16_t)(0.54120 * 8192), (uint16_t)(0.27590 * 8192),
-	 (uint16_t)(1.38704 * 8192), (uint16_t)(1.92388 * 8192), (uint16_t)(1.81226 * 8192), (uint16_t)(1.63099 * 8192),
-	 (uint16_t)(1.38704 * 8192), (uint16_t)(1.08979 * 8192), (uint16_t)(0.75066 * 8192), (uint16_t)(0.38268 * 8192),
-	 (uint16_t)(1.30656 * 8192), (uint16_t)(1.81226 * 8192), (uint16_t)(1.70711 * 8192), (uint16_t)(1.53636 * 8192),
-	 (uint16_t)(1.30656 * 8192), (uint16_t)(1.02656 * 8192), (uint16_t)(0.70711 * 8192), (uint16_t)(0.36048 * 8192),
-	 (uint16_t)(1.17588 * 8192), (uint16_t)(1.63099 * 8192), (uint16_t)(1.53636 * 8192), (uint16_t)(1.38268 * 8192),
-	 (uint16_t)(1.17588 * 8192), (uint16_t)(0.92388 * 8192), (uint16_t)(0.63638 * 8192), (uint16_t)(0.32442 * 8192),
-	 (uint16_t)(1.00000 * 8192), (uint16_t)(1.38704 * 8192), (uint16_t)(1.30656 * 8192), (uint16_t)(1.17588 * 8192),
-	 (uint16_t)(1.00000 * 8192), (uint16_t)(0.78570 * 8192), (uint16_t)(0.54120 * 8192), (uint16_t)(0.27590 * 8192),
-	 (uint16_t)(0.78570 * 8192), (uint16_t)(1.08979 * 8192), (uint16_t)(1.02656 * 8192), (uint16_t)(0.92388 * 8192),
-	 (uint16_t)(0.78570 * 8192), (uint16_t)(0.61732 * 8192), (uint16_t)(0.42522 * 8192), (uint16_t)(0.21677 * 8192),
-	 (uint16_t)(0.54120 * 8192), (uint16_t)(0.75066 * 8192), (uint16_t)(0.70711 * 8192), (uint16_t)(0.63638 * 8192),
-	 (uint16_t)(0.54120 * 8192), (uint16_t)(0.42522 * 8192), (uint16_t)(0.29290 * 8192), (uint16_t)(0.14932 * 8192),
-	 (uint16_t)(0.27590 * 8192), (uint16_t)(0.38268 * 8192), (uint16_t)(0.36048 * 8192), (uint16_t)(0.32442 * 8192),
-	 (uint16_t)(0.27590 * 8192), (uint16_t)(0.21678 * 8192), (uint16_t)(0.14932 * 8192), (uint16_t)(0.07612 * 8192)};
+                           (uint16_t)(1.00000 * 8192), (uint16_t)(1.38704 * 8192), (uint16_t)(1.30656 * 8192), (uint16_t)(1.17588 * 8192), (uint16_t)(1.00000 * 8192), (uint16_t)(0.78570 * 8192),
+                           (uint16_t)(0.54120 * 8192), (uint16_t)(0.27590 * 8192), (uint16_t)(1.38704 * 8192), (uint16_t)(1.92388 * 8192), (uint16_t)(1.81226 * 8192), (uint16_t)(1.63099 * 8192),
+                           (uint16_t)(1.38704 * 8192), (uint16_t)(1.08979 * 8192), (uint16_t)(0.75066 * 8192), (uint16_t)(0.38268 * 8192), (uint16_t)(1.30656 * 8192), (uint16_t)(1.81226 * 8192),
+                           (uint16_t)(1.70711 * 8192), (uint16_t)(1.53636 * 8192), (uint16_t)(1.30656 * 8192), (uint16_t)(1.02656 * 8192), (uint16_t)(0.70711 * 8192), (uint16_t)(0.36048 * 8192),
+                           (uint16_t)(1.17588 * 8192), (uint16_t)(1.63099 * 8192), (uint16_t)(1.53636 * 8192), (uint16_t)(1.38268 * 8192), (uint16_t)(1.17588 * 8192), (uint16_t)(0.92388 * 8192),
+                           (uint16_t)(0.63638 * 8192), (uint16_t)(0.32442 * 8192), (uint16_t)(1.00000 * 8192), (uint16_t)(1.38704 * 8192), (uint16_t)(1.30656 * 8192), (uint16_t)(1.17588 * 8192),
+                           (uint16_t)(1.00000 * 8192), (uint16_t)(0.78570 * 8192), (uint16_t)(0.54120 * 8192), (uint16_t)(0.27590 * 8192), (uint16_t)(0.78570 * 8192), (uint16_t)(1.08979 * 8192),
+                           (uint16_t)(1.02656 * 8192), (uint16_t)(0.92388 * 8192), (uint16_t)(0.78570 * 8192), (uint16_t)(0.61732 * 8192), (uint16_t)(0.42522 * 8192), (uint16_t)(0.21677 * 8192),
+                           (uint16_t)(0.54120 * 8192), (uint16_t)(0.75066 * 8192), (uint16_t)(0.70711 * 8192), (uint16_t)(0.63638 * 8192), (uint16_t)(0.54120 * 8192), (uint16_t)(0.42522 * 8192),
+                           (uint16_t)(0.29290 * 8192), (uint16_t)(0.14932 * 8192), (uint16_t)(0.27590 * 8192), (uint16_t)(0.38268 * 8192), (uint16_t)(0.36048 * 8192), (uint16_t)(0.32442 * 8192),
+                           (uint16_t)(0.27590 * 8192), (uint16_t)(0.21678 * 8192), (uint16_t)(0.14932 * 8192), (uint16_t)(0.07612 * 8192)};
 
-#if JD_TBLCLIP
-	#define BYTECLIP(v) Clip8[(unsigned int)(v) & 0x3FF]
-const uint8_t Clip8[1024] = {	/* 0..255 */
-	0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
-	31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59,
-	60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88,
-	89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113,
-	114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136,
-	137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159,
-	160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182,
-	183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205,
-	206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228,
-	229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251,
-	252, 253, 254, 255,
-	/* 256..511 */
-	255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-	255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-	255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-	255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-	255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-	255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-	255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-	255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-	255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-	255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-	255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-	255, 255, 255,
-	/* -512..-257 */
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	/* -256..-1 */
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-#endif
+    #if JD_TBLCLIP
+        #define BYTECLIP(v) Clip8[(unsigned int)(v) & 0x3FF]
+const uint8_t Clip8[1024] = {/* 0..255 */
+                             0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44,
+                             45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87,
+                             88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123,
+                             124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157,
+                             158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191,
+                             192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225,
+                             226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255,
+                             /* 256..511 */
+                             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+                             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+                             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+                             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+                             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+                             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+                             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+                             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+                             /* -512..-257 */
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             /* -256..-1 */
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    #endif
 
-#if JD_TBLCLIP == 0 /* JD_TBLCLIP */
+    #if JD_TBLCLIP == 0 /* JD_TBLCLIP */
 uint8_t TFT_SPI::JPEG_BYTECLIP(int val) {
-    if(val < 0) return 0;
-    else if(val > 255) return 255;
+    if (val < 0)
+        return 0;
+    else if (val > 255)
+        return 255;
     return (uint8_t)val;
 }
-#endif
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void* TFT_SPI::JPEG_alloc_pool(JDEC  *jd,size_t ndata) {
-	char *rp = 0;
+    #endif
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void* TFT_SPI::JPEG_alloc_pool(JDEC* jd, size_t ndata) {
+    char* rp = 0;
 
-	ndata = (ndata + 3) & ~3; /* Align block size to the word boundary */
+    ndata = (ndata + 3) & ~3; /* Align block size to the word boundary */
 
-	if(jd->sz_pool >= ndata) {
-		jd->sz_pool -= ndata;
-		rp = (char *)jd->pool;           /* Get start of available memory pool */
-		jd->pool = (void *)(rp + ndata); /* Allocate requierd bytes */
-	}
+    if (jd->sz_pool >= ndata) {
+        jd->sz_pool -= ndata;
+        rp = (char*)jd->pool;           /* Get start of available memory pool */
+        jd->pool = (void*)(rp + ndata); /* Allocate requierd bytes */
+    }
 
-	return (void *)rp; /* Return allocated memory block (NULL:no memory to allocate) */
-}//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+    return (void*)rp; /* Return allocated memory block (NULL:no memory to allocate) */
+} // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 uint8_t TFT_SPI::JPEG_create_qt_tbl(JDEC* jd, const uint8_t* data, size_t ndata) {
     unsigned int i, zi;
     uint8_t      d;
@@ -3276,7 +3251,7 @@ uint8_t TFT_SPI::JPEG_create_qt_tbl(JDEC* jd, const uint8_t* data, size_t ndata)
 
     return JDR_OK;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 uint8_t TFT_SPI::JPEG_create_huffman_tbl(JDEC* jd, const uint8_t* data, size_t ndata) {
     unsigned int i, j, b, cls, num;
     size_t       np;
@@ -3316,7 +3291,7 @@ uint8_t TFT_SPI::JPEG_create_huffman_tbl(JDEC* jd, const uint8_t* data, size_t n
             if (!cls && d > 11) return JDR_FMT1;
             pd[i] = d;
         }
-#if JD_FASTDECODE == 2
+    #if JD_FASTDECODE == 2
         { /* Create fast huffman decode table */
             unsigned int span, td, ti;
             uint16_t*    tbl_ac = 0;
@@ -3347,18 +3322,18 @@ uint8_t TFT_SPI::JPEG_create_huffman_tbl(JDEC* jd, const uint8_t* data, size_t n
             }
             jd->longofs[num][cls] = i; /* Code table offset for long code */
         }
-#endif
+    #endif
     }
 
     return JDR_OK;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 int TFT_SPI::JPEG_huffext(JDEC* jd, unsigned int id, unsigned int cls) {
     size_t       dc = jd->dctr;
     uint8_t*     dp = jd->dptr;
     unsigned int d, flg = 0;
 
-#if JD_FASTDECODE == 0
+    #if JD_FASTDECODE == 0
     uint8_t         bm, nd, bl;
     const uint8_t*  hb = jd->huffbits[id][cls]; /* Bit distribution table */
     const uint16_t* hc = jd->huffcode[id][cls]; /* Code word table */
@@ -3405,7 +3380,7 @@ int TFT_SPI::JPEG_huffext(JDEC* jd, unsigned int id, unsigned int cls) {
         bl--;
     } while (bl);
 
-#else
+    #else
     const uint8_t * hb, *hd;
     const uint16_t* hc;
     unsigned int    nc, bl, wbit = jd->dbit % 32;
@@ -3440,7 +3415,7 @@ int TFT_SPI::JPEG_huffext(JDEC* jd, unsigned int id, unsigned int cls) {
     jd->dptr = dp;
     jd->wreg = w;
 
-    #if JD_FASTDECODE == 2
+        #if JD_FASTDECODE == 2
     /* Table serch for the short codes */
     d = (unsigned int)(w >> (wbit - HUFF_BIT)); /* Short code as table index */
     if (cls) {                                  /* AC element */
@@ -3462,13 +3437,13 @@ int TFT_SPI::JPEG_huffext(JDEC* jd, unsigned int id, unsigned int cls) {
     hc = jd->huffcode[id][cls] + jd->longofs[id][cls]; /* Code word table */
     hd = jd->huffdata[id][cls] + jd->longofs[id][cls]; /* Data table */
     bl = HUFF_BIT + 1;
-    #else
+        #else
     /* Incremental serch for all codes */
     hb = jd->huffbits[id][cls]; /* Bit distribution table */
     hc = jd->huffcode[id][cls]; /* Code word table */
     hd = jd->huffdata[id][cls]; /* Data table */
     bl = 1;
-    #endif
+        #endif
     for (; bl <= 16; bl++) { /* Incremental search */
         nc = *hb++;
         if (nc) {
@@ -3482,16 +3457,16 @@ int TFT_SPI::JPEG_huffext(JDEC* jd, unsigned int id, unsigned int cls) {
             } while (--nc);
         }
     }
-#endif
+    #endif
     return 0 - (int)JDR_FMT1; /* Err: code not found (may be collapted data) */
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 int TFT_SPI::JPEG_bitext(JDEC* jd, unsigned int nbit) {
     size_t       dc = jd->dctr;
     uint8_t*     dp = jd->dptr;
     unsigned int d, flg = 0;
 
-#if JD_FASTDECODE == 0
+    #if JD_FASTDECODE == 0
     uint8_t mbit = jd->dbit;
     d = 0;
     do {
@@ -3527,7 +3502,7 @@ int TFT_SPI::JPEG_bitext(JDEC* jd, unsigned int nbit) {
     jd->dptr = dp;
     return (int)d;
 
-#else
+    #else
     unsigned int wbit = jd->dbit % 32;
     uint32_t     w = jd->wreg & ((1UL << wbit) - 1);
 
@@ -3562,15 +3537,15 @@ int TFT_SPI::JPEG_bitext(JDEC* jd, unsigned int nbit) {
     jd->dptr = dp;
 
     return (int)(w >> ((wbit - nbit) % 32));
-#endif
+    #endif
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 uint8_t TFT_SPI::JPEG_restart(JDEC* jd, uint16_t rstn) {
     unsigned int i;
     uint8_t*     dp = jd->dptr;
     size_t       dc = jd->dctr;
 
-#if JD_FASTDECODE == 0
+    #if JD_FASTDECODE == 0
     uint16_t d = 0;
 
     /* Get two bytes from the input stream */
@@ -3592,7 +3567,7 @@ uint8_t TFT_SPI::JPEG_restart(JDEC* jd, uint16_t rstn) {
     /* Check the marker */
     if ((d & 0xFFD8) != 0xFFD0 || (d & 7) != (rstn & 7)) { return JDR_FMT1; /* Err: expected RSTn marker is not detected (may be collapted data) */ }
 
-#else
+    #else
     uint16_t marker;
 
     if (jd->marker) { /* Generate a maker if it has been detected */
@@ -3617,12 +3592,12 @@ uint8_t TFT_SPI::JPEG_restart(JDEC* jd, uint16_t rstn) {
     if ((marker & 0xFFD8) != 0xFFD0 || (marker & 7) != (rstn & 7)) { return JDR_FMT1; /* Err: expected RSTn marker was not detected (may be collapted data) */ }
 
     jd->dbit = 0; /* Discard stuff bits */
-#endif
+    #endif
 
     jd->dcv[2] = jd->dcv[1] = jd->dcv[0] = 0; /* Reset DC offset */
     return JDR_OK;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::JPEG_block_idct(int32_t* src, jd_yuv_t* dst) {
     const int32_t M13 = (int32_t)(1.41421 * 4096), M2 = (int32_t)(1.08239 * 4096), M4 = (int32_t)(2.61313 * 4096), M5 = (int32_t)(1.84776 * 4096);
     int32_t       v0, v1, v2, v3, v4, v5, v6, v7;
@@ -3711,7 +3686,7 @@ void TFT_SPI::JPEG_block_idct(int32_t* src, jd_yuv_t* dst) {
         v4 -= v5;
 
         /* Descale the transformed values 8 bits and output a row */
-#if JD_FASTDECODE >= 1
+    #if JD_FASTDECODE >= 1
         dst[0] = (int16_t)((v0 + v7) >> 8);
         dst[7] = (int16_t)((v0 - v7) >> 8);
         dst[1] = (int16_t)((v1 + v6) >> 8);
@@ -3720,7 +3695,7 @@ void TFT_SPI::JPEG_block_idct(int32_t* src, jd_yuv_t* dst) {
         dst[5] = (int16_t)((v2 - v5) >> 8);
         dst[3] = (int16_t)((v3 + v4) >> 8);
         dst[4] = (int16_t)((v3 - v4) >> 8);
-#else
+    #else
         dst[0] = BYTECLIP((v0 + v7) >> 8);
         dst[7] = BYTECLIP((v0 - v7) >> 8);
         dst[1] = BYTECLIP((v1 + v6) >> 8);
@@ -3729,13 +3704,13 @@ void TFT_SPI::JPEG_block_idct(int32_t* src, jd_yuv_t* dst) {
         dst[5] = BYTECLIP((v2 - v5) >> 8);
         dst[3] = BYTECLIP((v3 + v4) >> 8);
         dst[4] = BYTECLIP((v3 - v4) >> 8);
-#endif
+    #endif
 
         dst += 8;
         src += 8; /* Next row */
     }
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 uint8_t TFT_SPI::JPEG_mcu_load(JDEC* jd) {
     int32_t*       tmp = (int32_t*)jd->workbuf; /* Block working buffer for de-quantize and IDCT */
     int            d, e;
@@ -3810,7 +3785,7 @@ uint8_t TFT_SPI::JPEG_mcu_load(JDEC* jd) {
 
     return JDR_OK; /* All blocks have been loaded successfully */
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 uint8_t TFT_SPI::JPEG_mcu_output(JDEC* jd, unsigned int x, unsigned int y) {
     const int    CVACC = (sizeof(int) > 2) ? 1024 : 128; /* Adaptive accuracy for both 16-/32-bit systems */
     unsigned int ix, iy, mx, my, rx, ry;
@@ -3984,7 +3959,7 @@ uint8_t TFT_SPI::JPEG_mcu_output(JDEC* jd, unsigned int x, unsigned int y) {
     bool r = JPEG_jd_output(jd, jd->workbuf, &rect);
     return r ? JDR_OK : JDR_INTR;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 uint8_t TFT_SPI::JPEG_jd_prepare(JDEC* jd, uint8_t* pool, size_t sz_pool, void* dev) {
     uint8_t *    seg, b;
     uint16_t     marker;
@@ -4120,12 +4095,13 @@ uint8_t TFT_SPI::JPEG_jd_prepare(JDEC* jd, uint8_t* pool, size_t sz_pool, void* 
             case 0xD9: /* EOI */ return JDR_FMT3; /* Unsuppoted JPEG standard (may be progressive JPEG) */
 
             default: /* Unknown segment (comment, exif or etc..) */
+                     // log_e("Unknown segment %02X", marker);
                 /* Skip segment data (null pointer specifies to remove data from the stream) */
                 if (JPEG_jd_input(jd, 0, len) != len) return JDR_INP;
         }
     }
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 uint8_t TFT_SPI::JPEG_jd_decomp(JDEC* jd, uint8_t scale) {
     unsigned int x, y, mx, my;
     uint16_t     rst, rsc;
@@ -4134,7 +4110,7 @@ uint8_t TFT_SPI::JPEG_jd_decomp(JDEC* jd, uint8_t scale) {
     if (scale > (JD_USE_SCALE ? 3 : 0)) return JDR_PAR;
     jd->scale = scale;
     mx = jd->msx * 8;
-    my = jd->msy * 8; /* Size of the MCU (pixel) */
+    my = jd->msy * 8;                         /* Size of the MCU (pixel) */
     jd->dcv[2] = jd->dcv[1] = jd->dcv[0] = 0; /* Initialize DC values */
     rst = rsc = 0;
     rc = JDR_OK;
@@ -5167,62 +5143,6 @@ void TFT_SPI::png_rgb24bto16b(png_s_rgb16b* dst, png_s_rgb24b* src) {
 }
 void TFT_SPI::png_rgb18btouint32(uint32_t* dst, png_s_rgb18b* src) { memcpy(dst, src, sizeof(png_s_rgb18b)); }
 void TFT_SPI::png_rgb16btouint32(uint32_t* dst, png_s_rgb16b* src) { memcpy(dst, src, sizeof(png_s_rgb16b)); }
-// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-// void TFT_SPI::png_draw_into_AddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, char* rgbaBuffer, uint32_t png_outbuff_size, uint8_t png_format) {
-//     if (!rgbaBuffer || png_outbuff_size < w * h * 4) return; // not enough data
-
-//     for (uint16_t row = 0; row < h; row++) {
-//         for (uint16_t col = 0; col < w; col++) {
-//             uint32_t index = (row * w + col) * 4;
-//             uint8_t r = rgbaBuffer[index];     // Rot
-//             uint8_t g = rgbaBuffer[index + 1]; // Grün
-//             uint8_t b = rgbaBuffer[index + 2]; // Blau
-//             uint8_t a = rgbaBuffer[index + 3]; // Alpha
-
-//             uint16_t px = x + col;
-//             uint16_t py = y + row;
-
-//             if (px >= m_h_res || py >= m_v_res) continue; // outside the screen
-
-//             // only alpha blending if alpha is not full
-//             if (a < 255) {
-//                 // get the old pixel
-//                 uint16_t oldPixel = m_framebuffer[0][py * m_h_res + px];
-
-//                 // Extrahiere die RGB-Komponenten aus dem alten Pixel (RGB565 → 888)
-//                 uint8_t oldR = ((oldPixel >> 11) & 0x1F) << 3; // 5 Bit Rot → 8 Bit
-//                 uint8_t oldG = ((oldPixel >> 5) & 0x3F) << 2;  // 6 Bit Grün → 8 Bit
-//                 uint8_t oldB = (oldPixel & 0x1F) << 3;         // 5 Bit Blau → 8 Bit
-
-//                 // calculate the new pixel
-//                 uint8_t newR = (r * a + oldR * (255 - a)) / 255;
-//                 uint8_t newG = (g * a + oldG * (255 - a)) / 255;
-//                 uint8_t newB = (b * a + oldB * (255 - a)) / 255;
-
-//                 // set the new pixel in the framebuffer
-//                 r = newR >> 3;
-//                 g = newG >> 2;
-//                 b = newB >> 3;
-//             } else {
-//                 // full alpha, no blending
-//                 r = r >> 3;
-//                 g = g >> 2;
-//                 b = b >> 3;
-//             }
-
-//             // set the new pixel in the framebuffer
-//             m_framebuffer[0][py * m_h_res + px] = (r << 11) | (g << 5) | b;
-//         }
-//     }
-
-//     // update the display
-//     startWrite();
-//     setAddrWindow(x, y, w, h);
-//     for(uint16_t row = y; row < y + h; row++) {
-//         writePixels(m_framebuffer[0] + row * m_h_res + x, w);
-//     }
-//     endWrite();
-// }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::png_draw_into_Framebuffer(uint16_t x, uint16_t y, uint16_t w, uint16_t h, char* rgbaBuffer, uint32_t, uint8_t) {
     if (!rgbaBuffer || w == 0 || h == 0) return;
