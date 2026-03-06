@@ -305,325 +305,306 @@ void TFT_SPI::readRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t* dat
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
-    // Clipping: Rechteck-Koordinaten auf den Framebuffer-Bereich beschränken
-    int16_t x0 = max((int16_t)0, x);
-    int16_t y0 = max((int16_t)0, y);
-    int16_t x1 = min((int)m_h_res, x + w); // Rechte Grenze
-    int16_t y1 = min((int)m_v_res, y + h); // Untere Grenze
-    // Zeichnen des Rechtecks nur im gültigen Bereich
-    for (int16_t j = y0; j < y1; ++j) { // Zeilen iterieren
-        for (int16_t i = x0; i < x1; ++i) { // Spalten iterieren
-            m_framebuffer[0][j * m_h_res + i] = color;
-        }
-    }
-    startWrite();
-    setAddrWindow(x, y, w, h);
-    for(int16_t j = y0; j < y1; j++) {
-        writeColor(color, x1 - x0);
-    }
-    endWrite();
+    if (w <= 0 || h <= 0) return;
+
+    // Optional: grobes Clipping gegen Displaygrenzen
+    if (x >= logicalWidth() || y >= logicalHeight()) return;
+
+    if (x + w < 0 || y + h < 0) return;
+
+    // Lokaler Line-Buffer auf dem Stack
+    uint16_t lineBuffer[w];
+
+    for (int16_t i = 0; i < w; ++i) lineBuffer[i] = color;
+
+    for (int16_t row = 0; row < h; ++row) { renderRGB565(x, y + row, w, 1, lineBuffer, nullptr); }
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::fillScreen(uint16_t color) {
-    fill(m_framebuffer[0], m_framebuffer[0] + (m_h_res * m_v_res), color);
+    log_w("%s %i: %i, %i, %i, %i, %i", __FILE__, __LINE__, 0, 0, logicalWidth(), logicalHeight(), color);
+    fillRect(0, 0, logicalWidth(), logicalHeight(), color);
+}
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_SPI::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color) {
+    int16_t dx = abs(x1 - x0);
+    int16_t dy = abs(y1 - y0);
 
-    startWrite();
-    setAddrWindow(0, 0, m_h_res, m_v_res);
-    writeColor(color, m_h_res * m_v_res);
-    endWrite();
+    int16_t sx = (x0 < x1) ? 1 : -1;
+    int16_t sy = (y0 < y1) ? 1 : -1;
+
+    int16_t err = dx - dy;
+
+    size_t minX = m_h_res;
+    size_t minY = m_v_res;
+    size_t maxX = 0;
+    size_t maxY = 0;
+
+    while (true) {
+        int32_t rotX, rotY;
+        mapRotation(m_rotation, x0, y0, rotX, rotY);
+
+        if (rotX < m_h_res && rotY < m_v_res) {
+            m_framebuffer[0][rotY * m_h_res + rotX] = color;
+
+            if (rotX < minX) minX = rotX;
+            if (rotY < minY) minY = rotY;
+            if (rotX > maxX) maxX = rotX;
+            if (rotY > maxY) maxY = rotY;
+        }
+
+        if (x0 == x1 && y0 == y1) break;
+
+        int16_t e2 = err << 1;
+
+        if (e2 > -dy) {
+            err -= dy;
+            x0 += sx;
+        }
+
+        if (e2 < dx) {
+            err += dx;
+            y0 += sy;
+        }
+    }
+
+    if (maxX > minX && maxY > minY) panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color) {
-    if(x0 < 0 || x0 >= m_h_res || x1 < 0 || x1 >= m_h_res || x2 < 0 || x2 >= m_h_res || y0 < 0 || y0 >= m_v_res || y1 < 0 || y1 >= m_v_res || y2 < 0 || y2 >= m_v_res) return;
-
-    auto drawLine = [](int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color, uint16_t* m_framebuffer[0], uint16_t m_h_res) {
-        // Bresenham-Algorithmus für Linien
-        int16_t dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
-        int16_t dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
-        int16_t err = dx + dy, e2; // Fehlerwert
-
-        while (true) {
-            m_framebuffer[0][y0 * m_h_res + x0] = color; // Pixel setzen
-            if (x0 == x1 && y0 == y1) break;
-            e2 = 2 * err;
-            if (e2 >= dy) { err += dy; x0 += sx; }
-            if (e2 <= dx) { err += dx; y0 += sy; }
-        }
-    };
-
-
-    // Zeichne die drei Linien des Dreiecks
-    drawLine(x0, y0, x1, y1, color, &m_framebuffer[0], m_h_res); // Linie von Punkt 0 nach Punkt 1
-    drawLine(x1, y1, x2, y2, color, &m_framebuffer[0], m_h_res); // Linie von Punkt 1 nach Punkt 2
-    drawLine(x2, y2, x0, y0, color, &m_framebuffer[0], m_h_res); // Linie von Punkt 2 nach Punkt 0
-
-    // Aktualisierung des gezeichneten Bereichs
-    int16_t x = std::min({x0, x1, x2});
-    int16_t y = std::min({y0, y1, y2});
-    int16_t w = std::max({x0, x1, x2}) - x + 1;
-    int16_t h = std::max({y0, y1, y2}) - y + 1;
-
-    startWrite();
-    setAddrWindow(x, y, w, h);
-    for(int16_t j = y; j < y + h; j++) {
-        writePixels(m_framebuffer[0] + j * m_h_res + x, w);
-    }
-    endWrite();
+    drawLine(x0, y0, x1, y1, color);
+    drawLine(x1, y1, x2, y2, color);
+    drawLine(x2, y2, x0, y0, color);
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color) {
-    if(x0 < 0 || x0 >= m_h_res || x1 < 0 || x1 >= m_h_res || x2 < 0 || x2 >= m_h_res || y0 < 0 || y0 >= m_v_res || y1 < 0 || y1 >= m_v_res || y2 < 0 || y2 >= m_v_res) return;
+    // Sort vertices by y
+    if (y0 > y1) {
+        std::swap(y0, y1);
+        std::swap(x0, x1);
+    }
+    if (y1 > y2) {
+        std::swap(y1, y2);
+        std::swap(x1, x2);
+    }
+    if (y0 > y1) {
+        std::swap(y0, y1);
+        std::swap(x0, x1);
+    }
 
- // Helferfunktion zum Zeichnen einer horizontalen Linie
-    auto drawHorizontalLine = [&](int16_t x_start, int16_t x_end, int16_t y) {
-        if (y >= 0 && y < m_v_res) { // Clipping in y-Richtung
-            if (x_start > x_end) std::swap(x_start, x_end);
-            x_start = std::max((int16_t)0, x_start); // Clipping in x-Richtung
-            x_end = std::min((int16_t)(m_h_res - 1), x_end);
-            for (int16_t x = x_start; x <= x_end; ++x) {
-                m_framebuffer[0][y * m_h_res + x] = color;
-            }
+    size_t minX = m_h_res;
+    size_t minY = m_v_res;
+    size_t maxX = 0;
+    size_t maxY = 0;
+
+    auto drawSpan = [&](int16_t xs, int16_t xe, int16_t y) {
+        if (xs > xe) std::swap(xs, xe);
+
+        for (int16_t x = xs; x <= xe; ++x) {
+            int32_t rotX, rotY;
+            mapRotation(m_rotation, x, y, rotX, rotY);
+
+            if (rotX >= m_h_res || rotY >= m_v_res) continue;
+
+            m_framebuffer[0][rotY * m_h_res + rotX] = color;
+
+            if (rotX < minX) minX = rotX;
+            if (rotY < minY) minY = rotY;
+            if (rotX > maxX) maxX = rotX;
+            if (rotY > maxY) maxY = rotY;
         }
     };
 
-    // Punkte nach ihrer y-Koordinate sortieren
-    if (y0 > y1) { std::swap(y0, y1); std::swap(x0, x1); }
-    if (y1 > y2) { std::swap(y1, y2); std::swap(x1, x2); }
-    if (y0 > y1) { std::swap(y0, y1); std::swap(x0, x1); }
-
-    // Variablen zur Begrenzung des aktualisierten Bereichs
-    int16_t x_min = std::min({x0, x1, x2});
-    int16_t x_max = std::max({x0, x1, x2});
-    int16_t y_min = std::min({y0, y1, y2});
-    int16_t y_max = std::max({y0, y1, y2});
-
-    // Clipping auf Framebuffer-Grenzen
-    int16_t x = std::max((int16_t)0, x_min);
-    int16_t w = std::min((int16_t)(m_h_res - 1), x_max) - x + 1;
-    int16_t y = std::max((int16_t)0, y_min);
-    int16_t h = std::min((int16_t)(m_v_res - 1), y_max) - y + 1;
-
-
-    // Dreieck in zwei Teile zerlegen (oben und unten)
-    if (y1 == y2) { // Sonderfall: flaches unteres Dreieck
-        for (int16_t i = y0; i <= y1; ++i) {
-            int16_t x_start = x0 + (x1 - x0) * (i - y0) / (y1 - y0);
-            int16_t x_end = x0 + (x2 - x0) * (i - y0) / (y2 - y0);
-            drawHorizontalLine(x_start, x_end, i);
+    if (y1 == y2) // flat-bottom
+    {
+        for (int16_t y = y0; y <= y1; ++y) {
+            int16_t xa = x0 + (x1 - x0) * (y - y0) / (y1 - y0);
+            int16_t xb = x0 + (x2 - x0) * (y - y0) / (y2 - y0);
+            drawSpan(xa, xb, y);
         }
-    } else if (y0 == y1) { // Sonderfall: flaches oberes Dreieck
-        for (int16_t i = y0; i <= y2; ++i) {
-            int16_t x_start = x0 + (x2 - x0) * (i - y0) / (y2 - y0);
-            int16_t x_end = x1 + (x2 - x1) * (i - y1) / (y2 - y1);
-            drawHorizontalLine(x_start, x_end, i);
+    } else if (y0 == y1) // flat-top
+    {
+        for (int16_t y = y0; y <= y2; ++y) {
+            int16_t xa = x0 + (x2 - x0) * (y - y0) / (y2 - y0);
+            int16_t xb = x1 + (x2 - x1) * (y - y1) / (y2 - y1);
+            drawSpan(xa, xb, y);
         }
-    } else { // Allgemeiner Fall: Dreieck wird in zwei Teile aufgeteilt
-        for (int16_t i = y0; i <= y1; ++i) { // Unterer Teil
-            int16_t x_start = x0 + (x1 - x0) * (i - y0) / (y1 - y0);
-            int16_t x_end = x0 + (x2 - x0) * (i - y0) / (y2 - y0);
-            drawHorizontalLine(x_start, x_end, i);
+    } else {
+        for (int16_t y = y0; y <= y1; ++y) {
+            int16_t xa = x0 + (x1 - x0) * (y - y0) / (y1 - y0);
+            int16_t xb = x0 + (x2 - x0) * (y - y0) / (y2 - y0);
+            drawSpan(xa, xb, y);
         }
-        for (int16_t i = y1; i <= y2; ++i) { // Oberer Teil
-            int16_t x_start = x1 + (x2 - x1) * (i - y1) / (y2 - y1);
-            int16_t x_end = x0 + (x2 - x0) * (i - y0) / (y2 - y0);
-            drawHorizontalLine(x_start, x_end, i);
+
+        for (int16_t y = y1; y <= y2; ++y) {
+            int16_t xa = x1 + (x2 - x1) * (y - y1) / (y2 - y1);
+            int16_t xb = x0 + (x2 - x0) * (y - y0) / (y2 - y0);
+            drawSpan(xa, xb, y);
         }
     }
-    startWrite();
-    setAddrWindow(x, y, w, h);
-    for(int16_t j = y; j < y + h; j++) {
-        writePixels(m_framebuffer[0] + j * m_h_res + x, w);
-    }
-    endWrite();
+
+    if (maxX > minX && maxY > minY) panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_SPI::drawRect(int16_t Xpos, int16_t Ypos, uint16_t Width, uint16_t Height, uint16_t Color) {
-    if(Xpos < 0 || Xpos >= m_h_res || Ypos < 0 || Ypos >= m_v_res) return;
-    if(Width == 0 || Height == 0) return;
-    if(Width > m_h_res - Xpos) Width = m_h_res - Xpos;
-    if(Height > m_v_res - Ypos) Height = m_v_res - Ypos;
+void TFT_SPI::drawRect(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t color) {
+    if (w == 0 || h == 0) return;
 
-    auto drawLine = [](int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color, uint16_t* fb, uint16_t m_h_res) {
-        // Bresenham-Algorithmus für Linien
-        int16_t dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
-        int16_t dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
-        int16_t err = dx + dy, e2; // Fehlerwert
-
-        while (true) {
-            fb[y0 * m_h_res + x0] = color; // Pixel setzen
-            if (x0 == x1 && y0 == y1) break;
-            e2 = 2 * err;
-            if (e2 >= dy) { err += dy; x0 += sx; }
-            if (e2 <= dx) { err += dx; y0 += sy; }
-        }
-    };
-
-    // Zeichne die vier Linien des Rechtecks
-    drawLine(Xpos, Ypos, Xpos + Width, Ypos, Color, m_framebuffer[0], m_h_res); // Oben
-    drawLine(Xpos + Width - 1, Ypos, Xpos + Width - 1, Ypos + Height - 1, Color, m_framebuffer[0], m_h_res); // Rechts
-    drawLine(Xpos, Ypos + Height - 1, Xpos + Width - 1, Ypos + Height - 1, Color, m_framebuffer[0], m_h_res); // Unten
-    drawLine(Xpos, Ypos + Height, Xpos, Ypos, Color, m_framebuffer[0], m_h_res); // Links
-
-    // Aktualisierung des gezeichneten Bereichs
-    int16_t x = std::min((int)Xpos, Xpos + Width);
-    int16_t y = std::min((int)Ypos, Ypos + Height);
-    int16_t w = std::max((int)Xpos, Xpos + Width) - x;
-    int16_t h = std::max((int)Ypos, Ypos + Height) - y;
-
-    startWrite();
-    setAddrWindow(x, y, w, h);
-    for(int16_t j = y; j < y + h; j++) {
-        writePixels(m_framebuffer[0] + j * m_h_res + x, w);
-    }
-    endWrite();
+    drawLine(x, y, x + w - 1, y, color);                 // Top
+    drawLine(x + w - 1, y, x + w - 1, y + h - 1, color); // Right
+    drawLine(x + w - 1, y + h - 1, x, y + h - 1, color); // Bottom
+    drawLine(x, y + h - 1, x, y, color);                 // Left
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color) {
-    // helper function: Calculate circular drawing for the corners
-    auto drawCircleQuadrant = [&](int16_t cx, int16_t cy, int16_t r, uint8_t quadrant) {
-        int16_t f = 1 - r;
-        int16_t ddF_x = 1;
-        int16_t ddF_y = -2 * r;
-        int16_t x = 0;
-        int16_t y = r;
+    if (w <= 0 || h <= 0 || r <= 0) return;
 
-        while (x <= y) {
-            if (quadrant & 0x1) m_framebuffer[0][(cy - y) * m_h_res + (cx + x)] = color; // up right
-            if (quadrant & 0x2) m_framebuffer[0][(cy + y) * m_h_res + (cx + x)] = color; // down right
-            if (quadrant & 0x4) m_framebuffer[0][(cy + y) * m_h_res + (cx - x)] = color; // down left
-            if (quadrant & 0x8) m_framebuffer[0][(cy - y) * m_h_res + (cx - x)] = color; // up left
+    if (r > w / 2) r = w / 2;
+    if (r > h / 2) r = h / 2;
 
-            if (quadrant & 0x10) m_framebuffer[0][(cy - x) * m_h_res + (cx + y)] = color; // up right (90° rotated)
-            if (quadrant & 0x20) m_framebuffer[0][(cy + x) * m_h_res + (cx + y)] = color; // down right (90° rotated)
-            if (quadrant & 0x40) m_framebuffer[0][(cy + x) * m_h_res + (cx - y)] = color; // down left (90° rotated)
-            if (quadrant & 0x80) m_framebuffer[0][(cy - x) * m_h_res + (cx - y)] = color; // up left (90° rotated)
+    // Gerade Linien
+    drawLine(x + r, y, x + w - r - 1, y, color);                 // top
+    drawLine(x + r, y + h - 1, x + w - r - 1, y + h - 1, color); // bottom
+    drawLine(x, y + r, x, y + h - r - 1, color);                 // left
+    drawLine(x + w - 1, y + r, x + w - 1, y + h - r - 1, color); // right
 
-            if (f >= 0) {
-                y--;
-                ddF_y += 2;
-                f += ddF_y;
-            }
-            x++;
-            ddF_x += 2;
-            f += ddF_x;
+    // Midpoint circle algorithm (nur Pixel setzen via mapRotation)
+    int16_t f = 1 - r;
+    int16_t ddF_x = 1;
+    int16_t ddF_y = -2 * r;
+    int16_t cx = 0;
+    int16_t cy = r;
+
+    while (cx <= cy) {
+        auto plot = [&](int16_t px, int16_t py) {
+            int32_t rotX, rotY;
+            mapRotation(m_rotation, px, py, rotX, rotY);
+
+            if (rotX < m_h_res && rotY < m_v_res) m_framebuffer[0][rotY * m_h_res + rotX] = color;
+        };
+
+        // 4 Ecken
+        plot(x + w - r - 1 + cx, y + r - cy); // top-right
+        plot(x + w - r - 1 + cy, y + r - cx);
+
+        plot(x + w - r - 1 + cx, y + h - r - 1 + cy); // bottom-right
+        plot(x + w - r - 1 + cy, y + h - r - 1 + cx);
+
+        plot(x + r - cx, y + h - r - 1 + cy); // bottom-left
+        plot(x + r - cy, y + h - r - 1 + cx);
+
+        plot(x + r - cx, y + r - cy); // top-left
+        plot(x + r - cy, y + r - cx);
+
+        if (f >= 0) {
+            cy--;
+            ddF_y += 2;
+            f += ddF_y;
         }
-    };
 
-    // draw horizontal lines above and below the quarter circles
-    for (int16_t i = x + r; i < x + w - r; i++) { // upper and lower horizontal lines
-        m_framebuffer[0][y * m_h_res + i] = color; // above
-        m_framebuffer[0][(y + h - 1) * m_h_res + i] = color; // below
-    }
-    for (int16_t i = y + r; i < y + h - r; i++) { // vertical lines
-        m_framebuffer[0][i * m_h_res + x] = color; // left
-        m_framebuffer[0][i * m_h_res + (x + w - 1)] = color; // right
+        cx++;
+        ddF_x += 2;
+        f += ddF_x;
     }
 
-    // fill the area between the quarter circles
-    drawCircleQuadrant(x + w - r - 1, y + r, r, 0x1 | 0x10); // Oben rechts
-    drawCircleQuadrant(x + w - r - 1, y + h - r - 1, r, 0x2 | 0x20); // Unten rechts
-    drawCircleQuadrant(x + r, y + h - r - 1, r, 0x4 | 0x40); // Unten links
-    drawCircleQuadrant(x + r, y + r, r, 0x8 | 0x80); // Oben links
-
-    // update the drawn area
-    startWrite();
-    setAddrWindow(x, y, w, h);
-    for(int16_t j = y; j < y + h; j++) {
-        writePixels(m_framebuffer[0] + j * m_h_res + x, w);
-    }
-    endWrite();
+    // Ein gemeinsamer Refresh (rotierte Bounding-Box optional berechenbar)
+    panelDrawBitmap(0, 0, m_h_res, m_v_res, m_framebuffer[0]);
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color) {
-    // Helper function: Calculate circular filling for the corners
-    auto fillCircleQuadrant = [&](int16_t cx, int16_t cy, int16_t r, uint8_t quadrant) {
-        int16_t f = 1 - r;
-        int16_t ddF_x = 1;
-        int16_t ddF_y = -2 * r;
-        int16_t x = 0;
-        int16_t y = r;
+    if (w <= 0 || h <= 0) return;
 
-        while (x <= y) {
-            for (int16_t i = 0; i <= x; i++) {
-                if (quadrant & 0x1) m_framebuffer[0][(cy - y) * m_h_res + (cx + i)] = color; // oben rechts
-                if (quadrant & 0x2) m_framebuffer[0][(cy + y) * m_h_res + (cx + i)] = color; // unten rechts
-                if (quadrant & 0x4) m_framebuffer[0][(cy + y) * m_h_res + (cx - i)] = color; // unten links
-                if (quadrant & 0x8) m_framebuffer[0][(cy - y) * m_h_res + (cx - i)] = color; // oben links
-            }
-            for (int16_t i = 0; i <= y; i++) {
-                if (quadrant & 0x10) m_framebuffer[0][(cy - x) * m_h_res + (cx + i)] = color; // oben rechts (gedreht)
-                if (quadrant & 0x20) m_framebuffer[0][(cy + x) * m_h_res + (cx + i)] = color; // unten rechts (gedreht)
-                if (quadrant & 0x40) m_framebuffer[0][(cy + x) * m_h_res + (cx - i)] = color; // unten links (gedreht)
-                if (quadrant & 0x80) m_framebuffer[0][(cy - x) * m_h_res + (cx - i)] = color; // oben links (gedreht)
-            }
+    if (r > w / 2) r = w / 2;
+    if (r > h / 2) r = h / 2;
 
-            if (f >= 0) {
-                y--;
-                ddF_y += 2;
-                f += ddF_y;
-            }
-            x++;
-            ddF_x += 2;
-            f += ddF_x;
-        }
+    size_t minX = m_h_res;
+    size_t minY = m_v_res;
+    size_t maxX = 0;
+    size_t maxY = 0;
+
+    auto plot = [&](int16_t px, int16_t py) {
+        int32_t rotX, rotY;
+        mapRotation(m_rotation, px, py, rotX, rotY);
+
+        if (rotX >= m_h_res || rotY >= m_v_res) return;
+
+        m_framebuffer[0][rotY * m_h_res + rotX] = color;
+
+        if (rotX < minX) minX = rotX;
+        if (rotY < minY) minY = rotY;
+        if (rotX > maxX) maxX = rotX;
+        if (rotY > maxY) maxY = rotY;
     };
 
-    // Horizontale Bereiche zwischen den oberen und unteren Viertelkreisen füllen
-    for (int16_t i = y; i < y + r; i++) { // Bereich oberhalb der Viertelkreise
-        for (int16_t j = x + r; j < x + w - r; j++) {
-            m_framebuffer[0][i * m_h_res + j] = color;
+    auto drawSpan = [&](int16_t xs, int16_t xe, int16_t py) {
+        if (xs > xe) std::swap(xs, xe);
+        for (int16_t px = xs; px <= xe; ++px) plot(px, py);
+    };
+
+    // Mittleres Rechteck
+    for (int16_t py = y + r; py < y + h - r; ++py) drawSpan(x, x + w - 1, py);
+
+    // obere + untere Rundbereiche
+    int16_t f = 1 - r;
+    int16_t ddF_x = 1;
+    int16_t ddF_y = -2 * r;
+    int16_t cx = 0;
+    int16_t cy = r;
+
+    while (cx <= cy) {
+        // obere Rundung
+        drawSpan(x + r - cx, x + w - r - 1 + cx, y + r - cy);
+        drawSpan(x + r - cy, x + w - r - 1 + cy, y + r - cx);
+
+        // untere Rundung
+        drawSpan(x + r - cx, x + w - r - 1 + cx, y + h - r - 1 + cy);
+        drawSpan(x + r - cy, x + w - r - 1 + cy, y + h - r - 1 + cx);
+
+        if (f >= 0) {
+            cy--;
+            ddF_y += 2;
+            f += ddF_y;
         }
-    }
-    for (int16_t i = y + h - r; i < y + h; i++) { // Bereich unterhalb der Viertelkreise
-        for (int16_t j = x + r; j < x + w - r; j++) {
-            m_framebuffer[0][i * m_h_res + j] = color;
-        }
+
+        cx++;
+        ddF_x += 2;
+        f += ddF_x;
     }
 
-    // Vertikaler Bereich zwischen den Viertelkreisen füllen
-    for (int16_t i = y + r; i < y + h - r; i++) { // Vertikaler Bereich
-        for (int16_t j = x; j < x + w; j++) { // Horizontaler Bereich
-            m_framebuffer[0][i * m_h_res + j] = color;
-        }
-    }
-
-    // Viertelkreise in den Ecken füllen
-    fillCircleQuadrant(x + w - r - 1, y + r, r, 0x1 | 0x10); // Oben rechts
-    fillCircleQuadrant(x + w - r - 1, y + h - r - 1, r, 0x2 | 0x20); // Unten rechts
-    fillCircleQuadrant(x + r, y + h - r - 1, r, 0x4 | 0x40); // Unten links
-    fillCircleQuadrant(x + r, y + r, r, 0x8 | 0x80); // Oben links
-
-    // Aktualisierung des gezeichneten Bereichs
-    startWrite();
-    setAddrWindow(x, y, w, h);
-    for(int16_t j = y; j < y + h; j++) {
-        writePixels(m_framebuffer[0] + j * m_h_res + x, w);
-    }
-    endWrite();
+    if (maxX > minX && maxY > minY) panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::drawCircle(int16_t cx, int16_t cy, int16_t r, uint16_t color) {
-    if (cx + r < 0 || cx - r >= m_h_res || cy + r < 0 || cy - r >= m_v_res) {
-        return; // Circle is completely outside, so don't draw anything
-    }
-    // Bresenham-Algorithm for circles
+    if (r <= 0) return;
+
     int16_t f = 1 - r;
     int16_t ddF_x = 1;
     int16_t ddF_y = -2 * r;
     int16_t x = 0;
     int16_t y = r;
 
-    auto setPixelSafe = [&](int16_t x, int16_t y, uint16_t color) { // Set pixel if it is within the framebuffer
-        if (x >= 0 && x < m_h_res && y >= 0 && y < m_v_res) {
-            m_framebuffer[0][y * m_h_res + x] = color;
-        }
+    size_t minX = m_h_res;
+    size_t minY = m_v_res;
+    size_t maxX = 0;
+    size_t maxY = 0;
+
+    auto plot = [&](int16_t px, int16_t py) {
+        int32_t rotX, rotY;
+        mapRotation(m_rotation, px, py, rotX, rotY);
+
+        if (rotX >= m_h_res || rotY >= m_v_res) return;
+
+        m_framebuffer[0][rotY * m_h_res + rotX] = color;
+
+        if (rotX < minX) minX = rotX;
+        if (rotY < minY) minY = rotY;
+        if (rotX > maxX) maxX = rotX;
+        if (rotY > maxY) maxY = rotY;
     };
 
-    // set the initial pixels
-    setPixelSafe(cx, cy + r, color); // upper pixel
-    setPixelSafe(cx, cy - r, color); // lower pixel
-    setPixelSafe(cx + r, cy, color); // right pixel
-    setPixelSafe(cx - r, cy, color); // left pixel
+    // Achsenpunkte
+    plot(cx, cy + r);
+    plot(cx, cy - r);
+    plot(cx + r, cy);
+    plot(cx - r, cy);
 
     while (x < y) {
         if (f >= 0) {
@@ -631,92 +612,79 @@ void TFT_SPI::drawCircle(int16_t cx, int16_t cy, int16_t r, uint16_t color) {
             ddF_y += 2;
             f += ddF_y;
         }
+
         x++;
         ddF_x += 2;
         f += ddF_x;
 
-        // Draw points in the eight symmetry axes
-        setPixelSafe(cx + x, cy + y, color); // Quadrant 1
-        setPixelSafe(cx - x, cy + y, color); // Quadrant 2
-        setPixelSafe(cx + x, cy - y, color); // Quadrant 3
-        setPixelSafe(cx - x, cy - y, color); // Quadrant 4
-        setPixelSafe(cx + y, cy + x, color); // Quadrant 5
-        setPixelSafe(cx - y, cy + x, color); // Quadrant 6
-        setPixelSafe(cx + y, cy - x, color); // Quadrant 7
-        setPixelSafe(cx - y, cy - x, color); // Quadrant 8
+        plot(cx + x, cy + y);
+        plot(cx - x, cy + y);
+        plot(cx + x, cy - y);
+        plot(cx - x, cy - y);
+        plot(cx + y, cy + x);
+        plot(cx - y, cy + x);
+        plot(cx + y, cy - x);
+        plot(cx - y, cy - x);
     }
 
-    int16_t x1 = std::max(cx - r, 1) - 1;
-    int16_t y1 = std::max(cy - r, 1) - 1;
-    int16_t w1 = std::min(cx + r, m_h_res - 1) - x1 + 1;
-    int16_t h1 = std::min(cy + r, m_v_res - 1) - y1 + 1;
-
-    // Update of the drawn area
-    startWrite();
-    setAddrWindow(x1, y1, w1, h1);
-    for(int16_t j = y1; j < y1 + h1; j++) {
-        writePixels(m_framebuffer[0] + j * m_h_res + x1, w1);
-    }
-    endWrite();
+    if (maxX > minX && maxY > minY) panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_SPI::fillCircle(int16_t cx, int16_t cy, uint16_t r, uint16_t color){
-    if (cx + r < 0 || cx - r >= m_h_res || cy + r < 0 || cy - r >= m_v_res) {
-        return; // Circle is completely outside, so don't draw anything
-    }
-    // Bresenham-Algorithmus für Kreise
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_SPI::fillCircle(int16_t cx, int16_t cy, uint16_t r, uint16_t color) {
+    if (r == 0) return;
+
     int16_t f = 1 - r;
     int16_t ddF_x = 1;
     int16_t ddF_y = -2 * r;
     int16_t x = 0;
     int16_t y = r;
 
+    size_t minX = m_h_res;
+    size_t minY = m_v_res;
+    size_t maxX = 0;
+    size_t maxY = 0;
 
-    auto setPixelSafe = [&](int16_t x, int16_t y, uint16_t color) {
-        if (x >= 0 && x < m_h_res && y >= 0 && y < m_v_res) {
-            m_framebuffer[0][y * m_h_res + x] = color;
-        }
+    auto plot = [&](int16_t px, int16_t py) {
+        int32_t rotX, rotY;
+        mapRotation(m_rotation, px, py, rotX, rotY);
+
+        if (rotX >= m_h_res || rotY >= m_v_res) return;
+
+        m_framebuffer[0][rotY * m_h_res + rotX] = color;
+
+        if (rotX < minX) minX = rotX;
+        if (rotY < minY) minY = rotY;
+        if (rotX > maxX) maxX = rotX;
+        if (rotY > maxY) maxY = rotY;
     };
 
-    // Fülle die erste vertikale Linie durch den Mittelpunkt
-    for (int16_t i = cy - r; i <= cy + r; i++) {
-        setPixelSafe(cx, i, color);
-    }
+    auto drawSpan = [&](int16_t xs, int16_t xe, int16_t py) {
+        if (xs > xe) std::swap(xs, xe);
+        for (int16_t px = xs; px <= xe; ++px) plot(px, py);
+    };
+
+    // Mittlere vertikale Linie
+    drawSpan(cx, cx, cy - r);
+    drawSpan(cx, cx, cy + r);
 
     while (x <= y) {
-        // Fülle horizontale Linien für alle acht Symmetrieachsen
-        for (int16_t i = cx - x; i <= cx + x; i++) {
-            setPixelSafe(i, cy + y, color); // Unten +y
-            setPixelSafe(i, cy - y, color); // Oben -y
-        }
-        for (int16_t i = cx - y; i <= cx + y; i++) {
-            setPixelSafe(i, cy + x, color); // Rechts +x
-            setPixelSafe(i, cy - x, color); // Links -x
-        }
+        drawSpan(cx - x, cx + x, cy + y);
+        drawSpan(cx - x, cx + x, cy - y);
+        drawSpan(cx - y, cx + y, cy + x);
+        drawSpan(cx - y, cx + y, cy - x);
 
         if (f >= 0) {
             y--;
             ddF_y += 2;
             f += ddF_y;
         }
+
         x++;
         ddF_x += 2;
         f += ddF_x;
     }
 
-    // Update of the drawn area
-    int16_t x1 = std::max(cx - r, 1) - 1;
-    int16_t y1 = std::max(cy - r, 1) - 1;
-    int16_t w1 = std::min(cx + r, m_h_res - 1) - x1 + 1;
-    int16_t h1 = std::min(cy + r, m_v_res - 1) - y1 + 1;
-
-    // Update of the drawn area
-    startWrite();
-    setAddrWindow(x1, y1, w1, h1);
-    for(int16_t j = y1; j < y1 + h1; j++) {
-        writePixels(m_framebuffer[0] + j * m_h_res + x1, w1);
-    }
-    endWrite();
+    if (maxX > minX && maxY > minY) panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::setFont(uint16_t font) {
