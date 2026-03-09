@@ -55,15 +55,15 @@ char _hl_item[18][40]{"",                    // none
 
 constexpr uint16_t MAX_STATIONS = 1000;
 
-Audio          audio;
-Preferences    pref;
-WebSrv         webSrv;
-WiFiMulti      wifiMulti;
-RTIME          rtc;
-Ticker         ticker100ms;
-TwoWire        i2cBusOne = TwoWire(0); // additional HW, sensors, buttons, encoder etc
-TwoWire        i2cBusTwo = TwoWire(1); // external DAC, AC101 or ES8388
-SPIClass       spiBus(FSPI);
+Audio       audio;
+Preferences pref;
+WebSrv      webSrv;
+WiFiMulti   wifiMulti;
+RTIME       rtc;
+Ticker      ticker100ms;
+TwoWire     i2cBusOne = TwoWire(0); // additional HW, sensors, buttons, encoder etc
+TwoWire     i2cBusTwo = TwoWire(1); // external DAC, AC101 or ES8388
+SPIClass    spiBus(FSPI);
 
 settings_s    s_settings;
 volume_s      s_volume;
@@ -80,7 +80,7 @@ File           audioFile;
 FtpServer      ftpSrv;
 DLNA_Client    dlna;
 KCX_BT_Emitter bt_emitter(BT_EMITTER_RX, BT_EMITTER_TX, BT_EMITTER_CONNECT, BT_EMITTER_MODE);
-hp_BH1750      BH1750;                 // create the sensor
+hp_BH1750      BH1750; // create the sensor
 
 ps_ptr<char> s_time_s = "";
 ps_ptr<char> s_myIP;
@@ -197,29 +197,41 @@ std::deque<ps_ptr<char>> s_logBuffer;
 const char* codecname[10] = {"unknown", "WAV", "MP3", "AAC", "M4A", "FLAC", "AACP", "OPUS", "OGG", "VORBIS"};
 
 #ifdef TFT_MODE_SPI // ⏹⏹⏹⏹
-TFT_SPI tft(spiBus, TFT_CS);
-TFT_SPI& getTFT() { return tft; }
+TFT_SPI  tft(spiBus, TFT_CS);
+TFT_SPI& getTFT() {
+    return tft;
+}
 #elif defined TFT_MODE_RGB
-TFT_RGB tft;
-TFT_RGB& getTFT() { return tft; }
+TFT_RGB  tft;
+TFT_RGB& getTFT() {
+    return tft;
+}
 #elif defined TFT_MODE_DSI
-TFT_DSI tft;
-TFT_DSI& getTFT() { return tft; }
+TFT_DSI  tft;
+TFT_DSI& getTFT() {
+    return tft;
+}
 #else
-#error "wrong TFT_CONTROLLER"
+    #error "wrong TFT_CONTROLLER"
 #endif
 
 #ifdef TP_MODE_XPT2046 // ⏹⏹⏹⏹
-TP_XPT2046 tp(spiBus, TP_CS);
-TP_XPT2046& getTP() { return tp; }
+TP_XPT2046  tp(spiBus, TP_CS);
+TP_XPT2046& getTP() {
+    return tp;
+}
 #elif defined TP_MODE_GT911
-TP_GT911 tp;
-TP_GT911& getTP() { return tp; }
+TP_GT911  tp;
+TP_GT911& getTP() {
+    return tp;
+}
 #elif defined TP_MODE_FT6X63
-FT6x36 tp;
-FT6x36& getTP() { return tp; }
+FT6x36  tp;
+FT6x36& getTP() {
+    return tp;
+}
 #else
-#error "wrong TP_CONTROLLER"
+    #error "wrong TP_CONTROLLER"
 #endif
 
 stationManagement staMgnt(&s_cur_station);
@@ -699,7 +711,7 @@ start:
     if (s_f_isFSConnected || s_f_isWebConnected) {
         SerialPrintflnCut("Playlist:    ", ANSI_ESC_YELLOW, path.c_get());
         webSrv.send("SD_playFile=", path);
-        if(s_state == PLAYER) dispFooter.updateFileNr(playlist.get_coloured_index().c_get());
+        if (s_state == PLAYER) dispFooter.updateFileNr(playlist.get_coloured_index().c_get());
         txt_PL_fName.writeText(playlist.get_items().c_get());
     } else {
         SerialPrintfln("Playlist:    " ANSI_ESC_YELLOW "can't connect to %s" ANSI_ESC_RESET "  ", path.c_get());
@@ -715,7 +727,7 @@ start:
 // 📌📌📌  C O N N E C T   TO   W I F I   📌📌📌
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- bool connectToWiFi() {
+bool connectToWiFi() {
 
     MWR_LOG_DEBUG("Connecting to WiFi...");
     ps_ptr<char> line(512);
@@ -1046,7 +1058,7 @@ void setup() {
     }
 
     set_display_items(); // TFT, TP, Resolotion
-    if(!init_SD_card()) return;
+    if (!init_SD_card()) return;
 
     defaultsettings();
 
@@ -1126,7 +1138,7 @@ void setup() {
             s_resetReason == ESP_RST_SDIO ||      // The boot button was pressed
             s_resetReason == ESP_RST_DEEPSLEEP) { // Wake up
             s_state = UNDEFINED;
-        //    setStation(s_cur_station);
+            //    setStation(s_cur_station);
         }
         if (!MDNS.begin("MiniWebRadio")) {
             SerialPrintfln("%s", "WiFI_info:   " ANSI_ESC_YELLOW "Error starting mDNS", ANSI_ESC_RESET);
@@ -1162,11 +1174,13 @@ void setup() {
     SerialPrintfln("recorder task started, Free heap: %u\n", ESP.getFreeHeap());
 
     dispHeader.setTransparency(true, false);
+    dispHeader.enable();
     dispHeader.updateItem(_hl_item[RADIO]);
     dispHeader.updateVolume(s_volume.cur_volume);
     dispHeader.speakerOnOff(!s_f_mute);
 
     dispFooter.setTransparency(true, false);
+    dispFooter.enable();
     dispFooter.setIpAddr(WiFi.localIP().toString().c_str());
     dispFooter.updateStation(s_cur_station);
     dispFooter.updateOffTime(s_sleeptime);
@@ -1179,7 +1193,7 @@ void setup() {
 // 📌📌📌  C O M M O N  📌📌📌
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-void set_display_items(){
+void set_display_items() {
 //---- LAYOUT -----------
 #ifdef TFT_LAYOUT_S
     s_h_resolution = 320;
@@ -1211,7 +1225,7 @@ void set_display_items(){
     vTaskDelay(100 / portTICK_PERIOD_MS); // wait for TFT to be ready
     getTFT().reset();
     vTaskDelay(100 / portTICK_PERIOD_MS); // wait for TFT to be ready
-    getTFT().clearVsyncCounter(); // clear the vsync counter and start them
+    getTFT().clearVsyncCounter();         // clear the vsync counter and start them
 #elifdef TFT_MODE_DSI
     getTFT().begin(DSI_TIMING);
     getTFT().setRotation(TFT_ROTATION);
@@ -1225,11 +1239,11 @@ void set_display_items(){
     getTP().setVersion(TP_CONTROLLER);
     getTP().setRotation(TP_ROTATION);
     getTP().setMirror(TP_H_MIRROR, TP_V_MIRROR);
-#elifdef TP_MODE_GT911 // GT911
+#elifdef TP_MODE_GT911  // GT911
     getTP().begin(&i2cBusOne, GT911_I2C_ADDRESS, s_h_resolution, s_v_resolution);
     getTP().setRotation(TP_ROTATION);
     getTP().setMirror(TP_H_MIRROR, TP_V_MIRROR);
-#elifdef TP_MODE_FT6X63// FT6x36
+#elifdef TP_MODE_FT6X63 // FT6x36
     getTP().begin(&i2cBusOne, 0x38, s_h_resolution, s_v_resolution);
     getTP().get_FT6x36_items();
     getTP().setRotation(TP_ROTATION);
@@ -1266,13 +1280,14 @@ bool init_SD_card() {
 //---------------------------------------------------------------------------------------
 
 ps_ptr<char> scaleImage(ps_ptr<char> path) {
-    MWR_LOG_DEBUG("path %s", path.c_get());
+    if (path.strlen() == 0) return "/common/unknown.png";
     bool ok = false;
     if (path.ends_with("bmp")) ok = true;
     if (path.ends_with("jpg")) ok = true;
     if (path.ends_with("gif")) ok = true;
     if (path.ends_with("png")) ok = true;
     if (path.starts_with("/png")) ok = false; // is web button
+    MWR_LOG_DEBUG("path %s", path.c_get());
     if (!ok) return path;
 
     int idx = path.index_of('/', 1);
@@ -1993,7 +2008,8 @@ void loop() {
 
     while (s_logBuffer.size() > 0) {
         size_t i = s_logBuffer.size();
-        webSrv.send("serTerminal=", s_logBuffer[i - 1].c_get());
+        if (s_logBuffer[i - 1].strlen() > 0 && s_logBuffer[i - 1].strlen() < 512) { webSrv.send("serTerminal=", s_logBuffer[i - 1].c_get()); }
+        else log_w("%s %i: strlen %i", __FILE__, __LINE__, s_logBuffer[i - 1].strlen());
         s_logBuffer.pop_back();
         if (s_logBuffer.size() == 0) s_logBuffer.clear(); // Löscht alle Elemente und gibt den Speicher frei
     }
@@ -2038,8 +2054,8 @@ void loop() {
 
                     if (s_state == RADIO) {
                         if (!txt_RA_staName.isEnabled()) { txt_RA_staName.show(); } // assume volBox is shown
-                        if (s_subState_radio == 1) { changeState(RADIO, 0); }                  // Mute, Vol+, Vol-, Sta+, Sta-, StaList
-                        if (s_subState_radio == 2) { changeState(RADIO, 0); }                  // Player, DLNA, Clock, SleepTime, Brightness, EQ, BT, Off
+                        if (s_subState_radio == 1) { changeState(RADIO, 0); }       // Mute, Vol+, Vol-, Sta+, Sta-, StaList
+                        if (s_subState_radio == 2) { changeState(RADIO, 0); }       // Player, DLNA, Clock, SleepTime, Brightness, EQ, BT, Off
                     } else if (s_state == STATIONSLIST) {
                         changeState(RADIO, 0);
                     } else if (s_state == PLAYER) {
@@ -2229,8 +2245,7 @@ void loop() {
                     SerialPrintfln("Start recording");
                 }
             }
-        }
-        else {
+        } else {
             if (recorder.running) {
                 recorder.sampleRate = audio.getSampleRate();
                 SerialPrintfln("Stop recording");
@@ -2290,8 +2305,11 @@ void loop() {
             } else {
                 if (bt_emitter.get_power_state()) { bt_emitter.power_off(); }
             }
-            if (bt_emitter.getMode().equals("NA")) {} // not ready yet
-            else if (!bt_emitter.getMode().equals(s_bt_emitter.mode)) { bt_emitter.setMode(s_bt_emitter.mode); }
+            if (bt_emitter.getMode().equals("NA")) {
+            } // not ready yet
+            else if (!bt_emitter.getMode().equals(s_bt_emitter.mode)) {
+                bt_emitter.setMode(s_bt_emitter.mode);
+            }
         }
     } //  END s_f_1sec
     //------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2553,7 +2571,7 @@ void my_audio_info(Audio::msg_t m) {
 
         case Audio::evt_lasthost:
             if (s_f_playlistEnabled) return;
-            if(s_state == RADIO) s_settings.lastconnectedhost.assign(m.msg);
+            if (s_state == RADIO) s_settings.lastconnectedhost.assign(m.msg);
             SerialPrintflnCut("lastURL: ..  ", ANSI_ESC_WHITE, m.msg);
             webSrv.send("stationURL=", m.msg);
             break;
@@ -3643,7 +3661,7 @@ void on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg) {
         s_bt_emitter.volume = msg.val;
         ps_ptr<char> v;
         v.assignf("Vol: %02i", s_bt_emitter.volume);
-        if(s_state == BLUETOOTH) dispFooter.updateFileNr(v);
+        if (s_state == BLUETOOTH) dispFooter.updateFileNr(v);
         SerialPrintfln("BT-Emitter:  %s " ANSI_ESC_YELLOW "%i" ANSI_ESC_RESET "  ", "volume", msg.val);
     }
     if (msg.e == KCX_BT_Emitter::evt_version) {

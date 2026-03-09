@@ -2,6 +2,31 @@
 // updated on Nov 16 2025
 
 #include "tp_ft6x36.h"
+
+__attribute__((weak)) void tp_info(const char* info){
+    // Default: do nothing. User can provide their own implementation to process audio data.
+}
+
+__attribute__((weak)) void tp_moved(uint16_t x, uint16_t y) {
+    // Default: do nothing. User can provide their own implementation to process audio data.
+}
+
+__attribute__((weak)) void tp_pressed(uint16_t x, uint16_t y) {
+    // Default: do nothing. User can provide their own implementation to process audio data.
+}
+
+__attribute__((weak)) void tp_long_pressed(uint16_t x, uint16_t y) {
+    // Default: do nothing. User can provide their own implementation to process audio data.
+}
+
+__attribute__((weak)) void tp_released(uint16_t x, uint16_t y) {
+    // Default: do nothing. User can provide their own implementation to process audio data.
+}
+
+__attribute__((weak)) void tp_long_released(uint16_t x, uint16_t y) {
+    // Default: do nothing. User can provide their own implementation to process audio data.
+}
+
 #define ANSI_ESC_RED   "\033[31m"
 #define ANSI_ESC_CYAN  "\033[36m"
 #define ANSI_ESC_RESET "\033[0m"
@@ -16,7 +41,7 @@ bool FT6x36::begin(TwoWire* twi, uint8_t addr, uint16_t h_resolution, uint16_t v
         m_isInit = true;
         char buff[30] = {0};
         sprintf(buff, "TouchPad found at " ANSI_ESC_CYAN "0x%02X" ANSI_ESC_RESET, m_addr);
-        if (tp_info) tp_info(buff);
+        tp_info(buff);
         write(FT6x36U_ADDR_DEVICE_MODE, 0);
         write(FT6X36_ADDR_THRESHHOLD, 22);
         m_h_resolution = h_resolution;
@@ -71,7 +96,7 @@ bool FT6x36::get_FT6x36_items() {
     uint8_t FW_ID = read(FT6X36_ADDR_FIRMARE_ID);
     sprintf(buff, "FT6x36 Chip ID: " ANSI_ESC_CYAN "%i" ANSI_ESC_RESET ", Library Version: " ANSI_ESC_CYAN "%i" ANSI_ESC_RESET ", Firmware Version: " ANSI_ESC_CYAN "%i" ANSI_ESC_RESET, chipID,
             Library_Vers, FW_ID);
-    if (tp_info) tp_info(buff);
+    tp_info(buff);
     return true;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -84,7 +109,7 @@ void FT6x36::loop() {
     if (t == 1 && !m_f_isTouch) {
         p = getPoint(t);
         // log_w("X: %d, Y: %d", p.x, p.y);
-        if (tp_pressed) tp_pressed(p.x, p.y);
+        tp_pressed(p.x, p.y);
         ts = millis();
         m_f_isTouch = true;
         return;
@@ -93,25 +118,25 @@ void FT6x36::loop() {
         p1 = getPoint(t);
         if (p1.x != p.x || p1.y != p.y) {
             p = p1;
-            if (tp_moved) tp_moved(p.x, p.y);
+            tp_moved(p.x, p.y);
             return;
         }
         // fall through
     }
     if (t == 1 && m_f_isTouch && (millis() > ts + 2000) && !m_f_isLongPressed) {
         m_f_isLongPressed = true;
-        if (tp_long_pressed) tp_long_pressed(p.x, p.y);
+        tp_long_pressed(p.x, p.y);
         ts = millis() + 10000;
         return;
     }
     if (t == 0 && m_f_isTouch && !m_f_isLongPressed) {
-        if (tp_released) tp_released(p.x, p.y);
+        tp_released(p.x, p.y);
         m_f_isTouch = false;
         return;
     }
     if (t == 0 && m_f_isLongPressed) {
         m_f_isLongPressed = false;
-        if (tp_long_released) tp_long_released(p.x, p.y);
+        tp_long_released(p.x, p.y);
         m_f_isTouch = false;
         return;
     }
@@ -198,7 +223,7 @@ uint8_t FT6x36::read(uint8_t reg) {
     m_wire->endTransmission();
     m_wire->requestFrom(m_addr, (uint8_t)1);
     uint8_t ret = m_wire->read();
-    m_wire->endTransmission(true);
+//    m_wire->endTransmission(true);
     return ret;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

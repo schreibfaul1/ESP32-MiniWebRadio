@@ -76,8 +76,11 @@ class FT6x36 {
     bool     m_isInit = false;
     bool     m_mirror_h = false;
     bool     m_mirror_v = false;
+    uint8_t  m_i2cFailCount = 0;
+    uint32_t m_lastRecoverMs = 0;
 
   private:
+    bool    recoverI2C();
     bool    write(uint8_t reg, uint8_t data);
     uint8_t read(uint8_t reg);
 };

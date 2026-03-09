@@ -25,6 +25,8 @@ void TFT_DSI::loop() {
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_DSI::begin(const Timing& newTiming) {
 
+    const char* controller = "unknown";
+
     // Hintergrundbeleuchtung einschalten
     if (TFT_BL >= 0) {
         //    gpio_set_direction((gpio_num_t)TFT_BL, GPIO_MODE_OUTPUT);
@@ -81,7 +83,7 @@ void TFT_DSI::begin(const Timing& newTiming) {
     // --------------------------------------------------
     // 4. Init Display-Controller (EK97001)
     // --------------------------------------------------
-    const char* controller = "EK97001";
+    controller = "EK97001";
     /*
      * R00h: NOP ( No Operation)
      * R01h: GRB (Software Reset)
@@ -121,7 +123,7 @@ void TFT_DSI::begin(const Timing& newTiming) {
     // --------------------------------------------------
     // 4. Init Display-Controller (JD9165)
     // --------------------------------------------------
-    const char* controller = "JD9165";
+    controller = "JD9165";
     /*
 
      */
@@ -190,7 +192,7 @@ void TFT_DSI::begin(const Timing& newTiming) {
     // --------------------------------------------------
     // 4. Init Display-Controller (ST7701)
     // --------------------------------------------------
-    const char* controller = "ST7701";
+    controller = "ST7701";
     /*
 
      */
@@ -304,6 +306,7 @@ void TFT_DSI::begin(const Timing& newTiming) {
 
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_DSI::reset() {
+    #ifdef LCD_RESET
     pinMode(LCD_RESET, OUTPUT);
     digitalWrite(LCD_RESET, 1);
     vTaskDelay(20);
@@ -312,6 +315,7 @@ void TFT_DSI::reset() {
     digitalWrite(LCD_RESET, 1);
     vTaskDelay(100);
     // ESP_ERROR_CHECK(esp_lcd_panel_reset(m_panel));
+    #endif
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool TFT_DSI::panelDrawBitmap(int16_t x0, int16_t y0, int16_t x1, int16_t y1, const void* bitmap) {
@@ -489,7 +493,7 @@ bool TFT_DSI::copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, u
         }
     }
 
-    if (destination == 0) drawRectLogicalFromFB(0, x,y,w,h);
+    if (destination == 0) drawRectLogicalFromFB(0, x, y, w, h);
 
     return true;
 }
@@ -880,11 +884,11 @@ void TFT_DSI::fillCircle(int16_t cx, int16_t cy, uint16_t r, uint16_t color) {
 void TFT_DSI::readRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t* data) {
     // Check whether parameters are within the valid range
     if (x < 0 || y < 0 || w <= 0 || h <= 0) return;
-    if (x + w > m_h_res|| y + h > m_v_res) return; // logicalWidth() = vertical resolution
+    if (x + w > m_h_res || y + h > m_v_res) return; // logicalWidth() = vertical resolution
     if (!data || !m_framebuffer[0]) return;
 
     uint16_t* dst = data;
-    uint16_t* src = m_framebuffer[0] + y * m_h_res+ x;
+    uint16_t* src = m_framebuffer[0] + y * m_h_res + x;
 
     for (int32_t row = 0; row < h; row++) {
         memcpy(dst, src, w * sizeof(uint16_t));

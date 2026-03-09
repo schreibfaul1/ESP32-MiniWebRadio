@@ -2,6 +2,31 @@
 // updated on Nov 23 2025
 
 #include "tp_gt911.h"
+
+__attribute__((weak)) void tp_info(const char* info) {
+    // Default: do nothing. User can provide their own implementation to process audio data.
+}
+
+__attribute__((weak)) void tp_moved(uint16_t x, uint16_t y) {
+    // Default: do nothing. User can provide their own implementation to process audio data.
+}
+
+__attribute__((weak)) void tp_pressed(uint16_t x, uint16_t y) {
+    // Default: do nothing. User can provide their own implementation to process audio data.
+}
+
+__attribute__((weak)) void tp_long_pressed(uint16_t x, uint16_t y) {
+    // Default: do nothing. User can provide their own implementation to process audio data.
+}
+
+__attribute__((weak)) void tp_released(uint16_t x, uint16_t y) {
+    // Default: do nothing. User can provide their own implementation to process audio data.
+}
+
+__attribute__((weak)) void tp_long_released(uint16_t x, uint16_t y) {
+    // Default: do nothing. User can provide their own implementation to process audio data.
+}
+
 #define ANSI_ESC_RED   "\033[31m"
 #define ANSI_ESC_CYAN  "\033[36m"
 #define ANSI_ESC_RESET "\033[0m"
@@ -15,11 +40,12 @@ bool TP_GT911::begin(TwoWire* twi, uint8_t addr, uint16_t h_resolution, uint16_t
     m_wire = twi; // I2C TwoWire Instance
     m_addr = addr;
     char buff[128] = {0};
+    m_wire->setTimeOut(1000);
     m_wire->beginTransmission(m_addr);
     if (m_wire->endTransmission() == 0) {
         m_isInit = true;
         sprintf(buff, "TouchPad found at " ANSI_ESC_CYAN "0x%02X" ANSI_ESC_RESET, m_addr);
-        if (tp_info) tp_info(buff);
+        tp_info(buff);
         readInfo(); // Need to get resolution to use rotation
         uint16_t x_resolution = readXResolution();
         uint16_t y_resolution = readYResolution();
@@ -27,21 +53,18 @@ bool TP_GT911::begin(TwoWire* twi, uint8_t addr, uint16_t h_resolution, uint16_t
         // log_i("y_resolution %i", y_resolution);
         if ((m_disp_v_resolution == x_resolution && m_disp_h_resolution == y_resolution) || (m_disp_v_resolution == y_resolution && m_disp_h_resolution == x_resolution)) {
             sprintf(buff, "TP resolution " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET " x " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET, x_resolution, y_resolution);
-            if (tp_info) tp_info(buff);
+            tp_info(buff);
         } else {
             sprintf(buff, "Touch resolution " ANSI_ESC_CYAN "%dx%d" ANSI_ESC_RESET " mapped to display " ANSI_ESC_CYAN "%dx%d" ANSI_ESC_RESET "", x_resolution, y_resolution, m_disp_h_resolution,
                     m_disp_v_resolution);
-            if (tp_info) tp_info(buff);
+            tp_info(buff);
         }
         m_touch_h_resolution = x_resolution;
         m_touch_v_resolution = y_resolution;
         return true;
     }
     sprintf(buff, ANSI_ESC_RED "TouchPad not found at 0x%02X" ANSI_ESC_RESET, m_addr);
-    if (tp_info)
-        tp_info(buff);
-    else
-        log_e("TouchPad not Initialized at 0x%02X", m_addr);
+    tp_info(buff);
     return false;
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -58,11 +81,13 @@ void TP_GT911::loop() {
     if (!m_isInit) return;
     static GTPoint  p, p1;
     static uint32_t ts = 0;
-    uint8_t         t = touched(); // number of touch points
+
+    uint8_t t = touched(); // number of touch points
+
     if (t == 1 && !m_f_isTouch) {
         p = getPoint(0);
         log_w("X: %d, Y: %d", p.x, p.y);
-        if (tp_pressed) tp_pressed(p.x, p.y);
+        tp_pressed(p.x, p.y);
         ts = millis();
         m_f_isTouch = true;
         return;
@@ -71,7 +96,7 @@ void TP_GT911::loop() {
         p1 = getPoint(0);
         if (p1.x != p.x || p1.y != p.y) {
             p = p1;
-            if (tp_moved) tp_moved(p.x, p.y);
+            tp_moved(p.x, p.y);
             return;
         }
         // fall through
@@ -79,18 +104,18 @@ void TP_GT911::loop() {
 
     if (t == 1 && m_f_isTouch && (millis() > ts + 2000) && !m_f_isLongPressed) {
         m_f_isLongPressed = true;
-        if (tp_long_pressed) tp_long_pressed(p.x, p.y);
+        tp_long_pressed(p.x, p.y);
         ts = millis() + 10000;
         return;
     }
     if (t == 0 && m_f_isTouch && !m_f_isLongPressed) {
-        if (tp_released) tp_released(p.x, p.y);
+        tp_released(p.x, p.y);
         m_f_isTouch = false;
         return;
     }
     if (t == 0 && m_f_isLongPressed) {
         m_f_isLongPressed = false;
-        if (tp_long_released) tp_long_released(p.x, p.y);
+        tp_long_released(p.x, p.y);
         m_f_isTouch = false;
         return;
     }
@@ -131,7 +156,6 @@ bool TP_GT911::write(uint16_t reg, uint8_t data) {
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 uint8_t TP_GT911::read(uint16_t reg) {
-    m_wire->setTimeOut(100); // 100ms Timeout
     m_wire->beginTransmission(m_addr);
 
     m_wire->write(reg >> 8);
@@ -209,7 +233,7 @@ TP_GT911::GTInfo* TP_GT911::readInfo() {
     char buff[128] = {0};
     sprintf(buff, "TP ProductID: " ANSI_ESC_CYAN "%s," ANSI_ESC_RESET " Firmware version: " ANSI_ESC_CYAN "%d," ANSI_ESC_RESET " VendorID: " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET, m_info.productId,
             m_info.fwId, m_info.vendorId);
-    if (tp_info) tp_info(buff);
+    tp_info(buff);
     return &m_info;
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
