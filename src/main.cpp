@@ -66,7 +66,7 @@ TwoWire        i2cBusTwo = TwoWire(1); // external DAC, AC101, ES8388 or ES8311
 SPIClass       spiBus(FSPI);
 
 #include "es8311.h"
-ES8311         es8311(&i2cBusTwo);
+ES8311         es8311(&i2cBusOne);
 
 settings_s    s_settings;
 volume_s      s_volume;

@@ -161,12 +161,10 @@ bool ES8311::begin(int32_t sda, int32_t scl, uint32_t frequency) {
     uint8_t reg = 0;
 
     if((sda >= 0) && (scl >= 0)){
-	    ok = _TwoWireInstance->begin(sda, scl, frequency);
         _TwoWireInstance->beginTransmission(ES8311_ADDR);
         ok = (_TwoWireInstance->endTransmission() == 0);
         if(!ok) {
-            _TwoWireInstance->end();
-            log_e("ES8311 not found"); return false;
+            log_e("ES8311 not found at address 0x%02X", ES8311_ADDR); return false;
         }
     }
     else {

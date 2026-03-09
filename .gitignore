@@ -1,6 +1,8 @@
+.cache
 .pio
 .vscode
 .env
+platformio_override.ini
 build
 logs
 managed_components
