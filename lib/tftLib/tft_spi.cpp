@@ -13,7 +13,7 @@ SPIClass*   SPItransfer;
 
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 TFT_SPI::TFT_SPI(SPIClass& spiInstance, int csPin){
-    _freq = 20000000;
+    m_freq = 20000000;
     _TFT_CS = csPin;
     spi_TFT = &spiInstance;
     pinMode(csPin, OUTPUT);
@@ -32,13 +32,10 @@ void TFT_SPI::loop(){
 void TFT_SPI::setTFTcontroller(uint8_t TFTcontroller) {
     _TFTcontroller = TFTcontroller; // 0=ILI9341, 1=HX8347D, 2=ILI9486(a), 3=ILI9486(b), 4= ILI9488, 5=ST7796
 
-    if(_TFTcontroller == ILI9341)   { m_h_res = 320; m_v_res = 240; _rotation = 0;}
-    if(_TFTcontroller == HX8347D)   { m_h_res = 320; m_v_res = 240; _rotation = 0;}
-    if(_TFTcontroller == ILI9486a)  { m_h_res = 480; m_v_res = 320; _rotation = 0;}
-    if(_TFTcontroller == ILI9486b)  { m_h_res = 480; m_v_res = 320; _rotation = 0;}
-    if(_TFTcontroller == ILI9488)   { m_h_res = 480; m_v_res = 320; _rotation = 0;}
-    if(_TFTcontroller == ST7796 )   { m_h_res = 480; m_v_res = 320; _rotation = 0;}
-    if(_TFTcontroller == ST7796RPI) { m_h_res = 480; m_v_res = 320; _rotation = 0;}
+    if(_TFTcontroller == ILI9341)   { m_h_res = 320; m_v_res = 240; m_rotation = 0;}
+    if(_TFTcontroller == ILI9486)  { m_h_res = 480; m_v_res = 320; m_rotation = 0;}
+    if(_TFTcontroller == ILI9488)   { m_h_res = 480; m_v_res = 320; m_rotation = 0;}
+    if(_TFTcontroller == ST7796 )   { m_h_res = 480; m_v_res = 320; m_rotation = 0;}
 
     m_framebuffer[0] = (uint16_t*)ps_malloc(m_h_res * m_v_res * 2);
     if(!m_framebuffer[0]) {if(tft_info) tft_info("Error allocating memory framebuffer 0"); return; }
@@ -53,15 +50,30 @@ void TFT_SPI::setTFTcontroller(uint8_t TFTcontroller) {
     memset(m_framebuffer[2], 0, m_h_res * m_v_res * 2);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_SPI::setDiaplayInversion(uint8_t dispInv) {
-    _displayInversion = dispInv;
+void TFT_SPI::setDiaplayInversion(uint8_t i) {
+    m_displayInversion = i;
+    startWrite();
+    if(_TFTcontroller == ILI9341) { writeCommand(i ? INVON : INVOFF); }
+    if(_TFTcontroller == ILI9486) { writeCommand(i ? INVON : INVOFF); }
+    if(_TFTcontroller == ILI9488) { writeCommand(i ? INVON : INVOFF); }
+    if(_TFTcontroller == ST7796)  { writeCommand(i ? INVON : INVOFF); }
+    endWrite();
+
 }
+
+void TFT_SPI::displayInversion() {
+    if(_TFTcontroller == ILI9341) { writeCommand(m_displayInversion ? INVON : INVOFF); }
+    if(_TFTcontroller == ILI9486) { writeCommand(m_displayInversion ? INVON : INVOFF); }
+    if(_TFTcontroller == ILI9488) { writeCommand(m_displayInversion ? INVON : INVOFF); }
+    if(_TFTcontroller == ST7796)  { writeCommand(m_displayInversion ? INVON : INVOFF); }
+}
+
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::setFrequency(uint32_t f) {
     if(f > 80000000) f = 80000000;
-    _freq = f; // overwrite default
-    spi_TFT->setFrequency(_freq);
-    SPIset = SPISettings(_freq, MSBFIRST, SPI_MODE0);
+    m_freq = f; // overwrite default
+    spi_TFT->setFrequency(m_freq);
+    SPIset = SPISettings(m_freq, MSBFIRST, SPI_MODE0);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::startWrite(void) {
@@ -75,30 +87,145 @@ void TFT_SPI::endWrite(void) {
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // Return the size of the display (per current rotation)
-int16_t TFT_SPI::width(void) const { return m_h_res; }
-int16_t TFT_SPI::height(void) const { return m_v_res; }
-uint8_t TFT_SPI::getRotation(void) const { return _rotation; }
+// int16_t TFT_SPI::width(void) const { return m_h_res; }
+// int16_t TFT_SPI::height(void) const { return m_v_res; }
+uint8_t TFT_SPI::getRotation(void) const { return m_rotation; }
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+bool TFT_SPI::panelDrawBitmap(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t* bitmap) {
+    bool res = false;
+    if(x0 >= x1 || y0 >= y1) {log_w("%s %i: x0 %i, y0 %i, x1 %i, y1 %i", __FILE__, __LINE__, x0, y0, x1, y1); return false;}
+
+    int16_t w = abs(x1 - x0);
+    int16_t h = abs(y1 - y0);
+
+    startWrite();
+    setAddrWindow(x0, y0, w, h);
+    for(int16_t j = y0; j < y0 + h; j++) {
+        writePixels(&bitmap[0] + j * m_h_res + x0, w);
+    }
+    endWrite();
+
+    return res;
+}
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+uint16_t TFT_SPI::logicalWidth() const {
+    if (m_rotation & 1) return m_v_res;
+    return m_h_res;
+}
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+uint16_t TFT_SPI::logicalHeight() const {
+    if (m_rotation & 1) return m_h_res;
+    return m_v_res;
+}
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+bool TFT_SPI::renderRGB565(int16_t x, int16_t y, uint16_t w, uint16_t h, const uint16_t* rgb, const uint8_t* alpha) {
+    if (!rgb || w == 0 || h == 0) return false;
+
+    int32_t minX = logicalWidth();
+    int32_t minY = logicalHeight();
+    int32_t maxX = -1;
+    int32_t maxY = -1;
+
+    for (uint16_t row = 0; row < h; ++row) {
+        for (uint16_t col = 0; col < w; ++col) {
+            int32_t srcX = x + col;
+            int32_t srcY = y + row;
+
+            int32_t dstX, dstY;
+            mapRotation(m_rotation, srcX, srcY, dstX, dstY);
+
+            if (dstX < 0 || dstY < 0) continue;
+
+            if (dstX >= m_h_res || dstY >= m_v_res) continue;
+
+            const size_t fbIndex = dstY * m_h_res + dstX;
+            const size_t srcIndex = row * w + col;
+
+            uint16_t newColor = rgb[srcIndex];
+
+            if (alpha) {
+                uint8_t a = alpha[srcIndex];
+
+                if (a == 0) continue;
+
+                if (a < 255) {
+                    uint16_t old = m_framebuffer[0][fbIndex];
+                    uint16_t invA = 255 - a;
+
+                    uint8_t r = ((newColor >> 11) & 0x1F) << 3;
+                    uint8_t g = ((newColor >> 5) & 0x3F) << 2;
+                    uint8_t b = (newColor & 0x1F) << 3;
+
+                    uint8_t oldR = ((old >> 11) & 0x1F) << 3;
+                    uint8_t oldG = ((old >> 5) & 0x3F) << 2;
+                    uint8_t oldB = (old & 0x1F) << 3;
+
+                    r = (r * a + oldR * invA + 128) >> 8;
+                    g = (g * a + oldG * invA + 128) >> 8;
+                    b = (b * a + oldB * invA + 128) >> 8;
+
+                    newColor = ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
+                }
+            }
+
+            m_framebuffer[0][fbIndex] = newColor;
+
+            if (dstX < minX) minX = dstX;
+            if (dstY < minY) minY = dstY;
+            if (dstX > maxX) maxX = dstX;
+            if (dstY > maxY) maxY = dstY;
+        }
+    }
+
+    if (maxX >= minX && maxY >= minY) { panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]); }
+
+    return true;
+}
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+inline void TFT_SPI::mapRotation(uint8_t rot, int32_t srcX, int32_t srcY, int32_t& dstX, int32_t& dstY) const {
+    switch (rot & 3) {
+        case 0:
+            dstX = srcX;
+            dstY = srcY;
+            break;
+
+        case 1: // 90° CW
+            dstX = logicalHeight() - 1 - srcY;
+            dstY = srcX;
+            break;
+
+        case 2: // 180°
+            dstX = logicalWidth() - 1 - srcX;
+            dstY = logicalHeight() - 1 - srcY;
+            break;
+
+        case 3: // 270° CW
+            dstX = srcY;
+            dstY = logicalWidth() - 1 - srcX;
+            break;
+    }
+}
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::writeCommand(uint16_t cmd) {
     TFT_DC_LOW();
-    if(_TFTcontroller == ILI9341 || _TFTcontroller == HX8347D || _TFTcontroller == ILI9488 || _TFTcontroller == ST7796) spi_TFT->write(cmd);
+    if(_TFTcontroller == ILI9341 || _TFTcontroller == ILI9488 || _TFTcontroller == ST7796) spi_TFT->write(cmd);
 
-    if(_TFTcontroller == ILI9486a || _TFTcontroller == ILI9486b || _TFTcontroller == ST7796RPI) spi_TFT->write16(cmd);
+    if(_TFTcontroller == ILI9486) spi_TFT->write16(cmd);
     TFT_DC_HIGH();
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 uint16_t TFT_SPI::readCommand() {
     uint16_t ret = 0;
     TFT_DC_LOW();
-    if(_TFTcontroller == ILI9341 || _TFTcontroller == HX8347D || _TFTcontroller == ILI9488 || _TFTcontroller == ST7796) ret = spi_TFT->transfer(0);
+    if(_TFTcontroller == ILI9341 ||  _TFTcontroller == ILI9488 || _TFTcontroller == ST7796) ret = spi_TFT->transfer(0);
 
-    if(_TFTcontroller == ILI9486a || _TFTcontroller == ILI9486b || _TFTcontroller == ST7796RPI) ret = spi_TFT->transfer16(0);
+    if(_TFTcontroller == ILI9486) ret = spi_TFT->transfer16(0);
     TFT_DC_HIGH();
     return ret;
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::begin(uint8_t DC) {
-    SPIset = SPISettings(_freq, MSBFIRST, SPI_MODE0);
+    SPIset = SPISettings(m_freq, MSBFIRST, SPI_MODE0);
     String info = "";
 
     _TFT_DC = DC;
@@ -149,23 +276,14 @@ void TFT_SPI::writePixel(int16_t x, int16_t y, uint16_t color) {
     setAddrWindow(x, y, 1, 1);
     switch(_TFTcontroller) {
         case ILI9341: spi_TFT->write16(color); break;
-        case HX8347D:
-            writeCommand(0x22); spi_TFT->write16(color);
-            break;
-        case ILI9486a:
-            writeCommand(ILI9486_RAMWR); spi_TFT->write16(color);
-            break;
-        case ILI9486b:
-            writeCommand(ILI9486_RAMWR); spi_TFT->write16(color);
+        case ILI9486:
+            writeCommand(RAMWR); spi_TFT->write16(color);
             break;
         case ILI9488:
-            writeCommand(ILI9488_RAMWR); write24BitColor(color);
+            writeCommand(RAMWR); write24BitColor(color);
             break;
         case ST7796:
-            writeCommand(ST7796_RAMWR); write24BitColor(color);
-            break;
-        case ST7796RPI:
-            writeCommand(ST7796_RAMWR); spi_TFT->write16(color);
+            writeCommand(RAMWR); write24BitColor(color);
             break;
         default:
             if(tft_info) tft_info("unknown tft controller");
@@ -173,344 +291,378 @@ void TFT_SPI::writePixel(int16_t x, int16_t y, uint16_t color) {
     }
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_SPI::copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
-    for(uint16_t j = y; j < y + h; j++) {
-        memcpy(m_framebuffer[destination] + j * m_h_res + x, m_framebuffer[source] + j * m_h_res + x, w * 2);
+void TFT_SPI::drawRectLogicalFromFB(uint8_t fb, int16_t x, int16_t y, uint16_t w, uint16_t h) {
+    int32_t px[4], py[4];
+
+    int32_t sx[4] = {x, x + w - 1, x, x + w - 1};
+
+    int32_t sy[4] = {y, y, y + h - 1, y + h - 1};
+
+    int32_t minX = m_h_res;
+    int32_t minY = m_v_res;
+    int32_t maxX = -1;
+    int32_t maxY = -1;
+
+    for (int i = 0; i < 4; i++) {
+        mapRotation(m_rotation, sx[i], sy[i], px[i], py[i]);
+
+        if (px[i] < minX) minX = px[i];
+        if (py[i] < minY) minY = py[i];
+        if (px[i] > maxX) maxX = px[i];
+        if (py[i] > maxY) maxY = py[i];
     }
-    startWrite();
-    setAddrWindow(x, y, w, h);
-    for(int16_t j = y; j < y + h; j++) {
-        writePixels(m_framebuffer[0] + j * m_h_res + x, w);
-    }
-    endWrite();
+
+    panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[fb]);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_SPI::readRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t* data) {
-    for(uint16_t j = 0; j < h; j++) {
-        memcpy(data + j * w * 2, m_framebuffer[0] + j * m_h_res + x + y * m_h_res, w * sizeof(uint16_t));
+bool TFT_SPI::copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
+    if (w == 0 || h == 0) return false;
+
+    uint16_t lw = logicalWidth();
+    uint16_t lh = logicalHeight();
+
+    if (x >= lw || y >= lh) return false;
+
+    if (x + w > lw) w = lw - x;
+
+    if (y + h > lh) h = lh - y;
+
+    for (uint16_t row = 0; row < h; ++row) {
+        for (uint16_t col = 0; col < w; ++col) {
+            int32_t physX, physY;
+
+            // 🔥 rotate here only
+            mapRotation(m_rotation, x + col, y + row, physX, physY);
+
+            if (physX < 0 || physY < 0 || physX >= m_h_res || physY >= m_v_res) continue;
+
+            m_framebuffer[destination][physY * m_h_res + physX] = m_framebuffer[source][physY * m_h_res + physX];
+        }
+    }
+
+    if (destination == 0) drawRectLogicalFromFB(0, x,y,w,h);
+
+    return true;
+}
+
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_SPI::readRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t* data) {
+    // Check whether parameters are within the valid range
+    if (x < 0 || y < 0 || w <= 0 || h <= 0) return;
+    if (x + w > logicalWidth() || y + h > logicalHeight()) return; // logicalWidth() = vertical resolution
+    if (!data || !m_framebuffer[0]) return;
+
+    uint16_t* dst = data;
+    uint16_t* src = m_framebuffer[0] + y * logicalWidth() + x;
+
+    for (int32_t row = 0; row < h; row++) {
+        memcpy(dst, src, w * sizeof(uint16_t));
+        src += logicalWidth();
+        dst += w;
     }
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
-    // Clipping: Rechteck-Koordinaten auf den Framebuffer-Bereich beschränken
-    int16_t x0 = max((int16_t)0, x);
-    int16_t y0 = max((int16_t)0, y);
-    int16_t x1 = min((int)m_h_res, x + w); // Rechte Grenze
-    int16_t y1 = min((int)m_v_res, y + h); // Untere Grenze
-    // Zeichnen des Rechtecks nur im gültigen Bereich
-    for (int16_t j = y0; j < y1; ++j) { // Zeilen iterieren
-        for (int16_t i = x0; i < x1; ++i) { // Spalten iterieren
-            m_framebuffer[0][j * m_h_res + i] = color;
-        }
-    }
-    startWrite();
-    setAddrWindow(x, y, w, h);
-    for(int16_t j = y0; j < y1; j++) {
-        writeColor(color, x1 - x0);
-    }
-    endWrite();
+    if (w <= 0 || h <= 0) return;
+
+    // Optional: grobes Clipping gegen Displaygrenzen
+    if (x >= logicalWidth() || y >= logicalHeight()) return;
+
+    if (x + w < 0 || y + h < 0) return;
+
+    // Lokaler Line-Buffer auf dem Stack
+    uint16_t lineBuffer[w];
+
+    for (int16_t i = 0; i < w; ++i) lineBuffer[i] = color;
+
+    for (int16_t row = 0; row < h; ++row) { renderRGB565(x, y + row, w, 1, lineBuffer, nullptr); }
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::fillScreen(uint16_t color) {
-    fill(m_framebuffer[0], m_framebuffer[0] + (m_h_res * m_v_res), color);
+    // log_w("%s %i: %i, %i, %i, %i, %i", __FILE__, __LINE__, 0, 0, logicalWidth(), logicalHeight(), color);
+    fillRect(0, 0, logicalWidth(), logicalHeight(), color);
+}
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_SPI::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color) {
+    int16_t dx = abs(x1 - x0);
+    int16_t dy = abs(y1 - y0);
 
-    startWrite();
-    setAddrWindow(0, 0, m_h_res, m_v_res);
-    writeColor(color, m_h_res * m_v_res);
-    endWrite();
+    int16_t sx = (x0 < x1) ? 1 : -1;
+    int16_t sy = (y0 < y1) ? 1 : -1;
+
+    int16_t err = dx - dy;
+
+    size_t minX = m_h_res;
+    size_t minY = m_v_res;
+    size_t maxX = 0;
+    size_t maxY = 0;
+
+    while (true) {
+        int32_t rotX, rotY;
+        mapRotation(m_rotation, x0, y0, rotX, rotY);
+
+        if (rotX < m_h_res && rotY < m_v_res) {
+            m_framebuffer[0][rotY * m_h_res + rotX] = color;
+
+            if (rotX < minX) minX = rotX;
+            if (rotY < minY) minY = rotY;
+            if (rotX > maxX) maxX = rotX;
+            if (rotY > maxY) maxY = rotY;
+        }
+
+        if (x0 == x1 && y0 == y1) break;
+
+        int16_t e2 = err << 1;
+
+        if (e2 > -dy) {
+            err -= dy;
+            x0 += sx;
+        }
+
+        if (e2 < dx) {
+            err += dx;
+            y0 += sy;
+        }
+    }
+
+    if (maxX > minX && maxY > minY) panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color) {
-    if(x0 < 0 || x0 >= m_h_res || x1 < 0 || x1 >= m_h_res || x2 < 0 || x2 >= m_h_res || y0 < 0 || y0 >= m_v_res || y1 < 0 || y1 >= m_v_res || y2 < 0 || y2 >= m_v_res) return;
-
-    auto drawLine = [](int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color, uint16_t* m_framebuffer[0], uint16_t m_h_res) {
-        // Bresenham-Algorithmus für Linien
-        int16_t dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
-        int16_t dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
-        int16_t err = dx + dy, e2; // Fehlerwert
-
-        while (true) {
-            m_framebuffer[0][y0 * m_h_res + x0] = color; // Pixel setzen
-            if (x0 == x1 && y0 == y1) break;
-            e2 = 2 * err;
-            if (e2 >= dy) { err += dy; x0 += sx; }
-            if (e2 <= dx) { err += dx; y0 += sy; }
-        }
-    };
-
-
-    // Zeichne die drei Linien des Dreiecks
-    drawLine(x0, y0, x1, y1, color, &m_framebuffer[0], m_h_res); // Linie von Punkt 0 nach Punkt 1
-    drawLine(x1, y1, x2, y2, color, &m_framebuffer[0], m_h_res); // Linie von Punkt 1 nach Punkt 2
-    drawLine(x2, y2, x0, y0, color, &m_framebuffer[0], m_h_res); // Linie von Punkt 2 nach Punkt 0
-
-    // Aktualisierung des gezeichneten Bereichs
-    int16_t x = std::min({x0, x1, x2});
-    int16_t y = std::min({y0, y1, y2});
-    int16_t w = std::max({x0, x1, x2}) - x + 1;
-    int16_t h = std::max({y0, y1, y2}) - y + 1;
-
-    startWrite();
-    setAddrWindow(x, y, w, h);
-    for(int16_t j = y; j < y + h; j++) {
-        writePixels(m_framebuffer[0] + j * m_h_res + x, w);
-    }
-    endWrite();
+    drawLine(x0, y0, x1, y1, color);
+    drawLine(x1, y1, x2, y2, color);
+    drawLine(x2, y2, x0, y0, color);
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color) {
-    if(x0 < 0 || x0 >= m_h_res || x1 < 0 || x1 >= m_h_res || x2 < 0 || x2 >= m_h_res || y0 < 0 || y0 >= m_v_res || y1 < 0 || y1 >= m_v_res || y2 < 0 || y2 >= m_v_res) return;
+    // Sort vertices by y
+    if (y0 > y1) {
+        std::swap(y0, y1);
+        std::swap(x0, x1);
+    }
+    if (y1 > y2) {
+        std::swap(y1, y2);
+        std::swap(x1, x2);
+    }
+    if (y0 > y1) {
+        std::swap(y0, y1);
+        std::swap(x0, x1);
+    }
 
- // Helferfunktion zum Zeichnen einer horizontalen Linie
-    auto drawHorizontalLine = [&](int16_t x_start, int16_t x_end, int16_t y) {
-        if (y >= 0 && y < m_v_res) { // Clipping in y-Richtung
-            if (x_start > x_end) std::swap(x_start, x_end);
-            x_start = std::max((int16_t)0, x_start); // Clipping in x-Richtung
-            x_end = std::min((int16_t)(m_h_res - 1), x_end);
-            for (int16_t x = x_start; x <= x_end; ++x) {
-                m_framebuffer[0][y * m_h_res + x] = color;
-            }
+    size_t minX = m_h_res;
+    size_t minY = m_v_res;
+    size_t maxX = 0;
+    size_t maxY = 0;
+
+    auto drawSpan = [&](int16_t xs, int16_t xe, int16_t y) {
+        if (xs > xe) std::swap(xs, xe);
+
+        for (int16_t x = xs; x <= xe; ++x) {
+            int32_t rotX, rotY;
+            mapRotation(m_rotation, x, y, rotX, rotY);
+
+            if (rotX >= m_h_res || rotY >= m_v_res) continue;
+
+            m_framebuffer[0][rotY * m_h_res + rotX] = color;
+
+            if (rotX < minX) minX = rotX;
+            if (rotY < minY) minY = rotY;
+            if (rotX > maxX) maxX = rotX;
+            if (rotY > maxY) maxY = rotY;
         }
     };
 
-    // Punkte nach ihrer y-Koordinate sortieren
-    if (y0 > y1) { std::swap(y0, y1); std::swap(x0, x1); }
-    if (y1 > y2) { std::swap(y1, y2); std::swap(x1, x2); }
-    if (y0 > y1) { std::swap(y0, y1); std::swap(x0, x1); }
-
-    // Variablen zur Begrenzung des aktualisierten Bereichs
-    int16_t x_min = std::min({x0, x1, x2});
-    int16_t x_max = std::max({x0, x1, x2});
-    int16_t y_min = std::min({y0, y1, y2});
-    int16_t y_max = std::max({y0, y1, y2});
-
-    // Clipping auf Framebuffer-Grenzen
-    int16_t x = std::max((int16_t)0, x_min);
-    int16_t w = std::min((int16_t)(m_h_res - 1), x_max) - x + 1;
-    int16_t y = std::max((int16_t)0, y_min);
-    int16_t h = std::min((int16_t)(m_v_res - 1), y_max) - y + 1;
-
-
-    // Dreieck in zwei Teile zerlegen (oben und unten)
-    if (y1 == y2) { // Sonderfall: flaches unteres Dreieck
-        for (int16_t i = y0; i <= y1; ++i) {
-            int16_t x_start = x0 + (x1 - x0) * (i - y0) / (y1 - y0);
-            int16_t x_end = x0 + (x2 - x0) * (i - y0) / (y2 - y0);
-            drawHorizontalLine(x_start, x_end, i);
+    if (y1 == y2) // flat-bottom
+    {
+        for (int16_t y = y0; y <= y1; ++y) {
+            int16_t xa = x0 + (x1 - x0) * (y - y0) / (y1 - y0);
+            int16_t xb = x0 + (x2 - x0) * (y - y0) / (y2 - y0);
+            drawSpan(xa, xb, y);
         }
-    } else if (y0 == y1) { // Sonderfall: flaches oberes Dreieck
-        for (int16_t i = y0; i <= y2; ++i) {
-            int16_t x_start = x0 + (x2 - x0) * (i - y0) / (y2 - y0);
-            int16_t x_end = x1 + (x2 - x1) * (i - y1) / (y2 - y1);
-            drawHorizontalLine(x_start, x_end, i);
+    } else if (y0 == y1) // flat-top
+    {
+        for (int16_t y = y0; y <= y2; ++y) {
+            int16_t xa = x0 + (x2 - x0) * (y - y0) / (y2 - y0);
+            int16_t xb = x1 + (x2 - x1) * (y - y1) / (y2 - y1);
+            drawSpan(xa, xb, y);
         }
-    } else { // Allgemeiner Fall: Dreieck wird in zwei Teile aufgeteilt
-        for (int16_t i = y0; i <= y1; ++i) { // Unterer Teil
-            int16_t x_start = x0 + (x1 - x0) * (i - y0) / (y1 - y0);
-            int16_t x_end = x0 + (x2 - x0) * (i - y0) / (y2 - y0);
-            drawHorizontalLine(x_start, x_end, i);
+    } else {
+        for (int16_t y = y0; y <= y1; ++y) {
+            int16_t xa = x0 + (x1 - x0) * (y - y0) / (y1 - y0);
+            int16_t xb = x0 + (x2 - x0) * (y - y0) / (y2 - y0);
+            drawSpan(xa, xb, y);
         }
-        for (int16_t i = y1; i <= y2; ++i) { // Oberer Teil
-            int16_t x_start = x1 + (x2 - x1) * (i - y1) / (y2 - y1);
-            int16_t x_end = x0 + (x2 - x0) * (i - y0) / (y2 - y0);
-            drawHorizontalLine(x_start, x_end, i);
+
+        for (int16_t y = y1; y <= y2; ++y) {
+            int16_t xa = x1 + (x2 - x1) * (y - y1) / (y2 - y1);
+            int16_t xb = x0 + (x2 - x0) * (y - y0) / (y2 - y0);
+            drawSpan(xa, xb, y);
         }
     }
-    startWrite();
-    setAddrWindow(x, y, w, h);
-    for(int16_t j = y; j < y + h; j++) {
-        writePixels(m_framebuffer[0] + j * m_h_res + x, w);
-    }
-    endWrite();
+
+    if (maxX > minX && maxY > minY) panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_SPI::drawRect(int16_t Xpos, int16_t Ypos, uint16_t Width, uint16_t Height, uint16_t Color) {
-    if(Xpos < 0 || Xpos >= m_h_res || Ypos < 0 || Ypos >= m_v_res) return;
-    if(Width == 0 || Height == 0) return;
-    if(Width > m_h_res - Xpos) Width = m_h_res - Xpos;
-    if(Height > m_v_res - Ypos) Height = m_v_res - Ypos;
+void TFT_SPI::drawRect(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t color) {
+    if (w == 0 || h == 0) return;
 
-    auto drawLine = [](int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color, uint16_t* fb, uint16_t m_h_res) {
-        // Bresenham-Algorithmus für Linien
-        int16_t dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
-        int16_t dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
-        int16_t err = dx + dy, e2; // Fehlerwert
-
-        while (true) {
-            fb[y0 * m_h_res + x0] = color; // Pixel setzen
-            if (x0 == x1 && y0 == y1) break;
-            e2 = 2 * err;
-            if (e2 >= dy) { err += dy; x0 += sx; }
-            if (e2 <= dx) { err += dx; y0 += sy; }
-        }
-    };
-
-    // Zeichne die vier Linien des Rechtecks
-    drawLine(Xpos, Ypos, Xpos + Width, Ypos, Color, m_framebuffer[0], m_h_res); // Oben
-    drawLine(Xpos + Width - 1, Ypos, Xpos + Width - 1, Ypos + Height - 1, Color, m_framebuffer[0], m_h_res); // Rechts
-    drawLine(Xpos, Ypos + Height - 1, Xpos + Width - 1, Ypos + Height - 1, Color, m_framebuffer[0], m_h_res); // Unten
-    drawLine(Xpos, Ypos + Height, Xpos, Ypos, Color, m_framebuffer[0], m_h_res); // Links
-
-    // Aktualisierung des gezeichneten Bereichs
-    int16_t x = std::min((int)Xpos, Xpos + Width);
-    int16_t y = std::min((int)Ypos, Ypos + Height);
-    int16_t w = std::max((int)Xpos, Xpos + Width) - x;
-    int16_t h = std::max((int)Ypos, Ypos + Height) - y;
-
-    startWrite();
-    setAddrWindow(x, y, w, h);
-    for(int16_t j = y; j < y + h; j++) {
-        writePixels(m_framebuffer[0] + j * m_h_res + x, w);
-    }
-    endWrite();
+    drawLine(x, y, x + w - 1, y, color);                 // Top
+    drawLine(x + w - 1, y, x + w - 1, y + h - 1, color); // Right
+    drawLine(x + w - 1, y + h - 1, x, y + h - 1, color); // Bottom
+    drawLine(x, y + h - 1, x, y, color);                 // Left
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color) {
-    // helper function: Calculate circular drawing for the corners
-    auto drawCircleQuadrant = [&](int16_t cx, int16_t cy, int16_t r, uint8_t quadrant) {
-        int16_t f = 1 - r;
-        int16_t ddF_x = 1;
-        int16_t ddF_y = -2 * r;
-        int16_t x = 0;
-        int16_t y = r;
+    if (w <= 0 || h <= 0 || r <= 0) return;
 
-        while (x <= y) {
-            if (quadrant & 0x1) m_framebuffer[0][(cy - y) * m_h_res + (cx + x)] = color; // up right
-            if (quadrant & 0x2) m_framebuffer[0][(cy + y) * m_h_res + (cx + x)] = color; // down right
-            if (quadrant & 0x4) m_framebuffer[0][(cy + y) * m_h_res + (cx - x)] = color; // down left
-            if (quadrant & 0x8) m_framebuffer[0][(cy - y) * m_h_res + (cx - x)] = color; // up left
+    if (r > w / 2) r = w / 2;
+    if (r > h / 2) r = h / 2;
 
-            if (quadrant & 0x10) m_framebuffer[0][(cy - x) * m_h_res + (cx + y)] = color; // up right (90° rotated)
-            if (quadrant & 0x20) m_framebuffer[0][(cy + x) * m_h_res + (cx + y)] = color; // down right (90° rotated)
-            if (quadrant & 0x40) m_framebuffer[0][(cy + x) * m_h_res + (cx - y)] = color; // down left (90° rotated)
-            if (quadrant & 0x80) m_framebuffer[0][(cy - x) * m_h_res + (cx - y)] = color; // up left (90° rotated)
+    // Gerade Linien
+    drawLine(x + r, y, x + w - r - 1, y, color);                 // top
+    drawLine(x + r, y + h - 1, x + w - r - 1, y + h - 1, color); // bottom
+    drawLine(x, y + r, x, y + h - r - 1, color);                 // left
+    drawLine(x + w - 1, y + r, x + w - 1, y + h - r - 1, color); // right
 
-            if (f >= 0) {
-                y--;
-                ddF_y += 2;
-                f += ddF_y;
-            }
-            x++;
-            ddF_x += 2;
-            f += ddF_x;
+    // Midpoint circle algorithm (nur Pixel setzen via mapRotation)
+    int16_t f = 1 - r;
+    int16_t ddF_x = 1;
+    int16_t ddF_y = -2 * r;
+    int16_t cx = 0;
+    int16_t cy = r;
+
+    while (cx <= cy) {
+        auto plot = [&](int16_t px, int16_t py) {
+            int32_t rotX, rotY;
+            mapRotation(m_rotation, px, py, rotX, rotY);
+
+            if (rotX < m_h_res && rotY < m_v_res) m_framebuffer[0][rotY * m_h_res + rotX] = color;
+        };
+
+        // 4 Ecken
+        plot(x + w - r - 1 + cx, y + r - cy); // top-right
+        plot(x + w - r - 1 + cy, y + r - cx);
+
+        plot(x + w - r - 1 + cx, y + h - r - 1 + cy); // bottom-right
+        plot(x + w - r - 1 + cy, y + h - r - 1 + cx);
+
+        plot(x + r - cx, y + h - r - 1 + cy); // bottom-left
+        plot(x + r - cy, y + h - r - 1 + cx);
+
+        plot(x + r - cx, y + r - cy); // top-left
+        plot(x + r - cy, y + r - cx);
+
+        if (f >= 0) {
+            cy--;
+            ddF_y += 2;
+            f += ddF_y;
         }
-    };
 
-    // draw horizontal lines above and below the quarter circles
-    for (int16_t i = x + r; i < x + w - r; i++) { // upper and lower horizontal lines
-        m_framebuffer[0][y * m_h_res + i] = color; // above
-        m_framebuffer[0][(y + h - 1) * m_h_res + i] = color; // below
-    }
-    for (int16_t i = y + r; i < y + h - r; i++) { // vertical lines
-        m_framebuffer[0][i * m_h_res + x] = color; // left
-        m_framebuffer[0][i * m_h_res + (x + w - 1)] = color; // right
+        cx++;
+        ddF_x += 2;
+        f += ddF_x;
     }
 
-    // fill the area between the quarter circles
-    drawCircleQuadrant(x + w - r - 1, y + r, r, 0x1 | 0x10); // Oben rechts
-    drawCircleQuadrant(x + w - r - 1, y + h - r - 1, r, 0x2 | 0x20); // Unten rechts
-    drawCircleQuadrant(x + r, y + h - r - 1, r, 0x4 | 0x40); // Unten links
-    drawCircleQuadrant(x + r, y + r, r, 0x8 | 0x80); // Oben links
-
-    // update the drawn area
-    startWrite();
-    setAddrWindow(x, y, w, h);
-    for(int16_t j = y; j < y + h; j++) {
-        writePixels(m_framebuffer[0] + j * m_h_res + x, w);
-    }
-    endWrite();
+    // Ein gemeinsamer Refresh (rotierte Bounding-Box optional berechenbar)
+    panelDrawBitmap(0, 0, m_h_res, m_v_res, m_framebuffer[0]);
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color) {
-    // Helper function: Calculate circular filling for the corners
-    auto fillCircleQuadrant = [&](int16_t cx, int16_t cy, int16_t r, uint8_t quadrant) {
-        int16_t f = 1 - r;
-        int16_t ddF_x = 1;
-        int16_t ddF_y = -2 * r;
-        int16_t x = 0;
-        int16_t y = r;
+    if (w <= 0 || h <= 0) return;
 
-        while (x <= y) {
-            for (int16_t i = 0; i <= x; i++) {
-                if (quadrant & 0x1) m_framebuffer[0][(cy - y) * m_h_res + (cx + i)] = color; // oben rechts
-                if (quadrant & 0x2) m_framebuffer[0][(cy + y) * m_h_res + (cx + i)] = color; // unten rechts
-                if (quadrant & 0x4) m_framebuffer[0][(cy + y) * m_h_res + (cx - i)] = color; // unten links
-                if (quadrant & 0x8) m_framebuffer[0][(cy - y) * m_h_res + (cx - i)] = color; // oben links
-            }
-            for (int16_t i = 0; i <= y; i++) {
-                if (quadrant & 0x10) m_framebuffer[0][(cy - x) * m_h_res + (cx + i)] = color; // oben rechts (gedreht)
-                if (quadrant & 0x20) m_framebuffer[0][(cy + x) * m_h_res + (cx + i)] = color; // unten rechts (gedreht)
-                if (quadrant & 0x40) m_framebuffer[0][(cy + x) * m_h_res + (cx - i)] = color; // unten links (gedreht)
-                if (quadrant & 0x80) m_framebuffer[0][(cy - x) * m_h_res + (cx - i)] = color; // oben links (gedreht)
-            }
+    if (r > w / 2) r = w / 2;
+    if (r > h / 2) r = h / 2;
 
-            if (f >= 0) {
-                y--;
-                ddF_y += 2;
-                f += ddF_y;
-            }
-            x++;
-            ddF_x += 2;
-            f += ddF_x;
-        }
+    size_t minX = m_h_res;
+    size_t minY = m_v_res;
+    size_t maxX = 0;
+    size_t maxY = 0;
+
+    auto plot = [&](int16_t px, int16_t py) {
+        int32_t rotX, rotY;
+        mapRotation(m_rotation, px, py, rotX, rotY);
+
+        if (rotX >= m_h_res || rotY >= m_v_res) return;
+
+        m_framebuffer[0][rotY * m_h_res + rotX] = color;
+
+        if (rotX < minX) minX = rotX;
+        if (rotY < minY) minY = rotY;
+        if (rotX > maxX) maxX = rotX;
+        if (rotY > maxY) maxY = rotY;
     };
 
-    // Horizontale Bereiche zwischen den oberen und unteren Viertelkreisen füllen
-    for (int16_t i = y; i < y + r; i++) { // Bereich oberhalb der Viertelkreise
-        for (int16_t j = x + r; j < x + w - r; j++) {
-            m_framebuffer[0][i * m_h_res + j] = color;
+    auto drawSpan = [&](int16_t xs, int16_t xe, int16_t py) {
+        if (xs > xe) std::swap(xs, xe);
+        for (int16_t px = xs; px <= xe; ++px) plot(px, py);
+    };
+
+    // Mittleres Rechteck
+    for (int16_t py = y + r; py < y + h - r; ++py) drawSpan(x, x + w - 1, py);
+
+    // obere + untere Rundbereiche
+    int16_t f = 1 - r;
+    int16_t ddF_x = 1;
+    int16_t ddF_y = -2 * r;
+    int16_t cx = 0;
+    int16_t cy = r;
+
+    while (cx <= cy) {
+        // obere Rundung
+        drawSpan(x + r - cx, x + w - r - 1 + cx, y + r - cy);
+        drawSpan(x + r - cy, x + w - r - 1 + cy, y + r - cx);
+
+        // untere Rundung
+        drawSpan(x + r - cx, x + w - r - 1 + cx, y + h - r - 1 + cy);
+        drawSpan(x + r - cy, x + w - r - 1 + cy, y + h - r - 1 + cx);
+
+        if (f >= 0) {
+            cy--;
+            ddF_y += 2;
+            f += ddF_y;
         }
-    }
-    for (int16_t i = y + h - r; i < y + h; i++) { // Bereich unterhalb der Viertelkreise
-        for (int16_t j = x + r; j < x + w - r; j++) {
-            m_framebuffer[0][i * m_h_res + j] = color;
-        }
+
+        cx++;
+        ddF_x += 2;
+        f += ddF_x;
     }
 
-    // Vertikaler Bereich zwischen den Viertelkreisen füllen
-    for (int16_t i = y + r; i < y + h - r; i++) { // Vertikaler Bereich
-        for (int16_t j = x; j < x + w; j++) { // Horizontaler Bereich
-            m_framebuffer[0][i * m_h_res + j] = color;
-        }
-    }
-
-    // Viertelkreise in den Ecken füllen
-    fillCircleQuadrant(x + w - r - 1, y + r, r, 0x1 | 0x10); // Oben rechts
-    fillCircleQuadrant(x + w - r - 1, y + h - r - 1, r, 0x2 | 0x20); // Unten rechts
-    fillCircleQuadrant(x + r, y + h - r - 1, r, 0x4 | 0x40); // Unten links
-    fillCircleQuadrant(x + r, y + r, r, 0x8 | 0x80); // Oben links
-
-    // Aktualisierung des gezeichneten Bereichs
-    startWrite();
-    setAddrWindow(x, y, w, h);
-    for(int16_t j = y; j < y + h; j++) {
-        writePixels(m_framebuffer[0] + j * m_h_res + x, w);
-    }
-    endWrite();
+    if (maxX > minX && maxY > minY) panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::drawCircle(int16_t cx, int16_t cy, int16_t r, uint16_t color) {
-    if (cx + r < 0 || cx - r >= m_h_res || cy + r < 0 || cy - r >= m_v_res) {
-        return; // Circle is completely outside, so don't draw anything
-    }
-    // Bresenham-Algorithm for circles
+    if (r <= 0) return;
+
     int16_t f = 1 - r;
     int16_t ddF_x = 1;
     int16_t ddF_y = -2 * r;
     int16_t x = 0;
     int16_t y = r;
 
-    auto setPixelSafe = [&](int16_t x, int16_t y, uint16_t color) { // Set pixel if it is within the framebuffer
-        if (x >= 0 && x < m_h_res && y >= 0 && y < m_v_res) {
-            m_framebuffer[0][y * m_h_res + x] = color;
-        }
+    size_t minX = m_h_res;
+    size_t minY = m_v_res;
+    size_t maxX = 0;
+    size_t maxY = 0;
+
+    auto plot = [&](int16_t px, int16_t py) {
+        int32_t rotX, rotY;
+        mapRotation(m_rotation, px, py, rotX, rotY);
+
+        if (rotX >= m_h_res || rotY >= m_v_res) return;
+
+        m_framebuffer[0][rotY * m_h_res + rotX] = color;
+
+        if (rotX < minX) minX = rotX;
+        if (rotY < minY) minY = rotY;
+        if (rotX > maxX) maxX = rotX;
+        if (rotY > maxY) maxY = rotY;
     };
 
-    // set the initial pixels
-    setPixelSafe(cx, cy + r, color); // upper pixel
-    setPixelSafe(cx, cy - r, color); // lower pixel
-    setPixelSafe(cx + r, cy, color); // right pixel
-    setPixelSafe(cx - r, cy, color); // left pixel
+    // Achsenpunkte
+    plot(cx, cy + r);
+    plot(cx, cy - r);
+    plot(cx + r, cy);
+    plot(cx - r, cy);
 
     while (x < y) {
         if (f >= 0) {
@@ -518,98 +670,79 @@ void TFT_SPI::drawCircle(int16_t cx, int16_t cy, int16_t r, uint16_t color) {
             ddF_y += 2;
             f += ddF_y;
         }
+
         x++;
         ddF_x += 2;
         f += ddF_x;
 
-        // Draw points in the eight symmetry axes
-        setPixelSafe(cx + x, cy + y, color); // Quadrant 1
-        setPixelSafe(cx - x, cy + y, color); // Quadrant 2
-        setPixelSafe(cx + x, cy - y, color); // Quadrant 3
-        setPixelSafe(cx - x, cy - y, color); // Quadrant 4
-        setPixelSafe(cx + y, cy + x, color); // Quadrant 5
-        setPixelSafe(cx - y, cy + x, color); // Quadrant 6
-        setPixelSafe(cx + y, cy - x, color); // Quadrant 7
-        setPixelSafe(cx - y, cy - x, color); // Quadrant 8
+        plot(cx + x, cy + y);
+        plot(cx - x, cy + y);
+        plot(cx + x, cy - y);
+        plot(cx - x, cy - y);
+        plot(cx + y, cy + x);
+        plot(cx - y, cy + x);
+        plot(cx + y, cy - x);
+        plot(cx - y, cy - x);
     }
 
-    int16_t x1 = std::max(cx - r, 1) - 1;
-    int16_t y1 = std::max(cy - r, 1) - 1;
-    int16_t w1 = std::min(cx + r, m_h_res - 1) - x1 + 1;
-    int16_t h1 = std::min(cy + r, m_v_res - 1) - y1 + 1;
-
-    // Update of the drawn area
-    startWrite();
-    setAddrWindow(x1, y1, w1, h1);
-    for(int16_t j = y1; j < y1 + h1; j++) {
-        writePixels(m_framebuffer[0] + j * m_h_res + x1, w1);
-    }
-    endWrite();
+    if (maxX > minX && maxY > minY) panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_SPI::fillCircle(int16_t cx, int16_t cy, uint16_t r, uint16_t color){
-    if (cx + r < 0 || cx - r >= m_h_res || cy + r < 0 || cy - r >= m_v_res) {
-        return; // Circle is completely outside, so don't draw anything
-    }
-    // Bresenham-Algorithmus für Kreise
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_SPI::fillCircle(int16_t cx, int16_t cy, uint16_t r, uint16_t color) {
+    if (r == 0) return;
+
     int16_t f = 1 - r;
     int16_t ddF_x = 1;
     int16_t ddF_y = -2 * r;
     int16_t x = 0;
     int16_t y = r;
 
+    size_t minX = m_h_res;
+    size_t minY = m_v_res;
+    size_t maxX = 0;
+    size_t maxY = 0;
 
-    auto setPixelSafe = [&](int16_t x, int16_t y, uint16_t color) {
-        if (x >= 0 && x < m_h_res && y >= 0 && y < m_v_res) {
-            m_framebuffer[0][y * m_h_res + x] = color;
-        }
+    auto plot = [&](int16_t px, int16_t py) {
+        int32_t rotX, rotY;
+        mapRotation(m_rotation, px, py, rotX, rotY);
+
+        if (rotX >= m_h_res || rotY >= m_v_res) return;
+
+        m_framebuffer[0][rotY * m_h_res + rotX] = color;
+
+        if (rotX < minX) minX = rotX;
+        if (rotY < minY) minY = rotY;
+        if (rotX > maxX) maxX = rotX;
+        if (rotY > maxY) maxY = rotY;
     };
 
-    // Fülle die erste vertikale Linie durch den Mittelpunkt
-    for (int16_t i = cy - r; i <= cy + r; i++) {
-        setPixelSafe(cx, i, color);
-    }
+    auto drawSpan = [&](int16_t xs, int16_t xe, int16_t py) {
+        if (xs > xe) std::swap(xs, xe);
+        for (int16_t px = xs; px <= xe; ++px) plot(px, py);
+    };
+
+    // Mittlere vertikale Linie
+    drawSpan(cx, cx, cy - r);
+    drawSpan(cx, cx, cy + r);
 
     while (x <= y) {
-        // Fülle horizontale Linien für alle acht Symmetrieachsen
-        for (int16_t i = cx - x; i <= cx + x; i++) {
-            setPixelSafe(i, cy + y, color); // Unten +y
-            setPixelSafe(i, cy - y, color); // Oben -y
-        }
-        for (int16_t i = cx - y; i <= cx + y; i++) {
-            setPixelSafe(i, cy + x, color); // Rechts +x
-            setPixelSafe(i, cy - x, color); // Links -x
-        }
+        drawSpan(cx - x, cx + x, cy + y);
+        drawSpan(cx - x, cx + x, cy - y);
+        drawSpan(cx - y, cx + y, cy + x);
+        drawSpan(cx - y, cx + y, cy - x);
 
         if (f >= 0) {
             y--;
             ddF_y += 2;
             f += ddF_y;
         }
+
         x++;
         ddF_x += 2;
         f += ddF_x;
     }
 
-    // Update of the drawn area
-    int16_t x1 = std::max(cx - r, 1) - 1;
-    int16_t y1 = std::max(cy - r, 1) - 1;
-    int16_t w1 = std::min(cx + r, m_h_res - 1) - x1 + 1;
-    int16_t h1 = std::min(cy + r, m_v_res - 1) - y1 + 1;
-
-    // Update of the drawn area
-    startWrite();
-    setAddrWindow(x1, y1, w1, h1);
-    for(int16_t j = y1; j < y1 + h1; j++) {
-        writePixels(m_framebuffer[0] + j * m_h_res + x1, w1);
-    }
-    endWrite();
-}
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_SPI::readRect(int32_t x, int32_t y, int32_t w, uint16_t* data) {
-
-    memcpy(data, m_framebuffer[0] + y * m_h_res + x, w * sizeof(uint16_t));
-    return;
+    if (maxX > minX && maxY > minY) panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::setFont(uint16_t font) {
@@ -1415,60 +1548,65 @@ void TFT_SPI::setFont(uint16_t font) {
         }
     #endif
 }
-/*******************************************************************************************************************************************************************************************************
- *                                                                                                                                                                                                     *
- *        ⏫⏫⏫⏫⏫⏫                                       W R I T E    T E X T    R E L A T E D    F U N C T I O N S                                                      ⏫⏫⏫⏫⏫⏫             *
- *                                                                                                                                                                                                     *
- * *****************************************************************************************************************************************************************************************************
- */
-void TFT_SPI::writeInAddrWindow(const uint8_t* bmi, uint16_t posX, uint16_t posY, uint16_t width, uint16_t height) {
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//    ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫    T E X T    ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ *
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_SPI::writeTheFramebuffer(const uint8_t* bmi, uint16_t posX, uint16_t posY, uint16_t width, uint16_t height) {
+    if (!bmi || width == 0 || height == 0) return;
 
-    auto bitreader = [&](const uint8_t* bm) { // lambda
-        static uint16_t       bmi = 0;
-        static uint8_t        idx = 0;
-        static const uint8_t* bitmap = NULL;
-        if(bm) {
+    auto bitreader = [&](const uint8_t* bm) {
+        static uint16_t       byteIndex = 0;
+        static uint8_t        bitMask = 0;
+        static const uint8_t* bitmap = nullptr;
+
+        if (bm) {
             bitmap = bm;
-            idx = 0x80;
-            bmi = 0;
+            byteIndex = 0;
+            bitMask = 0x80;
             return (int32_t)0;
         }
-        bool bit = *(bitmap + bmi) & idx;
-        idx >>= 1;
-        if(idx == 0) {
-            bmi++;
-            idx = 0x80;
+
+        bool bit = bitmap[byteIndex] & bitMask;
+
+        bitMask >>= 1;
+        if (bitMask == 0) {
+            bitMask = 0x80;
+            byteIndex++;
         }
-        if(bit) { return (int32_t) _textColor;}
-        return (int32_t)-1;  // _backColor, -1 is transparent
+
+        return bit ? (int32_t)m_textColor : (int32_t)-1;
     };
 
     bitreader(bmi);
 
-    if(posX >= m_h_res) {log_e("%s %i posX %i", __FILE__, __LINE__, posX); return;}
-    if(posY >= m_v_res) {log_e("%s %i posY %i", __FILE__, __LINE__, posY); return;}
-    if(posX + width >= m_h_res) {log_e("%s %i posX %i, width %i", __FILE__, __LINE__, posX, width); return;}
-    if(posY + height >= m_v_res) {log_e("%s %i posY %i, height %i", __FILE__, __LINE__, posY, height); return;}
+    uint16_t* rgbBuffer = (uint16_t*)ps_malloc(width * height * sizeof(uint16_t));
 
+    uint8_t* alphaBuffer = (uint8_t*)ps_malloc(width * height);
 
-    for(int16_t j = posY; j < posY + height; j++) {
-        for(int16_t i = posX; i < posX + width; i++) {
-            int32_t color = bitreader(0);
-            if(color == -1) {
-                continue;
+    if (!rgbBuffer || !alphaBuffer) return;
+
+    for (uint16_t row = 0; row < height; row++) {
+        for (uint16_t col = 0; col < width; col++) {
+
+            int32_t color = bitreader(nullptr);
+
+            size_t idx = row * width + col;
+
+            if (color == -1) {
+                rgbBuffer[idx] = 0;
+                alphaBuffer[idx] = 0; // transparent
+            } else {
+                rgbBuffer[idx] = (uint16_t)color;
+                alphaBuffer[idx] = 255;
             }
-            m_framebuffer[0][j * m_h_res + i] = color;
         }
     }
 
-    startWrite();
-    setAddrWindow(posX, posY, width, height);
-    for(int16_t j = posY; j < posY + height; j++) {
-        writePixels(m_framebuffer[0] + j * m_h_res + posX, width);
-    }
-    endWrite();
-}
+    renderRGB565(posX, posY, width, height, rgbBuffer, alphaBuffer);
 
+    free(rgbBuffer);
+    free(alphaBuffer);
+}
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // The function is passed a string and two arrays of length strlen(str + 1). This is definitely enough, since ANSI sequences or non-ASCII UTF-8 characters are always greater than 1.
 // For each printable character found in the LookUp table, the codepoint is written to the next position in the charr. The number of printable characters is increased by one.
@@ -1796,12 +1934,12 @@ size_t TFT_SPI::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16
         x += ofs_x;
         y = y + (m_current_font.line_height - m_current_font.base_line - 1) - box_h - ofs_y;
         if(y > 479) log_e("%s%i y %i idx %i", __FILE__, __LINE__, y, idx);
-        writeInAddrWindow(m_current_font.glyph_bitmap + bitmap_index, x, y, box_w, box_h);
+        writeTheFramebuffer(m_current_font.glyph_bitmap + bitmap_index, x, y, box_w, box_h);
         if(!narrow) adv_w += ofs_x;
         return adv_w;
     };
     //-------------------------------------------------------------------------------------------------------------------
-    strChLength =  analyzeText(str, utfPosArr, colorArr, _textColor); // fill utfPosArr, colorArr, ansiArr
+    strChLength =  analyzeText(str, utfPosArr, colorArr, m_textColor); // fill utfPosArr, colorArr, ansiArr
     // returns the number of chars
     if(autoSize) {nrOfLines = fitInAddrWindow(utfPosArr, strChLength, win_W, win_H, narrow, noWrap);}  // choose perfect fontsize
     if(!strChLength) return 0;
@@ -1893,60 +2031,43 @@ size_t TFT_SPI::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16
 exit:
     return charsDrawn;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-//   ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  B I T M A P  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫              *
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-#define bmpRead32(d, o) (d[o] | (uint16_t)(d[(o) + 1]) << 8 | (uint32_t)(d[(o) + 2]) << 16 | (uint32_t)(d[(o) + 3]) << 24)
-#define bmpRead16(d, o) (d[o] | (uint16_t)(d[(o) + 1]) << 8)
+    // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+    //    ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  B I T M A P  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫              *
+    // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+    #define bmpRead32(d, o) (d[o] | (uint16_t)(d[(o) + 1]) << 8 | (uint32_t)(d[(o) + 2]) << 16 | (uint32_t)(d[(o) + 3]) << 24)
+    #define bmpRead16(d, o) (d[o] | (uint16_t)(d[(o) + 1]) << 8)
 
-#define bmpColor8(c)  (((uint16_t)(((uint8_t*)(c))[0] & 0xE0) << 8) | ((uint16_t)(((uint8_t*)(c))[0] & 0x1C) << 6) | ((((uint8_t*)(c))[0] & 0x3) << 3))
-#define bmpColor16(c) ((((uint8_t*)(c))[0] | ((uint16_t)((uint8_t*)(c))[1]) << 8))
-#define bmpColor24(c) (((uint16_t)(((uint8_t*)(c))[2] & 0xF8) << 8) | ((uint16_t)(((uint8_t*)(c))[1] & 0xFC) << 3) | ((((uint8_t*)(c))[0] & 0xF8) >> 3))
-#define bmpColor32(c) (((uint16_t)(((uint8_t*)(c))[3] & 0xF8) << 8) | ((uint16_t)(((uint8_t*)(c))[2] & 0xFC) << 3) | ((((uint8_t*)(c))[1] & 0xF8) >> 3))
+    #define bmpColor8(c)  (((uint16_t)(((uint8_t*)(c))[0] & 0xE0) << 8) | ((uint16_t)(((uint8_t*)(c))[0] & 0x1C) << 6) | ((((uint8_t*)(c))[0] & 0x3) << 3))
+    #define bmpColor16(c) ((((uint8_t*)(c))[0] | ((uint16_t)((uint8_t*)(c))[1]) << 8))
+    #define bmpColor24(c) (((uint16_t)(((uint8_t*)(c))[2] & 0xF8) << 8) | ((uint16_t)(((uint8_t*)(c))[1] & 0xFC) << 3) | ((((uint8_t*)(c))[0] & 0xF8) >> 3))
+    #define bmpColor32(c) (((uint16_t)(((uint8_t*)(c))[3] & 0xF8) << 8) | ((uint16_t)(((uint8_t*)(c))[2] & 0xFC) << 3) | ((((uint8_t*)(c))[1] & 0xF8) >> 3))
 
 bool TFT_SPI::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight, float scale) {
-    if (scale <= 0) {
-        log_e("Invalid scale value: %f", scale);
-        return false;
-    }
+    if (scale <= 0.0f) return false;
 
-    if (!fs.exists(path)) {
-        log_e("file %s does not exist", path);
-        return false;
-    }
+    if (!fs.exists(path)) return false;
 
-    File bmp_file = fs.open(path);
-    if (!bmp_file) {
-        log_e("Failed to open file for reading: %s", path);
-        return false;
-    }
+    File bmp = fs.open(path);
+    if (!bmp) return false;
 
-    constexpr size_t headerLen = 0x36; // BMP-Header-Größe
-    uint8_t headerBuf[headerLen];
+    constexpr size_t headerLen = 54;
+    uint8_t          header[headerLen];
 
-    if (bmp_file.size() < headerLen || bmp_file.read(headerBuf, headerLen) < headerLen) {
-        log_e("Failed to read the file's header");
-        bmp_file.close();
-        return false;
-    }
+    if (bmp.read(header, headerLen) != headerLen) return false;
 
-    if (headerBuf[0] != 'B' || headerBuf[1] != 'M') {
-        log_e("Invalid BMP file format");
-        bmp_file.close();
-        return false;
-    }
+    if (header[0] != 'B' || header[1] != 'M') return false;
 
-    const uint32_t dataOffset = bmpRead32(headerBuf, 0x0A);
-    const int32_t bmpWidthI = bmpRead32(headerBuf, 0x12);
-    const int32_t bmpHeightI = bmpRead32(headerBuf, 0x16);
-    const uint16_t bitsPerPixel = bmpRead16(headerBuf, 0x1C);
-    const uint32_t compression = bmpRead32(headerBuf, 0x1E);
+    const uint32_t dataOffset = bmpRead32(header, 0x0A);
+    const int32_t  bmpWidthI = bmpRead32(header, 0x12);
+    const int32_t  bmpHeightI = bmpRead32(header, 0x16);
+    const uint16_t bpp = bmpRead16(header, 0x1C);
+    const uint32_t compression = bmpRead32(header, 0x1E);
 
-    if (compression != 0) {
-        log_e("Compressed BMP files are not supported");
-        bmp_file.close();
-        return false;
-    }
+    if (compression != 0) return false;
+
+    if (!(bpp == 16 || bpp == 24 || bpp == 32)) return false;
+
+    const bool bottomUp = (bmpHeightI > 0);
 
     const size_t bmpWidth = abs(bmpWidthI);
     const size_t bmpHeight = abs(bmpHeightI);
@@ -1954,81 +2075,56 @@ bool TFT_SPI::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, 
     const size_t scaledWidth = bmpWidth * scale;
     const size_t scaledHeight = bmpHeight * scale;
 
-    // Wenn maxWidth oder maxHeight 0 ist, wird der Wert ignoriert
-    const size_t effectiveMaxWidth = (maxWidth == 0) ? scaledWidth : maxWidth;
-    const size_t effectiveMaxHeight = (maxHeight == 0) ? scaledHeight : maxHeight;
+    const size_t drawWidth = (maxWidth == 0) ? scaledWidth : std::min((size_t)maxWidth, scaledWidth);
+    const size_t drawHeight = (maxHeight == 0) ? scaledHeight : std::min((size_t)maxHeight, scaledHeight);
 
-    // Begrenzen der tatsächlichen Darstellungsgröße auf den verfügbaren Ausschnitt
-    const size_t displayWidth = std::min(effectiveMaxWidth, scaledWidth);
-    const size_t displayHeight = std::min(effectiveMaxHeight, scaledHeight);
+    size_t dstWidth = (m_rotation & 1) ? drawHeight : drawWidth;
+    size_t dstHeight = (m_rotation & 1) ? drawWidth : drawHeight;
 
-    const size_t rowSize = ((bmpWidth * bitsPerPixel / 8 + 3) & ~3);
-    uint8_t* rowBuffer = new uint8_t[rowSize];
+    // --- Clipping auf Display ---
+    if (x >= logicalWidth() || y >= logicalHeight()) return false;
+    if (x + dstWidth > logicalWidth()) dstWidth = logicalWidth() - x;
+    if (y + dstHeight > logicalHeight()) dstHeight = logicalHeight() - y;
 
-    for (size_t i_y = 0; i_y < displayHeight; ++i_y) {
-        const float srcY = i_y / scale;
-        const size_t srcRow = bmpHeight - 1 - (size_t)srcY;
+    const size_t rowSize = ((bmpWidth * bpp / 8 + 3) & ~3);
 
-        if (srcRow >= bmpHeight) continue;
+    if (rowSize > m_ROWBUFFERSIZE) return false; // Schutz gegen zu große BMPs
 
-        bmp_file.seek(dataOffset + srcRow * rowSize);
-        if (bmp_file.read(rowBuffer, rowSize) != rowSize) {
-            log_e("Failed to read BMP row data");
-            delete[] rowBuffer;
-            bmp_file.close();
-            return false;
-        }
+    uint16_t* pixelBuffer = (uint16_t*)ps_malloc(drawWidth * drawHeight * 2);
+    for (size_t dy = 0; dy < drawHeight; ++dy) {
 
-        for (size_t i_x = 0; i_x < displayWidth; ++i_x) {
-            const float srcX = i_x / scale;
-            const size_t srcCol = (size_t)srcX;
+        const size_t srcYScaled = (dy * bmpHeight) / scaledHeight;
+        const size_t srcRow = bottomUp ? (bmpHeight - 1 - srcYScaled) : srcYScaled;
 
-            if (srcCol >= bmpWidth) continue;
+        bmp.seek(dataOffset + srcRow * rowSize);
+        bmp.read(m_rowBuffer, rowSize);
 
-            const uint8_t* pixelPtr = rowBuffer + srcCol * (bitsPerPixel / 8);
-            uint16_t color;
+        for (size_t dx = 0; dx < drawWidth; ++dx) {
 
-            switch (bitsPerPixel) {
-                case 16:
-                    color = bmpColor16(pixelPtr);
-                    break;
-                case 24:
-                    color = bmpColor24(pixelPtr);
-                    break;
-                case 32:
-                    color = bmpColor32(pixelPtr);
-                    break;
-                default:
-                    log_e("Unsupported bitsPerPixel: %d", bitsPerPixel);
-                    delete[] rowBuffer;
-                    bmp_file.close();
-                    return false;
+            const size_t srcXScaled = (dx * bmpWidth) / scaledWidth;
+
+            const uint8_t* pixelPtr = m_rowBuffer + srcXScaled * (bpp / 8);
+
+            uint16_t color = 0;
+
+            switch (bpp) {
+                case 16: color = bmpColor16(pixelPtr); break;
+                case 24: color = bmpColor24(pixelPtr); break;
+                case 32: color = bmpColor32(pixelPtr); break;
             }
 
-            const size_t xPos = x + i_x;
-            const size_t yPos = y + i_y;
-
-            if (xPos < m_h_res && yPos < m_v_res) {
-                m_framebuffer[0][yPos * m_h_res + xPos] = color;
-            }
+            pixelBuffer[dy * drawWidth + dx] = color;
         }
     }
-
-    delete[] rowBuffer;
-    bmp_file.close();
-
-    startWrite();
-    setAddrWindow(x, y, displayWidth, displayHeight);
-    for(int16_t j = y; j < y + displayHeight; j++) {
-        writePixels(m_framebuffer[0] + j * m_h_res + x, displayWidth);
-    }
-    endWrite();
-
+    renderRGB565(x, y, drawWidth, drawHeight, pixelBuffer, NULL);
+    bmp.close();
+    free(pixelBuffer);
     return true;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-//   ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  G I F  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//    ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  G I F  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool TFT_SPI::drawGifFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint8_t repeat) {
 
     gif.Iterations = repeat;
@@ -2036,49 +2132,60 @@ bool TFT_SPI::drawGifFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, 
     GIF_DecoderReset();
 
     gif_file = fs.open(path);
-    if(!gif_file) {
-        if(tft_info) tft_info("Failed to open file for reading");
+    if (!gif_file) {
+        if (tft_info) tft_info("Failed to open file for reading");
         return false;
     }
     GIF_readGifItems();
     // check it's a gif
-    if(!gif_GifHeader.startsWith("GIF")) {
-        if(tft_info) tft_info("File is not a gif");
+    if (!gif_GifHeader.startsWith("GIF")) {
+        if (tft_info) tft_info("File is not a gif");
         return false;
     }
     // check dimensions
     // { log_w("Width: %i, Height: %i,", gif.LogicalScreenWidth, gif.LogicalScreenHeight); }
-    if(gif.LogicalScreenWidth * gif.LogicalScreenHeight > 155000) {
-        if(tft_info) tft_info("!Image is too big!!");
+    if (gif.LogicalScreenWidth * gif.LogicalScreenHeight > 155000) {
+        if (tft_info) tft_info("!Image is too big!!");
         return false;
     }
 
-    if(psramFound()){gif_ImageBuffer = (uint16_t*) ps_malloc(gif.LogicalScreenWidth * gif.LogicalScreenHeight * sizeof(uint16_t));}
-    else            {gif_ImageBuffer = (uint16_t*)    malloc(gif.LogicalScreenWidth * gif.LogicalScreenHeight * sizeof(uint16_t));}
+    if (psramFound()) {
+        gif_ImageBuffer = (uint16_t*)ps_malloc(gif.LogicalScreenWidth * gif.LogicalScreenHeight * sizeof(uint16_t));
+    } else {
+        gif_ImageBuffer = (uint16_t*)malloc(gif.LogicalScreenWidth * gif.LogicalScreenHeight * sizeof(uint16_t));
+    }
 
-    if(psramFound()){gif_RestoreBuffer = (uint16_t*) ps_malloc(gif.LogicalScreenWidth * gif.LogicalScreenHeight * sizeof(uint16_t));}
-    else            {gif_RestoreBuffer = (uint16_t*)    malloc(gif.LogicalScreenWidth * gif.LogicalScreenHeight * sizeof(uint16_t));}
+    if (psramFound()) {
+        gif_RestoreBuffer = (uint16_t*)ps_malloc(gif.LogicalScreenWidth * gif.LogicalScreenHeight * sizeof(uint16_t));
+    } else {
+        gif_RestoreBuffer = (uint16_t*)malloc(gif.LogicalScreenWidth * gif.LogicalScreenHeight * sizeof(uint16_t));
+    }
 
-    if(!gif_ImageBuffer)   {if(tft_info) tft_info("!Not enough memory!!"); return false;}
-    if(!gif_RestoreBuffer) {if(tft_info) tft_info("!Not enough memory!!"); return false;}
+    if (!gif_ImageBuffer) {
+        if (tft_info) tft_info("!Not enough memory!!");
+        return false;
+    }
+    if (!gif_RestoreBuffer) {
+        if (tft_info) tft_info("!Not enough memory!!");
+        return false;
+    }
 
-    if(GIF_decodeGif(x, y) == false) {
+    if (GIF_decodeGif(x, y) == false) {
         GIF_freeMemory();
         gif_file.close();
         gif.drawNextImage = false;
         log_w("GIF file closed");
         return true;
-    }
-    else {
+    } else {
         gif.drawNextImage = true;
     }
     return true;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-bool TFT_SPI::GIF_loop(){
-    if(!gif.drawNextImage) return false;
-    if(gif.TimeStamp > millis()) return false;
-    if(!GIF_decodeGif(100, 100)){
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+bool TFT_SPI::GIF_loop() {
+    if (!gif.drawNextImage) return false;
+    if (gif.TimeStamp > millis()) return false;
+    if (!GIF_decodeGif(100, 100)) {
         GIF_freeMemory();
         gif_file.close();
         gif.drawNextImage = false;
@@ -2087,7 +2194,7 @@ bool TFT_SPI::GIF_loop(){
     }
     return true;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::GIF_readHeader() {
 
     //      7 6 5 4 3 2 1 0        Field Name                    Type
@@ -2231,10 +2338,10 @@ void TFT_SPI::GIF_readLocalColorTable() {
     gif_LocalColorTable.clear();
     gif_LocalColorTable.shrink_to_fit();
     gif_LocalColorTable.reserve(gif.SizeOfLocalColorTable);
-    if(gif.LocalColorTableFlag == 1) {
+    if (gif.LocalColorTableFlag == 1) {
         char     rgb_buff[3];
         uint16_t i = 0;
-        while(i != gif.SizeOfLocalColorTable) {
+        while (i != gif.SizeOfLocalColorTable) {
             gif_file.readBytes(rgb_buff, 3);
             // fill LocalColorTable, pass 8-bit (each) R,G,B, get back 16-bit packed color
             gif_LocalColorTable.push_back(((rgb_buff[0] & 0xF8) << 8) | ((rgb_buff[1] & 0xFC) << 3) | ((rgb_buff[2] & 0xF8) >> 3));
@@ -2266,10 +2373,10 @@ void TFT_SPI::GIF_readGlobalColorTable() {
     //        7                           256                 768
 
     gif_GlobalColorTable.clear();
-    if(gif.GlobalColorTableFlag == 1) {
+    if (gif.GlobalColorTableFlag == 1) {
         char     rgb_buff[3];
         uint16_t i = 0;
-        while(i != gif.SizeOfGlobalColorTable) {
+        while (i != gif.SizeOfGlobalColorTable) {
             gif_file.readBytes(rgb_buff, 3);
             // fill GlobalColorTable, pass 8-bit (each) R,G,B, get back 16-bit packed color
             gif_GlobalColorTable.push_back(((rgb_buff[0] & 0xF8) << 8) | ((rgb_buff[1] & 0xFC) << 3) | ((rgb_buff[2] & 0xF8) >> 3));
@@ -2284,35 +2391,32 @@ void TFT_SPI::GIF_readGlobalColorTable() {
 
 void TFT_SPI::GIF_readGraphicControlExtension() {
 
-/*     7 6 5 4 3 2 1 0
-   0 | 0x21            | Extension Introducer  - Identifies the beginning of an extension block. This field contains the fixed value 0x21.
-   1 | 0xF9            | Graphic Control Label - Identifies the type of extension block. For the Graphic Control Extension, this field contains the fixed value 0xF9.
-   2 | 0x04            | Block Size - The size of the block, not including the Block Terminator. This field contains the fixed value 0x04.
-   3 | x x x d d d u t | Packed Fields: xxx - reserved, ddd - disposal method, u . user input flag, t - transparent color flag.
-   4 |                 | Delay Time LSB - The delay time in hundredths of a second before the next image is displayed. This field contains the delay time.
-   5 |                 | Delay Time MSB - The delay time in hundredths of a second before the next image is displayed. This field contains the delay time.
-   6 |                 | Transparent Color Index - The index of the transparent color in the color table. This field contains the index of the transparent color.
-   7 | 0x00            | Block Terminator - Marks the end of the Graphic Control Extension. This field contains the fixed value 0x00.
+    /*     7 6 5 4 3 2 1 0
+       0 | 0x21            | Extension Introducer  - Identifies the beginning of an extension block. This field contains the fixed value 0x21.
+       1 | 0xF9            | Graphic Control Label - Identifies the type of extension block. For the Graphic Control Extension, this field contains the fixed value 0xF9.
+       2 | 0x04            | Block Size - The size of the block, not including the Block Terminator. This field contains the fixed value 0x04.
+       3 | x x x d d d u t | Packed Fields: xxx - reserved, ddd - disposal method, u . user input flag, t - transparent color flag.
+       4 |                 | Delay Time LSB - The delay time in hundredths of a second before the next image is displayed. This field contains the delay time.
+       5 |                 | Delay Time MSB - The delay time in hundredths of a second before the next image is displayed. This field contains the delay time.
+       6 |                 | Transparent Color Index - The index of the transparent color in the color table. This field contains the index of the transparent color.
+       7 | 0x00            | Block Terminator - Marks the end of the Graphic Control Extension. This field contains the fixed value 0x00.
 
-   Disposal Method - Indicates the way in which the graphic is to be treated after being displayed
-                       0 -   No disposal specified. The decoder is not required to take any action.
-                       1 -   Do not dispose. The graphic is to be left in place.
-                       2 -   Restore to background color. The area used by the graphic must be restored to the background color.
-                       3 -   Restore to previous. The decoder is required to restore the area overwritten by the graphic with
-   User Input Flag - Indicates whether or not user input is expected before continuing. If the flag is set, processing will continue when user input is entered. The nature of the User input
-                     is determined by the application (Carriage Return, Mouse Button Click, etc.).
-                       0 -   User input is not expected.
-                       1 -   User input is expected.
-   Transparency Flag - Indicates whether a transparency index is given in the Transparent Index field. (This field is the least significant bit of the byte.)
-                       0 -   Transparent Index is not given.
-                       1 -   Transparent Index is given.
-*/
+       Disposal Method - Indicates the way in which the graphic is to be treated after being displayed
+                           0 -   No disposal specified. The decoder is not required to take any action.
+                           1 -   Do not dispose. The graphic is to be left in place.
+                           2 -   Restore to background color. The area used by the graphic must be restored to the background color.
+                           3 -   Restore to previous. The decoder is required to restore the area overwritten by the graphic with
+       User Input Flag - Indicates whether or not user input is expected before continuing. If the flag is set, processing will continue when user input is entered. The nature of the User
+       input is determined by the application (Carriage Return, Mouse Button Click, etc.). 0 -   User input is not expected. 1 -   User input is expected. Transparency Flag - Indicates whether
+       a transparency index is given in the Transparent Index field. (This field is the least significant bit of the byte.) 0 -   Transparent Index is not given. 1 -   Transparent Index is
+       given.
+    */
 
     uint8_t BlockSize = 0;
     gif_file.readBytes(gif_buffer, 1);
     BlockSize = gif_buffer[0]; // Number of bytes in the block, not including the Block Terminator
 
-    if(BlockSize == 0) return;
+    if (BlockSize == 0) return;
     gif_file.readBytes(gif_buffer, BlockSize);
     gif.PackedFields = gif_buffer[0];
     gif.DisposalMethod = (gif.PackedFields & 0x1C) >> 2;
@@ -2370,7 +2474,7 @@ uint8_t TFT_SPI::GIF_readPlainTextExtension(char* buf) {
     uint8_t BlockSize = 0, numBytes = 0;
     BlockSize = gif_file.read();
     // log_i("BlockSize=%i", BlockSize);
-    if(BlockSize > 0) {
+    if (BlockSize > 0) {
         gif_file.readBytes(gif_buffer, BlockSize);
         // log_i("%s", buffer);
     }
@@ -2393,47 +2497,47 @@ uint8_t TFT_SPI::GIF_readPlainTextExtension(char* buf) {
 
 uint8_t TFT_SPI::GIF_readApplicationExtension(char* buf) {
 
-    //     7 6 5 4 3 2 1 0        Field Name                    Type
-    //    +---------------+
-    // 0  |               |       Block Size                    Byte
-    //    +---------------+
-    // 1  |               |
-    //    +-             -+
-    // 2  |               |
-    //    +-             -+
-    // 3  |               |       Application Identifier        8 Bytes
-    //    +-             -+
-    // 4  |               |
-    //    +-             -+
-    // 5  |               |
-    //    +-             -+
-    // 6  |               |
-    //    +-             -+
-    // 7  |               |
-    //    +-             -+
-    // 8  |               |
-    //    +---------------+
-    // 9  |               |
-    //    +-             -+
+    //      7 6 5 4 3 2 1 0        Field Name                    Type
+    //     +---------------+
+    // 0   |               |       Block Size                    Byte
+    //     +---------------+
+    // 1   |               |
+    //     +-             -+
+    // 2   |               |
+    //     +-             -+
+    // 3   |               |       Application Identifier        8 Bytes
+    //     +-             -+
+    // 4   |               |
+    //     +-             -+
+    // 5   |               |
+    //     +-             -+
+    // 6   |               |
+    //     +-             -+
+    // 7   |               |
+    //     +-             -+
+    // 8   |               |
+    //     +---------------+
+    // 9   |               |
+    //     +-             -+
     // 10  |               |       Appl. Authentication Code     3 Bytes
-    //    +-             -+
+    //     +-             -+
     // 11  |               |
-    //    +---------------+
+    //     +---------------+
     //
-    //    +===============+
-    //    |               |
-    //    |               |       Application Data              Data Sub-blocks
-    //    |               |
-    //    |               |
-    //    +===============+
+    //     +===============+
+    //     |               |
+    //     |               |       Application Data              Data Sub-blocks
+    //     |               |
+    //     |               |
+    //     +===============+
     //
-    //    +---------------+
-    // 0  |               |       Block Terminator              Byte
-    //    +---------------+
+    //     +---------------+
+    // 0   |               |       Block Terminator              Byte
+    //     +---------------+
 
     uint8_t BlockSize = 0, numBytes = 0;
     BlockSize = gif_file.read();
-    if(BlockSize > 0) { gif_file.readBytes(gif_buffer, BlockSize); }
+    if (BlockSize > 0) { gif_file.readBytes(gif_buffer, BlockSize); }
     numBytes = GIF_readDataSubBlock(buf);
     gif_file.readBytes(gif_buffer, 1); // BlockTerminator, marks the end of the Graphic Control Extension
     return numBytes;
@@ -2444,20 +2548,20 @@ uint8_t TFT_SPI::GIF_readApplicationExtension(char* buf) {
 uint8_t TFT_SPI::GIF_readCommentExtension(char* buf) {
 
     //    7 6 5 4 3 2 1 0        Field Name                    Type
-    //  +===============+
-    //  |               |
+    //   +===============+
+    //   |               |
     // N |               |       Comment Data                  Data Sub-blocks
-    //  |               |
-    //  +===============+
+    //   |               |
+    //   +===============+
     //
-    //  +---------------+
+    //   +---------------+
     // 0 |               |       Block Terminator              Byte
-    //  +---------------+
+    //   +---------------+
 
     uint8_t numBytes = 0;
     numBytes = GIF_readDataSubBlock(buf);
-    //sprintf(chbuf, "GIF: Comment %s", buf);
-    // if(tft_info) tft_info(chbuf);
+    // sprintf(chbuf, "GIF: Comment %s", buf);
+    //  if(tft_info) tft_info(chbuf);
     gif_file.readBytes(gif_buffer, 1); // BlockTerminator, marks the end of the Graphic Control Extension
     return numBytes;
 }
@@ -2490,11 +2594,11 @@ uint8_t TFT_SPI::GIF_readDataSubBlock(char* buf) {
 
     uint8_t BlockSize = 0;
     BlockSize = gif_file.read();
-    if(BlockSize > 0) {
+    if (BlockSize > 0) {
         gif.ZeroDataBlock = false;
         gif_file.readBytes(buf, BlockSize);
-    }
-    else gif.ZeroDataBlock = true;
+    } else
+        gif.ZeroDataBlock = true;
     return BlockSize;
 }
 
@@ -2502,7 +2606,7 @@ uint8_t TFT_SPI::GIF_readDataSubBlock(char* buf) {
 
 bool TFT_SPI::GIF_readExtension(char Label) {
     char buf[256];
-    switch(Label) {
+    switch (Label) {
         case 0x01:
             // log_w("PlainTextExtension");
             GIF_readPlainTextExtension(buf);
@@ -2551,17 +2655,17 @@ int32_t TFT_SPI::GIF_GetCode(int32_t code_size, int32_t flag) {
     int32_t        i, j, ret;
     uint8_t        count;
 
-    if(flag) {
+    if (flag) {
         curbit = 0;
         lastbit = 0;
         done = false;
         return 0;
     }
 
-    if((curbit + code_size) >= lastbit) {
-        if(done) {
+    if ((curbit + code_size) >= lastbit) {
+        if (done) {
             // log_i("done");
-            if(curbit >= lastbit) { return 0; }
+            if (curbit >= lastbit) { return 0; }
             return -1;
         }
         DSBbuffer[0] = DSBbuffer[last_byte - 2];
@@ -2575,7 +2679,7 @@ int32_t TFT_SPI::GIF_GetCode(int32_t code_size, int32_t flag) {
         count = GIF_readDataSubBlock(&DSBbuffer[2]);
         //    startWrite();
         // log_i("Dtatblocksize %i", count);
-        if(count == 0) done = true;
+        if (count == 0) done = true;
 
         last_byte = 2 + count;
 
@@ -2584,7 +2688,7 @@ int32_t TFT_SPI::GIF_GetCode(int32_t code_size, int32_t flag) {
         lastbit = (2 + count) * 8;
     }
     ret = 0;
-    for(i = curbit, j = 0; j < code_size; ++i, ++j) ret |= ((DSBbuffer[i / 8] & (1 << (i % 8))) != 0) << j;
+    for (i = curbit, j = 0; j < code_size; ++i, ++j) ret |= ((DSBbuffer[i / 8] & (1 << (i % 8))) != 0) << j;
 
     curbit += code_size;
 
@@ -2598,9 +2702,9 @@ int32_t TFT_SPI::GIF_LZWReadByte(bool init) {
     int32_t        code, incode;
     static int32_t firstcode, oldcode;
 
-    if(gif_next.capacity() < (1 << gif_MaxLzwBits)) gif_next.reserve((1 << gif_MaxLzwBits) - gif_next.capacity());
-    if(gif_vals.capacity() < (1 << gif_MaxLzwBits)) gif_vals.reserve((1 << gif_MaxLzwBits) - gif_vals.capacity());
-    if(gif_stack.capacity() < (1 << (gif_MaxLzwBits + 1))) gif_stack.reserve((1 << (gif_MaxLzwBits + 1)) - gif_stack.capacity());
+    if (gif_next.capacity() < (1 << gif_MaxLzwBits)) gif_next.reserve((1 << gif_MaxLzwBits) - gif_next.capacity());
+    if (gif_vals.capacity() < (1 << gif_MaxLzwBits)) gif_vals.reserve((1 << gif_MaxLzwBits) - gif_vals.capacity());
+    if (gif_stack.capacity() < (1 << (gif_MaxLzwBits + 1))) gif_stack.reserve((1 << (gif_MaxLzwBits + 1)) - gif_stack.capacity());
     gif_next.clear();
     gif_vals.clear();
     gif_stack.clear();
@@ -2609,7 +2713,7 @@ int32_t TFT_SPI::GIF_LZWReadByte(bool init) {
 
     int32_t i;
 
-    if(init) {
+    if (init) {
         //    LWZMinCodeSize      ColorCodes      ClearCode       EOICode
         //    2                   #0-#3           #4              #5
         //    3                   #0-#7           #8              #9
@@ -2631,32 +2735,31 @@ int32_t TFT_SPI::GIF_LZWReadByte(bool init) {
 
         fresh = true;
 
-        for(i = 0; i < gif.ClearCode; i++) {
+        for (i = 0; i < gif.ClearCode; i++) {
             gif_next[i] = 0;
             gif_vals[i] = i;
         }
-        for(; i < (1 << gif_MaxLzwBits); i++) gif_next[i] = gif_vals[0] = 0;
+        for (; i < (1 << gif_MaxLzwBits); i++) gif_next[i] = gif_vals[0] = 0;
 
         sp = &gif_stack[0];
 
         return 0;
-    }
-    else if(fresh) {
+    } else if (fresh) {
         fresh = false;
-        do { firstcode = oldcode = GIF_GetCode(gif.CodeSize, false); } while(firstcode == gif.ClearCode);
+        do { firstcode = oldcode = GIF_GetCode(gif.CodeSize, false); } while (firstcode == gif.ClearCode);
 
         return firstcode;
     }
 
-    if(sp > &gif_stack[0]) return *--sp;
+    if (sp > &gif_stack[0]) return *--sp;
 
-    while((code = GIF_GetCode(gif.CodeSize, false)) >= 0) {
-        if(code == gif.ClearCode) {
-            for(i = 0; i < gif.ClearCode; ++i) {
+    while ((code = GIF_GetCode(gif.CodeSize, false)) >= 0) {
+        if (code == gif.ClearCode) {
+            for (i = 0; i < gif.ClearCode; ++i) {
                 gif_next[i] = 0;
                 gif_vals[i] = i;
             }
-            for(; i < (1 << gif_MaxLzwBits); ++i) gif_next[i] = gif_vals[i] = 0;
+            for (; i < (1 << gif_MaxLzwBits); ++i) gif_next[i] = gif_vals[i] = 0;
 
             gif.CodeSize = gif.LZWMinimumCodeSize + 1;
             gif.MaxCodeSize = 2 * gif.ClearCode;
@@ -2665,54 +2768,53 @@ int32_t TFT_SPI::GIF_LZWReadByte(bool init) {
 
             firstcode = oldcode = GIF_GetCode(gif.CodeSize, false);
             return firstcode;
-        }
-        else if(code == gif.EOIcode) {
+        } else if (code == gif.EOIcode) {
             int32_t count;
             char    buf[260];
 
-            if(gif.ZeroDataBlock) return -2;
-            while((count = GIF_readDataSubBlock(buf)) > 0);
+            if (gif.ZeroDataBlock) return -2;
+            while ((count = GIF_readDataSubBlock(buf)) > 0);
 
-            if(count != 0) return -2;
+            if (count != 0) return -2;
         }
 
         incode = code;
 
-        if(code >= gif.MaxCode) {
+        if (code >= gif.MaxCode) {
             *sp++ = firstcode;
             code = oldcode;
         }
 
-        while(code >= gif.ClearCode) {
+        while (code >= gif.ClearCode) {
             *sp++ = gif_vals[code];
-            if(code == (int32_t)gif_next[code]) { return -1; }
+            if (code == (int32_t)gif_next[code]) { return -1; }
             code = gif_next[code];
         }
         *sp++ = firstcode = gif_vals[code];
 
-        if((code = gif.MaxCode) < (1 << gif_MaxLzwBits)) {
+        if ((code = gif.MaxCode) < (1 << gif_MaxLzwBits)) {
             gif_next[code] = oldcode;
             gif_vals[code] = firstcode;
             ++gif.MaxCode;
-            if((gif.MaxCode >= gif.MaxCodeSize) && (gif.MaxCodeSize < (1 << gif_MaxLzwBits))) {
+            if ((gif.MaxCode >= gif.MaxCodeSize) && (gif.MaxCodeSize < (1 << gif_MaxLzwBits))) {
                 gif.MaxCodeSize *= 2;
                 ++gif.CodeSize;
             }
         }
         oldcode = incode;
 
-        if(sp > &gif_stack[0]) return *--sp;
+        if (sp > &gif_stack[0]) return *--sp;
     }
     return code;
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 bool TFT_SPI::GIF_ReadImage(uint16_t x, uint16_t y) {
-    int32_t  color;
-    int32_t  xpos = x + gif.ImageLeftPosition;
-    int32_t  ypos = y + gif.ImageTopPosition;
-    int32_t  max = gif.ImageHeight * gif.ImageWidth;
-    uint32_t i = 0;
-    static uint8_t gif_LastDisposalMethod = 0;
+    int32_t         color;
+    int32_t         xpos = x + gif.ImageLeftPosition;
+    int32_t         ypos = y + gif.ImageTopPosition;
+    int32_t         max = gif.ImageHeight * gif.ImageWidth;
+    uint32_t        i = 0;
+    static uint8_t  gif_LastDisposalMethod = 0;
     static uint16_t gif_LastImageWidth = 0;
     static uint16_t gif_LastImageHeight = 0;
     static uint16_t gif_LastImageLeftPosition = 0;
@@ -2721,8 +2823,7 @@ bool TFT_SPI::GIF_ReadImage(uint16_t x, uint16_t y) {
     gif.LZWMinimumCodeSize = gif_file.read();
     if (GIF_LZWReadByte(true) < 0) return false;
 
-
-    if(gif.DisposalMethod < 2){
+    if (gif.DisposalMethod < 2) {
 
         while (i < max) {
             color = GIF_LZWReadByte(false);
@@ -2751,9 +2852,7 @@ bool TFT_SPI::GIF_ReadImage(uint16_t x, uint16_t y) {
                 uint16_t buf_x = gif.ImageLeftPosition + col;
                 uint16_t buf_y = gif.ImageTopPosition + row;
 
-                if (buf_x < gif.LogicalScreenWidth && buf_y < gif.LogicalScreenHeight) {
-                    gif_ImageBuffer[buf_y * gif.LogicalScreenWidth + buf_x] = gif_LocalColorTable[gif.BackgroundColorIndex];
-                }
+                if (buf_x < gif.LogicalScreenWidth && buf_y < gif.LogicalScreenHeight) { gif_ImageBuffer[buf_y * gif.LogicalScreenWidth + buf_x] = gif_LocalColorTable[gif.BackgroundColorIndex]; }
             }
         }
     }
@@ -2792,30 +2891,34 @@ bool TFT_SPI::GIF_ReadImage(uint16_t x, uint16_t y) {
         }
     }
 
-    // Copy from gif_imagebuffer in m framebuffer (only part of the current picture)
-    for (uint16_t row = 0; row < gif.ImageHeight; row++) {
-        for (uint16_t col = 0; col < gif.ImageWidth; col++) {
-            uint16_t fb_x = xpos + col;
-            uint16_t fb_y = ypos + row;
+    // --- Build contiguous RGB565 block for this frame ---
+
+    const uint16_t frameW = gif.ImageWidth;
+    const uint16_t frameH = gif.ImageHeight;
+
+    uint16_t* pixelBuffer = (uint16_t*)ps_malloc(frameW * frameH * sizeof(uint16_t));
+
+    if (!pixelBuffer) return false;
+
+    for (uint16_t row = 0; row < frameH; row++) {
+        for (uint16_t col = 0; col < frameW; col++) {
 
             uint16_t buf_x = gif.ImageLeftPosition + col;
             uint16_t buf_y = gif.ImageTopPosition + row;
 
-            if (fb_x < m_h_res && fb_y < m_v_res &&
-                buf_x < gif.LogicalScreenWidth && buf_y < gif.LogicalScreenHeight) {
-                m_framebuffer[0][fb_y * m_h_res + fb_x] = gif_ImageBuffer[buf_y * gif.LogicalScreenWidth + buf_x];
+            if (buf_x >= gif.LogicalScreenWidth || buf_y >= gif.LogicalScreenHeight) {
+                pixelBuffer[row * frameW + col] = 0x0000;
+                continue;
             }
+
+            pixelBuffer[row * frameW + col] = gif_ImageBuffer[buf_y * gif.LogicalScreenWidth + buf_x];
         }
     }
 
-    //panelDrawBitmap(xpos, ypos, xpos + gif.ImageWidth, ypos + gif.ImageHeight, m_framebuffer[0]);
+    // --- Unified render path ---
+    renderRGB565(xpos, ypos, frameW, frameH, pixelBuffer, NULL);
 
-    startWrite();
-    setAddrWindow(xpos, ypos, gif.ImageWidth, gif.ImageHeight);
-    for(int16_t j = y; j < ypos + gif.ImageHeight; j++) {
-        writePixels(m_framebuffer[0] + j * m_h_res + xpos, gif.ImageWidth);
-    }
-    endWrite();
+    free(pixelBuffer);
 
     return true;
 }
@@ -2833,16 +2936,16 @@ bool TFT_SPI::GIF_decodeGif(uint16_t x, uint16_t y) {
     char           c = 0;
     static int32_t test = 1;
     char           Label = 0;
-    if(gif.decodeSdFile_firstread == true) GIF_readGlobalColorTable(); // If exists
+    if (gif.decodeSdFile_firstread == true) GIF_readGlobalColorTable(); // If exists
     gif.decodeSdFile_firstread = false;
 
-    while(c != ';') { // Trailer found
+    while (c != ';') { // Trailer found
         c = gif_file.read();
-        if(c == '!') {               // it is a Extension
+        if (c == '!') {              // it is a Extension
             Label = gif_file.read(); // Label
             GIF_readExtension(Label);
         }
-        if(c == ',') {
+        if (c == ',') {
             GIF_readImageDescriptor(); // ImgageDescriptor
             GIF_readLocalColorTable(); // can follow the ImagrDescriptor
             GIF_ReadImage(x, y);       // read Image Data
@@ -2859,175 +2962,176 @@ bool TFT_SPI::GIF_decodeGif(uint16_t x, uint16_t y) {
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT_SPI::GIF_freeMemory() {
-    gif_next.clear();               gif_next.shrink_to_fit();
-    gif_vals.clear();               gif_vals.shrink_to_fit();
-    gif_stack.clear();              gif_stack.shrink_to_fit();
-    gif_GlobalColorTable.clear();   gif_GlobalColorTable.shrink_to_fit();
-    gif_LocalColorTable.clear();    gif_LocalColorTable.shrink_to_fit();
-    if(gif_ImageBuffer){free(gif_ImageBuffer); gif_ImageBuffer = NULL;}
-    if(gif_RestoreBuffer){free(gif_RestoreBuffer); gif_RestoreBuffer = NULL;}
-}
-
-void TFT_SPI::GIF_DecoderReset(){
-   GIF_freeMemory();
-   gif_file.close();
-   gif.decodeSdFile_firstread = false;
-   gif.GlobalColorTableFlag = false;
-   gif.LocalColorTableFlag = false;
-   gif.SortFlag = false;
-   gif.TransparentColorFlag = false;
-   gif.UserInputFlag = false;
-   gif.ZeroDataBlock = 0;
-   gif.InterlaceFlag = false;
-   gif.drawNextImage = false;
-   gif.BackgroundColorIndex = 0;
-   gif.BlockTerninator = 0;
-   gif.CharacterCellWidth = 0;
-   gif.CharacterCellHeight = 0;
-   gif.CodeSize = 0;
-   gif.ColorResulution = 0;
-   gif.DisposalMethod = 0;
-   gif.ImageSeparator = 0;
-   gif.lenDatablock = 0;
-   gif.LZWMinimumCodeSize = 0;
-   gif.PackedFields = 0;
-   gif.PixelAspectRatio = 0;
-   gif.TextBackgroundColorIndex = 0;
-   gif.TextForegroundColorIndex = 0;
-   gif.TransparentColorIndex = 0;
-   gif.ClearCode = 0;
-   gif.DelayTime = 0;
-   gif.EOIcode = 0; // End Of Information
-   gif.ImageHeight = 0;
-   gif.ImageWidth = 0;
-   gif.ImageLeftPosition = 0;
-   gif.ImageTopPosition = 0;
-   gif.LogicalScreenWidth = 0;
-   gif.LogicalScreenHeight = 0;
-   gif.MaxCode = 0;
-   gif.MaxCodeSize = 0;
-   gif.SizeOfGlobalColorTable = 0;
-   gif.SizeOfLocalColorTable = 0;
-   gif.TextGridLeftPosition = 0;
-   gif.TextGridTopPosition = 0;
-   gif.TextGridWidth = 0;
-   gif.TextGridHeight = 0;
-   gif.TimeStamp = 0;
-   gif.Iterations = 0;
-}
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-//   ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ J P E G ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-bool TFT_SPI::drawJpgFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight) {
-    if(!fs.exists(path)) {log_e("file %s not exists", path); return false; }
-    if(maxWidth) m_jpgWidthMax = maxWidth; else m_jpgWidthMax = m_h_res;
-    if(maxHeight) m_jpgHeightMax = maxHeight; else m_jpgHeightMax = m_v_res;
-
-    m_jpgFile = fs.open(path, FILE_READ);
-    if(!m_jpgFile) {log_e("Failed to open file for reading"); JPEG_setJpgScale(1); return false;}
-    JPEG_getJpgSize(&m_jpgWidth, &m_jpgHeight);
-    int res = JPEG_drawJpg(x, y); (void) res;
-    // log_w("path %s, res %i, x %i, y %i, m_jpgWidth %i, m_jpgHeight %i", path, res, x, y, m_jpgWidth, m_jpgHeight);
-    m_jpgFile.close();
-
-    startWrite();
-    setAddrWindow(x, y, m_jpgWidth, m_jpgHeight);
-    for(int16_t j = y; j < y + m_jpgHeight; j++) {
-        writePixels(m_framebuffer[0] + j * m_h_res + x, m_jpgWidth);
+    gif_next.clear();
+    gif_next.shrink_to_fit();
+    gif_vals.clear();
+    gif_vals.shrink_to_fit();
+    gif_stack.clear();
+    gif_stack.shrink_to_fit();
+    gif_GlobalColorTable.clear();
+    gif_GlobalColorTable.shrink_to_fit();
+    gif_LocalColorTable.clear();
+    gif_LocalColorTable.shrink_to_fit();
+    if (gif_ImageBuffer) {
+        free(gif_ImageBuffer);
+        gif_ImageBuffer = NULL;
     }
-    endWrite();
+    if (gif_RestoreBuffer) {
+        free(gif_RestoreBuffer);
+        gif_RestoreBuffer = NULL;
+    }
+}
 
+void TFT_SPI::GIF_DecoderReset() {
+    GIF_freeMemory();
+    gif_file.close();
+    gif.decodeSdFile_firstread = false;
+    gif.GlobalColorTableFlag = false;
+    gif.LocalColorTableFlag = false;
+    gif.SortFlag = false;
+    gif.TransparentColorFlag = false;
+    gif.UserInputFlag = false;
+    gif.ZeroDataBlock = 0;
+    gif.InterlaceFlag = false;
+    gif.drawNextImage = false;
+    gif.BackgroundColorIndex = 0;
+    gif.BlockTerninator = 0;
+    gif.CharacterCellWidth = 0;
+    gif.CharacterCellHeight = 0;
+    gif.CodeSize = 0;
+    gif.ColorResulution = 0;
+    gif.DisposalMethod = 0;
+    gif.ImageSeparator = 0;
+    gif.lenDatablock = 0;
+    gif.LZWMinimumCodeSize = 0;
+    gif.PackedFields = 0;
+    gif.PixelAspectRatio = 0;
+    gif.TextBackgroundColorIndex = 0;
+    gif.TextForegroundColorIndex = 0;
+    gif.TransparentColorIndex = 0;
+    gif.ClearCode = 0;
+    gif.DelayTime = 0;
+    gif.EOIcode = 0; // End Of Information
+    gif.ImageHeight = 0;
+    gif.ImageWidth = 0;
+    gif.ImageLeftPosition = 0;
+    gif.ImageTopPosition = 0;
+    gif.LogicalScreenWidth = 0;
+    gif.LogicalScreenHeight = 0;
+    gif.MaxCode = 0;
+    gif.MaxCodeSize = 0;
+    gif.SizeOfGlobalColorTable = 0;
+    gif.SizeOfLocalColorTable = 0;
+    gif.TextGridLeftPosition = 0;
+    gif.TextGridTopPosition = 0;
+    gif.TextGridWidth = 0;
+    gif.TextGridHeight = 0;
+    gif.TimeStamp = 0;
+    gif.Iterations = 0;
+}
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//    ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ J P E G ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+bool TFT_SPI::drawJpgFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight) {
+    if (!fs.exists(path)) {
+        log_e("file %s not exists", path);
+        return false;
+    }
+    if (maxWidth)
+        m_jpgWidthMax = maxWidth;
+    else
+        m_jpgWidthMax = logicalWidth();
+    if (maxHeight)
+        m_jpgHeightMax = maxHeight;
+    else
+        m_jpgHeightMax = logicalHeight();
+
+    m_jpgSdFile = fs.open(path, FILE_READ);
+    if (!m_jpgSdFile) {
+        log_e("Failed to open file for reading");
+        JPEG_setJpgScale(1);
+        return false;
+    }
+    JPEG_getSdJpgSize(&m_jpgWidth, &m_jpgHeight);
+    m_jpegPixelBuffer = (uint16_t*)ps_calloc(m_jpgWidth * m_jpgHeight, 2);
+
+    int res = JPEG_drawSdJpg(0, 0);
+    (void)res;
+    // log_w("path %s, res %i, x %i, y %i, m_jpgWidth %i, m_jpgHeight %i", path, res, x, y, m_jpgWidth, m_jpgHeight);
+    m_jpgSdFile.close();
+
+    renderRGB565(x, y, m_jpgWidth, m_jpgHeight, m_jpegPixelBuffer, NULL);
+
+    free(m_jpegPixelBuffer);
     return true;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::JPEG_setJpgScale(uint8_t scaleFactor) {
     switch (scaleFactor) {
-        case 1:  m_jpgScale = 0; break;
-        case 2:  m_jpgScale = 1; break;
-        case 4:  m_jpgScale = 2; break;
-        case 8:  m_jpgScale = 3; break;
+        case 1: m_jpgScale = 0; break;
+        case 2: m_jpgScale = 1; break;
+        case 4: m_jpgScale = 2; break;
+        case 8: m_jpgScale = 3; break;
         default: m_jpgScale = 0;
     }
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_SPI::JPEG_setSwapBytes(bool swapBytes){
-  m_swap = swapBytes;
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_SPI::JPEG_setSwapBytes(bool swapBytes) {
+    m_swap = swapBytes;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-unsigned int TFT_SPI::JPEG_jd_input(JDEC* jdec, uint8_t* buf, unsigned int len){
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+unsigned int TFT_SPI::JPEG_jd_input(JDEC* jdec, uint8_t* buf, unsigned int len) {
     uint32_t bytesLeft = 0;
 
-    if (m_jpg_source == TJPG_ARRAY) {  // Handle an array input
+    if (m_jpg_source == TJPG_ARRAY) {                                                   // Handle an array input
         if (m_array_index + len > m_array_size) { len = m_array_size - m_array_index; } // Avoid running off end of array
-        if (buf) memcpy_P(buf, (const uint8_t*)(m_array_data + m_array_index), len); // If buf is valid then copy len bytes to buffer
-        m_array_index += len;  // Move pointer
-    }
-    else if (m_jpg_source == TJPG_SD_FILE) {  // Handle SD library input
-        bytesLeft = m_jpgFile.available();  // Check how many bytes are available
+        if (buf) memcpy_P(buf, (const uint8_t*)(m_array_data + m_array_index), len);    // If buf is valid then copy len bytes to buffer
+        m_array_index += len;                                                           // Move pointer
+    } else if (m_jpg_source == TJPG_SD_FILE) {                                          // Handle SD library input
+        bytesLeft = m_jpgSdFile.available();                                            // Check how many bytes are available
         if (bytesLeft < len) len = bytesLeft;
         if (buf) {
-            m_jpgFile.read(buf, len); // Read into buffer, pointer moved as well
+            m_jpgSdFile.read(buf, len); // Read into buffer, pointer moved as well
         } else {
-            m_jpgFile.seek(m_jpgFile.position() + len); // Buffer is null, so skip data by moving pointer
+            m_jpgSdFile.seek(m_jpgSdFile.position() + len); // Buffer is null, so skip data by moving pointer
         }
     }
     return len;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-// Pass image block back to the sketch for rendering, may be a complete or partial MCU
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//  Pass image block back to the sketch for rendering, may be a complete or partial MCU
 int TFT_SPI::JPEG_jd_output(JDEC* jdec, void* bitmap, JRECT* jrect) {
     jdec = jdec; // Supress warning as ID is not used
 
-    int16_t  x = jrect->left + m_jpeg_x;  // Retrieve rendering parameters and add any offset
+    int16_t  x = jrect->left + m_jpeg_x; // Retrieve rendering parameters and add any offset
     int16_t  y = jrect->top + m_jpeg_y;
     uint16_t w = jrect->right + 1 - jrect->left;
     uint16_t h = jrect->bottom + 1 - jrect->top;
-    if(w > m_jpgWidthMax) return true;  // Clip width and height to the maximum allowed dimensions
-    if(h > m_jpgHeightMax) return true;
+    //    if(x > m_jpgWidthMax) return true;  // Clip width and height to the maximum allowed dimensions
+    //    if(y > m_jpgHeightMax) return true;
     bool r = JPEG_tft_output(x, y, w, h, (uint16_t*)bitmap);
     return r;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-bool TFT_SPI::JPEG_tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t* bitmap) {
-      if (!bitmap || w <= 0 || h <= 0) {  // Check for valid parameters
-        log_e("Invalid parameters: bitmap is null or width/height is zero.");
-        return false;
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+bool TFT_SPI::JPEG_tft_output(int16_t blockX, int16_t blockY, uint16_t w, uint16_t h, uint16_t* bitmap) {
+    if (!bitmap || w == 0 || h == 0) return false;
+
+    // Write MCU block into linear JPEG pixel buffer (no rotation!)
+    for (uint16_t localY = 0; localY < h; ++localY) {
+        for (uint16_t localX = 0; localX < w; ++localX) {
+
+            int32_t dstX = blockX + localX;
+            int32_t dstY = blockY + localY;
+
+            if (dstX >= m_jpgWidth || dstY >= m_jpgHeight) continue;
+
+            m_jpegPixelBuffer[dstY * m_jpgWidth + dstX] = bitmap[localY * w + localX];
+        }
     }
-    // Clip the rectangle to ensure it doesn't exceed framebuffer boundaries
-    int16_t x_end = std::min((int16_t)(x + w), (int16_t)m_h_res); // End of rectangle in x-direction
-    int16_t y_end = std::min((int16_t)(y + h), (int16_t)(m_v_res)); // End of rectangle in y-direction
-
-    if (x >= m_h_res || y >= m_v_res || x_end <= 0 || y_end <= 0) {
-        log_e("Rectangle is completely outside the framebuffer boundaries, x: %d, y: %d, x_end: %d, y_end: %d", x, y, x_end, y_end);
-        return false;
-    }
-
-    // Adjust start coordinates if they are out of bounds
-    int16_t start_x = max((int16_t)0, x);        // Sichtbarer Startpunkt in x-Richtung
-    int16_t start_y = max((int16_t)0, y);        // Sichtbarer Startpunkt in y-Richtung
-    int16_t clip_x_offset = start_x - x;         // Offset im Bitmap in x-Richtung
-    int16_t clip_y_offset = start_y - y;         // Offset im Bitmap in y-Richtung
-
-    // Berechnung der sichtbaren Breite und Höhe
-    int16_t visible_w = x_end - start_x;         // Sichtbare Breite
-    int16_t visible_h = y_end - start_y;         // Sichtbare Höhe
-
-    // Zeilenweises Kopieren mit Clipping
-    for (int16_t j = 0; j < visible_h ; ++j) {
-        // Quelle im Bitmap: Berechne die richtige Zeilenposition
-        uint16_t* src_ptr = bitmap + (clip_y_offset + j) * w + clip_x_offset;
-
-        // Ziel im Framebuffer: Berechne die richtige Zeilenposition
-        uint16_t* dest_ptr = m_framebuffer[0] + (start_y + j) * m_h_res + start_x;
-
-        // Kopiere nur die sichtbare Breite
-        memcpy(dest_ptr, src_ptr, visible_w * sizeof(uint16_t));
-    }
-    // log_w("Bitmap erfolgreich mit Clipping gezeichnet bei x: %d, y: %d, sichtbare Breite: %d, sichtbare Höhe: %d", start_x, start_y, visible_w, visible_h);
     return true;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-uint8_t TFT_SPI::JPEG_drawJpg(int32_t x, int32_t y) {
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+uint8_t TFT_SPI::JPEG_drawSdJpg(int32_t x, int32_t y) {
     JDEC    jdec;
     uint8_t r = JDR_OK;
 
@@ -3039,8 +3143,9 @@ uint8_t TFT_SPI::JPEG_drawJpg(int32_t x, int32_t y) {
     if (r == JDR_OK) { r = JPEG_jd_decomp(&jdec, m_jpgScale); } // Extract image and render
     return r;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-uint8_t TFT_SPI::JPEG_getJpgSize(uint16_t* w, uint16_t* h) {
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+uint8_t TFT_SPI::JPEG_getSdJpgSize(uint16_t* w, uint16_t* h) {
+
     JDEC    jdec;
     uint8_t r = JDR_OK;
     *w = 0;
@@ -3052,105 +3157,89 @@ uint8_t TFT_SPI::JPEG_getJpgSize(uint16_t* w, uint16_t* h) {
         *w = jdec.width;
         *h = jdec.height;
     }
-    m_jpgFile.seek(0);
+    m_jpgSdFile.seek(0);
     return r;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-#if JD_FASTDECODE == 2
-	#define HUFF_BIT  10 /* Bit length to apply fast huffman decode */
-	#define HUFF_LEN  (1 << HUFF_BIT)
-	#define HUFF_MASK (HUFF_LEN - 1)
-#endif
+    // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+    #if JD_FASTDECODE == 2
+        #define HUFF_BIT  10 /* Bit length to apply fast huffman decode */
+        #define HUFF_LEN  (1 << HUFF_BIT)
+        #define HUFF_MASK (HUFF_LEN - 1)
+    #endif
 
 const uint8_t Zig[64] = {/* Zigzag-order to raster-order conversion table */
-								0,  1,  8,  16, 9,  2,  3,  10, 17, 24, 32, 25, 18, 11, 4,  5,  12, 19, 26, 33, 40, 48,
-								41, 34, 27, 20, 13, 6,  7,  14, 21, 28, 35, 42, 49, 56, 57, 50, 43, 36, 29, 22, 15, 23,
-								30, 37, 44, 51, 58, 59, 52, 45, 38, 31, 39, 46, 53, 60, 61, 54, 47, 55, 62, 63};
+                         0,  1,  8,  16, 9,  2,  3,  10, 17, 24, 32, 25, 18, 11, 4,  5,  12, 19, 26, 33, 40, 48, 41, 34, 27, 20, 13, 6,  7,  14, 21, 28,
+                         35, 42, 49, 56, 57, 50, 43, 36, 29, 22, 15, 23, 30, 37, 44, 51, 58, 59, 52, 45, 38, 31, 39, 46, 53, 60, 61, 54, 47, 55, 62, 63};
 
 const uint16_t Ipsf[64] = {/* See also aa_idct.png */
-	 (uint16_t)(1.00000 * 8192), (uint16_t)(1.38704 * 8192), (uint16_t)(1.30656 * 8192), (uint16_t)(1.17588 * 8192),
-	 (uint16_t)(1.00000 * 8192), (uint16_t)(0.78570 * 8192), (uint16_t)(0.54120 * 8192), (uint16_t)(0.27590 * 8192),
-	 (uint16_t)(1.38704 * 8192), (uint16_t)(1.92388 * 8192), (uint16_t)(1.81226 * 8192), (uint16_t)(1.63099 * 8192),
-	 (uint16_t)(1.38704 * 8192), (uint16_t)(1.08979 * 8192), (uint16_t)(0.75066 * 8192), (uint16_t)(0.38268 * 8192),
-	 (uint16_t)(1.30656 * 8192), (uint16_t)(1.81226 * 8192), (uint16_t)(1.70711 * 8192), (uint16_t)(1.53636 * 8192),
-	 (uint16_t)(1.30656 * 8192), (uint16_t)(1.02656 * 8192), (uint16_t)(0.70711 * 8192), (uint16_t)(0.36048 * 8192),
-	 (uint16_t)(1.17588 * 8192), (uint16_t)(1.63099 * 8192), (uint16_t)(1.53636 * 8192), (uint16_t)(1.38268 * 8192),
-	 (uint16_t)(1.17588 * 8192), (uint16_t)(0.92388 * 8192), (uint16_t)(0.63638 * 8192), (uint16_t)(0.32442 * 8192),
-	 (uint16_t)(1.00000 * 8192), (uint16_t)(1.38704 * 8192), (uint16_t)(1.30656 * 8192), (uint16_t)(1.17588 * 8192),
-	 (uint16_t)(1.00000 * 8192), (uint16_t)(0.78570 * 8192), (uint16_t)(0.54120 * 8192), (uint16_t)(0.27590 * 8192),
-	 (uint16_t)(0.78570 * 8192), (uint16_t)(1.08979 * 8192), (uint16_t)(1.02656 * 8192), (uint16_t)(0.92388 * 8192),
-	 (uint16_t)(0.78570 * 8192), (uint16_t)(0.61732 * 8192), (uint16_t)(0.42522 * 8192), (uint16_t)(0.21677 * 8192),
-	 (uint16_t)(0.54120 * 8192), (uint16_t)(0.75066 * 8192), (uint16_t)(0.70711 * 8192), (uint16_t)(0.63638 * 8192),
-	 (uint16_t)(0.54120 * 8192), (uint16_t)(0.42522 * 8192), (uint16_t)(0.29290 * 8192), (uint16_t)(0.14932 * 8192),
-	 (uint16_t)(0.27590 * 8192), (uint16_t)(0.38268 * 8192), (uint16_t)(0.36048 * 8192), (uint16_t)(0.32442 * 8192),
-	 (uint16_t)(0.27590 * 8192), (uint16_t)(0.21678 * 8192), (uint16_t)(0.14932 * 8192), (uint16_t)(0.07612 * 8192)};
+                           (uint16_t)(1.00000 * 8192), (uint16_t)(1.38704 * 8192), (uint16_t)(1.30656 * 8192), (uint16_t)(1.17588 * 8192), (uint16_t)(1.00000 * 8192), (uint16_t)(0.78570 * 8192),
+                           (uint16_t)(0.54120 * 8192), (uint16_t)(0.27590 * 8192), (uint16_t)(1.38704 * 8192), (uint16_t)(1.92388 * 8192), (uint16_t)(1.81226 * 8192), (uint16_t)(1.63099 * 8192),
+                           (uint16_t)(1.38704 * 8192), (uint16_t)(1.08979 * 8192), (uint16_t)(0.75066 * 8192), (uint16_t)(0.38268 * 8192), (uint16_t)(1.30656 * 8192), (uint16_t)(1.81226 * 8192),
+                           (uint16_t)(1.70711 * 8192), (uint16_t)(1.53636 * 8192), (uint16_t)(1.30656 * 8192), (uint16_t)(1.02656 * 8192), (uint16_t)(0.70711 * 8192), (uint16_t)(0.36048 * 8192),
+                           (uint16_t)(1.17588 * 8192), (uint16_t)(1.63099 * 8192), (uint16_t)(1.53636 * 8192), (uint16_t)(1.38268 * 8192), (uint16_t)(1.17588 * 8192), (uint16_t)(0.92388 * 8192),
+                           (uint16_t)(0.63638 * 8192), (uint16_t)(0.32442 * 8192), (uint16_t)(1.00000 * 8192), (uint16_t)(1.38704 * 8192), (uint16_t)(1.30656 * 8192), (uint16_t)(1.17588 * 8192),
+                           (uint16_t)(1.00000 * 8192), (uint16_t)(0.78570 * 8192), (uint16_t)(0.54120 * 8192), (uint16_t)(0.27590 * 8192), (uint16_t)(0.78570 * 8192), (uint16_t)(1.08979 * 8192),
+                           (uint16_t)(1.02656 * 8192), (uint16_t)(0.92388 * 8192), (uint16_t)(0.78570 * 8192), (uint16_t)(0.61732 * 8192), (uint16_t)(0.42522 * 8192), (uint16_t)(0.21677 * 8192),
+                           (uint16_t)(0.54120 * 8192), (uint16_t)(0.75066 * 8192), (uint16_t)(0.70711 * 8192), (uint16_t)(0.63638 * 8192), (uint16_t)(0.54120 * 8192), (uint16_t)(0.42522 * 8192),
+                           (uint16_t)(0.29290 * 8192), (uint16_t)(0.14932 * 8192), (uint16_t)(0.27590 * 8192), (uint16_t)(0.38268 * 8192), (uint16_t)(0.36048 * 8192), (uint16_t)(0.32442 * 8192),
+                           (uint16_t)(0.27590 * 8192), (uint16_t)(0.21678 * 8192), (uint16_t)(0.14932 * 8192), (uint16_t)(0.07612 * 8192)};
 
-#if JD_TBLCLIP
-	#define BYTECLIP(v) Clip8[(unsigned int)(v) & 0x3FF]
-const uint8_t Clip8[1024] = {	/* 0..255 */
-	0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
-	31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59,
-	60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88,
-	89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113,
-	114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136,
-	137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159,
-	160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182,
-	183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205,
-	206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228,
-	229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251,
-	252, 253, 254, 255,
-	/* 256..511 */
-	255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-	255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-	255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-	255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-	255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-	255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-	255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-	255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-	255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-	255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-	255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-	255, 255, 255,
-	/* -512..-257 */
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	/* -256..-1 */
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-#endif
+    #if JD_TBLCLIP
+        #define BYTECLIP(v) Clip8[(unsigned int)(v) & 0x3FF]
+const uint8_t Clip8[1024] = {/* 0..255 */
+                             0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44,
+                             45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87,
+                             88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123,
+                             124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157,
+                             158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191,
+                             192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225,
+                             226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255,
+                             /* 256..511 */
+                             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+                             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+                             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+                             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+                             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+                             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+                             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+                             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+                             /* -512..-257 */
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             /* -256..-1 */
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    #endif
 
-#if JD_TBLCLIP == 0 /* JD_TBLCLIP */
+    #if JD_TBLCLIP == 0 /* JD_TBLCLIP */
 uint8_t TFT_SPI::JPEG_BYTECLIP(int val) {
-    if(val < 0) return 0;
-    else if(val > 255) return 255;
+    if (val < 0)
+        return 0;
+    else if (val > 255)
+        return 255;
     return (uint8_t)val;
 }
-#endif
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void* TFT_SPI::JPEG_alloc_pool(JDEC  *jd,size_t ndata) {
-	char *rp = 0;
+    #endif
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void* TFT_SPI::JPEG_alloc_pool(JDEC* jd, size_t ndata) {
+    char* rp = 0;
 
-	ndata = (ndata + 3) & ~3; /* Align block size to the word boundary */
+    ndata = (ndata + 3) & ~3; /* Align block size to the word boundary */
 
-	if(jd->sz_pool >= ndata) {
-		jd->sz_pool -= ndata;
-		rp = (char *)jd->pool;           /* Get start of available memory pool */
-		jd->pool = (void *)(rp + ndata); /* Allocate requierd bytes */
-	}
+    if (jd->sz_pool >= ndata) {
+        jd->sz_pool -= ndata;
+        rp = (char*)jd->pool;           /* Get start of available memory pool */
+        jd->pool = (void*)(rp + ndata); /* Allocate requierd bytes */
+    }
 
-	return (void *)rp; /* Return allocated memory block (NULL:no memory to allocate) */
-}//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+    return (void*)rp; /* Return allocated memory block (NULL:no memory to allocate) */
+} // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 uint8_t TFT_SPI::JPEG_create_qt_tbl(JDEC* jd, const uint8_t* data, size_t ndata) {
     unsigned int i, zi;
     uint8_t      d;
@@ -3173,7 +3262,7 @@ uint8_t TFT_SPI::JPEG_create_qt_tbl(JDEC* jd, const uint8_t* data, size_t ndata)
 
     return JDR_OK;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 uint8_t TFT_SPI::JPEG_create_huffman_tbl(JDEC* jd, const uint8_t* data, size_t ndata) {
     unsigned int i, j, b, cls, num;
     size_t       np;
@@ -3213,7 +3302,7 @@ uint8_t TFT_SPI::JPEG_create_huffman_tbl(JDEC* jd, const uint8_t* data, size_t n
             if (!cls && d > 11) return JDR_FMT1;
             pd[i] = d;
         }
-#if JD_FASTDECODE == 2
+    #if JD_FASTDECODE == 2
         { /* Create fast huffman decode table */
             unsigned int span, td, ti;
             uint16_t*    tbl_ac = 0;
@@ -3244,18 +3333,18 @@ uint8_t TFT_SPI::JPEG_create_huffman_tbl(JDEC* jd, const uint8_t* data, size_t n
             }
             jd->longofs[num][cls] = i; /* Code table offset for long code */
         }
-#endif
+    #endif
     }
 
     return JDR_OK;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 int TFT_SPI::JPEG_huffext(JDEC* jd, unsigned int id, unsigned int cls) {
     size_t       dc = jd->dctr;
     uint8_t*     dp = jd->dptr;
     unsigned int d, flg = 0;
 
-#if JD_FASTDECODE == 0
+    #if JD_FASTDECODE == 0
     uint8_t         bm, nd, bl;
     const uint8_t*  hb = jd->huffbits[id][cls]; /* Bit distribution table */
     const uint16_t* hc = jd->huffcode[id][cls]; /* Code word table */
@@ -3302,7 +3391,7 @@ int TFT_SPI::JPEG_huffext(JDEC* jd, unsigned int id, unsigned int cls) {
         bl--;
     } while (bl);
 
-#else
+    #else
     const uint8_t * hb, *hd;
     const uint16_t* hc;
     unsigned int    nc, bl, wbit = jd->dbit % 32;
@@ -3337,7 +3426,7 @@ int TFT_SPI::JPEG_huffext(JDEC* jd, unsigned int id, unsigned int cls) {
     jd->dptr = dp;
     jd->wreg = w;
 
-    #if JD_FASTDECODE == 2
+        #if JD_FASTDECODE == 2
     /* Table serch for the short codes */
     d = (unsigned int)(w >> (wbit - HUFF_BIT)); /* Short code as table index */
     if (cls) {                                  /* AC element */
@@ -3359,13 +3448,13 @@ int TFT_SPI::JPEG_huffext(JDEC* jd, unsigned int id, unsigned int cls) {
     hc = jd->huffcode[id][cls] + jd->longofs[id][cls]; /* Code word table */
     hd = jd->huffdata[id][cls] + jd->longofs[id][cls]; /* Data table */
     bl = HUFF_BIT + 1;
-    #else
+        #else
     /* Incremental serch for all codes */
     hb = jd->huffbits[id][cls]; /* Bit distribution table */
     hc = jd->huffcode[id][cls]; /* Code word table */
     hd = jd->huffdata[id][cls]; /* Data table */
     bl = 1;
-    #endif
+        #endif
     for (; bl <= 16; bl++) { /* Incremental search */
         nc = *hb++;
         if (nc) {
@@ -3379,16 +3468,16 @@ int TFT_SPI::JPEG_huffext(JDEC* jd, unsigned int id, unsigned int cls) {
             } while (--nc);
         }
     }
-#endif
+    #endif
     return 0 - (int)JDR_FMT1; /* Err: code not found (may be collapted data) */
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 int TFT_SPI::JPEG_bitext(JDEC* jd, unsigned int nbit) {
     size_t       dc = jd->dctr;
     uint8_t*     dp = jd->dptr;
     unsigned int d, flg = 0;
 
-#if JD_FASTDECODE == 0
+    #if JD_FASTDECODE == 0
     uint8_t mbit = jd->dbit;
     d = 0;
     do {
@@ -3424,7 +3513,7 @@ int TFT_SPI::JPEG_bitext(JDEC* jd, unsigned int nbit) {
     jd->dptr = dp;
     return (int)d;
 
-#else
+    #else
     unsigned int wbit = jd->dbit % 32;
     uint32_t     w = jd->wreg & ((1UL << wbit) - 1);
 
@@ -3459,15 +3548,15 @@ int TFT_SPI::JPEG_bitext(JDEC* jd, unsigned int nbit) {
     jd->dptr = dp;
 
     return (int)(w >> ((wbit - nbit) % 32));
-#endif
+    #endif
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 uint8_t TFT_SPI::JPEG_restart(JDEC* jd, uint16_t rstn) {
     unsigned int i;
     uint8_t*     dp = jd->dptr;
     size_t       dc = jd->dctr;
 
-#if JD_FASTDECODE == 0
+    #if JD_FASTDECODE == 0
     uint16_t d = 0;
 
     /* Get two bytes from the input stream */
@@ -3489,7 +3578,7 @@ uint8_t TFT_SPI::JPEG_restart(JDEC* jd, uint16_t rstn) {
     /* Check the marker */
     if ((d & 0xFFD8) != 0xFFD0 || (d & 7) != (rstn & 7)) { return JDR_FMT1; /* Err: expected RSTn marker is not detected (may be collapted data) */ }
 
-#else
+    #else
     uint16_t marker;
 
     if (jd->marker) { /* Generate a maker if it has been detected */
@@ -3514,12 +3603,12 @@ uint8_t TFT_SPI::JPEG_restart(JDEC* jd, uint16_t rstn) {
     if ((marker & 0xFFD8) != 0xFFD0 || (marker & 7) != (rstn & 7)) { return JDR_FMT1; /* Err: expected RSTn marker was not detected (may be collapted data) */ }
 
     jd->dbit = 0; /* Discard stuff bits */
-#endif
+    #endif
 
     jd->dcv[2] = jd->dcv[1] = jd->dcv[0] = 0; /* Reset DC offset */
     return JDR_OK;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::JPEG_block_idct(int32_t* src, jd_yuv_t* dst) {
     const int32_t M13 = (int32_t)(1.41421 * 4096), M2 = (int32_t)(1.08239 * 4096), M4 = (int32_t)(2.61313 * 4096), M5 = (int32_t)(1.84776 * 4096);
     int32_t       v0, v1, v2, v3, v4, v5, v6, v7;
@@ -3608,7 +3697,7 @@ void TFT_SPI::JPEG_block_idct(int32_t* src, jd_yuv_t* dst) {
         v4 -= v5;
 
         /* Descale the transformed values 8 bits and output a row */
-#if JD_FASTDECODE >= 1
+    #if JD_FASTDECODE >= 1
         dst[0] = (int16_t)((v0 + v7) >> 8);
         dst[7] = (int16_t)((v0 - v7) >> 8);
         dst[1] = (int16_t)((v1 + v6) >> 8);
@@ -3617,7 +3706,7 @@ void TFT_SPI::JPEG_block_idct(int32_t* src, jd_yuv_t* dst) {
         dst[5] = (int16_t)((v2 - v5) >> 8);
         dst[3] = (int16_t)((v3 + v4) >> 8);
         dst[4] = (int16_t)((v3 - v4) >> 8);
-#else
+    #else
         dst[0] = BYTECLIP((v0 + v7) >> 8);
         dst[7] = BYTECLIP((v0 - v7) >> 8);
         dst[1] = BYTECLIP((v1 + v6) >> 8);
@@ -3626,13 +3715,13 @@ void TFT_SPI::JPEG_block_idct(int32_t* src, jd_yuv_t* dst) {
         dst[5] = BYTECLIP((v2 - v5) >> 8);
         dst[3] = BYTECLIP((v3 + v4) >> 8);
         dst[4] = BYTECLIP((v3 - v4) >> 8);
-#endif
+    #endif
 
         dst += 8;
         src += 8; /* Next row */
     }
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 uint8_t TFT_SPI::JPEG_mcu_load(JDEC* jd) {
     int32_t*       tmp = (int32_t*)jd->workbuf; /* Block working buffer for de-quantize and IDCT */
     int            d, e;
@@ -3707,7 +3796,7 @@ uint8_t TFT_SPI::JPEG_mcu_load(JDEC* jd) {
 
     return JDR_OK; /* All blocks have been loaded successfully */
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 uint8_t TFT_SPI::JPEG_mcu_output(JDEC* jd, unsigned int x, unsigned int y) {
     const int    CVACC = (sizeof(int) > 2) ? 1024 : 128; /* Adaptive accuracy for both 16-/32-bit systems */
     unsigned int ix, iy, mx, my, rx, ry;
@@ -3881,7 +3970,7 @@ uint8_t TFT_SPI::JPEG_mcu_output(JDEC* jd, unsigned int x, unsigned int y) {
     bool r = JPEG_jd_output(jd, jd->workbuf, &rect);
     return r ? JDR_OK : JDR_INTR;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 uint8_t TFT_SPI::JPEG_jd_prepare(JDEC* jd, uint8_t* pool, size_t sz_pool, void* dev) {
     uint8_t *    seg, b;
     uint16_t     marker;
@@ -4017,12 +4106,13 @@ uint8_t TFT_SPI::JPEG_jd_prepare(JDEC* jd, uint8_t* pool, size_t sz_pool, void* 
             case 0xD9: /* EOI */ return JDR_FMT3; /* Unsuppoted JPEG standard (may be progressive JPEG) */
 
             default: /* Unknown segment (comment, exif or etc..) */
+                     // log_e("Unknown segment %02X", marker);
                 /* Skip segment data (null pointer specifies to remove data from the stream) */
                 if (JPEG_jd_input(jd, 0, len) != len) return JDR_INP;
         }
     }
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 uint8_t TFT_SPI::JPEG_jd_decomp(JDEC* jd, uint8_t scale) {
     unsigned int x, y, mx, my;
     uint16_t     rst, rsc;
@@ -4031,7 +4121,7 @@ uint8_t TFT_SPI::JPEG_jd_decomp(JDEC* jd, uint8_t scale) {
     if (scale > (JD_USE_SCALE ? 3 : 0)) return JDR_PAR;
     jd->scale = scale;
     mx = jd->msx * 8;
-    my = jd->msy * 8; /* Size of the MCU (pixel) */
+    my = jd->msy * 8;                         /* Size of the MCU (pixel) */
     jd->dcv[2] = jd->dcv[1] = jd->dcv[0] = 0; /* Initialize DC values */
     rst = rsc = 0;
     rc = JDR_OK;
@@ -4849,7 +4939,8 @@ int8_t TFT_SPI::png_decode() {
     }
     png_size = 0;
 
-    png_draw_into_AddrWindow(png_pos_x, png_pos_y, png_width, png_height, png_outbuffer, png_outbuff_size, png_format);
+    // png_draw_into_AddrWindow(png_pos_x, png_pos_y, png_width, png_height, png_outbuffer, png_outbuff_size, png_format);
+    png_draw_into_Framebuffer(png_pos_x, png_pos_y, png_width, png_height, png_outbuffer, png_outbuff_size, png_format);
 
     if(png_outbuffer) {
         free(png_outbuffer);
@@ -5064,60 +5155,30 @@ void TFT_SPI::png_rgb24bto16b(png_s_rgb16b* dst, png_s_rgb24b* src) {
 void TFT_SPI::png_rgb18btouint32(uint32_t* dst, png_s_rgb18b* src) { memcpy(dst, src, sizeof(png_s_rgb18b)); }
 void TFT_SPI::png_rgb16btouint32(uint32_t* dst, png_s_rgb16b* src) { memcpy(dst, src, sizeof(png_s_rgb16b)); }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_SPI::png_draw_into_AddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, char* rgbaBuffer, uint32_t png_outbuff_size, uint8_t png_format) {
-    if (!rgbaBuffer || png_outbuff_size < w * h * 4) return; // not enough data
+void TFT_SPI::png_draw_into_Framebuffer(uint16_t x, uint16_t y, uint16_t w, uint16_t h, char* rgbaBuffer, uint32_t, uint8_t) {
+    if (!rgbaBuffer || w == 0 || h == 0) return;
 
-    for (uint16_t row = 0; row < h; row++) {
-        for (uint16_t col = 0; col < w; col++) {
-            uint32_t index = (row * w + col) * 4;
-            uint8_t r = rgbaBuffer[index];     // Rot
-            uint8_t g = rgbaBuffer[index + 1]; // Grün
-            uint8_t b = rgbaBuffer[index + 2]; // Blau
-            uint8_t a = rgbaBuffer[index + 3]; // Alpha
+    uint16_t* rgbBuffer = (uint16_t*)ps_malloc(w * h * sizeof(uint16_t));
 
-            uint16_t px = x + col;
-            uint16_t py = y + row;
+    uint8_t* alphaBuffer = (uint8_t*)ps_malloc(w * h);
 
-            if (px >= m_h_res || py >= m_v_res) continue; // outside the screen
+    if (!rgbBuffer || !alphaBuffer) return;
 
-            // only alpha blending if alpha is not full
-            if (a < 255) {
-                // get the old pixel
-                uint16_t oldPixel = m_framebuffer[0][py * m_h_res + px];
+    for (uint32_t i = 0; i < w * h; i++) {
+        uint8_t r = rgbaBuffer[i * 4 + 0];
+        uint8_t g = rgbaBuffer[i * 4 + 1];
+        uint8_t b = rgbaBuffer[i * 4 + 2];
+        uint8_t a = rgbaBuffer[i * 4 + 3];
 
-                // Extrahiere die RGB-Komponenten aus dem alten Pixel (RGB565 → 888)
-                uint8_t oldR = ((oldPixel >> 11) & 0x1F) << 3; // 5 Bit Rot → 8 Bit
-                uint8_t oldG = ((oldPixel >> 5) & 0x3F) << 2;  // 6 Bit Grün → 8 Bit
-                uint8_t oldB = (oldPixel & 0x1F) << 3;         // 5 Bit Blau → 8 Bit
+        rgbBuffer[i] = ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
 
-                // calculate the new pixel
-                uint8_t newR = (r * a + oldR * (255 - a)) / 255;
-                uint8_t newG = (g * a + oldG * (255 - a)) / 255;
-                uint8_t newB = (b * a + oldB * (255 - a)) / 255;
-
-                // set the new pixel in the framebuffer
-                r = newR >> 3;
-                g = newG >> 2;
-                b = newB >> 3;
-            } else {
-                // full alpha, no blending
-                r = r >> 3;
-                g = g >> 2;
-                b = b >> 3;
-            }
-
-            // set the new pixel in the framebuffer
-            m_framebuffer[0][py * m_h_res + px] = (r << 11) | (g << 5) | b;
-        }
+        alphaBuffer[i] = a;
     }
 
-    // update the display
-    startWrite();
-    setAddrWindow(x, y, w, h);
-    for(uint16_t row = y; row < y + h; row++) {
-        writePixels(m_framebuffer[0] + row * m_h_res + x, w);
-    }
-    endWrite();
+    renderRGB565(x, y, w, h, rgbBuffer, alphaBuffer);
+
+    free(rgbBuffer);
+    free(alphaBuffer);
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 //  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ CONTROLLER SPECIFIC  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
@@ -5171,103 +5232,17 @@ void TFT_SPI::init() {
         spi_TFT->write(0x00); spi_TFT->write(0x0E); spi_TFT->write(0x14); spi_TFT->write(0x03); spi_TFT->write(0x11); spi_TFT->write(0x07);
         spi_TFT->write(0x31); spi_TFT->write(0xC1); spi_TFT->write(0x48); spi_TFT->write(0x08); spi_TFT->write(0x0F); spi_TFT->write(0x0C);
         spi_TFT->write(0x31); spi_TFT->write(0x36); spi_TFT->write(0x0F);
-        if(_displayInversion == 0) {
-            writeCommand(ILI9341_INVOFF); // Display Inversion OFF, normal mode
-        }
-        else {
-            writeCommand(ILI9341_INVON); // Display Inversion ON
-        }
-        writeCommand(0x11); // Sleep out
+        writeCommand(SLPOUT); // Sleep out
         delay(120);
-        writeCommand(0x2c);
-        writeCommand(0x29); // Display on
-        writeCommand(0x2c);
+        writeCommand(RAMWR);
+        displayInversion();
+        writeCommand(DISPON); // Display on
+
+        writeCommand(RAMWR);
+        writeCommand(MADCTL);
+        spi_TFT->write(MADCTL_MV | MADCTL_BGR);
     }
-    if(_TFTcontroller == HX8347D) {
-        if(tft_info) tft_info("init " ANSI_ESC_CYAN "HX8347D");
-        // Driving ability Setting
-        writeCommand(0xEA); spi_TFT->write(0x00); // PTBA[15:8]
-        writeCommand(0xEB); spi_TFT->write(0x20); // PTBA[7:0]
-        writeCommand(0xEC); spi_TFT->write(0x0C); // STBA[15:8]
-        writeCommand(0xED); spi_TFT->write(0xC4); // STBA[7:0]
-        writeCommand(0xE8); spi_TFT->write(0x40); // OPON[7:0]
-        writeCommand(0xE9); spi_TFT->write(0x38); // OPON1[7:0]
-        writeCommand(0xF1); spi_TFT->write(0x01); // OTPS1B
-        writeCommand(0xF2); spi_TFT->write(0x10); // GEN
-        writeCommand(0x27); spi_TFT->write(0xA3); // Display control 2 register
-
-        // Gamma 2.2 Setting
-        writeCommand(0x40); spi_TFT->write(0x01); // Gamma control 1 register
-        writeCommand(0x41); spi_TFT->write(0x00); // Gamma control 2 register
-        writeCommand(0x42); spi_TFT->write(0x00); // Gamma control 3 register
-        writeCommand(0x43); spi_TFT->write(0x10); // Gamma control 4 register
-        writeCommand(0x44); spi_TFT->write(0x0E); // Gamma control 5 register
-        writeCommand(0x45); spi_TFT->write(0x24); // Gamma control 6 register
-        writeCommand(0x46); spi_TFT->write(0x04); // Gamma control 7 register
-        writeCommand(0x47); spi_TFT->write(0x50); // Gamma control 8 register
-        writeCommand(0x48); spi_TFT->write(0x02); // Gamma control 9 register
-        writeCommand(0x49); spi_TFT->write(0x13); // Gamma control 10 register
-        writeCommand(0x4A); spi_TFT->write(0x19); // Gamma control 11 register
-        writeCommand(0x4B); spi_TFT->write(0x19); // Gamma control 12 register
-        writeCommand(0x4C); spi_TFT->write(0x16); // Gamma control 13 register
-        writeCommand(0x50); spi_TFT->write(0x1B); // Gamma control 14 register
-        writeCommand(0x51); spi_TFT->write(0x31); // Gamma control 15 register
-        writeCommand(0x52); spi_TFT->write(0x2F); // Gamma control 16 register
-        writeCommand(0x53); spi_TFT->write(0x3F); // Gamma control 17 register
-        writeCommand(0x54); spi_TFT->write(0x3F); // Gamma control 18 register
-        writeCommand(0x55); spi_TFT->write(0x3E); // Gamma control 19 register
-        writeCommand(0x56); spi_TFT->write(0x2F); // Gamma control 20 register
-        writeCommand(0x57); spi_TFT->write(0x7B); // Gamma control 21 register
-        writeCommand(0x58); spi_TFT->write(0x09); // Gamma control 22 register
-        writeCommand(0x59); spi_TFT->write(0x06); // Gamma control 23 register
-        writeCommand(0x5A); spi_TFT->write(0x06); // Gamma control 24 register
-        writeCommand(0x5B); spi_TFT->write(0x0C); // Gamma control 25 register
-        writeCommand(0x5C); spi_TFT->write(0x1D); // Gamma control 26 register
-        writeCommand(0x5D); spi_TFT->write(0xCC); // Gamma control 27 register
-
-        // Power Voltage Setting
-        writeCommand(0x1B); spi_TFT->write(0x1B); // VRH=4.65V
-        writeCommand(0x1A); spi_TFT->write(0x01); // BT (VGH~15V,VGL~-10V,DDVDH~5V)
-        writeCommand(0x24); spi_TFT->write(0x15); // VMH(VCOM High voltage ~3.2V)
-        writeCommand(0x25); spi_TFT->write(0x50); // VML(VCOM Low voltage -1.2V)
-        writeCommand(0x23); spi_TFT->write(0x88); // for Flicker adjust //can reload from OTP
-
-        // Power on Setting
-        writeCommand(0x18); spi_TFT->write(0x36); // I/P_RADJ,N/P_RADJ, Normal mode 60Hz
-        writeCommand(0x19); spi_TFT->write(0x01); // OSC_EN='1', start Osc
-
-        if(_displayInversion == 0) { writeCommand(0x01); spi_TFT->write(0x00);} // DP_STB='0', out deep sleep
-        else {                       writeCommand(0x01); spi_TFT->write(0x02);} // DP_STB='0', out deep sleep, invon = 1
-
-        writeCommand(0x1F); spi_TFT->write(0x88); // GAS=1, VOMG=00, PON=0, DK=1, XDK=0, DVDH_TRI=0, STB=0
-        delay(5);
-        writeCommand(0x1F); spi_TFT->write(0x80); // GAS=1, VOMG=00, PON=0, DK=0, XDK=0, DVDH_TRI=0, STB=0
-        delay(5);
-        writeCommand(0x1F); spi_TFT->write(0x90); // GAS=1, VOMG=00, PON=1, DK=0, XDK=0, DVDH_TRI=0, STB=0
-        delay(5);
-        writeCommand(0x1F); spi_TFT->write(0xD0); // GAS=1, VOMG=10, PON=1, DK=0, XDK=0, DDVDH_TRI=0, STB=0
-        delay(5);
-        // 262k/65k color selection
-        writeCommand(0x17); spi_TFT->write(0x05); // default 0x06 262k color // 0x05 65k color
-        // SET PANEL
-        writeCommand(0x36); spi_TFT->write(0x00); // SS_P, GS_P,REV_P,BGR_P
-        // Display ON Setting
-        writeCommand(0x28); spi_TFT->write(0x38); // GON=1, DTE=1, D=1000
-        delay(40);
-        writeCommand(0x28); spi_TFT->write(0x3C); // GON=1, DTE=1, D=1100
-
-        writeCommand(0x16); spi_TFT->write(0x08); // MY=0, MX=0, MV=0, BGR=1
-        // Set GRAM Area
-        writeCommand(0x02); spi_TFT->write(0x00); // Column address start register upper byte
-        writeCommand(0x03); spi_TFT->write(0x00); // Column address start register low byte
-        writeCommand(0x04); spi_TFT->write(0x00);
-        writeCommand(0x05); spi_TFT->write(0xEF); // Column End
-        writeCommand(0x06); spi_TFT->write(0x00);
-        writeCommand(0x07); spi_TFT->write(0x00); // Row Start
-        writeCommand(0x08); spi_TFT->write(0x01);
-        writeCommand(0x09); spi_TFT->write(0x3F); // Row End
-    }
-    if(_TFTcontroller == ILI9486a || _TFTcontroller == ILI9486b) {
+    if(_TFTcontroller == ILI9486) {
         if(tft_info) tft_info("init " ANSI_ESC_CYAN "ILI9486");
 
         // Driving ability Setting
@@ -5283,18 +5258,18 @@ void TFT_SPI::init() {
         writeCommand(0xC5); // VCOM Control
         spi_TFT->write16(0x00); spi_TFT->write16(0x00); spi_TFT->write16(0x00); spi_TFT->write16(0x00);
 
-        if(_TFTcontroller == ILI9486a) {
-            writeCommand(0xE0); // PGAMCTRL(Positive Gamma Control)
-            spi_TFT->write16(0x00); spi_TFT->write16(0x04); spi_TFT->write16(0x0E); spi_TFT->write16(0x08); spi_TFT->write16(0x17); spi_TFT->write16(0x0A);
-            spi_TFT->write16(0x40); spi_TFT->write16(0x79); spi_TFT->write16(0x4D); spi_TFT->write16(0x07); spi_TFT->write16(0x0E); spi_TFT->write16(0x0A);
-            spi_TFT->write16(0x1A); spi_TFT->write16(0x1D); spi_TFT->write16(0x0F);
-            writeCommand(0xE1); // NGAMCTRL (Negative Gamma Correction)
-            spi_TFT->write16(0x00); spi_TFT->write16(0x1B); spi_TFT->write16(0x1F); spi_TFT->write16(0x02); spi_TFT->write16(0x10); spi_TFT->write16(0x05);
-            spi_TFT->write16(0x32); spi_TFT->write16(0x34); spi_TFT->write16(0x43); spi_TFT->write16(0x02); spi_TFT->write16(0x0A); spi_TFT->write16(0x09);
-            spi_TFT->write16(0x33); spi_TFT->write16(0x37); spi_TFT->write16(0x0F);
-        }
+        // if(_TFTcontroller == ILI9486) {
+        //     writeCommand(0xE0); // PGAMCTRL(Positive Gamma Control)
+        //     spi_TFT->write16(0x00); spi_TFT->write16(0x04); spi_TFT->write16(0x0E); spi_TFT->write16(0x08); spi_TFT->write16(0x17); spi_TFT->write16(0x0A);
+        //     spi_TFT->write16(0x40); spi_TFT->write16(0x79); spi_TFT->write16(0x4D); spi_TFT->write16(0x07); spi_TFT->write16(0x0E); spi_TFT->write16(0x0A);
+        //     spi_TFT->write16(0x1A); spi_TFT->write16(0x1D); spi_TFT->write16(0x0F);
+        //     writeCommand(0xE1); // NGAMCTRL (Negative Gamma Correction)
+        //     spi_TFT->write16(0x00); spi_TFT->write16(0x1B); spi_TFT->write16(0x1F); spi_TFT->write16(0x02); spi_TFT->write16(0x10); spi_TFT->write16(0x05);
+        //     spi_TFT->write16(0x32); spi_TFT->write16(0x34); spi_TFT->write16(0x43); spi_TFT->write16(0x02); spi_TFT->write16(0x0A); spi_TFT->write16(0x09);
+        //     spi_TFT->write16(0x33); spi_TFT->write16(0x37); spi_TFT->write16(0x0F);
+        // }
 
-        if(_TFTcontroller == ILI9486b) {
+        if(_TFTcontroller == ILI9486) {
             writeCommand(0xE0); // PGAMCTRL(alternative Positive Gamma Control)
             spi_TFT->write16(0x0F); spi_TFT->write16(0x1F); spi_TFT->write16(0x1C); spi_TFT->write16(0x0C); spi_TFT->write16(0x0F); spi_TFT->write16(0x08);
             spi_TFT->write16(0x48); spi_TFT->write16(0x98); spi_TFT->write16(0x37); spi_TFT->write16(0x0A); spi_TFT->write16(0x13); spi_TFT->write16(0x04);
@@ -5305,442 +5280,175 @@ void TFT_SPI::init() {
             spi_TFT->write16(0x47); spi_TFT->write16(0x75); spi_TFT->write16(0x37); spi_TFT->write16(0x06); spi_TFT->write16(0x10); spi_TFT->write16(0x03);
             spi_TFT->write16(0x24); spi_TFT->write16(0x20); spi_TFT->write16(0x00);
         }
-        if(_displayInversion == 0) {
-            writeCommand(ILI9486_INVOFF); // Display Inversion OFF, normal mode   RPi LCD (A)
-        }
-        else {
-            writeCommand(ILI9486_INVON); // Display Inversion ON,                RPi LCD (B)
-        }
-
-        writeCommand(0x36); // Memory Access Control
+        writeCommand(MADCTL); // Memory Access Control
         spi_TFT->write16(0x48);
 
-        writeCommand(0x29); // Display ON
+        displayInversion();
+
+        writeCommand(DISPON); // Display ON
         delay(150);
+
+        writeCommand(MADCTL);
+        spi_TFT->write16(MADCTL_MV | MADCTL_BGR);
     }
     //==========================================
     if(_TFTcontroller == ILI9488) {
         if(tft_info) tft_info("init " ANSI_ESC_CYAN "ILI9488");
-        writeCommand(ILI9488_PGAMCTRL); // PGAMCTRL(Positive Gamma Control)
+        writeCommand(0xE0); // PGAMCTRL(Positive Gamma Control)
         spi_TFT->write(0x00); spi_TFT->write(0x03); spi_TFT->write(0x09); spi_TFT->write(0x08); spi_TFT->write(0x16); spi_TFT->write(0x0A);
         spi_TFT->write(0x3F); spi_TFT->write(0x78); spi_TFT->write(0x4C); spi_TFT->write(0x09); spi_TFT->write(0x0A); spi_TFT->write(0x08);
         spi_TFT->write(0x16); spi_TFT->write(0x1A); spi_TFT->write(0x0F);
-        writeCommand(ILI9488_NGAMCTRL); // NGAMCTRL (Negative Gamma Correction)
+        writeCommand(0xE1); // NGAMCTRL (Negative Gamma Correction)
         spi_TFT->write(0x00); spi_TFT->write(0x16); spi_TFT->write(0x19); spi_TFT->write(0x03); spi_TFT->write(0x0F); spi_TFT->write(0x05);
         spi_TFT->write(0x32); spi_TFT->write(0x45); spi_TFT->write(0x46); spi_TFT->write(0x04); spi_TFT->write(0x0E); spi_TFT->write(0x0D);
         spi_TFT->write(0x35); spi_TFT->write(0x37); spi_TFT->write(0x0F);
 
-        if(_displayInversion == 0) {
-            writeCommand(ILI9488_INVOFF); // Display Inversion OFF, normal mode
-        }
-        else {
-            writeCommand(ILI9488_INVON); // Display Inversion ON
-        }
-
-        writeCommand(ILI9488_PWCTR1); // Power Control 1
+        writeCommand(0xC0); // Power Control 1
         spi_TFT->write(0x17); spi_TFT->write(0x15);
-        writeCommand(ILI9488_PWCTR2); // Power Control 2
+        writeCommand(0xC1); // Power Control 2
         spi_TFT->write(0x41);
-        writeCommand(ILI9488_VMCTR1); // VCOM Control
+        writeCommand(0xC5); // VCOM Control
         spi_TFT->write(0x00); spi_TFT->write(0x12); spi_TFT->write(0x80);
-        writeCommand(ILI9488_MADCTL); // Memory Access Control
+        writeCommand(MADCTL); // Memory Access Control
         spi_TFT->write(0x48);
-        writeCommand(ILI9488_COLMOD); // Pixel Interface Format
+        writeCommand(0x3A); // Pixel Interface Format
         spi_TFT->write(0x66);
-        writeCommand(ILI9488_IFMODE); // Interface Mode Control
+        writeCommand(0xB0); // Interface Mode Control
         spi_TFT->write(0x00);
-        writeCommand(ILI9488_FRMCTR1); // Frame Rate Control
+        writeCommand(0xB1); // Frame Rate Control
         spi_TFT->write(0xA0);
-        writeCommand(ILI9488_INVTR); // Display Inversion Control
+        writeCommand(0xB4); // Display Inversion Control
         spi_TFT->write(0x02);
-        writeCommand(ILI9488_DISCTRL); // Display Function Control
+        writeCommand(0xB6); // Display Function Control
         spi_TFT->write(0x02); spi_TFT->write(0x02); spi_TFT->write(0x3B);
-        writeCommand(ILI9488_ETMOD); // Entry Mode Set
+        writeCommand(0xB7); // Entry Mode Set
         spi_TFT->write(0xC6);
         writeCommand(0xF7); // Adjust Control 3
         spi_TFT->write(0xA9); spi_TFT->write(0x51); spi_TFT->write(0x2C); spi_TFT->write(0x82);
-        writeCommand(ILI9488_SLPOUT); // Exit Sleep
+        writeCommand(SLPOUT); // Exit Sleep
+        displayInversion();
         delay(120);
-        writeCommand(ILI9488_DISPON); // Display on
+        writeCommand(DISPON); // Display on
         delay(25);
+        writeCommand(MADCTL);
+        spi_TFT->write(MADCTL_MV | MADCTL_BGR);
     }
     //==========================================
     if(_TFTcontroller == ST7796) {
         if(tft_info) tft_info("init " ANSI_ESC_CYAN "ST7796");
-        writeCommand(ST7796_SWRESET);
+        writeCommand(0x01);
         delay(120);
-        writeCommand(ST7796_SLPOUT); // Sleep Out
+        writeCommand(SLPOUT); // Sleep Out
         delay(120);
-        writeCommand(ST7796_MADCTL); // Memory Data Access Control
+        writeCommand(MADCTL); // Memory Data Access Control
         spi_TFT->write(0x40);
-        writeCommand(ST7796_CSCON); // Command Set Control
+        writeCommand(0xF0); // Command Set Control
         spi_TFT->write(0xC3);       // Enable extension command 2 partI
-        writeCommand(ST7796_CSCON); // Command Set Control
+        writeCommand(0xF0); // Command Set Control
         spi_TFT->write(0x96);       // Enable extension command 2 partII
-        writeCommand(ST7796_DIC); // Display Inversion Control
+        writeCommand(0xB4); // Display Inversion Control
         spi_TFT->write(0x00);
-        writeCommand(ST7796_IFMODE); // RAM control
+        writeCommand(0xB0); // RAM control
         spi_TFT->write(0x00);
-        writeCommand(ST7796_BPC); // Blanking Porch Control
+        writeCommand(0xB5); // Blanking Porch Control
         spi_TFT->write(0x08); spi_TFT->write(0x08); spi_TFT->write(0x00); spi_TFT->write(0x64);
-        writeCommand(ST7796_PWR1); // Power Control 1
+        writeCommand(0xC0); // Power Control 1
         spi_TFT->write(0xF0); spi_TFT->write(0x17);
-        writeCommand(ST7796_PWR2); // Power Control 2
+        writeCommand(0xC0); // Power Control 2
         spi_TFT->write(0x14);      //
-        writeCommand(ST7796_PWR3); // Power Control 3
+        writeCommand(0xC2); // Power Control 3
         spi_TFT->write(0xA7);
-        writeCommand(ST7796_VCMPCTL); // VCOM Control
+        writeCommand(0xC5); // VCOM Control
         spi_TFT->write(0x20);
-        writeCommand(ST7796_DOCA); // Display Output Ctrl Adjust
+        writeCommand(0xE8); // Display Output Ctrl Adjust
         spi_TFT->write(0x40); spi_TFT->write(0x8A); spi_TFT->write(0x00); spi_TFT->write(0x00);
         spi_TFT->write(0x29); spi_TFT->write(0x01); spi_TFT->write(0xBF); spi_TFT->write(0x33);
 
         //--------------------------------ST7789V gamma setting---------------------------------------//
-        writeCommand(ST7796_PGC); // PGAMCTRL(Positive Gamma Control)
+        writeCommand(0xE0); // PGAMCTRL(Positive Gamma Control)
         spi_TFT->write(0xF0); spi_TFT->write(0x0B); spi_TFT->write(0x11); spi_TFT->write(0x0B); spi_TFT->write(0x0A); spi_TFT->write(0x27);
         spi_TFT->write(0x3C); spi_TFT->write(0x55); spi_TFT->write(0x51); spi_TFT->write(0x37); spi_TFT->write(0x15); spi_TFT->write(0x17);
         spi_TFT->write(0x31); spi_TFT->write(0x35);
 
-        writeCommand(ST7796_NGC); // NGAMCTRL (Negative Gamma Correction)
+        writeCommand(0xE1); // NGAMCTRL (Negative Gamma Correction)
         spi_TFT->write(0x4E); spi_TFT->write(0x15); spi_TFT->write(0x19); spi_TFT->write(0x0B); spi_TFT->write(0x09); spi_TFT->write(0x27);
         spi_TFT->write(0x34); spi_TFT->write(0x32); spi_TFT->write(0x46); spi_TFT->write(0x38); spi_TFT->write(0x14); spi_TFT->write(0x16);
         spi_TFT->write(0x26); spi_TFT->write(0x2A);
 
-        writeCommand(ST7796_CSCON); // Command Set Control
+        writeCommand(0xF0); // Command Set Control
         spi_TFT->write(0x3C);       // Enable extension command 2 partI
 
-        writeCommand(ST7796_CSCON); // Command Set Control
+        writeCommand(0xF0); // Command Set Control
         spi_TFT->write(0x69);       // Enable extension command 2 partII
-
-        if(_displayInversion == 0) {
-            writeCommand(ST7796_INVOFF); // Display Inversion OFF, normal mode
-        }
-        else {
-            writeCommand(ST7796_INVON); // Display Inversion ON
-        }
-
-        writeCommand(ST7796_DISPON); // Display on
+        displayInversion();
+        writeCommand(DISPON); // Display on
         delay(25);
-    } //===============================================================================
 
-    if(_TFTcontroller == ST7796RPI) {
-        if(tft_info) tft_info("init " ANSI_ESC_CYAN "ST7796_RPI");
-        writeCommand(ST7796_SWRESET);
-        delay(120);
+        writeCommand(MADCTL);
+        spi_TFT->write(MADCTL_MV | MADCTL_BGR);
+     } //===============================================================================
 
-        writeCommand(ST7796_SLPOUT); // Sleep Out
-        delay(120);
-
-        writeCommand(ST7796_CSCON); // Command Set Control
-        spi_TFT->write16(0xC3);     // Enable extension command 2 partI
-
-        writeCommand(ST7796_CSCON); // Command Set Control
-        spi_TFT->write16(0x96);     // Enable extension command 2 partII
-
-        writeCommand(ST7796_MADCTL); // Memory Data Access Control
-        spi_TFT->write16(0x48);
-
-        writeCommand(ST7796_COLMOD); // Memory Data Access Control MX, MY, RGB mode
-        spi_TFT->write16(0x55);
-
-        writeCommand(ST7796_DIC); // Display Inversion Control
-        spi_TFT->write16(0x00);
-
-        writeCommand(ST7796_IFMODE); // RAM control
-        spi_TFT->write16(0x00);
-
-        writeCommand(ST7796_BPC); // Blanking Porch Control
-        spi_TFT->write16(0x08); spi_TFT->write16(0x08); spi_TFT->write16(0x00); spi_TFT->write16(0x64);
-        writeCommand(ST7796_PWR1); // Power Control 1
-        spi_TFT->write16(0xF0); spi_TFT->write16(0x17);
-        writeCommand(ST7796_PWR2); // Power Control 2
-        spi_TFT->write16(0x14);    //
-        writeCommand(ST7796_PWR3); // Power Control 3
-        spi_TFT->write16(0xA7);
-        writeCommand(ST7796_VCMPCTL); // VCOM Control
-        spi_TFT->write16(0x20);
-        writeCommand(ST7796_DOCA); // Display Output Ctrl Adjust
-        spi_TFT->write16(0x40); spi_TFT->write16(0x8A); spi_TFT->write16(0x00); spi_TFT->write16(0x00);
-        spi_TFT->write16(0x29); spi_TFT->write16(0x01); spi_TFT->write16(0xBF); spi_TFT->write16(0x33);
-
-        //--------------------------------ST7789V gamma setting---------------------------------------//
-        writeCommand(ST7796_PGC); // PGAMCTRL(Positive Gamma Control)
-        spi_TFT->write16(0xF0); spi_TFT->write16(0x0B); spi_TFT->write16(0x11); spi_TFT->write16(0x0B);
-        spi_TFT->write16(0x0A); spi_TFT->write16(0x27); spi_TFT->write16(0x3C); spi_TFT->write16(0x55);
-        spi_TFT->write16(0x51); spi_TFT->write16(0x37); spi_TFT->write16(0x15); spi_TFT->write16(0x17);
-        spi_TFT->write16(0x31); spi_TFT->write16(0x35);
-
-        writeCommand(ST7796_NGC); // NGAMCTRL (Negative Gamma Correction)
-        spi_TFT->write16(0x4E); spi_TFT->write16(0x15); spi_TFT->write16(0x19); spi_TFT->write16(0x0B);
-        spi_TFT->write16(0x09); spi_TFT->write16(0x27); spi_TFT->write16(0x34); spi_TFT->write16(0x32);
-        spi_TFT->write16(0x46); spi_TFT->write16(0x38); spi_TFT->write16(0x14); spi_TFT->write16(0x16);
-        spi_TFT->write16(0x26); spi_TFT->write16(0x2A);
-        writeCommand(ST7796_CSCON); // Command Set Control
-        spi_TFT->write16(0x3C);     // Enable extension command 2 partI
-        writeCommand(ST7796_CSCON); // Command Set Control
-        spi_TFT->write16(0x69);     // Enable extension command 2 partII
-        if(_displayInversion == 0) {
-            writeCommand(ST7796_INVOFF); // Display Inversion OFF, normal mode
-        }
-        else {
-            writeCommand(ST7796_INVON); // Display Inversion ON
-        }
-        writeCommand(ST7796_DISPON); // Display on
-        delay(25);
-    }
     endWrite();
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::setRotation(uint8_t m) {
-    _rotation = m % 4; // can't be higher than 3
-
-    if(_TFTcontroller == HX8347D) { //"HX8347D"
-        startWrite();
-        if(_rotation == 0) { // 0
-            writeCommand(0x16); spi_TFT->write(0x08); writeCommand(0x04); spi_TFT->write(0x00);
-            writeCommand(0x05); spi_TFT->write(0xEF); writeCommand(0x08); spi_TFT->write(0x01);
-            writeCommand(0x09); spi_TFT->write(0x3F);
-            m_h_res = HX8347D_WIDTH; m_v_res = HX8347D_HEIGHT;
-        }
-        if(_rotation == 1) { // 90°
-            writeCommand(0x16); spi_TFT->write(0x68); writeCommand(0x04); spi_TFT->write(0x01);
-            writeCommand(0x05); spi_TFT->write(0x3F); writeCommand(0x08); spi_TFT->write(0x00);
-            writeCommand(0x09); spi_TFT->write(0xEF);
-            m_v_res = HX8347D_WIDTH; m_h_res = HX8347D_HEIGHT;
-        }
-        if(_rotation == 2) { // 180
-            writeCommand(0x16); spi_TFT->write(0xC8); writeCommand(0x04); spi_TFT->write(0x00);
-            writeCommand(0x05); spi_TFT->write(0xEF); writeCommand(0x08); spi_TFT->write(0x01);
-            writeCommand(0x09); spi_TFT->write(0x3F);
-            m_h_res = HX8347D_WIDTH; m_v_res = HX8347D_HEIGHT;
-        }
-        if(_rotation == 3) { // 270
-            writeCommand(0x16); spi_TFT->write(0xA8); writeCommand(0x04); spi_TFT->write(0x01);
-            writeCommand(0x05); spi_TFT->write(0x3F); writeCommand(0x08); spi_TFT->write(0x00);
-            writeCommand(0x09); spi_TFT->write(0xEF);
-            m_v_res = HX8347D_WIDTH; m_h_res = HX8347D_HEIGHT;
-        }
-        endWrite();
-    }
-    if(_TFTcontroller == ILI9341) { // ILI9341
-        m = ili9341_rotations[_rotation].madctl;
-        m_h_res = ili9341_rotations[_rotation].width;
-        m_v_res = ili9341_rotations[_rotation].height;
-        startWrite();
-        writeCommand(ILI9341_MADCTL);
-        spi_TFT->write(m);
-        endWrite();
-    }
-    if(_TFTcontroller == ILI9486a || _TFTcontroller == ILI9486b) {
-        _rotation = m % 4; // can't be higher than 3
-        startWrite();
-        writeCommand(ILI9486_MADCTL);
-        switch(_rotation) {
-            case 0:
-                spi_TFT->write16(ILI9486_MADCTL_MX | ILI9486_MADCTL_BGR);
-                m_h_res = ILI9486_WIDTH;
-                m_v_res = ILI9486_HEIGHT;
-                break;
-            case 1:
-                spi_TFT->write16(ILI9486_MADCTL_MV | ILI9486_MADCTL_BGR);
-                m_v_res = ILI9486_WIDTH;
-                m_h_res = ILI9486_HEIGHT;
-                break;
-            case 2:
-                spi_TFT->write16(ILI9486_MADCTL_MY | ILI9486_MADCTL_BGR);
-                m_h_res = ILI9486_WIDTH;
-                m_v_res = ILI9486_HEIGHT;
-                break;
-            case 3:
-                spi_TFT->write16(ILI9486_MADCTL_MX | ILI9486_MADCTL_MY | ILI9486_MADCTL_MV | ILI9486_MADCTL_BGR);
-                m_v_res = ILI9486_WIDTH;
-                m_h_res = ILI9486_HEIGHT;
-                break;
-        }
-        endWrite();
-    }
-    if(_TFTcontroller == ILI9488) {
-        _rotation = m % 4; // can't be higher than 3
-        startWrite();
-        writeCommand(ILI9488_MADCTL);
-        switch(_rotation) {
-            case 0:
-                spi_TFT->write(ILI9488_MADCTL_MX | ILI9488_MADCTL_BGR);
-                m_h_res = ILI9488_WIDTH;
-                m_v_res = ILI9488_HEIGHT;
-                break;
-            case 1:
-                spi_TFT->write(ILI9488_MADCTL_MV | ILI9488_MADCTL_BGR);
-                m_v_res = ILI9488_WIDTH;
-                m_h_res = ILI9488_HEIGHT;
-                break;
-            case 2:
-                spi_TFT->write(ILI9488_MADCTL_MY | ILI9488_MADCTL_BGR);
-                m_h_res = ILI9488_WIDTH;
-                m_v_res = ILI9488_HEIGHT;
-                break;
-            case 3:
-                spi_TFT->write(ILI9488_MADCTL_MX | ILI9488_MADCTL_MY | ILI9488_MADCTL_MV | ILI9488_MADCTL_BGR);
-                m_v_res = ILI9488_WIDTH;
-                m_h_res = ILI9488_HEIGHT;
-                break;
-        }
-        endWrite();
-    }
-    if(_TFTcontroller == ST7796) {
-        _rotation = m % 4; // can't be higher than 3
-        startWrite();
-        writeCommand(ST7796_MADCTL);
-        switch(_rotation) {
-            case 0:
-                spi_TFT->write(ST7796_MADCTL_MX | ST7796_MADCTL_BGR);
-                m_h_res = ST7796_WIDTH;
-                m_v_res = ST7796_HEIGHT;
-                break;
-            case 1:
-                spi_TFT->write(ST7796_MADCTL_MV | ST7796_MADCTL_BGR);
-                m_v_res = ST7796_WIDTH;
-                m_h_res = ST7796_HEIGHT;
-                break;
-            case 2:
-                spi_TFT->write(ST7796_MADCTL_MY | ST7796_MADCTL_BGR);
-                m_h_res = ST7796_WIDTH;
-                m_v_res = ST7796_HEIGHT;
-                break;
-            case 3:
-                spi_TFT->write(ST7796_MADCTL_MX | ST7796_MADCTL_MY | ST7796_MADCTL_MV | ST7796_MADCTL_BGR);
-                m_v_res = ST7796_WIDTH;
-                m_h_res = ST7796_HEIGHT;
-                break;
-        }
-        endWrite();
-    }
-    if(_TFTcontroller == ST7796RPI) {
-        _rotation = m % 4; // can't be higher than 3
-        startWrite();
-        writeCommand(ST7796_MADCTL);
-        switch(_rotation) {
-            case 0:
-                spi_TFT->write16(ST7796_MADCTL_MX | ST7796_MADCTL_BGR);
-                m_h_res = ST7796_WIDTH;
-                m_v_res = ST7796_HEIGHT;
-                break;
-            case 1:
-                spi_TFT->write16(ST7796_MADCTL_MV | ST7796_MADCTL_BGR);
-                m_v_res = ST7796_WIDTH;
-                m_h_res = ST7796_HEIGHT;
-                break;
-            case 2:
-                spi_TFT->write16(ST7796_MADCTL_MY | ST7796_MADCTL_BGR);
-                m_h_res = ST7796_WIDTH;
-                m_v_res = ST7796_HEIGHT;
-                break;
-            case 3:
-                spi_TFT->write16(ST7796_MADCTL_MX | ST7796_MADCTL_MY | ST7796_MADCTL_MV | ST7796_MADCTL_BGR);
-                m_v_res = ST7796_WIDTH;
-                m_h_res = ST7796_HEIGHT;
-                break;
-        }
-        endWrite();
-    }
-}
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_SPI::invertDisplay(bool i) {
-    startWrite();
-    if(_TFTcontroller == ILI9341) { writeCommand(i ? ILI9341_INVON : ILI9341_INVOFF); }
-    if(_TFTcontroller == ILI9486a || _TFTcontroller == ILI9486b) { writeCommand(i ? ILI9486_INVON : ILI9486_INVOFF); }
-    if(_TFTcontroller == ILI9488) { writeCommand(i ? ILI9488_INVON : ILI9488_INVOFF); }
-    if(_TFTcontroller == ST7796 || _TFTcontroller == ST7796RPI) { writeCommand(i ? ST7796_INVON : ST7796_INVOFF); }
-    endWrite();
+    m_rotation = m % 4; // can't be higher than 3
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::setAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
     if(_TFTcontroller == ILI9341) { // ILI9341
         uint32_t xa = ((uint32_t)x << 16) | (x + w - 1);
         uint32_t ya = ((uint32_t)y << 16) | (y + h - 1);
-        writeCommand(ILI9341_CASET);
+        writeCommand(CASET);
         spi_TFT->write32(xa);
-        writeCommand(ILI9341_RASET);
+        writeCommand(RASET);
         spi_TFT->write32(ya);
-        writeCommand(ILI9341_RAMWR);
+        writeCommand(RAMWR);
     }
-    if(_TFTcontroller == HX8347D) { // HX8347D
-        writeCommand(0x02);
-        spi_TFT->write(x >> 8);
-        writeCommand(0x03);
-        spi_TFT->write(x & 0xFF); // Column Start
-        writeCommand(0x04);
-        spi_TFT->write((x + w - 1) >> 8);
-        writeCommand(0x05);
-        spi_TFT->write((x + w - 1) & 0xFF); // Column End
-        writeCommand(0x06);
-        spi_TFT->write(y >> 8);
-        writeCommand(0x07);
-        spi_TFT->write(y & 0xFF); // Row Start
-        writeCommand(0x08);
-        spi_TFT->write((y + h - 1) >> 8);
-        writeCommand(0x09);
-        spi_TFT->write((y + h - 1) & 0xFF); // Row End
-    }
-    if(_TFTcontroller == ILI9486a || _TFTcontroller == ILI9486b) {
-        writeCommand(ILI9486_CASET); // Column addr set
+    if(_TFTcontroller == ILI9486) {
+        writeCommand(CASET); // Column addr set
         spi_TFT->write16(x >> 8);
         spi_TFT->write16(x & 0xFF); // XSTART
         w = x + w - 1;
         spi_TFT->write16(w >> 8);
         spi_TFT->write16(w & 0xFF);  // XEND
-        writeCommand(ILI9486_PASET); // Row addr set
+        writeCommand(PASET); // Row addr set
         spi_TFT->write16(y >> 8);
         spi_TFT->write16(y & 0xFF); // YSTART
         h = y + h - 1;
         spi_TFT->write16(h >> 8);
         spi_TFT->write16(h & 0xFF); // YEND
-        writeCommand(ILI9486_RAMWR);
+        writeCommand(RAMWR);
     }
     if(_TFTcontroller == ILI9488) {
-        writeCommand(ILI9488_CASET); // Column addr set
+        writeCommand(CASET); // Column addr set
         spi_TFT->write(x >> 8);
         spi_TFT->write(x & 0xFF); // XSTART
         w = x + w - 1;
         spi_TFT->write(w >> 8);
         spi_TFT->write(w & 0xFF);    // XEND
-        writeCommand(ILI9488_PASET); // Row addr set
+        writeCommand(PASET); // Row addr set
         spi_TFT->write(y >> 8);
         spi_TFT->write(y & 0xFF); // YSTART
         h = y + h - 1;
         spi_TFT->write(h >> 8);
         spi_TFT->write(h & 0xFF); // YEND
-        writeCommand(ILI9488_RAMWR);
+        writeCommand(RAMWR);
     }
     if(_TFTcontroller == ST7796) {
-        writeCommand(ST7796_CASET); // Column addr set
+        writeCommand(CASET); // Column addr set
         spi_TFT->write(x >> 8);
         spi_TFT->write(x & 0xFF); // XSTART
         w = x + w - 1;
         spi_TFT->write(w >> 8);
         spi_TFT->write(w & 0xFF);   // XEND
-        writeCommand(ST7796_RASET); // Row addr set
+        writeCommand(RASET); // Row addr set
         spi_TFT->write(y >> 8);
         spi_TFT->write(y & 0xFF); // YSTART
         h = y + h - 1;
         spi_TFT->write(h >> 8);
         spi_TFT->write(h & 0xFF); // YEND
-        writeCommand(ST7796_RAMWR);
-    }
-    if(_TFTcontroller == ST7796RPI) {
-        writeCommand(ST7796_CASET); // Column addr set
-        spi_TFT->write16(x >> 8);
-        spi_TFT->write16(x & 0xFF); // XSTART
-        w = x + w - 1;
-        spi_TFT->write16(w >> 8);
-        spi_TFT->write16(w & 0xFF); // XEND
-        writeCommand(ST7796_RASET); // Row addr set
-        spi_TFT->write16(y >> 8);
-        spi_TFT->write16(y & 0xFF); // YSTART
-        h = y + h - 1;
-        spi_TFT->write16(h >> 8);
-        spi_TFT->write16(h & 0xFF); // YEND
-        writeCommand(ST7796_RAMWR);
+        writeCommand(RAMWR);
     }
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

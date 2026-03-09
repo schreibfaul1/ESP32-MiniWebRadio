@@ -36,10 +36,10 @@ class TP_XPT2046{
     void     setMirror(bool h, bool v);
   private:
     uint16_t TP_Send(uint8_t set_val);
-    bool     read_TP(uint16_t& x, uint16_t& y);
+    bool     read_TP(int16_t& x, int16_t& y);
     SPISettings TP_SPI;
     uint8_t     _TP_CS, _TP_IRQ;
-    uint16_t    x=0, y=0;
+    int16_t     x=0, y=0;
     uint16_t    m_h_resolution=320, m_v_resolution=240;
     uint8_t     _rotation;
     bool        f_loop=false;
