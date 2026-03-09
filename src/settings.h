@@ -285,10 +285,11 @@ const Timing DSI_TIMING = {.h_res = 1024,
 
         #define GT911_I2C_ADDRESS 0x5D // default I2C-address of GT911
 
-        #define I2S_DOUT 2
-        #define I2S_BCLK 3
-        #define I2S_LRC  4
-        #define I2S_MCLK -1 // important, don't change!
+        #define I2S_DOUT 9   // ES8311 DSDIN
+        #define I2S_BCLK 12  // ES8311 SCLK
+        #define I2S_LRC  10  // ES8311 LRCK
+        #define I2S_MCLK 13  // ES8311 MCLK
+        #define I2S_DIN  11  // ES8311 DOUT (microphone input)
 
         #define IR_PIN             5  // IR Receiver (if available)
         #define BT_EMITTER_RX      28
@@ -299,7 +300,7 @@ const Timing DSI_TIMING = {.h_res = 1024,
 
         #define LCD_RESET   27
         #define TFT_BL      26 //
-        #define AMP_ENABLED -1 // control pin for extenal amplifier (if available)
+        #define AMP_ENABLED 53 // control pin for amplifier
 
         #define I2C_SDA 7 // I2C dala line for capacitive touchpad
         #define I2C_SCL 8 // I2C clock line for capacitive touchpad

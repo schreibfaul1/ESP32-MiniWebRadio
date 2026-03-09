@@ -62,8 +62,11 @@ WiFiMulti      wifiMulti;
 RTIME          rtc;
 Ticker         ticker100ms;
 TwoWire        i2cBusOne = TwoWire(0); // additional HW, sensors, buttons, encoder etc
-TwoWire        i2cBusTwo = TwoWire(1); // external DAC, AC101 or ES8388
+TwoWire        i2cBusTwo = TwoWire(1); // external DAC, AC101, ES8388 or ES8311
 SPIClass       spiBus(FSPI);
+
+#include "es8311.h"
+ES8311         es8311(&i2cBusTwo);
 
 settings_s    s_settings;
 volume_s      s_volume;
@@ -1088,7 +1091,7 @@ void setup() {
     audio.setConnectionTimeout(CONN_TIMEOUT, CONN_TIMEOUT_SSL);
     audio.setVolumeSteps(s_volume.volumeSteps);
     audio.setVolume(0);
-    audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
+    audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT, I2S_MCLK);
     audio.setI2SCommFMT_LSB(I2S_COMM_FMT);
 
     SerialPrintfln("setup: ....  number of saved stations: " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET "   ", staMgnt.getSumStations());
@@ -1107,6 +1110,18 @@ void setup() {
         pinMode(AMP_ENABLED, OUTPUT);
         digitalWrite(AMP_ENABLED, HIGH);
         SerialPrintfln("setup: ....  On Board Amplifier pin is: " ANSI_ESC_CYAN "%i" ANSI_ESC_RESET "   ", AMP_ENABLED);
+    }
+
+    // Initialize ES8311 external DAC via I2C
+    if (I2C_SDA >= 0 && I2C_SCL >= 0) {
+        if (!es8311.begin(I2C_SDA, I2C_SCL, 400000)) {
+            SerialPrintfln("setup: ....  " ANSI_ESC_RED "ES8311 not found!" ANSI_ESC_RESET "   ");
+        }
+        else {
+            SerialPrintfln("setup: ....  " ANSI_ESC_GREEN "ES8311 initialized" ANSI_ESC_RESET "   ");
+            es8311.setVolume(50);
+            es8311.setBitsPerSample(16);
+        }
     }
 
     if (s_f_isWiFiConnected) webSrv.begin(80, 81); // HTTP port, WebSocket port
@@ -1295,6 +1310,7 @@ void setVolume(uint8_t vol) {
     sdr_DL_volume.setValue(s_volume.cur_volume);
     sdr_PL_volume.setValue(s_volume.cur_volume);
     sdr_RA_volume.setValue(s_volume.cur_volume);
+    es8311.setVolume(map(vol, 0, s_volume.volumeSteps, 0, 100)); // ES8311 hardware volume
     SerialPrintfln("action: ...  current volume is " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET "  ", s_volume.cur_volume);
 }
 
