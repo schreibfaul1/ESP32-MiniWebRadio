@@ -1098,7 +1098,6 @@ void setup() {
 #else
     audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
 #endif
-    audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT, I2S_MCLK);
     audio.setI2SCommFMT_LSB(I2S_COMM_FMT);
 
     SerialPrintfln("setup: ....  number of saved stations: " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET "   ", staMgnt.getSumStations());
