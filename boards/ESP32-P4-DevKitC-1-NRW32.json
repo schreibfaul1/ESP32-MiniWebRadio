@@ -8,6 +8,7 @@
     "f_flash": "80000000L",
     "flash_mode": "qio",
     "mcu": "esp32p4",
+    "chip_variant": "esp32p4_es",
     "variant": "esp32p4"
   },
   "arduino": {
