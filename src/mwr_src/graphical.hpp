@@ -6172,7 +6172,7 @@ class displayFooter : public RegisterTable {
         m_timeCounter = timeCounter;
         if (!m_enabled) return;
         if (!m_timeCounter) {
-            updateBitRate(m_bitRate);
+            txt_BitRate->show();
         } else {
             uint16_t x0 = s_BitRate.x;
             uint16_t x1x2 = round(s_BitRate.x + ((float)((s_BitRate.w) / 10) * timeCounter)) - 1;

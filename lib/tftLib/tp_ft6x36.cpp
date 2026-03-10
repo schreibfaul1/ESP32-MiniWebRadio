@@ -161,7 +161,7 @@ FT6x36::T_Point FT6x36::getPoint(uint8_t num) {
     if (!m_isInit) return {0, 0, 0};
     if (num != 1) return {0, 0, 0};
     if (num == 1) {
-        points.id = read(FT6X36_ADDR_TOUCH1_WEIGHT >> 4);
+        points.id = ((read(FT6X36_ADDR_TOUCH1_WEIGHT)) >> 4);
         points.x = (read(FT6X36_ADDR_TOUCH1_XH) & 0x0F) << 8;
         points.x += (read(FT6X36_ADDR_TOUCH1_XL));
         points.y = (read(FT6X36_ADDR_TOUCH1_YH) & 0x0F) << 8;
