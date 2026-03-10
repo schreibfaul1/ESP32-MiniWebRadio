@@ -384,21 +384,21 @@ const Timing DSI_TIMING = {.h_res = 480,
 
         #define GT911_I2C_ADDRESS 0x5D // default I2C-address of GT911
 
-        #define I2S_DOUT 29
-        #define I2S_BCLK 30
-        #define I2S_LRC  31
+        #define I2S_DOUT 29 // DIN pin - DAC      (-1 if not available)
+        #define I2S_BCLK 30 // BCK pin - DAC      (-1 if not available)
+        #define I2S_LRC  31 // LCK LRCK pin - DAC (-1 if not available)
         #define I2S_MCLK -1 // important, don't change!
 
-        #define IR_PIN             -1 // IR Receiver (if available)
-        #define BT_EMITTER_RX      -1
-        #define BT_EMITTER_TX      -1
-        #define BT_EMITTER_LINK    -1
-        #define BT_EMITTER_MODE    -1
-        #define BT_EMITTER_CONNECT -1
+        #define IR_PIN             33 // IR Receiver                           (-1 if not available)
+        #define BT_EMITTER_RX      32 // RX pin - KCX Bluetooth Transmitter    (-1 if not available)
+        #define BT_EMITTER_TX      28 // TX pin - KCX Bluetooth Transmitter    (-1 if not available)
+        #define BT_EMITTER_LINK    34 // high connected - low pairing status   (-1 if not available)
+        #define BT_EMITTER_MODE    35 // high transmit - low receive           (-1 if not available)
+        #define BT_EMITTER_CONNECT 49 // high impulse -> awake after POWER_OFF (-1 if not available)
 
-        #define LCD_RESET   5  // geändert Alfons 26.02.2026
-        #define TFT_BL      23 // geändert Alfons 26.02.2026
-        #define AMP_ENABLED -1 // control pin for external amplifier (if available)
+        #define LCD_RESET   5  // see schematics JC4880P443
+        #define TFT_BL      23 // see schematics JC4880P443
+        #define AMP_ENABLED -1 // control pin for external amplifier (-1 if not available)
 
         #define I2C_SDA 7 // I2C data line for capacitive touchpad
         #define I2C_SCL 8 // I2C clock line for capacitive touchpad
