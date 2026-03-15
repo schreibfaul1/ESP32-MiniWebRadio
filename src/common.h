@@ -31,7 +31,7 @@
     #define TFT_LAYOUT_L
 #endif
 
-#if (TP_CONTROLLER == 0 || TP_CONTROLLER == 3 || TP_CONTROLLER == 4 | TP_CONTROLLER == 5)
+#if (TP_CONTROLLER < 7)
     #define TP_MODE_XPT2046
 #endif
 

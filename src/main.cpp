@@ -194,7 +194,7 @@ bool s_f_ok_from_ir = false;
 std::deque<ps_ptr<char>> s_PLS_content;
 std::deque<ps_ptr<char>> s_logBuffer;
 
-const char* codecname[10] = {"unknown", "WAV", "MP3", "AAC", "M4A", "FLAC", "AACP", "OPUS", "OGG", "VORBIS"};
+const char* codecname[10] = {"unknown", "WAV", "MP3", "AAC", "M4A", "FLAC", "OPUS", "VORBIS", "OGG"};
 
 #ifdef TFT_MODE_SPI // ⏹⏹⏹⏹
 TFT_SPI  tft(spiBus, TFT_CS);
@@ -1236,9 +1236,8 @@ void set_display_items() {
 //---- TP_MODE ---------
 #ifdef TP_MODE_XPT2046 // XPT2046
     getTP().begin(TP_IRQ, s_h_resolution, s_v_resolution);
-    getTP().setVersion(TP_CONTROLLER);
+    getTP().setSize(TP_CONTROLLER); // (0) 2.8 inch, (1) 3.5 inch, (4) 4.0 inch
     getTP().setRotation(TP_ROTATION);
-    getTP().setMirror(TP_H_MIRROR, TP_V_MIRROR);
 #elifdef TP_MODE_GT911  // GT911
     getTP().begin(&i2cBusOne, GT911_I2C_ADDRESS, s_h_resolution, s_v_resolution);
     getTP().setRotation(TP_ROTATION);
