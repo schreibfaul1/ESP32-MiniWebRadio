@@ -86,7 +86,7 @@ void TP_GT911::loop() {
 
     if (t == 1 && !m_f_isTouch) {
         p = getPoint(0);
-        log_w("X: %d, Y: %d", p.x, p.y);
+        // log_w("%s %i: X: %d, Y: %d", __FILE__, __LINE__, p.x, p.y);
         tp_pressed(p.x, p.y);
         ts = millis();
         m_f_isTouch = true;

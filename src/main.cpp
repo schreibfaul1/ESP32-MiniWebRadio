@@ -799,7 +799,7 @@ bool connectToWiFi() {
         wifiMulti.run();
         vTaskDelay(1000);
         i++;
-        if (i > 20) break; // max 20s
+        if (i > 10) break; // max 20s
     }
     if (!WiFi.isConnected()) {
         SerialPrintfln("WiFI_info:   " ANSI_ESC_RED "WiFi credentials are not correct" ANSI_ESC_RESET "  ");
@@ -1154,6 +1154,7 @@ void setup() {
     } else {
         s_state = UNDEFINED;
         changeState(WIFI_SETTINGS, 0);
+        return;
     }
 
     if (LIGHT_SENSOR >= 0) {
