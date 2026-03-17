@@ -31,9 +31,6 @@ using namespace std;
 #define DISPON     0x29 // Display ON
 
 class TFT_SPI : public TFT_Base {
-  protected:
-    File gif_file;
-
   private:
     SPIClass* spi_TFT; // use in class TP
   public:
@@ -47,7 +44,6 @@ class TFT_SPI : public TFT_Base {
 
     // Recommended Non-Transaction
     void     readRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t* data);
-    bool     drawGifFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint8_t repeat);
     bool     drawJpgFile(fs::FS& fs, const char* path, uint16_t x = 0, uint16_t y = 0, uint16_t maxWidth = 0, uint16_t maxHeight = 0);
     uint8_t         getRotation(void) const;
     void            loop();
@@ -69,95 +65,6 @@ class TFT_SPI : public TFT_Base {
     uint8_t  buf[1024];
     char     chbuf[256 * 2];
 
-    // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-    //  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  G I F  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
-    // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-  private:
-    struct _gif {
-        bool     decodeSdFile_firstread = false;
-        bool     GlobalColorTableFlag = false;
-        bool     LocalColorTableFlag = false;
-        bool     SortFlag = false;
-        bool     TransparentColorFlag = false;
-        bool     UserInputFlag = false;
-        bool     ZeroDataBlock = 0;
-        bool     InterlaceFlag = false;
-        bool     drawNextImage = false;
-        uint8_t  BackgroundColorIndex = 0;
-        uint8_t  BlockTerninator = 0;
-        uint8_t  CharacterCellWidth = 0;
-        uint8_t  CharacterCellHeight = 0;
-        uint8_t  CodeSize = 0;
-        uint8_t  ColorResulution = 0;
-        uint8_t  DisposalMethod = 0;
-        uint8_t  ImageSeparator = 0;
-        uint8_t  lenDatablock = 0;
-        uint8_t  LZWMinimumCodeSize = 0;
-        uint8_t  PackedFields = 0;
-        uint8_t  PixelAspectRatio = 0;
-        uint8_t  TextBackgroundColorIndex = 0;
-        uint8_t  TextForegroundColorIndex = 0;
-        uint8_t  TransparentColorIndex = 0;
-        uint16_t ClearCode = 0;
-        uint16_t DelayTime = 0;
-        uint16_t EOIcode = 0; // End Of Information
-        uint16_t ImageHeight = 0;
-        uint16_t ImageWidth = 0;
-        uint16_t ImageLeftPosition = 0;
-        uint16_t ImageTopPosition = 0;
-        uint16_t LogicalScreenWidth = 0;
-        uint16_t LogicalScreenHeight = 0;
-        uint16_t MaxCode = 0;
-        uint16_t MaxCodeSize = 0;
-        uint16_t SizeOfGlobalColorTable = 0;
-        uint16_t SizeOfLocalColorTable = 0;
-        uint16_t TextGridLeftPosition = 0;
-        uint16_t TextGridTopPosition = 0;
-        uint16_t TextGridWidth = 0;
-        uint16_t TextGridHeight = 0;
-        uint32_t TimeStamp = 0;
-        uint32_t Iterations = 0;
-    } gif;
-
-    vector<unsigned short> gif_next;
-    vector<uint8_t>        gif_vals;
-    vector<uint8_t>        gif_stack;
-    vector<uint16_t>       gif_GlobalColorTable;
-    vector<uint16_t>       gif_LocalColorTable;
-
-    const uint8_t gif_MaxLzwBits = 12;
-    uint16_t*     gif_ImageBuffer = NULL;   // disposal method 0, 1 or 2
-    uint16_t*     gif_RestoreBuffer = NULL; // disposal method 3
-
-    char gif_buffer[15];
-    char gif_DSBbuffer[256]; // DataSubBlock
-
-    String gif_GifHeader = "";
-
-    int32_t GIF_readGifItems();
-    bool    GIF_decodeGif(uint16_t x, uint16_t y);
-    bool    GIF_loop();
-    void    GIF_freeMemory();
-    void    GIF_DecoderReset();
-    void    GIF_readHeader();
-    void    GIF_readLogicalScreenDescriptor();
-    void    GIF_readImageDescriptor();
-    void    GIF_readLocalColorTable();
-    void    GIF_readGlobalColorTable();
-    void    GIF_readGraphicControlExtension();
-    uint8_t GIF_readPlainTextExtension(char* buf);
-    uint8_t GIF_readApplicationExtension(char* buf);
-    uint8_t GIF_readCommentExtension(char* buf);
-    uint8_t GIF_readDataSubBlock(char* buf);
-    bool    GIF_readExtension(char Label);
-    int32_t GIF_GetCode(int32_t code_size, int32_t flag);
-    int32_t GIF_LZWReadByte(bool init);
-    bool    GIF_ReadImage(uint16_t x, uint16_t y);
-
-    // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-    //------------TFT_SPI-------------------
-
     inline int32_t minimum(int32_t a, int32_t b) {
         if (a < b)
             return a;
@@ -174,13 +81,11 @@ class TFT_SPI : public TFT_Base {
     void     writeCommand(uint16_t cmd);
     uint16_t readCommand();
 
-    // Transaction API not used by GFX
     void setAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
     void write24BitColor(uint16_t color);
     void writePixels(uint16_t* colors, uint32_t len);
     void writeColor(uint16_t color, uint32_t len);
 
-    // Transaction API
     void startWrite(void);
     void endWrite(void);
     void writePixel(int16_t x, int16_t y, uint16_t color);
