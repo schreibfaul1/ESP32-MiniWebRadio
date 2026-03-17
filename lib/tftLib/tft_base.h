@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Arduino.h"
+#include "FS.h"
 #include "fonts/fontsdef.h"
 #include "tft_common_defs.h"
 
@@ -30,6 +31,7 @@ class TFT_Base {
     uint16_t getTextColor() { return m_textColor; }
     void setFont(uint16_t font);
     void setTextOrientation(uint16_t orientation = 0) { m_textorientation = orientation; }
+    bool drawBmpFile(fs::FS& fs, const char* path, uint16_t x = 0, uint16_t y = 0, uint16_t maxWidth = 0, uint16_t maxHeight = 0, float scale = 1.0f);
     size_t writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, uint8_t h_align = TFT_ALIGN_LEFT, uint8_t v_align = TFT_ALIGN_CENTER, bool narrow = false,
                      bool noWrap = false, bool autoSize = false);
     uint16_t getLineLength(const char* txt, bool narrow);
@@ -66,4 +68,6 @@ class TFT_Base {
     uint16_t  m_backGroundColor = TFT_WHITE;
     uint16_t  m_textColor = TFT_BLACK;
     uint8_t   m_textorientation = 0;
+    const uint16_t m_rowBufferSize = 4096;
+    uint8_t*       m_rowBuffer = nullptr;
 };

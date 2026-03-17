@@ -47,7 +47,6 @@ class TFT_SPI : public TFT_Base {
 
     // Recommended Non-Transaction
     void     readRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t* data);
-    bool     drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight, float scale);
     bool     drawGifFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint8_t repeat);
     bool     drawJpgFile(fs::FS& fs, const char* path, uint16_t x = 0, uint16_t y = 0, uint16_t maxWidth = 0, uint16_t maxHeight = 0);
     uint8_t         getRotation(void) const;
@@ -283,8 +282,6 @@ class TFT_SPI : public TFT_Base {
     uint16_t       m_jpgHeight = 0;
     uint16_t       m_jpgWidthMax = 0;
     uint16_t       m_jpgHeightMax = 0;
-    const uint16_t m_ROWBUFFERSIZE = 4096;
-    uint8_t*       m_rowBuffer = nullptr;
     uint16_t*      m_jpegPixelBuffer = nullptr;
 
   public:

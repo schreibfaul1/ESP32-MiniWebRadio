@@ -20,6 +20,96 @@ uint16_t TFT_Base::logicalHeight() const {
     return m_v_res;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+bool TFT_Base::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight, float scale) {
+    auto bmpRead32 = [](const uint8_t* data, size_t offset) -> uint32_t {
+        return data[offset] | (uint16_t)(data[offset + 1]) << 8 | (uint32_t)(data[offset + 2]) << 16 | (uint32_t)(data[offset + 3]) << 24;
+    };
+    auto bmpRead16 = [](const uint8_t* data, size_t offset) -> uint16_t {
+        return data[offset] | (uint16_t)(data[offset + 1]) << 8;
+    };
+    auto bmpColor16 = [](const uint8_t* pixel) -> uint16_t {
+        return ((uint8_t*)pixel)[0] | ((uint16_t)((uint8_t*)pixel)[1]) << 8;
+    };
+    auto bmpColor24 = [](const uint8_t* pixel) -> uint16_t {
+        return ((uint16_t)(((uint8_t*)pixel)[2] & 0xF8) << 8) | ((uint16_t)(((uint8_t*)pixel)[1] & 0xFC) << 3) | ((((uint8_t*)pixel)[0] & 0xF8) >> 3);
+    };
+    auto bmpColor32 = [](const uint8_t* pixel) -> uint16_t {
+        return ((uint16_t)(((uint8_t*)pixel)[3] & 0xF8) << 8) | ((uint16_t)(((uint8_t*)pixel)[2] & 0xFC) << 3) | ((((uint8_t*)pixel)[1] & 0xF8) >> 3);
+    };
+
+    if (scale <= 0.0f) return false;
+    if (!fs.exists(path)) return false;
+
+    File bmp = fs.open(path);
+    if (!bmp) return false;
+
+    constexpr size_t headerLen = 54;
+    uint8_t          header[headerLen];
+
+    if (bmp.read(header, headerLen) != headerLen) return false;
+    if (header[0] != 'B' || header[1] != 'M') return false;
+
+    const uint32_t dataOffset = bmpRead32(header, 0x0A);
+    const int32_t  bmpWidthI = bmpRead32(header, 0x12);
+    const int32_t  bmpHeightI = bmpRead32(header, 0x16);
+    const uint16_t bpp = bmpRead16(header, 0x1C);
+    const uint32_t compression = bmpRead32(header, 0x1E);
+
+    if (compression != 0) return false;
+    if (!(bpp == 16 || bpp == 24 || bpp == 32)) return false;
+
+    const bool bottomUp = (bmpHeightI > 0);
+    const size_t bmpWidth = abs(bmpWidthI);
+    const size_t bmpHeight = abs(bmpHeightI);
+    const size_t scaledWidth = bmpWidth * scale;
+    const size_t scaledHeight = bmpHeight * scale;
+    const size_t drawWidth = (maxWidth == 0) ? scaledWidth : std::min((size_t)maxWidth, scaledWidth);
+    const size_t drawHeight = (maxHeight == 0) ? scaledHeight : std::min((size_t)maxHeight, scaledHeight);
+
+    size_t dstWidth = (m_rotation & 1) ? drawHeight : drawWidth;
+    size_t dstHeight = (m_rotation & 1) ? drawWidth : drawHeight;
+
+    if (x >= logicalWidth() || y >= logicalHeight()) return false;
+    if (x + dstWidth > logicalWidth()) dstWidth = logicalWidth() - x;
+    if (y + dstHeight > logicalHeight()) dstHeight = logicalHeight() - y;
+
+    const size_t rowSize = ((bmpWidth * bpp / 8 + 3) & ~3);
+    if (rowSize > m_rowBufferSize) return false;
+
+    if (!m_rowBuffer) m_rowBuffer = (uint8_t*)ps_malloc(m_rowBufferSize);
+    if (!m_rowBuffer) return false;
+
+    uint16_t* pixelBuffer = (uint16_t*)ps_malloc(drawWidth * drawHeight * sizeof(uint16_t));
+    if (!pixelBuffer) return false;
+
+    for (size_t dy = 0; dy < drawHeight; ++dy) {
+        const size_t srcYScaled = (dy * bmpHeight) / scaledHeight;
+        const size_t srcRow = bottomUp ? (bmpHeight - 1 - srcYScaled) : srcYScaled;
+
+        bmp.seek(dataOffset + srcRow * rowSize);
+        bmp.read(m_rowBuffer, rowSize);
+
+        for (size_t dx = 0; dx < drawWidth; ++dx) {
+            const size_t srcXScaled = (dx * bmpWidth) / scaledWidth;
+            const uint8_t* pixelPtr = m_rowBuffer + srcXScaled * (bpp / 8);
+
+            uint16_t color = 0;
+            switch (bpp) {
+                case 16: color = bmpColor16(pixelPtr); break;
+                case 24: color = bmpColor24(pixelPtr); break;
+                case 32: color = bmpColor32(pixelPtr); break;
+            }
+
+            pixelBuffer[dy * drawWidth + dx] = color;
+        }
+    }
+
+    renderRGB565(x, y, drawWidth, drawHeight, pixelBuffer, nullptr);
+    bmp.close();
+    free(pixelBuffer);
+    return true;
+}
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_Base::setFont(uint16_t font) {
     #define SET_FONT_DATA(CMAP, BITMAP, DSC)    \
         do {                                    \

@@ -50,7 +50,6 @@ class TFT_RGB : public TFT_Base {
     void     setRotation(uint8_t r);
     // Recommended Non-Transaction
     void            readRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t* data);
-    bool            drawBmpFile(fs::FS& fs, const char* path, uint16_t x = 0, uint16_t y = 0, uint16_t maxWidth = 0, uint16_t maxHeight = 0, float scale = 1.0);
     bool            drawGifFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint8_t repeat);
     bool            drawJpgFile(fs::FS& fs, const char* path, uint16_t x = 0, uint16_t y = 0, uint16_t maxWidth = 0, uint16_t maxHeight = 0);
   private:
@@ -69,8 +68,6 @@ class TFT_RGB : public TFT_Base {
 
   private:
     uint64_t       m_vsyncCounter = 0;
-    const uint16_t m_ROWBUFFERSIZE = 4096;
-    uint8_t*       m_rowBuffer = nullptr;
     uint16_t*      m_jpegPixelBuffer = nullptr;
 
     // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
