@@ -401,7 +401,7 @@ void TFT_SPI::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t 
         int32_t rotX, rotY;
         mapRotation(m_rotation, x0, y0, rotX, rotY);
 
-        if (rotX < m_h_res && rotY < m_v_res) {
+        if (rotX >= 0 && rotX < m_h_res && rotY >= 0 && rotY < m_v_res) {
             m_framebuffer[0][rotY * m_h_res + rotX] = color;
 
             if (rotX < minX) minX = rotX;
@@ -425,7 +425,7 @@ void TFT_SPI::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t 
         }
     }
 
-    if (maxX > minX && maxY > minY) panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
+    if (maxX >= minX && maxY >= minY) panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color) {
@@ -461,7 +461,7 @@ void TFT_SPI::fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16
             int32_t rotX, rotY;
             mapRotation(m_rotation, x, y, rotX, rotY);
 
-            if (rotX >= m_h_res || rotY >= m_v_res) continue;
+            if (rotX < 0 || rotY < 0 || rotX >= m_h_res || rotY >= m_v_res) continue;
 
             m_framebuffer[0][rotY * m_h_res + rotX] = color;
 
@@ -500,7 +500,7 @@ void TFT_SPI::fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16
         }
     }
 
-    if (maxX > minX && maxY > minY) panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
+    if (maxX >= minX && maxY >= minY) panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::drawRect(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t color) {
@@ -536,10 +536,12 @@ void TFT_SPI::drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t 
             int32_t rotX, rotY;
             mapRotation(m_rotation, px, py, rotX, rotY);
 
-            if (rotX < m_h_res && rotY < m_v_res) m_framebuffer[0][rotY * m_h_res + rotX] = color;
+            if (rotX >= 0 && rotX < m_h_res && rotY >= 0 && rotY < m_v_res) {
+                m_framebuffer[0][rotY * m_h_res + rotX] = color;
+            }
         };
 
-        // 4 Ecken
+        // 4 corners
         plot(x + w - r - 1 + cx, y + r - cy); // top-right
         plot(x + w - r - 1 + cy, y + r - cx);
 
@@ -563,8 +565,29 @@ void TFT_SPI::drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t 
         f += ddF_x;
     }
 
-    // Ein gemeinsamer Refresh (rotierte Bounding-Box optional berechenbar)
-    panelDrawBitmap(0, 0, m_h_res, m_v_res, m_framebuffer[0]);
+    int32_t minX = m_h_res;
+    int32_t minY = m_v_res;
+    int32_t maxX = -1;
+    int32_t maxY = -1;
+
+    auto includeCorner = [&](int16_t px, int16_t py) {
+        int32_t rotX, rotY;
+        mapRotation(m_rotation, px, py, rotX, rotY);
+
+        if (rotX < minX) minX = rotX;
+        if (rotY < minY) minY = rotY;
+        if (rotX > maxX) maxX = rotX;
+        if (rotY > maxY) maxY = rotY;
+    };
+
+    includeCorner(x, y);
+    includeCorner(x + w - 1, y);
+    includeCorner(x, y + h - 1);
+    includeCorner(x + w - 1, y + h - 1);
+
+    if (maxX >= minX && maxY >= minY) {
+        panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
+    }
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color) {
@@ -582,7 +605,7 @@ void TFT_SPI::fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t 
         int32_t rotX, rotY;
         mapRotation(m_rotation, px, py, rotX, rotY);
 
-        if (rotX >= m_h_res || rotY >= m_v_res) return;
+        if (rotX < 0 || rotY < 0 || rotX >= m_h_res || rotY >= m_v_res) return;
 
         m_framebuffer[0][rotY * m_h_res + rotX] = color;
 
@@ -627,7 +650,7 @@ void TFT_SPI::fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t 
         f += ddF_x;
     }
 
-    if (maxX > minX && maxY > minY) panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
+    if (maxX >= minX && maxY >= minY) panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::drawCircle(int16_t cx, int16_t cy, int16_t r, uint16_t color) {
@@ -648,7 +671,7 @@ void TFT_SPI::drawCircle(int16_t cx, int16_t cy, int16_t r, uint16_t color) {
         int32_t rotX, rotY;
         mapRotation(m_rotation, px, py, rotX, rotY);
 
-        if (rotX >= m_h_res || rotY >= m_v_res) return;
+        if (rotX < 0 || rotY < 0 || rotX >= m_h_res || rotY >= m_v_res) return;
 
         m_framebuffer[0][rotY * m_h_res + rotX] = color;
 
@@ -685,7 +708,7 @@ void TFT_SPI::drawCircle(int16_t cx, int16_t cy, int16_t r, uint16_t color) {
         plot(cx - y, cy - x);
     }
 
-    if (maxX > minX && maxY > minY) panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
+    if (maxX >= minX && maxY >= minY) panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::fillCircle(int16_t cx, int16_t cy, uint16_t r, uint16_t color) {
@@ -706,7 +729,7 @@ void TFT_SPI::fillCircle(int16_t cx, int16_t cy, uint16_t r, uint16_t color) {
         int32_t rotX, rotY;
         mapRotation(m_rotation, px, py, rotX, rotY);
 
-        if (rotX >= m_h_res || rotY >= m_v_res) return;
+        if (rotX < 0 || rotY < 0 || rotX >= m_h_res || rotY >= m_v_res) return;
 
         m_framebuffer[0][rotY * m_h_res + rotX] = color;
 
@@ -742,7 +765,7 @@ void TFT_SPI::fillCircle(int16_t cx, int16_t cy, uint16_t r, uint16_t color) {
         f += ddF_x;
     }
 
-    if (maxX > minX && maxY > minY) panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
+    if (maxX >= minX && maxY >= minY) panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::setFont(uint16_t font) {
