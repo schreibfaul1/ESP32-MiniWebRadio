@@ -1,17 +1,17 @@
 #include "tft_base.h"
 
 #include <utility>
-
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 uint16_t TFT_Base::logicalWidth() const {
     if (m_rotation & 1) return m_v_res;
     return m_h_res;
 }
-
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 uint16_t TFT_Base::logicalHeight() const {
     if (m_rotation & 1) return m_h_res;
     return m_v_res;
 }
-
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool TFT_Base::renderRGB565(int16_t x, int16_t y, uint16_t w, uint16_t h, const uint16_t* rgb, const uint8_t* alpha) {
     if (!rgb || w == 0 || h == 0) return false;
 
@@ -76,7 +76,7 @@ bool TFT_Base::renderRGB565(int16_t x, int16_t y, uint16_t w, uint16_t h, const 
 
     return true;
 }
-
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_Base::mapRotation(uint8_t rot, int32_t srcX, int32_t srcY, int32_t& dstX, int32_t& dstY) const {
     switch (rot & 3) {
         case 0:
@@ -100,7 +100,7 @@ void TFT_Base::mapRotation(uint8_t rot, int32_t srcX, int32_t srcY, int32_t& dst
             break;
     }
 }
-
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_Base::drawRectLogicalFromFB(uint8_t fb, int16_t x, int16_t y, uint16_t w, uint16_t h) {
     int32_t px[4], py[4];
     int32_t sx[4] = {x, x + w - 1, x, x + w - 1};
@@ -122,7 +122,7 @@ void TFT_Base::drawRectLogicalFromFB(uint8_t fb, int16_t x, int16_t y, uint16_t 
 
     panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[fb]);
 }
-
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool TFT_Base::copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
     if (w == 0 || h == 0) return false;
 
@@ -148,7 +148,7 @@ bool TFT_Base::copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, 
 
     return true;
 }
-
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_Base::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
     if (w <= 0 || h <= 0) return;
     if (x >= logicalWidth() || y >= logicalHeight()) return;
@@ -161,11 +161,11 @@ void TFT_Base::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t col
         renderRGB565(x, y + row, w, 1, lineBuffer, nullptr);
     }
 }
-
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_Base::fillScreen(uint16_t color) {
     fillRect(0, 0, logicalWidth(), logicalHeight(), color);
 }
-
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_Base::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color) {
     int16_t dx = abs(x1 - x0);
     int16_t dy = abs(y1 - y0);
@@ -208,13 +208,13 @@ void TFT_Base::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t
         panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
     }
 }
-
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_Base::drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color) {
     drawLine(x0, y0, x1, y1, color);
     drawLine(x1, y1, x2, y2, color);
     drawLine(x2, y2, x0, y0, color);
 }
-
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_Base::fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color) {
     if (y0 > y1) {
         std::swap(y0, y1);
@@ -282,7 +282,7 @@ void TFT_Base::fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int1
         panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
     }
 }
-
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_Base::drawRect(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t color) {
     if (w == 0 || h == 0) return;
 
@@ -291,7 +291,7 @@ void TFT_Base::drawRect(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t c
     drawLine(x + w - 1, y + h - 1, x, y + h - 1, color);
     drawLine(x, y + h - 1, x, y, color);
 }
-
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_Base::drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color) {
     if (w <= 0 || h <= 0 || r <= 0) return;
 
@@ -363,7 +363,7 @@ void TFT_Base::drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t
         panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
     }
 }
-
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_Base::fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color) {
     if (w <= 0 || h <= 0) return;
 
@@ -423,7 +423,7 @@ void TFT_Base::fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t
         panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
     }
 }
-
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_Base::drawCircle(int16_t cx, int16_t cy, int16_t r, uint16_t color) {
     if (r <= 0) return;
 
@@ -482,7 +482,7 @@ void TFT_Base::drawCircle(int16_t cx, int16_t cy, int16_t r, uint16_t color) {
         panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
     }
 }
-
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_Base::fillCircle(int16_t cx, int16_t cy, uint16_t r, uint16_t color) {
     if (r == 0) return;
 
@@ -540,3 +540,456 @@ void TFT_Base::fillCircle(int16_t cx, int16_t cy, uint16_t r, uint16_t color) {
         panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
     }
 }
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_Base::writeTheFramebuffer(const uint8_t* bmi, uint16_t posX, uint16_t posY, uint16_t width, uint16_t height) {
+    if (!bmi || width == 0 || height == 0) return;
+
+    auto bitreader = [&](const uint8_t* bm) {
+        static uint16_t       byteIndex = 0;
+        static uint8_t        bitMask = 0;
+        static const uint8_t* bitmap = nullptr;
+
+        if (bm) {
+            bitmap = bm;
+            byteIndex = 0;
+            bitMask = 0x80;
+            return (int32_t)0;
+        }
+
+        bool bit = bitmap[byteIndex] & bitMask;
+
+        bitMask >>= 1;
+        if (bitMask == 0) {
+            bitMask = 0x80;
+            byteIndex++;
+        }
+
+        return bit ? (int32_t)m_textColor : (int32_t)-1;
+    };
+
+    bitreader(bmi);
+
+    uint16_t* rgbBuffer = (uint16_t*)ps_malloc(width * height * sizeof(uint16_t));
+    uint8_t* alphaBuffer = (uint8_t*)ps_malloc(width * height);
+
+    if (!rgbBuffer || !alphaBuffer) return;
+
+    for (uint16_t row = 0; row < height; row++) {
+        for (uint16_t col = 0; col < width; col++) {
+            int32_t color = bitreader(nullptr);
+            size_t idx = row * width + col;
+
+            if (color == -1) {
+                rgbBuffer[idx] = 0;
+                alphaBuffer[idx] = 0;
+            }
+            else {
+                rgbBuffer[idx] = (uint16_t)color;
+                alphaBuffer[idx] = 255;
+            }
+        }
+    }
+
+    renderRGB565(posX, posY, width, height, rgbBuffer, alphaBuffer);
+
+    free(rgbBuffer);
+    free(alphaBuffer);
+}
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+uint16_t TFT_Base::analyzeText(const char* str, uint16_t* chArr, uint16_t* colorArr, uint16_t startColor) {
+    uint16_t chLen = 0;
+    uint16_t idx = 0;
+    int32_t  codePoint = -1;
+    colorArr[0] = startColor;
+
+    while ((uint8_t)str[idx] != 0) {
+        colorArr[chLen + 1] = colorArr[chLen];
+        switch ((uint8_t)str[idx]) {
+            case '\033':
+                if (strncmp(str + idx, "\033[30m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_BLACK; break; }
+                if (strncmp(str + idx, "\033[31m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_RED; break; }
+                if (strncmp(str + idx, "\033[32m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_GREEN; break; }
+                if (strncmp(str + idx, "\033[33m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_YELLOW; break; }
+                if (strncmp(str + idx, "\033[34m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_BLUE; break; }
+                if (strncmp(str + idx, "\033[35m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_MAGENTA; break; }
+                if (strncmp(str + idx, "\033[36m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_CYAN; break; }
+                if (strncmp(str + idx, "\033[37m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_WHITE; break; }
+                if (strncmp(str + idx, "\033[38;5;130m", 11) == 0) { idx += 11; colorArr[chLen] = TFT_BROWN; break; }
+                if (strncmp(str + idx, "\033[38;5;214m", 11) == 0) { idx += 11; colorArr[chLen] = TFT_ORANGE; break; }
+                if (strncmp(str + idx, "\033[90m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_GREY; break; }
+                if (strncmp(str + idx, "\033[91m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_LIGHTRED; break; }
+                if (strncmp(str + idx, "\033[92m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_LIGHTGREEN; break; }
+                if (strncmp(str + idx, "\033[93m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_LIGHTYELLOW; break; }
+                if (strncmp(str + idx, "\033[94m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_LIGHTBLUE; break; }
+                if (strncmp(str + idx, "\033[95m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_LIGHTMAGENTA; break; }
+                if (strncmp(str + idx, "\033[96m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_LIGHTCYAN; break; }
+                if (strncmp(str + idx, "\033[97m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_LIGHTGREY; break; }
+                if (strncmp(str + idx, "\033[38;5;52m", 10) == 0) { idx += 10; colorArr[chLen] = TFT_DARKRED; break; }
+                if (strncmp(str + idx, "\033[38;5;22m", 10) == 0) { idx += 10; colorArr[chLen] = TFT_DARKGREEN; break; }
+                if (strncmp(str + idx, "\033[38;5;136m", 11) == 0) { idx += 11; colorArr[chLen] = TFT_DARKYELLOW; break; }
+                if (strncmp(str + idx, "\033[38;5;17m", 10) == 0) { idx += 10; colorArr[chLen] = TFT_DARKBLUE; break; }
+                if (strncmp(str + idx, "\033[38;5;53m", 10) == 0) { idx += 10; colorArr[chLen] = TFT_DARKMAGENTA; break; }
+                if (strncmp(str + idx, "\033[38;5;23m", 10) == 0) { idx += 10; colorArr[chLen] = TFT_DARKCYAN; break; }
+                if (strncmp(str + idx, "\033[38;5;240m", 11) == 0) { idx += 11; colorArr[chLen] = TFT_DARKGREY; break; }
+                if (strncmp(str + idx, "\033[38;5;166m", 11) == 0) { idx += 11; colorArr[chLen] = TFT_DARKORANGE; break; }
+                if (strncmp(str + idx, "\033[38;5;215m", 11) == 0) { idx += 11; colorArr[chLen] = TFT_LIGHTORANGE; break; }
+                if (strncmp(str + idx, "\033[38;5;129m", 11) == 0) { idx += 11; colorArr[chLen] = TFT_PURPLE; break; }
+                if (strncmp(str + idx, "\033[38;5;213m", 11) == 0) { idx += 11; colorArr[chLen] = TFT_PINK; break; }
+                if (strncmp(str + idx, "\033[38;5;190m", 11) == 0) { idx += 11; colorArr[chLen] = TFT_LIME; break; }
+                if (strncmp(str + idx, "\033[38;5;25m", 10) == 0) { idx += 10; colorArr[chLen] = TFT_NAVY; break; }
+                if (strncmp(str + idx, "\033[38;5;51m", 10) == 0) { idx += 10; colorArr[chLen] = TFT_AQUAMARINE; break; }
+                if (strncmp(str + idx, "\033[38;5;189m", 11) == 0) { idx += 11; colorArr[chLen] = TFT_LAVENDER; break; }
+                if (strncmp(str + idx, "\033[38;2;210;180;140m", 19) == 0) { idx += 19; colorArr[chLen] = TFT_LIGHTBROWN; break; }
+                if (strncmp(str + idx, "\033[0m", 4) == 0) { idx += 4; break; }
+                if (strncmp(str + idx, "\033[1m", 4) == 0) { idx += 4; break; }
+                if (strncmp(str + idx, "\033[2m", 4) == 0) { idx += 4; break; }
+                if (strncmp(str + idx, "\033[3m", 4) == 0) { idx += 4; break; }
+                if (strncmp(str + idx, "\033[4m", 4) == 0) { idx += 4; break; }
+                if (tft_info) tft_info("unknown ANSI ESC SEQUENCE");
+                idx += 4;
+                break;
+
+            case 0x20 ... 0x7F:
+                chArr[chLen] = (uint8_t)str[idx];
+                idx += 1;
+                chLen += 1;
+                break;
+            case 0xC2 ... 0xD1:
+                codePoint = ((uint8_t)str[idx] - 0xC2) * 0x40 + (uint8_t)str[idx + 1];
+                if (m_current_font.lookup_table[codePoint] != 0) {
+                    chArr[chLen] = codePoint;
+                    chLen += 1;
+                }
+                else {
+                    log_w("character 0x%02X%02X is not in table", str[idx], str[idx + 1]);
+                }
+                idx += 2;
+                break;
+            case 0xD2 ... 0xDF:
+                log_w("character 0x%02X%02X  is not in table", str[idx], str[idx + 1]);
+                idx += 2;
+                break;
+            case 0xE0:
+                if ((uint8_t)str[idx + 1] == 0x80 && (uint8_t)str[idx + 2] == 0x99) {
+                    codePoint = 0xA4;
+                    chArr[chLen] = codePoint;
+                    chLen += 1;
+                }
+                else {
+                    log_w("character 0x%02X%02X  is not in table", str[idx], str[idx + 1]);
+                }
+                idx += 3;
+                break;
+            case 0xE1 ... 0xEF:
+                idx += 3;
+                break;
+            case 0xF0 ... 0xFF:
+                codePoint = -1;
+                if (!strncmp(str + idx, "🟢", 4)) { codePoint = 0xF9A2; }
+                if (!strncmp(str + idx, "🟡", 4)) { codePoint = 0xF9A1; }
+                if (!strncmp(str + idx, "🔴", 4)) { codePoint = 0xF9B4; }
+                if (!strncmp(str + idx, "🔵", 4)) { codePoint = 0xF9B5; }
+                if (!strncmp(str + idx, "🟠", 4)) { codePoint = 0xF9A0; }
+                if (!strncmp(str + idx, "🟣", 4)) { codePoint = 0xF9A3; }
+                if (!strncmp(str + idx, "🟤", 4)) { codePoint = 0xF9A4; }
+                if (!strncmp(str + idx, "🟩", 4)) { codePoint = 0xF9A9; }
+                if (!strncmp(str + idx, "🟨", 4)) { codePoint = 0xF9A8; }
+                if (!strncmp(str + idx, "🟥", 4)) { codePoint = 0xF9A5; }
+                if (!strncmp(str + idx, "🟦", 4)) { codePoint = 0xF9A6; }
+                if (!strncmp(str + idx, "🟧", 4)) { codePoint = 0xF9A7; }
+                if (!strncmp(str + idx, "🟪", 4)) { codePoint = 0xF9AA; }
+                if (!strncmp(str + idx, "🟫", 4)) { codePoint = 0xF9AB; }
+                if (codePoint != -1) {
+                    chArr[chLen] = codePoint;
+                    chLen += 1;
+                }
+                else {
+                    log_w("character 0x%02X%02X%02X%02X  is not in table", str[idx], str[idx + 1], str[idx + 2], str[idx + 3]);
+                }
+                idx += 4;
+                break;
+            default:
+                idx++;
+                break;
+        }
+    }
+    return chLen;
+}
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+uint16_t TFT_Base::getLineLength(const char* txt, bool narrow) {
+    uint16_t pxLength = 0;
+    uint16_t idx = 0;
+    bool     isEmoji = false;
+    while ((uint8_t)txt[idx] != 0) {
+        isEmoji = false;
+        if (txt[idx] == 0xF0) {
+            if (!strncmp(txt + idx, "🟢", 4)) { isEmoji = true; }
+            if (!strncmp(txt + idx, "🟡", 4)) { isEmoji = true; }
+            if (!strncmp(txt + idx, "🔴", 4)) { isEmoji = true; }
+            if (!strncmp(txt + idx, "🔵", 4)) { isEmoji = true; }
+            if (!strncmp(txt + idx, "🟠", 4)) { isEmoji = true; }
+            if (!strncmp(txt + idx, "🟣", 4)) { isEmoji = true; }
+            if (!strncmp(txt + idx, "🟤", 4)) { isEmoji = true; }
+            if (!strncmp(txt + idx, "🟩", 4)) { isEmoji = true; }
+            if (!strncmp(txt + idx, "🟨", 4)) { isEmoji = true; }
+            if (!strncmp(txt + idx, "🟥", 4)) { isEmoji = true; }
+            if (!strncmp(txt + idx, "🟦", 4)) { isEmoji = true; }
+            if (!strncmp(txt + idx, "🟧", 4)) { isEmoji = true; }
+            if (!strncmp(txt + idx, "🟪", 4)) { isEmoji = true; }
+            if (!strncmp(txt + idx, "🟫", 4)) { isEmoji = true; }
+            if (isEmoji) {
+                uint16_t fh = m_current_font.font_height;
+                pxLength += fh - fh / 3;
+                idx += 4;
+                continue;
+            }
+        }
+        uint16_t glyphPos = m_current_font.lookup_table[(uint8_t)txt[idx]];
+        pxLength += m_current_font.glyph_dsc[glyphPos].adv_w / 16;
+        int ofsX = m_current_font.glyph_dsc[glyphPos].ofs_x;
+        if (ofsX < 0) ofsX = 0;
+        if (!narrow) pxLength += ofsX;
+        idx++;
+    }
+    return pxLength;
+}
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+uint16_t TFT_Base::fitinline(uint16_t* cpArr, uint16_t chLength, uint16_t begin, int16_t win_W, uint16_t* usedPxLength, bool narrow, bool noWrap) {
+    (void)chLength;
+    uint16_t idx = begin;
+    uint16_t pxLength = 0;
+    uint16_t lastSpacePos = 0;
+    uint16_t drawableChars = 0;
+    uint16_t lastUsedPxLength = 0;
+    uint16_t glyphPos = 0;
+    bool     isEmoji = false;
+    while (cpArr[idx] != 0) {
+        *usedPxLength = pxLength;
+        if (cpArr[idx] == 0x20 || cpArr[idx - 1] == '-') {
+            lastSpacePos = drawableChars;
+            lastUsedPxLength = pxLength;
+        }
+        isEmoji = false;
+        if ((cpArr[idx] & 0xFF00) == 0xF900) {
+            if (cpArr[idx] == 0xF9A2) { isEmoji = true; }
+            if (cpArr[idx] == 0xF9A1) { isEmoji = true; }
+            if (cpArr[idx] == 0xF9B4) { isEmoji = true; }
+            if (cpArr[idx] == 0xF9B5) { isEmoji = true; }
+            if (cpArr[idx] == 0xF9A0) { isEmoji = true; }
+            if (cpArr[idx] == 0xF9A3) { isEmoji = true; }
+            if (cpArr[idx] == 0xF9A4) { isEmoji = true; }
+            if (cpArr[idx] == 0xF9A9) { isEmoji = true; }
+            if (cpArr[idx] == 0xF9A8) { isEmoji = true; }
+            if (cpArr[idx] == 0xF9A5) { isEmoji = true; }
+            if (cpArr[idx] == 0xF9A6) { isEmoji = true; }
+            if (cpArr[idx] == 0xF9A7) { isEmoji = true; }
+            if (cpArr[idx] == 0xF9AA) { isEmoji = true; }
+            if (cpArr[idx] == 0xF9AB) { isEmoji = true; }
+            if (isEmoji) {
+                uint16_t fh = m_current_font.font_height;
+                pxLength += fh - fh / 3;
+            }
+        }
+        else {
+            glyphPos = m_current_font.lookup_table[cpArr[idx]];
+            pxLength += m_current_font.glyph_dsc[glyphPos].adv_w / 16;
+            int ofsX = m_current_font.glyph_dsc[glyphPos].ofs_x;
+            if (ofsX < 0) ofsX = 0;
+            if (!narrow) pxLength += ofsX;
+        }
+        if (pxLength > win_W || cpArr[idx] == '\n') {
+            if (noWrap) return drawableChars;
+            if (lastSpacePos) {
+                *usedPxLength = lastUsedPxLength;
+                return lastSpacePos;
+            }
+            return drawableChars;
+        }
+        idx++;
+        drawableChars++;
+        *usedPxLength = pxLength;
+    }
+    return drawableChars;
+}
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+uint8_t TFT_Base::fitInAddrWindow(uint16_t* cpArr, uint16_t chLength, int16_t win_W, int16_t win_H, bool narrow, bool noWrap) {
+    uint8_t  nrOfFonts = sizeof(fontSizes);
+    uint8_t  currentFontSize = 0;
+    uint16_t usedPxLength = 0;
+    uint16_t drawableCharsTotal = 0;
+    uint16_t drawableCharsinline = 0;
+    uint16_t startPos = 0;
+    uint8_t  nrOfLines = 0;
+    while (true) {
+        currentFontSize = fontSizes[nrOfFonts - 1];
+        if (currentFontSize == 0) break;
+        setFont(currentFontSize);
+        drawableCharsTotal = 0;
+        startPos = 0;
+        nrOfLines = 1;
+        int16_t win_H_remain = win_H;
+        while (true) {
+            if (win_H_remain < m_current_font.line_height) break;
+            drawableCharsinline = fitinline(cpArr, chLength, startPos, win_W, &usedPxLength, narrow, noWrap);
+            win_H_remain -= m_current_font.line_height;
+            drawableCharsTotal += drawableCharsinline;
+            startPos += drawableCharsinline;
+            if (drawableCharsinline == 0) break;
+            if (drawableCharsTotal == chLength) goto exit;
+            nrOfLines++;
+        }
+        if (drawableCharsTotal == chLength) goto exit;
+        if (nrOfFonts == 0) break;
+        nrOfFonts--;
+    }
+exit:
+    return nrOfLines;
+}
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+size_t TFT_Base::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, uint8_t h_align, uint8_t v_align, bool narrow, bool noWrap, bool autoSize) {
+    uint16_t idx = 0;
+    uint16_t utfPosArr[strlen(str) + 1] = {0};
+    uint16_t colorArr[strlen(str) + 1] = {0};
+    uint16_t strChLength = 0;
+    uint8_t  nrOfLines = 1;
+    bool     isEmoji = false;
+
+    auto drawEmoji = [&](uint16_t idxLocal, uint16_t x, uint16_t y) {
+        uint8_t  emoji = (utfPosArr[idxLocal] & 0x00FF);
+        uint16_t color = 0;
+        char     shape = 'x';
+        switch (emoji) {
+            case 0xA2: color = TFT_GREEN; shape = 'c'; break;
+            case 0xA1: color = TFT_YELLOW; shape = 'c'; break;
+            case 0xB4: color = TFT_RED; shape = 'c'; break;
+            case 0xB5: color = TFT_BLUE; shape = 'c'; break;
+            case 0xA0: color = TFT_ORANGE; shape = 'c'; break;
+            case 0xA3: color = TFT_VIOLET; shape = 'c'; break;
+            case 0xA4: color = TFT_BROWN; shape = 'c'; break;
+            case 0xA9: color = TFT_GREEN; shape = 's'; break;
+            case 0xA8: color = TFT_YELLOW; shape = 's'; break;
+            case 0xA5: color = TFT_RED; shape = 's'; break;
+            case 0xA6: color = TFT_BLUE; shape = 's'; break;
+            case 0xA7: color = TFT_ORANGE; shape = 's'; break;
+            case 0xAA: color = TFT_VIOLET; shape = 's'; break;
+            case 0xAB: color = TFT_BROWN; shape = 's'; break;
+        }
+        if (shape == 'c') {
+            uint16_t fh = m_current_font.font_height;
+            uint16_t fw = fh - fh / 3;
+            uint16_t p = fh / 5;
+            uint16_t r = (fh - 2 * p) / 2;
+            uint16_t corr = fw / 10;
+            uint16_t cx = x + fw / 2;
+            uint16_t cy = y + fh / 2 + corr;
+            fillCircle(cx, cy, r, color);
+            return fw;
+        }
+        if (shape == 's') {
+            uint16_t fh = m_current_font.font_height;
+            uint16_t fw = fh - fh / 3;
+            uint16_t p = fh / 5;
+            uint16_t a = (fh - 2 * p);
+            uint16_t corr = fw / 10;
+            uint16_t sx = x + fw / 2;
+            uint16_t sy = y + fh / 2 + corr;
+            fillRect(sx - a / 2, sy - a / 2, a, a, color);
+            return fw;
+        }
+        log_w("unknown shape %c", shape);
+        return (uint16_t)0;
+    };
+
+    auto drawChar = [&](uint16_t idxLocal, uint16_t x, uint16_t y) {
+        uint16_t glyphPos = m_current_font.lookup_table[utfPosArr[idxLocal]];
+        uint16_t adv_w = m_current_font.glyph_dsc[glyphPos].adv_w / 16;
+        uint32_t bitmap_index = m_current_font.glyph_dsc[glyphPos].bitmap_index;
+        uint16_t box_w = m_current_font.glyph_dsc[glyphPos].box_w;
+        uint16_t box_h = m_current_font.glyph_dsc[glyphPos].box_h;
+        int16_t  ofs_x = m_current_font.glyph_dsc[glyphPos].ofs_x;
+        int16_t  ofs_y = m_current_font.glyph_dsc[glyphPos].ofs_y;
+        if (ofs_x < 0) ofs_x = 0;
+        x += ofs_x;
+        y = y + (m_current_font.line_height - m_current_font.base_line - 1) - box_h - ofs_y;
+        writeTheFramebuffer(m_current_font.glyph_bitmap + bitmap_index, x, y, box_w, box_h);
+        if (!narrow) adv_w += ofs_x;
+        return adv_w;
+    };
+
+    strChLength = analyzeText(str, utfPosArr, colorArr, m_textColor);
+    if (autoSize) nrOfLines = fitInAddrWindow(utfPosArr, strChLength, win_W, win_H, narrow, noWrap);
+    if (!strChLength) return 0;
+
+    if ((win_X + win_W) > logicalWidth()) win_W = logicalWidth() - win_X;
+    if ((win_Y + win_H) > logicalHeight()) win_H = logicalHeight() - win_Y;
+
+    uint16_t pX = win_X;
+    uint16_t pY = win_Y;
+    int16_t  pH = win_H;
+    int16_t  pW = win_W;
+
+    if (v_align == TFT_ALIGN_CENTER) {
+        int offset = (win_H - (nrOfLines * m_current_font.line_height)) / 2;
+        pY = pY + offset;
+    }
+    if (v_align == TFT_ALIGN_DOWN) {
+        int offset = (win_H - (nrOfLines * m_current_font.line_height));
+        pY = pY + offset;
+    }
+
+    uint16_t charsToDraw = 0;
+    uint16_t usedPxLength = 0;
+    uint16_t charsDrawn = 0;
+    while (true) {
+        if (noWrap && idx) goto exit;
+        if (pH < m_current_font.line_height) goto exit;
+        charsToDraw = fitinline(utfPosArr, strChLength, idx, pW, &usedPxLength, narrow, noWrap);
+
+        if (h_align == TFT_ALIGN_RIGHT) pX += win_W - usedPxLength - 2;
+        if (h_align == TFT_ALIGN_CENTER) pX += (win_W - usedPxLength) / 2;
+        uint16_t cnt = 0;
+        while (true) {
+            isEmoji = false;
+            setTextColor(colorArr[idx]);
+            if ((utfPosArr[idx] & 0xFF00) == 0xF900) {
+                if (utfPosArr[idx] == 0xF9A2) { isEmoji = true; }
+                if (utfPosArr[idx] == 0xF9A1) { isEmoji = true; }
+                if (utfPosArr[idx] == 0xF9B4) { isEmoji = true; }
+                if (utfPosArr[idx] == 0xF9B5) { isEmoji = true; }
+                if (utfPosArr[idx] == 0xF9A0) { isEmoji = true; }
+                if (utfPosArr[idx] == 0xF9A3) { isEmoji = true; }
+                if (utfPosArr[idx] == 0xF9A4) { isEmoji = true; }
+                if (utfPosArr[idx] == 0xF9A9) { isEmoji = true; }
+                if (utfPosArr[idx] == 0xF9A8) { isEmoji = true; }
+                if (utfPosArr[idx] == 0xF9A5) { isEmoji = true; }
+                if (utfPosArr[idx] == 0xF9A6) { isEmoji = true; }
+                if (utfPosArr[idx] == 0xF9A7) { isEmoji = true; }
+                if (utfPosArr[idx] == 0xF9AA) { isEmoji = true; }
+                if (utfPosArr[idx] == 0xF9AB) { isEmoji = true; }
+            }
+            uint16_t res = isEmoji ? drawEmoji(idx, pX, pY) : drawChar(idx, pX, pY);
+            pX += res;
+            pW -= res;
+            idx++;
+            cnt++;
+            charsDrawn++;
+            if (idx == strChLength) goto exit;
+            if (cnt == charsToDraw) break;
+        }
+        pH -= m_current_font.line_height;
+        pY += m_current_font.line_height;
+        pX = win_X;
+        pW = win_W;
+    }
+exit:
+    afterTextDraw(win_X, win_Y, win_W, win_H);
+    return charsDrawn;
+}
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_Base::afterTextDraw(uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H) {
+    (void)win_X;
+    (void)win_Y;
+    (void)win_W;
+    (void)win_H;
+}
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
