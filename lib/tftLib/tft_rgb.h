@@ -53,8 +53,6 @@ class TFT_RGB : public TFT_Base {
     bool            drawBmpFile(fs::FS& fs, const char* path, uint16_t x = 0, uint16_t y = 0, uint16_t maxWidth = 0, uint16_t maxHeight = 0, float scale = 1.0);
     bool            drawGifFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint8_t repeat);
     bool            drawJpgFile(fs::FS& fs, const char* path, uint16_t x = 0, uint16_t y = 0, uint16_t maxWidth = 0, uint16_t maxHeight = 0);
-    void            setFont(uint16_t font);
-
   private:
     Pins                   m_pins;
     Timing                 m_timing;

@@ -28,7 +28,7 @@ class TFT_Base {
     uint16_t getBackGroundColor() { return m_backGroundColor; }
     void setTextColor(uint16_t FGcolor) { m_textColor = FGcolor; }
     uint16_t getTextColor() { return m_textColor; }
-    virtual void setFont(uint16_t font) = 0;
+    void setFont(uint16_t font);
     void setTextOrientation(uint16_t orientation = 0) { m_textorientation = orientation; }
     size_t writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, uint8_t h_align = TFT_ALIGN_LEFT, uint8_t v_align = TFT_ALIGN_CENTER, bool narrow = false,
                      bool noWrap = false, bool autoSize = false);
