@@ -13,6 +13,7 @@
 #include "fonts/Garamond.h"
 #include "fonts/TimesNewRoman.h"
 #include "fonts/Z003.h"
+#include "tft_base.h"
 #include "fonts/fontsdef.h"
 
 using namespace std;
@@ -140,7 +141,7 @@ extern __attribute__((weak)) void tft_info(const char*);
 #define TFT_ALIGN_TOP    (4)
 #define TFT_ALIGN_DOWN   (5)
 
-class TFT_SPI {
+class TFT_SPI : public TFT_Base {
   protected:
     File gif_file;
 
@@ -156,19 +157,7 @@ class TFT_SPI {
     void setRotation(uint8_t r);
 
     // Recommended Non-Transaction
-    void     drawRect(int16_t Xpos, int16_t Ypos, uint16_t Width, uint16_t Height, uint16_t Color);
-    void     drawRectLogicalFromFB(uint8_t fb, int16_t x, int16_t y, uint16_t w, uint16_t h);
-    bool     copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h);
     void     readRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t* data);
-    void     fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
-    void     drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color);
-    void     fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color);
-    void     fillScreen(uint16_t color);
-    void     drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color);
-    void     drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color);
-    void     fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color);
-    void     drawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color);
-    void     fillCircle(int16_t Xm, int16_t Ym, uint16_t r, uint16_t color);
     bool     drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight, float scale);
     bool     drawGifFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint8_t repeat);
     bool     drawJpgFile(fs::FS& fs, const char* path, uint16_t x = 0, uint16_t y = 0, uint16_t maxWidth = 0, uint16_t maxHeight = 0);
@@ -186,24 +175,17 @@ class TFT_SPI {
     inline uint16_t getTextColor() { return m_textColor; }
     void            setFont(uint16_t font);
     inline void     setTextOrientation(uint16_t orientation = 0) { _textorientation = orientation; } // 0 h other v
-    uint16_t        logicalWidth() const;
-    uint16_t        logicalHeight() const;
     uint8_t         getRotation(void) const;
     void            loop();
 
   private:
-    bool        renderRGB565(int16_t x, int16_t y, uint16_t w, uint16_t h, const uint16_t* rgb, const uint8_t* alpha);
-    inline void mapRotation(uint8_t rot, int32_t srcX, int32_t srcY, int32_t& dstX, int32_t& dstY) const;
-    bool        panelDrawBitmap(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t* bitmap);
+    bool        panelDrawBitmap(int16_t x0, int16_t y0, int16_t x1, int16_t y1, const void* bitmap) override;
     void        displayInversion();
 
     enum Ctrl { ILI9341 = 0, ILI9486 = 3, ILI9488 = 4, ST7796 = 5 };
     uint8_t     _TFTcontroller = ILI9341;
     SPISettings SPIset; // SPI settings for this slave
 
-    uint16_t  m_h_res = 0;
-    uint16_t  m_v_res = 0;
-    uint16_t* m_framebuffer[3];
     bool      m_framebuffer_index = 0;
     uint8_t   fontSizes[13] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66, 81, 96};
 
@@ -222,7 +204,6 @@ class TFT_SPI {
 
 
     uint32_t m_freq;
-    uint8_t  m_rotation;
     uint8_t  m_displayInversion;
     uint16_t _backGroundColor = TFT_WHITE;
     uint16_t m_textColor = TFT_BLACK;

@@ -26,6 +26,7 @@
     #include "fonts/Garamond.h"
     #include "fonts/TimesNewRoman.h"
     #include "fonts/Z003.h"
+    #include "tft_base.h"
     #include "fonts/fontsdef.h"
     #include "tft_structures.h"
     #include "vector"
@@ -145,7 +146,7 @@ extern __attribute__((weak)) void tft_info(const char*);
     #define TFT_ALIGN_TOP    (4)
     #define TFT_ALIGN_DOWN   (5)
 
-class TFT_DSI {
+class TFT_DSI : public TFT_Base {
   public:
     TFT_DSI();
     ~TFT_DSI() { ; }
@@ -161,23 +162,9 @@ class TFT_DSI {
     void     clearVsyncCounter() { m_vsyncCounter = 0; }
     void     begin(const Timing& newTiming);
     void     setRotation(uint8_t r);
-    uint16_t logicalWidth() const;
-    uint16_t logicalHeight() const;
     void     setDisplayInversion(bool i);
     // Recommended Non-Transaction
-    void            drawLine(int16_t Xpos0, int16_t Ypos0, int16_t Xpos1, int16_t Ypos1, uint16_t color);
-    void            drawRect(int16_t Xpos, int16_t Ypos, uint16_t Width, uint16_t Height, uint16_t Color);
-    void            drawRectLogicalFromFB(uint8_t fb, int16_t x, int16_t y, uint16_t w, uint16_t h);
-    bool            copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h);
     void            readRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t* data);
-    void            fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
-    void            drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color);
-    void            fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color);
-    void            fillScreen(uint16_t color);
-    void            drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color);
-    void            fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color);
-    void            drawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color);
-    void            fillCircle(int16_t Xm, int16_t Ym, uint16_t r, uint16_t color);
     bool            drawBmpFile(fs::FS& fs, const char* path, uint16_t x = 0, uint16_t y = 0, uint16_t maxWidth = 0, uint16_t maxHeight = 0, float scale = 1.0);
     bool            drawGifFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint8_t repeat);
     bool            drawJpgFile(fs::FS& fs, const char* path, uint16_t x = 0, uint16_t y = 0, uint16_t maxWidth = 0, uint16_t maxHeight = 0);
@@ -196,25 +183,17 @@ class TFT_DSI {
     esp_lcd_panel_handle_t    m_panel;
     esp_lcd_panel_io_handle_t m_mipi_dbi_io;
     esp_err_t                 m_err = 0;
-    uint16_t                  m_h_res = 0;
-    uint16_t                  m_v_res = 0;
-    uint16_t*                 m_framebuffer[3];
     SemaphoreHandle_t         m_vsync_semaphore;
     TaskHandle_t              m_refresh_task_handle = NULL;
-    int8_t                    m_rotation = 0;
     bool                      m_refresh = false;
     bool                      m_invert = false;
     const uint16_t            m_ROWBUFFERSIZE = 4096;
     uint8_t*                  m_rowBuffer = nullptr;
 
-    bool renderRGB565(int16_t x, int16_t y, uint16_t w, uint16_t h, const uint16_t* rgb, const uint8_t* alpha);  // render and rotate
-    inline void mapRotation(uint8_t rot, int32_t srcX, int32_t srcY, int32_t& dstX, int32_t& dstY) const;
-    //-------------------------------------------------------------------------------------------------------------------
-
   private:
     File gif_file;
 
-    bool     panelDrawBitmap(int16_t x0, int16_t y0, int16_t x1, int16_t y1, const void* bitmap);
+    bool     panelDrawBitmap(int16_t x0, int16_t y0, int16_t x1, int16_t y1, const void* bitmap) override;
     void     writeTheFramebuffer(const uint8_t* bmi, uint16_t posX, uint16_t posY, uint16_t width, uint16_t height);
     uint16_t analyzeText(const char* str, uint16_t* chArr, uint16_t* colorArr, uint16_t startColor);
     uint16_t fitinline(uint16_t* cpArr, uint16_t chLength, uint16_t begin, int16_t win_W, uint16_t* usedPxLength, bool narrow, bool noWrap);
