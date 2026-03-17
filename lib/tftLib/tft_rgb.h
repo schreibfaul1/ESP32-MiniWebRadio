@@ -50,7 +50,6 @@ class TFT_RGB : public TFT_Base {
     void     setRotation(uint8_t r);
     // Recommended Non-Transaction
     void            readRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t* data);
-    bool            drawJpgFile(fs::FS& fs, const char* path, uint16_t x = 0, uint16_t y = 0, uint16_t maxWidth = 0, uint16_t maxHeight = 0);
   private:
     Pins                   m_pins;
     Timing                 m_timing;
@@ -65,134 +64,11 @@ class TFT_RGB : public TFT_Base {
 
   private:
     uint64_t       m_vsyncCounter = 0;
-    uint16_t*      m_jpegPixelBuffer = nullptr;
 
     // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
     //  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫   J P E G   ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
     // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-    #define LDB_WORD(ptr) (uint16_t)(((uint16_t)*((uint8_t*)(ptr)) << 8) | (uint16_t)*(uint8_t*)((ptr) + 1))
-    #define JD_SZBUF      512 /* Specifies size of stream input buffer */
-    #define JD_FORMAT     1   /* Specifies output pixel format. 0: RGB888 (24-bit/pix) 1: RGB565 (16-bit/pix) 2: Grayscale (8-bit/pix) */
-    #define JD_USE_SCALE  1   /* Switches output descaling feature. 0: Disable 1: Enable */
-    #define JD_TBLCLIP    0   /* Use table conversion for saturation arithmetic. A bit faster, but increases 1 KB of code size. 0: Disable 1: Enable */
-    #define JD_FASTDECODE 1   /* Optimization level  0: Basic optimization. Suitable for 8/16-bit MCUs. Workspace of 3100 bytes needed. */
-                              /*                                1: + 32-bit barrel shifter. Suitable for 32-bit MCUs. Workspace of 3480 bytes needed.*/
-                              /*                              2: + Table conversion for huffman decoding (wants 6 << HUFF_BIT bytes of RAM). Workspace of 9644 bytes needed. */
-    // Do not change this, it is the minimum size in bytes of the workspace needed by the decoder
-    #if JD_FASTDECODE == 0
-        #define TJPGD_WORKSPACE_SIZE 3100
-    #endif
-    #if JD_FASTDECODE == 1
-        #define TJPGD_WORKSPACE_SIZE 3500
-    #endif
-    #if JD_FASTDECODE == 2
-        #define TJPGD_WORKSPACE_SIZE (3500 + 6144)
-    #endif
-
-  private:
-    enum { TJPG_ARRAY = 0, TJPG_FS_FILE, TJPG_SD_FILE };
-
-    enum JDR {             /* Error code */
-               JDR_OK = 0, /* 0: Succeeded */
-               JDR_INTR,   /* 1: Interrupted by output function */
-               JDR_INP,    /* 2: Device error or wrong termination of input stream */
-               JDR_MEM1,   /* 3: Insufficient memory pool for the image */
-               JDR_MEM2,   /* 4: Insufficient stream input buffer */
-               JDR_PAR,    /* 5: Parameter error */
-               JDR_FMT1,   /* 6: Data format error (may be broken data) */
-               JDR_FMT2,   /* 7: Right format but not supported */
-               JDR_FMT3    /* 8: Not supported JPEG standard */
-    };
-    #if JD_FASTDECODE >= 1
-    typedef int16_t jd_yuv_t;
-    #else
-    typedef uint8_t jd_yuv_t;
-    #endif
-
-    typedef struct {     /* Rectangular region in the output image */
-        uint16_t left;   /* Left end */
-        uint16_t right;  /* Right end */
-        uint16_t top;    /* Top end */
-        uint16_t bottom; /* Bottom end */
-    } JRECT;
-
-    typedef struct _JDEC {        /* Decompressor object structure */
-        size_t    dctr;           /* Number of bytes available in the input buffer */
-        uint8_t*  dptr;           /* Current data read ptr */
-        uint8_t*  inbuf;          /* Bit stream input buffer */
-        uint8_t   dbit;           /* Number of bits availavble in wreg or reading bit mask */
-        uint8_t   scale;          /* Output scaling ratio */
-        uint8_t   msx, msy;       /* MCU size in unit of block (width, height) */
-        uint8_t   qtid[3];        /* Quantization table ID of each component, Y, Cb, Cr */
-        uint8_t   ncomp;          /* Number of color components 1:grayscale, 3:color */
-        int16_t   dcv[3];         /* Previous DC element of each component */
-        uint16_t  nrst;           /* Restart inverval */
-        uint16_t  width, height;  /* Size of the input image (pixel) */
-        uint8_t*  huffbits[2][2]; /* Huffman bit distribution tables [id][dcac] */
-        uint16_t* huffcode[2][2]; /* Huffman code word tables [id][dcac] */
-        uint8_t*  huffdata[2][2]; /* Huffman decoded data tables [id][dcac] */
-        int32_t*  qttbl[4];       /* Dequantizer tables [id] */
-    #if JD_FASTDECODE >= 1
-        uint32_t wreg;   /* Working shift register */
-        uint8_t  marker; /* Detected marker (0:None) */
-        #if JD_FASTDECODE == 2
-        uint8_t   longofs[2][2]; /* Table offset of long code [id][dcac] */
-        uint16_t* hufflut_ac[2]; /* Fast huffman decode tables for AC short code [id] */
-        uint8_t*  hufflut_dc[2]; /* Fast huffman decode tables for DC short code [id] */
-        #endif
-    #endif
-        void*     workbuf; /* Working buffer for IDCT and RGB output */
-        jd_yuv_t* mcubuf;  /* Working buffer for the MCU */
-        void*     pool;    /* Pointer to available memory pool */
-        size_t    sz_pool; /* Size of momory pool (bytes available) */
-        void*     device;  /* Pointer to I/O device identifiler for the session */
-        uint8_t   swap;    /* control byte swapping */
-    } JDEC;
-
-  private:
-    File           m_jpgSdFile;
-    bool           m_swap = false;
-    const uint8_t* m_array_data = nullptr;
-    uint32_t       m_array_index = 0;
-    uint32_t       m_array_size = 0;
-    uint8_t        m_workspace[TJPGD_WORKSPACE_SIZE] __attribute__((aligned(4))); // Must align workspace to a 32 bit boundary
-    uint8_t        m_jpg_source = 0;
-    int16_t        m_jpeg_x = 0;
-    int16_t        m_jpeg_y = 0;
-    uint8_t        m_jpgScale = 0;
-    uint16_t       m_jpgWidth = 0;
-    uint16_t       m_jpgHeight = 0;
-    uint16_t       m_jpgWidthMax = 0;
-    uint16_t       m_jpgHeightMax = 0;
-
-  public:
-    void    JPEG_setJpgScale(uint8_t scale);
-    uint8_t JPEG_drawSdJpg(int32_t x, int32_t y);
-    uint8_t JPEG_getSdJpgSize(uint16_t* w, uint16_t* h);
-    void    JPEG_setSwapBytes(bool swap);
-
-  private:
-    int          JPEG_jd_output(JDEC* jdec, void* bitmap, JRECT* jrect);
-    bool         JPEG_tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t* bitmap);
-    unsigned int JPEG_jd_input(JDEC* jdec, uint8_t* buf, unsigned int len);
-    void*        JPEG_alloc_pool(JDEC* jd, size_t ndata);
-    uint8_t      JPEG_create_qt_tbl(JDEC* jd, const uint8_t* data, size_t ndata);
-    uint8_t      JPEG_create_huffman_tbl(JDEC* jd, const uint8_t* data, size_t ndata);
-    int          JPEG_huffext(JDEC* jd, unsigned int id, unsigned int cls);
-    int          JPEG_bitext(JDEC* jd, unsigned int nbit);
-    uint8_t      JPEG_restart(JDEC* jd, uint16_t rstn);
-    void         JPEG_block_idct(int32_t* src, jd_yuv_t* dst);
-    uint8_t      JPEG_mcu_load(JDEC* jd);
-    uint8_t      JPEG_mcu_output(JDEC* jd, unsigned int x, unsigned int y);
-    uint8_t      JPEG_jd_prepare(JDEC* jd, uint8_t* pool, size_t sz_pool, void* dev);
-    uint8_t      JPEG_jd_decomp(JDEC* jd, uint8_t scale);
-
-  private:
-    #if JD_TBLCLIP == 0 /* JD_TBLCLIP */
-    uint8_t JPEG_BYTECLIP(int val);
-    #endif
-
-    // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+        // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
     //  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫   P N G   ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
     // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
