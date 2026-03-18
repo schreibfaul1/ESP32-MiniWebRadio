@@ -60,7 +60,6 @@ class TFT_RGB : public TFT_Base {
 
   private:
     bool        panelDrawBitmap(int16_t x0, int16_t y0, int16_t x1, int16_t y1, const void* bitmap) override;
-    void        afterTextDraw(uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H) override;
 
   private:
     uint64_t       m_vsyncCounter = 0;

@@ -77,7 +77,6 @@ class TFT_Base {
     int32_t GIF_GetCode(int32_t code_size, int32_t flag);
     int32_t GIF_LZWReadByte(bool init);
     bool    GIF_ReadImage(uint16_t x, uint16_t y);
-    virtual void afterTextDraw(uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H);
 
     virtual bool panelDrawBitmap(int16_t x0, int16_t y0, int16_t x1, int16_t y1, const void* bitmap) = 0;
 

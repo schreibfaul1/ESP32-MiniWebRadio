@@ -539,8 +539,8 @@ void showLogoAndStationName(bool force) {
         txt_RA_staName.show();
         pic_RA_logo.setPicturePath(path.c_get());
         pic_RA_logo.show();
-        staNr.assignf("%i", s_cur_station);
     }
+    staNr.assignf("%i", s_cur_station);
     webSrv.send("stationLogo=", path.c_get());
     webSrv.send("stationNr=", staNr);
     webSrv.send("stationURL=", s_settings.lastconnectedhost.get());
