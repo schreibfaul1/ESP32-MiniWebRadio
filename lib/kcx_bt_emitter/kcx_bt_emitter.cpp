@@ -2,7 +2,7 @@
  *  KCX_BT_Emitter.cpp
  *
  *  Created on: 21.01.2024
- *  updated on: 09.12.2025
+ *  updated on: 20.03.2026
  *      Author: Wolle
  */
 
@@ -41,13 +41,12 @@ void KCX_BT_Emitter::begin() {
 void KCX_BT_Emitter::loop() {
     if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;
 
-    if (millis() > m_timeStamp + 2000) m_lock = false;
-    if (millis() > m_timeStamp + 3000) { userCommand("AT+STATUS?"); } // 0 disconnected, 1 connected
+    if (millis() > m_timeStamp + 2000) m_f_2s = false;
 
-    if (!m_lock) {
-        m_lock = true;
+    if (!m_f_2s) {
+        m_f_2s = true;
+        m_timeStamp = millis();
         if (m_TX_queue.size()) {
-            m_timeStamp = millis();
             ps_ptr<char> cmd = get_tx_queue_item();
             if (cmd.starts_with("AT+MODE_")) {
                 setMode_intern(cmd.substr(8));
@@ -56,11 +55,13 @@ void KCX_BT_Emitter::loop() {
             }
             return;
         }
+        userCommand("AT+STATUS?"); // nothing in queue? ask for status ==> 0 disconnected, 1 connected
+        if (m_power_in_progress > 0) m_power_in_progress--;
     }
     if (Serial2.available()) readCmd();
     if (m_RX_queue.size()) {
         parseATcmds();
-        m_lock = false;
+        m_f_2s = false;
     }
     return;
 }
@@ -142,7 +143,7 @@ void KCX_BT_Emitter::parseATcmds() {
 
     if (item.equals("OK+")) {
         m_bt_found = true;
-        m_power = true;
+        m_f_power = true;
         m_msg.e = evt_found;
         if (m_bt_callback) { m_bt_callback(m_msg); }
     } else if (item.equals("OK+RESET")) {
@@ -154,11 +155,11 @@ void KCX_BT_Emitter::parseATcmds() {
         m_msg.e = evt_reset;
         if (m_bt_callback) { m_bt_callback(m_msg); }
     } else if (item.equals("POWER ON")) {
-        m_power = true;
+        m_f_power = true;
         m_msg.e = evt_power_on;
         if (m_bt_callback) { m_bt_callback(m_msg); }
     } else if (item.equals("OK+POWEROFF_MODE")) {
-        m_power = false;
+        m_f_power = false;
         m_f_connected = BT_NOT_CONNECTED;
         m_msg.e = evt_power_off;
         if (m_bt_callback) { m_bt_callback(m_msg); }
@@ -208,7 +209,7 @@ void KCX_BT_Emitter::parseATcmds() {
         m_msg.arg = item.c_get();
         if (m_bt_callback) { m_bt_callback(m_msg); }
     } else if (item.starts_with("MacAdd")) {
-        if (m_power) {
+        if (m_f_power) {
             bool found = false;
             for (auto sc : m_bt_scannedItems) {
                 // KCX_LOG_ERROR("item %s", item.c_get());
@@ -217,7 +218,7 @@ void KCX_BT_Emitter::parseATcmds() {
             if (!found) { m_bt_scannedItems.push_back(item); }
         }
     } else if (item.starts_with("CONNECT=>")) {
-        if (m_power) {
+        if (m_f_power) {
             if (m_f_connected == BT_NOT_CONNECTED) {
                 m_f_connected = BT_CONNECTED;
                 m_msg.e = evt_connect;
@@ -225,7 +226,7 @@ void KCX_BT_Emitter::parseATcmds() {
             }
         }
     } else if (item.equals("SCAN....")) {
-        if (m_power) {
+        if (m_f_power) {
             if (m_f_connected == BT_CONNECTED) {
                 m_f_connected = BT_NOT_CONNECTED;
                 m_msg.e = evt_disconnect;
@@ -345,7 +346,7 @@ void KCX_BT_Emitter::setVolume(uint8_t vol) {
     add_tx_queue_item(v);
 }
 void KCX_BT_Emitter::setMode(ps_ptr<char> mode) {
-    if (!m_power) {
+    if (!m_f_power) {
         m_msg.e = evt_info;
         m_msg.arg = "Power On  first";
         if (m_bt_callback) m_bt_callback(m_msg);
@@ -402,20 +403,34 @@ const char* KCX_BT_Emitter::getMyName() {
 }
 void KCX_BT_Emitter::power_off() {
     if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;
-    if (m_power) add_tx_queue_item("AT+POWER_OFF");
+    if (m_f_power) add_tx_queue_item("AT+POWER_OFF");
 }
-void KCX_BT_Emitter::power_on() {
+void KCX_BT_Emitter::power_on(ps_ptr<char> mode) {
     if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;
+    if (m_f_power || m_power_in_progress > 0) return;
+    m_power_in_progress = 5;
     KCX_LOG_ERROR("PowerOn");
-    digitalWrite(BT_MODE_PIN, m_mode_pin);
+    if (mode.equals("TX")) {
+        m_mode_pin = true;
+        digitalWrite(BT_MODE_PIN, m_mode_pin);
+    } else {
+        m_mode_pin = false;
+        digitalWrite(BT_MODE_PIN, m_mode_pin);
+    }
     digitalWrite(BT_CONNECT_PIN, LOW);
     m_connect_pin = LOW;
-    vTaskDelay(100);
+    vTaskDelay(10); // H>L>H 10ms pre impules
+    digitalWrite(BT_CONNECT_PIN, HIGH);
+    m_connect_pin = HIGH;
+    vTaskDelay(10); // wait 10ms
+    digitalWrite(BT_CONNECT_PIN, LOW);
+    m_connect_pin = LOW;
+    vTaskDelay(100); // H>L>H 100ms main impules
     digitalWrite(BT_CONNECT_PIN, HIGH);
     m_connect_pin = HIGH;
 }
 bool KCX_BT_Emitter::get_power_state() {
-    return m_power;
+    return m_f_power;
 }
 void KCX_BT_Emitter::userCommand(const char* cmd) {
     if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;

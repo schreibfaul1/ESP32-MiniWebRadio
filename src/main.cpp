@@ -1554,7 +1554,7 @@ void wake_up() {
     dispHeader.updateRSSI(WiFi.RSSI(), true);
     dispFooter.setTransparency(true, false);
     dispFooter.show();
-    if (s_bt_emitter.found && s_bt_emitter.enabled) bt_emitter.power_on();
+    if (s_bt_emitter.found && s_bt_emitter.enabled) bt_emitter.power_on(s_bt_emitter.mode.c_get());
 }
 
 void setRTC(ps_ptr<char> TZString) {
@@ -2300,7 +2300,7 @@ void loop() {
         if (s_bt_emitter.found) {
             if (s_bt_emitter.enabled) {
                 if (!s_f_sleeping) {
-                    if (!bt_emitter.get_power_state()) bt_emitter.power_on();
+                    if (!bt_emitter.get_power_state()) bt_emitter.power_on(s_bt_emitter.mode.c_get());
                 } else {
                     if (bt_emitter.get_power_state()) bt_emitter.power_off();
                 }

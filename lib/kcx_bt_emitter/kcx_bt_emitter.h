@@ -96,7 +96,7 @@ class KCX_BT_Emitter {
     const char*  getMyName();
     ps_ptr<char> get_bt_Version() { return m_bt_version; } // KCX_BT_RTX_V1.4
     void         power_off();
-    void         power_on();
+    void         power_on(ps_ptr<char> mode);
     bool         get_power_state();
     void         userCommand(const char* cmd);
     const char*  stringifyScannedItems();
@@ -138,13 +138,14 @@ class KCX_BT_Emitter {
     bool         m_f_scan = false;
     bool         m_f_KCX_BT_Emitter_isInit = false;
     uint32_t     m_timeStamp = 0;
-    bool         m_lock = false;
-    bool         m_power = false;
+    bool         m_f_2s = false;
+    bool         m_f_power = false;
 
     uint8_t m_bt_add_num = 0;
     uint8_t m_bt_name_num = 0;
     uint8_t m_bt_add_cnt = 0;
     uint8_t m_bt_name_cnt = 0;
+    uint8_t m_power_in_progress = 0;
 
     ps_ptr<char> m_myName = "unknown";
 
