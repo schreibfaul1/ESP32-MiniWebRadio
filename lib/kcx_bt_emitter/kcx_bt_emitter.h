@@ -2,7 +2,7 @@
  * KCX_BT_Emitter.cpp
  *
  *  Created on: 21.01.2024
- *  updated on: 22.02.2026
+ *  updated on: 24.02.2026
  *      Author: Wolle
  */
 
@@ -23,6 +23,7 @@ AT+VMLINK?          OK+VMLINK
                     Auto_link_Add:xx
                     MEM_MacAdd 00:xx
                     MEM_Name 00:xx
+AT+VMLINK?          Not in emitter mode!
 AT+ADDLINKNAME=xx   OK+ADDLINKNAME=xx
                     BT_ADD_NUM=xx
                     BT_NAME_NUM=xx
@@ -35,6 +36,12 @@ AT+ADDLINKADD=xx    OK+ADDLINKADD=xx
                     Auto_link_Add:xx
                     MEM_MacAdd 00:xx
                     MEM_Name 00:xx
+AT+STATUS?          OK+STATUS:0 disconnected or OK+STATUS:1 connected
+AT+PAUSE?           OK+PAUSE, OK+PLAY or no connect!
+AT+PAUSE            OK+PAUSE, OK+PLAY (pause resume)
+AT+POWER_OFF        OK+POWEROFF_MODE
+
+
 POWER ON
 SCAN....
 MacAdd:2c63c23c0200,Name: Pebble V3
@@ -98,7 +105,7 @@ class KCX_BT_Emitter {
     ps_ptr<char> get_bt_Version() { return m_bt_version; } // KCX_BT_RTX_V1.4
     void         power_off();
     void         power_on(ps_ptr<char> mode);
-    void         userCommand(const char* cmd);
+    void         userCommand(ps_ptr<char> cmd);
     const char*  stringifyScannedItems();
     const char*  list_protokol();
 
@@ -117,9 +124,12 @@ class KCX_BT_Emitter {
     ps_ptr<char>             m_jsonScanItemsStr;
     ps_ptr<char>             get_tx_queue_item();
     void                     add_tx_queue_item(ps_ptr<char> item);
+    bool                     already_in_TX_list(ps_ptr<char> command);
     ps_ptr<char>             get_rx_queue_item();
     void                     add_rx_queue_item(ps_ptr<char> item);
     void                     setMode_intern(ps_ptr<char> mode);
+    void                     decrement_timer();
+    bool                     compare_request(ps_ptr<char> answer);
     ps_ptr<char>             m_bt_version;
     uint8_t                  m_bt_volume = 0;
     bool                     m_bt_found = false;
@@ -133,20 +143,25 @@ class KCX_BT_Emitter {
     bool   m_f_btEmitter_found = false;
 
     ps_ptr<char> m_bt_mode = "NA";
+    int8_t       m_ibt_mode = -1; // -1 NA, 0 RX, 1 TX
     bool         m_f_bt_state = BT_PLAY;           // 0: BT_PAUSE, 1: BT_PLAY
     bool         m_f_connected = BT_NOT_CONNECTED; // scan, connected or not
     bool         m_f_scan = false;
     bool         m_f_KCX_BT_Emitter_isInit = false;
     uint32_t     m_timeStamp = 0;
-    bool         m_f_2s = false;
+    bool         m_f_1s = false;
+    bool         m_f_10s = false;
     bool         m_f_power = false;
 
+    uint8_t m_cnt = 0;
     uint8_t m_bt_add_num = 0;
     uint8_t m_bt_name_num = 0;
     uint8_t m_bt_add_cnt = 0;
     uint8_t m_bt_name_cnt = 0;
     uint8_t m_powerOn_in_progress = 0;
     uint8_t m_powerOff_in_progress = 0;
+    uint8_t m_tx_process_timer = 0;
+    uint8_t m_setMode_in_progress = 0;
 
     ps_ptr<char> m_myName = "unknown";
 

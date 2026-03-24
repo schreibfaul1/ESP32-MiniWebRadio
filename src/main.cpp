@@ -3613,15 +3613,19 @@ void on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg) {
     if (msg.e == KCX_BT_Emitter::evt_connect) {
         s_bt_emitter.connect = true;
         if (s_bt_emitter.mode.equals("TX")) {
+            txt_BT_mode.writeText("EMITTER");
+            pic_BT_mode.setPicturePath("/common/BT_TX.png");
             if (s_state == BLUETOOTH) {
-                pic_BT_mode.setPicturePath("/common/BT_TX.png");
                 pic_BT_mode.show();
+                txt_BT_mode.show();
             }
             webSrv.send("KCX_BT_MODE=", "TX");
         } else {
+            txt_BT_mode.writeText("RECEIVER");
+            pic_BT_mode.setPicturePath("/common/BT_RX.png");
             if (s_state == BLUETOOTH) {
-                pic_BT_mode.setPicturePath("/common/BT_RX.png");
                 pic_BT_mode.show();
+                txt_BT_mode.show();
             }
             webSrv.send("KCX_BT_MODE=", "RX");
         }
