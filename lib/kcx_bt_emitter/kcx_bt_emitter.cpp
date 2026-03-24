@@ -56,7 +56,8 @@ void KCX_BT_Emitter::loop() {
             return;
         }
         userCommand("AT+STATUS?"); // nothing in queue? ask for status ==> 0 disconnected, 1 connected
-        if (m_power_in_progress > 0) m_power_in_progress--;
+        if (m_powerOn_in_progress > 0) m_powerOn_in_progress--;
+        if (m_powerOff_in_progress > 0) m_powerOff_in_progress--;
     }
     if (Serial2.available()) readCmd();
     if (m_RX_queue.size()) {
@@ -156,10 +157,12 @@ void KCX_BT_Emitter::parseATcmds() {
         if (m_bt_callback) { m_bt_callback(m_msg); }
     } else if (item.equals("POWER ON")) {
         m_f_power = true;
+        m_powerOn_in_progress = 0;
         m_msg.e = evt_power_on;
         if (m_bt_callback) { m_bt_callback(m_msg); }
     } else if (item.equals("OK+POWEROFF_MODE")) {
         m_f_power = false;
+        m_powerOff_in_progress = 0;
         m_f_connected = BT_NOT_CONNECTED;
         m_msg.e = evt_power_off;
         if (m_bt_callback) { m_bt_callback(m_msg); }
@@ -403,12 +406,14 @@ const char* KCX_BT_Emitter::getMyName() {
 }
 void KCX_BT_Emitter::power_off() {
     if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;
+    if (!m_f_power || m_powerOff_in_progress > 0) return;
+    m_powerOff_in_progress = 5;
     if (m_f_power) add_tx_queue_item("AT+POWER_OFF");
 }
 void KCX_BT_Emitter::power_on(ps_ptr<char> mode) {
     if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;
-    if (m_f_power || m_power_in_progress > 0) return;
-    m_power_in_progress = 5;
+    if (m_f_power || m_powerOn_in_progress > 0) return;
+    m_powerOn_in_progress = 5;
     KCX_LOG_ERROR("PowerOn");
     if (mode.equals("TX")) {
         m_mode_pin = true;
@@ -428,9 +433,6 @@ void KCX_BT_Emitter::power_on(ps_ptr<char> mode) {
     vTaskDelay(100); // H>L>H 100ms main impules
     digitalWrite(BT_CONNECT_PIN, HIGH);
     m_connect_pin = HIGH;
-}
-bool KCX_BT_Emitter::get_power_state() {
-    return m_f_power;
 }
 void KCX_BT_Emitter::userCommand(const char* cmd) {
     if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;

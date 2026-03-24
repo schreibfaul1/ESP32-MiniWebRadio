@@ -1172,7 +1172,7 @@ void setup() {
     rec_buffer.alloc_array(REC_BUFFER_SIZE, "rec_buffer");                             // allocate in PSRAM
     writeBuffer.alloc_array(WRITE_CHUNK_SIZE, "writeBuffer");                          // allocate in PSRAM
     xTaskCreatePinnedToCore(wavWriterTask, "wavWriter", 4096, nullptr, 1, nullptr, 0); // start recorder task
-    SerialPrintfln("recorder task started, Free heap: %u\n", ESP.getFreeHeap());
+    SerialPrintfln("setup: ....  Recorder task started, free heap: " ANSI_ESC_CYAN "%u" ANSI_ESC_RESET "", ESP.getFreeHeap());
 
     dispHeader.setTransparency(true, false);
     dispHeader.enable();

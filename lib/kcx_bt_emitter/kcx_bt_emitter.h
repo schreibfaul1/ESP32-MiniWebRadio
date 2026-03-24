@@ -86,10 +86,11 @@ class KCX_BT_Emitter {
     void addLinkAddr(ps_ptr<char> addr); // up to 10 MAC addresses can be saved
 
     bool         isConnected() { return m_f_connected; }
+    bool         get_power_state() { return m_f_power; }
+    ps_ptr<char> getMode() { return m_bt_mode; } // RX: RECEIVER, TX: EMITTER
     uint8_t      getVolume() { return m_bt_volume; }
-    void         setVolume(uint8_t vol);         // 0 ... 31
-    ps_ptr<char> getMode() { return m_bt_mode; } // 0: RECEIVER, 1: EMITTER
-    void         setMode(ps_ptr<char> mode);     // RX: RECEIVER, TX: EMITTER
+    void         setVolume(uint8_t vol);     // 0 ... 31
+    void         setMode(ps_ptr<char> mode); // RX: RECEIVER, TX: EMITTER
     void         pauseResume();
     void         downvolume();
     void         upvolume();
@@ -97,7 +98,6 @@ class KCX_BT_Emitter {
     ps_ptr<char> get_bt_Version() { return m_bt_version; } // KCX_BT_RTX_V1.4
     void         power_off();
     void         power_on(ps_ptr<char> mode);
-    bool         get_power_state();
     void         userCommand(const char* cmd);
     const char*  stringifyScannedItems();
     const char*  list_protokol();
@@ -145,7 +145,8 @@ class KCX_BT_Emitter {
     uint8_t m_bt_name_num = 0;
     uint8_t m_bt_add_cnt = 0;
     uint8_t m_bt_name_cnt = 0;
-    uint8_t m_power_in_progress = 0;
+    uint8_t m_powerOn_in_progress = 0;
+    uint8_t m_powerOff_in_progress = 0;
 
     ps_ptr<char> m_myName = "unknown";
 
