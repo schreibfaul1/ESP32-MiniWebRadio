@@ -92,6 +92,7 @@ bool KCX_BT_Emitter::compare_request(ps_ptr<char> answer) {
         if (answer.starts_with("MacAdd")) extended_answer = true;
         if (answer.starts_with("CON MATCH")) extended_answer = true;
         if (answer.starts_with("CON ONE")) extended_answer = true;
+        if (answer.starts_with("CON LAST")) extended_answer = true;
         if (answer.starts_with("CONNECT")) extended_answer = true;
         if (answer.starts_with("VM Reset2")) extended_answer = true;     // after AT+RESET
         if (answer.starts_with("Delete_Vmlink")) extended_answer = true; // after AT+RESET
@@ -370,6 +371,8 @@ void KCX_BT_Emitter::parseATcmds() {
             ;
         } else if (item.starts_with("Not in receiver mode!")) {
             ;
+        } else if (item.starts_with("Not in emitter mode!")) {
+            ;
         } else {
             KCX_LOG_WARN("unknown RX command: %s", item.c_get());
         }
@@ -464,6 +467,7 @@ void KCX_BT_Emitter::setMode(ps_ptr<char> mode) {
         return;
     }
     if (mode == m_bt_mode) return;
+    if(m_setMode_in_progress) return;
     m_setMode_in_progress = 15;
     ps_ptr<char> m = "AT+MODE_";
     m.append(mode);
@@ -476,6 +480,9 @@ void KCX_BT_Emitter::setMode_intern(ps_ptr<char> mode) {
             m_ibt_mode = 0;
             digitalWrite(BT_MODE_PIN, LOW);
             m_mode_pin = LOW;
+            m_msg.arg = "RX";
+            m_msg.e = evt_mode;
+            if (m_bt_callback) { m_bt_callback(m_msg); }
         }
         m_tx_process_timer = 0;
     } else if (mode.equals("TX")) {
@@ -483,6 +490,9 @@ void KCX_BT_Emitter::setMode_intern(ps_ptr<char> mode) {
             m_ibt_mode = 1;
             digitalWrite(BT_MODE_PIN, HIGH);
             m_mode_pin = HIGH;
+            m_msg.arg = "TX";
+            m_msg.e = evt_mode;
+            if (m_bt_callback) { m_bt_callback(m_msg); }
         }
         m_tx_process_timer = 0;
     } else {

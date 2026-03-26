@@ -2308,8 +2308,9 @@ void loop() {
                 if (bt_emitter.get_power_state()) { bt_emitter.power_off(); }
             }
             if (bt_emitter.getMode().equals("NA")) {
-            } // not ready yet
-            else if (!bt_emitter.getMode().equals(s_bt_emitter.mode)) {
+                ; // not ready yet
+            }
+            else if (bt_emitter.get_power_state() &&  !bt_emitter.getMode().equals(s_bt_emitter.mode)) {
                 bt_emitter.setMode(s_bt_emitter.mode);
             }
         }
@@ -2344,6 +2345,7 @@ void loop() {
 
     //-------------------------------------------------DEBUG / WIFI_SETTINGS ----------------------------------------------------------------------------------
     if (Serial.available()) { // input: serial terminal
+
         String r = Serial.readString();
         r.replace("\n", "");
         SerialPrintfln("Terminal  :  " ANSI_ESC_YELLOW "%s" ANSI_ESC_RESET "  ", r.c_str());
