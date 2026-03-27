@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.1.1j - Mar 17, 2026                                                                                                               ";
+    Version 4.1.1k - Mar 27, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -1172,7 +1172,7 @@ void setup() {
     rec_buffer.alloc_array(REC_BUFFER_SIZE, "rec_buffer");                             // allocate in PSRAM
     writeBuffer.alloc_array(WRITE_CHUNK_SIZE, "writeBuffer");                          // allocate in PSRAM
     xTaskCreatePinnedToCore(wavWriterTask, "wavWriter", 4096, nullptr, 1, nullptr, 0); // start recorder task
-    SerialPrintfln("recorder task started, Free heap: %u\n", ESP.getFreeHeap());
+    SerialPrintfln("setup: ....  Recorder task started, free heap: " ANSI_ESC_CYAN "%u" ANSI_ESC_RESET "", ESP.getFreeHeap());
 
     dispHeader.setTransparency(true, false);
     dispHeader.enable();
@@ -2308,8 +2308,9 @@ void loop() {
                 if (bt_emitter.get_power_state()) { bt_emitter.power_off(); }
             }
             if (bt_emitter.getMode().equals("NA")) {
-            } // not ready yet
-            else if (!bt_emitter.getMode().equals(s_bt_emitter.mode)) {
+                ; // not ready yet
+            }
+            else if (bt_emitter.get_power_state() &&  !bt_emitter.getMode().equals(s_bt_emitter.mode)) {
                 bt_emitter.setMode(s_bt_emitter.mode);
             }
         }
@@ -2344,6 +2345,7 @@ void loop() {
 
     //-------------------------------------------------DEBUG / WIFI_SETTINGS ----------------------------------------------------------------------------------
     if (Serial.available()) { // input: serial terminal
+
         String r = Serial.readString();
         r.replace("\n", "");
         SerialPrintfln("Terminal  :  " ANSI_ESC_YELLOW "%s" ANSI_ESC_RESET "  ", r.c_str());
@@ -3613,15 +3615,19 @@ void on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg) {
     if (msg.e == KCX_BT_Emitter::evt_connect) {
         s_bt_emitter.connect = true;
         if (s_bt_emitter.mode.equals("TX")) {
+            txt_BT_mode.writeText("EMITTER");
+            pic_BT_mode.setPicturePath("/common/BT_TX.png");
             if (s_state == BLUETOOTH) {
-                pic_BT_mode.setPicturePath("/common/BT_TX.png");
                 pic_BT_mode.show();
+                txt_BT_mode.show();
             }
             webSrv.send("KCX_BT_MODE=", "TX");
         } else {
+            txt_BT_mode.writeText("RECEIVER");
+            pic_BT_mode.setPicturePath("/common/BT_RX.png");
             if (s_state == BLUETOOTH) {
-                pic_BT_mode.setPicturePath("/common/BT_RX.png");
                 pic_BT_mode.show();
+                txt_BT_mode.show();
             }
             webSrv.send("KCX_BT_MODE=", "RX");
         }
