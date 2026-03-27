@@ -83,20 +83,20 @@ bool KCX_BT_Emitter::compare_request(ps_ptr<char> answer) {
 
     if (!result) {
         if (answer.starts_with("OK+RESET")) extended_answer = true; // after AT+RESET
-        if (answer.starts_with("BT_ADD")) extended_answer = true;
-        if (answer.starts_with("BT_NAME")) extended_answer = true;
         if (answer.starts_with("Auto_link")) extended_answer = true;
         if (answer.starts_with("POWER ON")) extended_answer = true;
         if (answer.starts_with("SCAN")) extended_answer = true;
-        if (answer.starts_with("MacAdd")) extended_answer = true;
         if (answer.starts_with("CON MATCH")) extended_answer = true;
         if (answer.starts_with("CON ONE")) extended_answer = true;
         if (answer.starts_with("CON LAST")) extended_answer = true;
         if (answer.starts_with("CONNECT")) extended_answer = true;
         if (answer.starts_with("VM Reset2")) extended_answer = true;     // after AT+RESET
         if (answer.starts_with("Delete_Vmlink")) extended_answer = true; // after AT+RESET
+        if (answer.starts_with("BT_ADD")) return true;
+        if (answer.starts_with("BT_NAME")) return true;
         if (answer.starts_with("MEM_Name")) return true;
         if (answer.starts_with("MEM_MacAdd")) return true;
+        if (answer.starts_with("MacAdd")) return true;
     }
     if (!result && !extended_answer) {
         KCX_LOG_WARN("unknown answer, request: %s, response %s", m_last_tx_command.c_get(), answer.c_get());
@@ -229,7 +229,7 @@ void KCX_BT_Emitter::parseATcmds() {
     ps_ptr<char> item;
     item = get_rx_queue_item();
     KCX_LOG_DEBUG("%s", item.c_get());
-    if (!compare_request(item)) return;
+    compare_request(item);
 
     if (item.equals("OK+")) {
         m_bt_found = true;
@@ -365,6 +365,8 @@ void KCX_BT_Emitter::parseATcmds() {
         } else if (item.starts_with("BT_NAME")) {
             ;
         } else if (item.starts_with("BT_ADD")) {
+            ;
+        } else if (item.starts_with("CON MATCH ADD")) {
             ;
         } else if (item.starts_with("OK+VMLINK")) {
             ;
