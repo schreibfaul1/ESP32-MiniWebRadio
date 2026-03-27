@@ -2,7 +2,7 @@
  *  KCX_BT_Emitter.cpp
  *
  *  Created on: 21.01.2024
- *  updated on: 20.03.2026
+ *  updated on: 27.03.2026
  *      Author: Wolle
  */
 
@@ -96,6 +96,7 @@ bool KCX_BT_Emitter::compare_request(ps_ptr<char> answer) {
         if (answer.starts_with("CONNECT")) extended_answer = true;
         if (answer.starts_with("VM Reset2")) extended_answer = true;     // after AT+RESET
         if (answer.starts_with("Delete_Vmlink")) extended_answer = true; // after AT+RESET
+        if (answer.starts_with("MEM_MacAdd")) extended_answer = true;    // AT+VMLINK?
     }
     if (!result && !extended_answer) {
         KCX_LOG_WARN("unknown answer, request: %s, response %s", m_last_tx_command.c_get(), answer.c_get());
@@ -467,7 +468,7 @@ void KCX_BT_Emitter::setMode(ps_ptr<char> mode) {
         return;
     }
     if (mode == m_bt_mode) return;
-    if(m_setMode_in_progress) return;
+    if (m_setMode_in_progress) return;
     m_setMode_in_progress = 15;
     ps_ptr<char> m = "AT+MODE_";
     m.append(mode);
