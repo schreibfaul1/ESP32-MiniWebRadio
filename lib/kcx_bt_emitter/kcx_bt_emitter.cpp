@@ -86,7 +86,6 @@ bool KCX_BT_Emitter::compare_request(ps_ptr<char> answer) {
         if (answer.starts_with("BT_ADD")) extended_answer = true;
         if (answer.starts_with("BT_NAME")) extended_answer = true;
         if (answer.starts_with("Auto_link")) extended_answer = true;
-        if (answer.starts_with("MEM_Name")) extended_answer = true;
         if (answer.starts_with("POWER ON")) extended_answer = true;
         if (answer.starts_with("SCAN")) extended_answer = true;
         if (answer.starts_with("MacAdd")) extended_answer = true;
@@ -96,7 +95,8 @@ bool KCX_BT_Emitter::compare_request(ps_ptr<char> answer) {
         if (answer.starts_with("CONNECT")) extended_answer = true;
         if (answer.starts_with("VM Reset2")) extended_answer = true;     // after AT+RESET
         if (answer.starts_with("Delete_Vmlink")) extended_answer = true; // after AT+RESET
-        if (answer.starts_with("MEM_MacAdd")) extended_answer = true;    // AT+VMLINK?
+        if (answer.starts_with("MEM_Name")) return true;
+        if (answer.starts_with("MEM_MacAdd")) return true;
     }
     if (!result && !extended_answer) {
         KCX_LOG_WARN("unknown answer, request: %s, response %s", m_last_tx_command.c_get(), answer.c_get());
