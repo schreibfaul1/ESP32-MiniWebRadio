@@ -47,6 +47,7 @@
 
 #include "Audio.h"
 #include "BH1750.h"
+#include "es8311.h"
 #include "DLNAClient.h"
 #include "ESP32FtpServer.h"
 #include "IR.h"
@@ -315,6 +316,19 @@ struct tone_s {
     int16_t BAL = 0; // -16...0....+16         audioI2S
 };
 
+struct i2c_items_s {
+    bool es8311_found = false;
+    int  es8311_addr = -1;
+    bool es7210_found = false;
+    int  es7210_addr = -1;
+    bool gt911_found = false;
+    int  gt911_addr = -1;
+    bool ft6x36u_found = false;
+    int  ft6x36u_addr = -1;
+    bool bh1750_found = false;
+    int  bh1750_addr = -1;
+};
+
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 // prototypes (main.cpp)
@@ -341,6 +355,7 @@ boolean      isPlaylist(File file);
 bool         connectToWiFi();
 void         setWiFiCredentials(ps_ptr<char> ssid, ps_ptr<char> password);
 ps_ptr<char> scaleImage(ps_ptr<char> path);
+bool         detect_i2_c_devices(TwoWire* twi, int8_t sda, int8_t scl, i2c_items_s* i2c_items);
 void         set_display_items();
 bool         init_SD_card();
 void         setVolume(uint8_t vol);
