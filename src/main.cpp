@@ -1281,7 +1281,7 @@ void set_display_items() {
     getTP().setSize(TP_CONTROLLER); // (0) 2.8 inch, (1) 3.5 inch, (4) 4.0 inch
     getTP().setRotation(TP_ROTATION);
 #elifdef TP_MODE_GT911  // GT911
-    getTP().begin(&i2cBusOne, GT911_I2C_ADDRESS, s_h_resolution, s_v_resolution);
+    getTP().begin(&i2cBusOne, s_i2c_items.gt911_addr, s_h_resolution, s_v_resolution);
     getTP().setRotation(TP_ROTATION);
     getTP().setMirror(TP_H_MIRROR, TP_V_MIRROR);
 #elifdef TP_MODE_FT6X63 // FT6x36
