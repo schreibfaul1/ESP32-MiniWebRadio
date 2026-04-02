@@ -2,9 +2,6 @@
 #include "Arduino.h"
 #include "tft_structures.h"
 
-
-#define _SSID             "SSID"           // Your WiFi credentials here
-#define _PW               "PW"             //
 #define TFT_CONTROLLER    8                // (0)SPI-ILI9341[320x240], (3)SPI-ILI9486[480x320], (4)SPI-ILI9488[480x320], (5)SPI-ST7796[480x320], (7)RGB[800x480], (8)DSI-EK97001[1024x600], (9)DSI-JD9165[1024x600], (10)ST7701[480x800]
 #define DISPLAY_INVERSION 0                // only SPI displays, (0) off (1) on
 #define TFT_ROTATION      0                // (0) none, (1) 90°CW, (2) 180°CW, (3) 270°CW
@@ -13,7 +10,6 @@
 #define TP_ROTATION       1                // (0) none, (1) 90°CW, (2) 180°CW, (3) 270°CW
 #define TP_H_MIRROR       0                // (0) default, (1) mirror up <-> down
 #define TP_V_MIRROR       0                // (0) default, (1) mirror left <-> right
-#define LIGHT_SENSOR      1                // (0) none, (1) BH1750
 #define I2S_COMM_FMT      0                // (0) MAX98357A PCM5102A CS4344, (1) LSBJ (Least Significant Bit Justified format) PT8211
 #define SDMMC_FREQUENCY   80000000         // 80000000 or 40000000 Hz
 #define FTP_USERNAME      "esp32"          // user name in FTP Client
@@ -109,7 +105,6 @@ const Timing RGB_TIMING = {.h_res = 800,
         #define SD_MMC_CMD         11
         #define SD_MMC_CLK         12
         #define SD_MMC_D0          13
-        #define GT911_I2C_ADDRESS  0x5D // default I2C-address of GT911
         #define I2S_DOUT           17
         #define I2S_BCLK           0
         #define I2S_LRC            18
@@ -150,7 +145,6 @@ const Timing RGB_TIMING = {.h_res = 800,
         #define SD_MMC_D0  13
 
         #define I2C_MASTER_FREQ_HZ 400000 // 400 kHz I2C-frequency
-        #define GT911_I2C_ADDRESS  0x5D   // default I2C-address of GT911
 
         #define I2S_DOUT 17
         #define I2S_BCLK 42
@@ -195,7 +189,6 @@ const Timing RGB_TIMING = {.h_res = 800,
         #define SD_MMC_CMD         11
         #define SD_MMC_CLK         12
         #define SD_MMC_D0          13
-        #define GT911_I2C_ADDRESS  0x14 // default I2C-address of GT911
         #define I2S_DOUT           17
         #define I2S_BCLK           42
         #define I2S_LRC            18
@@ -236,8 +229,6 @@ const Timing RGB_TIMING = {.h_res = 800,
         #define SD_MMC_CMD 11
         #define SD_MMC_CLK 12
         #define SD_MMC_D0  13
-
-        #define GT911_I2C_ADDRESS 0x14 // default I2C-address of GT911
 
         #define I2S_DOUT 19
         #define I2S_BCLK 20
@@ -284,12 +275,18 @@ const Timing DSI_TIMING = {.h_res = 1024,
         #define SD_MMC_CLK 43
         #define SD_MMC_CMD 44
 
-        #define GT911_I2C_ADDRESS 0x5D // default I2C-address of GT911
+        // I2S ext. DAC
+        #define I2S_DOUT   2
+        #define I2S_BCLK   3
+        #define I2S_LRC    4
+        #define I2S_MCLK  -1
 
-        #define I2S_DOUT 2
-        #define I2S_BCLK 3
-        #define I2S_LRC  4
-        #define I2S_MCLK -1 // important, don't change!
+        // I2S onboard DAC ES8311
+        // #define I2S_DOUT  9 // ES8311 DSDIN
+        // #define I2S_BCLK 12 // ES8311 SCLK
+        // #define I2S_LRC  10 // ES8311 LRCK
+        // #define I2S_MCLK 13 // ES8311 MCLK
+        // #define I2S_DIN  11 // ES8311 DOUT (microphone input)
 
         #define IR_PIN             5  // IR Receiver (if available)
         #define BT_EMITTER_RX      28
@@ -300,7 +297,7 @@ const Timing DSI_TIMING = {.h_res = 1024,
 
         #define LCD_RESET   33
         #define TFT_BL      32 //
-        #define AMP_ENABLED -1 // control pin for extenal amplifier (if available)
+        #define AMP_ENABLED 53 // control pin for extenal amplifier
 
         #define I2C_SDA 7 // I2C dala line for capacitive touchpad
         #define I2C_SCL 8 // I2C clock line for capacitive touchpad
@@ -333,12 +330,17 @@ const Timing DSI_TIMING = {.h_res = 1024,
         #define SD_MMC_CLK 43
         #define SD_MMC_CMD 44
 
-        #define GT911_I2C_ADDRESS 0x5D // default I2C-address of GT911
-
+        // I2S external DAC
         #define I2S_DOUT 2
         #define I2S_BCLK 3
         #define I2S_LRC  4
-        #define I2S_MCLK -1 // important, don't change!
+        #define I2S_MCLK -1
+
+        // I2S onboard DAC ES8311
+        // #define I2S_DOUT  9 // ES8311 DSDIN
+        // #define I2S_BCLK 12 // ES8311 SCLK
+        // #define I2S_LRC  10 // ES8311 LRCK
+        // #define I2S_MCLK 13 // ES8311 MCLK
 
         #define IR_PIN             5  // IR Receiver (if available)
         #define BT_EMITTER_RX      -1
@@ -349,7 +351,7 @@ const Timing DSI_TIMING = {.h_res = 1024,
 
         #define LCD_RESET   27 //
         #define TFT_BL      23 //
-        #define AMP_ENABLED -1 //control pin for extenal amplifier (if available)
+        #define AMP_ENABLED 20 //control pin for onboard amplifier
 
         #define I2C_SDA 7 // I2C dala line for capacitive touchpad
         #define I2C_SCL 8 // I2C clock line for capacitive touchpad
@@ -382,12 +384,17 @@ const Timing DSI_TIMING = {.h_res = 480,
         #define SD_MMC_CLK 43
         #define SD_MMC_CMD 44
 
-        #define GT911_I2C_ADDRESS 0x5D // default I2C-address of GT911
-
+        // I2S external DAC
         #define I2S_DOUT 29 // DIN pin - DAC      (-1 if not available)
         #define I2S_BCLK 30 // BCK pin - DAC      (-1 if not available)
         #define I2S_LRC  31 // LCK LRCK pin - DAC (-1 if not available)
-        #define I2S_MCLK -1 // important, don't change!
+        #define I2S_MCLK -1
+
+        // I2S onboard DAC ES8311
+        // #define I2S_DOUT  9 // ES8311 DSDIN
+        // #define I2S_BCLK 12 // ES8311 SCLK
+        // #define I2S_LRC  10 // ES8311 LRCK
+        // #define I2S_MCLK 13 // ES8311 MCLK
 
         #define IR_PIN             33 // IR Receiver                           (-1 if not available)
         #define BT_EMITTER_RX      32 // RX pin - KCX Bluetooth Transmitter    (-1 if not available)
@@ -398,7 +405,7 @@ const Timing DSI_TIMING = {.h_res = 480,
 
         #define LCD_RESET   5  // see schematics JC4880P443
         #define TFT_BL      23 // see schematics JC4880P443
-        #define AMP_ENABLED -1 // control pin for external amplifier (-1 if not available)
+        #define AMP_ENABLED 11 // control pin for amplifier
 
         #define I2C_SDA 7 // I2C data line for capacitive touchpad
         #define I2C_SCL 8 // I2C clock line for capacitive touchpad

@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.1.1k - Mar 27, 2026                                                                                                               ";
+    Version 4.1.1l - Apr 01, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -72,6 +72,7 @@ timecounter_s s_timeCounter;
 SD_content    s_SD_content;
 bt_emitter_s  s_bt_emitter;
 tone_s        s_tone;
+i2c_items_s   s_i2c_items;
 Playlist      playlist;
 
 IR_buttons     irb(&s_settings);
@@ -81,6 +82,7 @@ FtpServer      ftpSrv;
 DLNA_Client    dlna;
 KCX_BT_Emitter bt_emitter(BT_EMITTER_RX, BT_EMITTER_TX, BT_EMITTER_CONNECT, BT_EMITTER_MODE);
 hp_BH1750      BH1750; // create the sensor
+ES8311         es8311;
 
 ps_ptr<char> s_time_s = "";
 ps_ptr<char> s_myIP;
@@ -173,7 +175,6 @@ bool s_f_playlistNextFile = false;
 bool s_f_logoUnknown = false;
 bool s_f_pauseResume = false;
 bool s_f_FFatFound = false;
-bool s_f_BH1750_found = false;
 bool s_f_clearLogo = false;
 bool s_f_clearStationName = false;
 bool s_f_dlnaBrowseServer = false;
@@ -1019,7 +1020,6 @@ void stopSong() {
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 void setup() {
-
     //---- BEGIN ---------
     Serial.begin(MONITOR_SPEED);
     vTaskDelay(1500); // wait for Serial to be ready
@@ -1042,12 +1042,8 @@ void setup() {
     if (!get_esp_items(&s_resetReason, &s_f_FFatFound)) return;
     pref.begin("Pref", false); // instance of preferences from AccessPoint (SSID, PW ...)
 
-    //---- I2C, BL, IR ---------
-    if (I2C_SDA >= 0) {
-        i2cBusOne.end();
-        i2cBusOne.flush();
-        i2cBusOne.begin(I2C_SDA, I2C_SCL, 100000);
-    }
+    if (!detect_i2_c_devices(&i2cBusOne, I2C_SDA, I2C_SCL, &s_i2c_items)) { SerialPrintfln("setup: ....  No i2c device found"); }
+
     if (TFT_BL >= 0) {
         s_f_brightnessIsChangeable = true;
         setupBacklight(TFT_BL, 512);
@@ -1100,7 +1096,7 @@ void setup() {
     audio.setConnectionTimeout(CONN_TIMEOUT, CONN_TIMEOUT_SSL);
     audio.setVolumeSteps(s_volume.volumeSteps);
     audio.setVolume(0);
-    audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
+    audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT, I2S_MCLK);
     audio.setI2SCommFMT_LSB(I2S_COMM_FMT);
 
     SerialPrintfln("setup: ....  number of saved stations: " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET "   ", staMgnt.getSumStations());
@@ -1157,16 +1153,19 @@ void setup() {
         return;
     }
 
-    if (LIGHT_SENSOR >= 0) {
-        s_f_BH1750_found = BH1750.begin(&i2cBusOne, BH1750.ADDR_TO_GROUND); // init the sensor with address pin connetcted to ground
-        if (s_f_BH1750_found) {                                             // result (bool) wil be be "false" if no sensor found
-            SerialPrintfln("setup: ....  " ANSI_ESC_WHITE "Ambient Light Sensor BH1750 found at " ANSI_ESC_CYAN "0x%X" ANSI_ESC_RESET, BH1750.ADDR_TO_GROUND);
-            BH1750.setResolutionMode(BH1750.ONE_TIME_H_RESOLUTION_MODE);
-            BH1750.setSensitivity(BH1750.SENSITIVITY_ADJ_MAX);
-        } else {
-            SerialPrintfln("setup: ....  " ANSI_ESC_RED "Ambient Light Sensor BH1750 not found" ANSI_ESC_RESET);
-        }
+    if (s_i2c_items.bh1750_found) {
+        BH1750.begin(&i2cBusOne, s_i2c_items.bh1750_addr); // init the sensor
+        SerialPrintfln("setup: ....  " ANSI_ESC_WHITE "Ambient Light Sensor BH1750 found at " ANSI_ESC_CYAN "0x%X" ANSI_ESC_RESET, s_i2c_items.bh1750_addr);
+        BH1750.setResolutionMode(BH1750.ONE_TIME_H_RESOLUTION_MODE);
+        BH1750.setSensitivity(BH1750.SENSITIVITY_ADJ_MAX);
     }
+
+    if (s_i2c_items.es8311_found) {
+        es8311.begin(&i2cBusOne, s_i2c_items.es8311_addr); // init the dac
+        SerialPrintfln("setup: ....  " ANSI_ESC_WHITE "DAC ES8311 found at " ANSI_ESC_CYAN "0x%X" ANSI_ESC_RESET, s_i2c_items.es8311_addr);
+        es8311.setVolume(90);
+    }
+
     if (BT_EMITTER_RX >= 0) bt_emitter.begin();
 
     rec_buffer.alloc_array(REC_BUFFER_SIZE, "rec_buffer");                             // allocate in PSRAM
@@ -1193,6 +1192,48 @@ void setup() {
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // 📌📌📌  C O M M O N  📌📌📌
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
+bool detect_i2_c_devices(TwoWire* twi, int8_t sda, int8_t scl, i2c_items_s* i2c_items) {
+    if (sda < 0) return false;
+    if (scl < 0) return false;
+    if (sda == scl) return false;
+    bool log = 0;
+    twi->end();
+    twi->flush();
+    twi->begin(sda, scl, 100000);
+
+    for (uint8_t addr = 0; addr < 128; addr++) {
+        twi->beginTransmission(addr);
+        if (twi->endTransmission() == 0) {
+            if (addr == 0x18 || addr == 0x19) {
+                i2c_items->es8311_found = true;
+                i2c_items->es8311_addr = addr;
+                if (log) MWR_LOG_WARN("es8311 found at 0x%X", addr);
+            } else if (addr == 0x14 || addr == 0x5D) {
+                i2c_items->gt911_found = true;
+                i2c_items->gt911_addr = addr;
+                if (log) MWR_LOG_WARN("gt911 found at 0x%X", addr);
+                //-- BH1750 -------------------------------------------------------------------------------------------------------------------------------
+            } else if (addr == 0x23 || addr == 0x5C) {
+                i2c_items->bh1750_found = true;
+                i2c_items->bh1750_addr = addr;
+                //-- FT8X36U ------------------------------------------------------------------------------------------------------------------------------
+            } else if (addr == 0x38) {
+                i2c_items->ft6x36u_found = true;
+                i2c_items->ft6x36u_addr = addr;
+                if (log) MWR_LOG_WARN("ft6x36u found at 0x%X", addr);
+            } else if (addr == 0x40) {
+                i2c_items->es7210_found = true;
+                i2c_items->es7210_addr = addr;
+                if (log) MWR_LOG_WARN("es7210 found at 0x%X", addr);
+            } else {
+                MWR_LOG_WARN("unknown i2c device at 0x%X found", addr);
+            }
+        }
+    }
+    return true;
+}
+//---------------------------------------------------------------------------------------
 
 void set_display_items() {
 //---- LAYOUT -----------
@@ -1240,7 +1281,7 @@ void set_display_items() {
     getTP().setSize(TP_CONTROLLER); // (0) 2.8 inch, (1) 3.5 inch, (4) 4.0 inch
     getTP().setRotation(TP_ROTATION);
 #elifdef TP_MODE_GT911  // GT911
-    getTP().begin(&i2cBusOne, GT911_I2C_ADDRESS, s_h_resolution, s_v_resolution);
+    getTP().begin(&i2cBusOne, s_i2c_items.gt911_addr, s_h_resolution, s_v_resolution);
     getTP().setRotation(TP_ROTATION);
     getTP().setMirror(TP_H_MIRROR, TP_V_MIRROR);
 #elifdef TP_MODE_FT6X63 // FT6x36
@@ -2309,8 +2350,7 @@ void loop() {
             }
             if (bt_emitter.getMode().equals("NA")) {
                 ; // not ready yet
-            }
-            else if (bt_emitter.get_power_state() &&  !bt_emitter.getMode().equals(s_bt_emitter.mode)) {
+            } else if (bt_emitter.get_power_state() && !bt_emitter.getMode().equals(s_bt_emitter.mode)) {
                 bt_emitter.setMode(s_bt_emitter.mode);
             }
         }
@@ -2521,6 +2561,12 @@ void my_audio_info(Audio::msg_t m) {
                 return;
             }
             if (startsWith(m.msg, "StreamTitle=")) { return; }
+            if (startsWith(m.msg, "BitsPerSample")) {
+                // es8311.setBitsPerSample(m.arg1);
+            }
+            if (startsWith(m.msg, "SampleRate (Hz)")) {
+                // es8311.setSampleRate(m.arg1);
+            }
             if (startsWith(m.msg, "HTTP/") && m.msg[9] > '3') {
                 SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, m.msg);
                 return;

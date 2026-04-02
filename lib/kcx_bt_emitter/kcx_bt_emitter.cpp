@@ -370,6 +370,8 @@ void KCX_BT_Emitter::parseATcmds() {
             ;
         } else if (item.starts_with("OK+VMLINK")) {
             ;
+        } else if (item.starts_with("VM Reset2")) {
+            ;
         } else if (item.starts_with("no connect!")) {
             ;
         } else if (item.starts_with("Not in receiver mode!")) {

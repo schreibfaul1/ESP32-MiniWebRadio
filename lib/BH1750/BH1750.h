@@ -110,12 +110,6 @@ private:
     BH1750Quality _quality;
     BH1750Timing  _timing;
 
-    uint8_t checkMtreg(uint8_t mtreg);
-
-
-   // unsigned int readValue();
-    unsigned int readChange(uint8_t mtreg, BH1750Quality quality, bool change);
-
 	uint8_t m_sensitivity     = SENSITIVITY_ADJ_DEFAULT;
 	float   m_resolution      = 1.0;
 	uint8_t m_resolutionMode  = ONE_TIME_H_RESOLUTION_MODE;
@@ -124,7 +118,4 @@ private:
 	const uint8_t m_Power_Down                    = 0b00000000; // No active state.
 	const uint8_t m_Power_On                      = 0b00000001; // Waiting for measurement command.
 	const uint8_t m_Reset                         = 0b00000111; // Reset Data register value. Reset command is not acceptable in Power Down mode.
-
-
-
 };
