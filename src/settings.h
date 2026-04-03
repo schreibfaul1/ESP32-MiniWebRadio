@@ -2,9 +2,9 @@
 #include "Arduino.h"
 #include "tft_structures.h"
 
-#define TFT_CONTROLLER    8                // (0)SPI-ILI9341[320x240], (3)SPI-ILI9486[480x320], (4)SPI-ILI9488[480x320], (5)SPI-ST7796[480x320], (7)RGB[800x480], (8)DSI-EK97001[1024x600], (9)DSI-JD9165[1024x600], (10)ST7701[480x800]
+#define TFT_CONTROLLER    7                // (0)SPI-ILI9341[320x240], (3)SPI-ILI9486[480x320], (4)SPI-ILI9488[480x320], (5)SPI-ST7796[480x320], (7)RGB[800x480], (8)DSI-EK97001[1024x600], (9)DSI-JD9165[1024x600], (10)ST7701[480x800]
 #define DISPLAY_INVERSION 0                // only SPI displays, (0) off (1) on
-#define TFT_ROTATION      0                // (0) none, (1) 90°CW, (2) 180°CW, (3) 270°CW
+#define TFT_ROTATION      2                // (0) none, (1) 90°CW, (2) 180°CW, (3) 270°CW
 #define TFT_FREQUENCY     40000000         // only SPI displays, 80000000, 40000000, 27000000, 20000000, 10000000
 #define TP_CONTROLLER     7                // (0)XPT2046 2.8", (1)XPT2046 3.5", (2)XPT2046 4.0", (7)GT911, (8)FT6x63
 #define TP_ROTATION       1                // (0) none, (1) 90°CW, (2) 180°CW, (3) 270°CW
@@ -83,13 +83,13 @@
 #endif     // TFT_CONTROLLER < 7
 
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-// 📌📌📌  DISPLAY [800x480] ESP32-S§ SUNTON   📌📌📌
+// 📌📌📌  DISPLAY [800x480] ESP32-S3 SUNTON   📌📌📌
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 #if 1                            // 0 deactivated, 1 activated
     #if TFT_CONTROLLER == 7      // RGB display
 const Pins RGB_PINS = { // SUNTON 7"
     .b0 = 15, .b1 = 7,  .b2 = 6,  .b3 = 5,  .b4 = 4,  .g0 = 9,     .g1 = 46,    .g2 = 3,  .g3 = 8,    .g4 = 16, .g5 = 1,
-    .r0 = 14, .r1 = 21, .r2 = 47, .r3 = 48, .r4 = 45, .hsync = 39, .vsync = 40, .de = 41, .pclk = 42, .bl = 2};
+    .r0 = 14, .r1 = 21, .r2 = 47, .r3 = 48, .r4 = 45, .hsync = 39, .vsync = 40, .de = 41, .pclk = 42, .bl = -1};
 
 const Timing RGB_TIMING = {.h_res = 800,
                            .v_res = 480,
@@ -127,7 +127,7 @@ const Timing RGB_TIMING = {.h_res = 800,
     #if TFT_CONTROLLER == 7 // RGB display
 const Pins RGB_PINS = { // ELECROW 5"
     .b0 = 8,  .b1 = 3,  .b2 = 46, .b3 = 9,  .b4 = 1,  .g0 = 5,     .g1 = 6,     .g2 = 7,  .g3 = 15,  .g4 = 16, .g5 = 4,
-    .r0 = 45, .r1 = 48, .r2 = 47, .r3 = 21, .r4 = 14, .hsync = 39, .vsync = 41, .de = 40, .pclk = 0, .bl = 2};
+    .r0 = 45, .r1 = 48, .r2 = 47, .r3 = 21, .r4 = 14, .hsync = 39, .vsync = 41, .de = 40, .pclk = 0, .bl = -1};
 
 const Timing RGB_TIMING = {.h_res = 800,
                                     .v_res = 480,
@@ -173,7 +173,7 @@ const Timing RGB_TIMING = {.h_res = 800,
     #if TFT_CONTROLLER == 7 // RGB display
 const Pins RGB_PINS = { // ELECROW 7"
     .b0 = 15, .b1 = 7,  .b2 = 6,  .b3 = 5,  .b4 = 4,  .g0 = 9,     .g1 = 46,    .g2 = 3,  .g3 = 8,   .g4 = 16, .g5 = 1,
-    .r0 = 14, .r1 = 21, .r2 = 47, .r3 = 48, .r4 = 45, .hsync = 39, .vsync = 40, .de = 41, .pclk = 0, .bl = 2};
+    .r0 = 14, .r1 = 21, .r2 = 47, .r3 = 48, .r4 = 45, .hsync = 39, .vsync = 40, .de = 41, .pclk = 0, .bl = -1};
 
 const Timing RGB_TIMING = {.h_res = 800,
                                     .v_res = 480,
