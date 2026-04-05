@@ -1297,10 +1297,10 @@ bool init_SD_card() {
     SerialPrintfln("setup: ...   Init SD card");
     pinMode(SD_MMC_D0, INPUT_PULLUP);
     int32_t sdmmc_frequency = SDMMC_FREQUENCY / 1000; // MHz -> KHz, default is 40MHz
-#ifdef CONFIG_IDF_TARGET_ESP32S3
+#if SD_MMC_D1 == -1
     SD_MMC.setPins(SD_MMC_CLK, SD_MMC_CMD, SD_MMC_D0);
     s_f_sd_card_found = SD_MMC.begin("/sdcard", true, false, sdmmc_frequency);
-#elifdef CONFIG_IDF_TARGET_ESP32P4
+#else
     SD_MMC.setPins(SD_MMC_CLK, SD_MMC_CMD, SD_MMC_D0, SD_MMC_D1, SD_MMC_D2, SD_MMC_D3);
     s_f_sd_card_found = SD_MMC.begin("/sdcard", false, false, sdmmc_frequency);
 #endif

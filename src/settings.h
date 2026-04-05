@@ -31,9 +31,14 @@
         #define TFT_BL             10 // at -1 the brightness menu is not displayed
         #define TP_IRQ             39
         #define TP_CS              15
+
         #define SD_MMC_D0          11
+        #define SD_MMC_D1          -1
+        #define SD_MMC_D2          -1
+        #define SD_MMC_D3          -1
         #define SD_MMC_CLK         13
         #define SD_MMC_CMD         14
+
         #define IR_PIN             4  // IR Receiver (if available)
         #define TFT_MOSI           18 // TFT and TP (FSPI)
         #define TFT_MISO           2  // TFT and TP (FSPI)
@@ -57,12 +62,14 @@
         #define TFT_BL             4 // at -1 the brightness menu is not displayed
         #define TP_IRQ             5
         #define TP_CS              2
+
         #define SD_MMC_D0          39
         #define SD_MMC_D1          40
         #define SD_MMC_D2          41
         #define SD_MMC_D3          42
         #define SD_MMC_CLK         43
         #define SD_MMC_CMD         44
+
         #define IR_PIN             32 // IR Receiver (if available)
         #define TFT_MOSI           20 // TFT and TP (FSPI)
         #define TFT_MISO           21 // TFT and TP (FSPI)
@@ -102,9 +109,14 @@ const Timing RGB_TIMING = {.h_res = 800,
                            .vsync_front_porch = 22};
 
         #define TP_IRQ             -1
+
+        #define SD_MMC_D0          13
+        #define SD_MMC_D1          -1
+        #define SD_MMC_D2          -1
+        #define SD_MMC_D3          -1
         #define SD_MMC_CMD         11
         #define SD_MMC_CLK         12
-        #define SD_MMC_D0          13
+
         #define I2S_DOUT           17
         #define I2S_BCLK           0
         #define I2S_LRC            18
@@ -140,9 +152,13 @@ const Timing RGB_TIMING = {.h_res = 800,
                                     .vsync_front_porch = 8};
 
         #define TP_IRQ     -1
+
+        #define SD_MMC_D0  13
+        #define SD_MMC_D1  -1
+        #define SD_MMC_D2  -1
+        #define SD_MMC_D3  -1
         #define SD_MMC_CMD 11
         #define SD_MMC_CLK 12
-        #define SD_MMC_D0  13
 
         #define I2C_MASTER_FREQ_HZ 400000 // 400 kHz I2C-frequency
 
@@ -186,9 +202,14 @@ const Timing RGB_TIMING = {.h_res = 800,
                                     .vsync_front_porch = 1};
 
         #define TP_IRQ             -1
+
+        #define SD_MMC_D0          13
+        #define SD_MMC_D1          -1
+        #define SD_MMC_D2          -1
+        #define SD_MMC_D3          -1
         #define SD_MMC_CMD         11
         #define SD_MMC_CLK         12
-        #define SD_MMC_D0          13
+
         #define I2S_DOUT           17
         #define I2S_BCLK           42
         #define I2S_LRC            18
@@ -226,9 +247,12 @@ const Timing RGB_TIMING = {.h_res = 800,
 
         #define TP_IRQ -1
 
+        #define SD_MMC_D0  13
+        #define SD_MMC_D1  -1
+        #define SD_MMC_D2  -1
+        #define SD_MMC_D3  -1
         #define SD_MMC_CMD 11
         #define SD_MMC_CLK 12
-        #define SD_MMC_D0  13
 
         #define I2S_DOUT 19
         #define I2S_BCLK 20
