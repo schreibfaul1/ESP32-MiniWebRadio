@@ -276,7 +276,7 @@ const Timing RGB_TIMING = {.h_res = 800,
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // 📌📌📌  DSI-DISPLAY [1024x600] ESP32-P4 WAVESHARE 7"   📌📌📌
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-#if 1                       // 0 deactivated, 1 activated
+#if 0                       // 0 deactivated, 1 activated
     #if TFT_CONTROLLER == 8 // RGB display
 
 const Timing DSI_TIMING = {.h_res = 1024,
@@ -325,6 +325,54 @@ const Timing DSI_TIMING = {.h_res = 1024,
 
         #define I2C_SDA 7 // I2C dala line for capacitive touchpad
         #define I2C_SCL 8 // I2C clock line for capacitive touchpad
+    #endif
+#endif
+
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// 📌📌📌  DSI-DISPLAY [1024x600] ESP32-P4 ELECROW 7"   📌📌📌
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+#if 1                       // 0 deactivated, 1 activated
+    #if TFT_CONTROLLER == 8 // RGB display
+
+const Timing DSI_TIMING = {.h_res = 1024,
+                           .v_res = 600,
+                           .pixel_clock_mhz = 52,
+                           .hsync_pulse_width = 10,
+                           .hsync_back_porch = 160,
+                           .hsync_front_porch = 160,
+                           .vsync_pulse_width = 1,
+                           .vsync_back_porch = 23,
+                           .vsync_front_porch = 12,
+                           .lane_bit_rate_mbps = 1000};
+
+        #define TP_IRQ -1
+
+        #define SD_MMC_D0  39
+        #define SD_MMC_D1  -1
+        #define SD_MMC_D2  -1
+        #define SD_MMC_D3  -1
+        #define SD_MMC_CLK 43
+        #define SD_MMC_CMD 44
+
+        // I2S onboard DAC ES7210
+        #define I2S_DOUT 23
+        #define I2S_BCLK 22
+        #define I2S_LRC  21
+        #define I2S_MCLK 24
+
+        #define IR_PIN             -1 // 5  // IR Receiver (if available)
+        #define BT_EMITTER_RX      -1 // 28
+        #define BT_EMITTER_TX      -1 // 29
+        #define BT_EMITTER_LINK    -1 // 30
+        #define BT_EMITTER_MODE    -1 // 31
+        #define BT_EMITTER_CONNECT -1 // 34
+
+        #define LCD_RESET   41
+        #define TFT_BL      31
+        #define AMP_ENABLED 30 // control pin for onboard amplifier
+
+        #define I2C_SDA 45 // I2C dala line for capacitive touchpad
+        #define I2C_SCL 46 // I2C clock line for capacitive touchpad
     #endif
 #endif
 
