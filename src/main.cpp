@@ -1313,7 +1313,7 @@ bool init_SD_card() {
     found = SD_MMC.begin("/sdcard", true, false, sdmmc_frequency);
 #else
     SD_MMC.setPins(SD_MMC_CLK, SD_MMC_CMD, SD_MMC_D0, SD_MMC_D1, SD_MMC_D2, SD_MMC_D3);
-    s_f_sd_card_found = SD_MMC.begin("/sdcard", false, false, sdmmc_frequency);
+    found = SD_MMC.begin("/sdcard", false, false, sdmmc_frequency);
 #endif
     if (found) {
         float cardSize = ((float)SD_MMC.cardSize()) / (1024 * 1024);
