@@ -4,7 +4,7 @@
 
 #define TFT_CONTROLLER    8                // (0)SPI-ILI9341[320x240], (3)SPI-ILI9486[480x320], (4)SPI-ILI9488[480x320], (5)SPI-ST7796[480x320], (7)RGB[800x480], (8)DSI-EK97007[1024x600], (9)DSI-JD9165[1024x600], (10)ST7701[480x800]
 #define DISPLAY_INVERSION 0                // only SPI displays, (0) off (1) on
-#define TFT_ROTATION      0                // (0) none, (1) 90°CW, (2) 180°CW, (3) 270°CW
+#define TFT_ROTATION      2                // (0) none, (1) 90°CW, (2) 180°CW, (3) 270°CW
 #define TFT_FREQUENCY     40000000         // only SPI displays, 80000000, 40000000, 27000000, 20000000, 10000000
 #define TP_CONTROLLER     7                // (0)XPT2046 2.8", (1)XPT2046 3.5", (2)XPT2046 4.0", (7)GT911, (8)FT6x63
 #define TP_ROTATION       1                // (0) none, (1) 90°CW, (2) 180°CW, (3) 270°CW
@@ -336,14 +336,14 @@ const Timing DSI_TIMING = {.h_res = 1024,
 
 const Timing DSI_TIMING = {.h_res = 1024,
                            .v_res = 600,
-                           .pixel_clock_mhz = 52,
-                           .hsync_pulse_width = 10,
+                           .pixel_clock_mhz = 51,
+                           .hsync_pulse_width = 70,
                            .hsync_back_porch = 160,
                            .hsync_front_porch = 160,
-                           .vsync_pulse_width = 1,
+                           .vsync_pulse_width = 10,
                            .vsync_back_porch = 23,
-                           .vsync_front_porch = 12,
-                           .lane_bit_rate_mbps = 1000};
+                           .vsync_front_porch = 21,
+                           .lane_bit_rate_mbps = 900};
 
         #define TP_IRQ -1
 
@@ -355,10 +355,10 @@ const Timing DSI_TIMING = {.h_res = 1024,
         #define SD_MMC_CMD 44
 
         // I2S onboard DAC ES7210
-        #define I2S_DOUT 23
-        #define I2S_BCLK 22
-        #define I2S_LRC  21
-        #define I2S_MCLK 24
+        #define I2S_DOUT -1 // 23
+        #define I2S_BCLK -1 // 22
+        #define I2S_LRC  -1 // 21
+        #define I2S_MCLK -1 // 24
 
         #define IR_PIN             -1 // 5  // IR Receiver (if available)
         #define BT_EMITTER_RX      -1 // 28
@@ -369,7 +369,7 @@ const Timing DSI_TIMING = {.h_res = 1024,
 
         #define LCD_RESET   41
         #define TFT_BL      31
-        #define AMP_ENABLED 30 // control pin for onboard amplifier
+        #define AMP_ENABLED -1 //30 // control pin for onboard amplifier
 
         #define I2C_SDA 45 // I2C dala line for capacitive touchpad
         #define I2C_SCL 46 // I2C clock line for capacitive touchpad

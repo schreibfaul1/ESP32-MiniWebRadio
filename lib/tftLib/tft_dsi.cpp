@@ -46,7 +46,17 @@ void TFT_DSI::begin(const Timing& newTiming) {
         .voltage_mv = 2500,
     };
     m_err = esp_ldo_acquire_channel(&ldo_mipi_phy_config, &ldo_mipi_phy);
-    if (m_err != 0) { log_e("LDO Power not enabled, err: %i\n", m_err); }
+    if (m_err != 0) { log_e("LDO3 Power not enabled, err: %i\n", m_err); }
+
+    // --- Power Configuration (LDO4 for I2C/touch pull up) ---
+    esp_ldo_channel_handle_t ldo4_handle = NULL;
+    esp_ldo_channel_config_t ldo4_cfg = {
+        .chan_id = 4,           // LDO Channel 4
+        .voltage_mv = 3300,     // Set to 3300mV (3.3V)
+    };
+    m_err = esp_ldo_acquire_channel(&ldo4_cfg, &ldo4_handle);
+    if (m_err != 0) { log_e("LDO4 Power not enabled, err: %i\n", m_err); }
+
 
     // --------------------------------------------------
     // 2. Reset Display

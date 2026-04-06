@@ -1042,19 +1042,29 @@ void setup() {
     if (!get_esp_items(&s_resetReason, &s_f_FFatFound)) return;
     pref.begin("Pref", false); // instance of preferences from AccessPoint (SSID, PW ...)
 
+    s_f_sd_card_found = init_SD_card();
     if (!detect_i2_c_devices(&i2cBusOne, I2C_SDA, I2C_SCL, &s_i2c_items)) { SerialPrintfln("setup: ....  No i2c device found"); }
+
+    set_display_items(); // TFT, TP, Resolotion
 
     if (TFT_BL >= 0) {
         s_f_brightnessIsChangeable = true;
         setupBacklight(TFT_BL, 512);
         setTFTbrightness(5);
     }
+
+    if (!s_f_sd_card_found) {
+        clearAll();
+        getTFT().setFont(displayConfig.fonts[6]);
+        getTFT().setTextColor(TFT_YELLOW);
+        getTFT().writeText("SD Card Mount Failed", 0, 50, displayConfig.dispWidth, displayConfig.dispHeight, TFT_ALIGN_CENTER, TFT_ALIGN_TOP, false, false);
+        SerialPrintfln(ANSI_ESC_RED "SD Card Mount Failed" ANSI_ESC_RESET "  ");
+        return;
+    }
+
     if (IR_PIN >= 0) {
         pinMode(IR_PIN, INPUT_PULLUP); // if ir_pin is read only, have a external resistor (~10...40KOhm)
     }
-
-    set_display_items(); // TFT, TP, Resolotion
-    if (!init_SD_card()) return;
 
     defaultsettings();
 
@@ -1294,28 +1304,23 @@ void set_display_items() {
 
 //---------------------------------------------------------------------------------------
 bool init_SD_card() {
+    bool found = false;
     SerialPrintfln("setup: ...   Init SD card");
     pinMode(SD_MMC_D0, INPUT_PULLUP);
     int32_t sdmmc_frequency = SDMMC_FREQUENCY / 1000; // MHz -> KHz, default is 40MHz
 #if SD_MMC_D1 == -1
     SD_MMC.setPins(SD_MMC_CLK, SD_MMC_CMD, SD_MMC_D0);
-    s_f_sd_card_found = SD_MMC.begin("/sdcard", true, false, sdmmc_frequency);
+    found = SD_MMC.begin("/sdcard", true, false, sdmmc_frequency);
 #else
     SD_MMC.setPins(SD_MMC_CLK, SD_MMC_CMD, SD_MMC_D0, SD_MMC_D1, SD_MMC_D2, SD_MMC_D3);
     s_f_sd_card_found = SD_MMC.begin("/sdcard", false, false, sdmmc_frequency);
 #endif
-    if (!s_f_sd_card_found) {
-        clearAll();
-        getTFT().setFont(displayConfig.fonts[6]);
-        getTFT().setTextColor(TFT_YELLOW);
-        getTFT().writeText("SD Card Mount Failed", 0, 50, displayConfig.dispWidth, displayConfig.dispHeight, TFT_ALIGN_CENTER, TFT_ALIGN_TOP, false, false);
-        SerialPrintfln(ANSI_ESC_RED "SD Card Mount Failed" ANSI_ESC_RESET "  ");
-        return false;
+    if (found) {
+        float cardSize = ((float)SD_MMC.cardSize()) / (1024 * 1024);
+        float freeSize = ((float)SD_MMC.cardSize() - SD_MMC.usedBytes()) / (1024 * 1024);
+        SerialPrintfln(ANSI_ESC_WHITE "setup: ....  SD card found, %.1f MB by %.1f MB free" ANSI_ESC_RESET "   ", freeSize, cardSize);
     }
-    float cardSize = ((float)SD_MMC.cardSize()) / (1024 * 1024);
-    float freeSize = ((float)SD_MMC.cardSize() - SD_MMC.usedBytes()) / (1024 * 1024);
-    SerialPrintfln(ANSI_ESC_WHITE "setup: ....  SD card found, %.1f MB by %.1f MB free" ANSI_ESC_RESET "   ", freeSize, cardSize);
-    return true;
+    return found;
 }
 
 //---------------------------------------------------------------------------------------
@@ -2046,6 +2051,7 @@ void loop() {
     bt_emitter.loop();
     getTFT().loop();
     BH1750.loop();
+
 
     while (s_logBuffer.size() > 0) {
         size_t i = s_logBuffer.size();
