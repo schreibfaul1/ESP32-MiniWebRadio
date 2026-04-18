@@ -2,7 +2,7 @@
  *  KCX_BT_Emitter.cpp
  *
  *  Created on: 21.01.2024
- *  updated on: 27.03.2026
+ *  updated on: 18.04.2026
  *      Author: Wolle
  */
 
@@ -43,7 +43,7 @@ void KCX_BT_Emitter::begin() {
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void KCX_BT_Emitter::decrement_timer() {
 
-    if (m_tx_process_timer == 1) {
+    if (m_tx_process_timer == 1 && m_f_power) {
         KCX_LOG_WARN("timeout, last command was: '%s'", m_last_tx_command.c_get());
         m_last_tx_command = "";
     }
@@ -480,6 +480,7 @@ void KCX_BT_Emitter::setMode(ps_ptr<char> mode) {
 }
 void KCX_BT_Emitter::setMode_intern(ps_ptr<char> mode) {
     if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;
+    if (!m_f_power) return;
     if (mode.equals("RX")) {
         if (m_ibt_mode != 0) {
             m_ibt_mode = 0;
