@@ -813,11 +813,11 @@ const char* aes_encrypt(const char* input) {
     len++;
     x_ps_free(&output);
     output = (char*)x_ps_calloc((len * 16) + 1, 1);
-    mbedtls_aes_context aes;
-    mbedtls_aes_init(&aes);
-    mbedtls_aes_setkey_enc(&aes, (const unsigned char*)aesKey, 128);
-    mbedtls_aes_crypt_ecb(&aes, MBEDTLS_AES_ENCRYPT, (const unsigned char*)input, (unsigned char*)output);
-    mbedtls_aes_free(&aes);
+    esp_aes_context aes;
+    esp_aes_init(&aes);
+    esp_aes_setkey(&aes, (const unsigned char*)aesKey, 128);
+    esp_aes_crypt_ecb(&aes, ESP_AES_ENCRYPT, (const unsigned char*)input, (unsigned char*)output);
+    esp_aes_free(&aes);
     return output;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -826,11 +826,11 @@ const char* aes_decrypt(const char* input) {
     uint16_t     len = strlen(input) + 1;
     x_ps_free(&output);
     output = (char*)x_ps_calloc(len, 1);
-    mbedtls_aes_context aes;
-    mbedtls_aes_init(&aes);
-    mbedtls_aes_setkey_dec(&aes, (const unsigned char*)aesKey, 128);
-    mbedtls_aes_crypt_ecb(&aes, MBEDTLS_AES_DECRYPT, (const unsigned char*)input, (unsigned char*)output);
-    mbedtls_aes_free(&aes);
+    esp_aes_context aes;
+    esp_aes_init(&aes);
+    esp_aes_setkey(&aes, (const unsigned char*)aesKey, 128);
+    esp_aes_crypt_ecb(&aes, ESP_AES_DECRYPT, (const unsigned char*)input, (unsigned char*)output);
+    esp_aes_free(&aes);
     return output;
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
