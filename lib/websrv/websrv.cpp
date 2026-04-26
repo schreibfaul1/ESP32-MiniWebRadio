@@ -8,6 +8,7 @@
 
 #include "websrv.h"
 #include "esp_memory_utils.h"
+#include "mbedtls/md.h"
 //--------------------------------------------------------------------------------------------------------------
 WebSrv::WebSrv(String Name, String Version) {
     _Name = Name;
@@ -32,7 +33,10 @@ String WebSrv::calculateWebSocketResponseKey(String sec_WS_key) {
     // output Sec-WebSocket-Accept-Key (used in response message to client)
     uint8_t sha1_result[20];
     String  concat = sec_WS_key + WS_sec_conKey;
-    mbedtls_sha1((unsigned char*)concat.c_str(), concat.length(), (unsigned char*)sha1_result);
+    const mbedtls_md_info_t* sha1_info = mbedtls_md_info_from_type(MBEDTLS_MD_SHA1);
+    if (sha1_info == nullptr ||
+        mbedtls_md(sha1_info, (const unsigned char*)concat.c_str(), concat.length(), sha1_result) != 0)
+        return "";
     return base64::encode(sha1_result, 20);
 }
 //--------------------------------------------------------------------------------------------------------------

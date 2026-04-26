@@ -71,15 +71,15 @@ void TFT_RGB::begin(const Pins& newPins, const Timing& newTiming) {
     panel_config.timings.flags.pclk_idle_high = true;
 
     panel_config.data_width = 16; // RGB565
-    panel_config.bits_per_pixel = 16;
+ //   panel_config.bits_per_pixel = 16;
     panel_config.num_fbs = 3;
     panel_config.bounce_buffer_size_px = 0;
     panel_config.dma_burst_size = 64;
-    panel_config.hsync_gpio_num = m_pins.hsync;
-    panel_config.vsync_gpio_num = m_pins.vsync;
-    panel_config.de_gpio_num = m_pins.de;
-    panel_config.pclk_gpio_num = m_pins.pclk;
-    panel_config.disp_gpio_num = m_pins.bl;
+    panel_config.hsync_gpio_num = (gpio_num_t)m_pins.hsync;
+    panel_config.vsync_gpio_num = (gpio_num_t)m_pins.vsync;
+    panel_config.de_gpio_num = (gpio_num_t)m_pins.de;
+    panel_config.pclk_gpio_num = (gpio_num_t)m_pins.pclk;
+    panel_config.disp_gpio_num = (gpio_num_t)m_pins.bl;
 
     int8_t pinArr[16] = {               // Daten-Pins für RGB565
         m_pins.b0, m_pins.b1, m_pins.b2, m_pins.b3, m_pins.b4,
@@ -89,7 +89,7 @@ void TFT_RGB::begin(const Pins& newPins, const Timing& newTiming) {
 
     for (int i = 0; i < 16; ++i) {
         //  log_i("i %i. pin %i", i, pinArr[i]);
-        panel_config.data_gpio_nums[i] = pinArr[i];
+        panel_config.data_gpio_nums[i] = (gpio_num_t)pinArr[i];
     }
     panel_config.flags.disp_active_low = false;
     panel_config.flags.refresh_on_demand = true;

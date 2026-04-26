@@ -11,7 +11,7 @@
 #include "Audio.h"
 #include "base64.h"
 #include "mbedtls/base64.h"
-#include "mbedtls/sha1.h"
+#include "sha/sha_core.h"
 
 extern __attribute__((weak)) void WEBSRV_onCommand(const char* cmd, const String param, const String arg);
 extern __attribute__((weak)) void WEBSRV_onRequest(const char* cmd, const char* param, const char* arg, const char* contentType, uint32_t contentLength);

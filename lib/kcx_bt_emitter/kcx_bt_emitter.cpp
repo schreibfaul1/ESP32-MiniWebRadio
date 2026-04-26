@@ -187,7 +187,7 @@ void KCX_BT_Emitter::readCmd() {
         m_last_rx_command = extracted_message;
         m_msg.e = evt_info;
         m_msg.arg = extracted_message.c_get();
-        if (m_bt_callback) { m_bt_callback(m_msg); }
+        // if (m_bt_callback) { m_bt_callback(m_msg); }
         return;
     };
 

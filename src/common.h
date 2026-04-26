@@ -56,7 +56,7 @@
 #include "driver/ledc.h"
 #include "esp_log.h"
 #include "kcx_bt_emitter.h"
-#include "mbedtls/sha1.h"
+#include "sha/sha_core.h"
 #include "rtime.h"
 #include "settings.h"
 #include "websrv.h"
@@ -73,7 +73,7 @@
 #include <WiFiClientSecure.h>
 #include <WiFiMulti.h>
 #include <Wire.h>
-#include <mbedtls/aes.h>
+#include <aes/esp_aes.h>
 #include <mbedtls/base64.h>
 #include <vector>
 
