@@ -747,7 +747,6 @@ bool connectToWiFi() {
     line += "\t";
     line += PW;
     pref.putString("wifiStr0", line.c_get());
-    WiFi.mode(WIFI_STA);
 
     for (int i = 0; i < 6; i++) {
         line.clear(); // Move this line outside the switch statement
@@ -792,8 +791,6 @@ bool connectToWiFi() {
     // These options can help when you need ANY kind of wifi connection to get a config file, report errors, etc.
     wifiMulti.setStrictMode(true); // Default is true.  Library will disconnect and forget currently connected AP if it's not in the AP list.
     SerialPrintfln("WiFI_info:   Connecting WiFi...");
-
-    WiFi.mode(WIFI_MODE_STA);
 
     int i = 0;
     while (!WiFi.isConnected()) {
@@ -1054,6 +1051,9 @@ void setup() {
     }
 
     set_display_items(); // TFT, TP, Resolotion
+#if defined(CONFIG_IDF_TARGET_ESP32P4) && CONFIG_ESP_HOSTED_SDIO_HOST_INTERFACE
+    WiFi.mode(WIFI_MODE_STA); // initialize ESP-Hosted SDIO before mounting the SD card on slot 0
+#endif
     if (!init_SD_card()) return;
 
     defaultsettings();
@@ -1091,6 +1091,15 @@ void setup() {
     lst_DLNA.client_and_history(&dlna, &s_dlnaHistory[0], 10);
     lst_RADIO.currentStationNr(&s_cur_station);
     clk_AC_red.alarm_time_and_days(&s_alarmdays, s_alarmtime);
+
+    audio.settings.DMA_DESC_NUM = 32;        // number of I2S DMA buffer
+    audio.settings.DMA_FRAME_NUM = 256;      // number of frames in one DMA buffer
+    audio.settings.FREQ_LS_HZ = 500;         // IIR Filter, lowshelf
+    audio.settings.FREQ_PEAK_HZ = 1800;      // IIR Filter, peakingEQ
+    audio.settings.FREQ_HS_HZ = 6000;        // IIR Filter, highshelf
+    audio.settings.QUALITY_SLOPE = 0.707;    // Quality (all shelfes)
+    audio.settings.PEAK_HOLD_SAMPLES = 2000; // VU_meter, (2000) ca. 20 ms @ 48 kHz
+    audio.settings.PEAK_RELEASE = 1;         // VU_meter, Fall rate
 
     audio.setAudioTaskCore(AUDIOTASK_CORE);
     audio.setConnectionTimeout(CONN_TIMEOUT, CONN_TIMEOUT_SSL);

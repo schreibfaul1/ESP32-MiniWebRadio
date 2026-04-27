@@ -254,7 +254,6 @@ void TFT_DSI::begin(const Timing& newTiming) {
     esp_lcd_dpi_panel_config_t dpi_cfg = {.virtual_channel = 0,
                                           .dpi_clk_src = MIPI_DSI_DPI_CLK_SRC_DEFAULT,
                                           .dpi_clock_freq_mhz = m_timing.pixel_clock_mhz,
-                                          .pixel_format = LCD_COLOR_PIXEL_FORMAT_RGB565,
                                           .in_color_format = LCD_COLOR_FMT_RGB565,
                                           .out_color_format = LCD_COLOR_FMT_RGB565,
 
@@ -273,7 +272,6 @@ void TFT_DSI::begin(const Timing& newTiming) {
                                               },
 
                                           .flags = {
-                                              .use_dma2d = true,
                                               .disable_lp = false,
                                           }};
 
