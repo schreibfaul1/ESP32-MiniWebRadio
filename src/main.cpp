@@ -1026,9 +1026,9 @@ void setup() {
     printf("\n\n");
     trim(Version);
     SerialPrintfln("");
-    SerialPrintfln("             " ANSI_ESC_BG_MAGENTA " ***************************************************** " ANSI_ESC_RESET "   ");
-    SerialPrintfln("             " ANSI_ESC_BG_MAGENTA " *     MiniWebRadio % 29s    * " ANSI_ESC_RESET "      ", Version);
-    SerialPrintfln("             " ANSI_ESC_BG_MAGENTA " ***************************************************** " ANSI_ESC_RESET "    ");
+    SerialPrintfln("             " ANSI_ESC_YELLOW " ***************************************************** " ANSI_ESC_RESET "   ");
+    SerialPrintfln("             " ANSI_ESC_YELLOW " *     MiniWebRadio % 29s    * " ANSI_ESC_RESET "      ", Version);
+    SerialPrintfln("             " ANSI_ESC_YELLOW " ***************************************************** " ANSI_ESC_RESET "    ");
     SerialPrintfln(ANSI_ESC_RESET "   ");
 
     mutex_rtc = xSemaphoreCreateMutex();
