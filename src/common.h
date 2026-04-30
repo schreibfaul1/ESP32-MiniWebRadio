@@ -743,6 +743,7 @@ class RegisterTable {
     virtual bool         positionXY(uint16_t, uint16_t) = 0;
     virtual void         draw() = 0;
     virtual void         getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) = 0;
+    virtual void         setFocus(bool) = 0;
     virtual ~RegisterTable() {}
 };
 static std::vector<RegisterTable*> registertable_objects;

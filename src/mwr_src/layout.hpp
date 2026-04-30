@@ -560,49 +560,30 @@ void placingGraphicObjects() { // and initialize them
     btn_RA_mute.setClickedOffPicturePath("/btn/Button_Mute_Off_Yellow.png");
     btn_RA_mute.setClickedOnPicturePath("/btn/Button_Mute_On_Yellow.png");
     btn_RA_prevSta.begin(1 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_RA_prevSta.setDefaultPicturePath("/btn/Button_Previous_Green.png");
-    btn_RA_prevSta.setClickedPicturePath("/btn/Button_Previous_Yellow.png");
+    btn_RA_prevSta.setPicturePath("/btn/Button_Previous");
     btn_RA_nextSta.begin(2 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_RA_nextSta.setDefaultPicturePath("/btn/Button_Next_Green.png");
-    btn_RA_nextSta.setClickedPicturePath("/btn/Button_Next_Yellow.png");
+    btn_RA_nextSta.setPicturePath("/btn/Button_Next");
     btn_RA_recorder.begin(3 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_RA_recorder.setOffPicturePath("/btn/Button_Recorder_Blue.png");
     btn_RA_recorder.setOnPicturePath("/btn/Button_Recorder_Red.png");
     btn_RA_recorder.setClickedOffPicturePath("/btn/Button_Recorder_Yellow.png");
     btn_RA_recorder.setClickedOnPicturePath("/btn/Button_Recorder_Yellow.png");
     btn_RA_staList.begin(0 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_RA_staList.setDefaultPicturePath("/btn/Button_List_Green.png");
-    btn_RA_staList.setClickedPicturePath("/btn/Button_List_Yellow.png");
-    btn_RA_staList.setAlternativePicturePath("/btn/Button_List_Magenta.png");
+    btn_RA_staList.setPicturePath("/btn/Button_List");
     btn_RA_player.begin(1 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_RA_player.setDefaultPicturePath("/btn/Button_Player_Green.png");
-    btn_RA_player.setClickedPicturePath("/btn/Button_Player_Yellow.png");
-    btn_RA_player.setAlternativePicturePath("/btn/Button_Player_Magenta.png");
+    btn_RA_player.setPicturePath("/btn/Button_Player");
     btn_RA_dlna.begin(2 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_RA_dlna.setDefaultPicturePath("/btn/Button_DLNA_Green.png");
-    btn_RA_dlna.setClickedPicturePath("/btn/Button_DLNA_Yellow.png");
-    btn_RA_dlna.setAlternativePicturePath("/btn/Button_DLNA_Magenta.png");
+    btn_RA_dlna.setPicturePath("/btn/Button_DLNA");
     btn_RA_clock.begin(3 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_RA_clock.setDefaultPicturePath("/btn/Button_Clock_Green.png");
-    btn_RA_clock.setClickedPicturePath("/btn/Button_Clock_Yellow.png");
-    btn_RA_clock.setAlternativePicturePath("/btn/Button_Clock_Magenta.png");
+    btn_RA_clock.setPicturePath("/btn/Button_Clock");
     btn_RA_sleep.begin(4 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_RA_sleep.setDefaultPicturePath("/btn/Button_OffTimer_Green.png");
-    btn_RA_sleep.setClickedPicturePath("/btn/Button_OffTimer_Yellow.png");
-    btn_RA_sleep.setAlternativePicturePath("/btn/Button_OffTimer_Magenta.png");
+    btn_RA_sleep.setPicturePath("/btn/Button_OffTimer");
     btn_RA_settings.begin(5 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_RA_settings.setDefaultPicturePath("/btn/Button_Settings_Green.png");
-    btn_RA_settings.setClickedPicturePath("/btn/Button_Settings_Yellow.png");
-    btn_RA_settings.setAlternativePicturePath("/btn/Button_Settings_Magenta.png");
+    btn_RA_settings.setPicturePath("/btn/Button_Settings");
     btn_RA_bt.begin(6 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_RA_bt.setDefaultPicturePath("/btn/Button_Bluetooth_Green.png");
-    btn_RA_bt.setClickedPicturePath("/btn/Button_Bluetooth_Yellow.png");
-    btn_RA_bt.setAlternativePicturePath("/btn/Button_Bluetooth_Magenta.png");
-    btn_RA_bt.setInactivePicturePath("/btn/Button_Bluetooth_Grey.png");
+    btn_RA_bt.setPicturePath("/btn/Button_Bluetooth");
     btn_RA_off.begin(7 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_RA_off.setDefaultPicturePath("/btn/Button_Off_Red.png");
-    btn_RA_off.setClickedPicturePath("/btn/Button_Off_Yellow.png");
-    btn_RA_off.setAlternativePicturePath("/btn/Button_Off_Magenta.png");
+    btn_RA_off.setPicturePath("/btn/Button_Off");
     txt_RA_sTitle.setTransparency(true, false);
     txt_RA_sTitle.begin(layout.winSTitle.x, layout.winSTitle.y, layout.winSTitle.w, layout.winSTitle.h, layout.winSTitle.pl, layout.winSTitle.pr, layout.winSTitle.pt, layout.winSTitle.pb);
     txt_RA_sTitle.setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
@@ -639,55 +620,33 @@ void placingGraphicObjects() { // and initialize them
     btn_PL_pause.setAlternativeOnPicturePath("/btn/Button_Play_Magenta.png");
     btn_PL_pause.setValue(false);
     btn_PL_cancel.begin(2 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_PL_cancel.setDefaultPicturePath("/btn/Button_Cancel_Red.png");
-    btn_PL_cancel.setClickedPicturePath("/btn/Button_Cancel_Yellow.png");
-    btn_PL_cancel.setAlternativePicturePath("/btn/Button_Cancel_Magenta.png");
+    btn_PL_cancel.setPicturePath("/btn/Button_Cancel");
     sdr_PL_volume.setTransparency(true, false);
     sdr_PL_volume.begin(5 * layout.winButton.w + 10, layout.winButton.y, displayConfig.dispWidth - (5 * layout.winButton.w + 20), layout.winButton.h, layout.winButton.pl, layout.winButton.pr,
                         layout.winButton.pt, layout.winButton.pb);
     btn_PL_prevFile.begin(0 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_PL_prevFile.setDefaultPicturePath("/btn/Button_Left_Blue.png");
-    btn_PL_prevFile.setClickedPicturePath("/btn/Button_Left_Yellow.png");
-    btn_PL_prevFile.setAlternativePicturePath("/btn/Button_Left_Magenta.png");
+    btn_PL_prevFile.setPicturePath("/btn/Button_Left");
     btn_PL_nextFile.begin(1 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_PL_nextFile.setDefaultPicturePath("/btn/Button_Right_Blue.png");
-    btn_PL_nextFile.setClickedPicturePath("/btn/Button_Right_Yellow.png");
-    btn_PL_nextFile.setAlternativePicturePath("/btn/Button_Right_Magenta.png");
+    btn_PL_nextFile.setPicturePath("/btn/Button_Right");
     btn_PL_ready.begin(2 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_PL_ready.setDefaultPicturePath("/btn/Button_Ready_Blue.png");
-    btn_PL_ready.setClickedPicturePath("/btn/Button_Ready_Yellow.png");
-    btn_PL_ready.setAlternativePicturePath("/btn/Button_Ready_Magenta.png");
+    btn_PL_ready.setPicturePath("/btn/Button_Ready");
     btn_PL_playAll.begin(3 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_PL_playAll.setDefaultPicturePath("/btn/Button_PlayAll_Blue.png");
-    btn_PL_playAll.setClickedPicturePath("/btn/Button_PlayAll_Yellow.png");
-    btn_PL_playAll.setAlternativePicturePath("/btn/Button_PlayAll_Magenta.png");
+    btn_PL_playAll.setPicturePath("/btn/Button_PlayAll");
     btn_PL_shuffle.begin(4 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_PL_shuffle.setDefaultPicturePath("/btn/Button_Shuffle_Blue.png");
-    btn_PL_shuffle.setClickedPicturePath("/btn/Button_Shuffle_Yellow.png");
-    btn_PL_shuffle.setAlternativePicturePath("/btn/Button_Shuffle_Magenta.png");
+    btn_PL_shuffle.setPicturePath("/btn/Button_Shuffle");
     btn_PL_fileList.setTransparency(true, false);
     btn_PL_fileList.begin(5 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_PL_fileList.setDefaultPicturePath("/btn/Button_List_Green.png");
-    btn_PL_fileList.setClickedPicturePath("/btn/Button_List_Yellow.png");
-    btn_PL_fileList.setAlternativePicturePath("/btn/Button_List_Magenta.png");
+    btn_PL_fileList.setPicturePath("/btn/Button_List");
     btn_PL_radio.setTransparency(true, false);
     btn_PL_radio.begin(6 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_PL_radio.setDefaultPicturePath("/btn/Button_Radio_Green.png");
-    btn_PL_radio.setClickedPicturePath("/btn/Button_Radio_Yellow.png");
-    btn_PL_radio.setAlternativePicturePath("/btn/Button_Radio_Magenta.png");
+    btn_PL_radio.setPicturePath("/btn/Button_Radio");
     btn_PL_off.setTransparency(true, false);
     btn_PL_off.begin(7 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_PL_off.setDefaultPicturePath("/btn/Button_Off_Red.png");
-    btn_PL_off.setClickedPicturePath("/btn/Button_Off_Yellow.png");
-    btn_PL_off.setAlternativePicturePath("/btn/Button_Off_Magenta.png");
+    btn_PL_off.setPicturePath("/btn/Button_Off_Red.png");
     btn_PL_playPrev.begin(3 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_PL_playPrev.setDefaultPicturePath("/btn/Button_Previous_Blue.png");
-    btn_PL_playPrev.setClickedPicturePath("/btn/Button_Previous_Yellow.png");
-    btn_PL_playPrev.setAlternativePicturePath("/btn/Button_Previous_Magenta.png");
+    btn_PL_playPrev.setPicturePath("/btn/Button_Previous");
     btn_PL_playNext.begin(4 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_PL_playNext.setDefaultPicturePath("/btn/Button_Next_Blue.png");
-    btn_PL_playNext.setClickedPicturePath("/btn/Button_Next_Yellow.png");
-    btn_PL_playNext.setAlternativePicturePath("/btn/Button_Next_Magenta.png");
+    btn_PL_playNext.setPicturePath("/btn/Button_Next");
     txt_PL_fName.setTransparency(true, false);
     txt_PL_fName.begin(layout.winName.x, layout.winName.y, layout.winName.w, layout.winName.h, layout.winName.pl, layout.winName.pr, layout.winName.pt, layout.winName.pb);
     txt_PL_fName.setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
@@ -718,17 +677,11 @@ void placingGraphicObjects() { // and initialize them
     btn_DL_pause.setAlternativeOnPicturePath("/btn/Button_Play_Magenta.png");
     btn_DL_pause.setValue(false);
     btn_DL_cancel.begin(2 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_DL_cancel.setDefaultPicturePath("/btn/Button_Cancel_Red.png");
-    btn_DL_cancel.setClickedPicturePath("/btn/Button_Cancel_Yellow.png");
-    btn_DL_cancel.setAlternativePicturePath("/btn/Button_Cancel_Magenta.png");
+    btn_DL_cancel.setPicturePath("/btn/Button_Cancel_Red.png");
     btn_DL_fileList.begin(3 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_DL_fileList.setDefaultPicturePath("/btn/Button_List_Green.png");
-    btn_DL_fileList.setClickedPicturePath("/btn/Button_List_Yellow.png");
-    btn_DL_fileList.setAlternativePicturePath("/btn/Button_List_Magenta.png");
+    btn_DL_fileList.setPicturePath("/btn/Button_List");
     btn_DL_radio.begin(4 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_DL_radio.setDefaultPicturePath("/btn/Button_Radio_Green.png");
-    btn_DL_radio.setClickedPicturePath("/btn/Button_Radio_Yellow.png");
-    btn_DL_radio.setAlternativePicturePath("/btn/Button_Radio_Magenta.png");
+    btn_DL_radio.setPicturePath("/btn/Button_Radio");
     sdr_DL_volume.setTransparency(true, false);
     sdr_DL_volume.begin(5 * layout.winButton.w + 10, layout.winButton.y, displayConfig.dispWidth - (5 * layout.winButton.w + 20), layout.winButton.h, layout.winButton.pl, layout.winButton.pr,
                         layout.winButton.pt, layout.winButton.pb);
@@ -748,13 +701,9 @@ void placingGraphicObjects() { // and initialize them
     clk_CL_24.setTransparency(false, false);
     clk_CL_24.begin(layout.winDigits.x, layout.winDigits.y, layout.winDigits.w, layout.winDigits.h);
     btn_CL_alarm.begin(0 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_CL_alarm.setDefaultPicturePath("/btn/Button_Bell_Green.png");
-    btn_CL_alarm.setClickedPicturePath("/btn/Button_Bell_Yellow.png");
-    btn_CL_alarm.setAlternativePicturePath("/btn/Button_Bell_Magenta.png");
+    btn_CL_alarm.setPicturePath("/btn/Button_Bell");
     btn_CL_radio.begin(1 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_CL_radio.setDefaultPicturePath("/btn/Button_Radio_Green.png");
-    btn_CL_radio.setClickedPicturePath("/btn/Button_Radio_Yellow.png");
-    btn_CL_radio.setAlternativePicturePath("/btn/Button_Radio_Magenta.png");
+    btn_CL_radio.setPicturePath("/btn/Button_Radio");
     btn_CL_mute.begin(2 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_CL_mute.setOffPicturePath("/btn/Button_Mute_Off_Green.png");
     btn_CL_mute.setOnPicturePath("/btn/Button_Mute_On_Red.png");
@@ -763,9 +712,7 @@ void placingGraphicObjects() { // and initialize them
     btn_CL_mute.setAlternativeOffPicturePath("/btn/Button_Mute_Off_Magenta.png");
     btn_CL_mute.setAlternativeOnPicturePath("/btn/Button_Mute_On_Magenta.png");
     btn_CL_off.begin(3 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_CL_off.setDefaultPicturePath("/btn/Button_Off_Red.png");
-    btn_CL_off.setClickedPicturePath("/btn/Button_Off_Yellow.png");
-    btn_CL_off.setAlternativePicturePath("/btn/Button_Off_Magenta.png");
+    btn_CL_off.setPicturePath("/btn/Button_Off");
     sdr_CL_volume.setTransparency(false, false);
     sdr_CL_volume.begin(5 * layout.winButton.w + 10, layout.winButton.y, layout.winButton.w * 3 - 10, layout.winButton.h, layout.winButton.pl, layout.winButton.pr, layout.winButton.pt,
                         layout.winButton.pb);
@@ -773,25 +720,16 @@ void placingGraphicObjects() { // and initialize them
     clk_AC_red.setTransparency(false, false);
     clk_AC_red.begin(layout.winDigits.x, layout.winDigits.y, layout.winDigits.w, layout.winDigits.h);
     btn_AC_left.begin(0 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_AC_left.setDefaultPicturePath("/btn/Button_Left_Blue.png");
-    btn_AC_left.setClickedPicturePath("/btn/Button_Left_Yellow.png");
-    btn_AC_left.setAlternativePicturePath("/btn/Button_Left_Magenta.png");
+    btn_AC_left.setPicturePath("/btn/Button_Left");
     btn_AC_right.begin(1 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_AC_right.setDefaultPicturePath("/btn/Button_Right_Blue.png");
-    btn_AC_right.setClickedPicturePath("/btn/Button_Right_Yellow.png");
-    btn_AC_right.setAlternativePicturePath("/btn/Button_Right_Magenta.png");
+    btn_AC_right.setPicturePath("/btn/Button_Right");
     btn_AC_up.begin(2 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_AC_up.setDefaultPicturePath("/btn/Button_Up_Blue.png");
-    btn_AC_up.setClickedPicturePath("/btn/Button_Up_Yellow.png");
-    btn_AC_up.setAlternativePicturePath("/btn/Button_Up_Magenta.png");
+    btn_AC_up.setPicturePath("/btn/Button_Up");
     btn_AC_down.begin(3 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_AC_down.setDefaultPicturePath("/btn/Button_Down_Blue.png");
-    btn_AC_down.setClickedPicturePath("/btn/Button_Down_Yellow.png");
-    btn_AC_down.setAlternativePicturePath("/btn/Button_Down_Magenta.png");
+    btn_AC_down.setPicturePath("/btn/Button_Down");
     btn_AC_ready.begin(4 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_AC_ready.setDefaultPicturePath("/btn/Button_Ready_Blue.png");
-    btn_AC_ready.setClickedPicturePath("/btn/Button_Ready_Yellow.png");
-    btn_AC_ready.setAlternativePicturePath("/btn/Button_Ready_Magenta.png");
+    btn_AC_ready.setPicturePath("/btn/Button_Ready");
+
     // RINGING -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     pic_RI_logo.setTransparency(true, false);
     pic_RI_logo.begin(layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h, layout.winLogo.pl, layout.winLogo.pr, layout.winLogo.pt, layout.winLogo.pb);
@@ -799,42 +737,25 @@ void placingGraphicObjects() { // and initialize them
     clk_RI_24small.begin(layout.winName.x, layout.winName.y, layout.winName.w, layout.winName.h);
     // SLEEPTIMER --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     btn_SL_up.begin(0 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_SL_up.setDefaultPicturePath("/btn/Button_Up_Blue.png");
-    btn_SL_up.setClickedPicturePath("/btn/Button_Up_Yellow.png");
-    btn_SL_up.setAlternativePicturePath("/btn/Button_Up_Magenta.png");
+    btn_SL_up.setPicturePath("/btn/Button_Up");
     btn_SL_down.begin(1 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_SL_down.setDefaultPicturePath("/btn/Button_Down_Blue.png");
-    btn_SL_down.setClickedPicturePath("/btn/Button_Down_Yellow.png");
-    btn_SL_down.setAlternativePicturePath("/btn/Button_Down_Magenta.png");
+    btn_SL_down.setPicturePath("/btn/Button_Down");
     btn_SL_ready.begin(2 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_SL_ready.setDefaultPicturePath("/btn/Button_Ready_Blue.png");
-    btn_SL_ready.setClickedPicturePath("/btn/Button_Ready_Yellow.png");
-    btn_SL_ready.setAlternativePicturePath("/btn/Button_Ready_Magenta.png");
+    btn_SL_ready.setPicturePath("/btn/Button_Ready");
     btn_SL_cancel.begin(4 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_SL_cancel.setDefaultPicturePath("/btn/Button_Cancel_Blue.png");
-    btn_SL_cancel.setClickedPicturePath("/btn/Button_Cancel_Yellow.png");
-    btn_SL_cancel.setAlternativePicturePath("/btn/Button_Cancel_Magenta.png");
+    btn_SL_cancel.setPicturePath("/btn/Button_Cancel");
     otb_SL_stime.begin(0, layout.winFooter.h, layout.winFooter.w / 2, layout.winButton.y - layout.winHeader.h);
     pic_SL_logo.setTransparency(false, false);
     pic_SL_logo.begin(layout.winFooter.w / 2, layout.winFooter.h, layout.winFooter.w / 2, layout.winButton.y - layout.winHeader.h, 0, 0, 10, 0);
     // SETTINGS ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     btn_SE_bright.begin(0 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_SE_bright.setDefaultPicturePath("/btn/Button_Brightness_Green.png");
-    btn_SE_bright.setClickedPicturePath("/btn/Button_Brightness_Yellow.png");
-    btn_SE_bright.setAlternativePicturePath("/btn/Button_Brightness_Magenta.png");
-    btn_SE_bright.setInactivePicturePath("/btn/Button_Brightness_Grey.png");
+    btn_SE_bright.setPicturePath("/btn/Button_Brightness");
     btn_SE_equal.begin(1 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_SE_equal.setDefaultPicturePath("/btn/Button_Equalizer_Green.png");
-    btn_SE_equal.setClickedPicturePath("/btn/Button_Equalizer_Yellow.png");
-    btn_SE_equal.setAlternativePicturePath("/btn/Button_Equalizer_Magenta.png");
+    btn_SE_equal.setPicturePath("/btn/Button_Equalizer");
     btn_SE_wifi.begin(2 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_SE_wifi.setDefaultPicturePath("/btn/Button_WiFi_Green.png");
-    btn_SE_wifi.setClickedPicturePath("/btn/Button_WiFi_Yellow.png");
-    btn_SE_wifi.setAlternativePicturePath("/btn/Button_WiFi_Magenta.png");
+    btn_SE_wifi.setPicturePath("/btn/Button_WiFi");
     btn_SE_radio.begin(3 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_SE_radio.setDefaultPicturePath("/btn/Button_Radio_Green.png");
-    btn_SE_radio.setClickedPicturePath("/btn/Button_Radio_Yellow.png");
-    btn_SE_radio.setAlternativePicturePath("/btn/Button_Radio_Magenta.png");
+    btn_SE_radio.setPicturePath("/btn/Button_Radio");
     pic_SE_logo.setTransparency(true, false);
     pic_SE_logo.begin(layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h, layout.winLogo.pl, layout.winLogo.pr, layout.winLogo.pt, layout.winLogo.pb);
     // BRIGHTNESS --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -842,9 +763,7 @@ void placingGraphicObjects() { // and initialize them
     sdr_BR_value.begin(2 * layout.winButton.w, layout.winButton.y, 4 * layout.winButton.w, layout.winButton.h, 0, 0, 0, 0);
     sdr_BR_value.setMinMaxVal(displayConfig.brightnessMin, displayConfig.brightnessMax);
     btn_BR_ready.begin(7 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_BR_ready.setDefaultPicturePath("/btn/Button_Ready_Blue.png");
-    btn_BR_ready.setClickedPicturePath("/btn/Button_Ready_Yellow.png");
-    btn_BR_ready.setAlternativePicturePath("/btn/Button_Ready_Magenta.png");
+    btn_BR_ready.setPicturePath("/btn/Button_Ready");
     pic_BR_logo.setTransparency(false, false);
     pic_BR_logo.begin(0, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, layout.winWoHF.pl, layout.winWoHF.pr, layout.winWoHF.pt, layout.winWoHF.pb);
     pic_BR_logo.setPicturePath("/common/Brightness.jpg");
@@ -882,29 +801,17 @@ void placingGraphicObjects() { // and initialize them
     txt_EQ_balance.setAlign(TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER);
     txt_EQ_balance.setFont(0); // 0 -> auto
     btn_EQ_lowPass.begin(layout.btnLP.x, layout.btnLP.y, layout.btnLP.w, layout.btnLP.h);
-    btn_EQ_lowPass.setDefaultPicturePath("/btn/s/Button_LP_Green.png");
-    btn_EQ_lowPass.setClickedPicturePath("/btn/s/Button_LP_Yellow.png");
-    btn_EQ_lowPass.setAlternativePicturePath("/btn/s/Button_LP_Magenta.png");
+    btn_EQ_lowPass.setPicturePath("/btn/s/Button_LP");
     btn_EQ_bandPass.begin(layout.btnBP.x, layout.btnBP.y, layout.btnBP.w, layout.btnBP.h);
-    btn_EQ_bandPass.setDefaultPicturePath("/btn/s/Button_BP_Green.png");
-    btn_EQ_bandPass.setClickedPicturePath("/btn/s/Button_BP_Yellow.png");
-    btn_EQ_bandPass.setAlternativePicturePath("/btn/s/Button_BP_Magenta.png");
+    btn_EQ_bandPass.setPicturePath("/btn/s/Button_BP");
     btn_EQ_highPass.begin(layout.btnHP.x, layout.btnHP.y, layout.btnHP.w, layout.btnHP.h);
-    btn_EQ_highPass.setDefaultPicturePath("/btn/s/Button_HP_Green.png");
-    btn_EQ_highPass.setClickedPicturePath("/btn/s/Button_HP_Yellow.png");
-    btn_EQ_highPass.setAlternativePicturePath("/btn/s/Button_HP_Magenta.png");
+    btn_EQ_highPass.setPicturePath("/btn/s/Button_HP");
     btn_EQ_balance.begin(layout.btnBAL.x, layout.btnBAL.y, layout.btnBAL.w, layout.btnBAL.h);
-    btn_EQ_balance.setDefaultPicturePath("/btn/s/Button_BAL_Green.png");
-    btn_EQ_balance.setClickedPicturePath("/btn/s/Button_BAL_Yellow.png");
-    btn_EQ_balance.setAlternativePicturePath("/btn/s/Button_BAL_Magenta.png");
+    btn_EQ_balance.setPicturePath("/btn/s/Button_BAL");
     btn_EQ_Radio.begin(0 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_EQ_Radio.setDefaultPicturePath("/btn/Button_Radio_Green.png");
-    btn_EQ_Radio.setClickedPicturePath("/btn/Button_Radio_Yellow.png");
-    btn_EQ_Radio.setAlternativePicturePath("/btn/Button_Radio_Magenta.png");
+    btn_EQ_Radio.setPicturePath("/btn/Button_Radio");
     btn_EQ_Player.begin(1 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_EQ_Player.setDefaultPicturePath("/btn/Button_Player_Green.png");
-    btn_EQ_Player.setClickedPicturePath("/btn/Button_Player_Yellow.png");
-    btn_EQ_Player.setAlternativePicturePath("/btn/Button_Player_Magenta.png");
+    btn_EQ_Player.setPicturePath("/btn/Button_Player");
     btn_EQ_mute.begin(2 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_EQ_mute.setOffPicturePath("/btn/Button_Mute_Off_Green.png");
     btn_EQ_mute.setOnPicturePath("/btn/Button_Mute_On_Red.png");
@@ -914,13 +821,9 @@ void placingGraphicObjects() { // and initialize them
     btn_EQ_mute.setAlternativeOnPicturePath("/btn/Button_Mute_On_Magenta.png");
     // BLUETOOTH ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     btn_BT_volDown.begin(0 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_BT_volDown.setDefaultPicturePath("/btn/Button_Volume_Down_Blue.png");
-    btn_BT_volDown.setClickedPicturePath("/btn/Button_Volume_Down_Yellow.png");
-    btn_BT_volDown.setAlternativePicturePath("/btn/Button_Volume_Down_Magenta.png");
+    btn_BT_volDown.setPicturePath("/btn/Button_Volume_Down");
     btn_BT_volUp.begin(1 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_BT_volUp.setDefaultPicturePath("/btn/Button_Volume_Up_Blue.png");
-    btn_BT_volUp.setClickedPicturePath("/btn/Button_Volume_Up_Yellow.png");
-    btn_BT_volUp.setAlternativePicturePath("/btn/Button_Volume_Up_Magenta.png");
+    btn_BT_volUp.setPicturePath("/btn/Button_Volume_Up");
     btn_BT_pause.begin(2 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_BT_pause.setOffPicturePath("/btn/Button_Pause_Blue.png");
     btn_BT_pause.setOnPicturePath("/btn/Button_Play_Blue.png");
@@ -929,13 +832,9 @@ void placingGraphicObjects() { // and initialize them
     btn_BT_pause.setAlternativeOffPicturePath("/btn/Button_Pause_Magenta.png");
     btn_BT_pause.setAlternativeOnPicturePath("/btn/Button_Play_Magenta.png");
     btn_BT_mode.begin(3 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_BT_mode.setDefaultPicturePath("/btn/Button_RxTx_Blue.png");
-    btn_BT_mode.setClickedPicturePath("/btn/Button_RxTx_Yellow.png");
-    btn_BT_mode.setAlternativePicturePath("/btn/Button_RxTx_Magenta.png");
+    btn_BT_mode.setPicturePath("/btn/Button_RxTx");
     btn_BT_radio.begin(4 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_BT_radio.setDefaultPicturePath("/btn/Button_Radio_Green.png");
-    btn_BT_radio.setClickedPicturePath("/btn/Button_Radio_Yellow.png");
-    btn_BT_radio.setAlternativePicturePath("/btn/Button_Radio_Magenta.png");
+    btn_BT_radio.setPicturePath("/btn/Button_Radio");
     btn_BT_power.begin(5 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_BT_power.setOffPicturePath("/btn/Button_Bluetooth_Red.png");
     btn_BT_power.setOnPicturePath("/btn/Button_Bluetooth_Blue.png");
@@ -953,8 +852,7 @@ void placingGraphicObjects() { // and initialize them
     txt_BT_mode.setFont(displayConfig.fonts[5]);
     // IR_SETTINGS -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     btn_IR_radio.begin(0 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_IR_radio.setDefaultPicturePath("/btn/Button_Radio_Green.png");
-    btn_IR_radio.setClickedPicturePath("/btn/Button_Radio_Yellow.png");
+    btn_IR_radio.setPicturePath("/btn/Button_Radio");
     // WIFI_SETTINGS -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     cls_wifiSettings.setTransparency(false, false);
     cls_wifiSettings.begin(layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, layout.winWoHF.pl, layout.winWoHF.pr, layout.winWoHF.pt, layout.winWoHF.pb);
@@ -968,14 +866,14 @@ extern int8_t s_subState_player;
 
 void set_ir_pos_RA(int lr) { // RADIO   -100 left, +100 right, -127 reset
     switch (s_ir_btn_select) {
-        case 0: btn_RA_staList.show(); break;
-        case 1: btn_RA_player.show(); break;
-        case 2: btn_RA_dlna.show(); break;
-        case 3: btn_RA_clock.show(); break;
-        case 4: btn_RA_sleep.show(); break;
-        case 5: btn_RA_settings.show(); break;
-        case 6: btn_RA_bt.show(); break;
-        case 7: btn_RA_off.show(); break;
+        case 0: btn_RA_staList.setFocus(false); break;
+        case 1: btn_RA_player.setFocus(false); break;
+        case 2: btn_RA_dlna.setFocus(false); break;
+        case 3: btn_RA_clock.setFocus(false); break;
+        case 4: btn_RA_sleep.setFocus(false); break;
+        case 5: btn_RA_settings.setFocus(false); break;
+        case 6: btn_RA_bt.setFocus(false); break;
+        case 7: btn_RA_off.setFocus(false); break;
     }
     if (lr == IR_LEFT) {
         s_ir_btn_select--;
@@ -987,14 +885,14 @@ void set_ir_pos_RA(int lr) { // RADIO   -100 left, +100 right, -127 reset
     }
     if (lr == IR_RESET) return;
     switch (s_ir_btn_select) {
-        case 0: btn_RA_staList.showAlternativePic(); break;
-        case 1: btn_RA_player.showAlternativePic(); break;
-        case 2: btn_RA_dlna.showAlternativePic(); break;
-        case 3: btn_RA_clock.showAlternativePic(); break;
-        case 4: btn_RA_sleep.showAlternativePic(); break;
-        case 5: btn_RA_settings.showAlternativePic(); break;
-        case 6: btn_RA_bt.showAlternativePic(); break;
-        case 7: btn_RA_off.showAlternativePic(); break;
+        case 0: btn_RA_staList.setFocus(true); break;
+        case 1: btn_RA_player.setFocus(true); break;
+        case 2: btn_RA_dlna.setFocus(true); break;
+        case 3: btn_RA_clock.setFocus(true); break;
+        case 4: btn_RA_sleep.setFocus(true); break;
+        case 5: btn_RA_settings.setFocus(true); break;
+        case 6: btn_RA_bt.setFocus(true); break;
+        case 7: btn_RA_off.setFocus(true); break;
     }
 }
 //-------------------------------------------------------------------------------------
@@ -1003,14 +901,14 @@ void set_ir_pos_PL(int lr) { // PLAYER   -100 left, +100 right, -127 reset
         if (s_ir_btn_select == -1) return;
         if (s_ir_btn_select == 8) return;
         switch (s_ir_btn_select) {
-            case 0: btn_PL_prevFile.show(); break;
-            case 1: btn_PL_nextFile.show(); break;
-            case 2: btn_PL_ready.show(); break;
-            case 3: btn_PL_playAll.show(); break;
-            case 4: btn_PL_shuffle.show(); break;
-            case 5: btn_PL_fileList.show(); break;
-            case 6: btn_PL_radio.show(); break;
-            case 7: btn_PL_off.show(); break;
+            case 0: btn_PL_prevFile.setFocus(false); break;
+            case 1: btn_PL_nextFile.setFocus(false); break;
+            case 2: btn_PL_ready.setFocus(false); break;
+            case 3: btn_PL_playAll.setFocus(false); break;
+            case 4: btn_PL_shuffle.setFocus(false); break;
+            case 5: btn_PL_fileList.setFocus(false); break;
+            case 6: btn_PL_radio.setFocus(false); break;
+            case 7: btn_PL_off.setFocus(false); break;
         }
         if (lr == IR_LEFT) {
             s_ir_btn_select--;
@@ -1022,25 +920,25 @@ void set_ir_pos_PL(int lr) { // PLAYER   -100 left, +100 right, -127 reset
         }
         if (lr == IR_RESET) return;
         switch (s_ir_btn_select) {
-            case 0: btn_PL_prevFile.showAlternativePic(); break;
-            case 1: btn_PL_nextFile.showAlternativePic(); break;
-            case 2: btn_PL_ready.showAlternativePic(); break;
-            case 3: btn_PL_playAll.showAlternativePic(); break;
-            case 4: btn_PL_shuffle.showAlternativePic(); break;
-            case 5: btn_PL_fileList.showAlternativePic(); break;
-            case 6: btn_PL_radio.showAlternativePic(); break;
-            case 7: btn_PL_off.showAlternativePic(); break;
+            case 0: btn_PL_prevFile.setFocus(true); break;
+            case 1: btn_PL_nextFile.setFocus(true); break;
+            case 2: btn_PL_ready.setFocus(true); break;
+            case 3: btn_PL_playAll.setFocus(true); break;
+            case 4: btn_PL_shuffle.setFocus(true); break;
+            case 5: btn_PL_fileList.setFocus(true); break;
+            case 6: btn_PL_radio.setFocus(true); break;
+            case 7: btn_PL_off.setFocus(true); break;
         }
     }
     if (s_subState_player == 1) {
         if (s_ir_btn_select == -1) return;
         if (s_ir_btn_select == 5) return;
         switch (s_ir_btn_select) {
-            case 0: btn_PL_mute.show(); break;
-            case 1: btn_PL_pause.show(); break;
-            case 2: btn_PL_cancel.show(); break;
-            case 3: btn_PL_playPrev.show(); break;
-            case 4: btn_PL_playNext.show(); break;
+            case 0: btn_PL_mute.setFocus(false); break;
+            case 1: btn_PL_pause.setFocus(false); break;
+            case 2: btn_PL_cancel.setFocus(false); break;
+            case 3: btn_PL_playPrev.setFocus(false); break;
+            case 4: btn_PL_playNext.setFocus(false); break;
         }
         if (lr == IR_LEFT) {
             s_ir_btn_select--;
@@ -1052,11 +950,11 @@ void set_ir_pos_PL(int lr) { // PLAYER   -100 left, +100 right, -127 reset
         }
         if (lr == IR_RESET) return;
         switch (s_ir_btn_select) {
-            case 0: btn_PL_mute.showAlternativePic(); break;
-            case 1: btn_PL_pause.showAlternativePic(); break;
-            case 2: btn_PL_cancel.showAlternativePic(); break;
-            case 3: btn_PL_playPrev.showAlternativePic(); break;
-            case 4: btn_PL_playNext.showAlternativePic(); break;
+            case 0: btn_PL_mute.setFocus(true); break;
+            case 1: btn_PL_pause.setFocus(true); break;
+            case 2: btn_PL_cancel.setFocus(true); break;
+            case 3: btn_PL_playPrev.setFocus(true); break;
+            case 4: btn_PL_playNext.setFocus(true); break;
         }
     }
 }
@@ -1065,11 +963,11 @@ void set_ir_pos_DL(int lr) { // DLNA   -100 left, +100 right, -127 reset
     if (s_ir_btn_select == -1) return;
     if (s_ir_btn_select == 5) return;
     switch (s_ir_btn_select) {
-        case 0: btn_DL_mute.show(); break;
-        case 1: btn_DL_pause.show(); break;
-        case 2: btn_DL_cancel.show(); break;
-        case 3: btn_DL_fileList.show(); break;
-        case 4: btn_DL_radio.show(); break;
+        case 0: btn_DL_mute.setFocus(false); break;
+        case 1: btn_DL_pause.setFocus(false); break;
+        case 2: btn_DL_cancel.setFocus(false); break;
+        case 3: btn_DL_fileList.setFocus(false); break;
+        case 4: btn_DL_radio.setFocus(false); break;
     }
     if (lr == IR_LEFT) {
         s_ir_btn_select--;
@@ -1081,11 +979,11 @@ void set_ir_pos_DL(int lr) { // DLNA   -100 left, +100 right, -127 reset
     }
     if (lr == IR_RESET) return;
     switch (s_ir_btn_select) {
-        case 0: btn_DL_mute.showAlternativePic(); break;
-        case 1: btn_DL_pause.showAlternativePic(); break;
-        case 2: btn_DL_cancel.showAlternativePic(); break;
-        case 3: btn_DL_fileList.showAlternativePic(); break;
-        case 4: btn_DL_radio.showAlternativePic(); break;
+        case 0: btn_DL_mute.setFocus(true); break;
+        case 1: btn_DL_pause.setFocus(true); break;
+        case 2: btn_DL_cancel.setFocus(true); break;
+        case 3: btn_DL_fileList.setFocus(true); break;
+        case 4: btn_DL_radio.setFocus(true); break;
     }
 }
 //-------------------------------------------------------------------------------------
@@ -1093,10 +991,10 @@ void set_ir_pos_CL(int lr) { // CLOCK   -100 left, +100 right, -127 reset
     if (s_ir_btn_select == -1) return;
     if (s_ir_btn_select == 4) return;
     switch (s_ir_btn_select) {
-        case 0: btn_CL_alarm.show(); break;
-        case 1: btn_CL_radio.show(); break;
-        case 2: btn_CL_mute.show(); break;
-        case 3: btn_CL_off.show(); break;
+        case 0: btn_CL_alarm.setFocus(false); break;
+        case 1: btn_CL_radio.setFocus(false); break;
+        case 2: btn_CL_mute.setFocus(false); break;
+        case 3: btn_CL_off.setFocus(false); break;
     }
     if (lr == IR_LEFT) {
         s_ir_btn_select--;
@@ -1108,10 +1006,10 @@ void set_ir_pos_CL(int lr) { // CLOCK   -100 left, +100 right, -127 reset
     }
     if (lr == IR_RESET) return;
     switch (s_ir_btn_select) {
-        case 0: btn_CL_alarm.showAlternativePic(); break;
-        case 1: btn_CL_radio.showAlternativePic(); break;
-        case 2: btn_CL_mute.showAlternativePic(); break;
-        case 3: btn_CL_off.showAlternativePic(); break;
+        case 0: btn_CL_alarm.setFocus(true); break;
+        case 1: btn_CL_radio.setFocus(true); break;
+        case 2: btn_CL_mute.setFocus(true); break;
+        case 3: btn_CL_off.setFocus(true); break;
     }
 }
 //-------------------------------------------------------------------------------------
@@ -1119,11 +1017,11 @@ void set_ir_pos_AC(int lr) { // ALARMCLOCK   -100 left, +100 right, -127 reset
     if (s_ir_btn_select == -1) return;
     if (s_ir_btn_select == 5) return;
     switch (s_ir_btn_select) {
-        case 0: btn_AC_left.show(); break;
-        case 1: btn_AC_right.show(); break;
-        case 2: btn_AC_up.show(); break;
-        case 3: btn_AC_down.show(); break;
-        case 4: btn_AC_ready.show(); break;
+        case 0: btn_AC_left.setFocus(false); break;
+        case 1: btn_AC_right.setFocus(false); break;
+        case 2: btn_AC_up.setFocus(false); break;
+        case 3: btn_AC_down.setFocus(false); break;
+        case 4: btn_AC_ready.setFocus(false); break;
     }
     if (lr == IR_LEFT) {
         s_ir_btn_select--;
@@ -1135,11 +1033,11 @@ void set_ir_pos_AC(int lr) { // ALARMCLOCK   -100 left, +100 right, -127 reset
     }
     if (lr == IR_RESET) return;
     switch (s_ir_btn_select) {
-        case 0: btn_AC_left.showAlternativePic(); break;
-        case 1: btn_AC_right.showAlternativePic(); break;
-        case 2: btn_AC_up.showAlternativePic(); break;
-        case 3: btn_AC_down.showAlternativePic(); break;
-        case 4: btn_AC_ready.showAlternativePic(); break;
+        case 0: btn_AC_left.setFocus(true); break;
+        case 1: btn_AC_right.setFocus(true); break;
+        case 2: btn_AC_up.setFocus(true); break;
+        case 3: btn_AC_down.setFocus(true); break;
+        case 4: btn_AC_ready.setFocus(true); break;
     }
 }
 //-------------------------------------------------------------------------------------
@@ -1147,10 +1045,10 @@ void set_ir_pos_SL(int lr) { // SLEEPTIMER   -100 left, +100 right, -127 reset
     if (s_ir_btn_select == -1) return;
     if (s_ir_btn_select == 4) return;
     switch (s_ir_btn_select) {
-        case 0: btn_SL_up.show(); break;
-        case 1: btn_SL_down.show(); break;
-        case 2: btn_SL_ready.show(); break;
-        case 3: btn_SL_cancel.show(); break;
+        case 0: btn_SL_up.setFocus(false); break;
+        case 1: btn_SL_down.setFocus(false); break;
+        case 2: btn_SL_ready.setFocus(false); break;
+        case 3: btn_SL_cancel.setFocus(false); break;
     }
     if (lr == IR_LEFT) {
         s_ir_btn_select--;
@@ -1162,10 +1060,10 @@ void set_ir_pos_SL(int lr) { // SLEEPTIMER   -100 left, +100 right, -127 reset
     }
     if (lr == IR_RESET) return;
     switch (s_ir_btn_select) {
-        case 0: btn_SL_up.showAlternativePic(); break;
-        case 1: btn_SL_down.showAlternativePic(); break;
-        case 2: btn_SL_ready.showAlternativePic(); break;
-        case 3: btn_SL_cancel.showAlternativePic(); break;
+        case 0: btn_SL_up.setFocus(true); break;
+        case 1: btn_SL_down.setFocus(true); break;
+        case 2: btn_SL_ready.setFocus(true); break;
+        case 3: btn_SL_cancel.setFocus(true); break;
     }
 }
 //-------------------------------------------------------------------------------------
@@ -1173,10 +1071,10 @@ void set_ir_pos_SE(int lr) { // SETTINGS   -100 left, +100 right, -127 reset
     if (s_ir_btn_select == -1) return;
     if (s_ir_btn_select == 4) return;
     switch (s_ir_btn_select) {
-        case 0: btn_SE_bright.show(); break;
-        case 1: btn_SE_equal.show(); break;
-        case 2: btn_SE_wifi.show(); break;
-        case 3: btn_SE_radio.show(); break;
+        case 0: btn_SE_bright.setFocus(false); break;
+        case 1: btn_SE_equal.setFocus(false); break;
+        case 2: btn_SE_wifi.setFocus(false); break;
+        case 3: btn_SE_radio.setFocus(false); break;
     }
     if (lr == IR_LEFT) {
         s_ir_btn_select--;
@@ -1188,10 +1086,10 @@ void set_ir_pos_SE(int lr) { // SETTINGS   -100 left, +100 right, -127 reset
     }
     if (lr == IR_RESET) return;
     switch (s_ir_btn_select) {
-        case 0: btn_SE_bright.showAlternativePic(); break;
-        case 1: btn_SE_equal.showAlternativePic(); break;
-        case 2: btn_SE_wifi.showAlternativePic(); break;
-        case 3: btn_SE_radio.showAlternativePic(); break;
+        case 0: btn_SE_bright.setFocus(true); break;
+        case 1: btn_SE_equal.setFocus(true); break;
+        case 2: btn_SE_wifi.setFocus(true); break;
+        case 3: btn_SE_radio.setFocus(true); break;
     }
 }
 //-------------------------------------------------------------------------------------
@@ -1199,7 +1097,7 @@ void set_ir_pos_BR(int lr) { // SETTINGS   -100 left, +100 right, -127 reset
     if (s_ir_btn_select == -1) return;
     if (s_ir_btn_select == 1) return;
     switch (s_ir_btn_select) {
-        case 0: btn_BR_ready.show(); break;
+        case 0: btn_BR_ready.setFocus(false); break;
     }
     if (lr == IR_LEFT) {
         s_ir_btn_select--;
@@ -1211,7 +1109,7 @@ void set_ir_pos_BR(int lr) { // SETTINGS   -100 left, +100 right, -127 reset
     }
     if (lr == IR_RESET) return;
     switch (s_ir_btn_select) {
-        case 0: btn_BR_ready.showAlternativePic(); break;
+        case 0: btn_BR_ready.setFocus(true); break;
     }
 }
 //-------------------------------------------------------------------------------------
@@ -1219,13 +1117,13 @@ void set_ir_pos_EQ(int lr) { // EQUALIZER   -1 left, +1 right
     if (s_ir_btn_select == -1) return;
     if (s_ir_btn_select > 6) return;
     switch (s_ir_btn_select) {
-        case 0: btn_EQ_Radio.show(); break;
-        case 1: btn_EQ_Player.show(); break;
-        case 2: btn_EQ_mute.show(); break;
-        case 3: btn_EQ_balance.show(); break;
-        case 4: btn_EQ_lowPass.show(); break;
-        case 5: btn_EQ_bandPass.show(); break;
-        case 6: btn_EQ_highPass.show(); break;
+        case 0: btn_EQ_Radio.setFocus(false); break;
+        case 1: btn_EQ_Player.setFocus(false); break;
+        case 2: btn_EQ_mute.setFocus(false); break;
+        case 3: btn_EQ_balance.setFocus(false); break;
+        case 4: btn_EQ_lowPass.setFocus(false); break;
+        case 5: btn_EQ_bandPass.setFocus(false); break;
+        case 6: btn_EQ_highPass.setFocus(false); break;
     }
     if (lr == IR_LEFT && s_ir_btn_select < 3) {
         s_ir_btn_select--;
@@ -1249,13 +1147,13 @@ void set_ir_pos_EQ(int lr) { // EQUALIZER   -1 left, +1 right
     }
     if (lr == IR_RESET) return;
     switch (s_ir_btn_select) {
-        case 0: btn_EQ_Radio.showAlternativePic(); break;
-        case 1: btn_EQ_Player.showAlternativePic(); break;
-        case 2: btn_EQ_mute.showAlternativePic(); break;
-        case 3: btn_EQ_balance.showAlternativePic(); break;
-        case 4: btn_EQ_lowPass.showAlternativePic(); break;
-        case 5: btn_EQ_bandPass.showAlternativePic(); break;
-        case 6: btn_EQ_highPass.showAlternativePic(); break;
+        case 0: btn_EQ_Radio.setFocus(true); break;
+        case 1: btn_EQ_Player.setFocus(true); break;
+        case 2: btn_EQ_mute.setFocus(true); break;
+        case 3: btn_EQ_balance.setFocus(true); break;
+        case 4: btn_EQ_lowPass.setFocus(true); break;
+        case 5: btn_EQ_bandPass.setFocus(true); break;
+        case 6: btn_EQ_highPass.setFocus(true); break;
     }
 }
 //-------------------------------------------------------------------------------------
@@ -1263,12 +1161,12 @@ void set_ir_pos_BT(int lr) { // BLUETOOTH   -1 left, +1 right
     if (s_ir_btn_select == -1) return;
     if (s_ir_btn_select == 6) return;
     switch (s_ir_btn_select) {
-        case 0: btn_BT_volDown.show(); break;
-        case 1: btn_BT_volUp.show(); break;
-        case 2: btn_BT_pause.show(); break;
-        case 3: btn_BT_mode.show(); break;
-        case 4: btn_BT_radio.show(); break;
-        case 5: btn_BT_power.show(); break;
+        case 0: btn_BT_volDown.setFocus(false); break;
+        case 1: btn_BT_volUp.setFocus(false); break;
+        case 2: btn_BT_pause.setFocus(false); break;
+        case 3: btn_BT_mode.setFocus(false); break;
+        case 4: btn_BT_radio.setFocus(false); break;
+        case 5: btn_BT_power.setFocus(false); break;
     }
     if (lr == IR_LEFT) {
         s_ir_btn_select--;
@@ -1280,12 +1178,12 @@ void set_ir_pos_BT(int lr) { // BLUETOOTH   -1 left, +1 right
     }
     if (lr == IR_RESET) return;
     switch (s_ir_btn_select) {
-        case 0: btn_BT_volDown.showAlternativePic(); break;
-        case 1: btn_BT_volUp.showAlternativePic(); break;
-        case 2: btn_BT_pause.showAlternativePic(); break;
-        case 3: btn_BT_mode.showAlternativePic(); break;
-        case 4: btn_BT_radio.showAlternativePic(); break;
-        case 5: btn_BT_power.showAlternativePic(); break;
+        case 0: btn_BT_volDown.setFocus(true); break;
+        case 1: btn_BT_volUp.setFocus(true); break;
+        case 2: btn_BT_pause.setFocus(true); break;
+        case 3: btn_BT_mode.setFocus(true); break;
+        case 4: btn_BT_radio.setFocus(true); break;
+        case 5: btn_BT_power.setFocus(true); break;
     }
 }
 //-------------------------------------------------------------------------------------
