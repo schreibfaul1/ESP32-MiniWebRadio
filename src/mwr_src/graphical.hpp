@@ -2177,8 +2177,16 @@ class button1state : public RegisterTable { // click button
     void         enable() { m_enabled = true; }
     void         disable() { m_enabled = false; }
     bool         isEnabled() { return m_enabled; }
-    void         setFocus(bool f) { m_focus = f; }
-    bool         hasFocus() { return m_focus; }
+    void         setFocus(bool f) {
+        m_focus = f;
+        if (m_enabled) {
+            if (m_focus)
+                drawImage(m_focusPicturePath, m_x, m_y, m_w, m_h);
+            else
+                drawImage(m_idlePicturePath, m_x, m_y, m_w, m_h);
+        }
+    }
+    bool hasFocus() { return m_focus; }
 
     void draw() override {
         if (!m_enabled) return;
@@ -2282,13 +2290,14 @@ class button2state : public RegisterTable { // on off switch
     int16_t      m_w = 0;
     int16_t      m_h = 0;
     uint32_t     m_bgColor = 0;
-    ps_ptr<char> m_offPicturePath;
-    ps_ptr<char> m_onPicturePath;
-    ps_ptr<char> m_clickedOffPicturePath;
-    ps_ptr<char> m_clickedOnPicturePath;
-    ps_ptr<char> m_inactivePicturePath;
-    ps_ptr<char> m_alternativeOnPicturePath;
-    ps_ptr<char> m_alternativeOffPicturePath;
+    ps_ptr<char> m_off_idlePicturePath;
+    ps_ptr<char> m_on_idlePicturePath;
+    ps_ptr<char> m_off_clickPicturePath;
+    ps_ptr<char> m_on_clickPicturePath;
+    ps_ptr<char> m_off_inactivePicturePath;
+    ps_ptr<char> m_on_inactivePicturePath;
+    ps_ptr<char> m_off_focusPicturePath;
+    ps_ptr<char> m_on_focusPicturePath;
     bool         m_enabled = false;
     bool         m_focus = false;
     bool         m_active = true;
@@ -2307,11 +2316,6 @@ class button2state : public RegisterTable { // on off switch
         m_enabled = false;
         m_clicked = false;
         m_state = false;
-        setOffPicturePath("");
-        setOnPicturePath("");
-        setClickedOffPicturePath("");
-        setClickedOnPicturePath("");
-        setInactivePicturePath("");
     }
     ~button2state() {}
 
@@ -2327,8 +2331,26 @@ class button2state : public RegisterTable { // on off switch
     void         enable() { m_enabled = true; }
     void         disable() { m_enabled = false; }
     bool         isEnabled() { return m_enabled; }
-    void         setFocus(bool f) { m_focus = f; }
     bool         hasFocus() { return m_focus; }
+
+    void setFocus(bool f) {
+        m_focus = f;
+        if (m_enabled) {
+            if (m_state) {
+                if (m_focus) {
+                    drawImage(m_on_focusPicturePath, m_x, m_y, m_w, m_h);
+                } else {
+                    drawImage(m_on_idlePicturePath, m_x, m_y, m_w, m_h);
+                }
+            } else {
+                if (m_focus) {
+                    drawImage(m_off_focusPicturePath, m_x, m_y, m_w, m_h);
+                } else {
+                    drawImage(m_off_idlePicturePath, m_x, m_y, m_w, m_h);
+                }
+            }
+        }
+    }
 
     void draw() override {
         if (!m_enabled) return;
@@ -2348,12 +2370,15 @@ class button2state : public RegisterTable { // on off switch
         m_clicked = false;
         if (m_active) {
             if (m_state)
-                drawImage(m_onPicturePath, m_x, m_y, m_w, m_h);
+                drawImage(m_on_idlePicturePath, m_x, m_y, m_w, m_h);
             else
-                drawImage(m_offPicturePath, m_x, m_y, m_w, m_h);
+                drawImage(m_off_idlePicturePath, m_x, m_y, m_w, m_h);
             m_enabled = true;
         } else {
-            drawImage(m_inactivePicturePath, m_x, m_y, m_w, m_h);
+            if (m_state)
+                drawImage(m_on_inactivePicturePath, m_x, m_y, m_w, m_h);
+            else
+                drawImage(m_off_inactivePicturePath, m_x, m_y, m_w, m_h);
         }
     }
 
@@ -2364,20 +2389,23 @@ class button2state : public RegisterTable { // on off switch
 
     void showClickedPic() {
         if (m_state) {
-            drawImage(m_clickedOnPicturePath, m_x, m_y, m_w, m_h);
+            drawImage(m_on_clickPicturePath, m_x, m_y, m_w, m_h);
         } else {
-            drawImage(m_clickedOffPicturePath, m_x, m_y, m_w, m_h);
+            drawImage(m_off_clickPicturePath, m_x, m_y, m_w, m_h);
         }
     }
-    void showAlternativePic() {
-        if (m_state) {
-            drawImage(m_alternativeOnPicturePath, m_x, m_y, m_w, m_h);
-        } else {
-            drawImage(m_alternativeOffPicturePath, m_x, m_y, m_w, m_h);
-        }
+
+    void setPicturePath(ps_ptr<char> path) {
+        m_off_idlePicturePath = path + "_Off_Idle.png";
+        m_on_idlePicturePath = path + "_On_Idle.png";
+        m_off_clickPicturePath = path + "_Off_Click.png";
+        m_on_clickPicturePath = path + "_On_Click.png";
+        m_off_inactivePicturePath = path + "_Off_Inactive.png";
+        m_on_inactivePicturePath = path + "_On_Inactive.png";
+        m_off_focusPicturePath = path + "_Off_Focus.png";
+        m_on_focusPicturePath = path + "_On_Focus.png";
     }
-    void setAlternativeOnPicturePath(ps_ptr<char> path) { m_alternativeOnPicturePath = path; }
-    void setAlternativeOffPicturePath(ps_ptr<char> path) { m_alternativeOffPicturePath = path; }
+
     void hide() {
         getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         m_enabled = false;
@@ -2387,9 +2415,9 @@ class button2state : public RegisterTable { // on off switch
         m_state = val;
         if (m_enabled) {
             if (m_state)
-                drawImage(m_onPicturePath, m_x, m_y, m_w, m_h);
+                drawImage(m_on_idlePicturePath, m_x, m_y, m_w, m_h);
             else
-                drawImage(m_offPicturePath, m_x, m_y, m_w, m_h);
+                drawImage(m_off_idlePicturePath, m_x, m_y, m_w, m_h);
         }
     }
     bool getValue() { return m_state; }
@@ -2398,24 +2426,12 @@ class button2state : public RegisterTable { // on off switch
     void setActive(bool act) { m_active = act; }
     bool getActive() { return m_active; }
 
-    void setOffPicturePath(ps_ptr<char> path) {
-        if (path.strlen() > 0) {
-            m_offPicturePath = path;
-        } else {
-            m_offPicturePath = "defaultPicturePath is not set";
-        }
-    }
-    void setClickedOffPicturePath(ps_ptr<char> path) { m_clickedOffPicturePath = path; }
-    void setClickedOnPicturePath(ps_ptr<char> path) { m_clickedOnPicturePath = path; }
-    void setOnPicturePath(ps_ptr<char> path) { m_onPicturePath = path; }
-    void setInactivePicturePath(ps_ptr<char> path) { m_inactivePicturePath = path; }
-
     bool click() {
         if (!m_enabled) return false;
         if (m_state)
-            drawImage(m_clickedOnPicturePath, m_x, m_y, m_w, m_h);
+            drawImage(m_on_clickPicturePath, m_x, m_y, m_w, m_h);
         else
-            drawImage(m_clickedOffPicturePath, m_x, m_y, m_w, m_h);
+            drawImage(m_off_clickPicturePath, m_x, m_y, m_w, m_h);
         m_clicked = true;
         m_state = !m_state;
 
@@ -2430,9 +2446,9 @@ class button2state : public RegisterTable { // on off switch
         if (y > m_y + m_h) return false;
         if (m_enabled) {
             if (m_state)
-                drawImage(m_clickedOnPicturePath, m_x, m_y, m_w, m_h);
+                drawImage(m_on_clickPicturePath, m_x, m_y, m_w, m_h);
             else
-                drawImage(m_clickedOffPicturePath, m_x, m_y, m_w, m_h);
+                drawImage(m_off_clickPicturePath, m_x, m_y, m_w, m_h);
             m_clicked = true;
             m_state = !m_state;
         }
@@ -2444,9 +2460,9 @@ class button2state : public RegisterTable { // on off switch
         if (!m_enabled) return false;
         if (!m_clicked) return false;
         if (m_state)
-            drawImage(m_onPicturePath, m_x, m_y, m_w, m_h);
+            drawImage(m_on_idlePicturePath, m_x, m_y, m_w, m_h);
         else
-            drawImage(m_offPicturePath, m_x, m_y, m_w, m_h);
+            drawImage(m_off_idlePicturePath, m_x, m_y, m_w, m_h);
         m_clicked = false;
         if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
         return true;
@@ -5455,8 +5471,8 @@ class displayHeader : public RegisterTable {
         uint8_t  pr = 0;
         uint8_t  pt = 0;
         uint8_t  pb = 0;
-    } const s_time; // time object
-    //------------------------------------------------------------------------------------------------------------------------------------------------
+    } const s_time;    // time object
+                       //------------------------------------------------------------------------------------------------------------------------------------------------
 #elifdef TFT_LAYOUT_M  // 480 x 320px
     //------------------------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
     struct w_i {
@@ -5499,7 +5515,7 @@ class displayHeader : public RegisterTable {
         uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_time; // time object
-    //------------------------------------------------------------------------------------------------------------------------------------------------
+                    //------------------------------------------------------------------------------------------------------------------------------------------------
 #elifdef TFT_LAYOUT_L  // 800 x 480px
     //------------------------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
     struct w_i {
@@ -5542,7 +5558,7 @@ class displayHeader : public RegisterTable {
         uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_time; // time object
-    //------------------------------------------------------------------------------------------------------------------------------------------------
+                    //------------------------------------------------------------------------------------------------------------------------------------------------
 #elifdef TFT_LAYOUT_XL // 1024 x 600px
     //------------------------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
     struct w_i {
