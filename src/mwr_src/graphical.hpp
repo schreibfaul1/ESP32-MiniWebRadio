@@ -120,6 +120,7 @@ class slider : public RegisterTable {
     bool         m_enabled = false;
     bool         m_clicked = false;
     bool         m_show = false;
+    bool         m_focus = false;
     bool         m_objectInit = false;
     bool         m_backgroundTransparency = false;
     bool         m_saveBackground = false;
@@ -320,6 +321,7 @@ class progressbar : public RegisterTable {
     uint32_t     m_railColorLeft = 0;
     uint32_t     m_railColorRight = 0;
     bool         m_enabled = false;
+    bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_objectInit = false;
     bool         m_backgroundTransparency = true;
@@ -491,6 +493,7 @@ class textbox : public RegisterTable {
     ps_ptr<char> m_text;
     ps_ptr<char> m_name;
     bool         m_enabled = false;
+    bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_autoSize = false;
     bool         m_narrow = false;
@@ -664,6 +667,7 @@ class inputbox : public RegisterTable {
     ps_ptr<char> m_text;
     ps_ptr<char> m_name;
     bool         m_enabled = false;
+    bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_autoSize = false;
     bool         m_narrow = false;
@@ -850,6 +854,7 @@ class textbutton : public RegisterTable {
     ps_ptr<char> m_text;
     ps_ptr<char> m_name;
     bool         m_enabled = false;
+    bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_autoSize = false;
     bool         m_narrow = false;
@@ -1094,6 +1099,7 @@ class selectbox : public RegisterTable {
     uint32_t                  m_borderColor = 0;
     ps_ptr<char>              m_name;
     bool                      m_enabled = false;
+    bool                      m_focus = false;
     bool                      m_clicked = false;
     bool                      m_autoSize = false;
     bool                      m_narrow = false;
@@ -1341,6 +1347,7 @@ class keyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     uint8_t      m_fontSize = 0;
     uint8_t      m_val = 0;
     bool         m_enabled = false;
+    bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_backgroundTransparency = false;
     bool         m_saveBackground = false;
@@ -1599,6 +1606,7 @@ class wifiSettings : public RegisterTable {
     uint32_t     m_borderColor = TFT_BLACK;
     ps_ptr<char> m_name;
     bool         m_enabled = false;
+    bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_autoSize = false;
     bool         m_narrow = false;
@@ -1974,6 +1982,7 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     ps_ptr<char> m_name;
     ps_ptr<char> m_time = "00:00:00";
     bool         m_enabled = false;
+    bool         m_focus = false;
     bool         m_backgroundTransparency = false;
     bool         m_saveBackground = false;
     bool         m_clicked = false;
@@ -2123,6 +2132,7 @@ class button1state : public RegisterTable { // click button
     ps_ptr<char> m_inactivePicturePath;
     ps_ptr<char> m_alternativePicturePath; // e.g. IR select
     bool         m_enabled = false;
+    bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_backgroundTransparency = false;
     bool         m_saveBackground = false;
@@ -2274,6 +2284,7 @@ class button2state : public RegisterTable { // on off switch
     ps_ptr<char> m_alternativeOnPicturePath;
     ps_ptr<char> m_alternativeOffPicturePath;
     bool         m_enabled = false;
+    bool         m_focus = false;
     bool         m_active = true;
     bool         m_clicked = false;
     bool         m_state = false;
@@ -2435,7 +2446,6 @@ class button2state : public RegisterTable { // on off switch
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class numbersBox : public RegisterTable { // range 000...999
   private:
-    bool         m_enabled = false;
     uint16_t     m_segmWidth = 0;
     uint16_t     m_segmentHigh = 0;
     int16_t      m_x = 0;
@@ -2447,6 +2457,8 @@ class numbersBox : public RegisterTable { // range 000...999
     int16_t      m_box_w = 0;
     int16_t      m_box_h = 0;
     uint32_t     m_bgColor = TFT_BLACK;
+    bool         m_enabled = false;
+    bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_backgroundTransparency = false; // unused yet
     bool         m_saveBackground = false;         // unused yet
@@ -2561,7 +2573,6 @@ class numbersBox : public RegisterTable { // range 000...999
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class offTimerBox : public RegisterTable { // range 000...999
   private:
-    bool         m_enabled = false;
     uint16_t     m_digitsWidth = 0;
     uint16_t     m_colonWidth = 0;
     uint16_t     m_digitsHigh = 0;
@@ -2578,6 +2589,8 @@ class offTimerBox : public RegisterTable { // range 000...999
     ps_ptr<char> m_color = "green";
     uint16_t     m_offColor = TFT_RED;
     uint16_t     m_onColor = TFT_GREEN;
+    bool         m_enabled = false;
+    bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_backgroundTransparency = false; // unused yet
     bool         m_saveBackground = false;         // unused yet
@@ -2721,6 +2734,7 @@ class pictureBox : public RegisterTable {
     ps_ptr<char> m_altPicturePath;
     ps_ptr<char> m_name;
     bool         m_enabled = false;
+    bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_backgroundTransparency = false;
     bool         m_saveBackground = false; // is used and to draw further objects on this box
@@ -2874,6 +2888,7 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
 
     uint32_t     m_bgColor = 0;
     bool         m_enabled = false;
+    bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_state = false;
     bool         m_backgroundTransparency = false;
@@ -3090,6 +3105,7 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
     int16_t      m_h = 0;
     uint32_t     m_bgColor = 0;
     bool         m_enabled = false;
+    bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_state = false;
     bool         m_backgroundTransparency = false;
@@ -3340,6 +3356,7 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
     uint16_t     m_fontSize = 0; // auto
     uint32_t     m_bgColor = 0;
     bool         m_enabled = false;
+    bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_state = false;
     bool         m_showAll = false;
@@ -3732,6 +3749,7 @@ class uniList {
     ps_ptr<char> m_ext1[10];
     ps_ptr<char> m_ext2[10];
     bool         m_enabled = false;
+    bool         m_focus = false;
 
   public:
     uniList(ps_ptr<char> name) {
@@ -3941,6 +3959,7 @@ class dlnaList : public RegisterTable {
     int16_t                                    m_dlnaMaxServers = -1;
     uint32_t                                   m_bgColor = 0;
     bool                                       m_enabled = false;
+    bool                                       m_focus = false;
     bool                                       m_clicked = false;
     bool                                       m_state = false;
     bool                                       m_isAudio = false;
@@ -4533,6 +4552,7 @@ class fileList : public RegisterTable {
     uint8_t      m_fontSize = 0;
     uint32_t     m_bgColor = 0;
     bool         m_enabled = false;
+    bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_state = false;
     ps_ptr<char> m_name;
@@ -4935,6 +4955,7 @@ class stationsList : public RegisterTable {
     uint8_t      m_stationListPos = 0;
     uint32_t     m_bgColor = 0;
     bool         m_enabled = false;
+    bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_state = false;
     ps_ptr<char> m_name;
@@ -5179,6 +5200,7 @@ class vuMeter : public RegisterTable {
     uint32_t     m_frameColor = TFT_DARKGREY;
     ps_ptr<char> m_name;
     bool         m_enabled = false;
+    bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_backgroundTransparency = false;
     bool         m_saveBackground = false;
@@ -5348,6 +5370,7 @@ class displayHeader : public RegisterTable {
     ps_ptr<char> m_item;
     ps_ptr<char> m_time = "00:00:00";
     bool         m_enabled = false;
+    bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_speakerOn = false;
     bool         m_backgroundTransparency = false;
@@ -5728,6 +5751,7 @@ class displayFooter : public RegisterTable {
     ps_ptr<char> m_fileNr;
     ps_ptr<char> m_ipAddr = "";
     bool         m_enabled = false;
+    bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_backgroundTransparency = false;
     bool         m_saveBackground = false;
@@ -6252,6 +6276,7 @@ class messageBox : public RegisterTable {
     ps_ptr<char> m_name;
     ps_ptr<char> m_text;
     bool         m_enabled = false;
+    bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_narrow = false;
     bool         m_noWrap = false;
