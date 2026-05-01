@@ -171,8 +171,12 @@ class slider : public RegisterTable {
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
-    void         setFocus(bool f) { m_focus = f; }
     bool         hasFocus() { return m_focus; }
+
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
 
     void draw() override {
         if (!m_enabled) return;
@@ -359,8 +363,12 @@ class progressbar : public RegisterTable {
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
-    void         setFocus(bool f) { m_focus = f; }
     bool         hasFocus() { return m_focus; }
+
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
 
     void draw() override {
         if (!m_enabled) return;
@@ -528,8 +536,12 @@ class textbox : public RegisterTable {
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
-    void         setFocus(bool f) { m_focus = f; }
     bool         hasFocus() { return m_focus; }
+
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
 
     void draw() override {
         if (!m_enabled) return;
@@ -704,8 +716,12 @@ class inputbox : public RegisterTable {
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
-    void         setFocus(bool f) { m_focus = f; }
     bool         hasFocus() { return m_focus; }
+
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
 
     void draw() override {
         if (!m_enabled) return;
@@ -937,8 +953,12 @@ class textbutton : public RegisterTable {
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
-    void         setFocus(bool f) { m_focus = f; }
     bool         hasFocus() { return m_focus; }
+
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
 
     void draw() override {
         if (!m_enabled) return;
@@ -1166,8 +1186,12 @@ class selectbox : public RegisterTable {
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
-    void         setFocus(bool f) { m_focus = f; }
     bool         hasFocus() { return m_focus; }
+
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
 
     void draw() override {
         if (!m_enabled) return;
@@ -1465,8 +1489,12 @@ class keyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
-    void         setFocus(bool f) { m_focus = f; }
     bool         hasFocus() { return m_focus; }
+
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
 
     void draw() override {
         if (!m_enabled) return;
@@ -1813,8 +1841,12 @@ class wifiSettings : public RegisterTable {
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
-    void         setFocus(bool f) { m_focus = f; }
     bool         hasFocus() { return m_focus; }
+
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
 
     void draw() override {
         if (!m_enabled) return;
@@ -2042,8 +2074,12 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     void         disable() { m_enabled = false; }
     void         enable() { m_enabled = true; }
     bool         isEnabled() { return m_enabled; }
-    void         setFocus(bool f) { m_focus = f; }
     bool         hasFocus() { return m_focus; }
+
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
 
     void draw() override {
         if (!m_enabled) return;
@@ -2154,6 +2190,7 @@ class button1state : public RegisterTable { // click button
     bool         m_clicked = false;
     bool         m_backgroundTransparency = false;
     bool         m_saveBackground = false;
+    bool         m_active = true;
     ps_ptr<char> m_name;
     releasedArg  m_ra;
 
@@ -2177,7 +2214,10 @@ class button1state : public RegisterTable { // click button
     void         enable() { m_enabled = true; }
     void         disable() { m_enabled = false; }
     bool         isEnabled() { return m_enabled; }
-    void         setFocus(bool f) {
+    bool hasFocus() { return m_focus; }
+
+    bool setFocus(bool f) {
+        if(!m_active) return false;
         m_focus = f;
         if (m_enabled) {
             if (m_focus)
@@ -2185,8 +2225,8 @@ class button1state : public RegisterTable { // click button
             else
                 drawImage(m_idlePicturePath, m_x, m_y, m_w, m_h);
         }
+        return true;
     }
-    bool hasFocus() { return m_focus; }
 
     void draw() override {
         if (!m_enabled) return;
@@ -2245,10 +2285,12 @@ class button1state : public RegisterTable { // click button
             m_idlePicturePath = path + "_idle.png";
             m_clickPicturePath = path + "_click.png";
             m_focusPicturePath = path + "_focus.png";
+            m_inactivePicturePath = path + "_inactive.png";
         } else {
             m_idlePicturePath = m_name + "_idle.png";
             m_clickPicturePath = m_name + "_click.png";
             m_focusPicturePath = m_name + "_focus.png";
+            m_inactivePicturePath = m_name + "_inactive.png";
         }
     }
 
@@ -2327,13 +2369,15 @@ class button2state : public RegisterTable { // on off switch
         m_enabled = false;
         m_active = true;
     }
+
     ps_ptr<char> getName() { return m_name; }
     void         enable() { m_enabled = true; }
     void         disable() { m_enabled = false; }
     bool         isEnabled() { return m_enabled; }
     bool         hasFocus() { return m_focus; }
 
-    void setFocus(bool f) {
+    bool setFocus(bool f) {
+        if(!m_active) return false;
         m_focus = f;
         if (m_enabled) {
             if (m_state) {
@@ -2350,6 +2394,7 @@ class button2state : public RegisterTable { // on off switch
                 }
             }
         }
+        return true;
     }
 
     void draw() override {
@@ -2556,8 +2601,12 @@ class numbersBox : public RegisterTable { // range 000...999
     void         enable() { m_enabled = true; }
     void         disable() { m_enabled = false; }
     bool         isEnabled() { return m_enabled; }
-    void         setFocus(bool f) { m_focus = f; }
     bool         hasFocus() { return m_focus; }
+
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
 
     void setNumbers(uint16_t numbers) {
         if (numbers > 999) return;
@@ -2692,8 +2741,12 @@ class offTimerBox : public RegisterTable { // range 000...999
     void         enable() { m_enabled = true; }
     void         disable() { m_enabled = false; }
     bool         isEnabled() { return m_enabled; }
-    void         setFocus(bool f) { m_focus = f; }
     bool         hasFocus() { return m_focus; }
+
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
 
     // void setTime(uint16_t time) {
     //     snprintf(m_numbers, sizeof(m_numbers), "%03u", time);
@@ -2795,8 +2848,12 @@ class pictureBox : public RegisterTable {
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
-    void         setFocus(bool f) { m_focus = f; }
     bool         hasFocus() { return m_focus; }
+
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
 
     void draw() override {
         if (!m_enabled) return;
@@ -2964,8 +3021,12 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
-    void         setFocus(bool f) { m_focus = f; }
     bool         hasFocus() { return m_focus; }
+
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
 
     void draw() override {
         if (!m_enabled) return;
@@ -3194,8 +3255,12 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
-    void         setFocus(bool f) { m_focus = f; }
     bool         hasFocus() { return m_focus; }
+
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
 
     void draw() override {
         if (!m_enabled) return;
@@ -3460,8 +3525,12 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
     ps_ptr<char> getName() { return m_name; }
     void         disable() { m_enabled = false; }
     bool         isEnabled() { return m_enabled; }
-    void         setFocus(bool f) { m_focus = f; }
     bool         hasFocus() { return m_focus; }
+
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
 
     void draw() override {
         if (!m_enabled) return;
@@ -4058,8 +4127,12 @@ class dlnaList : public RegisterTable {
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
-    void         setFocus(bool f) { m_focus = f; }
     bool         hasFocus() { return m_focus; }
+
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
 
     void draw() override {
         if (!m_enabled) return;
@@ -4639,8 +4712,12 @@ class fileList : public RegisterTable {
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
-    void         setFocus(bool f) { m_focus = f; }
     bool         hasFocus() { return m_focus; }
+
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
 
     void draw() override {
         if (!m_enabled) return;
@@ -5036,8 +5113,12 @@ class stationsList : public RegisterTable {
     void         currentStationNr(uint16_t* curStationNr) { m_curSstationNr = curStationNr; }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
-    void         setFocus(bool f) { m_focus = f; }
     bool         hasFocus() { return m_focus; }
+
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
 
     void draw() override {
         if (!m_enabled) return;
@@ -5284,8 +5365,12 @@ class vuMeter : public RegisterTable {
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
-    void         setFocus(bool f) { m_focus = f; }
     bool         hasFocus() { return m_focus; }
+
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
 
     void draw() override {
         if (!m_enabled) return;
@@ -5638,8 +5723,12 @@ class displayHeader : public RegisterTable {
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
-    void         setFocus(bool f) { m_focus = f; }
     bool         hasFocus() { return m_focus; }
+
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
 
     void draw() override {
         if (!m_enabled) return;
@@ -6133,8 +6222,12 @@ class displayFooter : public RegisterTable {
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
-    void         setFocus(bool f) { m_focus = f; }
     bool         hasFocus() { return m_focus; }
+
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
 
     void draw() override {
         if (!m_enabled) return;
@@ -6419,8 +6512,12 @@ class messageBox : public RegisterTable {
     bool         isEnabled() { return m_enabled; }
     void         disable() { m_enabled = false; }
     bool         hasFocus() { return m_focus; }
-    void         setFocus(bool f) { m_focus = f; }
     void         setBGcolor(uint32_t color) { m_bgColor = color; }
+
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
 
     void show() {
         txt_msgBox->setTransparency(m_backgroundTransparency, m_saveBackground);
