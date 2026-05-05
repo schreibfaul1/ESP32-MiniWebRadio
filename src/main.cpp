@@ -4231,7 +4231,7 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
     if (s_state == IR_SETTINGS) {
         if (name.equals("btn_IR_radio"))    { changeState(RADIO, 0); goto exit; }
     }
-    if (s_state == WIFI_SETTINGS) {           
+    if (s_state == WIFI_SETTINGS) {
         if (name.starts_with("txt_btn"))    { goto exit; }
         if (name.equals("wifiSettings"))    { setWiFiCredentials(ra.arg1.c_get(), ra.arg2.c_get());
                                               msg_box.setText("ESP restart", false, false);

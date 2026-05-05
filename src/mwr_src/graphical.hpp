@@ -120,16 +120,20 @@ static void                        register_object(RegisterTable* obj) {
     registertable_objects.push_back(obj);
 }
 inline void get_registered_names() {
-    int16_t x= 0, y= 0, w = 0, h = 0;
+    int16_t x = 0, y = 0, w = 0, h = 0;
     for (auto obj : registertable_objects) {
         obj->getBounds(x, y, w, h);
-        printf(ANSI_ESC_WHITE "    registered object:" ANSI_ESC_YELLOW " %-27s" ANSI_ESC_WHITE " is enabled: %-5s" ANSI_ESC_WHITE " x: %03d, y: %03d, w: %03d, h: %03d" ANSI_ESC_RESET "\n", obj->getName().c_get(),
-               obj->isEnabled() ? ANSI_ESC_RED "yes" : ANSI_ESC_BLUE "no", x, y, w, h);
+        printf(ANSI_ESC_WHITE "    registered object:" ANSI_ESC_YELLOW " %-27s" ANSI_ESC_WHITE " is enabled: %-5s" ANSI_ESC_WHITE " x: %03d, y: %03d, w: %03d, h: %03d" ANSI_ESC_RESET "\n",
+               obj->getName().c_get(), obj->isEnabled() ? ANSI_ESC_RED "yes" : ANSI_ESC_BLUE "no", x, y, w, h);
     }
 }
 inline void disableAllObjects() {
     for (auto obj : registertable_objects) { obj->disable(); }
 }
+inline void defocusAllObjects() {
+    for (auto obj : registertable_objects) { obj->setFocus(false); }
+}
+
 inline const char* isObjectClicked(uint16_t x, uint16_t y) {
     static char objName[100];
     objName[0] = '\0';
@@ -2255,17 +2259,18 @@ class button1state : public RegisterTable { // click button
     void         enable() { m_enabled = true; }
     void         disable() { m_enabled = false; }
     bool         isEnabled() { return m_enabled; }
-    bool hasFocus() { return m_focus; }
+    bool         hasFocus() { return m_focus; }
 
     bool setFocus(bool f) {
-        if(!m_active) return false;
-        m_focus = f;
+        if (!m_active) return false;
         if (m_enabled) {
-            if (m_focus)
-                drawImage(m_focusPicturePath, m_x, m_y, m_w, m_h);
-            else
-                drawImage(m_idlePicturePath, m_x, m_y, m_w, m_h);
+            if (f) {
+                if (!m_focus) drawImage(m_focusPicturePath, m_x, m_y, m_w, m_h);
+            } else {
+                if (m_focus) drawImage(m_idlePicturePath, m_x, m_y, m_w, m_h);
+            }
         }
+        m_focus = f;
         return true;
     }
 
@@ -2418,7 +2423,7 @@ class button2state : public RegisterTable { // on off switch
     bool         hasFocus() { return m_focus; }
 
     bool setFocus(bool f) {
-        if(!m_active) return false;
+        if (!m_active) return false;
         m_focus = f;
         if (m_enabled) {
             if (m_state) {

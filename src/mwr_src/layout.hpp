@@ -819,16 +819,7 @@ extern int8_t s_subState_player;
 
 void set_ir_pos_RA(int lr) { // RADIO   -100 left, +100 right, -127 reset
     uint8_t i = 0;
-    switch (s_ir_btn_select) {
-        case 0: btn_RA_staList.setFocus(false); break;
-        case 1: btn_RA_player.setFocus(false); break;
-        case 2: btn_RA_dlna.setFocus(false); break;
-        case 3: btn_RA_clock.setFocus(false); break;
-        case 4: btn_RA_sleep.setFocus(false); break;
-        case 5: btn_RA_settings.setFocus(false); break;
-        case 6: btn_RA_bt.setFocus(false); break;
-        case 7: btn_RA_off.setFocus(false); break;
-    }
+    defocusAllObjects();
 next:
     i++;
     if (lr == IR_LEFT) {
@@ -860,16 +851,7 @@ void set_ir_pos_PL(int lr) { // PLAYER   -100 left, +100 right, -127 reset
     if (s_subState_player == 0) {
         if (s_ir_btn_select == -1) return;
         if (s_ir_btn_select == 8) return;
-        switch (s_ir_btn_select) {
-            case 0: btn_PL_prevFile.setFocus(false); break;
-            case 1: btn_PL_nextFile.setFocus(false); break;
-            case 2: btn_PL_ready.setFocus(false); break;
-            case 3: btn_PL_playAll.setFocus(false); break;
-            case 4: btn_PL_shuffle.setFocus(false); break;
-            case 5: btn_PL_fileList.setFocus(false); break;
-            case 6: btn_PL_radio.setFocus(false); break;
-            case 7: btn_PL_off.setFocus(false); break;
-        }
+        defocusAllObjects();
 next0:
         i++;
         if (lr == IR_LEFT) {
@@ -898,13 +880,7 @@ next0:
     if (s_subState_player == 1) {
         if (s_ir_btn_select == -1) return;
         if (s_ir_btn_select == 5) return;
-        switch (s_ir_btn_select) {
-            case 0: btn_PL_mute.setFocus(false); break;
-            case 1: btn_PL_pause.setFocus(false); break;
-            case 2: btn_PL_cancel.setFocus(false); break;
-            case 3: btn_PL_playPrev.setFocus(false); break;
-            case 4: btn_PL_playNext.setFocus(false); break;
-        }
+        defocusAllObjects();
 next1:
         i++;
         if (lr == IR_LEFT) {
@@ -934,13 +910,7 @@ void set_ir_pos_DL(int lr) { // DLNA   -100 left, +100 right, -127 reset
     uint8_t i = 0;
     if (s_ir_btn_select == -1) return;
     if (s_ir_btn_select == 5) return;
-    switch (s_ir_btn_select) {
-        case 0: btn_DL_mute.setFocus(false); break;
-        case 1: btn_DL_pause.setFocus(false); break;
-        case 2: btn_DL_cancel.setFocus(false); break;
-        case 3: btn_DL_fileList.setFocus(false); break;
-        case 4: btn_DL_radio.setFocus(false); break;
-    }
+    defocusAllObjects();
 next:
     i++;
     if (lr == IR_LEFT) {
@@ -968,12 +938,7 @@ void set_ir_pos_CL(int lr) { // CLOCK   -100 left, +100 right, -127 reset
     uint8_t i = 0;
     if (s_ir_btn_select == -1) return;
     if (s_ir_btn_select == 4) return;
-    switch (s_ir_btn_select) {
-        case 0: btn_CL_alarm.setFocus(false); break;
-        case 1: btn_CL_radio.setFocus(false); break;
-        case 2: btn_CL_mute.setFocus(false); break;
-        case 3: btn_CL_off.setFocus(false); break;
-    }
+    defocusAllObjects();
 next:
     i++;
     if (lr == IR_LEFT) {
@@ -1000,13 +965,7 @@ void set_ir_pos_AC(int lr) { // ALARMCLOCK   -100 left, +100 right, -127 reset
     uint8_t i = 0;
     if (s_ir_btn_select == -1) return;
     if (s_ir_btn_select == 5) return;
-    switch (s_ir_btn_select) {
-        case 0: btn_AC_left.setFocus(false); break;
-        case 1: btn_AC_right.setFocus(false); break;
-        case 2: btn_AC_up.setFocus(false); break;
-        case 3: btn_AC_down.setFocus(false); break;
-        case 4: btn_AC_ready.setFocus(false); break;
-    }
+    defocusAllObjects();
 next:
     i++;
     if (lr == IR_LEFT) {
@@ -1034,12 +993,7 @@ void set_ir_pos_SL(int lr) { // SLEEPTIMER   -100 left, +100 right, -127 reset
     uint8_t i = 0;
     if (s_ir_btn_select == -1) return;
     if (s_ir_btn_select == 4) return;
-    switch (s_ir_btn_select) {
-        case 0: btn_SL_up.setFocus(false); break;
-        case 1: btn_SL_down.setFocus(false); break;
-        case 2: btn_SL_ready.setFocus(false); break;
-        case 3: btn_SL_cancel.setFocus(false); break;
-    }
+    defocusAllObjects();
 next:
     i++;
     if (lr == IR_LEFT) {
@@ -1066,12 +1020,7 @@ void set_ir_pos_SE(int lr) { // SETTINGS   -100 left, +100 right, -127 reset
     uint8_t i = 0;
     if (s_ir_btn_select == -1) return;
     if (s_ir_btn_select == 4) return;
-    switch (s_ir_btn_select) {
-        case 0: btn_SE_bright.setFocus(false); break;
-        case 1: btn_SE_equal.setFocus(false); break;
-        case 2: btn_SE_wifi.setFocus(false); break;
-        case 3: btn_SE_radio.setFocus(false); break;
-    }
+    defocusAllObjects();
 next:
     i++;
     if (lr == IR_LEFT) {
@@ -1098,9 +1047,7 @@ void set_ir_pos_BR(int lr) { // SETTINGS   -100 left, +100 right, -127 reset
     uint8_t i = 0;
     if (s_ir_btn_select == -1) return;
     if (s_ir_btn_select == 1) return;
-    switch (s_ir_btn_select) {
-        case 0: btn_BR_ready.setFocus(false); break;
-    }
+    defocusAllObjects();
 next:
     i++;
     if (lr == IR_LEFT) {
@@ -1124,15 +1071,8 @@ void set_ir_pos_EQ(int lr) { // EQUALIZER   -1 left, +1 right
     uint8_t i = 0;
     if (s_ir_btn_select == -1) return;
     if (s_ir_btn_select > 6) return;
-    switch (s_ir_btn_select) {
-        case 0: btn_EQ_Radio.setFocus(false); break;
-        case 1: btn_EQ_Player.setFocus(false); break;
-        case 2: btn_EQ_mute.setFocus(false); break;
-        case 3: btn_EQ_balance.setFocus(false); break;
-        case 4: btn_EQ_lowPass.setFocus(false); break;
-        case 5: btn_EQ_bandPass.setFocus(false); break;
-        case 6: btn_EQ_highPass.setFocus(false); break;
-    }
+    defocusAllObjects();
+
 next:
     i++;
     if (lr == IR_LEFT && s_ir_btn_select < 3) {
@@ -1174,14 +1114,8 @@ void set_ir_pos_BT(int lr) { // BLUETOOTH   -1 left, +1 right
     uint8_t i = 0;
     if (s_ir_btn_select == -1) return;
     if (s_ir_btn_select == 6) return;
-    switch (s_ir_btn_select) {
-        case 0: btn_BT_volDown.setFocus(false); break;
-        case 1: btn_BT_volUp.setFocus(false); break;
-        case 2: btn_BT_pause.setFocus(false); break;
-        case 3: btn_BT_mode.setFocus(false); break;
-        case 4: btn_BT_radio.setFocus(false); break;
-        case 5: btn_BT_power.setFocus(false); break;
-    }
+    defocusAllObjects();
+
 next:
     i++;
     if (lr == IR_LEFT) {

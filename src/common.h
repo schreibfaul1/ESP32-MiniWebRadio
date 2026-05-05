@@ -58,7 +58,6 @@
 #include "kcx_bt_emitter.h"
 #include "mbedtls/sha1.h"
 #include "rtime.h"
-#include "settings.h"
 #include "websrv.h"
 #include <Arduino.h>
 #include <ArduinoOTA.h>
