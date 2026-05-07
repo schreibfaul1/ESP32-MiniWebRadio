@@ -50,7 +50,7 @@ void TFT_SPI::setTFTcontroller(uint8_t TFTcontroller) {
     memset(m_framebuffer[2], 0, m_h_res * m_v_res * 2);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_SPI::setDiaplayInversion(uint8_t i) {
+void TFT_SPI::setDisplayInversion(uint8_t i) {
     m_displayInversion = i;
     startWrite();
     if(_TFTcontroller == ILI9341) { writeCommand(i ? INVON : INVOFF); }
