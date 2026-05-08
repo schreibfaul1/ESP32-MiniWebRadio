@@ -1099,7 +1099,7 @@ class SD_content {
 
     bool isDir(uint16_t idx) {
         if (idx >= m_files.size()) {
-            MWR_LOG_ERROR("idx %i is oor, max = %i", idx, m_files.size() - 1);
+            MWR_LOG_ERROR("idx %u is oor, max = %u", idx, m_files.size() - 1);
             return false;
         }
         if (m_files[idx].fileSize == -1) return true;
@@ -1112,7 +1112,7 @@ class SD_content {
             return "";
         }
         if (m_files.size() < idx + 1) {
-            MWR_LOG_WARN("idx %i is oor, max = %i", idx, m_files.size());
+            MWR_LOG_WARN("idx %u is oor, max = %u", idx, m_files.size());
             return "";
         }
         if (isDir(idx)) return m_files[idx].fileName.get();
@@ -1125,7 +1125,7 @@ class SD_content {
             return "";
         }
         if (m_files.size() < idx + 1) {
-            MWR_LOG_WARN("idx %i is oor, max = %i", idx, m_files.size());
+            MWR_LOG_WARN("idx %u is oor, max = %u", idx, m_files.size());
             return "";
         }
         return m_files[idx].fileName.get();
@@ -1137,7 +1137,7 @@ class SD_content {
             return 0;
         }
         if (m_files.size() < idx + 1) {
-            MWR_LOG_WARN("idx %i is oor, max = %i", idx, m_files.size());
+            MWR_LOG_WARN("idx %u is oor, max = %u", idx, m_files.size());
             return 0;
         }
         return m_files[idx].fileSize;
@@ -1149,7 +1149,7 @@ class SD_content {
             return "";
         }
         if (m_files.size() < idx + 1) {
-            MWR_LOG_WARN("idx %i is oor, max = %i", idx, m_files.size());
+            MWR_LOG_WARN("idx %u is oor, max = %u", idx, m_files.size());
             return "";
         }
         /*
@@ -1173,7 +1173,7 @@ class SD_content {
             return "";
         }
         if (m_files.size() < idx + 1) {
-            MWR_LOG_WARN("idx %i is oor, max = %i", idx, m_files.size());
+            MWR_LOG_WARN("idx %u is oor, max = %u", idx, m_files.size());
             return "";
         }
         /*
@@ -1579,7 +1579,7 @@ class Playlist {
         }
         m_playlist_file = SD_MMC.open(path.get());
         if (m_playlist_file.size() > 1048576) {
-            MWR_LOG_ERROR("Playlist too big, size is %i", m_playlist_file.size());
+            MWR_LOG_ERROR("Playlist too big, size is %u", m_playlist_file.size());
             reset();
             return false;
         }
@@ -1724,7 +1724,7 @@ class Playlist {
             m_content_file.push_back(itstr);
         }
         if (!m_content_file.size()) return false;
-        MWR_LOG_INFO("pls length %i", m_content_file.size());
+        MWR_LOG_INFO("pls length %u", m_content_file.size());
         return true;
     }
 
