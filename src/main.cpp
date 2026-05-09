@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.1.1n - Apr 18, 2026                                                                                                               ";
+    Version 4.2.0 - May 09, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -997,8 +997,8 @@ void connecttoFS(const char* FS, const char* filename, uint32_t fileStartTime) {
         s_cur_AudioFileNr = s_SD_content.getPosByFileName(s_cur_AudioFileName.c_get());
         if (s_cur_AudioFileNr == -1) s_cur_AudioFileNr = 0;
     }
-    MWR_LOG_DEBUG("Filesize %d", audio.getFileSize());
-    MWR_LOG_DEBUG("FilePos %d", audio.getAudioFilePosition());
+    MWR_LOG_DEBUG("Filesize %u", audio.getFileSize());
+    MWR_LOG_DEBUG("FilePos %u", audio.getAudioFilePosition());
 }
 void stopSong() {
     audio.stopSong();
@@ -1018,6 +1018,7 @@ void stopSong() {
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // 📌📌📌  S E T U P  📌📌📌
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
 
 void setup() {
     //---- BEGIN ---------
@@ -1256,7 +1257,7 @@ void set_display_items() {
     spiBus.begin(TFT_SCK, TFT_MISO, TFT_MOSI, -1); // SPI1 for TFT
     getTFT().setTFTcontroller(TFT_CONTROLLER);
     getTFT().setRotation(TFT_ROTATION);
-    getTFT().setDiaplayInversion(DISPLAY_INVERSION);
+    getTFT().setDisplayInversion(DISPLAY_INVERSION);
     getTFT().begin(TFT_DC); // Init TFT interface
     getTFT().setFrequency(TFT_FREQUENCY);
     getTFT().setBackGoundColor(TFT_BLACK);
@@ -1632,7 +1633,7 @@ boolean copySDtoFFat(const char* path) {
         len += r;
         if (r == 0) break;
     }
-    MWR_LOG_DEBUG("file length %i, written %i", file1.size(), len);
+    MWR_LOG_DEBUG("file length %u, written %u", file1.size(), len);
     if (file1.size() == len) return true;
     return false;
 }
@@ -2447,23 +2448,23 @@ void loop() {
         }
         if (r.startsWith("stoff")) { // setTimeOffset
             int32_t t = r.substring(3, r.length() - 1).toInt();
-            MWR_LOG_INFO("setTimeOffset %li", t);
+            MWR_LOG_INFO("setTimeOffset %i", t);
             audio.setTimeOffset(t);
         }
 
         if (r.startsWith("sapt")) { // setAudioPlayTime
             uint32_t t = r.substring(4, r.length() - 1).toInt();
-            MWR_LOG_INFO("setAudioPlayTime %lu", t);
+            MWR_LOG_INFO("setAudioPlayTime %u", t);
             audio.setAudioPlayTime(t);
         }
 
         if (r.startsWith("gafp")) { // getAudioFilePosition
-            MWR_LOG_INFO("getAudioFilePosition %lu", audio.getAudioFilePosition());
+            MWR_LOG_INFO("getAudioFilePosition %u", audio.getAudioFilePosition());
         }
 
         if (r.startsWith("safp")) { // setAudioFilePosition
             uint32_t t = r.substring(4, r.length() - 1).toInt();
-            MWR_LOG_INFO("setAudioFilePosition %lu", t);
+            MWR_LOG_INFO("setAudioFilePosition %u", t);
             audio.setAudioFilePosition(t);
         }
 
@@ -2495,7 +2496,7 @@ void loop() {
             if (f_o48)
                 MWR_LOG_INFO("output 48KHz");
             else
-                MWR_LOG_INFO("normal output %i Hz", audio.getSampleRate());
+                MWR_LOG_INFO("normal output %u Hz", audio.getSampleRate());
         }
         if (r.startsWith("btp")) { // bluetooth RX/TX protocol
             bt_emitter.list_protokol();
@@ -2515,17 +2516,17 @@ void loop() {
         static uint32_t time = 0;
         if (r.startsWith("stops")) { // stop song
             time = audio.stopSong();
-            MWR_LOG_INFO("file %s stopped at time %lu", s_cur_AudioFileName.c_get(), time);
+            MWR_LOG_INFO("file %s stopped at time %u", s_cur_AudioFileName.c_get(), time);
         }
         if (r.startsWith("starts")) { // start song
             ps_ptr<char> path = "/audiofiles/" + s_cur_AudioFileName;
             bool         ret = audio.connecttoFS(SD_MMC, path.c_get(), time);
-            MWR_LOG_INFO("file %s started at time %lu, ret %i", s_cur_AudioFileName.c_get(), time, ret);
+            MWR_LOG_INFO("file %s started at time %u, ret %i", s_cur_AudioFileName.c_get(), time, ret);
         }
 
         if (r.startsWith("gbr")) { // get bitrate
             uint32_t br = audio.getBitRate();
-            MWR_LOG_INFO("bitrate: %lu", br);
+            MWR_LOG_INFO("bitrate: %u", br);
         }
         if (r.startsWith("ibs")) { // inbuff status
             audio.inBufferStatus();
@@ -3574,7 +3575,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
 // clang-format off
 
 void WEBSRV_onRequest(const char* cmd,  const char* param, const char* arg, const char* contentType, uint32_t contentLength){
-    MWR_LOG_DEBUG("cmd %s, param %s, arg %s, ct %s, cl %i", cmd, param, arg, contentType, contentLength);
+    MWR_LOG_DEBUG("cmd %s, param %s, arg %s, ct %s, cl %u", cmd, param, arg, contentType, contentLength);
     if(strcmp(cmd, "SD_Upload") == 0) {savefile(param, contentLength, contentType); // PC --> SD
                                        if(strcmp(param, "/stations.json") == 0) staMgnt.updateStationsList();
                                        return;}
@@ -3905,7 +3906,7 @@ void graphicObjects_OnChange(ps_ptr<char> name, int32_t val) {
     if (name.equals("pgb_PL_progress")) { goto exit; }
     if (name.equals("pgb_DL_progress")) { goto exit; }
 
-    MWR_LOG_WARN("unused event: graphicObject %s was changed, val %li", name.c_get(), val);
+    MWR_LOG_WARN("unused event: graphicObject %s was changed, val %i", name.c_get(), val);
 exit:
     return;
 }
@@ -4230,7 +4231,7 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
     if (s_state == IR_SETTINGS) {
         if (name.equals("btn_IR_radio"))    { changeState(RADIO, 0); goto exit; }
     }
-    if (s_state == WIFI_SETTINGS) {           
+    if (s_state == WIFI_SETTINGS) {
         if (name.starts_with("txt_btn"))    { goto exit; }
         if (name.equals("wifiSettings"))    { setWiFiCredentials(ra.arg1.c_get(), ra.arg2.c_get());
                                               msg_box.setText("ESP restart", false, false);

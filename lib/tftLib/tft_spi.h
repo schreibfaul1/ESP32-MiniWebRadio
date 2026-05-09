@@ -37,7 +37,7 @@ class TFT_SPI : public TFT_Base {
     TFT_SPI(SPIClass& spiInstance, int csPin);
     ~TFT_SPI();
     void setTFTcontroller(uint8_t TFTcontroller);
-    void setDiaplayInversion(uint8_t dispInv);
+    void setDisplayInversion(uint8_t dispInv);
     void begin(uint8_t DC);
     void setFrequency(uint32_t f);
     void setRotation(uint8_t r);

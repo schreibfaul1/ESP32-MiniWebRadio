@@ -103,6 +103,51 @@ imgSize GetImageSize(ps_ptr<char> picturePath) {
     return img;
 }
 
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class RegisterTable {
+  public:
+    virtual ps_ptr<char> getName() = 0;
+    virtual bool         isEnabled() = 0;
+    virtual void         disable() = 0;
+    virtual bool         positionXY(uint16_t, uint16_t) = 0;
+    virtual void         draw() = 0;
+    virtual void         getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) = 0;
+    virtual bool         setFocus(bool) = 0;
+    virtual ~RegisterTable() {}
+};
+static std::vector<RegisterTable*> registertable_objects;
+static void                        register_object(RegisterTable* obj) {
+    registertable_objects.push_back(obj);
+}
+inline void get_registered_names() {
+    int16_t x = 0, y = 0, w = 0, h = 0;
+    for (auto obj : registertable_objects) {
+        obj->getBounds(x, y, w, h);
+        printf(ANSI_ESC_WHITE "    registered object:" ANSI_ESC_YELLOW " %-27s" ANSI_ESC_WHITE " is enabled: %-5s" ANSI_ESC_WHITE " x: %03d, y: %03d, w: %03d, h: %03d" ANSI_ESC_RESET "\n",
+               obj->getName().c_get(), obj->isEnabled() ? ANSI_ESC_RED "yes" : ANSI_ESC_BLUE "no", x, y, w, h);
+    }
+}
+inline void disableAllObjects() {
+    for (auto obj : registertable_objects) { obj->disable(); }
+}
+inline void defocusAllObjects() {
+    for (auto obj : registertable_objects) { obj->setFocus(false); }
+}
+
+inline const char* isObjectClicked(uint16_t x, uint16_t y) {
+    static char objName[100];
+    objName[0] = '\0';
+    for (auto obj : registertable_objects) {
+        if (obj->isEnabled() && obj->positionXY(x, y)) {
+            if (strlen(objName) > 0) strcat(objName, ", ");
+            strcat(objName, obj->getName().get());
+        }
+    }
+    return objName;
+}
+
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
 class slider : public RegisterTable {
   private:
     int16_t      m_x = 0;
@@ -120,6 +165,7 @@ class slider : public RegisterTable {
     bool         m_enabled = false;
     bool         m_clicked = false;
     bool         m_show = false;
+    bool         m_focus = false;
     bool         m_objectInit = false;
     bool         m_backgroundTransparency = false;
     bool         m_saveBackground = false;
@@ -170,6 +216,12 @@ class slider : public RegisterTable {
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
+    bool         hasFocus() { return m_focus; }
+
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
 
     void draw() override {
         if (!m_enabled) return;
@@ -320,6 +372,7 @@ class progressbar : public RegisterTable {
     uint32_t     m_railColorLeft = 0;
     uint32_t     m_railColorRight = 0;
     bool         m_enabled = false;
+    bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_objectInit = false;
     bool         m_backgroundTransparency = true;
@@ -355,6 +408,12 @@ class progressbar : public RegisterTable {
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
+    bool         hasFocus() { return m_focus; }
+
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
 
     void draw() override {
         if (!m_enabled) return;
@@ -491,6 +550,7 @@ class textbox : public RegisterTable {
     ps_ptr<char> m_text;
     ps_ptr<char> m_name;
     bool         m_enabled = false;
+    bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_autoSize = false;
     bool         m_narrow = false;
@@ -521,6 +581,12 @@ class textbox : public RegisterTable {
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
+    bool         hasFocus() { return m_focus; }
+
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
 
     void draw() override {
         if (!m_enabled) return;
@@ -664,6 +730,7 @@ class inputbox : public RegisterTable {
     ps_ptr<char> m_text;
     ps_ptr<char> m_name;
     bool         m_enabled = false;
+    bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_autoSize = false;
     bool         m_narrow = false;
@@ -694,6 +761,12 @@ class inputbox : public RegisterTable {
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
+    bool         hasFocus() { return m_focus; }
+
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
 
     void draw() override {
         if (!m_enabled) return;
@@ -850,6 +923,7 @@ class textbutton : public RegisterTable {
     ps_ptr<char> m_text;
     ps_ptr<char> m_name;
     bool         m_enabled = false;
+    bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_autoSize = false;
     bool         m_narrow = false;
@@ -924,6 +998,12 @@ class textbutton : public RegisterTable {
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
+    bool         hasFocus() { return m_focus; }
+
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
 
     void draw() override {
         if (!m_enabled) return;
@@ -1094,6 +1174,7 @@ class selectbox : public RegisterTable {
     uint32_t                  m_borderColor = 0;
     ps_ptr<char>              m_name;
     bool                      m_enabled = false;
+    bool                      m_focus = false;
     bool                      m_clicked = false;
     bool                      m_autoSize = false;
     bool                      m_narrow = false;
@@ -1150,6 +1231,12 @@ class selectbox : public RegisterTable {
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
+    bool         hasFocus() { return m_focus; }
+
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
 
     void draw() override {
         if (!m_enabled) return;
@@ -1341,6 +1428,7 @@ class keyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     uint8_t      m_fontSize = 0;
     uint8_t      m_val = 0;
     bool         m_enabled = false;
+    bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_backgroundTransparency = false;
     bool         m_saveBackground = false;
@@ -1368,12 +1456,12 @@ class keyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     uint32_t     m_bgColor = 0;
     uint32_t     m_fgColor = 0;
     uint32_t     m_clickColor = TFT_CYAN;
-    textbutton*  txt_btn_array = new textbutton[34]{textbutton("txt_btn0"),  textbutton("txt_btn1"),  textbutton("txt_btn2"),  textbutton("txt_btn3"),  textbutton("txt_btn4"),  textbutton("txt_btn5"),
-                                                    textbutton("txt_btn6"),  textbutton("txt_btn7"),  textbutton("txt_btn8"),  textbutton("txt_btn9"),  textbutton("txt_btn10"), textbutton("txt_btn11"),
-                                                    textbutton("txt_btn12"), textbutton("txt_btn13"), textbutton("txt_btn14"), textbutton("txt_btn15"), textbutton("txt_btn16"), textbutton("txt_btn17"),
-                                                    textbutton("txt_btn18"), textbutton("txt_btn19"), textbutton("txt_btn20"), textbutton("txt_btn21"), textbutton("txt_btn22"), textbutton("txt_btn23"),
-                                                    textbutton("txt_btn24"), textbutton("txt_btn25"), textbutton("txt_btn26"), textbutton("txt_btn27"), textbutton("txt_btn28"), textbutton("txt_btn29"),
-                                                    textbutton("txt_btn30"), textbutton("txt_btn31"), textbutton("txt_btn32"), textbutton("txt_btn33")};
+    textbutton* txt_btn_array = new textbutton[34]{textbutton("txt_btn0"),  textbutton("txt_btn1"),  textbutton("txt_btn2"),  textbutton("txt_btn3"),  textbutton("txt_btn4"),  textbutton("txt_btn5"),
+                                                   textbutton("txt_btn6"),  textbutton("txt_btn7"),  textbutton("txt_btn8"),  textbutton("txt_btn9"),  textbutton("txt_btn10"), textbutton("txt_btn11"),
+                                                   textbutton("txt_btn12"), textbutton("txt_btn13"), textbutton("txt_btn14"), textbutton("txt_btn15"), textbutton("txt_btn16"), textbutton("txt_btn17"),
+                                                   textbutton("txt_btn18"), textbutton("txt_btn19"), textbutton("txt_btn20"), textbutton("txt_btn21"), textbutton("txt_btn22"), textbutton("txt_btn23"),
+                                                   textbutton("txt_btn24"), textbutton("txt_btn25"), textbutton("txt_btn26"), textbutton("txt_btn27"), textbutton("txt_btn28"), textbutton("txt_btn29"),
+                                                   textbutton("txt_btn30"), textbutton("txt_btn31"), textbutton("txt_btn32"), textbutton("txt_btn33")};
 
   public:
     keyBoard(ps_ptr<char> name, uint8_t fontSize) {
@@ -1446,6 +1534,12 @@ class keyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
+    bool         hasFocus() { return m_focus; }
+
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
 
     void draw() override {
         if (!m_enabled) return;
@@ -1599,6 +1693,7 @@ class wifiSettings : public RegisterTable {
     uint32_t     m_borderColor = TFT_BLACK;
     ps_ptr<char> m_name;
     bool         m_enabled = false;
+    bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_autoSize = false;
     bool         m_narrow = false;
@@ -1790,8 +1885,13 @@ class wifiSettings : public RegisterTable {
         m_keyboard->begin(m_winKeybrd.x, m_winKeybrd.y, m_winKeybrd.w, m_winKeybrd.h, m_winKeybrd.pl, m_winKeybrd.pr, m_winKeybrd.pt, m_winKeybrd.pb);
     }
     ps_ptr<char> getName() { return m_name; }
+    bool         isEnabled() { return m_enabled; }
+    bool         hasFocus() { return m_focus; }
 
-    bool isEnabled() { return m_enabled; }
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
 
     void draw() override {
         if (!m_enabled) return;
@@ -1974,6 +2074,7 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     ps_ptr<char> m_name;
     ps_ptr<char> m_time = "00:00:00";
     bool         m_enabled = false;
+    bool         m_focus = false;
     bool         m_backgroundTransparency = false;
     bool         m_saveBackground = false;
     bool         m_clicked = false;
@@ -2015,7 +2116,15 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
         }
     }
     ps_ptr<char> getName() { return m_name; }
+    void         disable() { m_enabled = false; }
+    void         enable() { m_enabled = true; }
     bool         isEnabled() { return m_enabled; }
+    bool         hasFocus() { return m_focus; }
+
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
 
     void draw() override {
         if (!m_enabled) return;
@@ -2053,8 +2162,7 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
         }
         m_enabled = false;
     }
-    void disable() { m_enabled = false; }
-    void enable() { m_enabled = true; }
+
     void setFont(uint8_t size) { // size 0 -> auto, choose besr font size
         m_fontSize = size;
         m_fontSize = size;
@@ -2118,14 +2226,16 @@ class button1state : public RegisterTable { // click button
     int16_t      m_w = 0;
     int16_t      m_h = 0;
     uint32_t     m_bgColor = 0;
-    ps_ptr<char> m_defaultPicturePath;
-    ps_ptr<char> m_clickedPicturePath;
+    ps_ptr<char> m_idlePicturePath;
+    ps_ptr<char> m_clickPicturePath;
     ps_ptr<char> m_inactivePicturePath;
-    ps_ptr<char> m_alternativePicturePath; // e.g. IR select
+    ps_ptr<char> m_focusPicturePath; // e.g. IR select
     bool         m_enabled = false;
+    bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_backgroundTransparency = false;
     bool         m_saveBackground = false;
+    bool         m_active = true;
     ps_ptr<char> m_name;
     releasedArg  m_ra;
 
@@ -2136,10 +2246,6 @@ class button1state : public RegisterTable { // click button
         m_bgColor = TFT_BLACK;
         m_enabled = false;
         m_clicked = false;
-        setDefaultPicturePath("");
-        setClickedPicturePath("");
-        setInactivePicturePath("");
-        setAlternativePicturePath("");
     }
     ~button1state() {}
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
@@ -2151,7 +2257,22 @@ class button1state : public RegisterTable { // click button
     }
     ps_ptr<char> getName() { return m_name; }
     void         enable() { m_enabled = true; }
+    void         disable() { m_enabled = false; }
     bool         isEnabled() { return m_enabled; }
+    bool         hasFocus() { return m_focus; }
+
+    bool setFocus(bool f) {
+        if (!m_active) return false;
+        if (m_enabled) {
+            if (f) {
+                if (!m_focus) drawImage(m_focusPicturePath, m_x, m_y, m_w, m_h);
+            } else {
+                if (m_focus) drawImage(m_idlePicturePath, m_x, m_y, m_w, m_h);
+            }
+        }
+        m_focus = f;
+        return true;
+    }
 
     void draw() override {
         if (!m_enabled) return;
@@ -2173,7 +2294,7 @@ class button1state : public RegisterTable { // click button
             setInactive();
             return;
         }
-        drawImage(m_defaultPicturePath, m_x, m_y, m_w, m_h);
+        drawImage(m_idlePicturePath, m_x, m_y, m_w, m_h);
         m_enabled = true;
     }
 
@@ -2190,47 +2311,38 @@ class button1state : public RegisterTable { // click button
         }
         m_enabled = false;
     }
-    void disable() { m_enabled = false; }
+
     void setInactive() {
         drawImage(m_inactivePicturePath, m_x, m_y, m_w, m_h);
         m_enabled = false;
     }
-    void showAlternativePic(bool inactive = false) {
+    void showFocusPicture(bool inactive = false) {
         m_clicked = false;
         m_enabled = true;
         if (inactive) {
             setInactive();
             return;
         }
-        drawImage(m_alternativePicturePath, m_x, m_y, m_w, m_h);
+        drawImage(m_focusPicturePath, m_x, m_y, m_w, m_h);
     }
-    void showClickedPic() { drawImage(m_clickedPicturePath, m_x, m_y, m_w, m_h); }
-    void setDefaultPicturePath(ps_ptr<char> path) {
+    void showClickedPic() { drawImage(m_clickPicturePath, m_x, m_y, m_w, m_h); }
+    void setPicturePath(ps_ptr<char> path) {
         if (path.strlen() > 0) {
-            m_defaultPicturePath = path;
+            m_idlePicturePath = path + "_idle.png";
+            m_clickPicturePath = path + "_click.png";
+            m_focusPicturePath = path + "_focus.png";
+            m_inactivePicturePath = path + "_inactive.png";
         } else {
-            m_defaultPicturePath = "defaultPicturePath is not set";
+            m_idlePicturePath = m_name + "_idle.png";
+            m_clickPicturePath = m_name + "_click.png";
+            m_focusPicturePath = m_name + "_focus.png";
+            m_inactivePicturePath = m_name + "_inactive.png";
         }
     }
-    void setClickedPicturePath(ps_ptr<char> path) {
-        if (path.strlen() > 0) {
-            m_clickedPicturePath = path;
-        } else {
-            m_clickedPicturePath = "clickedPicturePath is not set";
-        }
-    }
-    void setInactivePicturePath(ps_ptr<char> path) {
-        if (path.strlen() > 0) {
-            m_inactivePicturePath = path;
-        } else {
-            m_inactivePicturePath = "inactivePicturePath is not set";
-        }
-    }
-    void setAlternativePicturePath(ps_ptr<char> path) { m_alternativePicturePath = path; }
 
     bool click() { // e.g. from IR
         if (!m_enabled) { return false; }
-        drawImage(m_clickedPicturePath, m_x, m_y, m_w, m_h);
+        drawImage(m_clickPicturePath, m_x, m_y, m_w, m_h);
         m_clicked = true;
         if (graphicObjects_OnClick) graphicObjects_OnClick(m_name, m_enabled);
         return true;
@@ -2242,7 +2354,7 @@ class button1state : public RegisterTable { // click button
         if (x > m_x + m_w) return false;
         if (y > m_y + m_h) return false;
         if (m_enabled) {
-            drawImage(m_clickedPicturePath, m_x, m_y, m_w, m_h);
+            drawImage(m_clickPicturePath, m_x, m_y, m_w, m_h);
             m_clicked = true;
         }
         if (graphicObjects_OnClick) graphicObjects_OnClick(m_name, m_enabled);
@@ -2252,7 +2364,7 @@ class button1state : public RegisterTable { // click button
     bool released() {
         if (!m_enabled) return false;
         if (!m_clicked) return false;
-        drawImage(m_defaultPicturePath, m_x, m_y, m_w, m_h);
+        drawImage(m_idlePicturePath, m_x, m_y, m_w, m_h);
         m_clicked = false;
         if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
         return true;
@@ -2266,14 +2378,16 @@ class button2state : public RegisterTable { // on off switch
     int16_t      m_w = 0;
     int16_t      m_h = 0;
     uint32_t     m_bgColor = 0;
-    ps_ptr<char> m_offPicturePath;
-    ps_ptr<char> m_onPicturePath;
-    ps_ptr<char> m_clickedOffPicturePath;
-    ps_ptr<char> m_clickedOnPicturePath;
-    ps_ptr<char> m_inactivePicturePath;
-    ps_ptr<char> m_alternativeOnPicturePath;
-    ps_ptr<char> m_alternativeOffPicturePath;
+    ps_ptr<char> m_off_idlePicturePath;
+    ps_ptr<char> m_on_idlePicturePath;
+    ps_ptr<char> m_off_clickPicturePath;
+    ps_ptr<char> m_on_clickPicturePath;
+    ps_ptr<char> m_off_inactivePicturePath;
+    ps_ptr<char> m_on_inactivePicturePath;
+    ps_ptr<char> m_off_focusPicturePath;
+    ps_ptr<char> m_on_focusPicturePath;
     bool         m_enabled = false;
+    bool         m_focus = false;
     bool         m_active = true;
     bool         m_clicked = false;
     bool         m_state = false;
@@ -2290,11 +2404,6 @@ class button2state : public RegisterTable { // on off switch
         m_enabled = false;
         m_clicked = false;
         m_state = false;
-        setOffPicturePath("");
-        setOnPicturePath("");
-        setClickedOffPicturePath("");
-        setClickedOnPicturePath("");
-        setInactivePicturePath("");
     }
     ~button2state() {}
 
@@ -2306,9 +2415,33 @@ class button2state : public RegisterTable { // on off switch
         m_enabled = false;
         m_active = true;
     }
+
     ps_ptr<char> getName() { return m_name; }
     void         enable() { m_enabled = true; }
+    void         disable() { m_enabled = false; }
     bool         isEnabled() { return m_enabled; }
+    bool         hasFocus() { return m_focus; }
+
+    bool setFocus(bool f) {
+        if (!m_active) return false;
+        m_focus = f;
+        if (m_enabled) {
+            if (m_state) {
+                if (m_focus) {
+                    drawImage(m_on_focusPicturePath, m_x, m_y, m_w, m_h);
+                } else {
+                    drawImage(m_on_idlePicturePath, m_x, m_y, m_w, m_h);
+                }
+            } else {
+                if (m_focus) {
+                    drawImage(m_off_focusPicturePath, m_x, m_y, m_w, m_h);
+                } else {
+                    drawImage(m_off_idlePicturePath, m_x, m_y, m_w, m_h);
+                }
+            }
+        }
+        return true;
+    }
 
     void draw() override {
         if (!m_enabled) return;
@@ -2328,12 +2461,15 @@ class button2state : public RegisterTable { // on off switch
         m_clicked = false;
         if (m_active) {
             if (m_state)
-                drawImage(m_onPicturePath, m_x, m_y, m_w, m_h);
+                drawImage(m_on_idlePicturePath, m_x, m_y, m_w, m_h);
             else
-                drawImage(m_offPicturePath, m_x, m_y, m_w, m_h);
+                drawImage(m_off_idlePicturePath, m_x, m_y, m_w, m_h);
             m_enabled = true;
         } else {
-            drawImage(m_inactivePicturePath, m_x, m_y, m_w, m_h);
+            if (m_state)
+                drawImage(m_on_inactivePicturePath, m_x, m_y, m_w, m_h);
+            else
+                drawImage(m_off_inactivePicturePath, m_x, m_y, m_w, m_h);
         }
     }
 
@@ -2344,32 +2480,35 @@ class button2state : public RegisterTable { // on off switch
 
     void showClickedPic() {
         if (m_state) {
-            drawImage(m_clickedOnPicturePath, m_x, m_y, m_w, m_h);
+            drawImage(m_on_clickPicturePath, m_x, m_y, m_w, m_h);
         } else {
-            drawImage(m_clickedOffPicturePath, m_x, m_y, m_w, m_h);
+            drawImage(m_off_clickPicturePath, m_x, m_y, m_w, m_h);
         }
     }
-    void showAlternativePic() {
-        if (m_state) {
-            drawImage(m_alternativeOnPicturePath, m_x, m_y, m_w, m_h);
-        } else {
-            drawImage(m_alternativeOffPicturePath, m_x, m_y, m_w, m_h);
-        }
+
+    void setPicturePath(ps_ptr<char> path) {
+        m_off_idlePicturePath = path + "_Off_Idle.png";
+        m_on_idlePicturePath = path + "_On_Idle.png";
+        m_off_clickPicturePath = path + "_Off_Click.png";
+        m_on_clickPicturePath = path + "_On_Click.png";
+        m_off_inactivePicturePath = path + "_Off_Inactive.png";
+        m_on_inactivePicturePath = path + "_On_Inactive.png";
+        m_off_focusPicturePath = path + "_Off_Focus.png";
+        m_on_focusPicturePath = path + "_On_Focus.png";
     }
-    void setAlternativeOnPicturePath(ps_ptr<char> path) { m_alternativeOnPicturePath = path; }
-    void setAlternativeOffPicturePath(ps_ptr<char> path) { m_alternativeOffPicturePath = path; }
+
     void hide() {
         getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         m_enabled = false;
     }
-    void disable() { m_enabled = false; }
+
     void setValue(bool val) {
         m_state = val;
         if (m_enabled) {
             if (m_state)
-                drawImage(m_onPicturePath, m_x, m_y, m_w, m_h);
+                drawImage(m_on_idlePicturePath, m_x, m_y, m_w, m_h);
             else
-                drawImage(m_offPicturePath, m_x, m_y, m_w, m_h);
+                drawImage(m_off_idlePicturePath, m_x, m_y, m_w, m_h);
         }
     }
     bool getValue() { return m_state; }
@@ -2378,24 +2517,12 @@ class button2state : public RegisterTable { // on off switch
     void setActive(bool act) { m_active = act; }
     bool getActive() { return m_active; }
 
-    void setOffPicturePath(ps_ptr<char> path) {
-        if (path.strlen() > 0) {
-            m_offPicturePath = path;
-        } else {
-            m_offPicturePath = "defaultPicturePath is not set";
-        }
-    }
-    void setClickedOffPicturePath(ps_ptr<char> path) { m_clickedOffPicturePath = path; }
-    void setClickedOnPicturePath(ps_ptr<char> path) { m_clickedOnPicturePath = path; }
-    void setOnPicturePath(ps_ptr<char> path) { m_onPicturePath = path; }
-    void setInactivePicturePath(ps_ptr<char> path) { m_inactivePicturePath = path; }
-
     bool click() {
         if (!m_enabled) return false;
         if (m_state)
-            drawImage(m_clickedOnPicturePath, m_x, m_y, m_w, m_h);
+            drawImage(m_on_clickPicturePath, m_x, m_y, m_w, m_h);
         else
-            drawImage(m_clickedOffPicturePath, m_x, m_y, m_w, m_h);
+            drawImage(m_off_clickPicturePath, m_x, m_y, m_w, m_h);
         m_clicked = true;
         m_state = !m_state;
 
@@ -2410,9 +2537,9 @@ class button2state : public RegisterTable { // on off switch
         if (y > m_y + m_h) return false;
         if (m_enabled) {
             if (m_state)
-                drawImage(m_clickedOnPicturePath, m_x, m_y, m_w, m_h);
+                drawImage(m_on_clickPicturePath, m_x, m_y, m_w, m_h);
             else
-                drawImage(m_clickedOffPicturePath, m_x, m_y, m_w, m_h);
+                drawImage(m_off_clickPicturePath, m_x, m_y, m_w, m_h);
             m_clicked = true;
             m_state = !m_state;
         }
@@ -2424,9 +2551,9 @@ class button2state : public RegisterTable { // on off switch
         if (!m_enabled) return false;
         if (!m_clicked) return false;
         if (m_state)
-            drawImage(m_onPicturePath, m_x, m_y, m_w, m_h);
+            drawImage(m_on_idlePicturePath, m_x, m_y, m_w, m_h);
         else
-            drawImage(m_offPicturePath, m_x, m_y, m_w, m_h);
+            drawImage(m_off_idlePicturePath, m_x, m_y, m_w, m_h);
         m_clicked = false;
         if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
         return true;
@@ -2435,7 +2562,6 @@ class button2state : public RegisterTable { // on off switch
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class numbersBox : public RegisterTable { // range 000...999
   private:
-    bool         m_enabled = false;
     uint16_t     m_segmWidth = 0;
     uint16_t     m_segmentHigh = 0;
     int16_t      m_x = 0;
@@ -2447,6 +2573,8 @@ class numbersBox : public RegisterTable { // range 000...999
     int16_t      m_box_w = 0;
     int16_t      m_box_h = 0;
     uint32_t     m_bgColor = TFT_BLACK;
+    bool         m_enabled = false;
+    bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_backgroundTransparency = false; // unused yet
     bool         m_saveBackground = false;         // unused yet
@@ -2470,7 +2598,6 @@ class numbersBox : public RegisterTable { // range 000...999
         placingDigits(w, h);
         m_enabled = false;
     }
-    ps_ptr<char> getName() { return m_name; }
 
     void draw() override {
         if (!m_enabled) return;
@@ -2515,9 +2642,18 @@ class numbersBox : public RegisterTable { // range 000...999
         getTFT().fillRect(m_x + m_box_x, m_y + m_box_y, m_box_w, m_box_h, m_bgColor);
         m_enabled = false;
     }
-    void disable() { m_enabled = false; }
-    void enable() { m_enabled = true; }
-    bool isEnabled() { return m_enabled; }
+
+    ps_ptr<char> getName() { return m_name; }
+    void         enable() { m_enabled = true; }
+    void         disable() { m_enabled = false; }
+    bool         isEnabled() { return m_enabled; }
+    bool         hasFocus() { return m_focus; }
+
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
+
     void setNumbers(uint16_t numbers) {
         if (numbers > 999) return;
         snprintf(m_numbers, sizeof(m_numbers), "%03u", numbers);
@@ -2561,7 +2697,6 @@ class numbersBox : public RegisterTable { // range 000...999
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class offTimerBox : public RegisterTable { // range 000...999
   private:
-    bool         m_enabled = false;
     uint16_t     m_digitsWidth = 0;
     uint16_t     m_colonWidth = 0;
     uint16_t     m_digitsHigh = 0;
@@ -2578,6 +2713,8 @@ class offTimerBox : public RegisterTable { // range 000...999
     ps_ptr<char> m_color = "green";
     uint16_t     m_offColor = TFT_RED;
     uint16_t     m_onColor = TFT_GREEN;
+    bool         m_enabled = false;
+    bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_backgroundTransparency = false; // unused yet
     bool         m_saveBackground = false;         // unused yet
@@ -2600,7 +2737,6 @@ class offTimerBox : public RegisterTable { // range 000...999
         placingDigits(m_w, m_h);
         m_enabled = false;
     }
-    ps_ptr<char> getName() { return m_name; }
 
     void draw() override {
         if (!m_enabled) return;
@@ -2646,9 +2782,18 @@ class offTimerBox : public RegisterTable { // range 000...999
         getTFT().fillRect(m_x + m_box_x, m_y + m_box_y, m_box_w, m_box_h, m_bgColor);
         m_enabled = false;
     }
-    void disable() { m_enabled = false; }
-    void enable() { m_enabled = true; }
-    bool isEnabled() { return m_enabled; }
+
+    ps_ptr<char> getName() { return m_name; }
+    void         enable() { m_enabled = true; }
+    void         disable() { m_enabled = false; }
+    bool         isEnabled() { return m_enabled; }
+    bool         hasFocus() { return m_focus; }
+
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
+
     // void setTime(uint16_t time) {
     //     snprintf(m_numbers, sizeof(m_numbers), "%03u", time);
     // }
@@ -2721,6 +2866,7 @@ class pictureBox : public RegisterTable {
     ps_ptr<char> m_altPicturePath;
     ps_ptr<char> m_name;
     bool         m_enabled = false;
+    bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_backgroundTransparency = false;
     bool         m_saveBackground = false; // is used and to draw further objects on this box
@@ -2747,8 +2893,13 @@ class pictureBox : public RegisterTable {
         m_enabled = false;
     }
     ps_ptr<char> getName() { return m_name; }
+    bool         isEnabled() { return m_enabled; }
+    bool         hasFocus() { return m_focus; }
 
-    bool isEnabled() { return m_enabled; }
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
 
     void draw() override {
         if (!m_enabled) return;
@@ -2874,6 +3025,7 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
 
     uint32_t     m_bgColor = 0;
     bool         m_enabled = false;
+    bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_state = false;
     bool         m_backgroundTransparency = false;
@@ -2915,6 +3067,12 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
+    bool         hasFocus() { return m_focus; }
+
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
 
     void draw() override {
         if (!m_enabled) return;
@@ -3090,6 +3248,7 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
     int16_t      m_h = 0;
     uint32_t     m_bgColor = 0;
     bool         m_enabled = false;
+    bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_state = false;
     bool         m_backgroundTransparency = false;
@@ -3142,6 +3301,12 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
+    bool         hasFocus() { return m_focus; }
+
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
 
     void draw() override {
         if (!m_enabled) return;
@@ -3340,6 +3505,7 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
     uint16_t     m_fontSize = 0; // auto
     uint32_t     m_bgColor = 0;
     bool         m_enabled = false;
+    bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_state = false;
     bool         m_showAll = false;
@@ -3403,7 +3569,14 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
         }
     }
     ps_ptr<char> getName() { return m_name; }
+    void         disable() { m_enabled = false; }
     bool         isEnabled() { return m_enabled; }
+    bool         hasFocus() { return m_focus; }
+
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
 
     void draw() override {
         if (!m_enabled) return;
@@ -3450,7 +3623,7 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
         m_enabled = false;
         getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
     }
-    void disable() { m_enabled = false; }
+
     void shiftRight() {
         m_idx++;
         if (m_idx == 4) m_idx = 0;
@@ -3732,6 +3905,7 @@ class uniList {
     ps_ptr<char> m_ext1[10];
     ps_ptr<char> m_ext2[10];
     bool         m_enabled = false;
+    bool         m_focus = false;
 
   public:
     uniList(ps_ptr<char> name) {
@@ -3941,6 +4115,7 @@ class dlnaList : public RegisterTable {
     int16_t                                    m_dlnaMaxServers = -1;
     uint32_t                                   m_bgColor = 0;
     bool                                       m_enabled = false;
+    bool                                       m_focus = false;
     bool                                       m_clicked = false;
     bool                                       m_state = false;
     bool                                       m_isAudio = false;
@@ -3997,8 +4172,13 @@ class dlnaList : public RegisterTable {
         m_dlnaHistory[0].name = "Media Server";
     }
     ps_ptr<char> getName() { return m_name; }
+    bool         isEnabled() { return m_enabled; }
+    bool         hasFocus() { return m_focus; }
 
-    bool isEnabled() { return m_enabled; }
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
 
     void draw() override {
         if (!m_enabled) return;
@@ -4533,6 +4713,7 @@ class fileList : public RegisterTable {
     uint8_t      m_fontSize = 0;
     uint32_t     m_bgColor = 0;
     bool         m_enabled = false;
+    bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_state = false;
     ps_ptr<char> m_name;
@@ -4577,6 +4758,12 @@ class fileList : public RegisterTable {
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
+    bool         hasFocus() { return m_focus; }
+
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
 
     void draw() override {
         if (!m_enabled) return;
@@ -4935,6 +5122,7 @@ class stationsList : public RegisterTable {
     uint8_t      m_stationListPos = 0;
     uint32_t     m_bgColor = 0;
     bool         m_enabled = false;
+    bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_state = false;
     ps_ptr<char> m_name;
@@ -4971,6 +5159,12 @@ class stationsList : public RegisterTable {
     void         currentStationNr(uint16_t* curStationNr) { m_curSstationNr = curStationNr; }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
+    bool         hasFocus() { return m_focus; }
+
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
 
     void draw() override {
         if (!m_enabled) return;
@@ -5179,6 +5373,7 @@ class vuMeter : public RegisterTable {
     uint32_t     m_frameColor = TFT_DARKGREY;
     ps_ptr<char> m_name;
     bool         m_enabled = false;
+    bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_backgroundTransparency = false;
     bool         m_saveBackground = false;
@@ -5216,6 +5411,12 @@ class vuMeter : public RegisterTable {
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
+    bool         hasFocus() { return m_focus; }
+
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
 
     void draw() override {
         if (!m_enabled) return;
@@ -5348,6 +5549,7 @@ class displayHeader : public RegisterTable {
     ps_ptr<char> m_item;
     ps_ptr<char> m_time = "00:00:00";
     bool         m_enabled = false;
+    bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_speakerOn = false;
     bool         m_backgroundTransparency = false;
@@ -5400,8 +5602,8 @@ class displayHeader : public RegisterTable {
         uint8_t  pr = 0;
         uint8_t  pt = 0;
         uint8_t  pb = 0;
-    } const s_time; // time object
-    //------------------------------------------------------------------------------------------------------------------------------------------------
+    } const s_time;    // time object
+                       //------------------------------------------------------------------------------------------------------------------------------------------------
 #elifdef TFT_LAYOUT_M  // 480 x 320px
     //------------------------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
     struct w_i {
@@ -5444,7 +5646,7 @@ class displayHeader : public RegisterTable {
         uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_time; // time object
-    //------------------------------------------------------------------------------------------------------------------------------------------------
+                    //------------------------------------------------------------------------------------------------------------------------------------------------
 #elifdef TFT_LAYOUT_L  // 800 x 480px
     //------------------------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
     struct w_i {
@@ -5487,7 +5689,7 @@ class displayHeader : public RegisterTable {
         uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_time; // time object
-    //------------------------------------------------------------------------------------------------------------------------------------------------
+                    //------------------------------------------------------------------------------------------------------------------------------------------------
 #elifdef TFT_LAYOUT_XL // 1024 x 600px
     //------------------------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
     struct w_i {
@@ -5567,6 +5769,12 @@ class displayHeader : public RegisterTable {
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
+    bool         hasFocus() { return m_focus; }
+
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
 
     void draw() override {
         if (!m_enabled) return;
@@ -5728,6 +5936,7 @@ class displayFooter : public RegisterTable {
     ps_ptr<char> m_fileNr;
     ps_ptr<char> m_ipAddr = "";
     bool         m_enabled = false;
+    bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_backgroundTransparency = false;
     bool         m_saveBackground = false;
@@ -6059,6 +6268,12 @@ class displayFooter : public RegisterTable {
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
+    bool         hasFocus() { return m_focus; }
+
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
 
     void draw() override {
         if (!m_enabled) return;
@@ -6252,6 +6467,7 @@ class messageBox : public RegisterTable {
     ps_ptr<char> m_name;
     ps_ptr<char> m_text;
     bool         m_enabled = false;
+    bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_narrow = false;
     bool         m_noWrap = false;
@@ -6341,7 +6557,13 @@ class messageBox : public RegisterTable {
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
     void         disable() { m_enabled = false; }
+    bool         hasFocus() { return m_focus; }
     void         setBGcolor(uint32_t color) { m_bgColor = color; }
+
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
 
     void show() {
         txt_msgBox->setTransparency(m_backgroundTransparency, m_saveBackground);

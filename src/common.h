@@ -58,7 +58,6 @@
 #include "kcx_bt_emitter.h"
 #include "mbedtls/sha1.h"
 #include "rtime.h"
-#include "settings.h"
 #include "websrv.h"
 #include <Arduino.h>
 #include <ArduinoOTA.h>
@@ -734,43 +733,7 @@ inline void vector_clear_and_shrink(vector<char*>& vec) {
     vec.shrink_to_fit();
 }
 
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class RegisterTable {
-  public:
-    virtual ps_ptr<char> getName() = 0;
-    virtual bool         isEnabled() = 0;
-    virtual void         disable() = 0;
-    virtual bool         positionXY(uint16_t, uint16_t) = 0;
-    virtual void         draw() = 0;
-    virtual void         getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) = 0;
-    virtual ~RegisterTable() {}
-};
-static std::vector<RegisterTable*> registertable_objects;
-static void                        register_object(RegisterTable* obj) {
-    registertable_objects.push_back(obj);
-}
-inline void get_registered_names() {
-    int16_t x= 0, y= 0, w = 0, h = 0;
-    for (auto obj : registertable_objects) {
-        obj->getBounds(x, y, w, h);
-        printf(ANSI_ESC_WHITE "    registered object:" ANSI_ESC_YELLOW " %-27s" ANSI_ESC_WHITE " is enabled: %-5s" ANSI_ESC_WHITE " x: %03d, y: %03d, w: %03d, h: %03d" ANSI_ESC_RESET "\n", obj->getName().c_get(),
-               obj->isEnabled() ? ANSI_ESC_RED "yes" : ANSI_ESC_BLUE "no", x, y, w, h);
-    }
-}
-inline void disableAllObjects() {
-    for (auto obj : registertable_objects) { obj->disable(); }
-}
-inline const char* isObjectClicked(uint16_t x, uint16_t y) {
-    static char objName[100];
-    objName[0] = '\0';
-    for (auto obj : registertable_objects) {
-        if (obj->isEnabled() && obj->positionXY(x, y)) {
-            if (strlen(objName) > 0) strcat(objName, ", ");
-            strcat(objName, obj->getName().get());
-        }
-    }
-    return objName;
-}
+
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // Macro for comfortable calls
 #define MWR_LOG_ERROR(fmt, ...)   Audio::AUDIO_LOG_IMPL(1, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
