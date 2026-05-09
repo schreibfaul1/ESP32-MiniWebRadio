@@ -6,7 +6,7 @@
 #define DISPLAY_INVERSION 0                // only SPI displays, (0) off (1) on
 #define TFT_ROTATION      0                // (0) none, (1) 90°CW, (2) 180°CW, (3) 270°CW
 #define TFT_FREQUENCY     40000000         // only SPI displays, 80000000, 40000000, 27000000, 20000000, 10000000
-#define TP_CONTROLLER     7               // (0)XPT2046 2.8", (1)XPT2046 3.5", (2)XPT2046 4.0", (7)GT911, (8)FT6x63
+#define TP_CONTROLLER     7                // (0)XPT2046 2.8", (1)XPT2046 3.5", (2)XPT2046 4.0", (7)GT911, (8)FT6x63
 #define TP_ROTATION       1                // (0) none, (1) 90°CW, (2) 180°CW, (3) 270°CW
 #define TP_H_MIRROR       0                // (0) default, (1) mirror up <-> down
 #define TP_V_MIRROR       0                // (0) default, (1) mirror left <-> right
