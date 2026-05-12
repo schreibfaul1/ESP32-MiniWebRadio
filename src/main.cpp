@@ -541,7 +541,7 @@ void showLogoAndStationName(bool force) {
         pic_RA_logo.setPicturePath(path.c_get());
         pic_RA_logo.show();
     }
-    staNr.assignf1("{}", s_cur_station);
+    staNr.assignf("{}", s_cur_station);
     webSrv.send("stationLogo=", path.c_get());
     webSrv.send("stationNr=", staNr);
     webSrv.send("stationURL=", s_settings.lastconnectedhost.get());
@@ -1495,7 +1495,7 @@ void setI2STone() {
 
 ps_ptr<char> getI2STone() {
     ps_ptr<char> tone;
-    tone.assignf1("LowPass={}\nBandPass={}\nHighPass={}\nBalance={}\n", s_tone.LP, s_tone.BP, s_tone.HP, s_tone.BAL);
+    tone.assignf("LowPass={}\nBandPass={}\nHighPass={}\nBalance={}\n", s_tone.LP, s_tone.BP, s_tone.HP, s_tone.BAL);
     return tone;
 }
 
@@ -1961,7 +1961,7 @@ void changeState(int8_t state, int8_t subState) {
             txt_BT_mode.setBGcolor(TFT_BROWN);
             txt_BT_mode.show();
             ps_ptr<char> v;
-            v.assignf1("Vol: {:02}", bt_emitter.getVolume());
+            v.assignf("Vol: {:02}", bt_emitter.getVolume());
             dispFooter.updateFileNr(v);
             if (s_state != BLUETOOTH) webSrv.send("changeState=", "BLUETOOTH");
             break;
@@ -2204,7 +2204,7 @@ void loop() {
                 f_resume = true;
                 s_f_eof = false;
                 ps_ptr<char> p;
-                p.assignf1("/voice_time/{}/{}_00.mp3", s_timeSpeechLang.c_get(), hour);
+                p.assignf("/voice_time/{}/{}_00.mp3", s_timeSpeechLang.c_get(), hour);
                 SerialPrintfln("Time: ...... play Audiofile %s", p.c_get());
                 connecttoFS("SD_MMC", p.c_get());
                 return;
@@ -2544,7 +2544,7 @@ void my_audio_info(Audio::msg_t m) {
         case Audio::evt_info:
             if (endsWith(m.msg, "failed!")) {
                 SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_YELLOW, m.msg);
-                s_streamTitle.assignf1(ANSI_ESC_ORANGE "{}", m.msg);
+                s_streamTitle.assignf(ANSI_ESC_ORANGE "{}", m.msg);
                 s_f_newStreamTitle = true;
                 s_f_webFailed = true;
                 return;
@@ -3349,7 +3349,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
 
     CMD_EQUALS("favicon.ico"){          webSrv.streamfile(SD_MMC, "/favicon.ico"); return;}                                                               // via XMLHttpRequest
 
-    CMD_EQUALS("test"){                 ps_ptr<char>p; p.assignf1("free heap: {}, Inbuff filled: {}, Inbuff free: {}, PSRAM filled {}, PSRAM free {},",
+    CMD_EQUALS("test"){                 ps_ptr<char>p; p.assignf("free heap: {}, Inbuff filled: {}, Inbuff free: {}, PSRAM filled {}, PSRAM free {},",
                                         ESP.getFreeHeap(), audio.inBufferFilled(), audio.inBufferFree(), (ESP.getPsramSize() - ESP.getFreePsram()), ESP.getFreePsram());
                                         webSrv.send("test=", p.c_get());
                                         SerialPrintfln("audiotask .. stackHighWaterMark: %lu bytes", (long unsigned)audio.getHighWatermark() * 4);
@@ -3714,7 +3714,7 @@ void on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg) {
     if (msg.e == KCX_BT_Emitter::evt_volume) {
         s_bt_emitter.volume = msg.val;
         ps_ptr<char> v;
-        v.assignf1("Vol: {:02}", s_bt_emitter.volume);
+        v.assignf("Vol: {:02}", s_bt_emitter.volume);
         if (s_state == BLUETOOTH) dispFooter.updateFileNr(v);
         SerialPrintfln("BT-Emitter:  %s " ANSI_ESC_YELLOW "%i" ANSI_ESC_RESET "  ", "volume", msg.val);
     }
@@ -3895,12 +3895,12 @@ void graphicObjects_OnChange(ps_ptr<char> name, int32_t val) {
     if (name.equals("sdr_DL_volume"))   { setVolume(val); goto exit; }
     if (name.equals("sdr_CL_volume"))   { setVolume(val); goto exit; }
     if (name.equals("sdr_BR_value"))    { s_brightness = val; setTFTbrightness(val); txt_BR_value.writeText(int2str(val)); goto exit; }
-    if (name.equals("sdr_EQ_LP"))       { c.assignf1("{} dB", val); s_tone.LP  = val; webSrv.send("settone=", getI2STone().c_get()); setI2STone(); txt_EQ_lowPass.writeText(c.c_get());  goto exit; }
-    if (name.equals("sdr_EQ_BP"))       { c.assignf1("{} dB", val); s_tone.BP  = val; webSrv.send("settone=", getI2STone().c_get()); setI2STone(); txt_EQ_bandPass.writeText(c.c_get()); goto exit; }
-    if (name.equals("sdr_EQ_HP"))       { c.assignf1("{} dB", val); s_tone.HP  = val; webSrv.send("settone=", getI2STone().c_get()); setI2STone(); txt_EQ_highPass.writeText(c.c_get()); goto exit; }
-    if (name.equals("sdr_EQ_BAL"))      { if(val < 0)       c.assignf1("{}/0 dB", val);  // e.g. -10/0 dB
-                                          else if (val > 0) c.assignf1("0/-{} dB", val); // e.g. 0/-8 dB
-                                          else              c.assignf1("0/0 dB", val);   // 0/0 dB
+    if (name.equals("sdr_EQ_LP"))       { c.assignf("{} dB", val); s_tone.LP  = val; webSrv.send("settone=", getI2STone().c_get()); setI2STone(); txt_EQ_lowPass.writeText(c.c_get());  goto exit; }
+    if (name.equals("sdr_EQ_BP"))       { c.assignf("{} dB", val); s_tone.BP  = val; webSrv.send("settone=", getI2STone().c_get()); setI2STone(); txt_EQ_bandPass.writeText(c.c_get()); goto exit; }
+    if (name.equals("sdr_EQ_HP"))       { c.assignf("{} dB", val); s_tone.HP  = val; webSrv.send("settone=", getI2STone().c_get()); setI2STone(); txt_EQ_highPass.writeText(c.c_get()); goto exit; }
+    if (name.equals("sdr_EQ_BAL"))      { if(val < 0)       c.assignf("{}/0 dB", val);  // e.g. -10/0 dB
+                                          else if (val > 0) c.assignf("0/-{} dB", val); // e.g. 0/-8 dB
+                                          else              c.assignf("0/0 dB", val);   // 0/0 dB
                                           s_tone.BAL = val; webSrv.send("settone=", getI2STone().c_get()); setI2STone(); txt_EQ_balance.writeText(c.c_get());  goto exit; }
     if (name.equals("pgb_PL_progress")) { goto exit; }
     if (name.equals("pgb_DL_progress")) { goto exit; }

@@ -83,7 +83,7 @@ void WebSrv::show(const char* pagename, const char* MIMEType, int16_t len) {
 
     if (m_websrv_callback) {
         m_msg.e = evt_info;
-        m_msg.arg.assignf1("{} {} {}",  isProgmem ? "PROGMEM" : "RAM", ", page length:", pagelen);
+        m_msg.arg.assignf("{} {} {}",  isProgmem ? "PROGMEM" : "RAM", ", page length:", pagelen);
         m_websrv_callback(m_msg);
     }
 
@@ -113,20 +113,20 @@ bool WebSrv::streamfile(fs::FS& fs, ps_ptr<char> path) { // transfer file from S
 
     if (path.strlen() == 0) {
         m_msg.e = evt_error;
-        m_msg.arg.assignf1(ANSI_ESC_RED "SD path is null");
+        m_msg.arg.assignf(ANSI_ESC_RED "SD path is null");
         if (m_websrv_callback) m_websrv_callback(m_msg);
         return false;
     } // guard
     if (path.strlen() > 1024) {
         m_msg.e = evt_info;
-        m_msg.arg.assignf1(ANSI_ESC_RED "SD path is too long {} bytes", path.strlen());
+        m_msg.arg.assignf(ANSI_ESC_RED "SD path is too long {} bytes", path.strlen());
         if (m_websrv_callback) m_websrv_callback(m_msg);
         return false;
     } // guard
     for (int i = 0; path[i] != '\0'; ++i) {  // Validate path for illegal characters
         if (path[i] < 32) {
             m_msg.e = evt_info;
-            m_msg.arg.assignf1(ANSI_ESC_RED "Illegal character in path");
+            m_msg.arg.assignf(ANSI_ESC_RED "Illegal character in path");
             if (m_websrv_callback) m_websrv_callback(m_msg);
             return false;
         }
@@ -143,14 +143,14 @@ bool WebSrv::streamfile(fs::FS& fs, ps_ptr<char> path) { // transfer file from S
     File file = fs.open(path.c_get(), "r");
     if (!file) {
         m_msg.e = evt_info;
-        m_msg.arg.assignf1("Failed to open file for reading: {}", c_path.c_get());
+        m_msg.arg.assignf("Failed to open file for reading: {}", c_path.c_get());
         if (m_websrv_callback) m_websrv_callback(m_msg);
         show_not_found();
         return false;
     }
 
     m_msg.e = evt_info;
-    m_msg.arg.assignf1("Length of file {} is {}", c_path.c_get(), file.size());
+    m_msg.arg.assignf("Length of file {} is {}", c_path.c_get(), file.size());
     if (m_websrv_callback) m_websrv_callback(m_msg);
 
     // HTTP header
@@ -418,7 +418,7 @@ bool WebSrv::uploadB64image(fs::FS& fs, const char* path, uint32_t contentLength
         decodedLen = 0;
         ret = mbedtls_base64_decode(decoded.get(), decoded.size(), &decodedLen, (const unsigned char*)b64buff.get(), chunkSize);
         if (ret != 0) {
-            msg.assignf1("Base64 decode error at offset {}", totalRead);
+            msg.assignf("Base64 decode error at offset {}", totalRead);
             goto exit;
         }
 
@@ -434,7 +434,7 @@ bool WebSrv::uploadB64image(fs::FS& fs, const char* path, uint32_t contentLength
     }
 
     file.close();
-    msg.assignf1("File '{}' written successfully, size {} bytes", path, (unsigned long)totalDecoded);
+    msg.assignf("File '{}' written successfully, size {} bytes", path, (unsigned long)totalDecoded);
     m_msg.e = evt_info;
     m_msg.arg = msg;
     if (m_websrv_callback) m_websrv_callback(m_msg);
@@ -501,13 +501,13 @@ bool WebSrv::uploadfile(fs::FS& fs, ps_ptr<char> path, uint32_t contentLength, p
 
             bytesRead = cmdclient.readBytes(buffer, toRead);
             if (bytesRead == 0) {
-                msg.assignf1("read error in simple upload ({} bytes left)", bytesRemaining);
+                msg.assignf("read error in simple upload ({} bytes left)", bytesRemaining);
                 goto exit;
             }
 
             int written = file.write(buffer, bytesRead);
             if (written != bytesRead) {
-                msg.assignf1("write error, written {}/{} bytes", written, bytesRead);
+                msg.assignf("write error, written {}/{} bytes", written, bytesRead);
                 goto exit;
             }
 
@@ -517,7 +517,7 @@ bool WebSrv::uploadfile(fs::FS& fs, ps_ptr<char> path, uint32_t contentLength, p
 
         file.close();
         m_msg.e = evt_info;
-        m_msg.arg.assignf1("upload of {} successful ({} bytes)", path.c_get(), totalWritten);
+        m_msg.arg.assignf("upload of {} successful ({} bytes)", path.c_get(), totalWritten);
         if (m_websrv_callback) m_websrv_callback(m_msg);
         return true;
     }
@@ -529,7 +529,7 @@ bool WebSrv::uploadfile(fs::FS& fs, ps_ptr<char> path, uint32_t contentLength, p
     t = millis();
     while (true) {
         if ((t + 2000) < millis()) {
-            msg.assignf1("timeout in webSrv uploadfile()");
+            msg.assignf("timeout in webSrv uploadfile()");
             goto exit;
         }
 
@@ -541,18 +541,18 @@ bool WebSrv::uploadfile(fs::FS& fs, ps_ptr<char> path, uint32_t contentLength, p
 
         bytesInTransBuf = cmdclient.readBytes(transBuf.get(), 256);
         if (bytesInTransBuf != av) {
-            msg.assignf1("read error in {}, available {} bytes, read {} bytes\n", path.c_get(), av, bytesInTransBuf);
+            msg.assignf("read error in {}, available {} bytes, read {} bytes\n", path.c_get(), av, bytesInTransBuf);
             goto exit;
         }
 
         if (!transBuf.starts_with("------")) {
-            msg.assignf1("startBoundary not found");
+            msg.assignf("startBoundary not found");
             goto exit;
         }
 
         startBoundaryEndPos = indexOf(transBuf.get(), "\r\n\r\n") + 4;
         if (startBoundaryEndPos < 0) {
-            msg.assignf1("startBoundaryEndPos not found");
+            msg.assignf("startBoundaryEndPos not found");
             goto exit;
         }
 
@@ -627,7 +627,7 @@ void WebSrv::handle_upload_file() {
     if (!m_upload_items.bytes_left) { // file successfully written
         m_handle_upload = false;
         m_msg.e = evt_info;
-        m_msg.arg.assignf1(ANSI_ESC_RESET "upload " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET " was successful", m_upload_items.uploadfile.name());
+        m_msg.arg.assignf(ANSI_ESC_RESET "upload " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET " was successful", m_upload_items.uploadfile.name());
         if (m_websrv_callback) m_websrv_callback(m_msg);
         m_upload_items.uploadfile.close();
     }
@@ -890,9 +890,9 @@ lastToDo:
             http_cmd[3] = '\0';
         }
         m_msg.e = evt_command;
-        m_msg.cmd.assignf1("{}", http_cmd);
-        m_msg.param1.assignf1("{}", http_param);
-        m_msg.arg1.assignf1("{}", http_arg);
+        m_msg.cmd.assignf("{}", http_cmd);
+        m_msg.param1.assignf("{}", http_param);
+        m_msg.arg1.assignf("{}", http_arg);
         if (m_websrv_callback) m_websrv_callback(m_msg);
         if (WEBSRV_onCommand) WEBSRV_onCommand(http_cmd, http_param, http_arg);
     }
