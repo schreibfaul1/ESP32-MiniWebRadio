@@ -237,11 +237,22 @@ void SerialPrintfcr(const char* fmt, ...) {
 }
 
 int log_redirect_handler(const char* format, va_list args) {
-    int len = vsnprintf(nullptr, 0, format, args) + 1;
-    // Puffer für die formatierte Nachricht
+    va_list args_len;
+    va_copy(args_len, args);
+    char probe[1];
+    int len = vsnprintf(probe, sizeof(probe), format, args_len);
+    va_end(args_len);
+    if (len < 0) return 0;
+    len += 1;
+    // Puffer fuer die formatierte Nachricht
     ps_ptr<char> log_buffer;
     log_buffer.alloc(len);
-    vsnprintf(log_buffer.get(), len, format, args);
+    char* log_dst = log_buffer.get();
+    if (!log_dst) return 0;
+    va_list args_msg;
+    va_copy(args_msg, args);
+    vsnprintf(log_dst, len, format, args_msg);
+    va_end(args_msg);
     if (len > 0) {
         int idx = log_buffer.index_of("ARDUINO:");
         if (idx > 0) {

@@ -1,0 +1,81 @@
+Processing esp32s3 (board: ESP32-S3-DevKitC-1-N8R8; platform: https://github.com/pioarduino/platform-espressif32/releases/download/55.03.38-1/platform-espressif32.zip; framework: arduino, espidf)
+--------------------------------------------------------------------------------
+Verbose mode can be enabled via `-v, --verbose` option
+CONFIGURATION: https://docs.platformio.org/page/boards/espressif32/ESP32-S3-DevKitC-1-N8R8.html
+PLATFORM: Espressif 32 (55.3.38) > Espressif ESP32-S3-DevKitC-1-N8R8 (8 MB QD, 8 MB OT PSRAM)
+HARDWARE: ESP32S3 240MHz, 320KB RAM, 8MB Flash
+DEBUG: Current (esp-builtin) On-board (esp-builtin) External (cmsis-dap, esp-bridge, esp-prog, esp-prog-2, iot-bus-jtag, jlink, minimodule, olimex-arm-usb-ocd, olimex-arm-usb-ocd-h, olimex-arm-usb-tiny-h, olimex-jtag-tiny, tumpa)
+PACKAGES: 
+ - contrib-piohome @ 3.4.4 
+ - framework-arduinoespressif32 @ 3.3.8 
+ - framework-arduinoespressif32-libs @ 5.5.4+sha.735507283d 
+ - framework-espidf @ 3.50504.0 (5.5.4) 
+ - tool-cmake @ 4.0.3 
+ - tool-esp-rom-elfs @ 2024.10.11 
+ - tool-esptoolpy @ 5.2.0 
+ - tool-ninja @ 1.13.1 
+ - tool-scons @ 4.40801.0 (4.8.1) 
+ - tool-xtensa-esp-elf-gdb @ 16.3.0+20250913 
+ - toolchain-xtensa-esp-elf @ 14.2.0+20260121
+*** "custom_component" is used to deselect managed idf components ***
+[ComponentManager] Created backup of build file
+[ComponentManager] Removed component: espressif/network_provisioning
+[ComponentManager] Removed component: espressif/esp-zboss-lib
+[ComponentManager] Removed component: espressif/esp-zigbee-lib
+[ComponentManager] Removed component: espressif/esp_rainmaker
+[ComponentManager] Removed component: espressif/rmaker_common
+[ComponentManager] Removed component: espressif/esp_insights
+[ComponentManager] Removed component: espressif/esp_diag_data_store
+[ComponentManager] Removed component: espressif/esp_diagnostics
+[ComponentManager] Removed component: espressif/cbor
+[ComponentManager] Removed component: espressif/qrcode
+[ComponentManager] Removed component: espressif/esp-sr
+[ComponentManager] Removed component: espressif/libsodium
+[ComponentManager] Removed component: espressif/esp-modbus
+[ComponentManager] Removed component: chmorgan/esp-libhelix-mp3
+[ComponentManager] Component not found: espressif/esp32-camera
+[ComponentManager] Session completed with 16 changes
+Using Python 3.13.13 environment at: /home/wolle/.platformio/penv/.espidf-5.5.4
+Reading CMake configuration...
+Warning! Flash memory size mismatch detected. Expected 8MB, found 16MB!
+Please select a proper value in your `sdkconfig.defaults` or via the `menuconfig` target!
+LDF: Library Dependency Finder -> https://bit.ly/configure-pio-ldf
+LDF Modes: Finder ~ chain, Compatibility ~ soft
+Found 54 compatible libraries
+Scanning dependencies...
+Dependency Graph
+|-- ESP32-audioI2S @ 3.4.6+sha.c6cc0ed
+|-- BH1750
+|-- dlna_client
+|-- ftpsrv
+|-- ESP32-IR-Remote-Control
+|-- SPIFFS @ 3.3.8
+|-- ES8311
+|-- kcx_bt_emitter
+|-- rtime
+|-- tftLib
+|-- websrv
+|-- ArduinoOTA @ 3.3.8
+|-- ESPmDNS @ 3.3.8
+|-- FFat @ 3.3.8
+|-- FS @ 3.3.8
+|-- Preferences @ 3.3.8
+|-- SD_MMC @ 3.3.8
+|-- SPI @ 3.3.8
+|-- Ticker @ 3.3.8
+|-- WiFi @ 3.3.8
+|-- NetworkClientSecure @ 3.3.8
+|-- Wire @ 3.3.8
+Building in release mode
+Retrieving maximum program size .pio/build/esp32s3/firmware.elf
+Checking size .pio/build/esp32s3/firmware.elf
+Advanced Memory Usage is available via "PlatformIO Home > Project Inspect"
+RAM:   [===       ]  25.6% (used 83864 bytes from 327680 bytes)
+Flash: [========= ]  89.5% (used 3459707 bytes from 3866624 bytes)
+*** Original Arduino "idf_component.yml" restored ***
+========================= [SUCCESS] Took 9.00 seconds =========================
+
+Environment    Status    Duration
+-------------  --------  ------------
+esp32s3        SUCCESS   00:00:08.999
+========================= 1 succeeded in 00:00:08.999 =========================
