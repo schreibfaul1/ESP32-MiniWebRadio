@@ -1326,7 +1326,7 @@ class SD_content {
                 fileName.copy_from(fn);
             }
             m_JSONstr.append("{\"name\":");
-            m_JSONstr.appendf("\"%s\"", fileName.c_get());
+            m_JSONstr.appendf("\"{}\"", fileName.c_get());
             m_JSONstr.append(",\"dir\":");
             if (isDir) {
                 m_JSONstr.append("true");
@@ -1334,7 +1334,7 @@ class SD_content {
             } else {
                 m_JSONstr.append("false");
                 m_JSONstr.append(",\"size\":");
-                m_JSONstr.appendf("%s", fileSize.c_get());
+                m_JSONstr.appendf("{}", fileSize.c_get());
             }
             m_JSONstr.append("},");
             MWR_LOG_DEBUG("%s", fn);
@@ -1640,7 +1640,7 @@ class Playlist {
                                 MWR_LOG_WARN("duration %is", d);
                                 itemsBuff = itemsBuff.substr(idx + 1);
                             }
-                            itemsBuff.appendf(" " ANSI_ESC_YELLOW " %s" ANSI_ESC_RESET, t.c_get());
+                            itemsBuff.appendf(" " ANSI_ESC_YELLOW " {}" ANSI_ESC_RESET, t.c_get());
                         }
 
                         m_content_items.push_back(itemsBuff);
@@ -1693,7 +1693,7 @@ class Playlist {
                 m_content_file.push_back(file.path());
                 ps_ptr<char> name;
                 name = file.name();
-                name.appendf("" ANSI_ESC_YELLOW " %i" ANSI_ESC_RESET "", file.size());
+                name.appendf("" ANSI_ESC_YELLOW " {}" ANSI_ESC_RESET "", file.size());
                 m_content_items.push_back(name);
             }
             file.close();

@@ -461,7 +461,7 @@ void KCX_BT_Emitter::setVolume(uint8_t vol) {
     if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;
     if (vol > 31) { vol = 31; }
     ps_ptr<char> v = "AT+VOL=";
-    v.appendf("%i", vol);
+    v.appendf("{}", vol);
     add_tx_queue_item(v);
 }
 void KCX_BT_Emitter::setMode(ps_ptr<char> mode) {
@@ -519,7 +519,7 @@ void KCX_BT_Emitter::downvolume() {
     }
     m_bt_volume--;
     ps_ptr<char> v = "AT+VOL=";
-    v.appendf("%02d", m_bt_volume);
+    v.appendf("{:02}", m_bt_volume);
     add_tx_queue_item(v);
 }
 void KCX_BT_Emitter::upvolume() {
@@ -530,7 +530,7 @@ void KCX_BT_Emitter::upvolume() {
     }
     m_bt_volume++;
     ps_ptr<char> v = "AT+VOL=";
-    v.appendf("%02d", m_bt_volume);
+    v.appendf("{:02}", m_bt_volume);
     add_tx_queue_item(v);
 }
 const char* KCX_BT_Emitter::getMyName() {

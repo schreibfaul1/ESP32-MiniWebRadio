@@ -160,8 +160,8 @@ bool WebSrv::streamfile(fs::FS& fs, ps_ptr<char> path) { // transfer file from S
     httpheader.append("Content-type: ");
     httpheader.append(getContentType(c_path));
     httpheader.append("\r\n");
-    httpheader.appendf("Content-Length: %i\r\n", file.size());
-    httpheader.appendf("Cache-Control: public, max-age=86400\r\n\r\n");
+    httpheader.appendf("Content-Length: {}\r\n", file.size());
+    httpheader.append("Cache-Control: public, max-age=86400\r\n\r\n");
 
     cmdclient.print(httpheader.c_get()); // header sent
     // log_i("%s", httpheader.c_get());
@@ -1158,8 +1158,8 @@ void WebSrv::reply(ps_ptr<char> response, const char* MIMEType, bool header) {
     if (header == true) {
         int32_t l = response.strlen();
         http_header.assign("HTTP/1.1 200 OK\r\n");
-        http_header.appendf("Content-type: %s\r\n", MIMEType);
-        http_header.appendf("Content-Length: %i\r\n\r\n", l);
+        http_header.appendf("Content-type: {}\r\n", MIMEType);
+        http_header.appendf("Content-Length: {}\r\n\r\n", l);
         cmdclient.print(http_header.c_get()); // header sent
     }
     cmdclient.print(response.c_get());
