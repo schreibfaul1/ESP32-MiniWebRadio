@@ -1116,7 +1116,7 @@ class SD_content {
             return "";
         }
         if (isDir(idx)) return m_files[idx].fileName.get();
-        m_buff.assignf("%s" ANSI_ESC_YELLOW " %li", m_files[idx].fileName.c_get(), m_files[idx].fileSize);
+        m_buff.assignf1("{}" ANSI_ESC_YELLOW " {}", m_files[idx].fileName.c_get(), m_files[idx].fileSize);
         return m_buff.get();
     }
     const char* getFileNameByIndex(uint16_t idx) {
@@ -1789,14 +1789,14 @@ class Playlist {
 
     ps_ptr<char> get_coloured_file() {
         ps_ptr<char> s = "";
-        if (m_index != -1) s.assignf(ANSI_ESC_CYAN "%s" ANSI_ESC_RESET, m_content_file[m_index]);
+        if (m_index != -1) s.assignf1(ANSI_ESC_CYAN "{}" ANSI_ESC_RESET, m_content_file[m_index].c_get());
         s.println();
         return s;
     }
 
     ps_ptr<char> get_coloured_index() {
         ps_ptr<char> s = "";
-        if (m_index != -1) s.assignf(ANSI_ESC_ORANGE "%03i/%03i" ANSI_ESC_RESET, m_index + 1, m_content_file.size());
+        if (m_index != -1) s.assignf1(ANSI_ESC_ORANGE "{:03}/{:03}" ANSI_ESC_RESET, m_index + 1, m_content_file.size());
         return s;
     }
 

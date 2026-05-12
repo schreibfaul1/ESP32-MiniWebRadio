@@ -2626,7 +2626,7 @@ class numbersBox : public RegisterTable { // range 000...999
             m_color = "orange";
         ps_ptr<char> path;
         for (uint8_t i = 0; i < 3; i++) {
-            path.assignf("%s%c%s.jpg", m_root, m_numbers[i], m_color.c_get());
+            path.assignf1("{}{}{}.jpg", m_root, m_numbers[i], m_color.c_get());
             if (!drawImage(path.c_get(), m_x + m_box_x + i * m_segmWidth, m_y + m_box_y)) return false;
         }
         m_enabled = true;
@@ -2758,8 +2758,8 @@ class offTimerBox : public RegisterTable { // range 000...999
         else
             m_color = "green";
         ps_ptr<char> numbers;
-        numbers.assignf("%dc%02d", time / 60, time % 60);
-        m_path.assignf("/digits/s/x%s.jpg", m_color.c_get());
+        numbers.assignf1("{}c{:02}", time / 60, time % 60);
+        m_path.assignf1("/digits/s/x{}.jpg", m_color.c_get());
 
         m_path[10] = numbers[0];
         drawImage(m_path.c_get(), m_x + m_digitsXpos[0], m_y + m_box_y);
@@ -3139,7 +3139,7 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
 
         for (uint8_t i = 0; i < 4; i++) {
             if ((time[i] != oldTime[i]) || m_showAll) {
-                m_pathBuff.assignf("/digits/l/%igreen.jpg", time[i]);
+                m_pathBuff.assignf1("/digits/l/{}green.jpg", time[i]);
                 if (i == 0) {
                     pic_clock24_digitsH10->setPicturePath(m_pathBuff);
                     pic_clock24_digitsH10->show();
@@ -3373,7 +3373,7 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
 
         for (uint8_t i = 0; i < 4; i++) {
             if ((time[i] != oldTime[i]) || m_showAll) {
-                m_pathBuff.assignf("/digits/s/%ired.jpg", time[i]);
+                m_pathBuff.assignf1("/digits/s/{}red.jpg", time[i]);
                 if (i == 0) {
                     pic_clock24_digitsH10->setPicturePath(m_pathBuff);
                     pic_clock24_digitsH10->show();
@@ -3753,7 +3753,7 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
         static uint8_t m_oldAlarmDigits[4] = {0};
         for (uint8_t i = 0; i < 4; i++) {
             if (m_oldAlarmDigits[i] != m_alarmDigits[i] || m_showAll) {
-                m_pathBuff.assignf("/digits/m/%i", m_alarmDigits[i]);
+                m_pathBuff.assignf1("/digits/m/{}", m_alarmDigits[i]);
 
                 if (i == m_idx) {
                     m_pathBuff.append("orange.jpg");
@@ -4002,7 +4002,7 @@ class uniList {
         if (pos > 9) return;
         getTFT().setFont(m_fontSize);
         if (m_mode == RADIO) {
-            m_buff.assignf(ANSI_ESC_YELLOW "%03li %s%s", nr, color.c_get(), txt.c_get());
+            m_buff.assignf1(ANSI_ESC_YELLOW "{:03} {}{}", nr, color.c_get(), txt.c_get());
             if (txt != "") { m_txt[pos] = txt; }
             if (ext1 != "") { m_ext1[pos] = ext1; }
             if (ext2 != "") { m_ext2[pos] = ext2; }
@@ -4014,11 +4014,11 @@ class uniList {
                 return;
             }
             if (ext1 == "")
-                m_buff.assignf("%s%s", color.c_get(), txt.c_get());
+                m_buff.assignf1("{}{}", color.c_get(), txt.c_get());
             else if (ext1[0] == '\0')
-                m_buff.assignf("%s%s", color.c_get(), txt.c_get());
+                m_buff.assignf1("{}{}", color.c_get(), txt.c_get());
             else
-                m_buff.assignf("%s%s " ANSI_ESC_CYAN "(%s)", color.c_get(), txt.c_get(), ext1.c_get());
+                m_buff.assignf1("{}{} " ANSI_ESC_CYAN "({})", color.c_get(), txt.c_get(), ext1.c_get());
             if (txt != "") {
                 m_txt[pos] = txt;
                 m_nr[pos] = 1;
@@ -4032,9 +4032,9 @@ class uniList {
                 return;
             }
             if (nr <= 0)
-                m_buff.assignf("%s%s", color.c_get(), txt.c_get());
+                m_buff.assignf1("{}{}", color.c_get(), txt.c_get());
             else
-                m_buff.assignf("%s%s" ANSI_ESC_YELLOW " %li", color.c_get(), txt.c_get(), nr);
+                m_buff.assignf1("{}{}" ANSI_ESC_YELLOW " %li", color.c_get(), txt.c_get(), nr);
             if (txt) {
                 m_txt[pos] = txt;
                 m_nr[pos] = nr;
@@ -4044,18 +4044,18 @@ class uniList {
         getTFT().writeText(m_buff.c_get(), indent, m_y + pos * m_lineHight, m_w - indent, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
     }
     void drawPosInfo(int16_t firstVal, int16_t secondVal, int16_t total, ps_ptr<char> color) { // e.g. 1-9/65
-        m_buff.assignf("%s%i-%i-%i", color.c_get(), firstVal, secondVal, total);
+        m_buff.assignf1("{}{}-{}-{}", color.c_get(), firstVal, secondVal, total);
         getTFT().writeText(m_buff.c_get(), 0, m_y, m_w, m_lineHight, TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER, true, true, false);
     }
     void colourLine(uint8_t pos, ps_ptr<char> color = ANSI_ESC_WHITE) {
         if (pos > 9) return;
         getTFT().setFont(m_fontSize);
-        if (m_mode == RADIO) { m_buff.assignf(ANSI_ESC_YELLOW "%03li %s%s", m_nr[pos], color.c_get(), m_txt[pos].c_get()); }
+        if (m_mode == RADIO) { m_buff.assignf1(ANSI_ESC_YELLOW "{:03} {}{}", m_nr[pos], color.c_get(), m_txt[pos].c_get()); }
         if (m_mode == PLAYER) {
             if (m_nr[pos])
-                m_buff.assignf("%s%s" ANSI_ESC_YELLOW " %li", color.c_get(), m_txt[pos].c_get(), m_nr[pos]); // file
+                m_buff.assignf1("{}{}" ANSI_ESC_YELLOW " {}", color.c_get(), m_txt[pos].c_get(), m_nr[pos]); // file
             else
-                m_buff.assignf("%s%s", color.c_get(), m_txt[pos].c_get()); // directory
+                m_buff.assignf1("{}{}", color.c_get(), m_txt[pos].c_get()); // directory
         }
         uint16_t indent = pos ? m_indentContent : m_indentDirectory;
         getTFT().writeText(m_buff.c_get(), indent, m_y + pos * m_lineHight, m_w - indent, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
@@ -4286,7 +4286,7 @@ class dlnaList : public RegisterTable {
             drawItem(pos);
             m_displayed_lines++;
         }
-        m_buff.assignf("%i-%i/%i", m_viewPoint + 1, m_viewPoint + (pos - 1), m_dlnaMaxItems); // shows the current items pos e.g. "30-39/210"
+        m_buff.assignf1("{}-{}/{}", m_viewPoint + 1, m_viewPoint + (pos - 1), m_dlnaMaxItems); // shows the current items pos e.g. "30-39/210"
         getTFT().setTextColor(TFT_ORANGE);
         getTFT().writeText(m_buff.c_get(), 10, m_y, m_w - 10, m_lineHight, TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER, true, true);
         return;
@@ -4473,7 +4473,7 @@ class dlnaList : public RegisterTable {
             if (startsWith(m_srvContent->at(m_itemListPos - 1).itemURL.c_get(), "http")) {
                 m_currItemNr[*m_dlnaLevel] = m_itemListPos - 1;
                 if (m_srvContent->at(m_itemListPos - 1).isAudio) {
-                    m_chptr.assignf("%s", m_srvContent->at(m_itemListPos - 1).title.c_get());
+                    m_chptr.assignf1("{}", m_srvContent->at(m_itemListPos - 1).title.c_get());
                     m_ra.arg1 = m_srvContent->at(m_itemListPos - 1).itemURL; // url --> connecttohost()
                     m_ra.arg2 = m_srvContent->at(m_itemListPos - 1).title;   // filename --> showFileName()
                     if (m_ra.arg1.strlen() > 0 && m_ra.arg2.strlen() > 0) m_ra.val1 = 1;
@@ -4486,7 +4486,7 @@ class dlnaList : public RegisterTable {
         if (guard3) { // is folder
             m_viewPoint = 0;
             m_currItemNr[*m_dlnaLevel] = m_itemListPos - 1;
-            m_chptr.assignf("%s (%d)", m_srvContent->at(m_itemListPos - 1).title.c_get(), m_srvContent->at(m_itemListPos - 1).childCount);
+            m_chptr.assignf1("{} ({})", m_srvContent->at(m_itemListPos - 1).title.c_get(), m_srvContent->at(m_itemListPos - 1).childCount);
             m_dlnaHistory[(*m_dlnaLevel) + 1].objId = m_srvContent->at(m_itemListPos - 1).objectId;
             m_dlnaHistory[(*m_dlnaLevel) + 1].name = m_srvContent->at(m_itemListPos - 1).title;
             m_dlnaHistory[(*m_dlnaLevel) + 1].childCount = m_srvContent->at(m_itemListPos - 1).childCount;

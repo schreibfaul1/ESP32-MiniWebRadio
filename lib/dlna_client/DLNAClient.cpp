@@ -134,7 +134,7 @@ bool DLNA_Client::srvGet(uint8_t srvNr) {
         }
     }
     // assemble HTTP header
-    buff.assignf("GET /%s HTTP/1.1\r\nHost: %s:%d\r\nConnection: close\r\nUser-Agent: ESP32/Player/UPNP1.0\r\n\r\n", m_dlnaServer[srvNr].location.c_get(), m_dlnaServer[srvNr].ip.c_get(),
+    buff.assignf1("GET /{} HTTP/1.1\r\nHost: {}:{}\r\nConnection: close\r\nUser-Agent: ESP32/Player/UPNP1.0\r\n\r\n", m_dlnaServer[srvNr].location.c_get(), m_dlnaServer[srvNr].ip.c_get(),
                  m_dlnaServer[srvNr].port);
     m_tcp_client.clear();
     m_tcp_client.print(buff.get());
@@ -623,8 +623,8 @@ bool DLNA_Client::srvPost(uint8_t srvNr, ps_ptr<char> objectId, const uint16_t s
         }
     }
 
-    chbuff.assignf("POST /%s HTTP/1.1\r\n"
-                   "Host: %s:%d\r\n"
+    chbuff.assignf1("POST /{} HTTP/1.1\r\n"
+                   "Host: {}:{}\r\n"
                    "CACHE-CONTROL: no-cache\r\nPRAGMA: no-cache\r\n"
                    "Connection: close\r\n"
                    "Content-Length: 000\r\n" /* dummy length, determine later*/
@@ -634,14 +634,14 @@ bool DLNA_Client::srvPost(uint8_t srvNr, ps_ptr<char> objectId, const uint16_t s
                    "\r\n", /*end header*/
                    m_dlnaServer[srvNr].controlURL.get(), m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port);
 
-    message.assignf("<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">\r\n"
+    message.assignf1("<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">\r\n"
                     "<s:Body>"
                     "<u:Browse xmlns:u=\"urn:schemas-upnp-org:service:ContentDirectory:1\">\r\n"
-                    "<ObjectID>%s</ObjectID>\r\n"
+                    "<ObjectID>{}</ObjectID>\r\n"
                     "<BrowseFlag>BrowseDirectChildren</BrowseFlag>\r\n"
                     "<Filter>*</Filter>\r\n"
-                    "<StartingIndex>%i</StartingIndex>\r\n"   /* startingIndex */
-                    "<RequestedCount>%i</RequestedCount>\r\n" /* max count*/
+                    "<StartingIndex>{}</StartingIndex>\r\n"   /* startingIndex */
+                    "<RequestedCount>{}</RequestedCount>\r\n" /* max count*/
                     "<SortCriteria></SortCriteria>\r\n"
                     "</u:Browse>\r\n"
                     "</s:Body>\r\n"
