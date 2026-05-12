@@ -1673,12 +1673,12 @@ class Playlist {
     bool create_playlist_from_SD_folder(ps_ptr<char> path) { // all files within a SD folder
         reset();
         if (!SD_MMC.exists(path.get())) {
-            MWR_LOG_ERROR("SD_MMC/%s not exist", path);
+            MWR_LOG_ERROR("SD_MMC/%s not exist", path.c_get());
             return false;
         }
         File folder = SD_MMC.open(path.get());
         if (!folder.isDirectory()) {
-            MWR_LOG_ERROR("SD_MMC%s is not a directory", path);
+            MWR_LOG_ERROR("SD_MMC%s is not a directory", path.c_get());
             folder.close();
             return false;
         }

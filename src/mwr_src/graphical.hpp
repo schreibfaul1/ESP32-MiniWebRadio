@@ -99,7 +99,7 @@ imgSize GetImageSize(ps_ptr<char> picturePath) {
         img.h += file.read();                                     // pos 23
         return img;
     }
-    MWR_LOG_ERROR("unknown picture format %s", picturePath);
+    MWR_LOG_ERROR("unknown picture format %s", picturePath.c_get());
     return img;
 }
 
@@ -323,7 +323,7 @@ class slider : public RegisterTable {
     int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max) {
         const int32_t run = in_max - in_min;
         if (run == 0) {
-            MWR_LOG_ERROR("map(): Invalid input range, %li == %li (min == max) in %s", in_min, in_max, m_name);
+            MWR_LOG_ERROR("map(): Invalid input range, %li == %li (min == max) in %s", in_min, in_max, m_name.c_get());
             return -1;
         }
         const int32_t rise = out_max - out_min;
@@ -503,7 +503,7 @@ class progressbar : public RegisterTable {
     int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max) {
         const int32_t run = in_max - in_min;
         if (run == 0) {
-            MWR_LOG_WARN("map(): Invalid input range, %li == %li (min == max) in %s", in_min, in_max, m_name);
+            MWR_LOG_WARN("map(): Invalid input range, %li == %li (min == max) in %s", in_min, in_max, m_name.c_get());
             return -1;
         }
         const int32_t rise = out_max - out_min;
@@ -4850,7 +4850,7 @@ class fileList : public RegisterTable {
                 int secondLastSlash = m_curAudioFolder.last_index_of('/', lastSlash - 1);
                 if (secondLastSlash != -1) m_curAudioFolder[secondLastSlash + 1] = '\0';
             }
-            MWR_LOG_DEBUG("m_curAudioFolder = %s", m_curAudioFolder);
+            MWR_LOG_DEBUG("m_curAudioFolder = %s", m_curAudioFolder.c_get());
             m_curAudioFileNr = 0;
             m_viewPos = 0;
             s_SD_content.listFilesInDir(m_curAudioFolder.c_get(), true, false);

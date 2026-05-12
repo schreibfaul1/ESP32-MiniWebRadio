@@ -44,7 +44,7 @@ LDF Modes: Finder ~ chain, Compatibility ~ soft
 Found 54 compatible libraries
 Scanning dependencies...
 Dependency Graph
-|-- ESP32-audioI2S @ 3.4.6+sha.c6cc0ed
+|-- ESP32-audioI2S @ 3.4.6+sha.8024f58
 |-- BH1750
 |-- dlna_client
 |-- ftpsrv
@@ -71,11 +71,11 @@ Retrieving maximum program size .pio/build/esp32s3/firmware.elf
 Checking size .pio/build/esp32s3/firmware.elf
 Advanced Memory Usage is available via "PlatformIO Home > Project Inspect"
 RAM:   [===       ]  25.6% (used 83864 bytes from 327680 bytes)
-Flash: [========= ]  89.5% (used 3459707 bytes from 3866624 bytes)
+Flash: [========= ]  90.7% (used 3508195 bytes from 3866624 bytes)
 *** Original Arduino "idf_component.yml" restored ***
-========================= [SUCCESS] Took 9.00 seconds =========================
+========================= [SUCCESS] Took 9.92 seconds =========================
 
 Environment    Status    Duration
 -------------  --------  ------------
-esp32s3        SUCCESS   00:00:08.999
-========================= 1 succeeded in 00:00:08.999 =========================
+esp32s3        SUCCESS   00:00:09.918
+========================= 1 succeeded in 00:00:09.918 =========================
