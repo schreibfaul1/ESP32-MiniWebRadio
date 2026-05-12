@@ -373,7 +373,7 @@ void updateSettings() {
     jO.appendf(",\n  \"ringVolume\":{}", s_volume.ringVolume);
     jO.appendf(",\n  \"volumeAfterAlarm\":{}", s_volume.volumeAfterAlarm);
     jO.appendf(",\n  \"BTvolume\":{}", s_bt_emitter.volume);
-    jO.appendf(",\n  \"BTpower\":{}", s_bt_emitter.enabled);
+    jO.appendf(",\n  \"BTpower\":\"{}\"", s_bt_emitter.enabled);
     jO.appendf(",\n  \"BTmode\":\"{}\"", bt_emitter.getMode().c_get());
     jO.appendf(",\n  \"alarmtime_sun\":\"{:02}:{:02}\"", s_alarmtime[0] / 60, s_alarmtime[0] % 60);
     jO.appendf(",\n  \"alarmtime_mon\":\"{:02}:{:02}\"", s_alarmtime[1] / 60, s_alarmtime[1] % 60);
@@ -383,9 +383,9 @@ void updateSettings() {
     jO.appendf(",\n  \"alarmtime_fri\":\"{:02}:{:02}\"", s_alarmtime[5] / 60, s_alarmtime[5] % 60);
     jO.appendf(",\n  \"alarmtime_sat\":\"{:02}:{:02}\"", s_alarmtime[6] / 60, s_alarmtime[6] % 60);
     jO.appendf(",\n  \"alarm_weekdays\":{}", s_alarmdays);
-    jO.appendf(",\n  \"timeAnnouncing\":{}", s_f_timeAnnouncement);
+    jO.appendf(",\n  \"timeAnnouncing\":\"{}\"", s_f_timeAnnouncement);
     jO.appendf(",\n  \"timeSpeechLang\":\"{}\"", s_timeSpeechLang.c_get());
-    jO.appendf(",\n  \"mute\":{}", s_f_mute);
+    jO.appendf(",\n  \"mute\":\"{}\"", s_f_mute);
     jO.appendf(",\n  \"brightness\":{}", s_brightness);
     jO.appendf(",\n  \"sleeptime\":{}", s_sleeptime);
     jO.appendf(",\n  \"lastconnectedhost\":\"{}\"", s_settings.lastconnectedhost.c_get());
