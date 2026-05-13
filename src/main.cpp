@@ -793,7 +793,7 @@ bool connectToWiFi() {
     }
 
     // These options can help when you need ANY kind of wifi connection to get a config file, report errors, etc.
-    wifiMulti.setStrictMode(true); // Default is true.  Library will disconnect and forget currently connected AP if it's not in the AP list.
+    wifiMulti.setStrictMode(false); // Allow opportunistic connections while maintaining known APs in priority
     SerialPrintfln("WiFI_info:   Connecting WiFi...");
 
     WiFi.mode(WIFI_MODE_STA);
