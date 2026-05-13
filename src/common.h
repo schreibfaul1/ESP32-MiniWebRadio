@@ -47,13 +47,13 @@
 
 #include "Audio.h"
 #include "BH1750.h"
-#include "es8311.h"
 #include "DLNAClient.h"
 #include "ESP32FtpServer.h"
 #include "IR.h"
 #include "SPIFFS.h"
 #include "base64.h"
 #include "driver/ledc.h"
+#include "es8311.h"
 #include "esp_log.h"
 #include "kcx_bt_emitter.h"
 #include "mbedtls/sha1.h"
@@ -199,48 +199,53 @@ extern RTIME                    rtc;
 extern WebSrv                   webSrv;
 extern std::deque<ps_ptr<char>> s_logBuffer;
 
-void SerialPrintfln(const char* fmt, ...) {
+template <typename... Args> void SerialPrintfln(const char* fmt, Args&&... args) {
     if (s_logBuffer.size() == 1024) s_logBuffer.pop_back();
+
     ps_ptr<char> myLog;
+
     if (newLine) {
         newLine = false;
         myLog.assign("\n");
     } else {
         myLog.assign("");
     }
+
     rtc.hasValidTime() ? myLog.append(rtc.gettime_s()) : myLog.append("00:00:00");
     myLog.append(" ");
-    va_list args;
-    va_start(args, fmt);
-    myLog.appendf_va(fmt, args);
-    va_end(args);
+    myLog.appendf(fmt, std::forward<Args>(args)...);
     myLog.append("\033[0m\r\n");
     printf("%s", myLog.c_get());
-    s_logBuffer.insert(s_logBuffer.begin(), std::move(myLog)); // send to webSrv in loop()
+    s_logBuffer.insert(s_logBuffer.begin(), std::move(myLog));
     myLog.reset();
 }
 
-void SerialPrintfcr(const char* fmt, ...) {
+template <typename... Args> void SerialPrintfcr(const char* fmt, Args&&... args) {
     if (s_logBuffer.size() == 1024) s_logBuffer.pop_back();
+
     ps_ptr<char> myLog;
-    rtc.hasValidTime() ? myLog.assign(rtc.gettime_s()) : myLog.assign("00:00:00");
+
+    if (newLine) {
+        newLine = false;
+        myLog.assign("\n");
+    } else {
+        myLog.assign("");
+    }
+
+    rtc.hasValidTime() ? myLog.append(rtc.gettime_s()) : myLog.append("00:00:00");
     myLog.append(" ");
-    va_list args;
-    va_start(args, fmt);
-    myLog.appendf_va(fmt, args);
-    va_end(args);
+    myLog.appendf(fmt, std::forward<Args>(args)...);
     myLog.append("\033[0m\r");
-    Serial.printf("%s", myLog.c_get());
-    s_logBuffer.insert(s_logBuffer.begin(), std::move(myLog)); // send to webSrv in loop()
+    printf("%s", myLog.c_get());
+    s_logBuffer.insert(s_logBuffer.begin(), std::move(myLog));
     myLog.reset();
-    newLine = true;
 }
 
 int log_redirect_handler(const char* format, va_list args) {
     va_list args_len;
     va_copy(args_len, args);
     char probe[1];
-    int len = vsnprintf(probe, sizeof(probe), format, args_len);
+    int  len = vsnprintf(probe, sizeof(probe), format, args_len);
     va_end(args_len);
     if (len < 0) return 0;
     len += 1;
@@ -265,9 +270,9 @@ int log_redirect_handler(const char* format, va_list args) {
             if (c == 'D') log_buffer.insert(ANSI_ESC_CYAN, 10);
             if (c == 'V') log_buffer.insert(ANSI_ESC_GREY, 10);
             log_buffer.truncate_at(log_buffer.strlen() - 1); // remove '\n'
-            SerialPrintfln("%s", log_buffer.c_get());
+            SerialPrintfln("{}", log_buffer.c_get());
         } else {
-            SerialPrintfln("%s", log_buffer.c_get());
+            SerialPrintfln("{}", log_buffer.c_get());
         }
     }
     return 0;
@@ -710,9 +715,9 @@ inline void SerialPrintflnCut(const char* item, const char* color, const char* s
     uint8_t maxLength = 100;
     if (strlen(str) > maxLength) {
         String f = str;
-        SerialPrintfln("%s%s%s ... %s", item, color, f.substring(0, maxLength - 25).c_str(), f.substring(f.length() - 20, f.length()).c_str());
+        SerialPrintfln("{}{}{]} ... %s", item, color, f.substring(0, maxLength - 25).c_str(), f.substring(f.length() - 20, f.length()).c_str());
     } else {
-        SerialPrintfln("%s%s%s", item, color, str);
+        SerialPrintfln("{}{}{}", item, color, str);
     }
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -743,7 +748,6 @@ inline void vector_clear_and_shrink(vector<char*>& vec) {
     vec.clear();
     vec.shrink_to_fit();
 }
-
 
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // Macro for comfortable calls

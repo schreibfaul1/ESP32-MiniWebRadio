@@ -521,7 +521,7 @@ void showLogoAndStationName(bool force) {
     if (s_cur_station) {
         MWR_LOG_DEBUG("showLogoAndStationName: %s", staMgnt.getStationName(s_cur_station));
         SN_utf8 = staMgnt.getStationName(s_cur_station);
-        SerialPrintfln("Country: ..  " ANSI_ESC_GREEN "%s" ANSI_ESC_RESET "  ", staMgnt.getStationCountry(s_cur_station));
+        SerialPrintfln("Country: ..  " ANSI_ESC_GREEN "{}" ANSI_ESC_RESET "  ", staMgnt.getStationCountry(s_cur_station));
     } else {
         SN_utf8 = s_stationName_air;
     }
@@ -626,7 +626,7 @@ boolean drawImage(ps_ptr<char> path, uint16_t posX, uint16_t posY, uint16_t maxW
     auto scImg = scaleImage(path);
     if (!SD_MMC.exists(scImg.c_get())) {
         if (scImg.index_of("/.", 0) > 0) return false; // empty filename
-        SerialPrintfln("AUDIO_info:  " ANSI_ESC_RED "file \"%s\" not found" ANSI_ESC_RESET "  ", scImg.c_get());
+        SerialPrintfln("AUDIO_info:  " ANSI_ESC_RED "file \"{}\" not found" ANSI_ESC_RESET "  ", scImg.c_get());
         return false;
     }
     if (scImg.ends_with("bmp")) { return getTFT().drawBmpFile(SD_MMC, scImg.c_get(), posX, posY, maxWidth, maxHeigth, 1.0); }
@@ -634,7 +634,7 @@ boolean drawImage(ps_ptr<char> path, uint16_t posX, uint16_t posY, uint16_t maxW
     if (scImg.ends_with("gif")) { return getTFT().drawGifFile(SD_MMC, scImg.c_get(), posX, posY, 0); }
     if (scImg.ends_with("png")) { return getTFT().drawPngFile(SD_MMC, scImg.c_get(), posX, posY); }
 
-    SerialPrintfln(ANSI_ESC_RED "the file \"%s\" contains neither a bmp, a gif, a png nor a jpg graphic" ANSI_ESC_RESET "  ", scImg.c_get());
+    SerialPrintfln(ANSI_ESC_RED "the file \"{}\" contains neither a bmp, a gif, a png nor a jpg graphic" ANSI_ESC_RESET "  ", scImg.c_get());
     return false; // neither jpg nor bmp
 }
 /*****************************************************************************************************************************************************
@@ -712,7 +712,7 @@ start:
         if (s_state == PLAYER) dispFooter.updateFileNr(playlist.get_coloured_index().c_get());
         txt_PL_fName.writeText(playlist.get_items().c_get());
     } else {
-        SerialPrintfln("Playlist:    " ANSI_ESC_YELLOW "can't connect to %s" ANSI_ESC_RESET "  ", path.c_get());
+        SerialPrintfln("Playlist:    " ANSI_ESC_YELLOW "can't connect to {}" ANSI_ESC_RESET "  ", path.c_get());
         goto start;
     }
 
@@ -773,17 +773,23 @@ bool connectToWiFi() {
             MWR_LOG_ERROR("Password display buffer too large: %zu bytes", buf_size);
             continue;
         }
-        char pass[buf_size];
+        ps_ptr<char> pass;
+        pass.alloc(buf_size);
+        char* pass_dst = pass.get();
+        if (!pass_dst) {
+            MWR_LOG_ERROR("Password display buffer allocation failed");
+            continue;
+        }
         for (size_t j = 0; j < pwlen; j++) {
             if (offset + dot_len > buf_size - 1) {
                 MWR_LOG_ERROR("Buffer overflow in password masking");
                 break;
             }
-            memcpy(pass + offset, emoji.blueCircle, dot_len);
+            memcpy(pass_dst + offset, emoji.blueCircle, dot_len);
             offset += dot_len;
         }
-        pass[offset] = '\0'; // Zero-terminate the string
-        SerialPrintfln("WiFI_info:   add credentials: " ANSI_ESC_CYAN "%s - %s" ANSI_ESC_YELLOW " [%s:%d]" ANSI_ESC_RESET "  ", ssid, pass, __FILENAME__, __LINE__);
+        pass_dst[offset] = '\0'; // Zero-terminate the string
+        SerialPrintfln("WiFI_info:   add credentials: " ANSI_ESC_CYAN "{} - {}" ANSI_ESC_YELLOW " [{}:{}]" ANSI_ESC_RESET "  ", ssid, pass_dst, __FILENAME__, __LINE__);
     }
 
     // These options can help when you need ANY kind of wifi connection to get a config file, report errors, etc.
@@ -808,7 +814,7 @@ bool connectToWiFi() {
     SerialPrintfln("WiFI_info:   " ANSI_ESC_GREEN "WiFi connected" ANSI_ESC_RESET "  ");
     vTaskDelay(1000);
     s_myIP = WiFi.localIP().toString().c_str();
-    SerialPrintfln("WiFI_info:   connected to " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE ", IP address is " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE ", Received Signal Strength " ANSI_ESC_CYAN "%i" ANSI_ESC_WHITE
+    SerialPrintfln("WiFI_info:   connected to " ANSI_ESC_CYAN "{}" ANSI_ESC_WHITE ", IP address is " ANSI_ESC_CYAN "{}" ANSI_ESC_WHITE ", Received Signal Strength " ANSI_ESC_CYAN "{}" ANSI_ESC_WHITE
                    " dB" ANSI_ESC_RESET "   ",
                    WiFi.SSID().c_str(), s_myIP.c_get(), WiFi.RSSI());
     return true; // can't connect to any network
@@ -915,10 +921,10 @@ void setWiFiCredentials(ps_ptr<char> ssid, ps_ptr<char> password) {
     state = 3;
 
 exit:
-    if (state == 0) { SerialPrintfln("WiFI_info:   " ANSI_ESC_RED "SSID: %s password can't changed, it is hard coded" ANSI_ESC_RESET "  ", ssid.c_get()); }
-    if (state == 1) { SerialPrintfln("WiFI_info:   " ANSI_ESC_GREEN "The passord \"%s\" for the SSID: %s has been changed" ANSI_ESC_RESET "  ", password.c_get(), ssid.c_get()); }
-    if (state == 2) { SerialPrintfln("WiFI_info:   " ANSI_ESC_GREEN "The SSID: %s has been added" ANSI_ESC_RESET "  ", ssid.c_get()); }
-    if (state == 3) { SerialPrintfln("WiFI_info:   " ANSI_ESC_RED "No more memory to save the credentials for: %s" ANSI_ESC_RESET "  ", ssid.c_get()); }
+    if (state == 0) { SerialPrintfln("WiFI_info:   " ANSI_ESC_RED "SSID: {} password can't changed, it is hard coded" ANSI_ESC_RESET "  ", ssid.c_get()); }
+    if (state == 1) { SerialPrintfln("WiFI_info:   " ANSI_ESC_GREEN "The passord \"{}\" for the SSID: {} has been changed" ANSI_ESC_RESET "  ", password.c_get(), ssid.c_get()); }
+    if (state == 2) { SerialPrintfln("WiFI_info:   " ANSI_ESC_GREEN "The SSID: {} has been added" ANSI_ESC_RESET "  ", ssid.c_get()); }
+    if (state == 3) { SerialPrintfln("WiFI_info:   " ANSI_ESC_RED "No more memory to save the credentials for: {}" ANSI_ESC_RESET "  ", ssid.c_get()); }
     return;
 }
 
@@ -966,7 +972,7 @@ void connecttohost(ps_ptr<char> host) {
             url = host.substr(idx1); // extract url
             user = host.substr(idx1 + 1, idx2 - idx1 - 1);
             pwd = host.substr(idx2 + 1);
-            SerialPrintfln("new host: .  %s user %s, pwd %s", url.c_get(), user.c_get(), pwd.c_get());
+            SerialPrintfln("new host: .  {} user {}, pwd {}", url.c_get(), user.c_get(), pwd.c_get());
             s_f_isWebConnected = audio.connecttohost(url.c_get(), user.c_get(), pwd.c_get());
             s_f_isFSConnected = false;
         }
@@ -1025,7 +1031,7 @@ void setup() {
     trim(Version);
     SerialPrintfln("");
     SerialPrintfln("             " ANSI_ESC_YELLOW " ***************************************************** " ANSI_ESC_RESET "   ");
-    SerialPrintfln("             " ANSI_ESC_YELLOW " *     MiniWebRadio % 29s    * " ANSI_ESC_RESET "      ", Version);
+    SerialPrintfln("             " ANSI_ESC_YELLOW " *     MiniWebRadio {:29}    * " ANSI_ESC_RESET "      ", Version);
     SerialPrintfln("             " ANSI_ESC_YELLOW " ***************************************************** " ANSI_ESC_RESET "    ");
     SerialPrintfln(ANSI_ESC_RESET "   ");
 
@@ -1097,27 +1103,27 @@ void setup() {
     audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT, I2S_MCLK);
     audio.setI2SCommFMT_LSB(I2S_COMM_FMT);
 
-    SerialPrintfln("setup: ....  number of saved stations: " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET "   ", staMgnt.getSumStations());
-    SerialPrintfln("setup: ....  number of saved favourites: " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET "   ", staMgnt.getSumFavStations());
-    SerialPrintfln("setup: ....  current station number: " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET "   ", s_cur_station);
-    SerialPrintfln("setup: ....  current volume: " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET "   ", s_volume.cur_volume);
-    SerialPrintfln("setup: ....  volume steps: " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET "   ", s_volume.volumeSteps);
-    SerialPrintfln("setup: ....  volume after alarm: " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET "   ", s_volume.volumeAfterAlarm);
-    SerialPrintfln("setup: ....  last connected host: " ANSI_ESC_CYAN "%s" ANSI_ESC_RESET "   ", s_settings.lastconnectedhost.c_get());
-    SerialPrintfln("setup: ....  connection timeout: " ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE " ms" ANSI_ESC_RESET "   ", CONN_TIMEOUT);
-    SerialPrintfln("setup: ....  connection timeout SSL: " ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE " ms" ANSI_ESC_RESET "   ", CONN_TIMEOUT_SSL);
+    SerialPrintfln("setup: ....  number of saved stations: " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET "   ", staMgnt.getSumStations());
+    SerialPrintfln("setup: ....  number of saved favourites: " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET "   ", staMgnt.getSumFavStations());
+    SerialPrintfln("setup: ....  current station number: " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET "   ", s_cur_station);
+    SerialPrintfln("setup: ....  current volume: " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET "   ", s_volume.cur_volume);
+    SerialPrintfln("setup: ....  volume steps: " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET "   ", s_volume.volumeSteps);
+    SerialPrintfln("setup: ....  volume after alarm: " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET "   ", s_volume.volumeAfterAlarm);
+    SerialPrintfln("setup: ....  last connected host: " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET "   ", s_settings.lastconnectedhost.c_get());
+    SerialPrintfln("setup: ....  connection timeout: " ANSI_ESC_CYAN "{}" ANSI_ESC_WHITE " ms" ANSI_ESC_RESET "   ", CONN_TIMEOUT);
+    SerialPrintfln("setup: ....  connection timeout SSL: " ANSI_ESC_CYAN "{}" ANSI_ESC_WHITE " ms" ANSI_ESC_RESET "   ", CONN_TIMEOUT_SSL);
 
     ir.begin(); // Init InfraredDecoder
 
     if (AMP_ENABLED >= 0) { // enable onboard amplifier
         pinMode(AMP_ENABLED, OUTPUT);
         digitalWrite(AMP_ENABLED, HIGH);
-        SerialPrintfln("setup: ....  On Board Amplifier pin is: " ANSI_ESC_CYAN "%i" ANSI_ESC_RESET "   ", AMP_ENABLED);
+        SerialPrintfln("setup: ....  On Board Amplifier pin is: " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET "   ", AMP_ENABLED);
     }
 
     if (s_f_isWiFiConnected) webSrv.begin(80, 81); // HTTP port, WebSocket port
 
-    if (s_f_mute) { SerialPrintfln("setup: ....  volume is muted: (from " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET ")", s_volume.cur_volume); }
+    if (s_f_mute) { SerialPrintfln("setup: ....  volume is muted: (from " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET ")", s_volume.cur_volume); }
     setI2STone();
 
     ticker100ms.attach(0.1, timer100ms);
@@ -1135,9 +1141,9 @@ void setup() {
             //    setStation(s_cur_station);
         }
         if (!MDNS.begin("MiniWebRadio")) {
-            SerialPrintfln("%s", "WiFI_info:   " ANSI_ESC_YELLOW "Error starting mDNS", ANSI_ESC_RESET);
+            SerialPrintfln("WiFI_info:   " ANSI_ESC_YELLOW "Error starting mDNS", ANSI_ESC_RESET);
         } else {
-            SerialPrintfln("%s", "WiFI_info:   mDNS started");
+            SerialPrintfln("WiFI_info:   mDNS started");
             MDNS.addService("esp32", "tcp", 80);
             SerialPrintfln("WiFI_info:   mDNS name: " ANSI_ESC_CYAN "MiniWebRadio" ANSI_ESC_RESET);
         }
@@ -1153,14 +1159,14 @@ void setup() {
 
     if (s_i2c_items.bh1750_found) {
         BH1750.begin(&i2cBusOne, s_i2c_items.bh1750_addr); // init the sensor
-        SerialPrintfln("setup: ....  " ANSI_ESC_WHITE "Ambient Light Sensor BH1750 found at " ANSI_ESC_CYAN "0x%X" ANSI_ESC_RESET, s_i2c_items.bh1750_addr);
+        SerialPrintfln("setup: ....  " ANSI_ESC_WHITE "Ambient Light Sensor BH1750 found at " ANSI_ESC_CYAN "0x{:02X}" ANSI_ESC_RESET, s_i2c_items.bh1750_addr);
         BH1750.setResolutionMode(BH1750.ONE_TIME_H_RESOLUTION_MODE);
         BH1750.setSensitivity(BH1750.SENSITIVITY_ADJ_MAX);
     }
 
     if (s_i2c_items.es8311_found) {
         es8311.begin(&i2cBusOne, s_i2c_items.es8311_addr); // init the dac
-        SerialPrintfln("setup: ....  " ANSI_ESC_WHITE "DAC ES8311 found at " ANSI_ESC_CYAN "0x%X" ANSI_ESC_RESET, s_i2c_items.es8311_addr);
+        SerialPrintfln("setup: ....  " ANSI_ESC_WHITE "DAC ES8311 found at " ANSI_ESC_CYAN "0x{:02X}" ANSI_ESC_RESET, s_i2c_items.es8311_addr);
         es8311.setVolume(90);
     }
 
@@ -1169,7 +1175,7 @@ void setup() {
     rec_buffer.alloc_array(REC_BUFFER_SIZE, "rec_buffer");                             // allocate in PSRAM
     writeBuffer.alloc_array(WRITE_CHUNK_SIZE, "writeBuffer");                          // allocate in PSRAM
     xTaskCreatePinnedToCore(wavWriterTask, "wavWriter", 4096, nullptr, 1, nullptr, 0); // start recorder task
-    SerialPrintfln("setup: ....  Recorder task started, free heap: " ANSI_ESC_CYAN "%u" ANSI_ESC_RESET "", ESP.getFreeHeap());
+    SerialPrintfln("setup: ....  Recorder task started, free heap: " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET "", ESP.getFreeHeap());
 
     dispHeader.setTransparency(true, false);
     dispHeader.enable();
@@ -1312,7 +1318,7 @@ bool init_SD_card() {
     }
     float cardSize = ((float)SD_MMC.cardSize()) / (1024 * 1024);
     float freeSize = ((float)SD_MMC.cardSize() - SD_MMC.usedBytes()) / (1024 * 1024);
-    SerialPrintfln(ANSI_ESC_WHITE "setup: ....  SD card found, %.1f MB by %.1f MB free" ANSI_ESC_RESET "   ", freeSize, cardSize);
+    SerialPrintfln(ANSI_ESC_WHITE "setup: ....  SD card found, {:.1} MB by {:.1} MB free" ANSI_ESC_RESET "   ", freeSize, cardSize);
     return true;
 }
 
@@ -1349,7 +1355,7 @@ void setVolume(uint8_t vol) {
     sdr_DL_volume.setValue(s_volume.cur_volume);
     sdr_PL_volume.setValue(s_volume.cur_volume);
     sdr_RA_volume.setValue(s_volume.cur_volume);
-    SerialPrintfln("action: ...  current volume is " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET "  ", s_volume.cur_volume);
+    SerialPrintfln("action: ...  current volume is " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET "  ", s_volume.cur_volume);
 }
 
 uint8_t downvolume() {
@@ -1391,7 +1397,7 @@ void setStation(uint16_t sta) {
     if (sta == 0) { setStationViaURL(s_settings.lastconnectedhost.c_get(), ""); }
     if (sta > staMgnt.getSumStations()) sta = s_cur_station;
     s_stationURL = staMgnt.getStationUrl(sta);
-    SerialPrintfln("action: ...  switch to station " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET "  ", sta);
+    SerialPrintfln("action: ...  switch to station " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET "  ", sta);
     s_homepage = "";
     s_streamTitle = "";
     s_icyDescription = "";
@@ -1460,10 +1466,10 @@ void savefile(ps_ptr<char> fileName, uint32_t contentLength, ps_ptr<char> conten
 
     if (!fileName.starts_with("/")) { fileName = "/" + fileName; }
     if (webSrv.uploadfile(SD_MMC, fileName, contentLength, contentType)) {
-        SerialPrintfln("save file:   " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE " in progress" ANSI_ESC_RESET "  ", fileName.c_get());
+        SerialPrintfln("save file:   " ANSI_ESC_CYAN "{}" ANSI_ESC_WHITE " in progress" ANSI_ESC_RESET "  ", fileName.c_get());
         webSrv.sendStatus(200);
     } else {
-        SerialPrintfln("save file:   " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE " to SD failed" ANSI_ESC_RESET "  ", fileName.c_get());
+        SerialPrintfln("save file:   " ANSI_ESC_CYAN "{}" ANSI_ESC_WHITE " to SD failed" ANSI_ESC_RESET "  ", fileName.c_get());
         webSrv.sendStatus(400);
     }
 }
@@ -1477,7 +1483,7 @@ void saveImage(const char* fileName, uint32_t contentLength) { // save the jpg i
         if (!startsWith(fileName, "/")) fn.append("/");
         fn.append(fileName);
         if (webSrv.uploadB64image(SD_MMC, fn.c_get(), contentLength)) {
-            SerialPrintfln("save image (jpg) " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE " to SD card was successfully" ANSI_ESC_RESET "  ", fn.c_get());
+            SerialPrintfln("save image (jpg) " ANSI_ESC_CYAN "{}" ANSI_ESC_WHITE " to SD card was successfully" ANSI_ESC_RESET "  ", fn.c_get());
             webSrv.sendStatus(200);
         } else
             webSrv.sendStatus(400);
@@ -1528,7 +1534,7 @@ void SD_playFile(ps_ptr<char> path, uint32_t fileStartTime, bool showFN) {
         showFileName(path.get() + idx + 1);
     }
 
-    SerialPrintfln("AUDIO_FILE:  " ANSI_ESC_MAGENTA "%s" ANSI_ESC_RESET, file_name.c_get());
+    SerialPrintfln("AUDIO_FILE:  " ANSI_ESC_MAGENTA "{}" ANSI_ESC_RESET, file_name.c_get());
     connecttoFS("SD_MMC", (const char*)path.c_get(), fileStartTime);
     if (s_f_playlistEnabled) showPlsFileNumber();
     if (s_f_isFSConnected) { s_settings.lastconnectedfile = path; }
@@ -1667,9 +1673,9 @@ void logAlarmItems() {
     uint8_t    mask = 0b00000001;
     for (uint8_t i = 0; i < 7; i++) {
         if (s_alarmdays & mask) {
-            SerialPrintfln("AlarmTime:   " ANSI_ESC_YELLOW "%s " ANSI_ESC_CYAN "%02i:%02i" ANSI_ESC_RESET "  ", wd[i], s_alarmtime[i] / 60, s_alarmtime[i] % 60);
+            SerialPrintfln("AlarmTime:   " ANSI_ESC_YELLOW "{} " ANSI_ESC_CYAN "%02i:%02i" ANSI_ESC_RESET "  ", wd[i], s_alarmtime[i] / 60, s_alarmtime[i] % 60);
         } else {
-            SerialPrintfln("AlarmTime:   " ANSI_ESC_YELLOW "%s No alarm is set" ANSI_ESC_RESET "  ", wd[i]);
+            SerialPrintfln("AlarmTime:   " ANSI_ESC_YELLOW "{} No alarm is set" ANSI_ESC_RESET "  ", wd[i]);
         }
         mask <<= 1;
     }
@@ -1993,9 +1999,9 @@ void changeState(int8_t state, int8_t subState) {
             cls_wifiSettings.setBorderWidth(1);
             cls_wifiSettings.setFontSize(displayConfig.listFontSize);
             int16_t n = WiFi.scanNetworks();
-            SerialPrintfln("setup: ....  " ANSI_ESC_WHITE "%i WiFi networks found" ANSI_ESC_RESET "  ", n);
+            SerialPrintfln("setup: ....  " ANSI_ESC_WHITE "{} WiFi networks found" ANSI_ESC_RESET "  ", n);
             for (int i = 0; i < n; i++) {
-                SerialPrintfln("setup: ....  " ANSI_ESC_GREEN "%s (%d)" ANSI_ESC_RESET "  ", WiFi.SSID(i).c_str(), (int16_t)WiFi.RSSI(i));
+                SerialPrintfln("setup: ....  " ANSI_ESC_GREEN "{} ({})" ANSI_ESC_RESET "  ", WiFi.SSID(i).c_str(), (int16_t)WiFi.RSSI(i));
                 ps_ptr<char> pw = get_WiFi_PW(WiFi.SSID(i).c_str());
                 cls_wifiSettings.add_WiFi_Items(WiFi.SSID(i).c_str(), pw.c_get());
             }
@@ -2202,11 +2208,11 @@ void loop() {
                 s_f_eof = false;
                 ps_ptr<char> p;
                 p.assignf("/voice_time/{}/{}_00.mp3", s_timeSpeechLang.c_get(), hour);
-                SerialPrintfln("Time: ...... play Audiofile %s", p.c_get());
+                SerialPrintfln("Time: ...... play Audiofile {}", p.c_get());
                 connecttoFS("SD_MMC", p.c_get());
                 return;
             } else {
-                SerialPrintfln("Time: ...... Announcement at %d o'clock is silent", hour);
+                SerialPrintfln("Time: ...... Announcement at {} o'clock is silent", hour);
             }
         }
         if (f_resume && s_f_eof) {
@@ -2229,7 +2235,7 @@ void loop() {
                     pgb_DL_progress.setValue(s_audioCurrentTime);
                 }
                 if (s_audioFileDuration) {
-                    SerialPrintfcr("AUDIO_FILE:  " ANSI_ESC_GREEN "AudioCurrentTime " ANSI_ESC_GREEN "%li:%02lis, " ANSI_ESC_GREEN "AudioFileDuration " ANSI_ESC_GREEN "%li:%02lis      ",
+                    SerialPrintfcr("AUDIO_FILE:  " ANSI_ESC_GREEN "AudioCurrentTime " ANSI_ESC_GREEN "{}:{:02}s, " ANSI_ESC_GREEN "AudioFileDuration " ANSI_ESC_GREEN "{}:{:02}s      ",
                                    (long int)s_audioCurrentTime / 60, (long int)s_audioCurrentTime % 60, (long int)s_audioFileDuration / 60, (long int)s_audioFileDuration % 60);
                 }
             }
@@ -2267,7 +2273,7 @@ void loop() {
             uint8_t c = audio.getCodec();
             if (c != 0 && c < 8) { // unknown or OGG, guard: c {1 ... 7, 9}
                 s_cur_Codec = c;
-                SerialPrintfln("Audiocodec:  " ANSI_ESC_YELLOW "%s" ANSI_ESC_RESET "  ", codecname[c]);
+                SerialPrintfln("Audiocodec:  " ANSI_ESC_YELLOW "{}" ANSI_ESC_RESET "  ", codecname[c]);
                 if (s_state == PLAYER) showFileLogo(PLAYER, s_subState_player);
             }
         }
@@ -2386,7 +2392,7 @@ void loop() {
 
         String r = Serial.readString();
         r.replace("\n", "");
-        SerialPrintfln("Terminal  :  " ANSI_ESC_YELLOW "%s" ANSI_ESC_RESET "  ", r.c_str());
+        SerialPrintfln("Terminal  :  " ANSI_ESC_YELLOW "{}" ANSI_ESC_RESET "  ", r.c_str());
         if (r.startsWith("pr")) {
             s_f_pauseResume = audio.pauseResume();
             if (s_f_pauseResume) {
@@ -2402,7 +2408,7 @@ void loop() {
         if (r.startsWith("rts")) { // run time stats
             char* timeStatsBuffer = x_ps_calloc(2000, sizeof(char));
             GetRunTimeStats(timeStatsBuffer);
-            { SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "task statistics\n\n%s" ANSI_ESC_RESET "  ", timeStatsBuffer); }
+            { SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "task statistics\n\n{}" ANSI_ESC_RESET "  ", timeStatsBuffer); }
             x_ps_free(&timeStatsBuffer);
         }
         if (r.startsWith("cts")) { // connect to speech
@@ -2413,8 +2419,8 @@ void loop() {
         }
 
         if (r.startsWith("bfi")) { // buffer filled
-            SerialPrintfln("inBuffer  :  filled %lu bytes" ANSI_ESC_RESET "  ", (long unsigned)audio.inBufferFilled());
-            SerialPrintfln("inBuffer  :  free   %lu bytes" ANSI_ESC_RESET "  ", (long unsigned)audio.inBufferFree());
+            SerialPrintfln("inBuffer  :  filled {} bytes" ANSI_ESC_RESET "  ", (long unsigned)audio.inBufferFilled());
+            SerialPrintfln("inBuffer  :  free   {} bytes" ANSI_ESC_RESET "  ", (long unsigned)audio.inBufferFree());
         }
         if (r.startsWith("st")) { // testtext for streamtitle
             if (r[2] == '0') s_streamTitle = "A Ё Ю";
@@ -2574,20 +2580,20 @@ void my_audio_info(Audio::msg_t m) {
                 return;
             }
             if (CORE_DEBUG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN) {
-                SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s" ANSI_ESC_RESET "  ", m.msg);
+                SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "{}" ANSI_ESC_RESET "  ", m.msg);
                 return;
             } // all other
             break;
 
         case Audio::evt_name:
             s_stationName_air = m.msg; // set max length
-            SerialPrintfln("StationName: " ANSI_ESC_MAGENTA "%s" ANSI_ESC_RESET "  ", m.msg);
+            SerialPrintfln("StationName: " ANSI_ESC_MAGENTA "{}" ANSI_ESC_RESET "  ", m.msg);
             s_f_newStationName = true;
             break;
 
         case Audio::evt_streamtitle:
             s_streamTitle = m.msg;
-            SerialPrintfln("StreamTitle: " ANSI_ESC_YELLOW "%s" ANSI_ESC_RESET "  ", m.msg);
+            SerialPrintfln("StreamTitle: " ANSI_ESC_YELLOW "{}" ANSI_ESC_RESET "  ", m.msg);
             s_f_newStreamTitle = true;
             break;
 
@@ -2636,34 +2642,34 @@ void my_audio_info(Audio::msg_t m) {
             if (strlen(m.msg) > 5) { SerialPrintflnCut("icy-logo:    ", ANSI_ESC_WHITE, m.msg); }
             break;
 
-        case Audio::evt_id3data: SerialPrintfln("id3data: ..  " ANSI_ESC_GREEN "%s" ANSI_ESC_RESET "  ", m.msg); break;
+        case Audio::evt_id3data: SerialPrintfln("id3data: ..  " ANSI_ESC_GREEN "{}" ANSI_ESC_RESET "  ", m.msg); break;
 
         case Audio::evt_image:
-            for (int i = 0; i < m.vec.size(); i += 2) { SerialPrintfln("CoverImage:  " ANSI_ESC_GREEN "segment %02i, pos %08i, len %08i" ANSI_ESC_RESET "  ", i / 2, m.vec[i], m.vec[i + 1]); }
+            for (int i = 0; i < m.vec.size(); i += 2) { SerialPrintfln("CoverImage:  " ANSI_ESC_GREEN "segment {:02}, pos {:08}, len {:08}" ANSI_ESC_RESET "  ", i / 2, m.vec[i], m.vec[i + 1]); }
             break;
 
         case Audio::evt_icydescription:
             s_icyDescription = m.msg;
             s_f_newIcyDescription = true;
-            if (strlen(m.msg)) SerialPrintfln("icy-descr:   %s", m.msg);
+            if (strlen(m.msg)) SerialPrintfln("icy-descr:   {}", m.msg);
             break;
 
         case Audio::evt_bitrate:
             if (!strlen(m.msg)) return; // guard
             s_icyBitRate = str2int(m.msg);
             s_f_newBitRate = true;
-            SerialPrintfln("bitRate:     " ANSI_ESC_GREEN "%i" ANSI_ESC_RESET "  ", s_icyBitRate);
+            SerialPrintfln("bitRate:     " ANSI_ESC_GREEN "{}" ANSI_ESC_RESET "  ", s_icyBitRate);
             break;
 
         case Audio::evt_lyrics:
-            SerialPrintfln("sync lyrics: " ANSI_ESC_CYAN "%s" ANSI_ESC_RESET "  ", m.msg);
+            SerialPrintfln("sync lyrics: " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET "  ", m.msg);
             s_lyrics = m.msg;
             s_f_newLyrics = true;
             break;
 
-        case Audio::evt_log: SerialPrintfln("%s: .....  %s", m.s, m.msg); break;
+        case Audio::evt_log: SerialPrintfln("{}: .....  {}", m.s, m.msg); break;
 
-        default: SerialPrintfln("message:...  %s", m.msg); break;
+        default: SerialPrintfln("message:...  {}", m.msg); break;
     }
 }
 
@@ -2699,25 +2705,25 @@ void on_BH1750(int32_t ambVal) { //--AMBIENT LIGHT SENSOR BH1750--
 // ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void ftp_debug(const char* info) {
     if (startsWith(info, "File Name")) return;
-    SerialPrintfln("ftpServer:   %s", info);
+    SerialPrintfln("ftpServer:   {}", info);
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 // Events from rtime library
 void RTIME_info(const char* info) {
-    SerialPrintfln("rtime_info:  %s", info);
+    SerialPrintfln("rtime_info:  {}", info);
 }
 // Events from tft library
 void tft_info(const char* info) {
-    SerialPrintfln("tft_info: .  %s", info);
+    SerialPrintfln("tft_info: .  {}", info);
 }
 // Events from tp library
 void tp_info(const char* info) {
-    SerialPrintfln("tp_info: ..  %s", info);
+    SerialPrintfln("tp_info: ..  {}", info);
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 // Events from IR Library
 void ir_code(uint8_t addr, uint8_t cmd) {
-    SerialPrintfln("ir_code: ..  " ANSI_ESC_YELLOW "IR address " ANSI_ESC_BLUE "0x%02x, " ANSI_ESC_YELLOW "IR command " ANSI_ESC_BLUE "0x%02x" ANSI_ESC_RESET "  ", addr, cmd);
+    SerialPrintfln("ir_code: ..  " ANSI_ESC_YELLOW "IR address " ANSI_ESC_BLUE "0x{:02X}, " ANSI_ESC_YELLOW "IR command " ANSI_ESC_BLUE "0x{:02X}" ANSI_ESC_RESET "  ", addr, cmd);
     char buf[20];
     sprintf(buf, "0x%02x", addr);
     webSrv.send("IR_address=", buf);
@@ -2728,7 +2734,7 @@ void ir_code(uint8_t addr, uint8_t cmd) {
 void ir_res(uint32_t res) {
     if (s_state != RADIO) return;
     if (s_f_sleeping == true) return;
-    SerialPrintfln("ir_result:   " ANSI_ESC_YELLOW "Stationnumber " ANSI_ESC_BLUE "%lu" ANSI_ESC_RESET "  ", (long unsigned)res);
+    SerialPrintfln("ir_result:   " ANSI_ESC_YELLOW "Stationnumber " ANSI_ESC_BLUE "{}" ANSI_ESC_RESET "  ", (long unsigned)res);
     nbr_RA_staBox.hide();
     setStationByNumber(res);
     return;
@@ -2743,13 +2749,13 @@ void ir_number(uint16_t num) {
 }
 
 void ir_released(int8_t key) {
-    SerialPrintfln("ir_code: ..  " ANSI_ESC_YELLOW "released ir key nr: " ANSI_ESC_BLUE "%02i, <%s>" ANSI_ESC_RESET "  ", key, ir_symbols[key]);
+    SerialPrintfln("ir_code: ..  " ANSI_ESC_YELLOW "released ir key nr: " ANSI_ESC_BLUE "{:02}, <{}>" ANSI_ESC_RESET "  ", key, ir_symbols[key]);
     tp_released(0, 0);
     return;
 }
 // ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void ir_long_key(int8_t key) {
-    SerialPrintfln("ir_code: ..  " ANSI_ESC_YELLOW "long pressed ir key nr: " ANSI_ESC_BLUE "%02i, <%s>" ANSI_ESC_RESET "  ", key, ir_symbols[key]);
+    SerialPrintfln("ir_code: ..  " ANSI_ESC_YELLOW "long pressed ir key nr: " ANSI_ESC_BLUE "{:02}, <{}>" ANSI_ESC_RESET "  ", key, ir_symbols[key]);
     if (key == 16) {
         if (!s_f_sleeping)
             fall_asleep(); // long OK
@@ -2761,7 +2767,7 @@ void ir_long_key(int8_t key) {
 // clang-format off
 void ir_short_key(int8_t key) {
     s_f_ok_from_ir = false;
-    SerialPrintfln("ir_code: ..  " ANSI_ESC_YELLOW "short pressed ir key nr: " ANSI_ESC_BLUE "%02i, <%s>" ANSI_ESC_RESET "  ", key, ir_symbols[key]);
+    SerialPrintfln("ir_code: ..  " ANSI_ESC_YELLOW "short pressed ir key nr: " ANSI_ESC_BLUE "{:02}, <{}>" ANSI_ESC_RESET "  ", key, ir_symbols[key]);
     if (s_f_sleeping == true && key != 20) return;
     if (s_state == IR_SETTINGS) return; // nothing todo
 
@@ -3331,7 +3337,7 @@ void ir_short_key(int8_t key) {
 void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  // called via html
 
     if(CORE_DEBUG_LEVEL == ARDUHAL_LOG_LEVEL_DEBUG){
-        SerialPrintfln("WS_onCmd:    " ANSI_ESC_YELLOW "cmd=\"%s\", params=\"%s\", arg=\"%s\"" ANSI_ESC_RESET "  ", cmd.c_get(), param.c_get(), arg.c_get());
+        SerialPrintfln("WS_onCmd:    " ANSI_ESC_YELLOW "cmd=\"{}\", params=\"{}\", arg=\"{}\"" ANSI_ESC_RESET "  ", cmd.c_get(), param.c_get(), arg.c_get());
     }
     #define CMD_EQUALS(x) if(cmd.equals(x) == true)
 
@@ -3349,8 +3355,8 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
     CMD_EQUALS("test"){                 ps_ptr<char>p; p.assignf("free heap: {}, Inbuff filled: {}, Inbuff free: {}, PSRAM filled {}, PSRAM free {},",
                                         ESP.getFreeHeap(), audio.inBufferFilled(), audio.inBufferFree(), (ESP.getPsramSize() - ESP.getFreePsram()), ESP.getFreePsram());
                                         webSrv.send("test=", p.c_get());
-                                        SerialPrintfln("audiotask .. stackHighWaterMark: %lu bytes", (long unsigned)audio.getHighWatermark() * 4);
-                                        SerialPrintfln("looptask ... stackHighWaterMark: %lu bytes", (long unsigned)uxTaskGetStackHighWaterMark(NULL) * 4);
+                                        SerialPrintfln("audiotask .. stackHighWaterMark: {} bytes", (long unsigned)audio.getHighWatermark() * 4);
+                                        SerialPrintfln("looptask ... stackHighWaterMark: {} bytes", (long unsigned)uxTaskGetStackHighWaterMark(NULL) * 4);
                                         return;}
 
     CMD_EQUALS("get_mute"){             s_f_mute == true ? webSrv.send("mute=", "1") : webSrv.send("mute=", "0"); return;}
@@ -3369,16 +3375,16 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
                                         sdr_PL_volume.setMinMaxVal(0, s_volume.volumeSteps);
                                         sdr_RA_volume.setMinMaxVal(0, s_volume.volumeSteps);
                                         setVolume(s_volume.cur_volume);
-                                        SerialPrintfln("action: ...  new volume steps: " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET "  ", s_volume.volumeSteps);
+                                        SerialPrintfln("action: ...  new volume steps: " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET "  ", s_volume.volumeSteps);
                                         return;}
 
     CMD_EQUALS("get_ringVolume"){       webSrv.send("ringVolume=", int2str(s_volume.ringVolume)); return;}
     CMD_EQUALS("set_ringVolume"){       s_volume.ringVolume = param.to_int32(); webSrv.send("ringVolume=", int2str(s_volume.ringVolume));
-                                        SerialPrintfln("action: ...  new ring volume: " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET "  ", s_volume.ringVolume); return;}
+                                        SerialPrintfln("action: ...  new ring volume: " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET "  ", s_volume.ringVolume); return;}
 
     CMD_EQUALS("get_volAfterAlarm"){    webSrv.send("volAfterAlarm=", int2str(s_volume.volumeAfterAlarm)); return;}
     CMD_EQUALS("set_volAfterAlarm"){    s_volume.volumeAfterAlarm = param.to_int32(); webSrv.send("volAfterAlarm=", int2str(s_volume.volumeAfterAlarm));
-                                        SerialPrintfln("action: ...  new volume after alarm: " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET "  ", s_volume.volumeAfterAlarm); return;}
+                                        SerialPrintfln("action: ...  new volume after alarm: " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET "  ", s_volume.volumeAfterAlarm); return;}
     CMD_EQUALS("homepage"){             webSrv.send("homepage=", s_homepage.c_get()); return;}
 
     CMD_EQUALS("to_listen"){            showLogoAndStationName(false); return;}   // via websocket, return the name and number of the current station
@@ -3410,7 +3416,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
 
     CMD_EQUALS("stationURL"){           setStationViaURL(param.c_get(), arg.c_get());                                                                        // via websocket
                                         s_stationName_air = param;
-                                        SerialPrintfln("StationName: " ANSI_ESC_MAGENTA "%s" ANSI_ESC_RESET "  ", param.c_get());
+                                        SerialPrintfln("StationName: " ANSI_ESC_MAGENTA "{}" ANSI_ESC_RESET "  ", param.c_get());
                                         s_f_newStationName = true; return;}
 
     CMD_EQUALS("webFileURL"){           audio.connecttohost(param.c_get())? changeState(PLAYER, 1) : changeState(PLAYER, 0); return;}                        // via websocket
@@ -3422,7 +3428,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
     CMD_EQUALS("get_timeZones"){        webSrv.send("timezones=", timezones_json); return;}
 
     CMD_EQUALS("set_timeZone"){         s_TZName = param;  s_TZString = arg.c_get();
-                                        SerialPrintfln("Timezone: .. " ANSI_ESC_BLUE "%s, %s" ANSI_ESC_RESET "  ", param.c_get(), arg.c_get());
+                                        SerialPrintfln("Timezone: .. " ANSI_ESC_BLUE "{}, {}" ANSI_ESC_RESET "  ", param.c_get(), arg.c_get());
                                         setRTC(s_TZString);
                                         updateSettings(); // write new TZ items to settings.json
                                         return;}
@@ -3460,14 +3466,14 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
 
     CMD_EQUALS("set_timeAnnouncement"){ if(param == "true" ) {s_f_timeAnnouncement = true;}
                                         if(   param == "false") {s_f_timeAnnouncement = false;}
-                                        SerialPrintfln("Timespeech   " ANSI_ESC_YELLOW "hourly time announcement " ANSI_ESC_BLUE "%s" ANSI_ESC_RESET "  ", (s_f_timeAnnouncement == 1) ? "on" : "off");
+                                        SerialPrintfln("Timespeech   " ANSI_ESC_YELLOW "hourly time announcement " ANSI_ESC_BLUE "{}" ANSI_ESC_RESET "  ", (s_f_timeAnnouncement == 1) ? "on" : "off");
                                         return;}
 
-    CMD_EQUALS("get_timeSpeechLang"){   webSrv.send("get_timeSpeechLang=", s_timeSpeechLang); SerialPrintfln("Timespeech   " ANSI_ESC_YELLOW "language is " ANSI_ESC_BLUE "%s" ANSI_ESC_RESET "  ", s_timeSpeechLang.c_get()); return;}
+    CMD_EQUALS("get_timeSpeechLang"){   webSrv.send("get_timeSpeechLang=", s_timeSpeechLang); SerialPrintfln("Timespeech   " ANSI_ESC_YELLOW "language is " ANSI_ESC_BLUE "{}" ANSI_ESC_RESET "  ", s_timeSpeechLang.c_get()); return;}
 
     CMD_EQUALS("set_timeSpeechLang"){   if(param.strlen() > 2){MWR_LOG_ERROR("set_timeSpeechLang too long %s", param.c_get()); return;}
                                         s_timeSpeechLang = param;
-                                        SerialPrintfln("Timespeech   " ANSI_ESC_YELLOW "language is " ANSI_ESC_BLUE "%s" ANSI_ESC_RESET "  ", param.c_get());
+                                        SerialPrintfln("Timespeech   " ANSI_ESC_YELLOW "language is " ANSI_ESC_BLUE "{}" ANSI_ESC_RESET "  ", param.c_get());
                                         return;}
 
     CMD_EQUALS("DLNA_getServer")  {     webSrv.send("DLNA_Names=", dlna.stringifyServer()); s_currDLNAsrvNr = -1; return;}
@@ -3481,31 +3487,31 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
                                         return;}
 
     CMD_EQUALS("SD/"){                  param = scaleImage(param); if(!SD_MMC.exists(param.c_get())) param = scaleImage("/common/unknown.png");
-                                        if(!webSrv.streamfile(SD_MMC, param)){ SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "The file could not be transferred " ANSI_ESC_RED "\"%s\"" ANSI_ESC_RESET "  ", param.get()); } // via XMLHttpRequest
+                                        if(!webSrv.streamfile(SD_MMC, param)){ SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "The file could not be transferred " ANSI_ESC_RED "\"{}\"" ANSI_ESC_RESET "  ", param.get()); } // via XMLHttpRequest
                                         return;}
 
     CMD_EQUALS("SD_Download"){          webSrv.streamfile(SD_MMC, param.c_get());                                                                         // via XMLHttpRequest
-                                        SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Load from SD  " ANSI_ESC_ORANGE "\"%s\"" ANSI_ESC_RESET "  ", param.c_get());
+                                        SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Load from SD  " ANSI_ESC_ORANGE "\"{}\"" ANSI_ESC_RESET "  ", param.c_get());
                                         return;}
 
     CMD_EQUALS("SD_GetFolder"){         webSrv.reply(s_SD_content.stringifyDirContent(param), webSrv.JS);                                                           // via XMLHttpRequest
-                                        SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "GetFolder " ANSI_ESC_ORANGE "\"%s\"" ANSI_ESC_RESET "  ", param.c_get());
+                                        SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "GetFolder " ANSI_ESC_ORANGE "\"{}\"" ANSI_ESC_RESET "  ", param.c_get());
                                         return;}
 
     CMD_EQUALS("SD_newFolder"){         bool res = SD_newFolder(param.c_get());                                                                           // via XMLHttpRequest
                                         if(res) webSrv.sendStatus(200); else webSrv.sendStatus(400);
-                                        SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "NewFolder " ANSI_ESC_ORANGE "\"%s\"" ANSI_ESC_RESET "  ", param.c_get());
+                                        SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "NewFolder " ANSI_ESC_ORANGE "\"{}\"" ANSI_ESC_RESET "  ", param.c_get());
                                         return;}
 
     CMD_EQUALS("SD_playFile"){          stopSong();
                                         webSrv.reply("SD_playFile=" + param, webSrv.TEXT);                                                                // via XMLHttpRequest
-                                        SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Play " ANSI_ESC_ORANGE "\"%s\"" ANSI_ESC_RESET "  ", param.c_get());
+                                        SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Play " ANSI_ESC_ORANGE "\"{}\"" ANSI_ESC_RESET "  ", param.c_get());
                                         SD_playFile(param.c_get());
                                         return;}
 
     CMD_EQUALS("SD_playAllFiles"){      stopSong();
                                         webSrv.send("SD_playFolder=", param);                                                                                      // via websocket
-                                        SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Play Folder" ANSI_ESC_ORANGE "\"%s\"" ANSI_ESC_RESET "  ", param.c_get());
+                                        SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Play Folder" ANSI_ESC_ORANGE "\"{}\"" ANSI_ESC_RESET "  ", param.c_get());
                                         if(playlist.create_playlist_from_SD_folder(param)){
                                             s_f_playlistEnabled = true;
                                             s_subState_player = 1;
@@ -3513,7 +3519,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
                                         return;}
 
     CMD_EQUALS("SD_rename"){            ps_ptr<char> _arg = arg.substr(0, arg.index_of("&")); // only the first argument is used                              // via XMLHttpRequest
-                                        SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Rename " ANSI_ESC_ORANGE "old \"%s\" new \"%s\"" ANSI_ESC_RESET "  ",
+                                        SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Rename " ANSI_ESC_ORANGE "old \"{}\" new \"%s\"" ANSI_ESC_RESET "  ",
                                         param.c_get(), _arg.c_get());
                                         bool res = SD_rename(param.c_get(), _arg.c_get());
                                         if(res) webSrv.reply("refresh", webSrv.TEXT);
@@ -3522,13 +3528,13 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
 
     CMD_EQUALS("set_IRcmd"){            int32_t command = param.to_int32(16);
                                         int32_t btnNr = arg.to_int32(10);
-                                        SerialPrintfln("set_IR_cmd:  " ANSI_ESC_YELLOW "IR command " ANSI_ESC_BLUE "0x%02lx, "
-                                        ANSI_ESC_YELLOW "IR Button Number " ANSI_ESC_BLUE "%02li" ANSI_ESC_RESET "  ", (long signed)command, (long signed)btnNr);
+                                        SerialPrintfln("set_IR_cmd:  " ANSI_ESC_YELLOW "IR command " ANSI_ESC_BLUE "0x{:02X}, "
+                                        ANSI_ESC_YELLOW "IR Button Number " ANSI_ESC_BLUE "{:02}" ANSI_ESC_RESET "  ", command, btnNr);
                                         ir.set_irButtons(btnNr,  command);
                                         s_settings.irbuttons[btnNr].val = command;
                                         return;}
 
-    CMD_EQUALS("set_IRaddr"){           SerialPrintfln("set_IR_addr: " ANSI_ESC_YELLOW "IR address " ANSI_ESC_BLUE "%s" ANSI_ESC_RESET "  ", param.c_get());
+    CMD_EQUALS("set_IRaddr"){           SerialPrintfln("set_IR_addr: " ANSI_ESC_YELLOW "IR address " ANSI_ESC_BLUE "{}" ANSI_ESC_RESET "  ", param.c_get());
                                         int32_t address = (int32_t)strtol(param.c_get(), NULL, 16);
                                         ir.set_irAddress(address);
                                         s_settings.irbuttons[42].val = address;
@@ -3561,7 +3567,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
 
     CMD_EQUALS("hardcopy"){             SerialPrintfln("Webpage: ... " ANSI_ESC_YELLOW "create a display hardcopy" ANSI_ESC_RESET "  "); make_hardcopy_on_sd(); webSrv.send("hardcopy=", "/hardcopy.bmp"); return;}
 
-    SerialPrintfln(ANSI_ESC_RED "unknown HTMLcommand %s, param=%s", cmd, param.c_get());
+    SerialPrintfln(ANSI_ESC_RED "unknown HTMLcommand {}, param={}", cmd, param.c_get());
     webSrv.sendStatus(400);
 }
 // clang-format on
@@ -3579,16 +3585,16 @@ void WEBSRV_onRequest(const char* cmd,  const char* param, const char* arg, cons
     if(strcmp(cmd, "upload_player2sd") == 0) {savefile(param, contentLength, contentType); return; }
     if(strcmp(cmd, "upload_text_file") == 0) {savefile(param, contentLength, contentType); return; }
     if(strcmp(cmd, "uploadfile") == 0){saveImage(param, contentLength); return;}
-    SerialPrintfln(ANSI_ESC_RED "unknown HTMLcommand %s, param=%s", cmd, param);
+    SerialPrintfln(ANSI_ESC_RED "unknown HTMLcommand {}, param={}", cmd, param);
     webSrv.sendStatus(400);
 }
 
 void WEBSRV_onDelete(const char* cmd,  const char* param, const char* arg){  // via XMLHttpRequest
     if(startsWith(cmd, "SD")){      bool res = SD_delete(param);
                                     if(res) webSrv.sendStatus(200); else webSrv.sendStatus(400);
-                                    SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Delete " ANSI_ESC_ORANGE "\"%s\"" ANSI_ESC_RESET "  ", param);
+                                    SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Delete " ANSI_ESC_ORANGE "\"{}\"" ANSI_ESC_RESET "  ", param);
                                     return;}
-    SerialPrintfln(ANSI_ESC_RED "unknown HTMLcommand %s, param=%s", cmd, param);
+    SerialPrintfln(ANSI_ESC_RED "unknown HTMLcommand {}, param={}", cmd, param);
     webSrv.sendStatus(400);
 }
 // clang-format on
@@ -3603,21 +3609,21 @@ void on_dlna_client(const DLNA_Client::msg_s& msg) {
             if (item.isAudio) {
                 if (item.duration.equals("?") != 0) { // no duration given
                     if (item.itemSize) {
-                        SerialPrintfln("DLNA_server: " ANSI_ESC_CYAN "title " ANSI_ESC_YELLOW " %s, itemSize %ld" ANSI_ESC_RESET "  ", item.title.c_get(), (long unsigned int)item.itemSize);
+                        SerialPrintfln("DLNA_server: " ANSI_ESC_CYAN "title " ANSI_ESC_YELLOW " {}, itemSize {}" ANSI_ESC_RESET "  ", item.title.c_get(), (long unsigned int)item.itemSize);
                     } else {
-                        SerialPrintfln("DLNA_server: " ANSI_ESC_CYAN "title " ANSI_ESC_YELLOW "%s" ANSI_ESC_RESET "  ", item.title.c_get());
+                        SerialPrintfln("DLNA_server: " ANSI_ESC_CYAN "title " ANSI_ESC_YELLOW "{}" ANSI_ESC_RESET "  ", item.title.c_get());
                     }
                 } else {
-                    SerialPrintfln("DLNA_server: " ANSI_ESC_CYAN "title " ANSI_ESC_YELLOW "%s, duration %s" ANSI_ESC_RESET "  ", item.title.c_get(), item.duration.c_get());
+                    SerialPrintfln("DLNA_server: " ANSI_ESC_CYAN "title " ANSI_ESC_YELLOW "{}, duration {}" ANSI_ESC_RESET "  ", item.title.c_get(), item.duration.c_get());
                 }
             }
             if (item.childCount) {
-                SerialPrintfln("DLNA_server: " ANSI_ESC_CYAN "title " ANSI_ESC_YELLOW "%s, childCount %i" ANSI_ESC_RESET "  ", item.title.c_get(), item.childCount);
+                SerialPrintfln("DLNA_server: " ANSI_ESC_CYAN "title " ANSI_ESC_YELLOW "{}, childCount {}" ANSI_ESC_RESET "  ", item.title.c_get(), item.childCount);
             } else {
-                SerialPrintfln("DLNA_server: " ANSI_ESC_CYAN "title " ANSI_ESC_YELLOW "%s, childCount 0" ANSI_ESC_RESET "  ", item.title.c_get());
+                SerialPrintfln("DLNA_server: " ANSI_ESC_CYAN "title " ANSI_ESC_YELLOW "{}, childCount 0" ANSI_ESC_RESET "  ", item.title.c_get());
             }
         }
-        if (msg.totalMatches >= 0) SerialPrintfln("DLNA_server: returned %i from %i", msg.numberReturned, msg.totalMatches);
+        if (msg.totalMatches >= 0) SerialPrintfln("DLNA_server: returned {} from {}", msg.numberReturned, msg.totalMatches);
         s_dlnaMaxItems = msg.totalMatches;
         s_totalNumberReturned += msg.numberReturned;
         if (msg.numberReturned == 50 && !s_f_dlnaMakePlaylistOTF) { // next round
@@ -3638,18 +3644,18 @@ void on_dlna_client(const DLNA_Client::msg_s& msg) {
     if (msg.e == DLNA_Client::evt_server) {
         for (size_t i = 0; i < msg.server->size(); i++) {
             const auto& server = msg.server->at(i);
-            SerialPrintfln("DLNA_server: [%d] " ANSI_ESC_CYAN "%s:%d " ANSI_ESC_YELLOW " %s" ANSI_ESC_RESET "  ", i, server.ip.c_get(), server.port, server.friendlyName.c_get());
+            SerialPrintfln("DLNA_server: [{}] " ANSI_ESC_CYAN "{}:{} " ANSI_ESC_YELLOW " {}" ANSI_ESC_RESET "  ", i, server.ip.c_get(), server.port, server.friendlyName.c_get());
         }
         s_dlnaMaXServers = msg.server->size();
-        SerialPrintfln("DLNA_server: %i media server found", msg.server->size());
+        SerialPrintfln("DLNA_server: {} media server found", msg.server->size());
     }
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg) {
-    if (msg.e == KCX_BT_Emitter::evt_info) { SerialPrintfln("BT-Emitter:  " ANSI_ESC_GREEN "%s" ANSI_ESC_RESET "  ", msg.arg); }
+    if (msg.e == KCX_BT_Emitter::evt_info) { SerialPrintfln("BT-Emitter:  " ANSI_ESC_GREEN "{}" ANSI_ESC_RESET "  ", msg.arg); }
     if (msg.e == KCX_BT_Emitter::evt_found) {
         s_bt_emitter.found = true;
-        SerialPrintfln("BT-Emitter:  %s" ANSI_ESC_RESET "  ", "found");
+        SerialPrintfln("BT-Emitter:  {}" ANSI_ESC_RESET "  ", "found");
         bt_emitter.userCommand("AT+GMR?");                 // get version
         bt_emitter.userCommand("AT+PAUSE?");               // pause or play?
         bt_emitter.userCommand("AT+NAME+BT-MiniWebRadio"); // set BT receiver name
@@ -3675,16 +3681,16 @@ void on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg) {
             webSrv.send("KCX_BT_MODE=", "RX");
         }
         webSrv.send("KCX_BT_connected=", "1");
-        SerialPrintfln("BT-Emitter:  %s ", "connected");
+        SerialPrintfln("BT-Emitter:  {} ", "connected");
     }
     if (msg.e == KCX_BT_Emitter::evt_disconnect) {
-        SerialPrintfln("BT-Emitter:  %s ", "disconnected");
+        SerialPrintfln("BT-Emitter:  {} ", "disconnected");
         pic_BT_mode.setPicturePath("/common/BTnc.png"); // not connected
         if (s_state == BLUETOOTH) pic_BT_mode.show();
         webSrv.send("KCX_BT_connected=", "0");
     }
     if (msg.e == KCX_BT_Emitter::evt_reset) {
-        SerialPrintfln("BT-Emitter:  %s ", "reset");
+        SerialPrintfln("BT-Emitter:  {} ", "reset");
         s_bt_emitter.connect = false;
     }
     if (msg.e == KCX_BT_Emitter::evt_power_on) {
@@ -3693,7 +3699,7 @@ void on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg) {
         btn_BT_power.setValue(true);
         pic_BT_mode.setPicturePath("/common/BTnc.png");
         if (s_state == BLUETOOTH) pic_BT_mode.show();
-        SerialPrintfln("BT-Emitter:  %s ", "power on");
+        SerialPrintfln("BT-Emitter:  {} ", "power on");
         bt_emitter.userCommand("AT+BT_MODE?");
     }
     if (msg.e == KCX_BT_Emitter::evt_power_off) {
@@ -3702,36 +3708,36 @@ void on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg) {
         btn_BT_power.setValue(false);
         pic_BT_mode.setPicturePath("/common/BToff.png");
         if (s_state == BLUETOOTH) pic_BT_mode.show();
-        SerialPrintfln("BT-Emitter:  %s ", "power off");
+        SerialPrintfln("BT-Emitter:  {} ", "power off");
     }
     if (msg.e == KCX_BT_Emitter::evt_scan) {
         s_bt_emitter.connect = false;
-        SerialPrintfln("BT-Emitter:  %s ", "scan ...");
+        SerialPrintfln("BT-Emitter:  {} ", "scan ...");
     }
     if (msg.e == KCX_BT_Emitter::evt_volume) {
         s_bt_emitter.volume = msg.val;
         ps_ptr<char> v;
         v.assignf("Vol: {:02}", s_bt_emitter.volume);
         if (s_state == BLUETOOTH) dispFooter.updateFileNr(v);
-        SerialPrintfln("BT-Emitter:  %s " ANSI_ESC_YELLOW "%i" ANSI_ESC_RESET "  ", "volume", msg.val);
+        SerialPrintfln("BT-Emitter:  {} " ANSI_ESC_YELLOW "{}" ANSI_ESC_RESET "  ", "volume", msg.val);
     }
     if (msg.e == KCX_BT_Emitter::evt_version) {
         s_bt_emitter.version = msg.arg;
-        SerialPrintfln("BT-Emitter:  %s " ANSI_ESC_YELLOW "%s" ANSI_ESC_RESET "  ", "version", msg.arg);
+        SerialPrintfln("BT-Emitter:  {} " ANSI_ESC_YELLOW "{}" ANSI_ESC_RESET "  ", "version", msg.arg);
     }
     if (msg.e == KCX_BT_Emitter::evt_mode) {
         webSrv.send("KCX_BT_MODE=", msg.arg);
         if (s_state == BLUETOOTH) txt_BT_mode.writeText(msg.arg[0] == 'R' ? "RECEIVER" : "EMITTER");
         s_bt_emitter.mode = msg.arg;
-        SerialPrintfln("BT-Emitter:  %s " ANSI_ESC_YELLOW "%s" ANSI_ESC_RESET "  ", "RX_TX_mode", msg.arg);
+        SerialPrintfln("BT-Emitter:  {} " ANSI_ESC_YELLOW "{}" ANSI_ESC_RESET "  ", "RX_TX_mode", msg.arg);
     }
     if (msg.e == KCX_BT_Emitter::evt_pause) {
         s_bt_emitter.play = false;
-        SerialPrintfln("BT-Emitter:  %s ", "Pause");
+        SerialPrintfln("BT-Emitter:  {} ", "Pause");
     }
     if (msg.e == KCX_BT_Emitter::evt_play) {
         s_bt_emitter.play = true;
-        SerialPrintfln("BT-Emitter:  %s ", "Play");
+        SerialPrintfln("BT-Emitter:  {} ", "Play");
     }
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -3746,20 +3752,20 @@ void on_websrv(const WebSrv::msg_s& msg) {
         if (msg.arg.starts_with("set_")) return;           // suppress all setters
         if (msg.arg.starts_with("SD")) return;             // suppress all SD commands
         if (msg.arg.starts_with("Length")) return;         // suppress all file length infos
-        SerialPrintfln("WebSrv Info: " ANSI_ESC_GREEN "%s " ANSI_ESC_RESET "  ", msg.arg.c_get());
+        SerialPrintfln("WebSrv Info: " ANSI_ESC_GREEN "{} " ANSI_ESC_RESET "  ", msg.arg.c_get());
     }
-    if (msg.e == WebSrv::evt_error) { SerialPrintfln("WebSrv Err:  " ANSI_ESC_RED "%s" ANSI_ESC_RESET "  ", msg.arg.c_get()); }
-    if (msg.e == WebSrv::evt_warn) { SerialPrintfln("WebSrv Warn:  " ANSI_ESC_YELLOW "%s" ANSI_ESC_RESET "  ", msg.arg.c_get()); }
+    if (msg.e == WebSrv::evt_error) { SerialPrintfln("WebSrv Err:  " ANSI_ESC_RED "{}" ANSI_ESC_RESET "  ", msg.arg.c_get()); }
+    if (msg.e == WebSrv::evt_warn) { SerialPrintfln("WebSrv Warn:  " ANSI_ESC_YELLOW "{}" ANSI_ESC_RESET "  ", msg.arg.c_get()); }
     if (msg.e == WebSrv::evt_command) { WEBSRV_onCommand(msg.cmd, msg.param1, msg.arg1); }
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void kcx_bt_memItems(const char* jsonItems) { // Every time an item (name or address) was added, a JSON string is passed here
-    // SerialPrintfln("bt_memItems %s", jsonItems);
+    // SerialPrintfln("bt_memItems {}", jsonItems);
     webSrv.send("KCX_BT_MEM=", jsonItems);
 }
 
 void kcx_bt_scanItems(const char* jsonItems) { // Every time an item (name and address) was scanned, a JSON string is passed here
-    // SerialPrintfln("bt_scanItems %s", jsonItems);
+    // SerialPrintfln("bt_scanItems {}", jsonItems);
     webSrv.send("KCX_BT_SCANNED=", jsonItems);
 }
 
@@ -3769,7 +3775,7 @@ void kcx_bt_scanItems(const char* jsonItems) { // Every time an item (name and a
 // clang-format off
 /*🟢🟡🔴*/
 void tp_pressed(uint16_t x, uint16_t y) {
-    //  SerialPrintfln(ANSI_ESC_YELLOW "Touchpoint  x=%d, y=%d", x, y);
+    //  SerialPrintfln(ANSI_ESC_YELLOW "Touchpoint  x={}, y={}", x, y);
     if (s_f_sleeping) return; // awake in tp_released()
     const char* objName = NULL;
     if(y > layout.winHeader.y + layout.winHeader.h && y < layout.winProgbar.y) {
@@ -3785,7 +3791,7 @@ void tp_pressed(uint16_t x, uint16_t y) {
     }
     objName = isObjectClicked(x, y);
 exit:
-    if (objName) { SerialPrintfln("click on ..  %s", objName); }
+    if (objName) { SerialPrintfln("click on ..  {}", objName); }
     return;
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -3877,7 +3883,7 @@ void tp_released(uint16_t x, uint16_t y){
         default:
             break;
     }
-    // SerialPrintfln("tp_released, state is: %i", s_state);
+    // SerialPrintfln("tp_released, state is: {}", s_state);
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void tp_long_released(uint16_t x, uint16_t y){

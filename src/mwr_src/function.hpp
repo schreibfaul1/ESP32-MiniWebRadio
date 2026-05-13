@@ -215,32 +215,32 @@ bool get_esp_items(uint8_t* s_resetReason, bool* s_f_FFatFound) {
     uint8_t      avMajor = ESP_ARDUINO_VERSION_MAJOR;
     uint8_t      avMinor = ESP_ARDUINO_VERSION_MINOR;
     uint8_t      avPatch = ESP_ARDUINO_VERSION_PATCH;
-    SerialPrintfln("ESP32 Chip: %s", chipModel.c_get());
-    SerialPrintfln("Arduino Version: %d.%d.%d", avMajor, avMinor, avPatch);
+    SerialPrintfln("ESP32 Chip: {}", chipModel.c_get());
+    SerialPrintfln("Arduino Version: {}.{}.{}", avMajor, avMinor, avPatch);
     uint8_t idfMajor = ESP_IDF_VERSION_MAJOR;
     uint8_t idfMinor = ESP_IDF_VERSION_MINOR;
     uint8_t idfPatch = ESP_IDF_VERSION_PATCH;
-    SerialPrintfln("ESP-IDF Version: %d.%d.%d", idfMajor, idfMinor, idfPatch);
-    SerialPrintfln("ARDUINO_LOOP_STACK_SIZE %d words (32 bit)", CONFIG_ARDUINO_LOOP_STACK_SIZE);
-    SerialPrintfln("FLASH size %lu bytes, speed %lu MHz", (long unsigned)ESP.getFlashChipSize(), (long unsigned)ESP.getFlashChipSpeed() / 1000000);
-    SerialPrintfln("CPU speed %lu MHz", (long unsigned)ESP.getCpuFreqMHz());
-    SerialPrintfln("SDMMC speed %d MHz", SDMMC_FREQUENCY / 1000000);
-    SerialPrintfln("TFT speed %d MHz", TFT_FREQUENCY / 1000000);
+    SerialPrintfln("ESP-IDF Version: {}.{}.{}", idfMajor, idfMinor, idfPatch);
+    SerialPrintfln("ARDUINO_LOOP_STACK_SIZE {} words (32 bit)", CONFIG_ARDUINO_LOOP_STACK_SIZE);
+    SerialPrintfln("FLASH size {} bytes, speed {} MHz", (long unsigned)ESP.getFlashChipSize(), (long unsigned)ESP.getFlashChipSpeed() / 1000000);
+    SerialPrintfln("CPU speed {} MHz", (long unsigned)ESP.getCpuFreqMHz());
+    SerialPrintfln("SDMMC speed {} MHz", SDMMC_FREQUENCY / 1000000);
+    SerialPrintfln("TFT speed {} MHz", TFT_FREQUENCY / 1000000);
 
     if (!psramInit()) {
         SerialPrintfln(ANSI_ESC_RED "PSRAM not found! MiniWebRadio doesn't work properly without PSRAM!" ANSI_ESC_WHITE);
     } else {
-        SerialPrintfln("PSRAM total size: %lu bytes", (long unsigned)ESP.getPsramSize());
+        SerialPrintfln("PSRAM total size: {} bytes", (long unsigned)ESP.getPsramSize());
     }
     if (ESP.getFlashChipSize() > 80000000) {
         if (!FFat.begin()) {
             if (!FFat.format()) SerialPrintfln("FFat Mount Failed\n");
         } else {
-            SerialPrintfln("FFat total space: %d bytes, free space: %d bytes", FFat.totalBytes(), FFat.freeBytes());
+            SerialPrintfln("FFat total space: {} bytes, free space: {} bytes", FFat.totalBytes(), FFat.freeBytes());
             *s_f_FFatFound = true;
         }
     }
-    SerialPrintfln("Arduino is pinned to core %d", xPortGetCoreID());
+    SerialPrintfln("Arduino is pinned to core {}", xPortGetCoreID());
     const char* rr = NULL;
     *s_resetReason = (esp_reset_reason_t)esp_reset_reason();
     switch (*s_resetReason) {
@@ -259,13 +259,13 @@ bool get_esp_items(uint8_t* s_resetReason, bool* s_f_FFatFound) {
         case ESP_RST_BROWNOUT: rr = "Brownout reset (software or hardware)"; break;
         case ESP_RST_SDIO: rr = "Reset over SDIO"; break;
     }
-    SerialPrintfln("RESET_REASON: %s", rr);
+    SerialPrintfln("RESET_REASON: {}", rr);
     if (chipModel.equals("ESP32-S3")) {
     } // ...  okay
     else if (chipModel.equals("ESP32-P4")) {
     } // ...  okay
     else {
-        SerialPrintfln(ANSI_ESC_RED "MiniWebRadio does not work with %s", chipModel.c_get());
+        SerialPrintfln(ANSI_ESC_RED "MiniWebRadio does not work with {}", chipModel.c_get());
         return false;
     }
     SerialPrintfln("");
@@ -1063,12 +1063,12 @@ class SD_content {
         m_files.clear();
         if (m_masterFile) m_masterFile.close();
         if (!SD_MMC.exists(path)) {
-            SerialPrintfln(ANSI_ESC_RED "SD_MMC/%s not exist", path);
+            SerialPrintfln(ANSI_ESC_RED "SD_MMC/{} not exist", path);
             return false;
         }
         m_masterFile = SD_MMC.open(path);
         if (!m_masterFile.isDirectory()) {
-            SerialPrintfln(ANSI_ESC_RED "SD_MMC/%s is not a directory", path);
+            SerialPrintfln(ANSI_ESC_RED "SD_MMC/{} is not a directory", path);
             m_masterFile.close();
             return false;
         }
@@ -1945,7 +1945,7 @@ void wavWriterTask(void*) {
             recorder.running = true;
             rec_buffer.clear();
             writeBuffer.clear();
-            SerialPrintfln("recorder: .  " ANSI_ESC_YELLOW "Recording started: " ANSI_ESC_CYAN "%s" ANSI_ESC_RESET, filename);
+            SerialPrintfln("recorder: .  " ANSI_ESC_YELLOW "Recording started: " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET, filename);
         }
 
         // --- WRITE DATA ---
@@ -2002,7 +2002,7 @@ void wavWriterTask(void*) {
             fileOpen = false;
             writeBufferFill = 0;
             recorder.running = false;
-            SerialPrintfln("recorder: .  " ANSI_ESC_YELLOW "Recording stopped. Total bytes: " ANSI_ESC_CYAN "%u" ANSI_ESC_YELLOW ", Overflows: " ANSI_ESC_CYAN "%u" ANSI_ESC_RESET, recorder.totalBytes,
+            SerialPrintfln("recorder: .  " ANSI_ESC_YELLOW "Recording stopped. Total bytes: " ANSI_ESC_CYAN "{}" ANSI_ESC_YELLOW ", Overflows: " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET, recorder.totalBytes,
                            recorder.overflowCount);
         }
 
