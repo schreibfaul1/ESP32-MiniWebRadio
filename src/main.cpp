@@ -259,11 +259,11 @@ boolean defaultsettings() {
     }
     irb.loadButtonsFromJSON("/ir_buttons.json");
     for (uint i = 0; i < s_settings.numOfIrButtons; i++) {
-        MWR_LOG_DEBUG("0x%04X,  %s", s_settings.irbuttons[i].val, s_settings.irbuttons[i].label);
+        MWR_LOG_DEBUG("0x{:04X},  {}", s_settings.irbuttons[i].val, s_settings.irbuttons[i].label);
         ir.set_irButtons(i, s_settings.irbuttons[i].val);
     }
     ir.set_irAddress(s_settings.irbuttons[42].val);
-    MWR_LOG_DEBUG("0x%04X,  %s", s_settings.irbuttons[42].val, s_settings.irbuttons[42].label);
+    MWR_LOG_DEBUG("0x{:04X},  {}", s_settings.irbuttons[42].val, s_settings.irbuttons[42].label);
 
     if (!SD_MMC.exists("/settings.json")) { // if not found create one
         updateSettings();
@@ -282,7 +282,7 @@ boolean defaultsettings() {
         int16_t pos1 = 0, pos2 = 0, pos3 = 0;
         pos1 = jO.index_of(s, 0);
         if (pos1 < 0) {
-            MWR_LOG_ERROR("index %s not found", s);
+            MWR_LOG_ERROR("index {} not found", s);
             return "0";
         }
         pos2 = jO.index_of(":", pos1) + 1;
@@ -409,7 +409,7 @@ void updateSettings() {
         file.print(jO.get());
         s_settingsHash = simpleHash(jO.c_get());
 
-        MWR_LOG_DEBUG("%s", jO.c_get());
+        MWR_LOG_DEBUG("{}", jO.c_get());
     }
 }
 /*****************************************************************************************************************************************************
@@ -519,7 +519,7 @@ void showLogoAndStationName(bool force) {
     if (force) { old_SN_utf8.reset(); }
 
     if (s_cur_station) {
-        MWR_LOG_DEBUG("showLogoAndStationName: %s", staMgnt.getStationName(s_cur_station));
+        MWR_LOG_DEBUG("showLogoAndStationName: {}", staMgnt.getStationName(s_cur_station));
         SN_utf8 = staMgnt.getStationName(s_cur_station);
         SerialPrintfln("Country: ..  " ANSI_ESC_GREEN "{}" ANSI_ESC_RESET "  ", staMgnt.getStationCountry(s_cur_station));
     } else {
@@ -716,7 +716,7 @@ start:
         goto start;
     }
 
-    MWR_LOG_WARN("path %s, items %s", playlist.get_file().c_get(), playlist.get_items().c_get());
+    MWR_LOG_WARN("path {}, items {}", playlist.get_file().c_get(), playlist.get_items().c_get());
 
     return;
 }
@@ -762,15 +762,15 @@ bool connectToWiFi() {
         line[pos] = '\0';                 // terminate ssid
         char* ssid = line.get();          // ssid is the first part
         char* pw = line.get() + pos + 1;  // password is the second part
-        MWR_LOG_DEBUG("ssid %s", ssid);
-        MWR_LOG_DEBUG("pw %s", pw);
+        MWR_LOG_DEBUG("ssid {}", ssid);
+        MWR_LOG_DEBUG("pw {}", pw);
         wifiMulti.addAP(ssid, pw); // SSID and PW in code"
         size_t offset = 0;
         size_t pwlen = strlen(pw);
         size_t dot_len = strlen(emoji.blueCircle); // = 4
         size_t buf_size = pwlen * dot_len + 1;     // +1 für '\0'
         if (buf_size > 512) {
-            MWR_LOG_ERROR("Password display buffer too large: %zu bytes", buf_size);
+            MWR_LOG_ERROR("Password display buffer too large: {} bytes", buf_size);
             continue;
         }
         ps_ptr<char> pass;
@@ -823,7 +823,7 @@ bool connectToWiFi() {
 void setWiFiCredentials(ps_ptr<char> ssid, ps_ptr<char> password) {
     if (ssid.strlen() < 5) return; // min length
 
-    MWR_LOG_ERROR("ssid %s pw %s", ssid.c_get(), password.c_get());
+    MWR_LOG_ERROR("ssid {} pw {}", ssid.c_get(), password.c_get());
 
     ps_ptr<char> line = "";
     ps_ptr<char> credentials;
@@ -957,7 +957,7 @@ void connecttohost(ps_ptr<char> host) {
         return;
     } else { // pipe found     e.g. http://xxx.com/ext|user|pw
         idx2 = host.index_of("|", idx1 + 1);
-        // MWR_LOG_INFO("idx2 = %i", idx2);
+        // MWR_LOG_INFO("idx2 = {}", idx2);
         if (idx2 == -1) { // second pipe not found
             s_f_isWebConnected = audio.connecttohost(host.c_get());
 
@@ -1000,8 +1000,8 @@ void connecttoFS(const char* FS, const char* filename, uint32_t fileStartTime) {
         s_cur_AudioFileNr = s_SD_content.getPosByFileName(s_cur_AudioFileName.c_get());
         if (s_cur_AudioFileNr == -1) s_cur_AudioFileNr = 0;
     }
-    MWR_LOG_DEBUG("Filesize %u", audio.getFileSize());
-    MWR_LOG_DEBUG("FilePos %u", audio.getAudioFilePosition());
+    MWR_LOG_DEBUG("Filesize {}", audio.getFileSize());
+    MWR_LOG_DEBUG("FilePos {}", audio.getAudioFilePosition());
 }
 void stopSong() {
     audio.stopSong();
@@ -1212,11 +1212,11 @@ bool detect_i2_c_devices(TwoWire* twi, int8_t sda, int8_t scl, i2c_items_s* i2c_
             if (addr == 0x18 || addr == 0x19) {
                 i2c_items->es8311_found = true;
                 i2c_items->es8311_addr = addr;
-                if (log) MWR_LOG_WARN("es8311 found at 0x%X", addr);
+                if (log) MWR_LOG_WARN("es8311 found at 0x{X}", addr);
             } else if (addr == 0x14 || addr == 0x5D) {
                 i2c_items->gt911_found = true;
                 i2c_items->gt911_addr = addr;
-                if (log) MWR_LOG_WARN("gt911 found at 0x%X", addr);
+                if (log) MWR_LOG_WARN("gt911 found at 0x{X}", addr);
                 //-- BH1750 -------------------------------------------------------------------------------------------------------------------------------
             } else if (addr == 0x23 || addr == 0x5C) {
                 i2c_items->bh1750_found = true;
@@ -1225,13 +1225,13 @@ bool detect_i2_c_devices(TwoWire* twi, int8_t sda, int8_t scl, i2c_items_s* i2c_
             } else if (addr == 0x38) {
                 i2c_items->ft6x36u_found = true;
                 i2c_items->ft6x36u_addr = addr;
-                if (log) MWR_LOG_WARN("ft6x36u found at 0x%X", addr);
+                if (log) MWR_LOG_WARN("ft6x36u found at 0x{X}", addr);
             } else if (addr == 0x40) {
                 i2c_items->es7210_found = true;
                 i2c_items->es7210_addr = addr;
-                if (log) MWR_LOG_WARN("es7210 found at 0x%X", addr);
+                if (log) MWR_LOG_WARN("es7210 found at 0x{X}", addr);
             } else {
-                MWR_LOG_WARN("unknown i2c device at 0x%X found", addr);
+                MWR_LOG_WARN("unknown i2c device at 0x{X} found", addr);
             }
         }
     }
@@ -1332,7 +1332,7 @@ ps_ptr<char> scaleImage(ps_ptr<char> path) {
     if (path.ends_with("gif")) ok = true;
     if (path.ends_with("png")) ok = true;
     if (path.starts_with("/png")) ok = false; // is web button
-    MWR_LOG_DEBUG("path %s", path.c_get());
+    MWR_LOG_DEBUG("path {}", path.c_get());
     if (!ok) return path;
 
     int idx = path.index_of('/', 1);
@@ -1340,14 +1340,14 @@ ps_ptr<char> scaleImage(ps_ptr<char> path) {
     ps_ptr<char> tfts = displayConfig.tftSize;
     tfts += "/";
     path.insert(tfts.c_get(), idx + 1); // "/logo/0N 90s.jpg" --> "/logo/s/0N 90s.jpg"
-    MWR_LOG_DEBUG("path %s", path.c_get());
+    MWR_LOG_DEBUG("path {}", path.c_get());
     return path;
 }
 
 void setVolume(uint8_t vol) {
     static int16_t oldVol = -1;
     if (vol == oldVol) return;
-    MWR_LOG_DEBUG("volume old: %i. new: %i", oldVol, vol);
+    MWR_LOG_DEBUG("volume old: {}. new: {}", oldVol, vol);
     s_volume.cur_volume = vol;
     oldVol = vol;
     dispHeader.updateVolume(s_volume.cur_volume);
@@ -1636,7 +1636,7 @@ boolean copySDtoFFat(const char* path) {
         len += r;
         if (r == 0) break;
     }
-    MWR_LOG_DEBUG("file length %u, written %u", file1.size(), len);
+    MWR_LOG_DEBUG("file length {}, written {}", file1.size(), len);
     if (file1.size() == len) return true;
     return false;
 }
@@ -1699,7 +1699,7 @@ void setTimeCounter(uint8_t sec) {
 // clang-format off
 /*🟢🟡🔴*/
 void changeState(int8_t state, int8_t subState) {
-    MWR_LOG_DEBUG("state %i, s_state %i, subState %i, s_subState_radio %i, s_subState_player %i", state, s_state, subState, s_subState_radio, s_subState_player);
+    MWR_LOG_DEBUG("state {}, s_state {}, subState {}, s_subState_radio {}, s_subState_player {}", state, s_state, subState, s_subState_radio, s_subState_player);
     bool newState = false;
     bool newSubState = false;
     disableAllObjects();
@@ -2149,7 +2149,7 @@ void loop() {
         s_totalRuntime++;
         // for(int i = 0; i< 3; i++){
         //     uint8_t* sa = audio.getSpectrum();
-        //     MWR_LOG_INFO("%i, %i, %i", sa[0], sa[1], sa[2]);
+        //     MWR_LOG_INFO("{}, {}, {}", sa[0], sa[1], sa[2]);
         // }
         uint16_t minuteOfTheDay = rtc.getMinuteOfTheDay();
         uint8_t  weekDay = rtc.getweekday();
@@ -2339,7 +2339,7 @@ void loop() {
             //    uint32_t fs = audioGetFileSize();
             //    uint32_t br = audioGetBitRate();
             //    if(br) t = (fs * 8)/ br;
-            //    MWR_LOG_DEBUG("Br %d, Dur %ds", br, t);
+            //    MWR_LOG_DEBUG("Br {}, Dur {}s", br, t);
         }
         //--------------------------------------------- BT EMITTER ----------------------------------------------------------------------------------
         if (s_bt_emitter.found) {
@@ -2438,7 +2438,7 @@ void loop() {
                                 "T U V W K J Q p O P Q R S T U V W K J Q";
             if (r[2] == '8') s_streamTitle = "A B C D E F G H I K L J M p O P Q R S T U V W A B C D E F G H I K L J M p O P Q R S T U V W K J Q p O P Q R S T U V W K J Q";
             if (r[2] == '9') s_streamTitle = "A B C D E F G H I K L J M p O P Q R S T U V W K J Q p O P Q R S T U V W K J Q";
-            MWR_LOG_INFO("st: %s", s_streamTitle.c_get());
+            MWR_LOG_INFO("st: {}", s_streamTitle.c_get());
             s_f_newStreamTitle = true;
         }
         if (r.startsWith("ais")) { // openAIspeech
@@ -2451,23 +2451,23 @@ void loop() {
         }
         if (r.startsWith("stoff")) { // setTimeOffset
             int32_t t = r.substring(3, r.length() - 1).toInt();
-            MWR_LOG_INFO("setTimeOffset %i", t);
+            MWR_LOG_INFO("setTimeOffset {}", t);
             audio.setTimeOffset(t);
         }
 
         if (r.startsWith("sapt")) { // setAudioPlayTime
             uint32_t t = r.substring(4, r.length() - 1).toInt();
-            MWR_LOG_INFO("setAudioPlayTime %u", t);
+            MWR_LOG_INFO("setAudioPlayTime {}", t);
             audio.setAudioPlayTime(t);
         }
 
         if (r.startsWith("gafp")) { // getAudioFilePosition
-            MWR_LOG_INFO("getAudioFilePosition %u", audio.getAudioFilePosition());
+            MWR_LOG_INFO("getAudioFilePosition {}", audio.getAudioFilePosition());
         }
 
         if (r.startsWith("safp")) { // setAudioFilePosition
             uint32_t t = r.substring(4, r.length() - 1).toInt();
-            MWR_LOG_INFO("setAudioFilePosition %u", t);
+            MWR_LOG_INFO("setAudioFilePosition {}", t);
             audio.setAudioFilePosition(t);
         }
 
@@ -2499,14 +2499,14 @@ void loop() {
             if (f_o48)
                 MWR_LOG_INFO("output 48KHz");
             else
-                MWR_LOG_INFO("normal output %u Hz", audio.getSampleRate());
+                MWR_LOG_INFO("normal output {} Hz", audio.getSampleRate());
         }
         if (r.startsWith("btp")) { // bluetooth RX/TX protocol
             bt_emitter.list_protokol();
         }
         if (r.startsWith("btstr")) { // bluetooth string, send to bt emitter e.g. btstr:AT+
             bt_emitter.userCommand(r.substring(6, r.length() - 1).c_str());
-            MWR_LOG_INFO("btstr: %s", r.substring(6, r.length() - 1).c_str());
+            MWR_LOG_INFO("btstr: {}", r.substring(6, r.length() - 1).c_str());
         }
         if (r.startsWith("tsp")) { s_f_timeSpeech = true; }
         if (r.startsWith("pwd")) { // set password for WiFi
@@ -2519,17 +2519,17 @@ void loop() {
         static uint32_t time = 0;
         if (r.startsWith("stops")) { // stop song
             time = audio.stopSong();
-            MWR_LOG_INFO("file %s stopped at time %u", s_cur_AudioFileName.c_get(), time);
+            MWR_LOG_INFO("file {} stopped at time {}", s_cur_AudioFileName.c_get(), time);
         }
         if (r.startsWith("starts")) { // start song
             ps_ptr<char> path = "/audiofiles/" + s_cur_AudioFileName;
             bool         ret = audio.connecttoFS(SD_MMC, path.c_get(), time);
-            MWR_LOG_INFO("file %s started at time %u, ret %i", s_cur_AudioFileName.c_get(), time, ret);
+            MWR_LOG_INFO("file {} started at time {}, ret {}", s_cur_AudioFileName.c_get(), time, ret);
         }
 
         if (r.startsWith("gbr")) { // get bitrate
             uint32_t br = audio.getBitRate();
-            MWR_LOG_INFO("bitrate: %u", br);
+            MWR_LOG_INFO("bitrate: {}", br);
         }
         if (r.startsWith("ibs")) { // inbuff status
             audio.inBufferStatus();
@@ -2698,7 +2698,7 @@ void my_audio_info(Audio::msg_t m) {
 void on_BH1750(int32_t ambVal) { //--AMBIENT LIGHT SENSOR BH1750--
     int16_t bh1750Value = 0;
     bh1750Value = map_l(ambVal, 0, 1600, displayConfig.brightnessMin, displayConfig.brightnessMax);
-    MWR_LOG_DEBUG("ambVal %i, bh1750Value %i, s_brightness %i", ambVal, bh1750Value, s_brightness);
+    MWR_LOG_DEBUG("ambVal {}, bh1750Value {}, s_brightness {}", ambVal, bh1750Value, s_brightness);
     if (TFT_CONTROLLER == 8) bh1750Value = 255 - bh1750Value; // invert brightness
     setTFTbrightness(max(bh1750Value, s_brightness));
 }
@@ -3325,7 +3325,7 @@ void ir_short_key(int8_t key) {
             prevStation();
             break;
         default: //  ---------------------------------------------------------------------------------------------------------------------------------
-            MWR_LOG_WARN("unknown IR code: %i", key);
+            MWR_LOG_WARN("unknown IR code: {}", key);
             break;
     }
 }
@@ -3369,7 +3369,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
                                         s_volume.ringVolume = map_l(s_volume.ringVolume, 0, s_volume.volumeSteps, 0, param.to_uint32()); webSrv.send("ringVolume=", int2str(s_volume.ringVolume));
                                         s_volume.volumeAfterAlarm = map_l(s_volume.volumeAfterAlarm, 0, s_volume.volumeSteps, 0, param.to_uint32()); webSrv.send("volAfterAlarm=", int2str(s_volume.volumeAfterAlarm));
                                         s_volume.volumeSteps = param.to_uint32(); webSrv.send("volumeSteps=", param.c_get()); audio.setVolumeSteps(s_volume.volumeSteps);
-                                        MWR_LOG_DEBUG("s_volumeSteps  %i", s_volume.volumeSteps);
+                                        MWR_LOG_DEBUG("s_volumeSteps  {}", s_volume.volumeSteps);
                                         sdr_CL_volume.setMinMaxVal(0, s_volume.volumeSteps);
                                         sdr_DL_volume.setMinMaxVal(0, s_volume.volumeSteps);
                                         sdr_PL_volume.setMinMaxVal(0, s_volume.volumeSteps);
@@ -3471,7 +3471,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
 
     CMD_EQUALS("get_timeSpeechLang"){   webSrv.send("get_timeSpeechLang=", s_timeSpeechLang); SerialPrintfln("Timespeech   " ANSI_ESC_YELLOW "language is " ANSI_ESC_BLUE "{}" ANSI_ESC_RESET "  ", s_timeSpeechLang.c_get()); return;}
 
-    CMD_EQUALS("set_timeSpeechLang"){   if(param.strlen() > 2){MWR_LOG_ERROR("set_timeSpeechLang too long %s", param.c_get()); return;}
+    CMD_EQUALS("set_timeSpeechLang"){   if(param.strlen() > 2){MWR_LOG_ERROR("set_timeSpeechLang too long {}", param.c_get()); return;}
                                         s_timeSpeechLang = param;
                                         SerialPrintfln("Timespeech   " ANSI_ESC_YELLOW "language is " ANSI_ESC_BLUE "{}" ANSI_ESC_RESET "  ", param.c_get());
                                         return;}
@@ -3577,7 +3577,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
 // clang-format off
 
 void WEBSRV_onRequest(const char* cmd,  const char* param, const char* arg, const char* contentType, uint32_t contentLength){
-    MWR_LOG_DEBUG("cmd %s, param %s, arg %s, ct %s, cl %u", cmd, param, arg, contentType, contentLength);
+    MWR_LOG_DEBUG("cmd {}, param {}, arg {}, ct {}, cl {}", cmd, param, arg, contentType, contentLength);
     if(strcmp(cmd, "SD_Upload") == 0) {savefile(param, contentLength, contentType); // PC --> SD
                                        if(strcmp(param, "/stations.json") == 0) staMgnt.updateStationsList();
                                        return;}
@@ -3908,7 +3908,7 @@ void graphicObjects_OnChange(ps_ptr<char> name, int32_t val) {
     if (name.equals("pgb_PL_progress")) { goto exit; }
     if (name.equals("pgb_DL_progress")) { goto exit; }
 
-    MWR_LOG_WARN("unused event: graphicObject %s was changed, val %i", name.c_get(), val);
+    MWR_LOG_WARN("unused event: graphicObject {} was changed, val {}", name.c_get(), val);
 exit:
     return;
 }
@@ -4058,7 +4058,7 @@ void graphicObjects_OnClick(ps_ptr<char> name, uint8_t val) { // val = 0 --> is 
     if (s_state == WIFI_SETTINGS) {
         s_timestamp = millis() + 4000; //  every click
         if (val && name.equals("key_WI_input")) {
-            MWR_LOG_DEBUG("val %i", val);
+            MWR_LOG_DEBUG("val {}", val);
             if (val == 13) {
                 changeState(RADIO, 0);
                 goto exit;
@@ -4071,7 +4071,7 @@ void graphicObjects_OnClick(ps_ptr<char> name, uint8_t val) { // val = 0 --> is 
         if (val && name.equals("wifiSettings_selectbox_ssid")) { goto exit; }
         if (val && name.equals("wifiSettings_keyBoard"))       { goto exit; }
     }
-    MWR_LOG_WARN("unused event: graphicObject %s was clicked", name.c_get());
+    MWR_LOG_WARN("unused event: graphicObject {} was clicked", name.c_get());
 exit:
     return;
 }
@@ -4172,7 +4172,7 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
                                                     goto exit;
                                                 }
                                                 else {
-                                                    MWR_LOG_WARN("unknown val: %i", ra.val1);
+                                                    MWR_LOG_WARN("unknown val: {}", ra.val1);
                                                 }
                                             }
     }
@@ -4243,7 +4243,7 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
                                               s_f_esp_restart = true;
                                               goto exit; }
     }
-    MWR_LOG_WARN("unused event: graphicObject %s was released", name.c_get());
+    MWR_LOG_WARN("unused event: graphicObject {} was released", name.c_get());
 exit:
     s_f_ok_from_ir = false;
     return;

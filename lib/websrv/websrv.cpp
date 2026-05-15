@@ -475,7 +475,7 @@ bool WebSrv::uploadfile(fs::FS& fs, ps_ptr<char> path, uint32_t contentLength, p
 
     file = fs.open(path.c_get(), FILE_WRITE);
     if (!file) {
-        WS_LOG_ERROR("cannot open file %s for writing", path.c_get());
+        WS_LOG_ERROR("cannot open file {} for writing", path.c_get());
         return false;
     }
 
@@ -589,7 +589,7 @@ void WebSrv::handle_upload_file() {
     transBuff.alloc(bytes_per_transaction + m_upload_items.max_endBoundary_length);
 
     while (true) {
-        //    WS_LOG_INFO("bytes_left %i", m_upload_items.bytes_left);
+        //    WS_LOG_INFO("bytes_left {}", m_upload_items.bytes_left);
         if ((t + 2000) < millis()) {
             WS_LOG_ERROR("timeout while file upload");
             m_handle_upload = false;
@@ -608,7 +608,7 @@ void WebSrv::handle_upload_file() {
                 } else { // remove endBoundary
                     m_upload_items.bytes_left -= (bytesInTransBuf - idx);
                     bytesInTransBuf = idx;
-                    WS_LOG_DEBUG("endBoundary found at %i, bytes_left %i, bytesInTransBuf %i", idx, m_upload_items.bytes_left, bytesInTransBuf);
+                    WS_LOG_DEBUG("endBoundary found at {}, bytes_left {}, bytesInTransBuf %i", idx, m_upload_items.bytes_left, bytesInTransBuf);
                 }
 
             } else {
@@ -616,9 +616,9 @@ void WebSrv::handle_upload_file() {
             }
             if (bytesInTransBuf > 0) {
                 bytesWritten = m_upload_items.uploadfile.write((uint8_t*)transBuff.get(), bytesInTransBuf);
-                if (bytesWritten != bytesInTransBuf) { WS_LOG_ERROR("write error, bytes %i, written %i", bytesInTransBuf, bytesWritten); }
+                if (bytesWritten != bytesInTransBuf) { WS_LOG_ERROR("write error, bytes {}, written {}", bytesInTransBuf, bytesWritten); }
                 m_upload_items.bytes_left -= bytesWritten;
-                WS_LOG_DEBUG("bytes_left %i, bytesWritten %i", m_upload_items.bytes_left, bytesWritten);
+                WS_LOG_DEBUG("bytes_left {}, bytesWritten %i", m_upload_items.bytes_left, bytesWritten);
             }
             break;
         }

@@ -1099,7 +1099,7 @@ class SD_content {
 
     bool isDir(uint16_t idx) {
         if (idx >= m_files.size()) {
-            MWR_LOG_ERROR("idx %u is oor, max = %u", idx, m_files.size() - 1);
+            MWR_LOG_ERROR("idx {} is oor, max = {}", idx, m_files.size() - 1);
             return false;
         }
         if (m_files[idx].fileSize == -1) return true;
@@ -1112,7 +1112,7 @@ class SD_content {
             return "";
         }
         if (m_files.size() < idx + 1) {
-            MWR_LOG_WARN("idx %u is oor, max = %u", idx, m_files.size());
+            MWR_LOG_WARN("idx {} is oor, max = {}", idx, m_files.size());
             return "";
         }
         if (isDir(idx)) return m_files[idx].fileName.get();
@@ -1125,7 +1125,7 @@ class SD_content {
             return "";
         }
         if (m_files.size() < idx + 1) {
-            MWR_LOG_WARN("idx %u is oor, max = %u", idx, m_files.size());
+            MWR_LOG_WARN("idx {} is oor, max = {}", idx, m_files.size());
             return "";
         }
         return m_files[idx].fileName.get();
@@ -1137,7 +1137,7 @@ class SD_content {
             return 0;
         }
         if (m_files.size() < idx + 1) {
-            MWR_LOG_WARN("idx %u is oor, max = %u", idx, m_files.size());
+            MWR_LOG_WARN("idx {} is oor, max = {}", idx, m_files.size());
             return 0;
         }
         return m_files[idx].fileSize;
@@ -1149,7 +1149,7 @@ class SD_content {
             return "";
         }
         if (m_files.size() < idx + 1) {
-            MWR_LOG_WARN("idx %u is oor, max = %u", idx, m_files.size());
+            MWR_LOG_WARN("idx {} is oor, max = {}", idx, m_files.size());
             return "";
         }
         /*
@@ -1173,7 +1173,7 @@ class SD_content {
             return "";
         }
         if (m_files.size() < idx + 1) {
-            MWR_LOG_WARN("idx %u is oor, max = %u", idx, m_files.size());
+            MWR_LOG_WARN("idx {} is oor, max = {}", idx, m_files.size());
             return "";
         }
         /*
@@ -1288,10 +1288,10 @@ class SD_content {
     exit:
         m_lastConnectedFile.clone_from(m_lastConnectedFolder);
         m_lastConnectedFile.append(m_lastConnectedFileName.c_get());
-        MWR_LOG_DEBUG("lastconnectedItem %s", lastconnectedItem);
-        MWR_LOG_DEBUG("lastConnectedFile %s", m_lastConnectedFile.c_get());
-        MWR_LOG_DEBUG("m_lastConnectedFileName %s", m_lastConnectedFileName.c_get());
-        MWR_LOG_DEBUG("m_lastConnectedFolder %s", m_lastConnectedFolder.c_get());
+        MWR_LOG_DEBUG("lastconnectedItem {}", lastconnectedItem);
+        MWR_LOG_DEBUG("lastConnectedFile {}", m_lastConnectedFile.c_get());
+        MWR_LOG_DEBUG("m_lastConnectedFileName {}", m_lastConnectedFileName.c_get());
+        MWR_LOG_DEBUG("m_lastConnectedFolder {}", m_lastConnectedFolder.c_get());
         listFilesInDir(m_lastConnectedFolder.c_get(), true, false);
         sort();
     }
@@ -1337,11 +1337,11 @@ class SD_content {
                 m_JSONstr.appendf("{}", fileSize.c_get());
             }
             m_JSONstr.append("},");
-            MWR_LOG_DEBUG("%s", fn);
+            MWR_LOG_DEBUG("{}", fn);
         }
         int lastComma = m_JSONstr.last_index_of(',');
         m_JSONstr[lastComma] = ']'; // replace comma by square bracket close
-        MWR_LOG_DEBUG("%s", m_JSONstr.c_get());
+        MWR_LOG_DEBUG("{}", m_JSONstr.c_get());
         return m_JSONstr.c_get();
     }
 
@@ -1569,17 +1569,17 @@ class Playlist {
         reset();
         if (!path.valid()) return false;
         if (!path.ends_with(".m3u")) {
-            MWR_LOG_ERROR("wrong playlist path %s", path.c_get());
+            MWR_LOG_ERROR("wrong playlist path {}", path.c_get());
             return false;
         }
         if (!SD_MMC.exists(path.get())) {
-            MWR_LOG_ERROR("Playlistfile %s not found", path.c_get());
+            MWR_LOG_ERROR("Playlistfile {} not found", path.c_get());
             reset();
             return false;
         }
         m_playlist_file = SD_MMC.open(path.get());
         if (m_playlist_file.size() > 1048576) {
-            MWR_LOG_ERROR("Playlist too big, size is %u", m_playlist_file.size());
+            MWR_LOG_ERROR("Playlist too big, size is {}", m_playlist_file.size());
             reset();
             return false;
         }
@@ -1637,7 +1637,7 @@ class Playlist {
                             t = itemsBuff.substr(0, idx);
                             int d = t.to_uint32();
                             if (d > 0) { // has duration
-                                MWR_LOG_WARN("duration %is", d);
+                                MWR_LOG_WARN("duration {}s", d);
                                 itemsBuff = itemsBuff.substr(idx + 1);
                             }
                             itemsBuff.appendf(" " ANSI_ESC_YELLOW " {}" ANSI_ESC_RESET, t.c_get());
@@ -1664,8 +1664,8 @@ class Playlist {
         m_playlist_file.close();
 
         // for (int i = 0; i < m_content_file.size(); i++) {
-        //     MWR_LOG_WARN("%i, %s", i, m_content_file[i].c_get());
-        //     MWR_LOG_INFO("%i, %s", i, m_content_items[i].c_get());
+        //     MWR_LOG_WARN("{}, {}", i, m_content_file[i].c_get());
+        //     MWR_LOG_INFO("{}, {}", i, m_content_items[i].c_get());
         // }
         return true;
     }
@@ -1673,12 +1673,12 @@ class Playlist {
     bool create_playlist_from_SD_folder(ps_ptr<char> path) { // all files within a SD folder
         reset();
         if (!SD_MMC.exists(path.get())) {
-            MWR_LOG_ERROR("SD_MMC/%s not exist", path.c_get());
+            MWR_LOG_ERROR("SD_MMC/{} not exist", path.c_get());
             return false;
         }
         File folder = SD_MMC.open(path.get());
         if (!folder.isDirectory()) {
-            MWR_LOG_ERROR("SD_MMC%s is not a directory", path.c_get());
+            MWR_LOG_ERROR("SD_MMC{} is not a directory", path.c_get());
             folder.close();
             return false;
         }
@@ -1701,8 +1701,8 @@ class Playlist {
         folder.close();
 
         // for (int i = 0; i < m_content_file.size(); i++) {
-        //     MWR_LOG_WARN("%i, %s", i, m_content_file[i].c_get());  // path
-        //     MWR_LOG_INFO("%i, %s", i, m_content_items[i].c_get()); // name
+        //     MWR_LOG_WARN("{}, {}", i, m_content_file[i].c_get());  // path
+        //     MWR_LOG_INFO("{}, {}", i, m_content_items[i].c_get()); // name
         // }
         return true;
     }
@@ -1720,11 +1720,11 @@ class Playlist {
             itstr += foldercontent->at(i).duration;
             itstr += ",";
             itstr += foldercontent->at(i).title;
-            MWR_LOG_DEBUG("pushing to playlist : %s", itstr.c_get());
+            MWR_LOG_DEBUG("pushing to playlist : {}", itstr.c_get());
             m_content_file.push_back(itstr);
         }
         if (!m_content_file.size()) return false;
-        MWR_LOG_INFO("pls length %u", m_content_file.size());
+        MWR_LOG_INFO("pls length {}", m_content_file.size());
         return true;
     }
 

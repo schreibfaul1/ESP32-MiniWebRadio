@@ -34,12 +34,12 @@ imgSize GetImageSize(ps_ptr<char> picturePath) {
     imgSize img = {0};
     auto    scaledPicPath = scaleImage(picturePath);
     if (!SD_MMC.exists(scaledPicPath.c_get())) { /* log_w("file %s not exists, objName: %s", scaledPicPath, m_name)*/
-        MWR_LOG_ERROR("cannot open file '%s'", scaledPicPath.c_get());
+        MWR_LOG_ERROR("cannot open file '{}'", scaledPicPath.c_get());
         return img;
     }
     File file = SD_MMC.open(scaledPicPath.c_get(), "r", false);
     if (file.size() < 24) {
-        MWR_LOG_WARN("file '%s' is too small", scaledPicPath.c_get());
+        MWR_LOG_WARN("file '{}' is too small", scaledPicPath.c_get());
         file.close();
         return img;
     }
@@ -50,7 +50,7 @@ imgSize GetImageSize(ps_ptr<char> picturePath) {
         while (true) {
             c1 = file.read();
             if (c1 == -1) {
-                MWR_LOG_WARN("sof marker in %s not found", scaledPicPath.c_get());
+                MWR_LOG_WARN("sof marker in {} not found", scaledPicPath.c_get());
                 file.close();
                 return img;
             } // end of file reached
@@ -99,7 +99,7 @@ imgSize GetImageSize(ps_ptr<char> picturePath) {
         img.h += file.read();                                     // pos 23
         return img;
     }
-    MWR_LOG_ERROR("unknown picture format %s", picturePath.c_get());
+    MWR_LOG_ERROR("unknown picture format {}", picturePath.c_get());
     return img;
 }
 
@@ -323,7 +323,7 @@ class slider : public RegisterTable {
     int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max) {
         const int32_t run = in_max - in_min;
         if (run == 0) {
-            MWR_LOG_ERROR("map(): Invalid input range, %li == %li (min == max) in %s", in_min, in_max, m_name.c_get());
+            MWR_LOG_ERROR("map(): Invalid input range, {} == {} (min == max) in {}", in_min, in_max, m_name.c_get());
             return -1;
         }
         const int32_t rise = out_max - out_min;
@@ -503,7 +503,7 @@ class progressbar : public RegisterTable {
     int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max) {
         const int32_t run = in_max - in_min;
         if (run == 0) {
-            MWR_LOG_WARN("map(): Invalid input range, %li == %li (min == max) in %s", in_min, in_max, m_name.c_get());
+            MWR_LOG_WARN("map(): Invalid input range, {} == {} (min == max) in {}", in_min, in_max, m_name.c_get());
             return -1;
         }
         const int32_t rise = out_max - out_min;
@@ -1363,13 +1363,13 @@ class selectbox : public RegisterTable {
         m_txt_select->released();
         if (m_txt_btn_down->released())
             if (m_idx < m_selContent.size() - 1) {
-                m_idx++; /* MWR_LOG_DEBUG("btn_down %i/%i", m_idx, m_selContent.size()); */
+                m_idx++; /* MWR_LOG_DEBUG("btn_down {}/{}", m_idx, m_selContent.size()); */
                 writeText(m_idx);
                 ret = true;
             }
         if (m_txt_btn_up->released())
             if (m_idx > 0) {
-                m_idx--; /* MWR_LOG_DEBUG("btn_up %i/%i",   m_idx, m_selContent.size()); */
+                m_idx--; /* MWR_LOG_DEBUG("btn_up {}/{}",   m_idx, m_selContent.size()); */
                 writeText(m_idx);
                 ret = true;
             }
@@ -1382,7 +1382,7 @@ class selectbox : public RegisterTable {
         if (m_selContent.size() > 0) {
             for (uint8_t i = 0; i < m_selContent.size(); i++) {
                 if (txt == m_selContent[i]) {
-                    //    MWR_LOG_WARN("addText: %s already in list", txt);
+                    //    MWR_LOG_WARN("addText: {} already in list", txt);
                     return;
                 }
             }
@@ -1397,7 +1397,7 @@ class selectbox : public RegisterTable {
         } else
             txt = m_selContent[idx];
         if (m_enabled) {
-            MWR_LOG_DEBUG("writeText: %s", txt.c_get());
+            MWR_LOG_DEBUG("writeText: {}", txt.c_get());
             m_txt_select->setText(txt, m_narrow, m_noWrap);
             m_txt_select->setTransparency(m_backgroundTransparency, m_saveBackground);
             m_txt_select->show();
@@ -1876,7 +1876,7 @@ class wifiSettings : public RegisterTable {
             m_winKeybrd.pt = 1;
             m_winKeybrd.pb = 1; // keyboard
         } else {
-            MWR_LOG_WARN("unsupported resolution width %i px", w);
+            MWR_LOG_WARN("unsupported resolution width {} px", w);
             return;
         }
 
@@ -1989,7 +1989,7 @@ class wifiSettings : public RegisterTable {
         if (m_sel_ssid->positionXY(x, y)) { ; }
         if (m_in_password->positionXY(x, y)) { ; }
         if (m_keyboard->positionXY(x, y)) {
-            MWR_LOG_INFO("key pressed %i", m_keyboard->getVal());
+            MWR_LOG_INFO("key pressed {}", m_keyboard->getVal());
             changePassword(m_keyboard->getVal(), m_credentials_idx);
             m_in_password->setText(m_credentials[m_credentials_idx].password.c_get());
             m_in_password->setTransparency(m_backgroundTransparency, m_saveBackground);
@@ -2684,7 +2684,7 @@ class numbersBox : public RegisterTable { // range 000...999
             MWR_LOG_ERROR("cannot get digit size");
             return;
         }
-        MWR_LOG_DEBUG("digits w = %i, h = %i", img.w, img.h);
+        MWR_LOG_DEBUG("digits w = {}, h = {}", img.w, img.h);
         m_segmWidth = img.w;
         m_segmentHigh = img.h;
 
@@ -2823,7 +2823,7 @@ class offTimerBox : public RegisterTable { // range 000...999
             MWR_LOG_ERROR("cannot get digit size");
             return;
         }
-        MWR_LOG_DEBUG("digits w = %i, h = %i", img.w, img.h);
+        MWR_LOG_DEBUG("digits w = {}, h = {}", img.w, img.h);
         m_digitsWidth = img.w;
         m_digitsHigh = img.h;
 
@@ -2832,7 +2832,7 @@ class offTimerBox : public RegisterTable { // range 000...999
             MWR_LOG_ERROR("cannot get colon size");
             return;
         }
-        MWR_LOG_DEBUG("colon w = %i, h = %i", img.w, img.h);
+        MWR_LOG_DEBUG("colon w = {}, h = {}", img.w, img.h);
         m_colonWidth = img.w;
 
         m_box_w = 3 * m_digitsWidth + m_colonWidth;
@@ -2843,7 +2843,7 @@ class offTimerBox : public RegisterTable { // range 000...999
         m_digitsXpos[1] = m_digitsXpos[0] + m_digitsWidth;
         m_digitsXpos[2] = m_digitsXpos[1] + m_colonWidth;
         m_digitsXpos[3] = m_digitsXpos[2] + m_digitsWidth;
-        MWR_LOG_DEBUG("box w=%i, h=%i, x=%i, y=%i, x0=%i, x1=%i, x2=%i, x3=%i", m_box_w, m_box_h, m_box_x, m_box_y, m_digitsXpos[0], m_digitsXpos[1], m_digitsXpos[2], m_digitsXpos[3]);
+        MWR_LOG_DEBUG("box w={}, h={}, x={}, y={}, x0={}, x1={}, x2={}, x3={}", m_box_w, m_box_h, m_box_x, m_box_y, m_digitsXpos[0], m_digitsXpos[1], m_digitsXpos[2], m_digitsXpos[3]);
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -3199,7 +3199,7 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
             MWR_LOG_ERROR("cannot get digit size");
             return;
         }
-        MWR_LOG_DEBUG("digits w = %i, h = %i", img.w, img.h);
+        MWR_LOG_DEBUG("digits w = {}, h = {}", img.w, img.h);
         digits_w = img.w;
         digits_h = img.h;
 
@@ -3208,7 +3208,7 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
             MWR_LOG_ERROR("cannot get colon size");
             return;
         }
-        MWR_LOG_DEBUG("colon w = %i, h = %i", img.w, img.h);
+        MWR_LOG_DEBUG("colon w = {}, h = {}", img.w, img.h);
         colon_w = img.w;
         digits_y = (h - digits_h) / 2;
         paddig_l = (w - (4 * digits_w + colon_w)) / 2;
@@ -3433,7 +3433,7 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
             MWR_LOG_ERROR("cannot get digit size");
             return;
         }
-        MWR_LOG_DEBUG("digits w = %i, h = %i", img.w, img.h);
+        MWR_LOG_DEBUG("digits w = {}, h = {}", img.w, img.h);
         digits_w = img.w;
         digits_h = img.h;
 
@@ -3442,7 +3442,7 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
             MWR_LOG_ERROR("cannot get colon size");
             return;
         }
-        MWR_LOG_DEBUG("colon w = %i, h = %i", img.w, img.h);
+        MWR_LOG_DEBUG("colon w = {}, h = {}", img.w, img.h);
         colon_w = img.w;
         digits_y = (h - digits_h) / 2;
         paddig_l = (w - (4 * digits_w + colon_w)) / 2;
@@ -3844,7 +3844,7 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
             MWR_LOG_ERROR("cannot get digit size");
             return;
         }
-        MWR_LOG_DEBUG("digits w = %i, h = %i", img.w, img.h);
+        MWR_LOG_DEBUG("digits w = {}, h = {}", img.w, img.h);
         digits_w = img.w;
         digits_h = img.h;
         img = GetImageSize("/digits/m/cred.jpg"); // get size of colon
@@ -4295,7 +4295,7 @@ class dlnaList : public RegisterTable {
     bool drawItem(int8_t pos, bool selectedLine = false) { // pos 0 is parent, pos 1...9 are itens, selectedLine means released (ok)
 
         if (pos < 0 || pos > 9) {
-            MWR_LOG_WARN("pos oor %i", pos);
+            MWR_LOG_WARN("pos oor {}", pos);
             return false;
         } // guard
         if (*m_dlnaLevel == 0 && pos > m_dlnaServer->size()) { /* log_e("pos too high %i", pos);*/
@@ -4575,7 +4575,7 @@ class dlnaList : public RegisterTable {
         } else {
             maxItems = m_dlnaMaxItems;
         }
-        MWR_LOG_DEBUG("m_itemListPos_last %i, m_displayed_lines %i, maxItems %i, m_currItemNr[*m_dlnaLevel] %i", m_itemListPos_last, m_displayed_lines, maxItems, m_currItemNr[*m_dlnaLevel]);
+        MWR_LOG_DEBUG("m_itemListPos_last {}, m_displayed_lines {}, maxItems {}, m_currItemNr[*m_dlnaLevel] {}", m_itemListPos_last, m_displayed_lines, maxItems, m_currItemNr[*m_dlnaLevel]);
         if (maxItems - 1 <= m_currItemNr[*m_dlnaLevel]) return;
         m_currItemNr[*m_dlnaLevel]++;
         if (m_currItemNr[*m_dlnaLevel] >= m_viewPoint + 9) {
@@ -4850,7 +4850,7 @@ class fileList : public RegisterTable {
                 int secondLastSlash = m_curAudioFolder.last_index_of('/', lastSlash - 1);
                 if (secondLastSlash != -1) m_curAudioFolder[secondLastSlash + 1] = '\0';
             }
-            MWR_LOG_DEBUG("m_curAudioFolder = %s", m_curAudioFolder.c_get());
+            MWR_LOG_DEBUG("m_curAudioFolder = {}", m_curAudioFolder.c_get());
             m_curAudioFileNr = 0;
             m_viewPos = 0;
             s_SD_content.listFilesInDir(m_curAudioFolder.c_get(), true, false);

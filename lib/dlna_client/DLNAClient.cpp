@@ -97,7 +97,7 @@ void DLNA_Client::parseDlnaServer(uint16_t len) {
         }
     }
     if (strcmp(p + idx1, "0.0.0.0") == 0) {
-        DLNA_LOG_ERROR("invalid IP address found %s", p + idx1);
+        DLNA_LOG_ERROR("invalid IP address found {}", p + idx1);
         return;
     }
 
@@ -122,14 +122,14 @@ bool DLNA_Client::srvGet(uint8_t srvNr) {
     ret = m_tcp_client.connect(m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port);
     if (!ret) {
         m_tcp_client.stop();
-        DLNA_LOG_ERROR("The server %s:%d did not answer within %lums", m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port, millis() - t);
+        DLNA_LOG_ERROR("The server {}:{} did not answer within {}ms", m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port, millis() - t);
         return false;
     }
     t = millis() + 250;
     while (true) {
         if (m_tcp_client.connected()) break;
         if (t < millis()) {
-            DLNA_LOG_ERROR("The server %s:%d refuses the connection [%s:%d]", m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port, __FILENAME__, __LINE__);
+            DLNA_LOG_ERROR("The server {}:{} refuses the connection", m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port);
             return false;
         }
     }
@@ -142,7 +142,7 @@ bool DLNA_Client::srvGet(uint8_t srvNr) {
     while (true) {
         if (m_tcp_client.available()) break;
         if (t < millis()) {
-            DLNA_LOG_ERROR("The server %s:%d is not responding after request [%s:%d]", m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port, __FILENAME__, __LINE__);
+            DLNA_LOG_ERROR("The server {}:{} is not responding after request", m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port);
             return false;
         }
     }
@@ -217,11 +217,11 @@ bool DLNA_Client::readHttpHeader() {
             continue;
         }
 
-        DLNA_LOG_DEBUG("%s", rhl.get());
+        DLNA_LOG_DEBUG("{}", rhl.get());
         if (rhl.starts_with_icase("content-length:")) {
             rhl.remove_before(':', false);
             m_contentlength = rhl.to_uint32();
-            DLNA_LOG_DEBUG("content-length: %lu", (long unsigned int)m_contentlength);
+            DLNA_LOG_DEBUG("content-length: {}", (long unsigned int)m_contentlength);
         } else if (rhl.starts_with_icase("content-type:")) { // content-type: text/html; charset=UTF-8
             int idx = indexOf(rhl.get() + 13, ";", 0);
             if (idx > 0) rhl[13 + idx] = '\0';
@@ -230,7 +230,7 @@ bool DLNA_Client::readHttpHeader() {
             else if (indexOf(rhl.get() + 13, "text/html", 0) > 0)
                 ct_seen = true;
             else {
-                DLNA_LOG_ERROR("content type expected: text/xml or text/html, got %s", rhl.get() + 13);
+                DLNA_LOG_ERROR("content type expected: text/xml or text/html, got {}", rhl.get() + 13);
                 goto exit; // wrong content type
             }
         } else if ((rhl.starts_with_icase("transfer-encoding:"))) {
@@ -279,7 +279,7 @@ int32_t DLNA_Client::getChunkSize(uint16_t* readedBytes) {
             m_chunked = false;
             // determine limit from the current data volume + already read bytes
             transportLimit = m_tcp_client.available() + *readedBytes;
-            DLNA_LOG_INFO("No http chunked recognized-switch to transport chunking with limit %u", (unsigned)transportLimit);
+            DLNA_LOG_INFO("No http chunked recognized-switch to transport chunking with limit {}", (unsigned)transportLimit);
             return transportLimit;
         }
     }
@@ -377,7 +377,7 @@ bool DLNA_Client::readContent() {
     buff.replace("&szlig;;", "ß");    // ß
 
     buff.trim();
-    DLNA_LOG_DEBUG("%s", buff.get());
+    DLNA_LOG_DEBUG("{}", buff.get());
 
     m_content.clear(); // Delete all old entries
     m_content = split_lines(buff);
@@ -444,11 +444,11 @@ bool DLNA_Client::getServerItems(uint8_t srvNr) {
         m_dlnaServer[srvNr].controlURL.remove_before('/', false);
     }
     if (strcmp(m_dlnaServer[srvNr].friendlyName.c_get(), "?") == 0) {
-        DLNA_LOG_ERROR("friendlyName %s, [%i]", m_dlnaServer[srvNr].friendlyName.c_get(), srvNr);
+        DLNA_LOG_ERROR("friendlyName {}, [{}]", m_dlnaServer[srvNr].friendlyName.c_get(), srvNr);
         return false;
     }
     if (strcmp(m_dlnaServer[srvNr].controlURL.c_get(), "?") == 0) {
-        DLNA_LOG_ERROR("controlURL %s, [%i]", m_dlnaServer[srvNr].controlURL.c_get(), srvNr);
+        DLNA_LOG_ERROR("controlURL {}, [{}]", m_dlnaServer[srvNr].controlURL.c_get(), srvNr);
         return false;
     }
     return true;
@@ -493,7 +493,7 @@ bool DLNA_Client::browseResult() {
 
     for (int i = 0; i < m_content.size(); i++) {
         m_content[i].trim();
-        DLNA_LOG_DEBUG("%s", m_content[i].get());
+        DLNA_LOG_DEBUG("{}", m_content[i].get());
         m_content[i].trim();
         /*------C O N T A I N E R -------*/
 
@@ -610,7 +610,7 @@ bool DLNA_Client::srvPost(uint8_t srvNr, ps_ptr<char> objectId, const uint16_t s
 
     if (!ret) {
         m_tcp_client.stop();
-        DLNA_LOG_ERROR("The server %s:%d is not responding after %lums", m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port, millis() - t);
+        DLNA_LOG_ERROR("The server {}:{} is not responding after {}ms", m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port, millis() - t);
         return false;
     }
     while (true) {
@@ -618,7 +618,7 @@ bool DLNA_Client::srvPost(uint8_t srvNr, ps_ptr<char> objectId, const uint16_t s
         delay(100);
         cnt++;
         if (cnt == 10) {
-            DLNA_LOG_ERROR("The server %s:%d refuses the connection", m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port);
+            DLNA_LOG_ERROR("The server {}:{} refuses the connection", m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port);
             return false;
         }
     }
@@ -655,7 +655,7 @@ bool DLNA_Client::srvPost(uint8_t srvNr, ps_ptr<char> objectId, const uint16_t s
     chbuff.replace("000", tmp);
     chbuff.append(message.get());
 
-    // DLNA_LOG_DRBUG("%s", chbuff.get());
+    // DLNA_LOG_DRBUG("{}", chbuff.get());
 
     m_tcp_client.print(chbuff.get());
 
@@ -663,7 +663,7 @@ bool DLNA_Client::srvPost(uint8_t srvNr, ps_ptr<char> objectId, const uint16_t s
     while (true) {
         if (m_tcp_client.available()) break;
         if (t < millis()) {
-            DLNA_LOG_DEBUG("The server %s:%d is not responding after request", m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port);
+            DLNA_LOG_DEBUG("The server {}:{} is not responding after request", m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port);
             return false;
         }
     }
@@ -722,7 +722,7 @@ const char* DLNA_Client::stringifyServer() {
     }
     int posLastComma = m_JSONstr.last_index_of(',');
     m_JSONstr[posLastComma] = ']'; // replace comma by square bracket close
-    DLNA_LOG_DEBUG("%s", m_JSONstr.c_get());
+    DLNA_LOG_DEBUG("{}", m_JSONstr.c_get());
     return m_JSONstr.c_get();
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -769,7 +769,7 @@ const char* DLNA_Client::stringifyContent() {
     }
     int posLastComma = m_JSONstr.last_index_of(',');
     m_JSONstr[posLastComma] = ']'; // replace comma by square bracket close
-    DLNA_LOG_DEBUG("%s", m_JSONstr.c_get());
+    DLNA_LOG_DEBUG("{}", m_JSONstr.c_get());
     return m_JSONstr.c_get();
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -800,7 +800,7 @@ void DLNA_Client::loop() {
             if (cnt < m_dlnaServer.size()) {
                 if (fail == 3) {
                     fail = 0;
-                    DLNA_LOG_ERROR("no response from svr [%i]", cnt);
+                    DLNA_LOG_ERROR("no response from svr [{}]", cnt);
                     cnt++;
                     break;
                 }
