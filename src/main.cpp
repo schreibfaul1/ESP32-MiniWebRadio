@@ -796,23 +796,21 @@ bool connectToWiFi() {
     wifiMulti.setStrictMode(false); // Allow opportunistic connections while maintaining known APs in priority
     SerialPrintfln("WiFI_info:   Connecting WiFi...");
 
-    WiFi.mode(WIFI_MODE_STA);
-
+    wifiMulti.run();
     int i = 0;
-    while (!WiFi.isConnected()) {
-        wifiMulti.run();
+    while (WiFi.status() != WL_CONNECTED) {
         vTaskDelay(1000);
         i++;
         if (i > 10) break; // max 20s
     }
-    if (!WiFi.isConnected()) {
+    if (WiFi.status() != WL_CONNECTED)  {
         SerialPrintfln("WiFI_info:   " ANSI_ESC_RED "WiFi credentials are not correct" ANSI_ESC_RESET "  ");
         return false;
     }
-    WiFi.setAutoReconnect(true);
-    if (WIFI_TX_POWER >= 2 && WIFI_TX_POWER <= 21) WiFi.setTxPower((wifi_power_t)(WIFI_TX_POWER * 4));
     SerialPrintfln("WiFI_info:   " ANSI_ESC_GREEN "WiFi connected" ANSI_ESC_RESET "  ");
     vTaskDelay(1000);
+    WiFi.setAutoReconnect(true);
+    if (WIFI_TX_POWER >= 2 && WIFI_TX_POWER <= 21) WiFi.setTxPower((wifi_power_t)(WIFI_TX_POWER * 4));
     s_myIP = WiFi.localIP().toString().c_str();
     SerialPrintfln("WiFI_info:   connected to " ANSI_ESC_CYAN "{}" ANSI_ESC_WHITE ", IP address is " ANSI_ESC_CYAN "{}" ANSI_ESC_WHITE ", Received Signal Strength " ANSI_ESC_CYAN "{}" ANSI_ESC_WHITE
                    " dB" ANSI_ESC_RESET "   ",

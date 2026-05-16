@@ -261,14 +261,15 @@ int log_redirect_handler(const char* format, va_list args) {
     if (len > 0) {
         int idx = log_buffer.index_of("ARDUINO:");
         if (idx > 0) {
-            char c = log_buffer[7];
+            // log_buffer.println();
+            char c = log_buffer[0];
             log_buffer.remove_before(idx, true);
-            log_buffer.insert("    ", 8);
-            if (c == 'E') log_buffer.insert(ANSI_ESC_RED, 10);
-            if (c == 'W') log_buffer.insert(ANSI_ESC_YELLOW, 10);
-            if (c == 'I') log_buffer.insert(ANSI_ESC_GREEN, 10);
-            if (c == 'D') log_buffer.insert(ANSI_ESC_CYAN, 10);
-            if (c == 'V') log_buffer.insert(ANSI_ESC_GREY, 10);
+            log_buffer.insert(" .. ", 8);
+            if (c == 'E') log_buffer.insert(ANSI_ESC_RED, 11);
+            if (c == 'W') log_buffer.insert(ANSI_ESC_YELLOW, 11);
+            if (c == 'I') log_buffer.insert(ANSI_ESC_GREEN, 11);
+            if (c == 'D') log_buffer.insert(ANSI_ESC_CYAN, 11);
+            if (c == 'V') log_buffer.insert(ANSI_ESC_GREY, 11);
             log_buffer.truncate_at(log_buffer.strlen() - 1); // remove '\n'
             SerialPrintfln("{}", log_buffer.c_get());
         } else {
