@@ -965,7 +965,7 @@ class IR_buttons {
                 if (validObject && label != NULL) {
                     m_settings->irbuttons[buttonNr].val = val;
                     m_settings->irbuttons[buttonNr].label = label;
-                    // log_w("buttonNr %i, val %i, label %s", buttonNr, m_settings->irbuttons[buttonNr].val, m_settings->irbuttons[buttonNr].label);
+                    // MWR_LOG_WARN("buttonNr {}, val {}, label {}", buttonNr, m_settings->irbuttons[buttonNr].val, m_settings->irbuttons[buttonNr].label);
                     buttonIndex++;
                 } else {
                     Serial.println("Error: Invalid object, missing buttonNr or label.");
@@ -1005,7 +1005,7 @@ class IR_buttons {
         String jsonString;
         while (file.available()) { jsonString += (char)file.read(); }
         file.close();
-        //    log_w("%s", jsonString.c_str());
+        //    MWR_LOG_WARN("{}", jsonString.c_str());
         // JSON parsen
         if (!parseJSONString(jsonString.c_str())) {
             Serial.println("Failed to parse JSON.");
@@ -1016,8 +1016,8 @@ class IR_buttons {
         while (true) {
             if (m_settings->irbuttons[m_numOfIrButtons].label == NULL) break;
 
-            // if(m_settings->irbuttons[m_numOfIrButtons].val == -1) log_w("IR_buttonNr %02i, value -1,   label %s", m_numOfIrButtons, m_settings->irbuttons[m_numOfIrButtons].label);
-            //  else log_w("IR_buttonNr %02i, value 0x%02X, label %s", m_numOfIrButtons, m_settings->irbuttons[m_numOfIrButtons].val, m_settings->irbuttons[m_numOfIrButtons].label);
+            // if(m_settings->irbuttons[m_numOfIrButtons].val == -1) MWR_LOG_WARN("IR_buttonNr {:02}, value -1,   label {}", m_numOfIrButtons, m_settings->irbuttons[m_numOfIrButtons].label);
+            //  else MWR_LOG_WARN("IR_buttonNr {:02}, value 0x{:02X}, label {}", m_numOfIrButtons, m_settings->irbuttons[m_numOfIrButtons].val, m_settings->irbuttons[m_numOfIrButtons].label);
             m_numOfIrButtons++;
         }
         m_settings->numOfIrButtons = m_numOfIrButtons;
@@ -1279,7 +1279,7 @@ class SD_content {
             m_lastConnectedFileName.copy_from(lastconnectedItem + posLast + 1);
         }
 
-        // log_e("posFirst %i, posLast %i, m_lastConnectedFileName %s, m_lastConnectedFolder %s", posFirst, posLast, m_lastConnectedFileName, m_lastConnectedFolder);
+        // MWR_LOG_WARN("posFirst {}, posLast {}, m_lastConnectedFileName {}, m_lastConnectedFolder {}", posFirst, posLast, m_lastConnectedFileName, m_lastConnectedFolder);
         posDot = m_lastConnectedFileName.index_of('.', 0);
         if (posDot == -1) { // no extension
             m_lastConnectedFileName.assign("");
@@ -1710,7 +1710,7 @@ class Playlist {
     bool create_playlist_from_DLNA_folder(const std::deque<DLNA_Client::srvItem>* foldercontent) {
         reset();
         for (int i = 0; i < foldercontent->size(); i++) {
-            // log_i( "%d : (%d) %s %s -- %s",i, foldercontent.isAudio[i], foldercontent.itemURL[i], foldercontent.title[i], foldercontent.duration[i]);
+            // MWR_LOG_WARN( "{} : ({}) {} {} -- {}",i, foldercontent.isAudio[i], foldercontent.itemURL[i], foldercontent.title[i], foldercontent.duration[i]);
             if (!foldercontent->at(i).isAudio) continue;
             uint16_t len =
                 strlen((const char*)foldercontent->at(i).itemURL.c_get()) + strlen((const char*)foldercontent->at(i).title.c_get()) + strlen((const char*)foldercontent->at(i).duration.c_get()) + 3;

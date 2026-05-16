@@ -33,7 +33,7 @@ imgSize GetImageSize(ps_ptr<char> picturePath) {
     }
     imgSize img = {0};
     auto    scaledPicPath = scaleImage(picturePath);
-    if (!SD_MMC.exists(scaledPicPath.c_get())) { /* log_w("file %s not exists, objName: %s", scaledPicPath, m_name)*/
+    if (!SD_MMC.exists(scaledPicPath.c_get())) { /* MWR_LOG_WARN("file {} not exists, objName: {}", scaledPicPath, m_name)*/
         MWR_LOG_ERROR("cannot open file '{}'", scaledPicPath.c_get());
         return img;
     }
@@ -62,7 +62,7 @@ imgSize GetImageSize(ps_ptr<char> picturePath) {
         file.readBytes(buf, 7);
         img.h = buf[3] * 256 + buf[4];
         img.w = buf[5] * 256 + buf[6];
-        //    log_i("w %i, h %i", m_w, m_h);
+        //    MWR_LOG_WARN("w {}, h {}", m_w, m_h);
         return img;
     }
     if ((buf[0] == 'B') && (buf[1] == 'M') && (buf[2] == '6')) { // format bmp
@@ -75,7 +75,7 @@ imgSize GetImageSize(ps_ptr<char> picturePath) {
         img.h += (file.read() << 8);
         img.h += (file.read() << 16);
         img.h += (file.read() << 24);
-        //    log_i("w %i, h %i", m_w, m_h);
+        //    MWR_LOG_WARN("w {}, h {}", m_w, m_h);
         return img;
     }
     if ((buf[0] == 'G') && (buf[1] == 'I') && (buf[2] == 'F')) { // format gif
@@ -84,7 +84,7 @@ imgSize GetImageSize(ps_ptr<char> picturePath) {
         img.w += (file.read() << 8);
         img.h = file.read(); // pos 8
         img.h += (file.read() << 8);
-        //    log_i("w %i, h %i", m_w, m_h);
+        //    MWR_LOG_WARN("w {}, h {}", m_w, m_h);
         return img;
     }
     if ((buf[0] == 0x89) && (buf[1] == 'P') && (buf[2] == 'N')) { // format png
@@ -120,11 +120,14 @@ static void                        register_object(RegisterTable* obj) {
     registertable_objects.push_back(obj);
 }
 inline void get_registered_names() {
+    ps_ptr<char>rn;
+    rn.set_name("rn");
     int16_t x = 0, y = 0, w = 0, h = 0;
     for (auto obj : registertable_objects) {
+        rn.assignf(ANSI_ESC_RESET "    registered object:" ANSI_ESC_YELLOW " {:27}" ANSI_ESC_RESET " is enabled: {}" ANSI_ESC_RESET ",", obj->getName().c_get(), obj->isEnabled() ? ANSI_ESC_RED "yes" : ANSI_ESC_BLUE " no");
         obj->getBounds(x, y, w, h);
-        printf(ANSI_ESC_WHITE "    registered object:" ANSI_ESC_YELLOW " %-27s" ANSI_ESC_WHITE " is enabled: %-5s" ANSI_ESC_WHITE " x: %03d, y: %03d, w: %03d, h: %03d" ANSI_ESC_RESET "\n",
-               obj->getName().c_get(), obj->isEnabled() ? ANSI_ESC_RED "yes" : ANSI_ESC_BLUE "no", x, y, w, h);
+        rn.appendf(" x: {:4}, y: {:4}, w: {:4}, h: {:4}", x, y, w, h);
+        rn.println();
     }
 }
 inline void disableAllObjects() {
@@ -2025,7 +2028,7 @@ class wifiSettings : public RegisterTable {
         if (m_keyboard->getVal() == 0x0D) {                        // enter
             m_ra.arg1 = m_credentials[m_credentials_idx].ssid;     // ssid
             m_ra.arg2 = m_credentials[m_credentials_idx].password; // password
-            // log_w("enter pressed ssid %s, password %s", m_ssid[m_pwd_idx], m_password[m_pwd_idx]);
+            // MWR_LOG_WARN("enter pressed ssid {}, password {}", m_ssid[m_pwd_idx], m_password[m_pwd_idx]);
             if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
         }
         m_clicked = false;
@@ -2794,9 +2797,6 @@ class offTimerBox : public RegisterTable { // range 000...999
         return true;
     }
 
-    // void setTime(uint16_t time) {
-    //     snprintf(m_numbers, sizeof(m_numbers), "%03u", time);
-    // }
     bool positionXY(uint16_t x, uint16_t y) {
         if (x < m_x) return false;
         if (y < m_y) return false;
@@ -4277,10 +4277,10 @@ class dlnaList : public RegisterTable {
         for (pos = 0; pos < 10; pos++) {
             if (pos == 1 && m_viewPoint > 0) { myList.drawTriangeUp(); }
             if (pos == 9 && m_viewPoint + 9 < m_dlnaMaxItems - 1) { myList.drawTriangeDown(); }
-            if (*m_dlnaLevel == 0 && pos > m_dlnaServer->size()) { /* log_e("pos too high %i", pos);*/
+            if (*m_dlnaLevel == 0 && pos > m_dlnaServer->size()) { /* MWR_LOG_WARN("pos too high {}", pos);*/
                 break;
             } // guard
-            if (*m_dlnaLevel > 0 && pos > m_srvContent->size()) { /* log_e("pos too high %i", pos);*/
+            if (*m_dlnaLevel > 0 && pos > m_srvContent->size()) { /* MWR_LOG_WARN("pos too high {}", pos);*/
                 break;
             } // guard
             drawItem(pos);
@@ -4298,10 +4298,10 @@ class dlnaList : public RegisterTable {
             MWR_LOG_WARN("pos oor {}", pos);
             return false;
         } // guard
-        if (*m_dlnaLevel == 0 && pos > m_dlnaServer->size()) { /* log_e("pos too high %i", pos);*/
+        if (*m_dlnaLevel == 0 && pos > m_dlnaServer->size()) { /* MWR_LOG_WARN("pos too high {}", pos);*/
             return false;
         } // guard
-        if (*m_dlnaLevel > 0 && pos > m_srvContent->size()) { /* log_e("pos too high %i", pos);*/
+        if (*m_dlnaLevel > 0 && pos > m_srvContent->size()) { /* MWR_LOG_WARN("pos too high {}", pos);*/
             return false;
         } // guard
 
@@ -4597,7 +4597,7 @@ class dlnaList : public RegisterTable {
 
     ps_ptr<char> getSelectedURL() { // ok from IR
         if (*m_dlnaLevel == 0) {    //------------------------------------------------------------------------------------------------------- choose server
-            // log_e("server %s", m_dlnaServer.friendlyName[m_currItemNr[0]]);
+            // MWR_LOG_WARN("server {}", m_dlnaServer.friendlyName[m_currItemNr[0]]);
             m_chptr = m_dlnaServer->at(m_currItemNr[0]).friendlyName.c_get();
             m_currDLNAsrvNr = m_currItemNr[0];
             m_currItemNr[*m_dlnaLevel] = m_currItemNr[0];
@@ -4619,12 +4619,12 @@ class dlnaList : public RegisterTable {
             m_srvContent = &m_dlna->getBrowseResult();
             m_dlnaMaxItems = m_dlna->getTotalMatches();
             m_dlnaHistory[*m_dlnaLevel].maxItems = m_dlnaMaxItems; // level 1
-            // log_e("m_dlnaMaxItems %i, level %i", m_dlnaMaxItems, (*m_dlnaLevel));
+            // MWR_LOG_WARN("m_dlnaMaxItems {}, level {}", m_dlnaMaxItems, (*m_dlnaLevel));
             dlnaItemsList();
             return "";
         }
         if (m_currItemNr[*m_dlnaLevel] + 1 == m_viewPoint) { // DLNA history, parent item ---------------------------------------------- back to parent
-            // log_e("%s", m_dlnaHistory[*m_dlnaLevel].name);
+            // MWR_LOG_WARN("{}", m_dlnaHistory[*m_dlnaLevel].name);
             drawItem(0, true); // make cyan
             vTaskDelay(300);
             (*m_dlnaLevel)--;
@@ -4662,7 +4662,7 @@ class dlnaList : public RegisterTable {
             m_srvContent = &m_dlna->getBrowseResult();
             m_dlnaMaxItems = m_dlna->getTotalMatches();
             m_dlnaHistory[*m_dlnaLevel].maxItems = m_dlnaMaxItems;
-            // log_e("m_dlnaMaxItems %i, level %i", m_dlnaMaxItems, (*m_dlnaLevel)); // level 2, 3, 4...
+            // MWR_LOG_WARN("m_dlnaMaxItems {}, level {}", m_dlnaMaxItems, (*m_dlnaLevel)); // level 2, 3, 4...
             dlnaItemsList();
             if (!m_dlnaMaxItems) { // folder is empty
                 m_currItemNr[*m_dlnaLevel]--;
@@ -4842,7 +4842,7 @@ class fileList : public RegisterTable {
             }
             audioFileslist(m_viewPos);
         }
-        if (m_browseOnRelease == 3) {                               // log_e("m_curAudioFolder = %s", m_curAudioFolder);                                         // previous folder
+        if (m_browseOnRelease == 3) {                               // MWR_LOG_WARN("m_curAudioFolder = {}", m_curAudioFolder);                                         // previous folder
             if (m_curAudioFolder.equals("/audiofiles/")) goto exit; // is already the root
             myList.drawLine(pos, m_curAudioFolder.c_get(), "", "", ANSI_ESC_CYAN, -1);
             int lastSlash = m_curAudioFolder.last_index_of('/');
