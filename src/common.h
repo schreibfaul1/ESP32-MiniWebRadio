@@ -716,7 +716,7 @@ inline void SerialPrintflnCut(const char* item, const char* color, const char* s
     uint8_t maxLength = 100;
     if (strlen(str) > maxLength) {
         String f = str;
-        SerialPrintfln("{}{}{]} ... %s", item, color, f.substring(0, maxLength - 25).c_str(), f.substring(f.length() - 20, f.length()).c_str());
+        SerialPrintfln("{}{}{]} ... {}", item, color, f.substring(0, maxLength - 25).c_str(), f.substring(f.length() - 20, f.length()).c_str());
     } else {
         SerialPrintfln("{}{}{}", item, color, str);
     }
