@@ -4034,7 +4034,7 @@ class uniList {
             if (nr <= 0)
                 m_buff.assignf("{}{}", color.c_get(), txt.c_get());
             else
-                m_buff.assignf("{}{}" ANSI_ESC_YELLOW " %li", color.c_get(), txt.c_get(), nr);
+                m_buff.assignf("{}{}" ANSI_ESC_YELLOW " {}", color.c_get(), txt.c_get(), nr);
             if (txt) {
                 m_txt[pos] = txt;
                 m_nr[pos] = nr;
