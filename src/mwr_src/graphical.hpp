@@ -33,13 +33,13 @@ imgSize GetImageSize(ps_ptr<char> picturePath) {
     }
     imgSize img = {0};
     auto    scaledPicPath = scaleImage(picturePath);
-    if (!SD_MMC.exists(scaledPicPath.c_get())) { /* log_w("file %s not exists, objName: %s", scaledPicPath, m_name)*/
-        MWR_LOG_ERROR("cannot open file '%s'", scaledPicPath.c_get());
+    if (!SD_MMC.exists(scaledPicPath.c_get())) { /* MWR_LOG_WARN("file {} not exists, objName: {}", scaledPicPath, m_name)*/
+        MWR_LOG_ERROR("cannot open file '{}'", scaledPicPath.c_get());
         return img;
     }
     File file = SD_MMC.open(scaledPicPath.c_get(), "r", false);
     if (file.size() < 24) {
-        MWR_LOG_WARN("file '%s' is too small", scaledPicPath.c_get());
+        MWR_LOG_WARN("file '{}' is too small", scaledPicPath.c_get());
         file.close();
         return img;
     }
@@ -50,7 +50,7 @@ imgSize GetImageSize(ps_ptr<char> picturePath) {
         while (true) {
             c1 = file.read();
             if (c1 == -1) {
-                MWR_LOG_WARN("sof marker in %s not found", scaledPicPath.c_get());
+                MWR_LOG_WARN("sof marker in {} not found", scaledPicPath.c_get());
                 file.close();
                 return img;
             } // end of file reached
@@ -62,7 +62,7 @@ imgSize GetImageSize(ps_ptr<char> picturePath) {
         file.readBytes(buf, 7);
         img.h = buf[3] * 256 + buf[4];
         img.w = buf[5] * 256 + buf[6];
-        //    log_i("w %i, h %i", m_w, m_h);
+        //    MWR_LOG_WARN("w {}, h {}", m_w, m_h);
         return img;
     }
     if ((buf[0] == 'B') && (buf[1] == 'M') && (buf[2] == '6')) { // format bmp
@@ -75,7 +75,7 @@ imgSize GetImageSize(ps_ptr<char> picturePath) {
         img.h += (file.read() << 8);
         img.h += (file.read() << 16);
         img.h += (file.read() << 24);
-        //    log_i("w %i, h %i", m_w, m_h);
+        //    MWR_LOG_WARN("w {}, h {}", m_w, m_h);
         return img;
     }
     if ((buf[0] == 'G') && (buf[1] == 'I') && (buf[2] == 'F')) { // format gif
@@ -84,7 +84,7 @@ imgSize GetImageSize(ps_ptr<char> picturePath) {
         img.w += (file.read() << 8);
         img.h = file.read(); // pos 8
         img.h += (file.read() << 8);
-        //    log_i("w %i, h %i", m_w, m_h);
+        //    MWR_LOG_WARN("w {}, h {}", m_w, m_h);
         return img;
     }
     if ((buf[0] == 0x89) && (buf[1] == 'P') && (buf[2] == 'N')) { // format png
@@ -99,7 +99,7 @@ imgSize GetImageSize(ps_ptr<char> picturePath) {
         img.h += file.read();                                     // pos 23
         return img;
     }
-    MWR_LOG_ERROR("unknown picture format %s", picturePath.c_get());
+    MWR_LOG_ERROR("unknown picture format {}", picturePath.c_get());
     return img;
 }
 
@@ -120,11 +120,14 @@ static void                        register_object(RegisterTable* obj) {
     registertable_objects.push_back(obj);
 }
 inline void get_registered_names() {
+    ps_ptr<char>rn;
+    rn.set_name("rn");
     int16_t x = 0, y = 0, w = 0, h = 0;
     for (auto obj : registertable_objects) {
+        rn.assignf(ANSI_ESC_RESET "    registered object:" ANSI_ESC_YELLOW " {:27}" ANSI_ESC_RESET " is enabled: {}" ANSI_ESC_RESET ",", obj->getName().c_get(), obj->isEnabled() ? ANSI_ESC_RED "yes" : ANSI_ESC_BLUE " no");
         obj->getBounds(x, y, w, h);
-        printf(ANSI_ESC_WHITE "    registered object:" ANSI_ESC_YELLOW " %-27s" ANSI_ESC_WHITE " is enabled: %-5s" ANSI_ESC_WHITE " x: %03d, y: %03d, w: %03d, h: %03d" ANSI_ESC_RESET "\n",
-               obj->getName().c_get(), obj->isEnabled() ? ANSI_ESC_RED "yes" : ANSI_ESC_BLUE "no", x, y, w, h);
+        rn.appendf(" x: {:4}, y: {:4}, w: {:4}, h: {:4}", x, y, w, h);
+        rn.println();
     }
 }
 inline void disableAllObjects() {
@@ -323,7 +326,7 @@ class slider : public RegisterTable {
     int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max) {
         const int32_t run = in_max - in_min;
         if (run == 0) {
-            MWR_LOG_ERROR("map(): Invalid input range, %li == %li (min == max) in %s", in_min, in_max, m_name.c_get());
+            MWR_LOG_ERROR("map(): Invalid input range, {} == {} (min == max) in {}", in_min, in_max, m_name.c_get());
             return -1;
         }
         const int32_t rise = out_max - out_min;
@@ -503,7 +506,7 @@ class progressbar : public RegisterTable {
     int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max) {
         const int32_t run = in_max - in_min;
         if (run == 0) {
-            MWR_LOG_WARN("map(): Invalid input range, %li == %li (min == max) in %s", in_min, in_max, m_name.c_get());
+            MWR_LOG_WARN("map(): Invalid input range, {} == {} (min == max) in {}", in_min, in_max, m_name.c_get());
             return -1;
         }
         const int32_t rise = out_max - out_min;
@@ -1363,13 +1366,13 @@ class selectbox : public RegisterTable {
         m_txt_select->released();
         if (m_txt_btn_down->released())
             if (m_idx < m_selContent.size() - 1) {
-                m_idx++; /* MWR_LOG_DEBUG("btn_down %i/%i", m_idx, m_selContent.size()); */
+                m_idx++; /* MWR_LOG_DEBUG("btn_down {}/{}", m_idx, m_selContent.size()); */
                 writeText(m_idx);
                 ret = true;
             }
         if (m_txt_btn_up->released())
             if (m_idx > 0) {
-                m_idx--; /* MWR_LOG_DEBUG("btn_up %i/%i",   m_idx, m_selContent.size()); */
+                m_idx--; /* MWR_LOG_DEBUG("btn_up {}/{}",   m_idx, m_selContent.size()); */
                 writeText(m_idx);
                 ret = true;
             }
@@ -1382,7 +1385,7 @@ class selectbox : public RegisterTable {
         if (m_selContent.size() > 0) {
             for (uint8_t i = 0; i < m_selContent.size(); i++) {
                 if (txt == m_selContent[i]) {
-                    //    MWR_LOG_WARN("addText: %s already in list", txt);
+                    //    MWR_LOG_WARN("addText: {} already in list", txt);
                     return;
                 }
             }
@@ -1397,7 +1400,7 @@ class selectbox : public RegisterTable {
         } else
             txt = m_selContent[idx];
         if (m_enabled) {
-            MWR_LOG_DEBUG("writeText: %s", txt.c_get());
+            MWR_LOG_DEBUG("writeText: {}", txt.c_get());
             m_txt_select->setText(txt, m_narrow, m_noWrap);
             m_txt_select->setTransparency(m_backgroundTransparency, m_saveBackground);
             m_txt_select->show();
@@ -1876,7 +1879,7 @@ class wifiSettings : public RegisterTable {
             m_winKeybrd.pt = 1;
             m_winKeybrd.pb = 1; // keyboard
         } else {
-            MWR_LOG_WARN("unsupported resolution width %i px", w);
+            MWR_LOG_WARN("unsupported resolution width {} px", w);
             return;
         }
 
@@ -1989,7 +1992,7 @@ class wifiSettings : public RegisterTable {
         if (m_sel_ssid->positionXY(x, y)) { ; }
         if (m_in_password->positionXY(x, y)) { ; }
         if (m_keyboard->positionXY(x, y)) {
-            MWR_LOG_INFO("key pressed %i", m_keyboard->getVal());
+            MWR_LOG_INFO("key pressed {}", m_keyboard->getVal());
             changePassword(m_keyboard->getVal(), m_credentials_idx);
             m_in_password->setText(m_credentials[m_credentials_idx].password.c_get());
             m_in_password->setTransparency(m_backgroundTransparency, m_saveBackground);
@@ -2025,7 +2028,7 @@ class wifiSettings : public RegisterTable {
         if (m_keyboard->getVal() == 0x0D) {                        // enter
             m_ra.arg1 = m_credentials[m_credentials_idx].ssid;     // ssid
             m_ra.arg2 = m_credentials[m_credentials_idx].password; // password
-            // log_w("enter pressed ssid %s, password %s", m_ssid[m_pwd_idx], m_password[m_pwd_idx]);
+            // MWR_LOG_WARN("enter pressed ssid {}, password {}", m_ssid[m_pwd_idx], m_password[m_pwd_idx]);
             if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
         }
         m_clicked = false;
@@ -2626,7 +2629,7 @@ class numbersBox : public RegisterTable { // range 000...999
             m_color = "orange";
         ps_ptr<char> path;
         for (uint8_t i = 0; i < 3; i++) {
-            path.assignf("%s%c%s.jpg", m_root, m_numbers[i], m_color.c_get());
+            path.assignf("{}{}{}.jpg", m_root, m_numbers[i], m_color.c_get());
             if (!drawImage(path.c_get(), m_x + m_box_x + i * m_segmWidth, m_y + m_box_y)) return false;
         }
         m_enabled = true;
@@ -2684,7 +2687,7 @@ class numbersBox : public RegisterTable { // range 000...999
             MWR_LOG_ERROR("cannot get digit size");
             return;
         }
-        MWR_LOG_DEBUG("digits w = %i, h = %i", img.w, img.h);
+        MWR_LOG_DEBUG("digits w = {}, h = {}", img.w, img.h);
         m_segmWidth = img.w;
         m_segmentHigh = img.h;
 
@@ -2758,8 +2761,8 @@ class offTimerBox : public RegisterTable { // range 000...999
         else
             m_color = "green";
         ps_ptr<char> numbers;
-        numbers.assignf("%dc%02d", time / 60, time % 60);
-        m_path.assignf("/digits/s/x%s.jpg", m_color.c_get());
+        numbers.assignf("{}c{:02}", time / 60, time % 60);
+        m_path.assignf("/digits/s/x{}.jpg", m_color.c_get());
 
         m_path[10] = numbers[0];
         drawImage(m_path.c_get(), m_x + m_digitsXpos[0], m_y + m_box_y);
@@ -2794,9 +2797,6 @@ class offTimerBox : public RegisterTable { // range 000...999
         return true;
     }
 
-    // void setTime(uint16_t time) {
-    //     snprintf(m_numbers, sizeof(m_numbers), "%03u", time);
-    // }
     bool positionXY(uint16_t x, uint16_t y) {
         if (x < m_x) return false;
         if (y < m_y) return false;
@@ -2823,7 +2823,7 @@ class offTimerBox : public RegisterTable { // range 000...999
             MWR_LOG_ERROR("cannot get digit size");
             return;
         }
-        MWR_LOG_DEBUG("digits w = %i, h = %i", img.w, img.h);
+        MWR_LOG_DEBUG("digits w = {}, h = {}", img.w, img.h);
         m_digitsWidth = img.w;
         m_digitsHigh = img.h;
 
@@ -2832,7 +2832,7 @@ class offTimerBox : public RegisterTable { // range 000...999
             MWR_LOG_ERROR("cannot get colon size");
             return;
         }
-        MWR_LOG_DEBUG("colon w = %i, h = %i", img.w, img.h);
+        MWR_LOG_DEBUG("colon w = {}, h = {}", img.w, img.h);
         m_colonWidth = img.w;
 
         m_box_w = 3 * m_digitsWidth + m_colonWidth;
@@ -2843,7 +2843,7 @@ class offTimerBox : public RegisterTable { // range 000...999
         m_digitsXpos[1] = m_digitsXpos[0] + m_digitsWidth;
         m_digitsXpos[2] = m_digitsXpos[1] + m_colonWidth;
         m_digitsXpos[3] = m_digitsXpos[2] + m_digitsWidth;
-        MWR_LOG_DEBUG("box w=%i, h=%i, x=%i, y=%i, x0=%i, x1=%i, x2=%i, x3=%i", m_box_w, m_box_h, m_box_x, m_box_y, m_digitsXpos[0], m_digitsXpos[1], m_digitsXpos[2], m_digitsXpos[3]);
+        MWR_LOG_DEBUG("box w={}, h={}, x={}, y={}, x0={}, x1={}, x2={}, x3={}", m_box_w, m_box_h, m_box_x, m_box_y, m_digitsXpos[0], m_digitsXpos[1], m_digitsXpos[2], m_digitsXpos[3]);
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -3139,7 +3139,7 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
 
         for (uint8_t i = 0; i < 4; i++) {
             if ((time[i] != oldTime[i]) || m_showAll) {
-                m_pathBuff.assignf("/digits/l/%igreen.jpg", time[i]);
+                m_pathBuff.assignf("/digits/l/{}green.jpg", time[i]);
                 if (i == 0) {
                     pic_clock24_digitsH10->setPicturePath(m_pathBuff);
                     pic_clock24_digitsH10->show();
@@ -3199,7 +3199,7 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
             MWR_LOG_ERROR("cannot get digit size");
             return;
         }
-        MWR_LOG_DEBUG("digits w = %i, h = %i", img.w, img.h);
+        MWR_LOG_DEBUG("digits w = {}, h = {}", img.w, img.h);
         digits_w = img.w;
         digits_h = img.h;
 
@@ -3208,7 +3208,7 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
             MWR_LOG_ERROR("cannot get colon size");
             return;
         }
-        MWR_LOG_DEBUG("colon w = %i, h = %i", img.w, img.h);
+        MWR_LOG_DEBUG("colon w = {}, h = {}", img.w, img.h);
         colon_w = img.w;
         digits_y = (h - digits_h) / 2;
         paddig_l = (w - (4 * digits_w + colon_w)) / 2;
@@ -3373,7 +3373,7 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
 
         for (uint8_t i = 0; i < 4; i++) {
             if ((time[i] != oldTime[i]) || m_showAll) {
-                m_pathBuff.assignf("/digits/s/%ired.jpg", time[i]);
+                m_pathBuff.assignf("/digits/s/{}red.jpg", time[i]);
                 if (i == 0) {
                     pic_clock24_digitsH10->setPicturePath(m_pathBuff);
                     pic_clock24_digitsH10->show();
@@ -3433,7 +3433,7 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
             MWR_LOG_ERROR("cannot get digit size");
             return;
         }
-        MWR_LOG_DEBUG("digits w = %i, h = %i", img.w, img.h);
+        MWR_LOG_DEBUG("digits w = {}, h = {}", img.w, img.h);
         digits_w = img.w;
         digits_h = img.h;
 
@@ -3442,7 +3442,7 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
             MWR_LOG_ERROR("cannot get colon size");
             return;
         }
-        MWR_LOG_DEBUG("colon w = %i, h = %i", img.w, img.h);
+        MWR_LOG_DEBUG("colon w = {}, h = {}", img.w, img.h);
         colon_w = img.w;
         digits_y = (h - digits_h) / 2;
         paddig_l = (w - (4 * digits_w + colon_w)) / 2;
@@ -3753,7 +3753,7 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
         static uint8_t m_oldAlarmDigits[4] = {0};
         for (uint8_t i = 0; i < 4; i++) {
             if (m_oldAlarmDigits[i] != m_alarmDigits[i] || m_showAll) {
-                m_pathBuff.assignf("/digits/m/%i", m_alarmDigits[i]);
+                m_pathBuff.assignf("/digits/m/{}", m_alarmDigits[i]);
 
                 if (i == m_idx) {
                     m_pathBuff.append("orange.jpg");
@@ -3844,7 +3844,7 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
             MWR_LOG_ERROR("cannot get digit size");
             return;
         }
-        MWR_LOG_DEBUG("digits w = %i, h = %i", img.w, img.h);
+        MWR_LOG_DEBUG("digits w = {}, h = {}", img.w, img.h);
         digits_w = img.w;
         digits_h = img.h;
         img = GetImageSize("/digits/m/cred.jpg"); // get size of colon
@@ -4002,7 +4002,7 @@ class uniList {
         if (pos > 9) return;
         getTFT().setFont(m_fontSize);
         if (m_mode == RADIO) {
-            m_buff.assignf(ANSI_ESC_YELLOW "%03li %s%s", nr, color.c_get(), txt.c_get());
+            m_buff.assignf(ANSI_ESC_YELLOW "{:03} {}{}", nr, color.c_get(), txt.c_get());
             if (txt != "") { m_txt[pos] = txt; }
             if (ext1 != "") { m_ext1[pos] = ext1; }
             if (ext2 != "") { m_ext2[pos] = ext2; }
@@ -4014,11 +4014,11 @@ class uniList {
                 return;
             }
             if (ext1 == "")
-                m_buff.assignf("%s%s", color.c_get(), txt.c_get());
+                m_buff.assignf("{}{}", color.c_get(), txt.c_get());
             else if (ext1[0] == '\0')
-                m_buff.assignf("%s%s", color.c_get(), txt.c_get());
+                m_buff.assignf("{}{}", color.c_get(), txt.c_get());
             else
-                m_buff.assignf("%s%s " ANSI_ESC_CYAN "(%s)", color.c_get(), txt.c_get(), ext1.c_get());
+                m_buff.assignf("{}{} " ANSI_ESC_CYAN "({})", color.c_get(), txt.c_get(), ext1.c_get());
             if (txt != "") {
                 m_txt[pos] = txt;
                 m_nr[pos] = 1;
@@ -4032,9 +4032,9 @@ class uniList {
                 return;
             }
             if (nr <= 0)
-                m_buff.assignf("%s%s", color.c_get(), txt.c_get());
+                m_buff.assignf("{}{}", color.c_get(), txt.c_get());
             else
-                m_buff.assignf("%s%s" ANSI_ESC_YELLOW " %li", color.c_get(), txt.c_get(), nr);
+                m_buff.assignf("{}{}" ANSI_ESC_YELLOW " {}", color.c_get(), txt.c_get(), nr);
             if (txt) {
                 m_txt[pos] = txt;
                 m_nr[pos] = nr;
@@ -4044,18 +4044,18 @@ class uniList {
         getTFT().writeText(m_buff.c_get(), indent, m_y + pos * m_lineHight, m_w - indent, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
     }
     void drawPosInfo(int16_t firstVal, int16_t secondVal, int16_t total, ps_ptr<char> color) { // e.g. 1-9/65
-        m_buff.assignf("%s%i-%i-%i", color.c_get(), firstVal, secondVal, total);
+        m_buff.assignf("{}{}-{}-{}", color.c_get(), firstVal, secondVal, total);
         getTFT().writeText(m_buff.c_get(), 0, m_y, m_w, m_lineHight, TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER, true, true, false);
     }
     void colourLine(uint8_t pos, ps_ptr<char> color = ANSI_ESC_WHITE) {
         if (pos > 9) return;
         getTFT().setFont(m_fontSize);
-        if (m_mode == RADIO) { m_buff.assignf(ANSI_ESC_YELLOW "%03li %s%s", m_nr[pos], color.c_get(), m_txt[pos].c_get()); }
+        if (m_mode == RADIO) { m_buff.assignf(ANSI_ESC_YELLOW "{:03} {}{}", m_nr[pos], color.c_get(), m_txt[pos].c_get()); }
         if (m_mode == PLAYER) {
             if (m_nr[pos])
-                m_buff.assignf("%s%s" ANSI_ESC_YELLOW " %li", color.c_get(), m_txt[pos].c_get(), m_nr[pos]); // file
+                m_buff.assignf("{}{}" ANSI_ESC_YELLOW " {}", color.c_get(), m_txt[pos].c_get(), m_nr[pos]); // file
             else
-                m_buff.assignf("%s%s", color.c_get(), m_txt[pos].c_get()); // directory
+                m_buff.assignf("{}{}", color.c_get(), m_txt[pos].c_get()); // directory
         }
         uint16_t indent = pos ? m_indentContent : m_indentDirectory;
         getTFT().writeText(m_buff.c_get(), indent, m_y + pos * m_lineHight, m_w - indent, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
@@ -4277,16 +4277,16 @@ class dlnaList : public RegisterTable {
         for (pos = 0; pos < 10; pos++) {
             if (pos == 1 && m_viewPoint > 0) { myList.drawTriangeUp(); }
             if (pos == 9 && m_viewPoint + 9 < m_dlnaMaxItems - 1) { myList.drawTriangeDown(); }
-            if (*m_dlnaLevel == 0 && pos > m_dlnaServer->size()) { /* log_e("pos too high %i", pos);*/
+            if (*m_dlnaLevel == 0 && pos > m_dlnaServer->size()) { /* MWR_LOG_WARN("pos too high {}", pos);*/
                 break;
             } // guard
-            if (*m_dlnaLevel > 0 && pos > m_srvContent->size()) { /* log_e("pos too high %i", pos);*/
+            if (*m_dlnaLevel > 0 && pos > m_srvContent->size()) { /* MWR_LOG_WARN("pos too high {}", pos);*/
                 break;
             } // guard
             drawItem(pos);
             m_displayed_lines++;
         }
-        m_buff.assignf("%i-%i/%i", m_viewPoint + 1, m_viewPoint + (pos - 1), m_dlnaMaxItems); // shows the current items pos e.g. "30-39/210"
+        m_buff.assignf("{}-{}/{}", m_viewPoint + 1, m_viewPoint + (pos - 1), m_dlnaMaxItems); // shows the current items pos e.g. "30-39/210"
         getTFT().setTextColor(TFT_ORANGE);
         getTFT().writeText(m_buff.c_get(), 10, m_y, m_w - 10, m_lineHight, TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER, true, true);
         return;
@@ -4295,13 +4295,13 @@ class dlnaList : public RegisterTable {
     bool drawItem(int8_t pos, bool selectedLine = false) { // pos 0 is parent, pos 1...9 are itens, selectedLine means released (ok)
 
         if (pos < 0 || pos > 9) {
-            MWR_LOG_WARN("pos oor %i", pos);
+            MWR_LOG_WARN("pos oor {}", pos);
             return false;
         } // guard
-        if (*m_dlnaLevel == 0 && pos > m_dlnaServer->size()) { /* log_e("pos too high %i", pos);*/
+        if (*m_dlnaLevel == 0 && pos > m_dlnaServer->size()) { /* MWR_LOG_WARN("pos too high {}", pos);*/
             return false;
         } // guard
-        if (*m_dlnaLevel > 0 && pos > m_srvContent->size()) { /* log_e("pos too high %i", pos);*/
+        if (*m_dlnaLevel > 0 && pos > m_srvContent->size()) { /* MWR_LOG_WARN("pos too high {}", pos);*/
             return false;
         } // guard
 
@@ -4473,7 +4473,7 @@ class dlnaList : public RegisterTable {
             if (startsWith(m_srvContent->at(m_itemListPos - 1).itemURL.c_get(), "http")) {
                 m_currItemNr[*m_dlnaLevel] = m_itemListPos - 1;
                 if (m_srvContent->at(m_itemListPos - 1).isAudio) {
-                    m_chptr.assignf("%s", m_srvContent->at(m_itemListPos - 1).title.c_get());
+                    m_chptr.assignf("{}", m_srvContent->at(m_itemListPos - 1).title.c_get());
                     m_ra.arg1 = m_srvContent->at(m_itemListPos - 1).itemURL; // url --> connecttohost()
                     m_ra.arg2 = m_srvContent->at(m_itemListPos - 1).title;   // filename --> showFileName()
                     if (m_ra.arg1.strlen() > 0 && m_ra.arg2.strlen() > 0) m_ra.val1 = 1;
@@ -4486,7 +4486,7 @@ class dlnaList : public RegisterTable {
         if (guard3) { // is folder
             m_viewPoint = 0;
             m_currItemNr[*m_dlnaLevel] = m_itemListPos - 1;
-            m_chptr.assignf("%s (%d)", m_srvContent->at(m_itemListPos - 1).title.c_get(), m_srvContent->at(m_itemListPos - 1).childCount);
+            m_chptr.assignf("{} ({})", m_srvContent->at(m_itemListPos - 1).title.c_get(), m_srvContent->at(m_itemListPos - 1).childCount);
             m_dlnaHistory[(*m_dlnaLevel) + 1].objId = m_srvContent->at(m_itemListPos - 1).objectId;
             m_dlnaHistory[(*m_dlnaLevel) + 1].name = m_srvContent->at(m_itemListPos - 1).title;
             m_dlnaHistory[(*m_dlnaLevel) + 1].childCount = m_srvContent->at(m_itemListPos - 1).childCount;
@@ -4575,7 +4575,7 @@ class dlnaList : public RegisterTable {
         } else {
             maxItems = m_dlnaMaxItems;
         }
-        MWR_LOG_DEBUG("m_itemListPos_last %i, m_displayed_lines %i, maxItems %i, m_currItemNr[*m_dlnaLevel] %i", m_itemListPos_last, m_displayed_lines, maxItems, m_currItemNr[*m_dlnaLevel]);
+        MWR_LOG_DEBUG("m_itemListPos_last {}, m_displayed_lines {}, maxItems {}, m_currItemNr[*m_dlnaLevel] {}", m_itemListPos_last, m_displayed_lines, maxItems, m_currItemNr[*m_dlnaLevel]);
         if (maxItems - 1 <= m_currItemNr[*m_dlnaLevel]) return;
         m_currItemNr[*m_dlnaLevel]++;
         if (m_currItemNr[*m_dlnaLevel] >= m_viewPoint + 9) {
@@ -4597,7 +4597,7 @@ class dlnaList : public RegisterTable {
 
     ps_ptr<char> getSelectedURL() { // ok from IR
         if (*m_dlnaLevel == 0) {    //------------------------------------------------------------------------------------------------------- choose server
-            // log_e("server %s", m_dlnaServer.friendlyName[m_currItemNr[0]]);
+            // MWR_LOG_WARN("server {}", m_dlnaServer.friendlyName[m_currItemNr[0]]);
             m_chptr = m_dlnaServer->at(m_currItemNr[0]).friendlyName.c_get();
             m_currDLNAsrvNr = m_currItemNr[0];
             m_currItemNr[*m_dlnaLevel] = m_currItemNr[0];
@@ -4619,12 +4619,12 @@ class dlnaList : public RegisterTable {
             m_srvContent = &m_dlna->getBrowseResult();
             m_dlnaMaxItems = m_dlna->getTotalMatches();
             m_dlnaHistory[*m_dlnaLevel].maxItems = m_dlnaMaxItems; // level 1
-            // log_e("m_dlnaMaxItems %i, level %i", m_dlnaMaxItems, (*m_dlnaLevel));
+            // MWR_LOG_WARN("m_dlnaMaxItems {}, level {}", m_dlnaMaxItems, (*m_dlnaLevel));
             dlnaItemsList();
             return "";
         }
         if (m_currItemNr[*m_dlnaLevel] + 1 == m_viewPoint) { // DLNA history, parent item ---------------------------------------------- back to parent
-            // log_e("%s", m_dlnaHistory[*m_dlnaLevel].name);
+            // MWR_LOG_WARN("{}", m_dlnaHistory[*m_dlnaLevel].name);
             drawItem(0, true); // make cyan
             vTaskDelay(300);
             (*m_dlnaLevel)--;
@@ -4662,7 +4662,7 @@ class dlnaList : public RegisterTable {
             m_srvContent = &m_dlna->getBrowseResult();
             m_dlnaMaxItems = m_dlna->getTotalMatches();
             m_dlnaHistory[*m_dlnaLevel].maxItems = m_dlnaMaxItems;
-            // log_e("m_dlnaMaxItems %i, level %i", m_dlnaMaxItems, (*m_dlnaLevel)); // level 2, 3, 4...
+            // MWR_LOG_WARN("m_dlnaMaxItems {}, level {}", m_dlnaMaxItems, (*m_dlnaLevel)); // level 2, 3, 4...
             dlnaItemsList();
             if (!m_dlnaMaxItems) { // folder is empty
                 m_currItemNr[*m_dlnaLevel]--;
@@ -4842,7 +4842,7 @@ class fileList : public RegisterTable {
             }
             audioFileslist(m_viewPos);
         }
-        if (m_browseOnRelease == 3) {                               // log_e("m_curAudioFolder = %s", m_curAudioFolder);                                         // previous folder
+        if (m_browseOnRelease == 3) {                               // MWR_LOG_WARN("m_curAudioFolder = {}", m_curAudioFolder);                                         // previous folder
             if (m_curAudioFolder.equals("/audiofiles/")) goto exit; // is already the root
             myList.drawLine(pos, m_curAudioFolder.c_get(), "", "", ANSI_ESC_CYAN, -1);
             int lastSlash = m_curAudioFolder.last_index_of('/');
@@ -4850,7 +4850,7 @@ class fileList : public RegisterTable {
                 int secondLastSlash = m_curAudioFolder.last_index_of('/', lastSlash - 1);
                 if (secondLastSlash != -1) m_curAudioFolder[secondLastSlash + 1] = '\0';
             }
-            MWR_LOG_DEBUG("m_curAudioFolder = %s", m_curAudioFolder.c_get());
+            MWR_LOG_DEBUG("m_curAudioFolder = {}", m_curAudioFolder.c_get());
             m_curAudioFileNr = 0;
             m_viewPos = 0;
             s_SD_content.listFilesInDir(m_curAudioFolder.c_get(), true, false);
@@ -5869,7 +5869,7 @@ class displayHeader : public RegisterTable {
             old_rssi = new_rssi; // no need to draw a rssi icon if rssiRange has not changed
             if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO) {
                 static int32_t tmp_rssi = 0;
-                if ((abs(rssi - tmp_rssi) > 4)) { SerialPrintfln("WiFI_info:   RSSI is " ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE " dB", rssi); }
+                if ((abs(rssi - tmp_rssi) > 4)) { SerialPrintfln("WiFI_info:   RSSI is " ANSI_ESC_CYAN "{}" ANSI_ESC_WHITE " dB", rssi); }
                 tmp_rssi = rssi;
             }
             if (m_enabled) show = true;

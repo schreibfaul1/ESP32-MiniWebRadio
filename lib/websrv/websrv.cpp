@@ -83,7 +83,7 @@ void WebSrv::show(const char* pagename, const char* MIMEType, int16_t len) {
 
     if (m_websrv_callback) {
         m_msg.e = evt_info;
-        m_msg.arg.assignf("%s %s %u",  isProgmem ? "PROGMEM" : "RAM", ", page length:", pagelen);
+        m_msg.arg.assignf("{} {} {}",  isProgmem ? "PROGMEM" : "RAM", ", page length:", pagelen);
         m_websrv_callback(m_msg);
     }
 
@@ -119,7 +119,7 @@ bool WebSrv::streamfile(fs::FS& fs, ps_ptr<char> path) { // transfer file from S
     } // guard
     if (path.strlen() > 1024) {
         m_msg.e = evt_info;
-        m_msg.arg.assignf(ANSI_ESC_RED "SD path is too long %i bytes", path.strlen());
+        m_msg.arg.assignf(ANSI_ESC_RED "SD path is too long {} bytes", path.strlen());
         if (m_websrv_callback) m_websrv_callback(m_msg);
         return false;
     } // guard
@@ -143,14 +143,14 @@ bool WebSrv::streamfile(fs::FS& fs, ps_ptr<char> path) { // transfer file from S
     File file = fs.open(path.c_get(), "r");
     if (!file) {
         m_msg.e = evt_info;
-        m_msg.arg.assignf("Failed to open file for reading: %s", c_path.c_get());
+        m_msg.arg.assignf("Failed to open file for reading: {}", c_path.c_get());
         if (m_websrv_callback) m_websrv_callback(m_msg);
         show_not_found();
         return false;
     }
 
     m_msg.e = evt_info;
-    m_msg.arg.assignf("Length of file %s is %d", c_path.c_get(), file.size());
+    m_msg.arg.assignf("Length of file {} is {}", c_path.c_get(), file.size());
     if (m_websrv_callback) m_websrv_callback(m_msg);
 
     // HTTP header
@@ -160,8 +160,8 @@ bool WebSrv::streamfile(fs::FS& fs, ps_ptr<char> path) { // transfer file from S
     httpheader.append("Content-type: ");
     httpheader.append(getContentType(c_path));
     httpheader.append("\r\n");
-    httpheader.appendf("Content-Length: %i\r\n", file.size());
-    httpheader.appendf("Cache-Control: public, max-age=86400\r\n\r\n");
+    httpheader.appendf("Content-Length: {}\r\n", file.size());
+    httpheader.append("Cache-Control: public, max-age=86400\r\n\r\n");
 
     cmdclient.print(httpheader.c_get()); // header sent
     // log_i("%s", httpheader.c_get());
@@ -418,7 +418,7 @@ bool WebSrv::uploadB64image(fs::FS& fs, const char* path, uint32_t contentLength
         decodedLen = 0;
         ret = mbedtls_base64_decode(decoded.get(), decoded.size(), &decodedLen, (const unsigned char*)b64buff.get(), chunkSize);
         if (ret != 0) {
-            msg.assignf("Base64 decode error at offset %u", totalRead);
+            msg.assignf("Base64 decode error at offset {}", totalRead);
             goto exit;
         }
 
@@ -434,7 +434,7 @@ bool WebSrv::uploadB64image(fs::FS& fs, const char* path, uint32_t contentLength
     }
 
     file.close();
-    msg.assignf("File '%s' written successfully, size %lu bytes", path, (unsigned long)totalDecoded);
+    msg.assignf("File '{}' written successfully, size {} bytes", path, (unsigned long)totalDecoded);
     m_msg.e = evt_info;
     m_msg.arg = msg;
     if (m_websrv_callback) m_websrv_callback(m_msg);
@@ -475,7 +475,7 @@ bool WebSrv::uploadfile(fs::FS& fs, ps_ptr<char> path, uint32_t contentLength, p
 
     file = fs.open(path.c_get(), FILE_WRITE);
     if (!file) {
-        WS_LOG_ERROR("cannot open file %s for writing", path.c_get());
+        WS_LOG_ERROR("cannot open file {} for writing", path.c_get());
         return false;
     }
 
@@ -501,13 +501,13 @@ bool WebSrv::uploadfile(fs::FS& fs, ps_ptr<char> path, uint32_t contentLength, p
 
             bytesRead = cmdclient.readBytes(buffer, toRead);
             if (bytesRead == 0) {
-                msg.assignf("read error in simple upload (%lu bytes left)", bytesRemaining);
+                msg.assignf("read error in simple upload ({} bytes left)", bytesRemaining);
                 goto exit;
             }
 
             int written = file.write(buffer, bytesRead);
             if (written != bytesRead) {
-                msg.assignf("write error, written %i/%i bytes", written, bytesRead);
+                msg.assignf("write error, written {}/{} bytes", written, bytesRead);
                 goto exit;
             }
 
@@ -517,7 +517,7 @@ bool WebSrv::uploadfile(fs::FS& fs, ps_ptr<char> path, uint32_t contentLength, p
 
         file.close();
         m_msg.e = evt_info;
-        m_msg.arg.assignf("upload of %s successful (%lu bytes)", path.c_get(), totalWritten);
+        m_msg.arg.assignf("upload of {} successful ({} bytes)", path.c_get(), totalWritten);
         if (m_websrv_callback) m_websrv_callback(m_msg);
         return true;
     }
@@ -541,7 +541,7 @@ bool WebSrv::uploadfile(fs::FS& fs, ps_ptr<char> path, uint32_t contentLength, p
 
         bytesInTransBuf = cmdclient.readBytes(transBuf.get(), 256);
         if (bytesInTransBuf != av) {
-            msg.assignf("read error in %s, available %lu bytes, read %li bytes\n", path, av, bytesInTransBuf);
+            msg.assignf("read error in {}, available {} bytes, read {} bytes\n", path.c_get(), av, bytesInTransBuf);
             goto exit;
         }
 
@@ -589,7 +589,7 @@ void WebSrv::handle_upload_file() {
     transBuff.alloc(bytes_per_transaction + m_upload_items.max_endBoundary_length);
 
     while (true) {
-        //    WS_LOG_INFO("bytes_left %i", m_upload_items.bytes_left);
+        //    WS_LOG_INFO("bytes_left {}", m_upload_items.bytes_left);
         if ((t + 2000) < millis()) {
             WS_LOG_ERROR("timeout while file upload");
             m_handle_upload = false;
@@ -608,7 +608,7 @@ void WebSrv::handle_upload_file() {
                 } else { // remove endBoundary
                     m_upload_items.bytes_left -= (bytesInTransBuf - idx);
                     bytesInTransBuf = idx;
-                    WS_LOG_DEBUG("endBoundary found at %i, bytes_left %i, bytesInTransBuf %i", idx, m_upload_items.bytes_left, bytesInTransBuf);
+                    WS_LOG_DEBUG("endBoundary found at {}, bytes_left {}, bytesInTransBuf %i", idx, m_upload_items.bytes_left, bytesInTransBuf);
                 }
 
             } else {
@@ -616,9 +616,9 @@ void WebSrv::handle_upload_file() {
             }
             if (bytesInTransBuf > 0) {
                 bytesWritten = m_upload_items.uploadfile.write((uint8_t*)transBuff.get(), bytesInTransBuf);
-                if (bytesWritten != bytesInTransBuf) { WS_LOG_ERROR("write error, bytes %i, written %i", bytesInTransBuf, bytesWritten); }
+                if (bytesWritten != bytesInTransBuf) { WS_LOG_ERROR("write error, bytes {}, written {}", bytesInTransBuf, bytesWritten); }
                 m_upload_items.bytes_left -= bytesWritten;
-                WS_LOG_DEBUG("bytes_left %i, bytesWritten %i", m_upload_items.bytes_left, bytesWritten);
+                WS_LOG_DEBUG("bytes_left {}, bytesWritten %i", m_upload_items.bytes_left, bytesWritten);
             }
             break;
         }
@@ -627,7 +627,7 @@ void WebSrv::handle_upload_file() {
     if (!m_upload_items.bytes_left) { // file successfully written
         m_handle_upload = false;
         m_msg.e = evt_info;
-        m_msg.arg.assignf(ANSI_ESC_RESET "upload " ANSI_ESC_CYAN "%s" ANSI_ESC_RESET " was successful", m_upload_items.uploadfile.name());
+        m_msg.arg.assignf(ANSI_ESC_RESET "upload " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET " was successful", m_upload_items.uploadfile.name());
         if (m_websrv_callback) m_websrv_callback(m_msg);
         m_upload_items.uploadfile.close();
     }
@@ -890,9 +890,9 @@ lastToDo:
             http_cmd[3] = '\0';
         }
         m_msg.e = evt_command;
-        m_msg.cmd.assignf("%s", http_cmd);
-        m_msg.param1.assignf("%s", http_param);
-        m_msg.arg1.assignf("%s", http_arg);
+        m_msg.cmd.assignf("{}", http_cmd);
+        m_msg.param1.assignf("{}", http_param);
+        m_msg.arg1.assignf("{}", http_arg);
         if (m_websrv_callback) m_websrv_callback(m_msg);
         if (WEBSRV_onCommand) WEBSRV_onCommand(http_cmd, http_param, http_arg);
     }
@@ -1158,8 +1158,8 @@ void WebSrv::reply(ps_ptr<char> response, const char* MIMEType, bool header) {
     if (header == true) {
         int32_t l = response.strlen();
         http_header.assign("HTTP/1.1 200 OK\r\n");
-        http_header.appendf("Content-type: %s\r\n", MIMEType);
-        http_header.appendf("Content-Length: %i\r\n\r\n", l);
+        http_header.appendf("Content-type: {}\r\n", MIMEType);
+        http_header.appendf("Content-Length: {}\r\n\r\n", l);
         cmdclient.print(http_header.c_get()); // header sent
     }
     cmdclient.print(response.c_get());

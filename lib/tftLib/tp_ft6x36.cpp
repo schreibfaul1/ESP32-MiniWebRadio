@@ -39,7 +39,7 @@ bool FT6x36::begin(TwoWire* twi, uint8_t addr, uint16_t h_resolution, uint16_t v
     m_addr = addr;
     if (probe()) {
         m_isInit = true;
-        char buff[30] = {0};
+        char buff[64] = {0};
         sprintf(buff, "TouchPad found at " ANSI_ESC_CYAN "0x%02X" ANSI_ESC_RESET, m_addr);
         tp_info(buff);
         write(FT6x36U_ADDR_DEVICE_MODE, 0);

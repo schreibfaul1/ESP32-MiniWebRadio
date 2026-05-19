@@ -2,7 +2,7 @@
  *  KCX_BT_Emitter.cpp
  *
  *  Created on: 21.01.2024
- *  updated on: 18.04.2026
+ *  updated on: 15.05.2026
  *      Author: Wolle
  */
 
@@ -44,7 +44,7 @@ void KCX_BT_Emitter::begin() {
 void KCX_BT_Emitter::decrement_timer() {
 
     if (m_tx_process_timer == 1 && m_f_power) {
-        KCX_LOG_WARN("timeout, last command was: '%s'", m_last_tx_command.c_get());
+        KCX_LOG_WARN("timeout, last command was: '{}'", m_last_tx_command.c_get());
         m_last_tx_command = "";
     }
 
@@ -99,7 +99,7 @@ bool KCX_BT_Emitter::compare_request(ps_ptr<char> answer) {
         if (answer.starts_with("MacAdd")) return true;
     }
     if (!result && !extended_answer) {
-        KCX_LOG_WARN("unknown answer, request: %s, response %s", m_last_tx_command.c_get(), answer.c_get());
+        KCX_LOG_WARN("unknown answer, request: {}, response {}", m_last_tx_command.c_get(), answer.c_get());
         return false;
     }
 
@@ -194,7 +194,7 @@ void KCX_BT_Emitter::readCmd() {
     while (true) {
         if (t < millis()) {
             if (!buff.is_utf8()) return;
-            KCX_LOG_WARN("timeout while reading from KCX_BT_Emitter, received: %s", buff.c_get());
+            KCX_LOG_WARN("timeout while reading from KCX_BT_Emitter, received: {}", buff.c_get());
             return;
         }
         if (ch == '\n') {
@@ -220,7 +220,7 @@ void KCX_BT_Emitter::readCmd() {
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void KCX_BT_Emitter::writeCommand(ps_ptr<char> cmd) {
     protocol_addElement("TX", cmd.c_get());
-    KCX_LOG_DEBUG("writeCmd %s", cmd.c_get());
+    KCX_LOG_DEBUG("writeCmd {}", cmd.c_get());
     Serial2.printf("%s%s", cmd.c_get(), "\r\n"); // kcx write
     return;
 }
@@ -228,7 +228,7 @@ void KCX_BT_Emitter::writeCommand(ps_ptr<char> cmd) {
 void KCX_BT_Emitter::parseATcmds() {
     ps_ptr<char> item;
     item = get_rx_queue_item();
-    KCX_LOG_DEBUG("%s", item.c_get());
+    KCX_LOG_DEBUG("{}", item.c_get());
     compare_request(item);
 
     if (item.equals("OK+")) {
@@ -243,7 +243,7 @@ void KCX_BT_Emitter::parseATcmds() {
         m_msg.e = evt_reset;
         if (m_bt_callback) { m_bt_callback(m_msg); }
     } else if (item.equals("POWER ON")) {
-        KCX_LOG_DEBUG("%s", item.c_get());
+        KCX_LOG_DEBUG("{}", item.c_get());
         m_f_power = true;
         m_powerOn_in_progress = 0;
         // m_setMode_in_progress = 0;
@@ -379,7 +379,7 @@ void KCX_BT_Emitter::parseATcmds() {
         } else if (item.starts_with("Not in emitter mode!")) {
             ;
         } else {
-            KCX_LOG_WARN("unknown RX command: %s", item.c_get());
+            KCX_LOG_WARN("unknown RX command: {}", item.c_get());
         }
     }
     return;
@@ -406,11 +406,11 @@ bool KCX_BT_Emitter::already_in_TX_list(ps_ptr<char> command) {
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void KCX_BT_Emitter::add_tx_queue_item(ps_ptr<char> item) {
     if (already_in_TX_list(item)) {
-        KCX_LOG_DEBUG("commamd '%s' already in tx list", item.c_get());
+        KCX_LOG_DEBUG("commamd '{}' already in tx list", item.c_get());
         return;
     }
     m_TX_queue.push_back(item);
-    KCX_LOG_DEBUG("add_tx_queue_item %s", item.c_get());
+    KCX_LOG_DEBUG("add_tx_queue_item {}", item.c_get());
     return;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -420,7 +420,7 @@ ps_ptr<char> KCX_BT_Emitter::get_tx_queue_item() {
     queue_item = m_TX_queue[0];
     m_last_tx_command = m_TX_queue[0];
     m_tx_process_timer = 5; // max 5 sec
-    KCX_LOG_DEBUG("get_tx_queue_item %s", queue_item.c_get());
+    KCX_LOG_DEBUG("get_tx_queue_item {}", queue_item.c_get());
     m_TX_queue.pop_front();
     return queue_item;
 }
@@ -434,7 +434,7 @@ ps_ptr<char> KCX_BT_Emitter::get_rx_queue_item() {
     ps_ptr<char> queue_item;
     if (m_RX_queue.size() == 0) return "";
     queue_item = m_RX_queue[0];
-    KCX_LOG_DEBUG("%s", queue_item.c_get());
+    KCX_LOG_DEBUG("{}", queue_item.c_get());
     m_RX_queue.pop_front();
     return queue_item;
 }
@@ -461,7 +461,7 @@ void KCX_BT_Emitter::setVolume(uint8_t vol) {
     if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;
     if (vol > 31) { vol = 31; }
     ps_ptr<char> v = "AT+VOL=";
-    v.appendf("%i", vol);
+    v.appendf("{}", vol);
     add_tx_queue_item(v);
 }
 void KCX_BT_Emitter::setMode(ps_ptr<char> mode) {
@@ -502,7 +502,7 @@ void KCX_BT_Emitter::setMode_intern(ps_ptr<char> mode) {
         }
         m_tx_process_timer = 0;
     } else {
-        KCX_LOG_ERROR("unknown mode %s", mode.c_get());
+        KCX_LOG_ERROR("unknown mode {}", mode.c_get());
         return;
     }
     add_tx_queue_item("AT+RESET");
@@ -519,7 +519,7 @@ void KCX_BT_Emitter::downvolume() {
     }
     m_bt_volume--;
     ps_ptr<char> v = "AT+VOL=";
-    v.appendf("%02d", m_bt_volume);
+    v.appendf("{:02}", m_bt_volume);
     add_tx_queue_item(v);
 }
 void KCX_BT_Emitter::upvolume() {
@@ -530,7 +530,7 @@ void KCX_BT_Emitter::upvolume() {
     }
     m_bt_volume++;
     ps_ptr<char> v = "AT+VOL=";
-    v.appendf("%02d", m_bt_volume);
+    v.appendf("{:02}", m_bt_volume);
     add_tx_queue_item(v);
 }
 const char* KCX_BT_Emitter::getMyName() {
@@ -571,7 +571,7 @@ void KCX_BT_Emitter::userCommand(ps_ptr<char> cmd) {
     add_tx_queue_item(cmd);
 }
 const char* KCX_BT_Emitter::list_protokol() {
-    for (auto& item : m_RX_TX_protocol) { KCX_LOG_INFO("RX_TX_protocol %s", item.c_get()); }
+    for (auto& item : m_RX_TX_protocol) { KCX_LOG_INFO("RX_TX_protocol {}", item.c_get()); }
     return "";
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -583,8 +583,8 @@ void KCX_BT_Emitter::stringifyMemItems() {
     // "MEM_Name 00:MyName"         --> save in _KCX_BT_names vector
     // "MEM_MacAdd 00:82435181cc6a" --> save in _KCX_BT_addr vector
 
-    for (auto& item : m_MEM_MacAdd) { KCX_LOG_DEBUG("RX_TX_protocol %s", item.c_get()); }
-    for (auto& item : m_MEM_Name) { KCX_LOG_DEBUG("RX_TX_protocol %s", item.c_get()); }
+    for (auto& item : m_MEM_MacAdd) { KCX_LOG_DEBUG("RX_TX_protocol {}", item.c_get()); }
+    for (auto& item : m_MEM_Name) { KCX_LOG_DEBUG("RX_TX_protocol {}", item.c_get()); }
 
     m_jsonMemItemsStr.assign("[");
     // [{"name":"btName","addr":"82435181cc6a"},{"name":"btsecondName","addr":"82435181cc6a"},{....}]
@@ -597,20 +597,20 @@ void KCX_BT_Emitter::stringifyMemItems() {
     }
     int posComma = m_jsonMemItemsStr.last_index_of(',');
     m_jsonMemItemsStr[posComma] = ']'; // replace comma by square bracket close
-    KCX_LOG_DEBUG("%s", m_jsonMemItemsStr.c_get());
+    KCX_LOG_DEBUG("{}", m_jsonMemItemsStr.c_get());
     kcx_bt_memItems(m_jsonMemItemsStr.c_get());
     return;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 const char* KCX_BT_Emitter::stringifyScannedItems() { // returns the last three scanned BT devices as jsonStr
 
-    for (auto& item : m_bt_scannedItems) { KCX_LOG_DEBUG("RX_TX_protocol %s", item.c_get()); }
+    for (auto& item : m_bt_scannedItems) { KCX_LOG_DEBUG("RX_TX_protocol {}", item.c_get()); }
 
     m_jsonScanItemsStr.assign("[");
     // [{"name":"btName","addr":"82435181cc6a"},{"name":"btsecondName","addr":"82435181cc6b"},{name":"btthirdName","addr":"82435181cc6c"}]
     int idx1, idx2, idx3;
     for (int i = 0; i < m_bt_scannedItems.size(); i++) {
-        KCX_LOG_DEBUG("m_bt_scannedItems[i]   %s", m_bt_scannedItems[i].c_get());
+        KCX_LOG_DEBUG("m_bt_scannedItems[i]   {}", m_bt_scannedItems[i].c_get());
         idx1 = m_bt_scannedItems[i].index_of(':');
         idx2 = m_bt_scannedItems[i].index_of(',');
         idx3 = m_bt_scannedItems[i].last_index_of(':');
@@ -633,6 +633,6 @@ const char* KCX_BT_Emitter::stringifyScannedItems() { // returns the last three 
     if (!m_bt_scannedItems.size()) m_jsonScanItemsStr.append("{\"addr\":\"\",\"name\":\"\"},");
     int posComma = m_jsonScanItemsStr.last_index_of(',');
     m_jsonScanItemsStr[posComma] = ']'; // and terminate
-    KCX_LOG_DEBUG("%s", m_jsonScanItemsStr.c_get());
+    KCX_LOG_DEBUG("{}", m_jsonScanItemsStr.c_get());
     return m_jsonScanItemsStr.c_get();
 }

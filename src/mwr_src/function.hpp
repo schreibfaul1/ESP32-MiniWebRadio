@@ -215,32 +215,32 @@ bool get_esp_items(uint8_t* s_resetReason, bool* s_f_FFatFound) {
     uint8_t      avMajor = ESP_ARDUINO_VERSION_MAJOR;
     uint8_t      avMinor = ESP_ARDUINO_VERSION_MINOR;
     uint8_t      avPatch = ESP_ARDUINO_VERSION_PATCH;
-    SerialPrintfln("ESP32 Chip: %s", chipModel.c_get());
-    SerialPrintfln("Arduino Version: %d.%d.%d", avMajor, avMinor, avPatch);
+    SerialPrintfln("ESP32 Chip: {}", chipModel.c_get());
+    SerialPrintfln("Arduino Version: {}.{}.{}", avMajor, avMinor, avPatch);
     uint8_t idfMajor = ESP_IDF_VERSION_MAJOR;
     uint8_t idfMinor = ESP_IDF_VERSION_MINOR;
     uint8_t idfPatch = ESP_IDF_VERSION_PATCH;
-    SerialPrintfln("ESP-IDF Version: %d.%d.%d", idfMajor, idfMinor, idfPatch);
-    SerialPrintfln("ARDUINO_LOOP_STACK_SIZE %d words (32 bit)", CONFIG_ARDUINO_LOOP_STACK_SIZE);
-    SerialPrintfln("FLASH size %lu bytes, speed %lu MHz", (long unsigned)ESP.getFlashChipSize(), (long unsigned)ESP.getFlashChipSpeed() / 1000000);
-    SerialPrintfln("CPU speed %lu MHz", (long unsigned)ESP.getCpuFreqMHz());
-    SerialPrintfln("SDMMC speed %d MHz", SDMMC_FREQUENCY / 1000000);
-    SerialPrintfln("TFT speed %d MHz", TFT_FREQUENCY / 1000000);
+    SerialPrintfln("ESP-IDF Version: {}.{}.{}", idfMajor, idfMinor, idfPatch);
+    SerialPrintfln("ARDUINO_LOOP_STACK_SIZE {} words (32 bit)", CONFIG_ARDUINO_LOOP_STACK_SIZE);
+    SerialPrintfln("FLASH size {} bytes, speed {} MHz", (long unsigned)ESP.getFlashChipSize(), (long unsigned)ESP.getFlashChipSpeed() / 1000000);
+    SerialPrintfln("CPU speed {} MHz", (long unsigned)ESP.getCpuFreqMHz());
+    SerialPrintfln("SDMMC speed {} MHz", SDMMC_FREQUENCY / 1000000);
+    SerialPrintfln("TFT speed {} MHz", TFT_FREQUENCY / 1000000);
 
     if (!psramInit()) {
         SerialPrintfln(ANSI_ESC_RED "PSRAM not found! MiniWebRadio doesn't work properly without PSRAM!" ANSI_ESC_WHITE);
     } else {
-        SerialPrintfln("PSRAM total size: %lu bytes", (long unsigned)ESP.getPsramSize());
+        SerialPrintfln("PSRAM total size: {} bytes", (long unsigned)ESP.getPsramSize());
     }
     if (ESP.getFlashChipSize() > 80000000) {
         if (!FFat.begin()) {
             if (!FFat.format()) SerialPrintfln("FFat Mount Failed\n");
         } else {
-            SerialPrintfln("FFat total space: %d bytes, free space: %d bytes", FFat.totalBytes(), FFat.freeBytes());
+            SerialPrintfln("FFat total space: {} bytes, free space: {} bytes", FFat.totalBytes(), FFat.freeBytes());
             *s_f_FFatFound = true;
         }
     }
-    SerialPrintfln("Arduino is pinned to core %d", xPortGetCoreID());
+    SerialPrintfln("Arduino is pinned to core {}", xPortGetCoreID());
     const char* rr = NULL;
     *s_resetReason = (esp_reset_reason_t)esp_reset_reason();
     switch (*s_resetReason) {
@@ -259,13 +259,13 @@ bool get_esp_items(uint8_t* s_resetReason, bool* s_f_FFatFound) {
         case ESP_RST_BROWNOUT: rr = "Brownout reset (software or hardware)"; break;
         case ESP_RST_SDIO: rr = "Reset over SDIO"; break;
     }
-    SerialPrintfln("RESET_REASON: %s", rr);
+    SerialPrintfln("RESET_REASON: {}", rr);
     if (chipModel.equals("ESP32-S3")) {
     } // ...  okay
     else if (chipModel.equals("ESP32-P4")) {
     } // ...  okay
     else {
-        SerialPrintfln(ANSI_ESC_RED "MiniWebRadio does not work with %s", chipModel.c_get());
+        SerialPrintfln(ANSI_ESC_RED "MiniWebRadio does not work with {}", chipModel.c_get());
         return false;
     }
     SerialPrintfln("");
@@ -807,32 +807,6 @@ const char ir_symbols[34][15] = {"ZERO",        "ONE",        "TWO",        "THR
                                  "PLAYER",      "DLNA",       "CLOCK",      "OFF_TIMER", "VOLUME+", "VOLUME-", "-30s", "+30s",         "CHANNEL+", "CHANNEL-"};
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-const char* aes_encrypt(const char* input) {
-    static char* output = NULL;
-    uint16_t     len = strlen(input) / 16;
-    len++;
-    x_ps_free(&output);
-    output = (char*)x_ps_calloc((len * 16) + 1, 1);
-    mbedtls_aes_context aes;
-    mbedtls_aes_init(&aes);
-    mbedtls_aes_setkey_enc(&aes, (const unsigned char*)aesKey, 128);
-    mbedtls_aes_crypt_ecb(&aes, MBEDTLS_AES_ENCRYPT, (const unsigned char*)input, (unsigned char*)output);
-    mbedtls_aes_free(&aes);
-    return output;
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-const char* aes_decrypt(const char* input) {
-    static char* output = NULL;
-    uint16_t     len = strlen(input) + 1;
-    x_ps_free(&output);
-    output = (char*)x_ps_calloc(len, 1);
-    mbedtls_aes_context aes;
-    mbedtls_aes_init(&aes);
-    mbedtls_aes_setkey_dec(&aes, (const unsigned char*)aesKey, 128);
-    mbedtls_aes_crypt_ecb(&aes, MBEDTLS_AES_DECRYPT, (const unsigned char*)input, (unsigned char*)output);
-    mbedtls_aes_free(&aes);
-    return output;
-}
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // 📌📌📌  I R _ B U T T O N S  📌📌📌
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -887,6 +861,7 @@ class IR_buttons {
         const char* ptr = jsonString;
         uint8_t     buttonNr = 0;
         size_t      buttonIndex = 0;
+        ps_ptr<char> v;
 
         // Check if the JSON string starts with '['
         ptr = skipWhitespace(ptr);
@@ -965,7 +940,7 @@ class IR_buttons {
                 if (validObject && label != NULL) {
                     m_settings->irbuttons[buttonNr].val = val;
                     m_settings->irbuttons[buttonNr].label = label;
-                    // log_w("buttonNr %i, val %i, label %s", buttonNr, m_settings->irbuttons[buttonNr].val, m_settings->irbuttons[buttonNr].label);
+                    // MWR_LOG_WARN("buttonNr {}, val {}, label {}", buttonNr, m_settings->irbuttons[buttonNr].val, m_settings->irbuttons[buttonNr].label);
                     buttonIndex++;
                 } else {
                     Serial.println("Error: Invalid object, missing buttonNr or label.");
@@ -1005,7 +980,7 @@ class IR_buttons {
         String jsonString;
         while (file.available()) { jsonString += (char)file.read(); }
         file.close();
-        //    log_w("%s", jsonString.c_str());
+        //    MWR_LOG_WARN("{}", jsonString.c_str());
         // JSON parsen
         if (!parseJSONString(jsonString.c_str())) {
             Serial.println("Failed to parse JSON.");
@@ -1016,8 +991,8 @@ class IR_buttons {
         while (true) {
             if (m_settings->irbuttons[m_numOfIrButtons].label == NULL) break;
 
-            // if(m_settings->irbuttons[m_numOfIrButtons].val == -1) log_w("IR_buttonNr %02i, value -1,   label %s", m_numOfIrButtons, m_settings->irbuttons[m_numOfIrButtons].label);
-            //  else log_w("IR_buttonNr %02i, value 0x%02X, label %s", m_numOfIrButtons, m_settings->irbuttons[m_numOfIrButtons].val, m_settings->irbuttons[m_numOfIrButtons].label);
+            // if(m_settings->irbuttons[m_numOfIrButtons].val == -1) MWR_LOG_WARN("IR_buttonNr {:02}, value -1,   label {}", m_numOfIrButtons, m_settings->irbuttons[m_numOfIrButtons].label);
+            //  else MWR_LOG_WARN("IR_buttonNr {:02}, value 0x{:02X}, label {}", m_numOfIrButtons, m_settings->irbuttons[m_numOfIrButtons].val, m_settings->irbuttons[m_numOfIrButtons].label);
             m_numOfIrButtons++;
         }
         m_settings->numOfIrButtons = m_numOfIrButtons;
@@ -1063,12 +1038,12 @@ class SD_content {
         m_files.clear();
         if (m_masterFile) m_masterFile.close();
         if (!SD_MMC.exists(path)) {
-            SerialPrintfln(ANSI_ESC_RED "SD_MMC/%s not exist", path);
+            SerialPrintfln(ANSI_ESC_RED "SD_MMC/{} not exist", path);
             return false;
         }
         m_masterFile = SD_MMC.open(path);
         if (!m_masterFile.isDirectory()) {
-            SerialPrintfln(ANSI_ESC_RED "SD_MMC/%s is not a directory", path);
+            SerialPrintfln(ANSI_ESC_RED "SD_MMC/{} is not a directory", path);
             m_masterFile.close();
             return false;
         }
@@ -1099,7 +1074,7 @@ class SD_content {
 
     bool isDir(uint16_t idx) {
         if (idx >= m_files.size()) {
-            MWR_LOG_ERROR("idx %u is oor, max = %u", idx, m_files.size() - 1);
+            MWR_LOG_ERROR("idx {} is oor, max = {}", idx, m_files.size() - 1);
             return false;
         }
         if (m_files[idx].fileSize == -1) return true;
@@ -1112,11 +1087,11 @@ class SD_content {
             return "";
         }
         if (m_files.size() < idx + 1) {
-            MWR_LOG_WARN("idx %u is oor, max = %u", idx, m_files.size());
+            MWR_LOG_WARN("idx {} is oor, max = {}", idx, m_files.size());
             return "";
         }
         if (isDir(idx)) return m_files[idx].fileName.get();
-        m_buff.assignf("%s" ANSI_ESC_YELLOW " %li", m_files[idx].fileName.c_get(), m_files[idx].fileSize);
+        m_buff.assignf("{}" ANSI_ESC_YELLOW " {}", m_files[idx].fileName.c_get(), m_files[idx].fileSize);
         return m_buff.get();
     }
     const char* getFileNameByIndex(uint16_t idx) {
@@ -1125,7 +1100,7 @@ class SD_content {
             return "";
         }
         if (m_files.size() < idx + 1) {
-            MWR_LOG_WARN("idx %u is oor, max = %u", idx, m_files.size());
+            MWR_LOG_WARN("idx {} is oor, max = {}", idx, m_files.size());
             return "";
         }
         return m_files[idx].fileName.get();
@@ -1137,7 +1112,7 @@ class SD_content {
             return 0;
         }
         if (m_files.size() < idx + 1) {
-            MWR_LOG_WARN("idx %u is oor, max = %u", idx, m_files.size());
+            MWR_LOG_WARN("idx {} is oor, max = {}", idx, m_files.size());
             return 0;
         }
         return m_files[idx].fileSize;
@@ -1149,7 +1124,7 @@ class SD_content {
             return "";
         }
         if (m_files.size() < idx + 1) {
-            MWR_LOG_WARN("idx %u is oor, max = %u", idx, m_files.size());
+            MWR_LOG_WARN("idx {} is oor, max = {}", idx, m_files.size());
             return "";
         }
         /*
@@ -1173,7 +1148,7 @@ class SD_content {
             return "";
         }
         if (m_files.size() < idx + 1) {
-            MWR_LOG_WARN("idx %u is oor, max = %u", idx, m_files.size());
+            MWR_LOG_WARN("idx {} is oor, max = {}", idx, m_files.size());
             return "";
         }
         /*
@@ -1279,7 +1254,7 @@ class SD_content {
             m_lastConnectedFileName.copy_from(lastconnectedItem + posLast + 1);
         }
 
-        // log_e("posFirst %i, posLast %i, m_lastConnectedFileName %s, m_lastConnectedFolder %s", posFirst, posLast, m_lastConnectedFileName, m_lastConnectedFolder);
+        // MWR_LOG_WARN("posFirst {}, posLast {}, m_lastConnectedFileName {}, m_lastConnectedFolder {}", posFirst, posLast, m_lastConnectedFileName, m_lastConnectedFolder);
         posDot = m_lastConnectedFileName.index_of('.', 0);
         if (posDot == -1) { // no extension
             m_lastConnectedFileName.assign("");
@@ -1288,10 +1263,10 @@ class SD_content {
     exit:
         m_lastConnectedFile.clone_from(m_lastConnectedFolder);
         m_lastConnectedFile.append(m_lastConnectedFileName.c_get());
-        MWR_LOG_DEBUG("lastconnectedItem %s", lastconnectedItem);
-        MWR_LOG_DEBUG("lastConnectedFile %s", m_lastConnectedFile.c_get());
-        MWR_LOG_DEBUG("m_lastConnectedFileName %s", m_lastConnectedFileName.c_get());
-        MWR_LOG_DEBUG("m_lastConnectedFolder %s", m_lastConnectedFolder.c_get());
+        MWR_LOG_DEBUG("lastconnectedItem {}", lastconnectedItem);
+        MWR_LOG_DEBUG("lastConnectedFile {}", m_lastConnectedFile.c_get());
+        MWR_LOG_DEBUG("m_lastConnectedFileName {}", m_lastConnectedFileName.c_get());
+        MWR_LOG_DEBUG("m_lastConnectedFolder {}", m_lastConnectedFolder.c_get());
         listFilesInDir(m_lastConnectedFolder.c_get(), true, false);
         sort();
     }
@@ -1326,7 +1301,7 @@ class SD_content {
                 fileName.copy_from(fn);
             }
             m_JSONstr.append("{\"name\":");
-            m_JSONstr.appendf("\"%s\"", fileName.c_get());
+            m_JSONstr.appendf("\"{}\"", fileName.c_get());
             m_JSONstr.append(",\"dir\":");
             if (isDir) {
                 m_JSONstr.append("true");
@@ -1334,14 +1309,14 @@ class SD_content {
             } else {
                 m_JSONstr.append("false");
                 m_JSONstr.append(",\"size\":");
-                m_JSONstr.appendf("%s", fileSize.c_get());
+                m_JSONstr.appendf("{}", fileSize.c_get());
             }
             m_JSONstr.append("},");
-            MWR_LOG_DEBUG("%s", fn);
+            MWR_LOG_DEBUG("{}", fn);
         }
         int lastComma = m_JSONstr.last_index_of(',');
         m_JSONstr[lastComma] = ']'; // replace comma by square bracket close
-        MWR_LOG_DEBUG("%s", m_JSONstr.c_get());
+        MWR_LOG_DEBUG("{}", m_JSONstr.c_get());
         return m_JSONstr.c_get();
     }
 
@@ -1569,17 +1544,17 @@ class Playlist {
         reset();
         if (!path.valid()) return false;
         if (!path.ends_with(".m3u")) {
-            MWR_LOG_ERROR("wrong playlist path %s", path.c_get());
+            MWR_LOG_ERROR("wrong playlist path {}", path.c_get());
             return false;
         }
         if (!SD_MMC.exists(path.get())) {
-            MWR_LOG_ERROR("Playlistfile %s not found", path.c_get());
+            MWR_LOG_ERROR("Playlistfile {} not found", path.c_get());
             reset();
             return false;
         }
         m_playlist_file = SD_MMC.open(path.get());
         if (m_playlist_file.size() > 1048576) {
-            MWR_LOG_ERROR("Playlist too big, size is %u", m_playlist_file.size());
+            MWR_LOG_ERROR("Playlist too big, size is {}", m_playlist_file.size());
             reset();
             return false;
         }
@@ -1637,10 +1612,10 @@ class Playlist {
                             t = itemsBuff.substr(0, idx);
                             int d = t.to_uint32();
                             if (d > 0) { // has duration
-                                MWR_LOG_WARN("duration %is", d);
+                                MWR_LOG_WARN("duration {}s", d);
                                 itemsBuff = itemsBuff.substr(idx + 1);
                             }
-                            itemsBuff.appendf(" " ANSI_ESC_YELLOW " %s" ANSI_ESC_RESET, t.c_get());
+                            itemsBuff.appendf(" " ANSI_ESC_YELLOW " {}" ANSI_ESC_RESET, t.c_get());
                         }
 
                         m_content_items.push_back(itemsBuff);
@@ -1664,8 +1639,8 @@ class Playlist {
         m_playlist_file.close();
 
         // for (int i = 0; i < m_content_file.size(); i++) {
-        //     MWR_LOG_WARN("%i, %s", i, m_content_file[i].c_get());
-        //     MWR_LOG_INFO("%i, %s", i, m_content_items[i].c_get());
+        //     MWR_LOG_WARN("{}, {}", i, m_content_file[i].c_get());
+        //     MWR_LOG_INFO("{}, {}", i, m_content_items[i].c_get());
         // }
         return true;
     }
@@ -1673,12 +1648,12 @@ class Playlist {
     bool create_playlist_from_SD_folder(ps_ptr<char> path) { // all files within a SD folder
         reset();
         if (!SD_MMC.exists(path.get())) {
-            MWR_LOG_ERROR("SD_MMC/%s not exist", path.c_get());
+            MWR_LOG_ERROR("SD_MMC/{} not exist", path.c_get());
             return false;
         }
         File folder = SD_MMC.open(path.get());
         if (!folder.isDirectory()) {
-            MWR_LOG_ERROR("SD_MMC%s is not a directory", path.c_get());
+            MWR_LOG_ERROR("SD_MMC{} is not a directory", path.c_get());
             folder.close();
             return false;
         }
@@ -1693,7 +1668,7 @@ class Playlist {
                 m_content_file.push_back(file.path());
                 ps_ptr<char> name;
                 name = file.name();
-                name.appendf("" ANSI_ESC_YELLOW " %i" ANSI_ESC_RESET "", file.size());
+                name.appendf("" ANSI_ESC_YELLOW " {}" ANSI_ESC_RESET "", file.size());
                 m_content_items.push_back(name);
             }
             file.close();
@@ -1701,8 +1676,8 @@ class Playlist {
         folder.close();
 
         // for (int i = 0; i < m_content_file.size(); i++) {
-        //     MWR_LOG_WARN("%i, %s", i, m_content_file[i].c_get());  // path
-        //     MWR_LOG_INFO("%i, %s", i, m_content_items[i].c_get()); // name
+        //     MWR_LOG_WARN("{}, {}", i, m_content_file[i].c_get());  // path
+        //     MWR_LOG_INFO("{}, {}", i, m_content_items[i].c_get()); // name
         // }
         return true;
     }
@@ -1710,7 +1685,7 @@ class Playlist {
     bool create_playlist_from_DLNA_folder(const std::deque<DLNA_Client::srvItem>* foldercontent) {
         reset();
         for (int i = 0; i < foldercontent->size(); i++) {
-            // log_i( "%d : (%d) %s %s -- %s",i, foldercontent.isAudio[i], foldercontent.itemURL[i], foldercontent.title[i], foldercontent.duration[i]);
+            // MWR_LOG_WARN( "{} : ({}) {} {} -- {}",i, foldercontent.isAudio[i], foldercontent.itemURL[i], foldercontent.title[i], foldercontent.duration[i]);
             if (!foldercontent->at(i).isAudio) continue;
             uint16_t len =
                 strlen((const char*)foldercontent->at(i).itemURL.c_get()) + strlen((const char*)foldercontent->at(i).title.c_get()) + strlen((const char*)foldercontent->at(i).duration.c_get()) + 3;
@@ -1720,11 +1695,11 @@ class Playlist {
             itstr += foldercontent->at(i).duration;
             itstr += ",";
             itstr += foldercontent->at(i).title;
-            MWR_LOG_DEBUG("pushing to playlist : %s", itstr.c_get());
+            MWR_LOG_DEBUG("pushing to playlist : {}", itstr.c_get());
             m_content_file.push_back(itstr);
         }
         if (!m_content_file.size()) return false;
-        MWR_LOG_INFO("pls length %u", m_content_file.size());
+        MWR_LOG_INFO("pls length {}", m_content_file.size());
         return true;
     }
 
@@ -1789,14 +1764,14 @@ class Playlist {
 
     ps_ptr<char> get_coloured_file() {
         ps_ptr<char> s = "";
-        if (m_index != -1) s.assignf(ANSI_ESC_CYAN "%s" ANSI_ESC_RESET, m_content_file[m_index]);
+        if (m_index != -1) s.assignf(ANSI_ESC_CYAN "{}" ANSI_ESC_RESET, m_content_file[m_index].c_get());
         s.println();
         return s;
     }
 
     ps_ptr<char> get_coloured_index() {
         ps_ptr<char> s = "";
-        if (m_index != -1) s.assignf(ANSI_ESC_ORANGE "%03i/%03i" ANSI_ESC_RESET, m_index + 1, m_content_file.size());
+        if (m_index != -1) s.assignf(ANSI_ESC_ORANGE "{:03}/{:03}" ANSI_ESC_RESET, m_index + 1, m_content_file.size());
         return s;
     }
 
@@ -1945,7 +1920,7 @@ void wavWriterTask(void*) {
             recorder.running = true;
             rec_buffer.clear();
             writeBuffer.clear();
-            SerialPrintfln("recorder: .  " ANSI_ESC_YELLOW "Recording started: " ANSI_ESC_CYAN "%s" ANSI_ESC_RESET, filename);
+            SerialPrintfln("recorder: .  " ANSI_ESC_YELLOW "Recording started: " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET, filename);
         }
 
         // --- WRITE DATA ---
@@ -2002,7 +1977,7 @@ void wavWriterTask(void*) {
             fileOpen = false;
             writeBufferFill = 0;
             recorder.running = false;
-            SerialPrintfln("recorder: .  " ANSI_ESC_YELLOW "Recording stopped. Total bytes: " ANSI_ESC_CYAN "%u" ANSI_ESC_YELLOW ", Overflows: " ANSI_ESC_CYAN "%u" ANSI_ESC_RESET, recorder.totalBytes,
+            SerialPrintfln("recorder: .  " ANSI_ESC_YELLOW "Recording stopped. Total bytes: " ANSI_ESC_CYAN "{}" ANSI_ESC_YELLOW ", Overflows: " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET, recorder.totalBytes,
                            recorder.overflowCount);
         }
 
