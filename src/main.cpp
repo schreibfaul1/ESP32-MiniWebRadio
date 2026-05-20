@@ -803,7 +803,7 @@ bool connectToWiFi() {
         i++;
         if (i > 10) break; // max 20s
     }
-    if (WiFi.status() != WL_CONNECTED)  {
+    if (WiFi.status() != WL_CONNECTED) {
         SerialPrintfln("WiFI_info:   " ANSI_ESC_RED "WiFi credentials are not correct" ANSI_ESC_RESET "  ");
         return false;
     }
@@ -1019,7 +1019,6 @@ void stopSong() {
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // 📌📌📌  S E T U P  📌📌📌
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
 
 void setup() {
     //---- BEGIN ---------
@@ -2493,11 +2492,24 @@ void loop() {
         if (r.startsWith("o48")) { // output48KHz
             static bool f_o48 = false;
             f_o48 = !f_o48;
-            audio.setOutput48KHz(f_o48);
-            if (f_o48)
+            if (f_o48) {
+                audio.setOutputSampleRate(Audio::SR_48000);
                 MWR_LOG_INFO("output 48KHz");
-            else
+            } else {
+                audio.setOutputSampleRate(Audio::SR_ORIGIN);
                 MWR_LOG_INFO("normal output {} Hz", audio.getSampleRate());
+            }
+        }
+        if (r.startsWith("o44")) { // output48KHz
+            static bool f_o44 = false;
+            f_o44 = !f_o44;
+            if (f_o44) {
+                audio.setOutputSampleRate(Audio::SR_44100);
+                MWR_LOG_INFO("output 44.1KHz");
+            } else {
+                audio.setOutputSampleRate(Audio::SR_ORIGIN);
+                MWR_LOG_INFO("normal output {} Hz", audio.getSampleRate());
+            }
         }
         if (r.startsWith("btp")) { // bluetooth RX/TX protocol
             bt_emitter.list_protokol();
@@ -2531,6 +2543,11 @@ void loop() {
         }
         if (r.startsWith("ibs")) { // inbuff status
             audio.inBufferStatus();
+        }
+        if (r.startsWith("ns")) { // noise shaping
+            audio.settings.NOISE_SHAPING = !audio.settings.NOISE_SHAPING;
+            if(audio.settings.NOISE_SHAPING) MWR_LOG_INFO("noise shaping is active");
+            else MWR_LOG_INFO("noise shaping is inactive");
         }
     }
 }
