@@ -507,7 +507,7 @@ void showStreamTitle(ps_ptr<char> streamtitle) {
     // replacestr(st, "| ", "\n");
     // replacestr(st, "|", "\n");
 
-    txt_RA_sTitle.setTextColor(TFT_CORNSILK);
+    txt_RA_sTitle.setTextColor(MWR_STREAMTITLE_TEXT_COLOR);
     txt_RA_sTitle.writeText(streamtitle.c_get());
 }
 
@@ -532,7 +532,7 @@ void showLogoAndStationName(bool force) {
 
     if (old_SN_utf8 != SN_utf8) {
         old_SN_utf8 = SN_utf8;
-        txt_RA_staName.setTextColor(TFT_CYAN);
+        txt_RA_staName.setTextColor(MWR_STATION_NAME_TEXT_COLOR);
         txt_RA_staName.setText(SN_utf8.c_get());
         txt_RA_staName.show();
         pic_RA_logo.setPicturePath(path.c_get());

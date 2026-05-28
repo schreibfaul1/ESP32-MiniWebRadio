@@ -5929,9 +5929,9 @@ class displayFooter : public RegisterTable {
     uint16_t     m_offTime = 0;
     uint32_t     m_bitRate = 0;
     uint16_t     m_bgColor = TFT_BLACK;
-    uint16_t     m_stationColor = TFT_LAVENDER;
-    uint16_t     m_bitRateColor = TFT_LAVENDER;
-    uint16_t     m_ipAddrColor = TFT_GREENYELLOW;
+    uint16_t     m_stationColor = MWR_STATION_NR_TEXT_COLOR;
+    uint16_t     m_bitRateColor = MWR_BITRATE_TEXT_COLOR;
+    uint16_t     m_ipAddrColor = MWR_IPADDR_TEXT_COLOR;
     ps_ptr<char> m_name;
     ps_ptr<char> m_fileNr;
     ps_ptr<char> m_ipAddr = "";
@@ -6370,13 +6370,13 @@ class displayFooter : public RegisterTable {
         char buff[15];
         sprintf(buff, "%d:%02d", m_offTime / 60, m_offTime % 60);
         if (m_offTime) {
-            txt_OffTimer->setTextColor(TFT_RED);
+            txt_OffTimer->setTextColor(MWR_TIMER_ACTIVE_TEXT_COLOR);
             txt_OffTimer->setText(buff);
             txt_OffTimer->show();
             pic_Hourglass->setPicturePath(m_hourGlassymbol[1]);
             pic_Hourglass->show();
         } else {
-            txt_OffTimer->setTextColor(TFT_DEEPSKYBLUE);
+            txt_OffTimer->setTextColor(MWR_TIMER_INACTIVE_TEXT_COLOR);
             txt_OffTimer->setText(buff);
             txt_OffTimer->show();
             pic_Hourglass->setPicturePath(m_hourGlassymbol[0]);
