@@ -758,37 +758,3 @@ inline void vector_clear_and_shrink(vector<char*>& vec) {
 #define MWR_LOG_DEBUG(fmt, ...)   Audio::AUDIO_LOG_IMPL(4, __FILE__, __LINE__, __func__, fmt, ##__VA_ARGS__)
 #define MWR_LOG_VERBOSE(fmt, ...) Audio::AUDIO_LOG_IMPL(5, __FILE__, __LINE__, __func__, fmt, ##__VA_ARGS__)
 
-
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-// Default UI theme
-#ifndef MWR_STATION_NAME_TEXT_COLOR
-#define MWR_STATION_NAME_TEXT_COLOR TFT_CYAN
-#endif
-
-#ifndef MWR_STREAMTITLE_TEXT_COLOR
-#define MWR_STREAMTITLE_TEXT_COLOR TFT_CORNSILK
-#endif
-
-#ifndef MWR_STATION_NR_TEXT_COLOR
-#define MWR_STATION_NR_TEXT_COLOR TFT_LAVENDER
-#endif
-
-#ifndef MWR_BITRATE_TEXT_COLOR
-#define MWR_BITRATE_TEXT_COLOR TFT_LAVENDER
-#endif
-
-#ifndef MWR_IPADDR_TEXT_COLOR
-#define MWR_IPADDR_TEXT_COLOR TFT_GREENYELLOW
-#endif
-
-#ifndef MWR_TIMER_ACTIVE_TEXT_COLOR
-#define MWR_TIMER_ACTIVE_TEXT_COLOR TFT_RED
-#endif
-
-#ifndef MWR_TIMER_INACTIVE_TEXT_COLOR
-#define MWR_TIMER_INACTIVE_TEXT_COLOR TFT_DEEPSKYBLUE
-#endif
-
-#ifndef MWR_TIME_TEXT_COLOR
-#define MWR_TIME_TEXT_COLOR TFT_LIGHTGREEN
-#endif
