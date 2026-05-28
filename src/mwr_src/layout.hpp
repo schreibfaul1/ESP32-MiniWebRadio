@@ -547,7 +547,7 @@ messageBox msg_box("messagebox");
 void placingGraphicObjects() { // and initialize them
     // ALL STATE
     dispHeader.begin(layout.winHeader.x, layout.winHeader.y, layout.winHeader.w, layout.winHeader.h);
-    dispHeader.setTimeColor(TFT_LIGHTGREEN);
+    dispHeader.setTimeColor(MWR_TIME_TEXT_COLOR);
     dispFooter.begin(layout.winFooter.x, layout.winFooter.y, layout.winFooter.w, layout.winFooter.h);
     volBox.begin(layout.winName.x, layout.winName.y, layout.winName.w, layout.winName.h);
     myList.begin(layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, displayConfig.fonts[0]);
