@@ -411,3 +411,40 @@ const Timing DSI_TIMING = {.h_res = 480,
         #define I2C_SCL 8 // I2C clock line for capacitive touchpad
     #endif
 #endif
+
+
+
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// 📌📌📌  Default UI theme 📌📌📌
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+#ifndef MWR_STATION_NAME_TEXT_COLOR
+#define MWR_STATION_NAME_TEXT_COLOR TFT_CYAN
+#endif
+
+#ifndef MWR_STREAMTITLE_TEXT_COLOR
+#define MWR_STREAMTITLE_TEXT_COLOR TFT_CORNSILK
+#endif
+
+#ifndef MWR_STATION_NR_TEXT_COLOR
+#define MWR_STATION_NR_TEXT_COLOR TFT_LAVENDER
+#endif
+
+#ifndef MWR_BITRATE_TEXT_COLOR
+#define MWR_BITRATE_TEXT_COLOR TFT_LAVENDER
+#endif
+
+#ifndef MWR_IPADDR_TEXT_COLOR
+#define MWR_IPADDR_TEXT_COLOR TFT_GREENYELLOW
+#endif
+
+#ifndef MWR_TIMER_ACTIVE_TEXT_COLOR
+#define MWR_TIMER_ACTIVE_TEXT_COLOR TFT_RED
+#endif
+
+#ifndef MWR_TIMER_INACTIVE_TEXT_COLOR
+#define MWR_TIMER_INACTIVE_TEXT_COLOR TFT_DEEPSKYBLUE
+#endif
+
+#ifndef MWR_TIME_TEXT_COLOR
+#define MWR_TIME_TEXT_COLOR TFT_LIGHTGREEN
+#endif
