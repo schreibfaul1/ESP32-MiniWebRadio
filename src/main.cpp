@@ -507,7 +507,7 @@ void showStreamTitle(ps_ptr<char> streamtitle) {
     // replacestr(st, "| ", "\n");
     // replacestr(st, "|", "\n");
 
-    txt_RA_sTitle.setTextColor(TFT_CORNSILK);
+    txt_RA_sTitle.setTextColor(MWR_STREAMTITLE_TEXT_COLOR);
     txt_RA_sTitle.writeText(streamtitle.c_get());
 }
 
