@@ -4,6 +4,7 @@
 #include "mwr_src/index.h"
 #include "mwr_src/index.js.h"
 #include "mwr_src/layout.hpp"
+#include "mwr_src/mwr_ui_theme.h"
 // clang-format off
 /*****************************************************************************************************************************************************
     MiniWebRadio -- Webradio receiver for ESP32-S3
