@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.0b - May 19, 2026                                                                                                               ";
+    Version 4.2.0c - May 28, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -2544,11 +2544,6 @@ void loop() {
         if (r.startsWith("ibs")) { // inbuff status
             audio.inBufferStatus();
         }
-        if (r.startsWith("ns")) { // noise shaping
-            audio.settings.NOISE_SHAPING = !audio.settings.NOISE_SHAPING;
-            if(audio.settings.NOISE_SHAPING) MWR_LOG_INFO("noise shaping is active");
-            else MWR_LOG_INFO("noise shaping is inactive");
-        }
     }
 }
 
@@ -2673,13 +2668,17 @@ void my_audio_info(Audio::msg_t m) {
             if (!strlen(m.msg)) return; // guard
             s_icyBitRate = str2int(m.msg);
             s_f_newBitRate = true;
-            SerialPrintfln("bitRate:     " ANSI_ESC_GREEN "{}" ANSI_ESC_RESET "  ", s_icyBitRate);
+            // SerialPrintfln("bitRate:     " ANSI_ESC_GREEN "{}" ANSI_ESC_RESET "  ", s_icyBitRate);
             break;
 
         case Audio::evt_lyrics:
             SerialPrintfln("sync lyrics: " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET "  ", m.msg);
             s_lyrics = m.msg;
             s_f_newLyrics = true;
+            break;
+
+        case Audio::evt_genre:
+            SerialPrintfln("genre: ..... {}", m.msg);
             break;
 
         case Audio::evt_log: SerialPrintfln("{}: .....  {}", m.s, m.msg); break;
