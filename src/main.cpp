@@ -532,7 +532,7 @@ void showLogoAndStationName(bool force) {
 
     if (old_SN_utf8 != SN_utf8) {
         old_SN_utf8 = SN_utf8;
-        txt_RA_staName.setTextColor(TFT_CYAN);
+        txt_RA_staName.setTextColor(MWR_STATION_NAME_COLOR);
         txt_RA_staName.setText(SN_utf8.c_get());
         txt_RA_staName.show();
         pic_RA_logo.setPicturePath(path.c_get());
