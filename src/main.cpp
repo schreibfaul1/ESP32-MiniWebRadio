@@ -941,6 +941,7 @@ void connecttohost(ps_ptr<char> host) {
     s_icyBitRate = 0;
     s_decoderBitRate = 0;
     s_f_webFailed = false;
+    s_f_isFSConnected = false;
 
     idx1 = host.index_of("|", 0);
     if (idx1 == -1) { // no pipe found
@@ -948,11 +949,9 @@ void connecttohost(ps_ptr<char> host) {
 
         if (!s_f_isWebConnected) {
             s_cthFailCounter++;
-        } else
+        } else {
             (s_cthFailCounter = 0);
-
-        s_f_isFSConnected = false;
-        return;
+        }
     } else { // pipe found     e.g. http://xxx.com/ext|user|pw
         idx2 = host.index_of("|", idx1 + 1);
         // MWR_LOG_INFO("idx2 = {}", idx2);
@@ -961,18 +960,15 @@ void connecttohost(ps_ptr<char> host) {
 
             if (!s_f_isWebConnected) {
                 s_cthFailCounter++;
-            } else
+            } else {
                 (s_cthFailCounter = 0);
-
-            s_f_isFSConnected = false;
-            return;
+            }
         } else {                     // extract url, user, pwd
             url = host.substr(idx1); // extract url
             user = host.substr(idx1 + 1, idx2 - idx1 - 1);
             pwd = host.substr(idx2 + 1);
             SerialPrintfln("new host: .  {} user {}, pwd {}", url.c_get(), user.c_get(), pwd.c_get());
             s_f_isWebConnected = audio.connecttohost(url.c_get(), user.c_get(), pwd.c_get());
-            s_f_isFSConnected = false;
         }
     }
     if (s_cthFailCounter >= 3) {
@@ -1150,6 +1146,7 @@ void setup() {
         s_f_dlnaSeekServer = true;
     } else {
         s_state = UNDEFINED;
+        setTFTbrightness(80); // duty 80%
         changeState(WIFI_SETTINGS, 0);
         return;
     }
@@ -1405,7 +1402,7 @@ void setStation(uint16_t sta) {
     } else {
         connecttohost(s_stationURL.c_get());
     }
-    changeState(RADIO, 0);
+    //    changeState(RADIO, 0);
     old_cur_station = sta;
     showLogoAndStationName(true);
     if (s_cur_station == 0) {
@@ -1426,7 +1423,7 @@ void setStationViaURL(const char* url, const char* extension) {
     if (strlen(extension) > 0) origin_url.appendf("&{}", extension);
     s_stationURL = origin_url;
     connecttohost(origin_url);
-    changeState(RADIO, 0);
+    //    changeState(RADIO, 0);
     clearStreamTitle();
     showLogoAndStationName(true);
     dispFooter.updateFlag("");
@@ -2050,7 +2047,7 @@ void loop() {
 
     while (s_logBuffer.size() > 0) {
         size_t i = s_logBuffer.size();
-        if (s_logBuffer[i - 1].strlen() > 0 && s_logBuffer[i - 1].strlen() < 512) {
+        if (s_logBuffer[i - 1].strlen() > 0 && s_logBuffer[i - 1].strlen() < 1024) {
             webSrv.send("serTerminal=", s_logBuffer[i - 1].c_get());
         } else
             log_w("%s %i: strlen %i", __FILE__, __LINE__, s_logBuffer[i - 1].strlen());
@@ -2544,6 +2541,14 @@ void loop() {
         if (r.startsWith("ibs")) { // inbuff status
             audio.inBufferStatus();
         }
+        if (r.startsWith("ir")) { // is running?
+            MWR_LOG_INFO("is running: {}", audio.isRunning());
+        }
+        if (r.startsWith("vfs")) { // volume fading speed
+            float t = r.substring(3, r.length() - 1).toFloat();
+            MWR_LOG_INFO("set volume fading speed {}, current: {}", t, audio.settings.VOL_FADING_SPEED);
+            audio.settings.VOL_FADING_SPEED = t;
+        }
     }
 }
 
@@ -2677,9 +2682,7 @@ void my_audio_info(Audio::msg_t m) {
             s_f_newLyrics = true;
             break;
 
-        case Audio::evt_genre:
-            SerialPrintfln("genre: ..... {}", m.msg);
-            break;
+        case Audio::evt_genre: SerialPrintfln("genre: ..... {}", m.msg); break;
 
         case Audio::evt_log: SerialPrintfln("{}: .....  {}", m.s, m.msg); break;
 
