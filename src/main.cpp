@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.0c - May 28, 2026                                                                                                               ";
+    Version 4.2.0d - Jun 12, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -1131,7 +1131,6 @@ void setup() {
             s_resetReason == ESP_RST_SDIO ||      // The boot button was pressed
             s_resetReason == ESP_RST_DEEPSLEEP) { // Wake up
             s_state = UNDEFINED;
-            //    setStation(s_cur_station);
         }
         if (!MDNS.begin("MiniWebRadio")) {
             SerialPrintfln("WiFI_info:   " ANSI_ESC_YELLOW "Error starting mDNS", ANSI_ESC_RESET);
@@ -1184,7 +1183,8 @@ void setup() {
     dispFooter.updateOffTime(s_sleeptime);
 
     setRTC(s_TZString);
-    setStation(s_cur_station);
+    if(s_cur_station) setStation(s_cur_station);
+    else setStationViaURL(s_settings.lastconnectedhost.c_get(), "");
 }
 
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -1386,18 +1386,34 @@ uint8_t upvolume() {
     return s_volume.cur_volume;
 }
 
+void setStationViaURL(const char* url, const char* extension) {
+    ps_ptr<char>c_url = url;
+    ps_ptr<char>c_ext = extension;
+    if(!c_url.valid()){
+        MWR_LOG_ERROR("url is empty");
+        return;
+    }
+    // e.g.  http://lstn.lv/bbcradio.m3u8?station=bbc_radio_one&bitrate=96000
+    // url is http://lstn.lv/bbcradio.m3u8?station=bbc_radio_one, extension is bitrate=96000
+    if(c_ext.strlen()) c_url.appendf("&{}", c_ext);
+    s_stationURL = c_url;
+    s_stationName_air.reset();
+    s_cur_station = 0;
+    setStation(0);
+}
+
 void setStation(uint16_t sta) {
     static uint16_t old_cur_station = 0;
-    if (sta == 0) { setStationViaURL(s_settings.lastconnectedhost.c_get(), ""); }
     if (sta > staMgnt.getSumStations()) sta = s_cur_station;
-    s_stationURL = staMgnt.getStationUrl(sta);
+    if(sta) s_stationURL = staMgnt.getStationUrl(sta);
     SerialPrintfln("action: ...  switch to station " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET "  ", sta);
     s_homepage = "";
     s_streamTitle = "";
     s_icyDescription = "";
     s_f_newStreamTitle = true;
     s_f_newIcyDescription = true;
-    if (s_f_isWebConnected && sta == old_cur_station && s_state == RADIO) { // Station is already selected
+    clearStreamTitle();
+    if (s_f_isWebConnected && sta && sta == old_cur_station && s_state == RADIO) { // Station is already selected
         //    s_f_newStreamTitle = true;
     } else {
         connecttohost(s_stationURL.c_get());
@@ -1413,22 +1429,7 @@ void setStation(uint16_t sta) {
     dispFooter.updateStation(s_cur_station);
 }
 
-void setStationViaURL(const char* url, const char* extension) {
-    // e.g.  http://lstn.lv/bbcradio.m3u8?station=bbc_radio_one&bitrate=96000
-    // url is http://lstn.lv/bbcradio.m3u8?station=bbc_radio_one, extension is bitrate=96000
-    s_stationName_air.reset();
 
-    s_cur_station = 0;
-    ps_ptr<char> origin_url = url;
-    if (strlen(extension) > 0) origin_url.appendf("&{}", extension);
-    s_stationURL = origin_url;
-    connecttohost(origin_url);
-    //    changeState(RADIO, 0);
-    clearStreamTitle();
-    showLogoAndStationName(true);
-    dispFooter.updateFlag("");
-    dispFooter.updateStation(0); // set 000
-}
 
 const char* getFlagPath(uint16_t station) {
     static char flagPath[40];
