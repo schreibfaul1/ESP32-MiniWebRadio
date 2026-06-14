@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.0d - Jun 12, 2026                                                                                                               ";
+    Version 4.2.0e - Jun 14, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -2674,7 +2674,7 @@ void my_audio_info(Audio::msg_t m) {
             if (!strlen(m.msg)) return; // guard
             s_icyBitRate = str2int(m.msg);
             s_f_newBitRate = true;
-            // SerialPrintfln("bitRate:     " ANSI_ESC_GREEN "{}" ANSI_ESC_RESET "  ", s_icyBitRate);
+            SerialPrintfln("bitRate:     " ANSI_ESC_GREEN "{}" ANSI_ESC_RESET "  ", s_icyBitRate);
             break;
 
         case Audio::evt_lyrics:
