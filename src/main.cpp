@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.0e - Jun 14, 2026                                                                                                               ";
+    Version 4.2.0f - Jun 16, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -54,16 +54,6 @@ char _hl_item[18][40]{"",                    // none
                       ""};
 
 constexpr uint16_t MAX_STATIONS = 1000;
-
-Audio       audio;
-Preferences pref;
-WebSrv      webSrv;
-WiFiMulti   wifiMulti;
-RTIME       rtc;
-Ticker      ticker100ms;
-TwoWire     i2cBusOne = TwoWire(0); // additional HW, sensors, buttons, encoder etc
-TwoWire     i2cBusTwo = TwoWire(1); // external DAC, AC101 or ES8388
-SPIClass    spiBus(FSPI);
 
 settings_s    s_settings;
 volume_s      s_volume;
@@ -1037,6 +1027,7 @@ void setup() {
     esp_log_level_set("*", ESP_LOG_DEBUG);
     esp_log_set_vprintf(log_redirect_handler);
     if (!get_esp_items(&s_resetReason, &s_f_FFatFound)) return;
+
     pref.begin("Pref", false); // instance of preferences from AccessPoint (SSID, PW ...)
 
     if (!detect_i2_c_devices(&i2cBusOne, I2C_SDA, I2C_SCL, &s_i2c_items)) { SerialPrintfln("setup: ....  No i2c device found"); }
@@ -1185,6 +1176,8 @@ void setup() {
     setRTC(s_TZString);
     if(s_cur_station) setStation(s_cur_station);
     else setStationViaURL(s_settings.lastconnectedhost.c_get(), "");
+    s_state = UNDEFINED;
+    changeState(RADIO, 0);
 }
 
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -1397,7 +1390,7 @@ void setStationViaURL(const char* url, const char* extension) {
     // url is http://lstn.lv/bbcradio.m3u8?station=bbc_radio_one, extension is bitrate=96000
     if(c_ext.strlen()) c_url.appendf("&{}", c_ext);
     s_stationURL = c_url;
-    s_stationName_air.reset();
+    s_stationName_air = url;
     s_cur_station = 0;
     setStation(0);
 }
@@ -2461,7 +2454,7 @@ void loop() {
         }
 
         if (r.startsWith("safp")) { // setAudioFilePosition
-            uint32_t t = r.substring(4, r.length() - 1).toInt();
+            uint32_t t = r.substring(4, r.length()).toInt();
             MWR_LOG_INFO("setAudioFilePosition {}", t);
             audio.setAudioFilePosition(t);
         }

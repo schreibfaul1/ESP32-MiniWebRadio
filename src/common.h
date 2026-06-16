@@ -76,6 +76,16 @@
 #include <mbedtls/base64.h>
 #include <vector>
 
+Audio       audio;
+Preferences pref;
+WebSrv      webSrv;
+WiFiMulti   wifiMulti;
+RTIME       rtc;
+Ticker      ticker100ms;
+TwoWire     i2cBusOne = TwoWire(0); // additional HW, sensors, buttons, encoder etc
+TwoWire     i2cBusTwo = TwoWire(1); // external DAC, AC101 or ES8388
+SPIClass    spiBus(FSPI);
+
 #ifdef TFT_MODE_SPI
     #include "tft_spi.h"
 #elifdef TFT_MODE_RGB

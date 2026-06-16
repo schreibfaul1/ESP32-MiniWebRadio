@@ -221,11 +221,14 @@ bool get_esp_items(uint8_t* s_resetReason, bool* s_f_FFatFound) {
     uint8_t idfMinor = ESP_IDF_VERSION_MINOR;
     uint8_t idfPatch = ESP_IDF_VERSION_PATCH;
     SerialPrintfln("ESP-IDF Version: {}.{}.{}", idfMajor, idfMinor, idfPatch);
-    SerialPrintfln("ARDUINO_LOOP_STACK_SIZE {} words (32 bit)", CONFIG_ARDUINO_LOOP_STACK_SIZE);
-    SerialPrintfln("FLASH size {} bytes, speed {} MHz", (long unsigned)ESP.getFlashChipSize(), (long unsigned)ESP.getFlashChipSpeed() / 1000000);
-    SerialPrintfln("CPU speed {} MHz", (long unsigned)ESP.getCpuFreqMHz());
-    SerialPrintfln("SDMMC speed {} MHz", SDMMC_FREQUENCY / 1000000);
-    SerialPrintfln("TFT speed {} MHz", TFT_FREQUENCY / 1000000);
+    SerialPrintfln("audioI2S Version: {}", audio.getVersion());
+    SerialPrintfln("ARDUINO_LOOP_STACK_SIZE: {} words (32 bit)", CONFIG_ARDUINO_LOOP_STACK_SIZE);
+    SerialPrintfln("FLASH size: {} bytes, speed: {} MHz", (long unsigned)ESP.getFlashChipSize(), (long unsigned)ESP.getFlashChipSpeed() / 1000000);
+    SerialPrintfln("CPU speed: {} MHz", (long unsigned)ESP.getCpuFreqMHz());
+    SerialPrintfln("SDMMC speed: {} MHz", SDMMC_FREQUENCY / 1000000);
+#ifdef TFT_MODE_SPI
+    SerialPrintfln("TFT speed: {} MHz", TFT_FREQUENCY / 1000000);
+#endif
 
     if (!psramInit()) {
         SerialPrintfln(ANSI_ESC_RED "PSRAM not found! MiniWebRadio doesn't work properly without PSRAM!" ANSI_ESC_WHITE);
@@ -858,9 +861,9 @@ class IR_buttons {
     }
 
     bool parseJSONString(const char* jsonString) { // Function to parse the JSON string
-        const char* ptr = jsonString;
-        uint8_t     buttonNr = 0;
-        size_t      buttonIndex = 0;
+        const char*  ptr = jsonString;
+        uint8_t      buttonNr = 0;
+        size_t       buttonIndex = 0;
         ps_ptr<char> v;
 
         // Check if the JSON string starts with '['
