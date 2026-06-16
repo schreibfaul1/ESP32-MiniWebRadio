@@ -387,12 +387,13 @@ bool         init_SD_card();
 void         setVolume(uint8_t vol);
 uint8_t      downvolume();
 uint8_t      upvolume();
+void         setStation(ps_ptr<char> url, ps_ptr<char> extension = {});
 void         setStation(uint16_t sta);
 const char*  getFlagPath(uint16_t station);
 void         nextStation();
 void         prevStation();
 void         setStationByNumber(uint16_t staNr);
-void         setStationViaURL(const char* url, const char* extension);
+
 void         savefile(ps_ptr<char> fileName, uint32_t contentLength, ps_ptr<char> contenttype);
 void         setI2STone();
 ps_ptr<char> getI2STone();

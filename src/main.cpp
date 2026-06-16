@@ -1174,9 +1174,8 @@ void setup() {
     dispFooter.updateOffTime(s_sleeptime);
 
     setRTC(s_TZString);
-    if(s_cur_station) setStation(s_cur_station);
-    else setStationViaURL(s_settings.lastconnectedhost.c_get(), "");
-    s_state = UNDEFINED;
+    s_stationURL = s_settings.lastconnectedhost;
+    setStation(s_cur_station);
     changeState(RADIO, 0);
 }
 
@@ -1379,50 +1378,58 @@ uint8_t upvolume() {
     return s_volume.cur_volume;
 }
 
-void setStationViaURL(const char* url, const char* extension) {
-    ps_ptr<char>c_url = url;
-    ps_ptr<char>c_ext = extension;
-    if(!c_url.valid()){
+void setStation(ps_ptr<char> url, ps_ptr<char> extension){
+    if (!url.valid()) {
         MWR_LOG_ERROR("url is empty");
         return;
     }
     // e.g.  http://lstn.lv/bbcradio.m3u8?station=bbc_radio_one&bitrate=96000
     // url is http://lstn.lv/bbcradio.m3u8?station=bbc_radio_one, extension is bitrate=96000
-    if(c_ext.strlen()) c_url.appendf("&{}", c_ext);
-    s_stationURL = c_url;
     s_stationName_air = url;
+    if(extension.strlen()) url.appendf("&{}", extension);
+    s_stationURL = url;
     s_cur_station = 0;
     setStation(0);
 }
 
 void setStation(uint16_t sta) {
-    static uint16_t old_cur_station = 0;
-    if (sta > staMgnt.getSumStations()) sta = s_cur_station;
-    if(sta) s_stationURL = staMgnt.getStationUrl(sta);
+    static int16_t      old_cur_station = -1;
+    static ps_ptr<char> old_cur_url = "";
+    if (sta == 0) {
+        if (s_stationURL == old_cur_url) {
+            s_f_newStreamTitle = true;
+        } else {
+            connecttohost(s_stationURL);
+            s_f_newStationName = true;
+        }
+        s_stationName_air = s_stationURL;
+    } else {
+        if (sta > staMgnt.getSumStations()) sta = s_cur_station;
+        s_stationURL = staMgnt.getStationUrl(sta);
+        if (s_f_isWebConnected && sta == old_cur_station && s_state == RADIO) { // Station is already selected
+            //    s_f_newStreamTitle = true;
+        } else {
+            connecttohost(s_stationURL);
+        }
+    }
     SerialPrintfln("action: ...  switch to station " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET "  ", sta);
     s_homepage = "";
     s_streamTitle = "";
     s_icyDescription = "";
     s_f_newStreamTitle = true;
     s_f_newIcyDescription = true;
+    s_f_newStationName = true;
     clearStreamTitle();
-    if (s_f_isWebConnected && sta && sta == old_cur_station && s_state == RADIO) { // Station is already selected
-        //    s_f_newStreamTitle = true;
-    } else {
-        connecttohost(s_stationURL.c_get());
-    }
-    //    changeState(RADIO, 0);
     old_cur_station = sta;
+    old_cur_url = s_stationURL;
     showLogoAndStationName(true);
     if (s_cur_station == 0) {
-        dispFooter.updateFlag("");
+        dispFooter.updateFlag("/flags/unknown.jpg");
     } else {
         dispFooter.updateFlag(getFlagPath(s_cur_station));
     }
     dispFooter.updateStation(s_cur_station);
 }
-
-
 
 const char* getFlagPath(uint16_t station) {
     static char flagPath[40];
@@ -3425,10 +3432,9 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
 
     CMD_EQUALS("set_station"){          setStationByNumber(param.to_uint32()); return;}                                                                      // via websocket
 
-    CMD_EQUALS("stationURL"){           setStationViaURL(param.c_get(), arg.c_get());                                                                        // via websocket
-                                        s_stationName_air = param;
+    CMD_EQUALS("stationURL"){           setStation(param.c_get(), arg.c_get());                                                                        // via websocket
                                         SerialPrintfln("StationName: " ANSI_ESC_MAGENTA "{}" ANSI_ESC_RESET "  ", param.c_get());
-                                        s_f_newStationName = true; return;}
+                                        return;}
 
     CMD_EQUALS("webFileURL"){           audio.connecttohost(param.c_get())? changeState(PLAYER, 1) : changeState(PLAYER, 0); return;}                        // via websocket
 
