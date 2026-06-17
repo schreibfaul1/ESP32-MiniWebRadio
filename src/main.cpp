@@ -2451,7 +2451,7 @@ void loop() {
         }
 
         if (r.startsWith("sapt")) { // setAudioPlayTime
-            uint32_t t = r.substring(4, r.length() - 1).toInt();
+            uint32_t t = r.substring(4, r.length()).toInt();
             MWR_LOG_INFO("setAudioPlayTime {}", t);
             audio.setAudioPlayTime(t);
         }
