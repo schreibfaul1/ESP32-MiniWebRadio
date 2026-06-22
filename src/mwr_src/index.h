@@ -521,103 +521,103 @@ function connect() {
     console.log(`Connecting to WebSocket at ws://${window.location.hostname}:81/ (Attempt ${reconnectAttempts + 1}/${maxReconnectAttempts})...`);
     toastr.info("Versuche Verbindung zum MiniWebRadio herzustellen...", "", {timeOut: 0, extendedTimeOut: 0, closeButton: false, tapToDismiss: false}); // Info über Verbindungsversuch
 
-    socket = new WebSocket('ws://'+window.location.hostname+':81/');
+    reconnectTimeout = setTimeout(function () {
+        socket = new WebSocket('ws://'+window.location.hostname+':81/');
 
-    socket.onopen = function () {
-        console.log("Websocket connected");
-        toastr.clear(); // Alle Toastr-Nachrichten löschen
-        toastr.success("Verbindung hergestellt!"); // Bestätigung
-        currentReconnectDelay = 1000; // Reset delay on successful connection
-        reconnectAttempts = 0; // Reset attempts on successful connection
+        socket.onopen = function () {
+            console.log("Websocket connected");
+            toastr.clear(); // Delete all Toastr messages
+            toastr.success("Connection established!"); // Confirmation
+            currentReconnectDelay = 100; // Reset delay on successful connection
+            reconnectAttempts = 0; // Reset attempts on successful connection
 
-        // Starte den regelmäßigen Ping
-        // Achtung: Wenn du setInterval hier jedes Mal startest, wenn sich verbindest,
-        // und die Verbindung öfter abbricht, könntest du mehrere Intervalle parallel laufen haben.
-        // Besser ist es, das Intervall zu clearen, bevor du es neu setzt.
-        // Nehmen wir an, du hast eine globale Variable `pingIntervalId`
-        if (typeof pingIntervalId !== 'undefined' && pingIntervalId) {
-             clearInterval(pingIntervalId);
-        }
-        pingIntervalId = setInterval(ping, 10000); // Ping alle 10 Sekunden
+            // Start the regular ping
+            // Please note: If you start `setInterval` here every time you connect,
+            // and the connection drops frequently, you could end up with several intervals running in parallel.
+            // It’s better to clear the interval before you reset it.
+            if (typeof pingIntervalId !== 'undefined' && pingIntervalId) {
+                 clearInterval(pingIntervalId);
+            }
+            pingIntervalId = setInterval(ping, 10000); // Ping every 10 seconds
 
-        socket.send('get_tftSize');
-        socket.send("get_mute");
-        socket.send("get_timeAnnouncement");
-        socket.send("get_tone");
-        socket.send("get_networks");
-        socket.send("change_state=" + "RADIO");
-        socket.send("get_sleepMode");
+            socket.send('get_tftSize');
+            socket.send("get_mute");
+            socket.send("get_timeAnnouncement");
+            socket.send("get_tone");
+            socket.send("get_networks");
+            socket.send("change_state=" + "RADIO");
+            socket.send("get_sleepMode");
 
-        loadStationsFromSD("/stations.json")
-            .then(() => {
-                stationsLoaded = true;
-                console.log("stations loaded");
-                socket.send('to_listen');
-            })
-            .catch(error => {
-                stationsLoaded = false;
-                console.error("Error loading stations:", error);
-            });
-        loadFileFromSD("/ir_buttons.json", "application/json")
-            .then(data => {ir_buttons = data;});
-    };
+            loadStationsFromSD("/stations.json")
+                .then(() => {
+                    stationsLoaded = true;
+                    console.log("stations loaded");
+                    socket.send('to_listen');
+                })
+                .catch(error => {
+                    stationsLoaded = false;
+                    console.error("Error loading stations:", error);
+                });
+            loadFileFromSD("/ir_buttons.json", "application/json")
+                .then(data => {ir_buttons = data;});
+        };
 
-    socket.onclose = function (e) {
-        console.log('WebSocket getrennt. Code:', e.code, 'Reason:', e.reason);
-        toastr.error('Verbindung zum MiniWebRadio getrennt. Versuche Wiederherstellung...'); // Informiere den Benutzer
-        clearTimeout(tm); // Lösche den Ping-Timeout, da die Verbindung geschlossen ist
-        if (typeof pingIntervalId !== 'undefined' && pingIntervalId) {
-             clearInterval(pingIntervalId); // Stoppe das Ping-Intervall
-             pingIntervalId = null;
-        }
+        socket.onclose = function (e) {
+            console.log('WebSocket getrennt. Code:', e.code, 'Reason:', e.reason);
+            toastr.error('Connection to MiniWebRadio lost. Attempting to re-establish...'); // Inform the user
+            clearTimeout(tm); // Clear the ping timeout, as the connection has been closed
+            if (typeof pingIntervalId !== 'undefined' && pingIntervalId) {
+                 clearInterval(pingIntervalId); // Stop the ping interval
+                 pingIntervalId = null;
+            }
 
-        socket = null; // Setze den Socket auf null, um den alten zu verwerfen
+            socket = null; // Set the socket to zero to discard the old one
 
-        if (reconnectAttempts < maxReconnectAttempts) {
-            reconnectAttempts++;
-            reconnectTimeout = setTimeout(function () {
-                connect(); // Versuch die Wiederverbindung
-            }, currentReconnectDelay);
-            // Erhöhe die Verzögerung für den nächsten Versuch (exponentieller Backoff)
-            currentReconnectDelay = Math.min(currentReconnectDelay * 2, maxReconnectDelay);
-            console.log(`Wiederverbindungsversuch in ${currentReconnectDelay / 1000}s... (Versuch ${reconnectAttempts}/${maxReconnectAttempts})`);
-        } else {
-            console.error("Maximale Wiederverbindungsversuche erreicht. Bitte Seite neu laden.");
-            toastr.error("Verbindung konnte nicht wiederhergestellt werden. Bitte Seite neu laden.");
-        }
-    };
+            if (reconnectAttempts < maxReconnectAttempts) {
+                reconnectAttempts++;
+                reconnectTimeout = setTimeout(function () {
+                    connect(); // try new connection
+                }, currentReconnectDelay);
+                // Increase the delay for the next attempt (exponential backoff
+                currentReconnectDelay = Math.min(currentReconnectDelay * 2, maxReconnectDelay);
+                console.log(`Reconnection attempt in${currentReconnectDelay / 1000}s... (Versuch ${reconnectAttempts}/${maxReconnectAttempts})`);
+            } else {
+                console.error("Maximum number of reconnection attempts reached. Please reload the page.");
+                toastr.error("Connection could not be re-established. Please reload the page.");
+            }
+        };
 
-    socket.onerror = function (err) {
-        console.error("WebSocket Fehler:", err);
-        // `onerror` wird oft vor `onclose` ausgelöst.
-        // `socket.close()` hier wird `onclose` triggern, was die Wiederverbindungslogik handhabt.
-        if (socket && socket.readyState !== WebSocket.CLOSED) { // Nur schließen, wenn nicht bereits geschlossen
-            socket.close();
-        }
-        toastr.error("WebSocket Fehler aufgetreten!");
-    };
+        socket.onerror = function (err) {
+            console.error("WebSocket Error:", err);
+            // `onerror` is often triggered before `onclose`.
+            // Calling `socket.close()` here will trigger `onclose`, which handles the reconnection logic.
+            if (socket && socket.readyState !== WebSocket.CLOSED) { // Only close if it is not already closed
+                socket.close();
+            }
+            toastr.error("A WebSocket error has occurred!");
+        };
 
-    socket.onmessage = function(event) {
-        var socketMsg = event.data;
+        socket.onmessage = function(event) {
+            var socketMsg = event.data;
 
-        var n   = socketMsg.indexOf('=');
-        var msg = '';
-        var val = '';
-        if (n >= 0) {
-            msg  = socketMsg.substring(0, n);
-            val  = socketMsg.substring(n + 1);
-        }
-        else {
-            msg = socketMsg;
-        }
+            var n   = socketMsg.indexOf('=');
+            var msg = '';
+            var val = '';
+            if (n >= 0) {
+                msg  = socketMsg.substring(0, n);
+                val  = socketMsg.substring(n + 1);
+            }
+            else {
+                msg = socketMsg;
+            }
 
-        switch(msg) {
-            case "pong":
-                                        clearTimeout(tm); // Wichtig: Lösche den Ping-Timeout, wenn ein Pong kommt!
-                                        console.log("pong");
-                                        reconnectAttempts = 0;
-                                        toastr.clear(); // Lösche nur die Warnung, wenn sie da ist
-                                        break;
+            switch(msg) {
+                case "pong":
+                                            clearTimeout(tm); // Important: Clear the ping timeout when a pong arrives!
+                                            console.log("pong");
+                                            reconnectAttempts = 0;
+                                            toastr.clear(); // Only clear the warning if it is there
+                                            break;
             case "mute":                if(val == '1'){ document.getElementById('Mute').src = 'SD/png/Button_Mute_Red.png'
                                                         resultstr1.value = "mute on"
                                                         console.log("mute on")}
@@ -786,6 +786,7 @@ function connect() {
             default:                    console.log('unknown message', msg, val)
         }
     }
+    }, 100);
 }
 // ---- end websocket section------------------------
 
