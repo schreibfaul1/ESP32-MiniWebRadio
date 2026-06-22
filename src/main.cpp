@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.0f - Jun 16, 2026                                                                                                               ";
+    Version 4.2.0g - Jun 22, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -482,11 +482,11 @@ inline void clearAll() {
     getTFT().copyFramebuffer(1, 0, 0, 0, displayConfig.dispWidth, displayConfig.dispHeight);
 }
 
-inline uint16_t txtlen(String str) {
-    uint16_t len = 0;
-    for (int32_t i = 0; i < str.length(); i++)
-        if (str[i] <= 0xC2) len++;
-    return len;
+void showStationName(){
+    if (s_f_sleeping) return;
+    txt_RA_staName.setTextColor(TFT_CYAN);
+    txt_RA_staName.setText(getStationName());
+    txt_RA_staName.show();
 }
 
 void showStreamTitle(ps_ptr<char> streamtitle) {
@@ -501,39 +501,53 @@ void showStreamTitle(ps_ptr<char> streamtitle) {
     txt_RA_sTitle.writeText(streamtitle.c_get());
 }
 
-void showLogoAndStationName(bool force) {
-    ps_ptr<char>        SN_utf8;
-    ps_ptr<char>        path;
-    ps_ptr<char>        staNr;
-    static ps_ptr<char> old_SN_utf8;
-    if (force) { old_SN_utf8.reset(); }
+void showLogoAndStationName() {
+    showStationName();
+    pic_RA_logo.setPicturePath(getLogoPath());
+    pic_RA_logo.show();
+    dispFooter.updateStation(s_cur_station);
+    dispFooter.updateFlag(getFlagPath(s_cur_station));
+    webSrv_send_station_items();
+    return;
+}
 
+ps_ptr<char> getStationName() {
+    ps_ptr<char> SN_utf8;
+    ps_ptr<char> path;
     if (s_cur_station) {
-        MWR_LOG_DEBUG("showLogoAndStationName: {}", staMgnt.getStationName(s_cur_station));
         SN_utf8 = staMgnt.getStationName(s_cur_station);
-        SerialPrintfln("Country: ..  " ANSI_ESC_GREEN "{}" ANSI_ESC_RESET "  ", staMgnt.getStationCountry(s_cur_station));
     } else {
         SN_utf8 = s_stationName_air;
     }
     SN_utf8.trim();
+    return SN_utf8;
+}
 
-    path = "/logo/" + SN_utf8 + ".jpg";
+ps_ptr<char> getLogoPath() {
+    ps_ptr<char> path;
+    ps_ptr<char> staName = getStationName();
+    path = "/logo/" + staName + ".jpg";
     if (!SD_MMC.exists(scaleImage(path).c_get())) path = "/common/unknown.png";
+    return path;
+}
 
-    if (old_SN_utf8 != SN_utf8) {
-        old_SN_utf8 = SN_utf8;
-        txt_RA_staName.setTextColor(TFT_CYAN);
-        txt_RA_staName.setText(SN_utf8.c_get());
-        txt_RA_staName.show();
-        pic_RA_logo.setPicturePath(path.c_get());
-        pic_RA_logo.show();
-    }
+const char* getFlagPath(uint16_t station) {
+    if(station == 0) return "/flags/unknown.jpg";
+    static char flagPath[40];
+    flagPath[0] = '\0';
+    strcpy(flagPath, "/flags/");
+    strcat(flagPath, staMgnt.getStationCountry(station));
+    for (int i = 0; i < strlen(flagPath); i++) flagPath[i] = tolower(flagPath[i]);
+    strcat(flagPath, ".jpg");
+    return flagPath;
+}
+
+void webSrv_send_station_items() {
+    ps_ptr<char> staNr;
     staNr.assignf("{}", s_cur_station);
-    webSrv.send("stationLogo=", path.c_get());
+    webSrv.send("stationLogo=", getLogoPath());
     webSrv.send("stationNr=", staNr);
     webSrv.send("stationURL=", s_settings.lastconnectedhost.get());
-
-    return;
 }
 
 void showFileLogo(int8_t state, int8_t subState) {
@@ -1174,9 +1188,8 @@ void setup() {
     dispFooter.updateOffTime(s_sleeptime);
 
     setRTC(s_TZString);
-    if(s_cur_station) setStation(s_cur_station);
-    else setStationViaURL(s_settings.lastconnectedhost.c_get(), "");
-    s_state = UNDEFINED;
+    s_stationURL = s_settings.lastconnectedhost;
+    setStation(s_cur_station);
     changeState(RADIO, 0);
 }
 
@@ -1379,59 +1392,38 @@ uint8_t upvolume() {
     return s_volume.cur_volume;
 }
 
-void setStationViaURL(const char* url, const char* extension) {
-    ps_ptr<char>c_url = url;
-    ps_ptr<char>c_ext = extension;
-    if(!c_url.valid()){
+void setStation(ps_ptr<char> url, ps_ptr<char> extension) {
+    if (!url.valid()) {
         MWR_LOG_ERROR("url is empty");
         return;
     }
     // e.g.  http://lstn.lv/bbcradio.m3u8?station=bbc_radio_one&bitrate=96000
     // url is http://lstn.lv/bbcradio.m3u8?station=bbc_radio_one, extension is bitrate=96000
-    if(c_ext.strlen()) c_url.appendf("&{}", c_ext);
-    s_stationURL = c_url;
     s_stationName_air = url;
+    if (extension.strlen()) url.appendf("&{}", extension);
+    s_stationURL = url;
     s_cur_station = 0;
     setStation(0);
 }
 
 void setStation(uint16_t sta) {
-    static uint16_t old_cur_station = 0;
-    if (sta > staMgnt.getSumStations()) sta = s_cur_station;
-    if(sta) s_stationURL = staMgnt.getStationUrl(sta);
+    if (sta == 0) {
+        connecttohost(s_stationURL);
+        s_stationName_air = s_stationURL;
+    } else {
+        if (sta > staMgnt.getSumStations()) sta = s_cur_station;
+        s_stationURL = staMgnt.getStationUrl(sta);
+        connecttohost(s_stationURL);
+    }
     SerialPrintfln("action: ...  switch to station " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET "  ", sta);
+    SerialPrintfln("Country: ..  " ANSI_ESC_GREEN "{}" ANSI_ESC_RESET "  ", staMgnt.getStationCountry(s_cur_station));
     s_homepage = "";
     s_streamTitle = "";
     s_icyDescription = "";
+    clearStreamTitle();
     s_f_newStreamTitle = true;
     s_f_newIcyDescription = true;
-    clearStreamTitle();
-    if (s_f_isWebConnected && sta && sta == old_cur_station && s_state == RADIO) { // Station is already selected
-        //    s_f_newStreamTitle = true;
-    } else {
-        connecttohost(s_stationURL.c_get());
-    }
-    //    changeState(RADIO, 0);
-    old_cur_station = sta;
-    showLogoAndStationName(true);
-    if (s_cur_station == 0) {
-        dispFooter.updateFlag("");
-    } else {
-        dispFooter.updateFlag(getFlagPath(s_cur_station));
-    }
-    dispFooter.updateStation(s_cur_station);
-}
-
-
-
-const char* getFlagPath(uint16_t station) {
-    static char flagPath[40];
-    flagPath[0] = '\0';
-    strcpy(flagPath, "/flags/");
-    strcat(flagPath, staMgnt.getStationCountry(station));
-    for (int i = 0; i < strlen(flagPath); i++) flagPath[i] = tolower(flagPath[i]);
-    strcat(flagPath, ".jpg");
-    return flagPath;
+    showLogoAndStationName();
 }
 
 void nextStation() {
@@ -1580,7 +1572,7 @@ void wake_up() {
     clearAll();
     setTFTbrightness(s_brightness);
     setStation(s_cur_station);
-    showLogoAndStationName(true);
+    showLogoAndStationName();
     dispHeader.setTransparency(true, false);
     dispHeader.show();
     dispHeader.speakerOnOff(!s_f_mute);
@@ -1724,12 +1716,11 @@ void changeState(int8_t state, int8_t subState) {
         case RADIO: {
             if (newState) {
                 clearWithOutHeaderFooter();
-                dispFooter.updateFlag(getFlagPath(s_cur_station));
                 webSrv.send("changeState=", "RADIO");
                 if(!s_f_isWebConnected){
                     setStation(s_cur_station);
                 }
-                if(s_f_isWebConnected) showLogoAndStationName(true);
+                if(s_f_isWebConnected) showLogoAndStationName();
             }
             dispHeader.enable();
             dispFooter.enable();
@@ -2177,7 +2168,7 @@ void loop() {
             }
             if (s_f_newStationName) {
                 s_f_newStationName = false;
-                showLogoAndStationName(false);
+                showStationName();
             }
         }
         //---------------------------------------------TIME SPEECH -----------------------------------------------------------------------------------
@@ -2444,7 +2435,7 @@ void loop() {
         }
 
         if (r.startsWith("sapt")) { // setAudioPlayTime
-            uint32_t t = r.substring(4, r.length() - 1).toInt();
+            uint32_t t = r.substring(4, r.length()).toInt();
             MWR_LOG_INFO("setAudioPlayTime {}", t);
             audio.setAudioPlayTime(t);
         }
@@ -3398,7 +3389,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
                                         SerialPrintfln("action: ...  new volume after alarm: " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET "  ", s_volume.volumeAfterAlarm); return;}
     CMD_EQUALS("homepage"){             webSrv.send("homepage=", s_homepage.c_get()); return;}
 
-    CMD_EQUALS("to_listen"){            showLogoAndStationName(false); return;}   // via websocket, return the name and number of the current station
+    CMD_EQUALS("to_listen"){            webSrv_send_station_items(); return;}   // via websocket, return the name and number of the current station
     CMD_EQUALS("get_tone"){             webSrv.send("settone=", getI2STone().c_get()); return;}
 
     CMD_EQUALS("get_streamtitle"){      webSrv.reply(s_streamTitle.c_get(), webSrv.TEXT); return;}
@@ -3423,12 +3414,11 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
 
     CMD_EQUALS("next_station"){         nextFavStation(); return;}                                                                                           // via websocket
 
-    CMD_EQUALS("set_station"){          setStationByNumber(param.to_uint32()); return;}                                                                      // via websocket
+    CMD_EQUALS("set_station"){          uint16_t staNr = param.to_uint32(); if(staNr != s_cur_station) setStationByNumber(staNr); return;}                                                                      // via websocket
 
-    CMD_EQUALS("stationURL"){           setStationViaURL(param.c_get(), arg.c_get());                                                                        // via websocket
-                                        s_stationName_air = param;
+    CMD_EQUALS("stationURL"){           setStation(param.c_get(), arg.c_get());                                                                        // via websocket
                                         SerialPrintfln("StationName: " ANSI_ESC_MAGENTA "{}" ANSI_ESC_RESET "  ", param.c_get());
-                                        s_f_newStationName = true; return;}
+                                        return;}
 
     CMD_EQUALS("webFileURL"){           audio.connecttohost(param.c_get())? changeState(PLAYER, 1) : changeState(PLAYER, 0); return;}                        // via websocket
 
