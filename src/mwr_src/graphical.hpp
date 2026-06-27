@@ -553,15 +553,13 @@ class textbox : public RegisterTable {
     bool         m_autoSize = false;
     bool         m_narrow = false;
     bool         m_noWrap = false;
-    bool         m_backgroundTransparency = false;
-    bool         m_saveBackground = false;
     releasedArg  m_ra;
 
   public:
     textbox(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
-        m_bgColor = TFT_BLACK;
+        m_bgColor = TFT_TRANSPARENCY;
         m_fgColor = TFT_LIGHTGREY;
         m_borderColor = TFT_BLACK;
         m_fontSize = 1;
@@ -598,33 +596,15 @@ class textbox : public RegisterTable {
     }
 
     void show() {
+        if(m_enabled) hide();
         m_enabled = true;
         m_clicked = false;
-        if (m_backgroundTransparency) {
-            if (m_saveBackground)
-                getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
-            else
-                getTFT().copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
-        } else {
-            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        }
+        getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
         writeText(m_text.c_get());
     }
 
-    void setTransparency(bool backgroundTransparency, bool saveBackground) {
-        m_backgroundTransparency = backgroundTransparency;
-        m_saveBackground = saveBackground;
-    }
-
     void hide() {
-        if (m_backgroundTransparency) {
-            if (m_saveBackground)
-                getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
-            else
-                getTFT().copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
-        } else {
-            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        }
+        getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
         m_enabled = false;
     }
     void disable() { m_enabled = false; }
@@ -633,7 +613,6 @@ class textbox : public RegisterTable {
         m_fontSize = 0;
         if (size != 0) {
             m_fontSize = size;
-            getTFT().setFont(m_fontSize);
         } else {
             m_autoSize = true;
         }
@@ -679,28 +658,20 @@ class textbox : public RegisterTable {
     void writeText(ps_ptr<char> txt) {
         m_text = txt;
         if (m_enabled) {
-            int32_t txtColor_tmp = getTFT().getTextColor();
-            int32_t bgColor_tmp = getTFT().getBackGroundColor();
-            getTFT().setTextColor(m_fgColor);
-            getTFT().setBackGoundColor(m_bgColor);
-            if (m_backgroundTransparency) {
-                if (m_saveBackground)
-                    getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
-                else
-                    getTFT().copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
-            } else {
-                getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-            }
-            if (m_fontSize != 0) { getTFT().setFont(m_fontSize); }
             int x = m_x + m_padding_left;
             int y = m_y + m_paddig_top;
             int w = m_w - (m_paddig_right + m_padding_left);
             int h = m_h - (m_paddig_bottom + m_paddig_top);
-            if (m_borderWidth > 0) { getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor); }
-            if (m_borderWidth > 1) { getTFT().drawRect(m_x + 1, m_y + 1, m_w - 2, m_h - 2, m_borderColor); }
-            getTFT().writeText(m_text.c_get(), x, y, w, h, m_h_align, m_v_align, m_narrow, m_noWrap, m_autoSize);
-            getTFT().setTextColor(txtColor_tmp);
-            getTFT().setBackGoundColor(bgColor_tmp);
+            getTFT().setTextColor(m_fgColor);
+            getTFT().setFont(m_fontSize);
+            if (m_borderWidth > 0) {
+                getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
+                getTFT().copyFramebuffer(2, 0, x + 1, y + 1, w - 2, h - 2);
+                getTFT().writeText(m_text.c_get(), x + 1, y + 1, w - 2, h - 2, m_h_align, m_v_align, m_narrow, m_noWrap, m_autoSize);
+            } else {
+                getTFT().copyFramebuffer(2, 0, x, y, w, h);
+                getTFT().writeText(m_text.c_get(), x, y, w, h, m_h_align, m_v_align, m_narrow, m_noWrap, m_autoSize);
+            }
         }
     }
 };
@@ -1237,10 +1208,10 @@ class selectbox : public RegisterTable {
     void setTransparency(bool backgroundTransparency, bool saveBackground) {
         m_backgroundTransparency = backgroundTransparency;
         m_saveBackground = saveBackground;
-        m_txt_select->setTransparency(m_backgroundTransparency, m_saveBackground);
+        //    m_txt_select->setTransparency(m_backgroundTransparency, m_saveBackground);
         m_txt_btn_down->setTransparency(m_backgroundTransparency, m_saveBackground);
         m_txt_btn_up->setTransparency(m_backgroundTransparency, m_saveBackground);
-        m_txt_btn_idx->setTransparency(m_backgroundTransparency, m_saveBackground);
+        //    m_txt_btn_idx->setTransparency(m_backgroundTransparency, m_saveBackground);
     }
 
     void hide() {
@@ -1364,12 +1335,12 @@ class selectbox : public RegisterTable {
         if (m_enabled) {
             MWR_LOG_DEBUG("writeText: {}", txt.c_get());
             m_txt_select->setText(txt, m_narrow, m_noWrap);
-            m_txt_select->setTransparency(m_backgroundTransparency, m_saveBackground);
+            //    m_txt_select->setTransparency(m_backgroundTransparency, m_saveBackground);
             m_txt_select->show();
             char c_idx[5] = {0};
             itoa(idx + 1, c_idx, 10);
             m_txt_btn_idx->setText(c_idx, m_narrow, m_noWrap);
-            m_txt_btn_idx->setTransparency(m_backgroundTransparency, m_saveBackground);
+            //    m_txt_btn_idx->setTransparency(m_backgroundTransparency, m_saveBackground);
             m_txt_btn_idx->show();
         }
     }
@@ -2131,7 +2102,7 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
                 char ch[2] = {0, 0};
                 ch[0] = m_time[i];
                 txt_time[i].setText(ch, true);
-                txt_time[i].setTransparency(m_backgroundTransparency, m_saveBackground);
+                //    txt_time[i].setTransparency(m_backgroundTransparency, m_saveBackground);
                 txt_time[i].show();
                 oldtime[i] = m_time[i];
             }
@@ -3507,8 +3478,8 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
         m_saveBackground = saveBackground;
 
         for (uint8_t i = 0; i < 7; i++) {
-            txt_alarm_days[i].setTransparency(m_backgroundTransparency, m_saveBackground);
-            txt_alarm_time[i].setTransparency(m_backgroundTransparency, m_saveBackground);
+            //    txt_alarm_days[i].setTransparency(m_backgroundTransparency, m_saveBackground);
+            //    txt_alarm_time[i].setTransparency(m_backgroundTransparency, m_saveBackground);
         }
         pic_alarm_digitsH10->setTransparency(m_backgroundTransparency, m_saveBackground);
         pic_alarm_digitsH01->setTransparency(m_backgroundTransparency, m_saveBackground);
@@ -3684,8 +3655,8 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
         }
     }
     void updateAlarmDaysAndTime() {
-        uint8_t  mask = 0b00000001;
-        int32_t  color = TFT_BLACK;
+        uint8_t mask = 0b00000001;
+        int32_t color = TFT_BLACK;
 
         for (int i = 0; i < 7; i++) {
             // alarmDays
@@ -5395,7 +5366,7 @@ class vuMeter : public RegisterTable {
 
   private:
     void drawRect(uint8_t row, uint8_t col, bool br) {
-        int32_t color = 0;
+        int32_t  color = 0;
         uint16_t y_end = m_frame_y + m_frame_h - m_frameSize - m_segm_h;
         uint16_t xPos = m_frame_x + m_frameSize + col * (m_segm_w + m_frameSize);
         uint16_t yPos = y_end - row * (m_frameSize + m_segm_h);
@@ -5694,9 +5665,9 @@ class displayHeader : public RegisterTable {
         m_backgroundTransparency = backgroundTransparency;
         m_saveBackground = saveBackground;
         m_timeStringObject->setTransparency(m_backgroundTransparency, m_saveBackground);
-        txt_Item->setTransparency(m_backgroundTransparency, m_saveBackground);
+        //    txt_Item->   setTransparency(m_backgroundTransparency, m_saveBackground);
         pic_Speaker->setTransparency(m_backgroundTransparency, m_saveBackground);
-        txt_Volume->setTransparency(m_backgroundTransparency, m_saveBackground);
+        //    txt_Volume->setTransparency(m_backgroundTransparency, m_saveBackground);
         pic_RSSID->setTransparency(m_backgroundTransparency, m_saveBackground);
     }
 
@@ -6187,14 +6158,14 @@ class displayFooter : public RegisterTable {
         m_backgroundTransparency = backgroundTransparency;
         m_saveBackground = saveBackground;
         pic_Antenna->setTransparency(m_backgroundTransparency, false);
-        txt_StaNr->setTransparency(m_backgroundTransparency, false);
-        txt_FileNr->setTransparency(m_backgroundTransparency, false);
+        //    txt_StaNr->setTransparency(m_backgroundTransparency, false);
+        //    txt_FileNr->setTransparency(m_backgroundTransparency, false);
         pic_Flag->setTransparency(m_backgroundTransparency, false);
-        txt_OffTimer->setTransparency(m_backgroundTransparency, false);
-        pic_Hourglass->setTransparency(m_backgroundTransparency, false);
-        txt_BitRate->setTransparency(m_backgroundTransparency, false);
-        txt_OffTimer->setTransparency(m_backgroundTransparency, false);
-        txt_IpAddr->setTransparency(m_backgroundTransparency, false);
+        //    txt_OffTimer->setTransparency(m_backgroundTransparency, false);
+        //    pic_Hourglass->setTransparency(m_backgroundTransparency, false);
+        //    txt_BitRate->setTransparency(m_backgroundTransparency, false);
+        //    txt_OffTimer->setTransparency(m_backgroundTransparency, false);
+        //    txt_IpAddr->setTransparency(m_backgroundTransparency, false);
     }
 
     void hide() {
@@ -6446,7 +6417,7 @@ class messageBox : public RegisterTable {
     }
 
     void show() {
-        txt_msgBox->setTransparency(m_backgroundTransparency, m_saveBackground);
+        //    txt_msgBox->setTransparency(m_backgroundTransparency, m_saveBackground);
         txt_msgBox->show();
     }
 

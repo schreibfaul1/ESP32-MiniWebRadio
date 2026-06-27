@@ -41,7 +41,7 @@ extern __attribute__((weak)) void tft_info(const char*);
 #define ANSI_ESC_AQUAMARINE  "\033[38;5;51m"
 #define ANSI_ESC_LAVENDER    "\033[38;5;189m"
 
-// RGB565 Color definitions            R    G    B
+// RGB565 Color definitions         R    G    B
 #define TFT_RED          0xF800 // 255,   0,   0
 #define TFT_DARKRED      0x8000 // 128,   0,   0
 #define TFT_LIGHTRED     0xFBEF // 255, 127, 127
@@ -92,6 +92,8 @@ extern __attribute__((weak)) void tft_info(const char*);
 #define TFT_SANDYBROWN      0xF52C // 244, 164,  96
 #define TFT_TURQUOISE       0x471A //  64, 224, 208
 #define TFT_VIOLET          0x801F // 128,   0, 255
+
+#define TFT_TRANSPARENCY    -1
 
 #if TFT_FONT == 0
     #define TFT_GARAMOND
