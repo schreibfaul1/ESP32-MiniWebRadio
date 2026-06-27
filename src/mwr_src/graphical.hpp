@@ -120,11 +120,12 @@ static void                        register_object(RegisterTable* obj) {
     registertable_objects.push_back(obj);
 }
 inline void get_registered_names() {
-    ps_ptr<char>rn;
+    ps_ptr<char> rn;
     rn.set_name("rn");
     int16_t x = 0, y = 0, w = 0, h = 0;
     for (auto obj : registertable_objects) {
-        rn.assignf(ANSI_ESC_RESET "    registered object:" ANSI_ESC_YELLOW " {:27}" ANSI_ESC_RESET " is enabled: {}" ANSI_ESC_RESET ",", obj->getName().c_get(), obj->isEnabled() ? ANSI_ESC_RED "yes" : ANSI_ESC_BLUE " no");
+        rn.assignf(ANSI_ESC_RESET "    registered object:" ANSI_ESC_YELLOW " {:27}" ANSI_ESC_RESET " is enabled: {}" ANSI_ESC_RESET ",", obj->getName().c_get(),
+                   obj->isEnabled() ? ANSI_ESC_RED "yes" : ANSI_ESC_BLUE " no");
         obj->getBounds(x, y, w, h);
         rn.appendf(" x: {:4}, y: {:4}, w: {:4}, h: {:4}", x, y, w, h);
         rn.println();
@@ -2228,7 +2229,6 @@ class button1state : public RegisterTable { // click button
     int16_t      m_y = 0;
     int16_t      m_w = 0;
     int16_t      m_h = 0;
-    uint32_t     m_bgColor = 0;
     ps_ptr<char> m_idlePicturePath;
     ps_ptr<char> m_clickPicturePath;
     ps_ptr<char> m_inactivePicturePath;
@@ -2236,8 +2236,6 @@ class button1state : public RegisterTable { // click button
     bool         m_enabled = false;
     bool         m_focus = false;
     bool         m_clicked = false;
-    bool         m_backgroundTransparency = false;
-    bool         m_saveBackground = false;
     bool         m_active = true;
     ps_ptr<char> m_name;
     releasedArg  m_ra;
@@ -2246,7 +2244,6 @@ class button1state : public RegisterTable { // click button
     button1state(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
-        m_bgColor = TFT_BLACK;
         m_enabled = false;
         m_clicked = false;
     }
@@ -2278,10 +2275,7 @@ class button1state : public RegisterTable { // click button
     }
 
     void draw() override {
-        if (!m_enabled) return;
-        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
-        // writeText(m_text);
+        // nothing to do
     }
 
     void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
@@ -2297,21 +2291,13 @@ class button1state : public RegisterTable { // click button
             setInactive();
             return;
         }
+        getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
         drawImage(m_idlePicturePath, m_x, m_y, m_w, m_h);
         m_enabled = true;
     }
 
-    void setTransparency(bool backgroundTransparency, bool saveBackground) {
-        m_backgroundTransparency = backgroundTransparency;
-        m_saveBackground = saveBackground;
-    }
-
     void hide() {
-        if (m_backgroundTransparency) {
-            getTFT().copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
-        } else {
-            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        }
+        getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
         m_enabled = false;
     }
 
