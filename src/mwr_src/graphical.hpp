@@ -541,7 +541,6 @@ class textbox : public RegisterTable {
     uint8_t      m_paddig_right = 0;  // right margin
     uint8_t      m_paddig_top = 0;    // top margin
     uint8_t      m_paddig_bottom = 0; // bottom margin
-    uint8_t      m_borderWidth = 0;
     int32_t      m_bgColor = 0;
     int32_t      m_fgColor = 0;
     int32_t      m_borderColor = 0;
@@ -561,7 +560,7 @@ class textbox : public RegisterTable {
         m_name = name;
         m_bgColor = TFT_TRANSPARENCY;
         m_fgColor = TFT_LIGHTGREY;
-        m_borderColor = TFT_BLACK;
+        m_borderColor = TFT_TRANSPARENCY;
         m_fontSize = 1;
     }
     ~textbox() {}
@@ -600,6 +599,7 @@ class textbox : public RegisterTable {
         m_enabled = true;
         m_clicked = false;
         getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+        if (m_borderColor != TFT_TRANSPARENCY) { getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor); }
         writeText(m_text.c_get());
     }
 
@@ -619,15 +619,16 @@ class textbox : public RegisterTable {
     }
     void setTextColor(int32_t color) { m_fgColor = color; }
     void setBGcolor(int32_t color) { m_bgColor = color; }
-    void setBorderColor(int32_t color) { m_borderColor = color; }
-    void setBorderWidth(uint8_t width) { // 0 = no border
-        m_borderWidth = width;
-        if (m_borderWidth > 2) m_borderWidth = 2;
-        m_padding_left = m_padding_left + m_borderWidth;
-        m_paddig_right = m_paddig_right + m_borderWidth;
-        m_paddig_top = m_paddig_top + m_borderWidth;
-        m_paddig_bottom = m_paddig_bottom + m_borderWidth;
+    void setBorderColor(int32_t color) {
+        m_borderColor = color;
+        if (m_borderColor != TFT_TRANSPARENCY) {
+            m_padding_left = m_padding_left + 1;
+            m_paddig_right = m_paddig_right + 1;
+            m_paddig_top = m_paddig_top + 1;
+            m_paddig_bottom = m_paddig_bottom + 1;
+        }
     }
+
     bool positionXY(uint16_t x, uint16_t y) {
         if (x < m_x) return false;
         if (y < m_y) return false;
@@ -664,8 +665,7 @@ class textbox : public RegisterTable {
             int h = m_h - (m_paddig_bottom + m_paddig_top);
             getTFT().setTextColor(m_fgColor);
             getTFT().setFont(m_fontSize);
-            if (m_borderWidth > 0) {
-                getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
+            if (m_borderColor != TFT_TRANSPARENCY) {
                 getTFT().copyFramebuffer(2, 0, x + 1, y + 1, w - 2, h - 2);
                 getTFT().writeText(m_text.c_get(), x + 1, y + 1, w - 2, h - 2, m_h_align, m_v_align, m_narrow, m_noWrap, m_autoSize);
             } else {
@@ -1248,10 +1248,8 @@ class selectbox : public RegisterTable {
     void setBorderWidth(uint8_t width) { // 0 = no border
         m_borderWidth = width;
         if (m_borderWidth > 2) m_borderWidth = 2;
-        m_txt_select->setBorderWidth(m_borderWidth);
         m_txt_btn_down->setBorderWidth(m_borderWidth);
         m_txt_btn_up->setBorderWidth(m_borderWidth);
-        m_txt_btn_idx->setBorderWidth(m_borderWidth);
     }
     bool positionXY(uint16_t x, uint16_t y) {
         if (x < m_x) return false;
@@ -2156,6 +2154,7 @@ class button1state : public RegisterTable { // click button
 
     void show(bool inactive = false) {
         m_clicked = false;
+        if (m_enabled) hide();
         if (inactive) {
             setInactive();
             return;
@@ -2166,8 +2165,11 @@ class button1state : public RegisterTable { // click button
     }
 
     void hide() {
-        getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
-        m_enabled = false;
+        if (m_enabled) {
+            MWR_LOG_ERROR("hide, name: {}", m_name);
+            getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+            m_enabled = false;
+        }
     }
 
     void setInactive() {
@@ -3396,13 +3398,13 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
         for (uint8_t i = 0; i < 7; i++) {
             txt_alarm_days[i].begin(m_alarmdaysXPos[i], m_alarmdaysYPos, m_alarmdaysW, m_alarmdaysH, 0, 0, 0, 0);
             txt_alarm_days[i].setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
-            txt_alarm_days[i].setBorderWidth(1);
             txt_alarm_days[i].setFont(m_fontSize);
+            txt_alarm_days[i].setBorderColor(TFT_LIGHTGREY);
             txt_alarm_days[i].setText(m_WD[i]);
             txt_alarm_time[i].begin(m_alarmdaysXPos[i], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, 0, 0, 0, 0);
             txt_alarm_time[i].setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
-            txt_alarm_time[i].setBorderWidth(1);
             txt_alarm_time[i].setFont(m_fontSize);
+            txt_alarm_time[i].setBorderColor(TFT_LIGHTGREY);
         }
     }
     ps_ptr<char> getName() { return m_name; }
@@ -6074,7 +6076,6 @@ class displayFooter : public RegisterTable {
         txt_BitRate->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
         txt_BitRate->setTextColor(m_bitRateColor);
         txt_BitRate->setBorderColor(m_bitRateColor);
-        txt_BitRate->setBorderWidth(1);
         txt_BitRate->setFont(m_fontSize); // 0 -> auto
         txt_IpAddr->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
         txt_IpAddr->setTextColor(m_ipAddrColor);
