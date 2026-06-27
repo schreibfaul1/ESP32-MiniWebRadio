@@ -482,7 +482,7 @@ inline void clearAll() {
     getTFT().copyFramebuffer(1, 0, 0, 0, displayConfig.dispWidth, displayConfig.dispHeight);
 }
 
-void showStationName(){
+void showStationName() {
     if (s_f_sleeping) return;
     txt_RA_staName.setTextColor(TFT_CYAN);
     txt_RA_staName.setText(getStationName());
@@ -532,7 +532,7 @@ ps_ptr<char> getLogoPath() {
 }
 
 const char* getFlagPath(uint16_t station) {
-    if(station == 0) return "/flags/unknown.jpg";
+    if (station == 0) return "/flags/unknown.jpg";
     static char flagPath[40];
     flagPath[0] = '\0';
     strcpy(flagPath, "/flags/");
@@ -4068,6 +4068,8 @@ void graphicObjects_OnClick(ps_ptr<char> name, uint8_t val) { // val = 0 --> is 
         if(name.starts_with("txt_btn"))                        { goto exit; }
         if (val && name.equals("btn_SE_wifi"))                 { goto exit; }
         if (val && name.equals("select_txtbtn_down"))          { goto exit; }
+        if (val && name.equals("wifiSettings"))                { goto exit; }
+        if (       name.equals("wifiSettings_keyBoard"))       { goto exit; }
         if (val && name.equals("wifiSettings_selectbox_ssid")) { goto exit; }
         if (val && name.equals("wifiSettings_selectbox_ssid")) { goto exit; }
         if (val && name.equals("wifiSettings_keyBoard"))       { goto exit; }

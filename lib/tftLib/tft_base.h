@@ -26,8 +26,8 @@ class TFT_Base {
     void fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color);
     void drawCircle(int16_t cx, int16_t cy, int16_t r, uint16_t color);
     void fillCircle(int16_t cx, int16_t cy, uint16_t r, uint16_t color);
-    void setBackGoundColor(uint16_t BGcolor) { m_backGroundColor = BGcolor; }
-    uint16_t getBackGroundColor() { return m_backGroundColor; }
+    void setBackGoundColor(int32_t BGcolor) { m_backGroundColor = BGcolor; }
+    int32_t getBackGroundColor() { return m_backGroundColor; }
     void setTextColor(uint16_t FGcolor) { m_textColor = FGcolor; }
     uint16_t getTextColor() { return m_textColor; }
     void setFont(uint16_t font);
@@ -86,7 +86,7 @@ class TFT_Base {
     uint8_t   m_rotation = 0;
     uint8_t   fontSizes[13] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66, 81, 96};
     fonts_t   m_current_font = {};
-    uint16_t  m_backGroundColor = TFT_WHITE;
+    int32_t  m_backGroundColor = TFT_WHITE;
     uint16_t  m_textColor = TFT_BLACK;
     uint8_t   m_textorientation = 0;
     File      gif_file;
