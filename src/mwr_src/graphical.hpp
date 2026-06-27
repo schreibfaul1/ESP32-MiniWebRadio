@@ -596,7 +596,7 @@ class textbox : public RegisterTable {
     }
 
     void show() {
-        if(m_enabled) hide();
+        if (m_enabled) hide();
         m_enabled = true;
         m_clicked = false;
         getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
@@ -689,7 +689,6 @@ class inputbox : public RegisterTable {
     uint8_t      m_paddig_right = 0;  // right margin
     uint8_t      m_paddig_top = 0;    // top margin
     uint8_t      m_paddig_bottom = 0; // bottom margin
-    uint8_t      m_borderWidth = 0;
     int32_t      m_bgColor = 0;
     int32_t      m_fgColor = 0;
     int32_t      m_borderColor = 0;
@@ -745,11 +744,11 @@ class inputbox : public RegisterTable {
     }
 
     void show() {
-        if(m_enabled) hide();
+        if (m_enabled) hide();
         m_enabled = true;
         m_clicked = false;
         getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
-        if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
+        if (m_borderColor != TFT_TRANSPARENCY) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
         writeText(m_text);
     }
 
@@ -770,14 +769,14 @@ class inputbox : public RegisterTable {
     }
     void setTextColor(int32_t color) { m_fgColor = color; }
     void setBGcolor(int32_t color) { m_bgColor = color; }
-    void setBorderColor(int32_t color) { m_borderColor = color; }
-    void setBorderWidth(uint8_t width) { // 0 = no border
-        m_borderWidth = width;
-        if (m_borderWidth > 2) m_borderWidth = 2;
-        m_padding_left = m_padding_left + m_borderWidth;
-        m_paddig_right = m_paddig_right + m_borderWidth;
-        m_paddig_top = m_paddig_top + m_borderWidth;
-        m_paddig_bottom = m_paddig_bottom + m_borderWidth;
+    void setBorderColor(int32_t color) {
+        m_borderColor = color;
+        if (m_borderColor != TFT_TRANSPARENCY) {
+            m_padding_left = m_padding_left + 1;
+            m_paddig_right = m_paddig_right + 1;
+            m_paddig_top = m_paddig_top + 1;
+            m_paddig_bottom = m_paddig_bottom + 1;
+        }
     }
     bool positionXY(uint16_t x, uint16_t y) {
         if (x < m_x) return false;
@@ -812,13 +811,16 @@ class inputbox : public RegisterTable {
             int y = m_y + m_paddig_top;
             int w = m_w - (m_paddig_right + m_padding_left);
             int h = m_h - (m_paddig_bottom + m_paddig_top);
-            if (m_borderWidth > 0) {
-                if(m_bgColor == TFT_TRANSPARENCY) getTFT().copyFramebuffer(2, 0, m_x + 1, m_y + 1, m_w -2, m_h - 2);
-                else getTFT().fillRect(m_x + 1, m_y + 1, m_w -2, m_h - 2, m_bgColor);
-            }
-            else {
-                if(m_bgColor == TFT_TRANSPARENCY) getTFT().copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
-                else getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+            if (m_borderColor != TFT_TRANSPARENCY) {
+                if (m_bgColor == TFT_TRANSPARENCY)
+                    getTFT().copyFramebuffer(2, 0, m_x + 1, m_y + 1, m_w - 2, m_h - 2);
+                else
+                    getTFT().fillRect(m_x + 1, m_y + 1, m_w - 2, m_h - 2, m_bgColor);
+            } else {
+                if (m_bgColor == TFT_TRANSPARENCY)
+                    getTFT().copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+                else
+                    getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
             }
             if (m_fontSize != 0) { getTFT().setFont(m_fontSize); }
             getTFT().setTextColor(m_fgColor);
@@ -1444,9 +1446,7 @@ class keyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     bool         isEnabled() { return m_enabled; }
     bool         hasFocus() { return m_focus; }
 
-    void setBGcolor(int32_t color){
-        m_bgColor = color;
-    }
+    void setBGcolor(int32_t color) { m_bgColor = color; }
 
     bool setFocus(bool f) {
         m_focus = f;
@@ -1580,7 +1580,6 @@ class wifiSettings : public RegisterTable {
     uint8_t      m_padding_top = 0;    // top margin
     uint8_t      m_padding_bottom = 0; // bottom margin
     uint8_t      m_credentials_idx = 0;
-    uint8_t      m_borderWidth = 0;
     int32_t      m_bgColor = 0;
     int32_t      m_fgColor = 0;
     int32_t      m_borderColor = TFT_BLACK;
@@ -1649,7 +1648,6 @@ class wifiSettings : public RegisterTable {
         m_in_password->setTextColor(m_fgColor);
         m_in_password->setBGcolor(m_bgColor);
         m_in_password->setBorderColor(m_borderColor);
-        m_in_password->setBorderWidth(m_borderWidth);
         m_in_password->setFont(0); // auto size
     }
     ~wifiSettings() {
@@ -1811,7 +1809,7 @@ class wifiSettings : public RegisterTable {
         m_backgroundTransparency = backgroundTransparency;
         m_saveBackground = saveBackground;
         m_sel_ssid->setTransparency(m_backgroundTransparency, m_saveBackground);
-    //    m_in_password->setTransparency(m_backgroundTransparency, m_saveBackground);
+        //    m_in_password->setTransparency(m_backgroundTransparency, m_saveBackground);
     }
 
     void hide() {
@@ -1848,7 +1846,7 @@ class wifiSettings : public RegisterTable {
         m_fgColor = color;
         m_sel_ssid->setTextColor(m_fgColor);
         m_in_password->setTextColor(m_fgColor);
-    //    m_keyboard->setTextColor(m_fgColor);
+        //    m_keyboard->setTextColor(m_fgColor);
     }
     void setBGcolor(int32_t color) {
         m_bgColor = color;
@@ -1860,13 +1858,6 @@ class wifiSettings : public RegisterTable {
         m_borderColor = color;
         m_sel_ssid->setBorderColor(m_borderColor);
         m_in_password->setBorderColor(m_borderColor);
-    }
-    void setBorderWidth(uint8_t width) { // 0 = no border
-        m_borderWidth = width;
-        if (m_borderWidth > 2) m_borderWidth = 2;
-        m_sel_ssid->setBorderWidth(m_borderWidth);
-        m_in_password->setBorderWidth(m_borderWidth);
-        //    m_keyboard->setBorderWidth(m_borderWidth);
     }
     bool positionXY(uint16_t x, uint16_t y) {
         if (x < m_x) return false;

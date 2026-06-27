@@ -1975,7 +1975,6 @@ void changeState(int8_t state, int8_t subState) {
             dispHeader.enable(); dispFooter.enable();
             clearWithOutHeaderFooter();
             cls_wifiSettings.clearText();
-            cls_wifiSettings.setBorderWidth(1);
             cls_wifiSettings.setFontSize(displayConfig.listFontSize);
             int16_t n = WiFi.scanNetworks();
             SerialPrintfln("setup: ....  " ANSI_ESC_WHITE "{} WiFi networks found" ANSI_ESC_RESET "  ", n);
