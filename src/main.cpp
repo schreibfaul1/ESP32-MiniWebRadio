@@ -4237,7 +4237,7 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
     if (s_state == WIFI_SETTINGS) {
         if (name.starts_with("txt_btn"))    { goto exit; }
         if (name.equals("wifiSettings"))    { setWiFiCredentials(ra.arg1.c_get(), ra.arg2.c_get());
-                                              msg_box.setText("ESP restart", false, false);
+                                              msg_box.setText("ESP restart");
                                               msg_box.show();
                                               vTaskDelay(2000);
                                               s_f_msg_box = true;
