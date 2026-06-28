@@ -214,7 +214,7 @@ template <typename... Args> void SerialPrintfln(const char* fmt, Args&&... args)
     ps_ptr<char> myLog;
 
     rtc.hasValidTime() ? myLog.append(rtc.gettime_s()) : myLog.append("00:00:00");
-    myLog.append("\033[0m");
+    myLog.append(" \033[0m");
     myLog.appendf(fmt, std::forward<Args>(args)...);
     myLog.append("\033[0m\r\n");
     printf("%s", myLog.c_get());

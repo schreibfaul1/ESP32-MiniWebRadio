@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.0h - Jun 28, 2026                                                                                                               ";
+    Version 4.2.0h1 - Jun 28, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -1106,7 +1106,7 @@ void setup() {
     SerialPrintfln("setup: ....  current volume: " ANSI_ESC_CYAN "{}", s_volume.cur_volume);
     SerialPrintfln("setup: ....  volume steps: " ANSI_ESC_CYAN "{}", s_volume.volumeSteps);
     SerialPrintfln("setup: ....  volume after alarm: " ANSI_ESC_CYAN "{}", s_volume.volumeAfterAlarm);
-    SerialPrintfln("setup: ....  last connected host: " ANSI_ESC_CYAN "{}", s_settings.lastconnectedhost.c_get());
+    SerialPrintfln("setup: ....  last connected host: " ANSI_ESC_YELLOW "{}", s_settings.lastconnectedhost);
     SerialPrintfln("setup: ....  connection timeout: " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET " ms", CONN_TIMEOUT);
     SerialPrintfln("setup: ....  connection timeout SSL: " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET " ms", CONN_TIMEOUT_SSL);
 
@@ -1141,7 +1141,7 @@ void setup() {
         } else {
             SerialPrintfln("WiFI_info:   mDNS started");
             MDNS.addService("esp32", "tcp", 80);
-            SerialPrintfln("WiFI_info:   mDNS name: " ANSI_ESC_CYAN "MiniWebRadio");
+            SerialPrintfln("WiFI_info:   mDNS name: " ANSI_ESC_YELLOW "MiniWebRadio");
         }
         ArduinoOTA.setHostname("MiniWebRadio");
         ArduinoOTA.begin();
