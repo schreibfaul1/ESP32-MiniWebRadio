@@ -254,18 +254,20 @@ int log_redirect_handler(const char* format, va_list args) {
     vsnprintf(log_dst, len, format, args_msg);
     va_end(args_msg);
     if (len > 0) {
+        //0x1B 0x5B 0x30 0x3B 0x33 0x32 0x6D 0x49 0x20 0x28    0x31 0x35 0x33 0x37 0x29 0x20 0x41 0x52 0x44 0x55    0x49 0x4E 0x4F 0x3A 0x20
+        // ESC  [    0    ;    3    2    m    I         (       1    5    3    7    )         A    R    D    U       I    N    O    :
         int idx = log_buffer.index_of("ARDUINO:");
+        char c = log_buffer[7]; // 0...7 is ANSI_ESC_CODE
         if (idx > 0) {
-            // log_buffer.println();
-            char c = log_buffer[0];
+            idx += 9;  // after "ARDUINO: "
             log_buffer.remove_before(idx, true);
-            log_buffer.insert(" .. ", 8);
+            log_buffer.truncate_at(log_buffer.strlen() - 1); // remove '\n'
+            log_buffer.insert("ARDUINO: .. ", 0);
             if (c == 'E') log_buffer.insert(ANSI_ESC_RED, 11);
             if (c == 'W') log_buffer.insert(ANSI_ESC_YELLOW, 11);
             if (c == 'I') log_buffer.insert(ANSI_ESC_GREEN, 11);
             if (c == 'D') log_buffer.insert(ANSI_ESC_CYAN, 11);
             if (c == 'V') log_buffer.insert(ANSI_ESC_GREY, 11);
-            log_buffer.truncate_at(log_buffer.strlen() - 1); // remove '\n'
             SerialPrintfln("{}", log_buffer.c_get());
         } else {
             SerialPrintfln("{}", log_buffer.c_get());
