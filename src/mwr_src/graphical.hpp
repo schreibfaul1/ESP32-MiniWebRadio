@@ -5869,7 +5869,7 @@ class displayHeader : public RegisterTable {
             old_rssi = new_rssi; // no need to draw a rssi icon if rssiRange has not changed
             if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO) {
                 static int32_t tmp_rssi = 0;
-                if ((abs(rssi - tmp_rssi) > 4)) { SerialPrintfln("WiFI_info:   RSSI is " ANSI_ESC_CYAN "{}" ANSI_ESC_WHITE " dB", rssi); }
+                if ((abs(rssi - tmp_rssi) > 4)) { SerialPrintfln("WiFI_info:   RSSI is " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET " dB", rssi); }
                 tmp_rssi = rssi;
             }
             if (m_enabled) show = true;

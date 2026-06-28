@@ -1,5 +1,5 @@
 // created: 10.02.2022
-// updated: 23.11.2025
+// updated: 28.06.2026
 
 #include "settings.h"
 
@@ -75,6 +75,16 @@
 #include <mbedtls/aes.h>
 #include <mbedtls/base64.h>
 #include <vector>
+
+Audio       audio;
+Preferences pref;
+WebSrv      webSrv;
+WiFiMulti   wifiMulti;
+RTIME       rtc;
+Ticker      ticker100ms;
+TwoWire     i2cBusOne = TwoWire(0); // additional HW, sensors, buttons, encoder etc
+TwoWire     i2cBusTwo = TwoWire(1); // external DAC, AC101 or ES8388
+SPIClass    spiBus(FSPI);
 
 #ifdef TFT_MODE_SPI
     #include "tft_spi.h"
@@ -193,7 +203,6 @@ enum status {
 
 enum ir_shift { IR_RIGHT = +100, IR_LEFT = -100, IR_UP = +101, IR_DOWN = -101, IR_RESET = -127 };
 
-static bool                     newLine = false;
 extern SemaphoreHandle_t        mutex_rtc;
 extern RTIME                    rtc;
 extern WebSrv                   webSrv;
@@ -204,15 +213,8 @@ template <typename... Args> void SerialPrintfln(const char* fmt, Args&&... args)
 
     ps_ptr<char> myLog;
 
-    if (newLine) {
-        newLine = false;
-        myLog.assign("\n");
-    } else {
-        myLog.assign("");
-    }
-
     rtc.hasValidTime() ? myLog.append(rtc.gettime_s()) : myLog.append("00:00:00");
-    myLog.append(" ");
+    myLog.append(" \033[0m");
     myLog.appendf(fmt, std::forward<Args>(args)...);
     myLog.append("\033[0m\r\n");
     printf("%s", myLog.c_get());
@@ -224,13 +226,6 @@ template <typename... Args> void SerialPrintfcr(const char* fmt, Args&&... args)
     if (s_logBuffer.size() == 1024) s_logBuffer.pop_back();
 
     ps_ptr<char> myLog;
-
-    if (newLine) {
-        newLine = false;
-        myLog.assign("\n");
-    } else {
-        myLog.assign("");
-    }
 
     rtc.hasValidTime() ? myLog.append(rtc.gettime_s()) : myLog.append("00:00:00");
     myLog.append(" ");
@@ -357,8 +352,12 @@ void         wake_up();
 void         setRTC(ps_ptr<char> TZString);
 boolean      isAlarm(uint8_t weekDay, uint8_t alarmDays, uint16_t minuteOfTheDay, int16_t* alarmTime);
 boolean      copySDtoFFat(const char* path);
+void         showStationName();
 void         showStreamTitle(ps_ptr<char> streamTitle);
-void         showLogoAndStationName(bool force);
+void         showLogoAndStationName();
+ps_ptr<char> getStationName();
+ps_ptr<char> getLogoPath();
+void         webSrv_send_station_items();
 void         showFileLogo(int8_t state, int8_t subState);
 void         showFileName(const char* fname);
 void         showPlsFileNumber();
@@ -377,12 +376,13 @@ bool         init_SD_card();
 void         setVolume(uint8_t vol);
 uint8_t      downvolume();
 uint8_t      upvolume();
+void         setStation(ps_ptr<char> url, ps_ptr<char> extension = {});
 void         setStation(uint16_t sta);
 const char*  getFlagPath(uint16_t station);
 void         nextStation();
 void         prevStation();
 void         setStationByNumber(uint16_t staNr);
-void         setStationViaURL(const char* url, const char* extension);
+
 void         savefile(ps_ptr<char> fileName, uint32_t contentLength, ps_ptr<char> contenttype);
 void         setI2STone();
 ps_ptr<char> getI2STone();
