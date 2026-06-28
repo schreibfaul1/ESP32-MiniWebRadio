@@ -666,10 +666,6 @@ class textbox : public RegisterTable {
         return true;
     }
 
-    void setText(ps_ptr<char> txt) { // prepare a text, wait of show() to write it
-        m_text = txt;
-    }
-
     void setNarrow(bool narrow){
         m_narrow = narrow;
     }
@@ -684,8 +680,6 @@ class textbox : public RegisterTable {
     void writeText(ps_ptr<char> txt) {
         m_text = txt;
         if (m_enabled) {
-            uint16_t txtColor_tmp = getTFT().getTextColor();
-            uint16_t bgColor_tmp = getTFT().getBackGroundColor();
             getTFT().setTextColor(m_fgColor);
             getTFT().setBackGoundColor(m_bgColor);
             if (m_backgroundTransparency) {
@@ -704,8 +698,6 @@ class textbox : public RegisterTable {
             if (m_borderWidth > 0) { getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor); }
             if (m_borderWidth > 1) { getTFT().drawRect(m_x + 1, m_y + 1, m_w - 2, m_h - 2, m_borderColor); }
             getTFT().writeText(m_text.c_get(), x, y, w, h, m_h_align, m_v_align, m_narrow, m_noWrap, m_autoSize);
-            getTFT().setTextColor(txtColor_tmp);
-            getTFT().setBackGoundColor(bgColor_tmp);
         }
     }
 };
@@ -1393,14 +1385,12 @@ class selectbox : public RegisterTable {
             txt = m_selContent[idx];
         if (m_enabled) {
             MWR_LOG_DEBUG("writeText: {}", txt.c_get());
-            m_txt_select->setText(txt);
+            m_txt_select->writeText(txt);
             m_txt_select->setTransparency(m_backgroundTransparency, m_saveBackground);
-            m_txt_select->show();
             char c_idx[5] = {0};
             itoa(idx + 1, c_idx, 10);
-            m_txt_btn_idx->setText(c_idx);
+            m_txt_btn_idx->writeText(c_idx);
             m_txt_btn_idx->setTransparency(m_backgroundTransparency, m_saveBackground);
-            m_txt_btn_idx->show();
         }
     }
     ps_ptr<char> getSelectedText() {
@@ -2131,6 +2121,7 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
         m_enabled = true;
         if (m_saveBackground) getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
         updateTime(m_time, true);
+        for (uint8_t i = 0; i < 8; i++) { txt_time[i].show(); }
     }
 
     void setTransparency(bool backgroundTransparency, bool saveBackground) {
@@ -2180,9 +2171,8 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
             if (oldtime[i] != m_time[i]) {
                 char ch[2] = {0, 0};
                 ch[0] = m_time[i];
-                txt_time[i].setText(ch);
+                txt_time[i].writeText(ch);
                 txt_time[i].setTransparency(m_backgroundTransparency, m_saveBackground);
-                txt_time[i].show();
                 oldtime[i] = m_time[i];
             }
         }
@@ -3524,7 +3514,7 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
             txt_alarm_days[i].setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
             txt_alarm_days[i].setBorderWidth(1);
             txt_alarm_days[i].setFont(m_fontSize);
-            txt_alarm_days[i].setText(m_WD[i]);
+            txt_alarm_days[i].writeText(m_WD[i]);
             txt_alarm_time[i].begin(m_alarmdaysXPos[i], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, 0, 0, 0, 0);
             txt_alarm_time[i].setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
             txt_alarm_time[i].setBorderWidth(1);
@@ -3562,6 +3552,10 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
         m_showAll = true;
         updateDigits();
         updateAlarmDaysAndTime();
+        for (uint8_t i = 0; i < 7; i++){
+            txt_alarm_days[i].show();
+            txt_alarm_time[i].show();
+        }
     }
 
     void setTransparency(bool backgroundTransparency, bool saveBackground) {
@@ -3672,21 +3666,17 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
             if (*m_alarmDays & mask) { // is set
                 txt_alarm_days[m_btnAlarmDay].setBorderColor(TFT_RED);
                 txt_alarm_days[m_btnAlarmDay].setTextColor(TFT_RED);
-                txt_alarm_days[m_btnAlarmDay].setText(m_WD[m_btnAlarmDay]);
-                txt_alarm_days[m_btnAlarmDay].show();
+                txt_alarm_days[m_btnAlarmDay].writeText(m_WD[m_btnAlarmDay]);
                 txt_alarm_time[m_btnAlarmDay].setBorderColor(TFT_GREEN);
                 txt_alarm_time[m_btnAlarmDay].setTextColor(TFT_GREEN);
-                txt_alarm_time[m_btnAlarmDay].setText(hhmm);
-                txt_alarm_time[m_btnAlarmDay].show();
+                txt_alarm_time[m_btnAlarmDay].writeText(hhmm);
             } else { // bit is not set
                 txt_alarm_days[m_btnAlarmDay].setBorderColor(TFT_DARKGREY);
                 txt_alarm_days[m_btnAlarmDay].setTextColor(TFT_DARKGREY);
-                txt_alarm_days[m_btnAlarmDay].setText(m_WD[m_btnAlarmDay]);
-                txt_alarm_days[m_btnAlarmDay].show();
+                txt_alarm_days[m_btnAlarmDay].writeText(m_WD[m_btnAlarmDay]);
                 txt_alarm_time[m_btnAlarmDay].setBorderColor(TFT_DARKGREY);
                 txt_alarm_time[m_btnAlarmDay].setTextColor(TFT_DARKGREY);
-                txt_alarm_time[m_btnAlarmDay].setText("");
-                txt_alarm_time[m_btnAlarmDay].show();
+                txt_alarm_time[m_btnAlarmDay].writeText("");
             }
             m_btnAlarmDay = -1;
         }
@@ -3699,8 +3689,7 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
                 m_alarmTime[m_btnAlarmTime] = (m_alarmDigits[0] * 10 + m_alarmDigits[1]) * 60 + (m_alarmDigits[2] * 10 + m_alarmDigits[3]);
                 char hhmm[10] = "00:00";
                 sprintf(hhmm, "%02d:%02d", m_alarmTime[m_btnAlarmTime] / 60, m_alarmTime[m_btnAlarmTime] % 60);
-                txt_alarm_time[m_btnAlarmTime].setText(hhmm);
-                txt_alarm_time[m_btnAlarmTime].show();
+                txt_alarm_time[m_btnAlarmTime].writeText(hhmm);
             }
             m_btnAlarmTime = -1;
         }
@@ -3757,18 +3746,17 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
                 color = TFT_DARKGREY;
             txt_alarm_days[i].setBorderColor(color);
             txt_alarm_days[i].setTextColor(color);
-            txt_alarm_days[i].setText(m_WD[i]);
-            txt_alarm_days[i].show();
+            txt_alarm_days[i].writeText(m_WD[i]);
             char hhmm[10] = "00:00";
             sprintf(hhmm, "%02d:%02d", m_alarmTime[i] / 60, m_alarmTime[i] % 60);
             if (*m_alarmDays & mask) {
                 txt_alarm_time[i].setBorderColor(TFT_GREEN);
                 txt_alarm_time[i].setTextColor(TFT_GREEN);
-                txt_alarm_time[i].setText(hhmm);
+                txt_alarm_time[i].writeText(hhmm);
             } else {
                 txt_alarm_time[i].setBorderColor(TFT_DARKGREY);
                 txt_alarm_time[i].setTextColor(TFT_DARKGREY);
-                txt_alarm_time[i].setText("");
+                txt_alarm_time[i].writeText("");
             }
             txt_alarm_time[i].show();
             mask <<= 1;
@@ -3778,8 +3766,7 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
     void alarmDaysPressed(uint8_t idx) {
         txt_alarm_days[idx].setBorderColor(TFT_YELLOW);
         txt_alarm_days[idx].setTextColor(TFT_YELLOW);
-        txt_alarm_days[idx].setText(m_WD[idx]);
-        txt_alarm_days[idx].show();
+        txt_alarm_days[idx].writeText(m_WD[idx]);
     }
     void alarmTimePressed(uint8_t idx) {
         uint8_t mask = 0b00000001;
@@ -3790,7 +3777,7 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
             sprintf(hhmm, "%02d:%02d", m_alarmTime[idx] / 60, m_alarmTime[idx] % 60);
             txt_alarm_time[idx].setBorderColor(TFT_YELLOW);
             txt_alarm_time[idx].setTextColor(TFT_YELLOW);
-            txt_alarm_time[idx].setText(hhmm);
+            txt_alarm_time[idx].writeText(hhmm);
             getTFT().setTextColor(TFT_YELLOW);
             txt_alarm_time[idx].show();
         }
@@ -5745,6 +5732,8 @@ class displayHeader : public RegisterTable {
         m_enabled = true;
         m_clicked = false;
         m_old_rssi = -1;
+        txt_Item->show();
+        txt_Volume->show();
         updateItem(m_item);
         speakerOnOff(m_speakerOn);
         updateVolume(m_volume);
@@ -5775,8 +5764,7 @@ class displayHeader : public RegisterTable {
     void updateItem(ps_ptr<char> hl_item) { // radio, clock, audioplayer...
         if (!m_enabled) return;
         m_item = hl_item;
-        txt_Item->setText(hl_item.c_get());
-        txt_Item->show();
+        txt_Item->writeText(hl_item.c_get());
     }
     void setItemColor(uint16_t itemColor) {
         m_itemColor = itemColor;
@@ -5795,8 +5783,7 @@ class displayHeader : public RegisterTable {
         char buff[15];
         itoa(m_volume, buff, 10);
         txt_Volume->setTextColor(m_volumeColor);
-        txt_Volume->setText(buff);
-        txt_Volume->show();
+        txt_Volume->writeText(buff);
     }
 
     void updateRSSI(int8_t rssi, bool show = false) {
@@ -6241,6 +6228,8 @@ class displayFooter : public RegisterTable {
         m_clicked = false;
         pic_Antenna->show();
         txt_IpAddr->show();
+        txt_StaNr->show();
+        txt_OffTimer->show();
         updateStation(m_staNr);
         updateOffTime(m_offTime);
         updateBitRate(m_bitRate);
@@ -6286,15 +6275,23 @@ class displayFooter : public RegisterTable {
         m_staNr = staNr;
         char buff[10];
         sprintf(buff, "%03d", m_staNr);
-        txt_StaNr->setText(buff);
-        txt_StaNr->show();
+        if(txt_FileNr->isEnabled()){
+            txt_FileNr->hide();
+            txt_StaNr->show();
+            // pic_Flag->show();
+        }
+        txt_StaNr->writeText(buff);
     }
     void updateFileNr(ps_ptr<char> fNr) { // or BT Volume
         if (txt_StaNr->isEnabled()) txt_StaNr->hide();
         if (pic_Flag->isEnabled()) pic_Flag->hide();
         m_fileNr = fNr;
-        txt_FileNr->setText(m_fileNr);
-        txt_FileNr->show();
+        if(txt_StaNr->isEnabled()){
+            txt_StaNr->hide();
+            pic_Flag->hide();
+            txt_FileNr->show();
+        }
+        txt_FileNr->writeText(m_fileNr);
     }
     void setStationNrColor(uint16_t stationColor) { m_stationColor = stationColor; }
     void updateFlag(ps_ptr<char> flag) {
@@ -6314,14 +6311,12 @@ class displayFooter : public RegisterTable {
         sprintf(buff, "%d:%02d", m_offTime / 60, m_offTime % 60);
         if (m_offTime) {
             txt_OffTimer->setTextColor(TFT_RED);
-            txt_OffTimer->setText(buff);
-            txt_OffTimer->show();
+            txt_OffTimer->writeText(buff);
             pic_Hourglass->setPicturePath(m_hourGlassymbol[1]);
             pic_Hourglass->show();
         } else {
             txt_OffTimer->setTextColor(TFT_DEEPSKYBLUE);
-            txt_OffTimer->setText(buff);
-            txt_OffTimer->show();
+            txt_OffTimer->writeText(buff);
             pic_Hourglass->setPicturePath(m_hourGlassymbol[0]);
             pic_Hourglass->show();
         }
@@ -6358,7 +6353,7 @@ class displayFooter : public RegisterTable {
             sbr[3] = 'M';
             sbr[4] = '\0';
         }
-        txt_BitRate->setText(sbr);
+        txt_BitRate->writeText(sbr);
         txt_BitRate->show();
     }
     void setBitRateColor(uint16_t bitRateColor) {
@@ -6369,8 +6364,7 @@ class displayFooter : public RegisterTable {
     void setIpAddr(ps_ptr<char> ipAddr) {
         ipAddr.insert("IP:", 0);
         m_ipAddr = ipAddr;
-        txt_IpAddr->setText(ipAddr);
-        txt_IpAddr->show();
+        txt_IpAddr->writeText(ipAddr);
     }
     void setIpAddrColor(uint16_t ipAddrColor) {
         m_ipAddrColor = ipAddrColor;

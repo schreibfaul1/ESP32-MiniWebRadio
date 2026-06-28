@@ -482,11 +482,10 @@ inline void clearAll() {
     getTFT().copyFramebuffer(1, 0, 0, 0, displayConfig.dispWidth, displayConfig.dispHeight);
 }
 
-void showStationName(){
+void showStationName() {
     if (s_f_sleeping) return;
     txt_RA_staName.setTextColor(TFT_CYAN);
-    txt_RA_staName.setText(getStationName());
-    txt_RA_staName.show();
+    txt_RA_staName.writeText(getStationName());
 }
 
 void showStreamTitle(ps_ptr<char> streamtitle) {
@@ -532,7 +531,7 @@ ps_ptr<char> getLogoPath() {
 }
 
 const char* getFlagPath(uint16_t station) {
-    if(station == 0) return "/flags/unknown.jpg";
+    if (station == 0) return "/flags/unknown.jpg";
     static char flagPath[40];
     flagPath[0] = '\0';
     strcpy(flagPath, "/flags/");
@@ -1653,7 +1652,7 @@ void logAlarmItems() {
     uint8_t    mask = 0b00000001;
     for (uint8_t i = 0; i < 7; i++) {
         if (s_alarmdays & mask) {
-            SerialPrintfln("AlarmTime:   " ANSI_ESC_YELLOW "{} " ANSI_ESC_CYAN "%02i:%02i" ANSI_ESC_RESET "  ", wd[i], s_alarmtime[i] / 60, s_alarmtime[i] % 60);
+            SerialPrintfln("AlarmTime:   " ANSI_ESC_YELLOW "{} " ANSI_ESC_CYAN "{:02}:{:02}" ANSI_ESC_RESET "  ", wd[i], s_alarmtime[i] / 60, s_alarmtime[i] % 60);
         } else {
             SerialPrintfln("AlarmTime:   " ANSI_ESC_YELLOW "{} No alarm is set" ANSI_ESC_RESET "  ", wd[i]);
         }
@@ -1680,6 +1679,7 @@ void setTimeCounter(uint8_t sec) {
 /*🟢🟡🔴*/
 void changeState(int8_t state, int8_t subState) {
     MWR_LOG_DEBUG("state {}, s_state {}, subState {}, s_subState_radio {}, s_subState_player {}", state, s_state, subState, s_subState_radio, s_subState_player);
+    SerialPrintfln("state: ....  " ANSI_ESC_GREEN "{}",  _hl_item[s_state]);
     bool newState = false;
     bool newSubState = false;
     disableAllObjects();
@@ -1717,26 +1717,36 @@ void changeState(int8_t state, int8_t subState) {
             if (newState) {
                 clearWithOutHeaderFooter();
                 webSrv.send("changeState=", "RADIO");
-                if(!s_f_isWebConnected){
-                    setStation(s_cur_station);
-                }
+                if(!s_f_isWebConnected){ setStation(s_cur_station); }
+                pic_RA_logo.show();
+                txt_RA_staName.show();
                 if(s_f_isWebConnected) showLogoAndStationName();
+                if (subState == 0){
+                    txt_RA_sTitle.show();
+                    VUmeter_RA.show();
+                }
+
+
+
+
+            }
+            else{
+                txt_RA_staName.enable();
+                pic_RA_logo.enable();
             }
             dispHeader.enable();
             dispFooter.enable();
-            txt_RA_staName.enable();
-            pic_RA_logo.enable();
+
             if (subState == 0) {
                 if(newSubState) {
                     VUmeter_RA.show();
-                    txt_RA_sTitle.setText("");
+                    txt_RA_sTitle.writeText("");
                     txt_RA_sTitle.show();
                     s_f_newIcyDescription = true;
                     s_f_newStreamTitle = true;
                 }
                 else {
                     VUmeter_RA.enable();
-                    txt_RA_sTitle.enable();
                     txt_RA_sTitle.enable();
                 }
                 setTimeCounter(0);
@@ -1903,8 +1913,7 @@ void changeState(int8_t state, int8_t subState) {
                 pic_BR_logo.show();
                 sdr_BR_value.setValue(s_brightness);
                 sdr_BR_value.show();
-                txt_BR_value.setText(int2str(s_brightness));
-                txt_BR_value.show();
+                txt_BR_value.writeText(int2str(s_brightness));
             } else {
                 sdr_BR_value.enable();
                 txt_BR_value.enable();
@@ -1960,7 +1969,7 @@ void changeState(int8_t state, int8_t subState) {
                 pic_RI_logo.enable();
                 showFileLogo(RINGING, subState);
                 setTFTbrightness(s_brightness);
-                SerialPrintfln(ANSI_ESC_MAGENTA "Alarm" ANSI_ESC_RESET "  ");
+                SerialPrintfln(ANSI_ESC_MAGENTA "Alarm");
                 setVolume(s_volume.ringVolume);
                 audio.setVolume(s_volume.ringVolume);
                 muteChanged(false);
@@ -1978,9 +1987,9 @@ void changeState(int8_t state, int8_t subState) {
             cls_wifiSettings.setBorderWidth(1);
             cls_wifiSettings.setFontSize(displayConfig.listFontSize);
             int16_t n = WiFi.scanNetworks();
-            SerialPrintfln("setup: ....  " ANSI_ESC_WHITE "{} WiFi networks found" ANSI_ESC_RESET "  ", n);
+            SerialPrintfln("setup: ....  " ANSI_ESC_WHITE "{} WiFi networks found", n);
             for (int i = 0; i < n; i++) {
-                SerialPrintfln("setup: ....  " ANSI_ESC_GREEN "{} ({})" ANSI_ESC_RESET "  ", WiFi.SSID(i).c_str(), (int16_t)WiFi.RSSI(i));
+                SerialPrintfln("setup: ....  " ANSI_ESC_GREEN "{} ({})", WiFi.SSID(i).c_str(), (int16_t)WiFi.RSSI(i));
                 ps_ptr<char> pw = get_WiFi_PW(WiFi.SSID(i).c_str());
                 cls_wifiSettings.add_WiFi_Items(WiFi.SSID(i).c_str(), pw.c_get());
             }
@@ -2252,7 +2261,7 @@ void loop() {
             uint8_t c = audio.getCodec();
             if (c != 0 && c < 8) { // unknown or OGG, guard: c {1 ... 7, 9}
                 s_cur_Codec = c;
-                SerialPrintfln("Audiocodec:  " ANSI_ESC_YELLOW "{}" ANSI_ESC_RESET "  ", codecname[c]);
+                SerialPrintfln("Audiocodec:  " ANSI_ESC_YELLOW "{}", codecname[c]);
                 if (s_state == PLAYER) showFileLogo(PLAYER, s_subState_player);
             }
         }
@@ -2371,17 +2380,17 @@ void loop() {
 
         String r = Serial.readString();
         r.replace("\n", "");
-        SerialPrintfln("Terminal  :  " ANSI_ESC_YELLOW "{}" ANSI_ESC_RESET "  ", r.c_str());
+        SerialPrintfln("Terminal  :  " ANSI_ESC_YELLOW "{}", r.c_str());
         if (r.startsWith("pr")) {
             s_f_pauseResume = audio.pauseResume();
             if (s_f_pauseResume) {
-                SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "Pause-Resume" ANSI_ESC_RESET "  ");
+                SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "Pause-Resume");
             } else {
-                SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "Pause-Resume not possible" ANSI_ESC_RESET "  ");
+                SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "Pause-Resume not possible");
             }
         }
         if (r.startsWith("hc")) { // A make_hardcopy_on_sd of the display is created and written to the SD card
-            { SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "create hardcopy" ANSI_ESC_RESET "  "); }
+            { SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "create hardcopy"); }
             make_hardcopy_on_sd();
         }
         if (r.startsWith("rts")) { // run time stats
@@ -2612,8 +2621,7 @@ void my_audio_info(Audio::msg_t m) {
             }
             if (s_state == RADIO) {}
             if (s_state == DLNA) {
-                txt_DL_fName.setText("");
-                txt_DL_fName.show();
+                txt_DL_fName.writeText("");
                 btn_DL_pause.setActive(false);
                 btn_DL_pause.show();
             }
@@ -3116,7 +3124,7 @@ void ir_short_key(int8_t key) {
             }
             if(s_state == DLNAITEMSLIST) {
                 ps_ptr<char> r = lst_DLNA.getSelectedURL();
-                if(r) { txt_DL_fName.setTextColor(TFT_CYAN); txt_DL_fName.setText(lst_DLNA.getSelectedTitle()); changeState(DLNA, 0); connecttohost(r); }
+                if(r) { txt_DL_fName.setTextColor(TFT_CYAN); txt_DL_fName.writeText(lst_DLNA.getSelectedTitle()); changeState(DLNA, 0); connecttohost(r); }
                 else setTimeCounter(2);
                 break;
             }
@@ -4144,14 +4152,13 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
         if (name.equals("btn_DL_mute"))     { muteChanged(btn_DL_mute.getValue());   if(s_ir_btn_select == 0) set_ir_pos_DL(0); goto exit; }
         if (name.equals("btn_DL_pause"))    { s_f_pauseResume = audio.pauseResume(); if(s_ir_btn_select == 1) set_ir_pos_DL(0); goto exit; }
         if (name.equals("btn_DL_cancel"))   { stopSong();
-                                              txt_DL_fName.setText("");
-                                              txt_DL_fName.show();
+                                              txt_DL_fName.writeText("");
                                               pgb_DL_progress.reset();
                                               btn_DL_pause.setActive(false);
                                               btn_DL_pause.show();
                                               if(s_ir_btn_select == 3) set_ir_pos_DL(0);
                                               goto exit; }
-        if (name.equals("btn_DL_fileList")) { changeState(DLNAITEMSLIST, 0); txt_DL_fName.setText(""); goto exit; }
+        if (name.equals("btn_DL_fileList")) { changeState(DLNAITEMSLIST, 0); txt_DL_fName.writeText(""); goto exit; }
         if (name.equals("btn_DL_radio"))    { setStation(s_cur_station); goto exit; }
         if (name.equals("sdr_DL_volume"))   { goto exit; }
         if (name.equals("pgb_DL_progress")) { audio.setTimeOffset(ra.val2); goto exit; }
@@ -4162,7 +4169,7 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
                                                 }
                                                 if (ra.val1 == 1) { // play a file
                                                     txt_DL_fName.setTextColor(TFT_CYAN);
-                                                    txt_DL_fName.setText(ra.arg2.c_get());
+                                                    txt_DL_fName.writeText(ra.arg2.c_get());
                                                     connecttohost(ra.arg1);
                                                     changeState(DLNA, 0);
                                                     goto exit;

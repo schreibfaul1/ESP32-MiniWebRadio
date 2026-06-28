@@ -225,7 +225,7 @@ template <typename... Args> void SerialPrintfln(const char* fmt, Args&&... args)
     myLog.append(" ");
     myLog.appendf(fmt, std::forward<Args>(args)...);
     myLog.append("\033[0m\r\n");
-    printf("%s", myLog.c_get());
+    printf(ANSI_ESC_RESET "%s" ANSI_ESC_RESET, myLog.c_get());
     s_logBuffer.insert(s_logBuffer.begin(), std::move(myLog));
     myLog.reset();
 }
