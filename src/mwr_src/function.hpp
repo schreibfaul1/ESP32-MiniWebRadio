@@ -215,35 +215,35 @@ bool get_esp_items(uint8_t* s_resetReason, bool* s_f_FFatFound) {
     uint8_t      avMajor = ESP_ARDUINO_VERSION_MAJOR;
     uint8_t      avMinor = ESP_ARDUINO_VERSION_MINOR;
     uint8_t      avPatch = ESP_ARDUINO_VERSION_PATCH;
-    SerialPrintfln("ESP32 Chip: {}", chipModel.c_get());
-    SerialPrintfln("Arduino Version: {}.{}.{}", avMajor, avMinor, avPatch);
+    printfln(s_tag.sys_info, "ESP32 Chip: {}", chipModel.c_get());
+    printfln(s_tag.sys_info, "Arduino Version: {}.{}.{}", avMajor, avMinor, avPatch);
     uint8_t idfMajor = ESP_IDF_VERSION_MAJOR;
     uint8_t idfMinor = ESP_IDF_VERSION_MINOR;
     uint8_t idfPatch = ESP_IDF_VERSION_PATCH;
-    SerialPrintfln("ESP-IDF Version: {}.{}.{}", idfMajor, idfMinor, idfPatch);
-    SerialPrintfln("audioI2S Version: {}", audio.getVersion());
-    SerialPrintfln("ARDUINO_LOOP_STACK_SIZE: {} words (32 bit)", CONFIG_ARDUINO_LOOP_STACK_SIZE);
-    SerialPrintfln("FLASH size: {} bytes, speed: {} MHz", (long unsigned)ESP.getFlashChipSize(), (long unsigned)ESP.getFlashChipSpeed() / 1000000);
-    SerialPrintfln("CPU speed: {} MHz", (long unsigned)ESP.getCpuFreqMHz());
-    SerialPrintfln("SDMMC speed: {} MHz", SDMMC_FREQUENCY / 1000000);
+    printfln(s_tag.sys_info, "ESP-IDF Version: {}.{}.{}", idfMajor, idfMinor, idfPatch);
+    printfln(s_tag.sys_info, "audioI2S Version: {}", audio.getVersion());
+    printfln(s_tag.sys_info, "ARDUINO_LOOP_STACK_SIZE: {} words (32 bit)", CONFIG_ARDUINO_LOOP_STACK_SIZE);
+    printfln(s_tag.sys_info, "FLASH size: {} bytes, speed: {} MHz", (long unsigned)ESP.getFlashChipSize(), (long unsigned)ESP.getFlashChipSpeed() / 1000000);
+    printfln(s_tag.sys_info, "CPU speed: {} MHz", (long unsigned)ESP.getCpuFreqMHz());
+    printfln(s_tag.sys_info, "SDMMC speed: {} MHz", SDMMC_FREQUENCY / 1000000);
 #ifdef TFT_MODE_SPI
-    SerialPrintfln("TFT speed: {} MHz", TFT_FREQUENCY / 1000000);
+    printfln(s_tag.sys_info, "TFT speed: {} MHz", TFT_FREQUENCY / 1000000);
 #endif
 
     if (!psramInit()) {
-        SerialPrintfln(ANSI_ESC_RED "PSRAM not found! MiniWebRadio doesn't work properly without PSRAM!");
+        printfln(s_tag.sys_info, ANSI_ESC_RED "PSRAM not found! MiniWebRadio doesn't work properly without PSRAM!");
     } else {
-        SerialPrintfln("PSRAM total size: {} bytes", (long unsigned)ESP.getPsramSize());
+        printfln(s_tag.sys_info, "PSRAM total size: {} bytes", ESP.getPsramSize());
     }
     if (ESP.getFlashChipSize() > 80000000) {
         if (!FFat.begin()) {
-            if (!FFat.format()) SerialPrintfln("FFat Mount Failed\n");
+            if (!FFat.format()) printfln(s_tag.sys_info, "FFat Mount Failed\n");
         } else {
-            SerialPrintfln("FFat total space: {} bytes, free space: {} bytes", FFat.totalBytes(), FFat.freeBytes());
+            printfln(s_tag.sys_info, "FFat total space: {} bytes, free space: {} bytes", FFat.totalBytes(), FFat.freeBytes());
             *s_f_FFatFound = true;
         }
     }
-    SerialPrintfln("Arduino is pinned to core {}", xPortGetCoreID());
+    printfln(s_tag.sys_info, "Arduino is pinned to core {}", xPortGetCoreID());
     const char* rr = NULL;
     *s_resetReason = (esp_reset_reason_t)esp_reset_reason();
     switch (*s_resetReason) {
@@ -262,16 +262,16 @@ bool get_esp_items(uint8_t* s_resetReason, bool* s_f_FFatFound) {
         case ESP_RST_BROWNOUT: rr = "Brownout reset (software or hardware)"; break;
         case ESP_RST_SDIO: rr = "Reset over SDIO"; break;
     }
-    SerialPrintfln("RESET_REASON: {}", rr);
+    printfln(s_tag.sys_info, "RESET_REASON: {}", rr);
     if (chipModel.equals("ESP32-S3")) {
     } // ...  okay
     else if (chipModel.equals("ESP32-P4")) {
     } // ...  okay
     else {
-        SerialPrintfln(ANSI_ESC_RED "MiniWebRadio does not work with {}", chipModel.c_get());
+        printfln(s_tag.sys_info, ANSI_ESC_RED "MiniWebRadio does not work with {}", chipModel.c_get());
         return false;
     }
-    SerialPrintfln("");
+    printfln(s_tag.none, "");
     return true;
 }
 
@@ -1041,12 +1041,12 @@ class SD_content {
         m_files.clear();
         if (m_masterFile) m_masterFile.close();
         if (!SD_MMC.exists(path)) {
-            SerialPrintfln(ANSI_ESC_RED "SD_MMC/{} not exist", path);
+            printfln(s_tag.sd_card, ANSI_ESC_RED "SD_MMC/{} not exist", path);
             return false;
         }
         m_masterFile = SD_MMC.open(path);
         if (!m_masterFile.isDirectory()) {
-            SerialPrintfln(ANSI_ESC_RED "SD_MMC/{} is not a directory", path);
+            printfln(s_tag.sd_card, ANSI_ESC_RED "SD_MMC/{} is not a directory", path);
             m_masterFile.close();
             return false;
         }
@@ -1923,7 +1923,7 @@ void wavWriterTask(void*) {
             recorder.running = true;
             rec_buffer.clear();
             writeBuffer.clear();
-            SerialPrintfln("recorder: .  " ANSI_ESC_YELLOW "Recording started: " ANSI_ESC_CYAN "{}", filename);
+            printfln(s_tag.recorder, ANSI_ESC_YELLOW "Recording started: " ANSI_ESC_YELLOW "{}", filename);
         }
 
         // --- WRITE DATA ---
@@ -1980,8 +1980,7 @@ void wavWriterTask(void*) {
             fileOpen = false;
             writeBufferFill = 0;
             recorder.running = false;
-            SerialPrintfln("recorder: .  " ANSI_ESC_YELLOW "Recording stopped. Total bytes: " ANSI_ESC_CYAN "{}" ANSI_ESC_YELLOW ", Overflows: " ANSI_ESC_CYAN "{}", recorder.totalBytes,
-                           recorder.overflowCount);
+            printfln(s_tag.recorder, "Recording stopped. Total bytes: " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET ", Overflows: " ANSI_ESC_CYAN "{}", recorder.totalBytes, recorder.overflowCount);
         }
 
         // Small delay to feed watchdog and release CPU

@@ -4475,7 +4475,7 @@ class dlnaList : public RegisterTable {
                 if (m_srvContent->at(m_itemListPos - 1).isAudio) {
                     m_chptr.assignf("{}", m_srvContent->at(m_itemListPos - 1).title.c_get());
                     m_ra.arg1 = m_srvContent->at(m_itemListPos - 1).itemURL; // url --> connecttohost()
-                    m_ra.arg2 = m_srvContent->at(m_itemListPos - 1).title;   // filename --> showFileName()
+                    m_ra.arg2 = m_srvContent->at(m_itemListPos - 1).title;   // filename --> showPlayerFileName()
                     if (m_ra.arg1.strlen() > 0 && m_ra.arg2.strlen() > 0) m_ra.val1 = 1;
                     m_browseOnRelease = DLNA_FILE;
                     goto exit;
@@ -5869,7 +5869,7 @@ class displayHeader : public RegisterTable {
             old_rssi = new_rssi; // no need to draw a rssi icon if rssiRange has not changed
             if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO) {
                 static int32_t tmp_rssi = 0;
-                if ((abs(rssi - tmp_rssi) > 4)) { SerialPrintfln("WiFI_info:   RSSI is " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET " dB", rssi); }
+                if ((abs(rssi - tmp_rssi) > 4)) { printfln(s_tag.wifi_info, "RSSI: " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET " dB", rssi); }
                 tmp_rssi = rssi;
             }
             if (m_enabled) show = true;
