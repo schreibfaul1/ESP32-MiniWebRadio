@@ -1,5 +1,5 @@
 // created: 10.02.2022
-// updated: 23.11.2025
+// updated: 28.06.2026
 
 #include "settings.h"
 
@@ -203,7 +203,6 @@ enum status {
 
 enum ir_shift { IR_RIGHT = +100, IR_LEFT = -100, IR_UP = +101, IR_DOWN = -101, IR_RESET = -127 };
 
-static bool                     newLine = false;
 extern SemaphoreHandle_t        mutex_rtc;
 extern RTIME                    rtc;
 extern WebSrv                   webSrv;
@@ -214,15 +213,8 @@ template <typename... Args> void SerialPrintfln(const char* fmt, Args&&... args)
 
     ps_ptr<char> myLog;
 
-    if (newLine) {
-        newLine = false;
-        myLog.assign("\n");
-    } else {
-        myLog.assign("");
-    }
-
     rtc.hasValidTime() ? myLog.append(rtc.gettime_s()) : myLog.append("00:00:00");
-    myLog.append(" ");
+    myLog.append("\033[0m");
     myLog.appendf(fmt, std::forward<Args>(args)...);
     myLog.append("\033[0m\r\n");
     printf("%s", myLog.c_get());
@@ -234,13 +226,6 @@ template <typename... Args> void SerialPrintfcr(const char* fmt, Args&&... args)
     if (s_logBuffer.size() == 1024) s_logBuffer.pop_back();
 
     ps_ptr<char> myLog;
-
-    if (newLine) {
-        newLine = false;
-        myLog.assign("\n");
-    } else {
-        myLog.assign("");
-    }
 
     rtc.hasValidTime() ? myLog.append(rtc.gettime_s()) : myLog.append("00:00:00");
     myLog.append(" ");

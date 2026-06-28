@@ -231,7 +231,7 @@ bool get_esp_items(uint8_t* s_resetReason, bool* s_f_FFatFound) {
 #endif
 
     if (!psramInit()) {
-        SerialPrintfln(ANSI_ESC_RED "PSRAM not found! MiniWebRadio doesn't work properly without PSRAM!" ANSI_ESC_WHITE);
+        SerialPrintfln(ANSI_ESC_RED "PSRAM not found! MiniWebRadio doesn't work properly without PSRAM!");
     } else {
         SerialPrintfln("PSRAM total size: {} bytes", (long unsigned)ESP.getPsramSize());
     }
@@ -1923,7 +1923,7 @@ void wavWriterTask(void*) {
             recorder.running = true;
             rec_buffer.clear();
             writeBuffer.clear();
-            SerialPrintfln("recorder: .  " ANSI_ESC_YELLOW "Recording started: " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET, filename);
+            SerialPrintfln("recorder: .  " ANSI_ESC_YELLOW "Recording started: " ANSI_ESC_CYAN "{}", filename);
         }
 
         // --- WRITE DATA ---
@@ -1980,7 +1980,7 @@ void wavWriterTask(void*) {
             fileOpen = false;
             writeBufferFill = 0;
             recorder.running = false;
-            SerialPrintfln("recorder: .  " ANSI_ESC_YELLOW "Recording stopped. Total bytes: " ANSI_ESC_CYAN "{}" ANSI_ESC_YELLOW ", Overflows: " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET, recorder.totalBytes,
+            SerialPrintfln("recorder: .  " ANSI_ESC_YELLOW "Recording stopped. Total bytes: " ANSI_ESC_CYAN "{}" ANSI_ESC_YELLOW ", Overflows: " ANSI_ESC_CYAN "{}", recorder.totalBytes,
                            recorder.overflowCount);
         }
 
