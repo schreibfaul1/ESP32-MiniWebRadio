@@ -621,13 +621,10 @@ void placingGraphicObjects() { // and initialize them
     btn_PL_playAll.setPicturePath("/btn/Button_PlayAll");
     btn_PL_shuffle.begin(4 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_PL_shuffle.setPicturePath("/btn/Button_Shuffle");
-    btn_PL_fileList.setTransparency(true, false);
     btn_PL_fileList.begin(5 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_PL_fileList.setPicturePath("/btn/Button_List");
-    btn_PL_radio.setTransparency(true, false);
     btn_PL_radio.begin(6 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_PL_radio.setPicturePath("/btn/Button_Radio");
-    btn_PL_off.setTransparency(true, false);
     btn_PL_off.begin(7 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_PL_off.setPicturePath("/btn/Button_Off");
     btn_PL_playPrev.begin(3 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);

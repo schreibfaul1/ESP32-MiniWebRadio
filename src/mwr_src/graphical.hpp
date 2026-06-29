@@ -2227,7 +2227,6 @@ class button1state : public RegisterTable { // click button
     int16_t      m_y = 0;
     int16_t      m_w = 0;
     int16_t      m_h = 0;
-    uint32_t     m_bgColor = 0;
     ps_ptr<char> m_idlePicturePath;
     ps_ptr<char> m_clickPicturePath;
     ps_ptr<char> m_inactivePicturePath;
@@ -2235,8 +2234,6 @@ class button1state : public RegisterTable { // click button
     bool         m_enabled = false;
     bool         m_focus = false;
     bool         m_clicked = false;
-    bool         m_backgroundTransparency = false;
-    bool         m_saveBackground = false;
     bool         m_active = true;
     ps_ptr<char> m_name;
     releasedArg  m_ra;
@@ -2245,7 +2242,6 @@ class button1state : public RegisterTable { // click button
     button1state(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
-        m_bgColor = TFT_BLACK;
         m_enabled = false;
         m_clicked = false;
     }
@@ -2292,6 +2288,7 @@ class button1state : public RegisterTable { // click button
 
     void show(bool inactive = false) {
         m_clicked = false;
+        getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
         if (inactive) {
             setInactive();
             return;
@@ -2300,17 +2297,8 @@ class button1state : public RegisterTable { // click button
         m_enabled = true;
     }
 
-    void setTransparency(bool backgroundTransparency, bool saveBackground) {
-        m_backgroundTransparency = backgroundTransparency;
-        m_saveBackground = saveBackground;
-    }
-
     void hide() {
-        if (m_backgroundTransparency) {
-            getTFT().copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
-        } else {
-            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        }
+        getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
         m_enabled = false;
     }
 
