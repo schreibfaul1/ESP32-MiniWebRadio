@@ -2367,7 +2367,6 @@ class button2state : public RegisterTable { // on off switch
     int16_t      m_y = 0;
     int16_t      m_w = 0;
     int16_t      m_h = 0;
-    uint32_t     m_bgColor = 0;
     ps_ptr<char> m_off_idlePicturePath;
     ps_ptr<char> m_on_idlePicturePath;
     ps_ptr<char> m_off_clickPicturePath;
@@ -2381,8 +2380,6 @@ class button2state : public RegisterTable { // on off switch
     bool         m_active = true;
     bool         m_clicked = false;
     bool         m_state = false;
-    bool         m_backgroundTransparency = false;
-    bool         m_saveBackground = false;
     ps_ptr<char> m_name;
     releasedArg  m_ra;
 
@@ -2390,7 +2387,6 @@ class button2state : public RegisterTable { // on off switch
     button2state(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
-        m_bgColor = TFT_BLACK;
         m_enabled = false;
         m_clicked = false;
         m_state = false;
@@ -2449,6 +2445,7 @@ class button2state : public RegisterTable { // on off switch
 
     void show() {
         m_clicked = false;
+        getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
         if (m_active) {
             if (m_state)
                 drawImage(m_on_idlePicturePath, m_x, m_y, m_w, m_h);
@@ -2461,11 +2458,6 @@ class button2state : public RegisterTable { // on off switch
             else
                 drawImage(m_off_inactivePicturePath, m_x, m_y, m_w, m_h);
         }
-    }
-
-    void setTransparency(bool backgroundTransparency, bool saveBackground) {
-        m_backgroundTransparency = backgroundTransparency;
-        m_saveBackground = saveBackground;
     }
 
     void showClickedPic() {
@@ -2488,7 +2480,7 @@ class button2state : public RegisterTable { // on off switch
     }
 
     void hide() {
-        getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
         m_enabled = false;
     }
 
