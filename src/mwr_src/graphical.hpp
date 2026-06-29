@@ -565,7 +565,6 @@ class textbox : public RegisterTable {
     uint8_t      m_paddig_right = 0;  // right margin
     uint8_t      m_paddig_top = 0;    // top margin
     uint8_t      m_paddig_bottom = 0; // bottom margin
-    uint8_t      m_borderWidth = 0;
     int32_t      m_bgColor = 0;
     int32_t      m_textColor = 0;
     int32_t      m_borderColor = 0;
@@ -585,7 +584,7 @@ class textbox : public RegisterTable {
         m_name = name;
         m_bgColor = TFT_TRANSPARENT;
         m_textColor = TFT_LIGHTGREY;
-        m_borderColor = TFT_LIGHTGREY;
+        m_borderColor = TFT_TRANSPARENT;
         m_fontSize = 1;
     }
     ~textbox() {}
@@ -656,15 +655,10 @@ class textbox : public RegisterTable {
         m_bgColor = color;
         writeText(m_text);
     }
-    void setBorderColor(int32_t color) { m_borderColor = color; }
-    void setBorderWidth(uint8_t width) { // 0 = no border
-        m_borderWidth = width;
-        if (m_borderWidth > 2) m_borderWidth = 2;
-        m_padding_left = m_padding_left + m_borderWidth;
-        m_paddig_right = m_paddig_right + m_borderWidth;
-        m_paddig_top = m_paddig_top + m_borderWidth;
-        m_paddig_bottom = m_paddig_bottom + m_borderWidth;
+    void setBorderColor(int32_t color) { // TFT_TRANSPARENT -> no border
+        m_borderColor = color;
     }
+
     bool positionXY(uint16_t x, uint16_t y) {
         if (x < m_x) return false;
         if (y < m_y) return false;
@@ -707,8 +701,10 @@ class textbox : public RegisterTable {
             int y = m_y + m_paddig_top;
             int w = m_w - (m_paddig_right + m_padding_left);
             int h = m_h - (m_paddig_bottom + m_paddig_top);
-            if (m_borderWidth > 0) { getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor); }
-            if (m_borderWidth > 1) { getTFT().drawRect(m_x + 1, m_y + 1, m_w - 2, m_h - 2, m_borderColor); }
+            if(m_borderColor != TFT_TRANSPARENT) {
+                x+=1; y+=1; w -= 2; h -= 2;
+                getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
+            }
             getTFT().writeText(m_text.c_get(), x, y, w, h, m_h_align, m_v_align, m_narrow, m_noWrap, m_autoSize);
         }
     }
@@ -1344,11 +1340,9 @@ class selectbox : public RegisterTable {
     void setBorderWidth(uint8_t width) { // 0 = no border
         m_borderWidth = width;
         if (m_borderWidth > 2) m_borderWidth = 2;
-        m_txt_select->setBorderWidth(m_borderWidth);
         m_txt_btn_down->setBorderWidth(m_borderWidth);
         m_txt_btn_up->setBorderWidth(m_borderWidth);
-        m_txt_btn_idx->setBorderWidth(m_borderWidth);
-    }
+     }
     bool positionXY(uint16_t x, uint16_t y) {
         if (x < m_x) return false;
         if (y < m_y) return false;
@@ -3564,12 +3558,12 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
         for (uint8_t i = 0; i < 7; i++) {
             txt_alarm_days[i].begin(m_alarmdaysXPos[i], m_alarmdaysYPos, m_alarmdaysW, m_alarmdaysH, 0, 0, 0, 0);
             txt_alarm_days[i].setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
-            txt_alarm_days[i].setBorderWidth(1);
+            txt_alarm_days[i].setBorderColor(TFT_LIGHTGREY);
             txt_alarm_days[i].setFont(m_fontSize);
             txt_alarm_days[i].setText(m_WD[i]);
             txt_alarm_time[i].begin(m_alarmdaysXPos[i], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, 0, 0, 0, 0);
             txt_alarm_time[i].setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
-            txt_alarm_time[i].setBorderWidth(1);
+            txt_alarm_time[i].setBorderColor(TFT_LIGHTGREY);
             txt_alarm_time[i].setFont(m_fontSize);
         }
     }
@@ -6282,7 +6276,6 @@ class displayFooter : public RegisterTable {
         txt_BitRate->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
         txt_BitRate->setTextColor(m_bitRateColor);
         txt_BitRate->setBorderColor(m_bitRateColor);
-        txt_BitRate->setBorderWidth(1);
         txt_BitRate->setFont(m_fontSize); // 0 -> auto
         txt_IpAddr->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
         txt_IpAddr->setNarrow(true);

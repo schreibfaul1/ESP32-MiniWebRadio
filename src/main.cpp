@@ -3963,6 +3963,7 @@ void graphicObjects_OnClick(ps_ptr<char> name, uint8_t val) { // val = 0 --> is 
         if (val && name.equals("btn_RA_settings")) { goto exit; }
         if (val && name.equals("VUmeter_RA"))      { goto exit; }
         if (val && name.equals("txt_RA_sTitle"))   { goto exit; }
+        if (       name.equals("sdr_RA_volume"))   { goto exit; }
     }
     if (s_state == STATIONSLIST) {
         if (val && name.equals("lst_RADIO"))       { setTimeCounter(LIST_TIMER); goto exit; }
@@ -4080,12 +4081,16 @@ void graphicObjects_OnClick(ps_ptr<char> name, uint8_t val) { // val = 0 --> is 
                 goto exit;
             }
         }
-        if(name.starts_with("txt_btn"))                        { goto exit; }
+        if (name.starts_with("txt_btn"))                       { goto exit; }
+        if (val && name.equals("wifiSettings"))                { goto exit; }
+        if (       name.equals("wifiSettings_keyBoard"))       { goto exit; }
         if (val && name.equals("btn_SE_wifi"))                 { goto exit; }
         if (val && name.equals("select_txtbtn_down"))          { goto exit; }
         if (val && name.equals("wifiSettings_selectbox_ssid")) { goto exit; }
         if (val && name.equals("wifiSettings_selectbox_ssid")) { goto exit; }
         if (val && name.equals("wifiSettings_keyBoard"))       { goto exit; }
+        if (val && name.equals("select_txtbtn_up"))            { goto exit; }
+        if (val && name.equals("select_txtbtn_down"))          { goto exit; }
     }
     MWR_LOG_WARN("unused event: graphicObject {} was clicked", name.c_get());
 exit:
@@ -4250,7 +4255,6 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
         if (name.equals("btn_IR_radio"))    { changeState(RADIO, 0); goto exit; }
     }
     if (s_state == WIFI_SETTINGS) {
-        if (name.starts_with("txt_btn"))    { goto exit; }
         if (name.equals("wifiSettings"))    { setWiFiCredentials(ra.arg1.c_get(), ra.arg2.c_get());
                                               msg_box.setText("ESP restart", false, false);
                                               msg_box.show();
@@ -4258,8 +4262,12 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
                                               s_f_msg_box = true;
                                               s_f_esp_restart = true;
                                               goto exit; }
+        if (name.starts_with("txt_btn"))                { goto exit; }
+        if (name.equals("wifiSettings_selectbox_ssid")) { goto exit; }
+        if (name.equals("select_txtbtn_up"))            { goto exit; }
+        if (name.equals("select_txtbtn_down"))          { goto exit; }
     }
-    MWR_LOG_WARN("unused event: graphicObject {} was released", name.c_get());
+    MWR_LOG_WARN("unused event: graphicObject {} was released", name);
 exit:
     s_f_ok_from_ir = false;
     return;
