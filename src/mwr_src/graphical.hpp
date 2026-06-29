@@ -650,7 +650,9 @@ class textbox : public RegisterTable {
         }
     }
     void setTextColor(int32_t color) { m_textColor = color; }
+
     void setBGcolor(int32_t color) {
+        if (m_bgColor == color) return;
         m_bgColor = color;
         writeText(m_text);
     }
@@ -680,11 +682,12 @@ class textbox : public RegisterTable {
         if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
         return true;
     }
-    void setText(ps_ptr<char> txt, bool narrow = false, bool noWrap = false) { // prepare a text, wait of show() to write it
-        m_text = txt;
-        m_narrow = narrow;
-        m_noWrap = noWrap;
-    }
+    void setText(ps_ptr<char> txt) { m_text = txt; } // prepare a text, wait of show() to write it
+
+    void setNarrow(bool narrow) { m_narrow = narrow; }
+
+    void setNoWrap(bool noWrap) { m_noWrap = noWrap; }
+
     void setAlign(uint8_t h_align, uint8_t v_align) {
         m_h_align = h_align;
         m_v_align = v_align;
@@ -1222,9 +1225,13 @@ class selectbox : public RegisterTable {
         m_paddig_top = paddig_top;
         m_paddig_bottom = paddig_bottom;
         m_txt_select->begin(m_x, m_y, m_w - (m_h * 3), m_h, m_padding_left, m_paddig_right, m_paddig_top, m_paddig_bottom);
+        m_txt_select->setNarrow(m_narrow);
+        m_txt_select->setNoWrap(m_noWrap);
         m_txt_btn_down->begin(m_x + m_w - (m_h * 3), m_y, m_h, m_h, m_h / 5, m_h / 5, m_h / 5, m_h / 5, 0);
         m_txt_btn_up->begin(m_x + m_w - (m_h * 2), m_y, m_h, m_h, m_h / 5, m_h / 5, m_h / 5, m_h / 5, 0);
         m_txt_btn_idx->begin(m_x + m_w - (m_h * 1), m_y, m_h, m_h, m_padding_left, m_paddig_right, m_paddig_top, m_paddig_bottom);
+        m_txt_btn_idx->setNarrow(m_narrow);
+        m_txt_btn_idx->setNoWrap(m_noWrap);
         m_txt_btn_down->setClickColor(TFT_CYAN);
         m_txt_btn_down->setText("/d");
         m_txt_btn_up->setClickColor(TFT_CYAN);
@@ -1399,12 +1406,12 @@ class selectbox : public RegisterTable {
             txt = m_selContent[idx];
         if (m_enabled) {
             MWR_LOG_DEBUG("writeText: {}", txt.c_get());
-            m_txt_select->setText(txt, m_narrow, m_noWrap);
+            m_txt_select->setText(txt);
             m_txt_select->setBGcolor(TFT_BLACK);
             m_txt_select->show();
             char c_idx[5] = {0};
             itoa(idx + 1, c_idx, 10);
-            m_txt_btn_idx->setText(c_idx, m_narrow, m_noWrap);
+            m_txt_btn_idx->setText(c_idx);
             m_txt_btn_idx->setBGcolor(TFT_BLACK);
             m_txt_btn_idx->show();
         }
@@ -2114,6 +2121,7 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
             txt_time[i].setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
             txt_time[i].setTextColor(m_fgColor);
             txt_time[i].setFont(m_fontSize);
+            txt_time[i].setNarrow(true);
         }
     }
     ps_ptr<char> getName() { return m_name; }
@@ -2195,7 +2203,6 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
             if (oldtime[i] != m_time[i]) {
                 char ch[2] = {0, 0};
                 ch[0] = m_time[i];
-                txt_time[i].setText(ch, true);
                 txt_time[i].writeText(ch);
                 oldtime[i] = m_time[i];
             }
@@ -5850,7 +5857,6 @@ class displayHeader : public RegisterTable {
     }
     void updateItem(ps_ptr<char> hl_item) { // radio, clock, audioplayer...
         if (!m_enabled) return;
-        log_e("item %s", hl_item.c_get());
         m_item = hl_item;
         txt_Item->writeText(hl_item.c_get());
     }
@@ -6279,6 +6285,8 @@ class displayFooter : public RegisterTable {
         txt_BitRate->setBorderWidth(1);
         txt_BitRate->setFont(m_fontSize); // 0 -> auto
         txt_IpAddr->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+        txt_IpAddr->setNarrow(true);
+        txt_IpAddr->setNoWrap(true);
         txt_IpAddr->setTextColor(m_ipAddrColor);
         txt_IpAddr->setFont(m_fontSize); // 0 -> auto
         pic_Antenna->setPicturePath(m_Antenna_red);
@@ -6447,7 +6455,7 @@ class displayFooter : public RegisterTable {
     void setIpAddr(ps_ptr<char> ipAddr) {
         ipAddr.insert("IP:", 0);
         m_ipAddr = ipAddr;
-        txt_IpAddr->setText(ipAddr, true, true);
+        txt_IpAddr->setText(ipAddr);
         txt_IpAddr->show();
     }
     void setIpAddrColor(uint16_t ipAddrColor) {
@@ -6572,6 +6580,8 @@ class messageBox : public RegisterTable {
         txt_msgBox->begin(m_x, m_y, m_w, m_h, m_pl, m_pr, m_pt, m_pb);
         txt_msgBox->setTextColor(m_textColor);
         txt_msgBox->setBGcolor(m_bgColor);
+        txt_msgBox->setNarrow(m_narrow);
+        txt_msgBox->setNoWrap(m_noWrap);
     }
     // clang-format on
 
@@ -6611,7 +6621,7 @@ class messageBox : public RegisterTable {
         m_noWrap = noWrap;
         txt_msgBox->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
         txt_msgBox->setFont(0); // auto
-        txt_msgBox->setText(m_text.c_get(), m_narrow, m_noWrap);
+        txt_msgBox->setText(m_text.c_get());
     }
 
     void setTransparency(bool backgroundTransparency, bool saveBackground) {

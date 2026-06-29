@@ -1714,13 +1714,13 @@ void changeState(int8_t state, int8_t subState) {
     if(newState)disableAllObjects();
     dispHeader.enable();
     dispFooter.enable();
+    if(state != s_state) { dispHeader.updateItem(_hl_item[state]); }
 
     s_subState_radio  = UNDEFINED;
     s_subState_player = UNDEFINED;
     s_subState_clock  = UNDEFINED;
 
     s_f_volBarVisible = false;
-    if(state != s_state) { dispHeader.updateItem(_hl_item[state]); }
     if (state != RADIO) { dispFooter.updateFlag(""); }
 
     switch (state) {
