@@ -2154,7 +2154,8 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
 
     void show() {
         m_enabled = true;
-        if (m_saveBackground) getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+        getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+        if (m_bgColor != TFT_TRANSPARENT) { getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor); }
         for (uint8_t i = 0; i < 8; i++) { txt_time[i].show(); }
         updateTime(m_time, true);
     }
@@ -2165,15 +2166,9 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     }
 
     void hide() {
+        getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+
         for (uint8_t i = 0; i < 8; i++) { txt_time[i].hide(); }
-        if (m_backgroundTransparency) {
-            if (m_saveBackground)
-                getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
-            else
-                getTFT().copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
-        } else {
-            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        }
         m_enabled = false;
     }
 
@@ -2182,12 +2177,15 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
         m_fontSize = size;
         getTFT().setFont(m_fontSize);
     }
-    void setTextColor(uint32_t color) {
+    void setTextColor(int32_t color) {
         m_fgColor = color;
         for (uint8_t i = 0; i < 8; i++) { txt_time[i].setTextColor(m_fgColor); }
     }
-    void setBGcolor(uint32_t color) { m_bgColor = color; }
-    void setBorderColor(uint32_t color) { m_borderColor = color; }
+    void setBGcolor(int32_t color) {
+        m_bgColor = color;
+        for (uint8_t i = 0; i < 8; i++) { txt_time[i].setTextColor(m_bgColor); }
+    }
+    void setBorderColor(int32_t color) { m_borderColor = color; }
     void updateTime(ps_ptr<char> hl_time, bool complete = true) {
         if (hl_time.strlen() != 8) return;
         if (!m_enabled) return;
@@ -2195,23 +2193,15 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
         static char oldtime[8] = {255}; // hhmmss
         getTFT().setFont(m_fontSize);
         getTFT().setTextColor(m_fgColor);
-        // if (complete == true) {
-        //     if (m_backgroundTransparency) {
-        //         getTFT().copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
-        //     } else {
-        //         getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        //     }
-        //     for (uint8_t i = 0; i < 8; i++) { oldtime[i] = 255; }
-        // }
+        if (complete == true) {
+            for (uint8_t i = 0; i < 8; i++) { oldtime[i] = 255; }
+        }
         for (uint8_t i = 0; i < 8; i++) {
             if (oldtime[i] != m_time[i]) {
                 char ch[2] = {0, 0};
                 ch[0] = m_time[i];
                 txt_time[i].setText(ch, true);
                 txt_time[i].writeText(ch);
-
-                //   txt_time[i].setTransparency(m_backgroundTransparency, m_saveBackground);
-                //   txt_time[i].show();
                 oldtime[i] = m_time[i];
             }
         }
@@ -5557,7 +5547,7 @@ class displayHeader : public RegisterTable {
     int8_t       m_old_rssi = -1;
     uint8_t      m_fontSize = 0;
     uint8_t      m_volume = 0;
-    uint32_t     m_bgColor = TFT_BLACK;
+    int32_t      m_bgColor = 0;
     ps_ptr<char> m_name;
     ps_ptr<char> m_item;
     ps_ptr<char> m_time = "00:00:00";
@@ -5570,9 +5560,9 @@ class displayHeader : public RegisterTable {
     const char   m_rssiSymbol[5][18] = {"/common/RSSI0.png", "/common/RSSI1.png", "/common/RSSI2.png", "/common/RSSI3.png", "/common/RSSI4.png"};
     const char   m_speakerSymbol[2][25] = {"/common/Speaker_off.png", "/common/Speaker_on.png"};
     releasedArg  m_ra;
-    uint16_t     m_itemColor = TFT_GREENYELLOW;
-    uint16_t     m_volumeColor = TFT_DEEPSKYBLUE;
-    uint16_t     m_timeColor = TFT_GREENYELLOW;
+    int32_t      m_itemColor = TFT_GREENYELLOW;
+    int32_t      m_volumeColor = TFT_DEEPSKYBLUE;
+    int32_t      m_timeColor = TFT_GREENYELLOW;
     //------------------------------------------------------------------------------------------------------------------------------------------------
 #ifdef TFT_LAYOUT_S // 320 x 240px
     //------------------------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
@@ -5750,7 +5740,7 @@ class displayHeader : public RegisterTable {
     displayHeader(ps_ptr<char> name, uint8_t fontSize) {
         register_object(this);
         m_name = name;
-        m_bgColor = TFT_BLACK;
+        m_bgColor = TFT_TRANSPARENT;
         m_fontSize = fontSize;
         m_timeStringObject = new timeString("timeString", m_fontSize);
     }
@@ -5804,7 +5794,7 @@ class displayHeader : public RegisterTable {
     }
 
     void show() {
-        if (m_backgroundTransparency) {
+        if (m_bgColor == TFT_TRANSPARENT) {
             getTFT().copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
@@ -5839,8 +5829,14 @@ class displayHeader : public RegisterTable {
         m_enabled = true;
         m_timeStringObject->enable();
     }
-    void disable() { m_enabled = false; }
-    void setBGcolor(uint32_t color) { m_bgColor = color; }
+    void disable() {
+        m_enabled = false;
+        m_timeStringObject->disable();
+    }
+    void setBGcolor(int32_t color) {
+        m_bgColor = color;
+        m_timeStringObject->setBGcolor(color);
+    }
     void updateItem(ps_ptr<char> hl_item) { // radio, clock, audioplayer...
         if (!m_enabled) return;
         m_item = hl_item;
@@ -5898,7 +5894,7 @@ class displayHeader : public RegisterTable {
         m_time = hl_time; // hhmmss
         m_timeStringObject->updateTime(m_time, false);
     }
-    void setTimeColor(uint16_t timeColor) {
+    void setTimeColor(int32_t timeColor) {
         m_timeColor = timeColor;
         m_timeStringObject->setTextColor(m_timeColor);
         updateTime(m_time, true);
