@@ -111,6 +111,7 @@ class RegisterTable {
     virtual void         disable() = 0;
     virtual bool         positionXY(uint16_t, uint16_t) = 0;
     virtual void         draw() = 0;
+    virtual void         hide() = 0;
     virtual void         getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) = 0;
     virtual bool         setFocus(bool) = 0;
     virtual ~RegisterTable() {}
@@ -150,17 +151,20 @@ inline const char* isObjectClicked(uint16_t x, uint16_t y) {
     return objName;
 }
 
-inline void hide_objects_in_area(int16_t x, int16_t y, int16_t w, int16_t h){
+inline void hide_objects_in_area(int16_t x, int16_t y, int16_t w, int16_t h) {
     MWR_LOG_WARN("hide_objects_in_area");
     int16_t obj_x = 0, obj_y = 0, obj_w = 0, obj_h = 0;
     for (auto obj : registertable_objects) {
-        if(obj->isEnabled()){
+        if (obj->isEnabled()) {
             obj->getBounds(obj_x, obj_y, obj_w, obj_h);
-            uint16_t left   = std::max(x, obj_x);
-            uint16_t top    = std::max(y, obj_y);
-            uint16_t right  = std::min<uint32_t>(x + w, obj_x + obj_w);
+            uint16_t left = std::max(x, obj_x);
+            uint16_t top = std::max(y, obj_y);
+            uint16_t right = std::min<uint32_t>(x + w, obj_x + obj_w);
             uint16_t bottom = std::min<uint32_t>(y + h, obj_y + obj_h);
-            if((left < right) && (top < bottom)) MWR_LOG_ERROR("Obj {}", obj->getName().c_get());
+            if ((left < right) && (top < bottom)) {
+                MWR_LOG_ERROR("Obj {}", obj->getName().c_get());
+                obj->hide();
+            }
         }
     }
 }
@@ -637,16 +641,10 @@ class textbox : public RegisterTable {
     }
 
     void hide() {
-        if (m_backgroundTransparency) {
-            if (m_saveBackground)
-                getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
-            else
-                getTFT().copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
-        } else {
-            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        }
+        getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
         m_enabled = false;
     }
+
     void disable() { m_enabled = false; }
     void enable() { m_enabled = true; }
     void setFont(uint8_t size) { // size 0 -> auto, choose besr font size
@@ -658,9 +656,9 @@ class textbox : public RegisterTable {
             m_autoSize = true;
         }
     }
-    void setTextColor(uint32_t color) { m_textColor = color; }
-    void setBGcolor(uint32_t color) { m_bgColor = color; }
-    void setBorderColor(uint32_t color) { m_borderColor = color; }
+    void setTextColor(int32_t color) { m_textColor = color; }
+    void setBGcolor(int32_t color) { m_bgColor = color; }
+    void setBorderColor(int32_t color) { m_borderColor = color; }
     void setBorderWidth(uint8_t width) { // 0 = no border
         m_borderWidth = width;
         if (m_borderWidth > 2) m_borderWidth = 2;
@@ -699,10 +697,11 @@ class textbox : public RegisterTable {
     void writeText(ps_ptr<char> txt) {
         m_text = txt;
         if (m_enabled) {
-            getTFT().copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
-            // } else {
-            //     getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-            // }
+            if (m_bgColor == -1) {
+                getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+            } else {
+                getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+            }
             if (m_fontSize != 0) { getTFT().setFont(m_fontSize); }
             getTFT().setTextColor(m_textColor);
             int x = m_x + m_padding_left;
@@ -2074,9 +2073,9 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     uint8_t      m_fontSize = 0;
     uint8_t      m_h_align = TFT_ALIGN_CENTER;
     uint8_t      m_v_align = TFT_ALIGN_CENTER;
-    uint32_t     m_bgColor = 0;
-    uint32_t     m_fgColor = 0;
-    uint32_t     m_borderColor = 0;
+    int32_t      m_bgColor = 0;
+    int32_t      m_fgColor = 0;
+    int32_t      m_borderColor = 0;
     ps_ptr<char> m_name;
     ps_ptr<char> m_time = "00:00:00";
     bool         m_enabled = false;
@@ -2091,7 +2090,7 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     timeString(ps_ptr<char> name, uint8_t fontSize) {
         register_object(this);
         m_name = name;
-        m_bgColor = TFT_BLACK;
+        m_bgColor = TFT_TRANSPARENT;
         m_fgColor = TFT_LIGHTGREY;
         m_fontSize = fontSize;
     }
@@ -2122,10 +2121,17 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
         }
     }
     ps_ptr<char> getName() { return m_name; }
-    void         disable() { m_enabled = false; }
-    void         enable() { m_enabled = true; }
-    bool         isEnabled() { return m_enabled; }
-    bool         hasFocus() { return m_focus; }
+
+    void disable() {
+        m_enabled = false;
+        for (uint8_t i = 0; i < 8; i++) { txt_time[i].disable(); }
+    }
+    void enable() {
+        m_enabled = true;
+        for (uint8_t i = 0; i < 8; i++) { txt_time[i].enable(); }
+    }
+    bool isEnabled() { return m_enabled; }
+    bool hasFocus() { return m_focus; }
 
     bool setFocus(bool f) {
         m_focus = f;
@@ -2149,6 +2155,7 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     void show() {
         m_enabled = true;
         if (m_saveBackground) getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+        for (uint8_t i = 0; i < 8; i++) { txt_time[i].show(); }
         updateTime(m_time, true);
     }
 
@@ -2158,6 +2165,7 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     }
 
     void hide() {
+        for (uint8_t i = 0; i < 8; i++) { txt_time[i].hide(); }
         if (m_backgroundTransparency) {
             if (m_saveBackground)
                 getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
@@ -2187,21 +2195,23 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
         static char oldtime[8] = {255}; // hhmmss
         getTFT().setFont(m_fontSize);
         getTFT().setTextColor(m_fgColor);
-        if (complete == true) {
-            if (m_backgroundTransparency) {
-                getTFT().copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
-            } else {
-                getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-            }
-            for (uint8_t i = 0; i < 8; i++) { oldtime[i] = 255; }
-        }
+        // if (complete == true) {
+        //     if (m_backgroundTransparency) {
+        //         getTFT().copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+        //     } else {
+        //         getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        //     }
+        //     for (uint8_t i = 0; i < 8; i++) { oldtime[i] = 255; }
+        // }
         for (uint8_t i = 0; i < 8; i++) {
             if (oldtime[i] != m_time[i]) {
                 char ch[2] = {0, 0};
                 ch[0] = m_time[i];
                 txt_time[i].setText(ch, true);
-                txt_time[i].setTransparency(m_backgroundTransparency, m_saveBackground);
-                txt_time[i].show();
+                txt_time[i].writeText(ch);
+
+                //   txt_time[i].setTransparency(m_backgroundTransparency, m_saveBackground);
+                //   txt_time[i].show();
                 oldtime[i] = m_time[i];
             }
         }
@@ -5823,6 +5833,7 @@ class displayHeader : public RegisterTable {
     void hide() {
         getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         m_enabled = false;
+        m_timeStringObject->hide();
     }
     void enable() {
         m_enabled = true;

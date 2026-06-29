@@ -1709,6 +1709,8 @@ void changeState(int8_t state, int8_t subState) {
     if (state == CLOCK          && s_subState_clock  != subState) { newSubState = true;  }
 
     if(newState)disableAllObjects();
+    dispHeader.enable();
+    dispFooter.enable();
 
     s_subState_radio  = UNDEFINED;
     s_subState_player = UNDEFINED;
