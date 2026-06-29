@@ -819,7 +819,7 @@ bool connectToWiFi() {
     s_myIP = WiFi.localIP().toString().c_str();
 
     printfln(s_tag.wifi_info,
-             "connected to " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET ", IP address is " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET ", Received Signal Strength " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET " dB",
+             "connected to " ANSI_ESC_YELLOW "{}" ANSI_ESC_RESET ", IP address is " ANSI_ESC_ORANGE "{}" ANSI_ESC_RESET ", Received Signal Strength " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET " dB",
              WiFi.SSID().c_str(), s_myIP.c_get(), WiFi.RSSI());
 
     return true; // can't connect to any network
@@ -3483,14 +3483,14 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
 
     CMD_EQUALS("set_timeAnnouncement"){ if(param == "true" ) {s_f_timeAnnouncement = true;}
                                         if(   param == "false") {s_f_timeAnnouncement = false;}
-                                        printfln(s_tag.webserver, "Timespeech: " ANSI_ESC_YELLOW "hourly time announcement " ANSI_ESC_BLUE "{}", (s_f_timeAnnouncement == 1) ? "on" : "off");
+                                        printfln(s_tag.webserver, "Timespeech, hourly time announcement is " ANSI_ESC_YELLOW "{}", (s_f_timeAnnouncement == 1) ? "on" : "off");
                                         return;}
 
-    CMD_EQUALS("get_timeSpeechLang"){   webSrv.send("get_timeSpeechLang=", s_timeSpeechLang); printfln(s_tag.webserver, "Timespeech: " ANSI_ESC_YELLOW "language is " ANSI_ESC_BLUE "{}", s_timeSpeechLang.c_get()); return;}
+    CMD_EQUALS("get_timeSpeechLang"){   webSrv.send("get_timeSpeechLang=", s_timeSpeechLang); printfln(s_tag.webserver, "Timespeech language is " ANSI_ESC_YELLOW "{}", s_timeSpeechLang.c_get()); return;}
 
     CMD_EQUALS("set_timeSpeechLang"){   if(param.strlen() > 2){MWR_LOG_ERROR("set_timeSpeechLang too long {}", param.c_get()); return;}
                                         s_timeSpeechLang = param;
-                                        printfln(s_tag.webserver, "Timespeech: " ANSI_ESC_YELLOW "language is " ANSI_ESC_BLUE "{}", param.c_get());
+                                        printfln(s_tag.webserver, "Timespeech, set language " ANSI_ESC_YELLOW "{}", param.c_get());
                                         return;}
 
     CMD_EQUALS("DLNA_getServer")  {     webSrv.send("DLNA_Names=", dlna.stringifyServer()); s_currDLNAsrvNr = -1; return;}
@@ -3508,27 +3508,27 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
                                         return;}
 
     CMD_EQUALS("SD_Download"){          webSrv.streamfile(SD_MMC, param.c_get());                                                                         // via XMLHttpRequest
-                                        printfln(s_tag.webserver, "Load from SD  " ANSI_ESC_ORANGE "\"{}\"", param.c_get());
+                                        printfln(s_tag.webserver, "Load from SD  " ANSI_ESC_YELLOW "\"{}\"", param.c_get());
                                         return;}
 
     CMD_EQUALS("SD_GetFolder"){         webSrv.reply(s_SD_content.stringifyDirContent(param), webSrv.JS);                                                           // via XMLHttpRequest
-                                        printfln(s_tag.webserver, "GetFolder " ANSI_ESC_ORANGE "\"{}\"", param.c_get());
+                                        printfln(s_tag.webserver, "GetFolder " ANSI_ESC_YELLOW "\"{}\"", param.c_get());
                                         return;}
 
     CMD_EQUALS("SD_newFolder"){         bool res = SD_newFolder(param.c_get());                                                                           // via XMLHttpRequest
                                         if(res) webSrv.sendStatus(200); else webSrv.sendStatus(400);
-                                        printfln(s_tag.webserver, "NewFolder " ANSI_ESC_ORANGE "\"{}\"", param.c_get());
+                                        printfln(s_tag.webserver, "NewFolder " ANSI_ESC_YELLOW "\"{}\"", param.c_get());
                                         return;}
 
     CMD_EQUALS("SD_playFile"){          stopSong();
                                         webSrv.reply("SD_playFile=" + param, webSrv.TEXT);                                                                // via XMLHttpRequest
-                                        printfln(s_tag.webserver, "Play " ANSI_ESC_ORANGE "\"{}\"", param.c_get());
+                                        printfln(s_tag.webserver, "Play " ANSI_ESC_YELLOW "\"{}\"", param.c_get());
                                         SD_playFile(param.c_get());
                                         return;}
 
     CMD_EQUALS("SD_playAllFiles"){      stopSong();
                                         webSrv.send("SD_playFolder=", param);                                                                                      // via websocket
-                                        printfln(s_tag.webserver, "Play Folder" ANSI_ESC_ORANGE "\"{}\"", param.c_get());
+                                        printfln(s_tag.webserver, "Play Folder" ANSI_ESC_YELLOW "\"{}\"", param.c_get());
                                         if(playlist.create_playlist_from_SD_folder(param)){
                                             s_f_playlistEnabled = true;
                                             s_subState_player = 1;
@@ -3536,7 +3536,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
                                         return;}
 
     CMD_EQUALS("SD_rename"){            ps_ptr<char> _arg = arg.substr(0, arg.index_of("&")); // only the first argument is used                              // via XMLHttpRequest
-                                        printfln(s_tag.webserver, "Rename " ANSI_ESC_ORANGE "old \"{}\" new \"%s\"",
+                                        printfln(s_tag.webserver, "Rename " ANSI_ESC_YELLOW "old \"{}\" new \"%s\"",
                                         param.c_get(), _arg.c_get());
                                         bool res = SD_rename(param.c_get(), _arg.c_get());
                                         if(res) webSrv.reply("refresh", webSrv.TEXT);
@@ -3660,7 +3660,7 @@ void on_dlna_client(const DLNA_Client::msg_s& msg) {
     if (msg.e == DLNA_Client::evt_server) {
         for (size_t i = 0; i < msg.server->size(); i++) {
             const auto& server = msg.server->at(i);
-            printfln(s_tag.dlna_server, "[{}] " ANSI_ESC_CYAN "{}:{} " ANSI_ESC_YELLOW " {}", i, server.ip, server.port, server.friendlyName);
+            printfln(s_tag.dlna_server, "[{}] " ANSI_ESC_ORANGE "{}:{} " ANSI_ESC_YELLOW " {}", i, server.ip, server.port, server.friendlyName);
         }
         s_dlnaMaXServers = msg.server->size();
         printfln(s_tag.dlna_server, ANSI_ESC_CYAN "{}" ANSI_ESC_RESET " media server found", msg.server->size());
