@@ -577,8 +577,6 @@ class textbox : public RegisterTable {
     bool         m_autoSize = false;
     bool         m_narrow = false;
     bool         m_noWrap = false;
-    bool         m_backgroundTransparency = false;
-    bool         m_saveBackground = false;
     releasedArg  m_ra;
 
   public:
@@ -633,11 +631,6 @@ class textbox : public RegisterTable {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         }
         writeText(m_text.c_get());
-    }
-
-    void setTransparency(bool backgroundTransparency, bool saveBackground) {
-        m_backgroundTransparency = backgroundTransparency;
-        m_saveBackground = saveBackground;
     }
 
     void hide() {
@@ -1277,10 +1270,10 @@ class selectbox : public RegisterTable {
     void setTransparency(bool backgroundTransparency, bool saveBackground) {
         m_backgroundTransparency = backgroundTransparency;
         m_saveBackground = saveBackground;
-        m_txt_select->setTransparency(m_backgroundTransparency, m_saveBackground);
+        m_txt_select->setBGcolor(TFT_BLACK);
         m_txt_btn_down->setTransparency(m_backgroundTransparency, m_saveBackground);
         m_txt_btn_up->setTransparency(m_backgroundTransparency, m_saveBackground);
-        m_txt_btn_idx->setTransparency(m_backgroundTransparency, m_saveBackground);
+        m_txt_btn_idx->setBGcolor(TFT_BLACK);
     }
 
     void hide() {
@@ -1404,12 +1397,12 @@ class selectbox : public RegisterTable {
         if (m_enabled) {
             MWR_LOG_DEBUG("writeText: {}", txt.c_get());
             m_txt_select->setText(txt, m_narrow, m_noWrap);
-            m_txt_select->setTransparency(m_backgroundTransparency, m_saveBackground);
+            m_txt_select->setBGcolor(TFT_BLACK);
             m_txt_select->show();
             char c_idx[5] = {0};
             itoa(idx + 1, c_idx, 10);
             m_txt_btn_idx->setText(c_idx, m_narrow, m_noWrap);
-            m_txt_btn_idx->setTransparency(m_backgroundTransparency, m_saveBackground);
+            m_txt_btn_idx->setBGcolor(TFT_BLACK);
             m_txt_btn_idx->show();
         }
     }
@@ -3612,8 +3605,8 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
         m_saveBackground = saveBackground;
 
         for (uint8_t i = 0; i < 7; i++) {
-            txt_alarm_days[i].setTransparency(m_backgroundTransparency, m_saveBackground);
-            txt_alarm_time[i].setTransparency(m_backgroundTransparency, m_saveBackground);
+            txt_alarm_days[i].setBGcolor(TFT_BLACK);
+            txt_alarm_time[i].setBGcolor(TFT_BLACK);
         }
         pic_alarm_digitsH10->setTransparency(m_backgroundTransparency, m_saveBackground);
         pic_alarm_digitsH01->setTransparency(m_backgroundTransparency, m_saveBackground);
@@ -5814,9 +5807,9 @@ class displayHeader : public RegisterTable {
         m_backgroundTransparency = backgroundTransparency;
         m_saveBackground = saveBackground;
         m_timeStringObject->setTransparency(m_backgroundTransparency, m_saveBackground);
-        txt_Item->setTransparency(m_backgroundTransparency, m_saveBackground);
+        txt_Item->setBGcolor(m_bgColor);
         pic_Speaker->setTransparency(m_backgroundTransparency, m_saveBackground);
-        txt_Volume->setTransparency(m_backgroundTransparency, m_saveBackground);
+        txt_Volume->setBGcolor(m_bgColor);
         pic_RSSID->setTransparency(m_backgroundTransparency, m_saveBackground);
     }
 
@@ -6317,14 +6310,14 @@ class displayFooter : public RegisterTable {
         m_backgroundTransparency = backgroundTransparency;
         m_saveBackground = saveBackground;
         pic_Antenna->setTransparency(m_backgroundTransparency, false);
-        txt_StaNr->setTransparency(m_backgroundTransparency, false);
-        txt_FileNr->setTransparency(m_backgroundTransparency, false);
+        txt_StaNr->setBGcolor(m_bgColor);
+        txt_FileNr->setBGcolor(m_bgColor);
         pic_Flag->setTransparency(m_backgroundTransparency, false);
-        txt_OffTimer->setTransparency(m_backgroundTransparency, false);
+        txt_OffTimer->setBGcolor(m_bgColor);
         pic_Hourglass->setTransparency(m_backgroundTransparency, false);
-        txt_BitRate->setTransparency(m_backgroundTransparency, false);
-        txt_OffTimer->setTransparency(m_backgroundTransparency, false);
-        txt_IpAddr->setTransparency(m_backgroundTransparency, false);
+        txt_BitRate->setBGcolor(m_bgColor);
+        txt_OffTimer->setBGcolor(m_bgColor);
+        txt_IpAddr->setBGcolor(m_bgColor);
     }
 
     void hide() {
@@ -6576,7 +6569,7 @@ class messageBox : public RegisterTable {
     }
 
     void show() {
-        txt_msgBox->setTransparency(m_backgroundTransparency, m_saveBackground);
+        txt_msgBox->setBGcolor(m_bgColor);
         txt_msgBox->show();
     }
 
