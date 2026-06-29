@@ -120,11 +120,12 @@ static void                        register_object(RegisterTable* obj) {
     registertable_objects.push_back(obj);
 }
 inline void get_registered_names() {
-    ps_ptr<char>rn;
+    ps_ptr<char> rn;
     rn.set_name("rn");
     int16_t x = 0, y = 0, w = 0, h = 0;
     for (auto obj : registertable_objects) {
-        rn.assignf(ANSI_ESC_RESET "    registered object:" ANSI_ESC_YELLOW " {:27}" ANSI_ESC_RESET " is enabled: {}" ANSI_ESC_RESET ",", obj->getName().c_get(), obj->isEnabled() ? ANSI_ESC_RED "yes" : ANSI_ESC_BLUE " no");
+        rn.assignf(ANSI_ESC_RESET "    registered object:" ANSI_ESC_YELLOW " {:27}" ANSI_ESC_RESET " is enabled: {}" ANSI_ESC_RESET ",", obj->getName().c_get(),
+                   obj->isEnabled() ? ANSI_ESC_RED "yes" : ANSI_ESC_BLUE " no");
         obj->getBounds(x, y, w, h);
         rn.appendf(" x: {:4}, y: {:4}, w: {:4}, h: {:4}", x, y, w, h);
         rn.println();
@@ -149,6 +150,20 @@ inline const char* isObjectClicked(uint16_t x, uint16_t y) {
     return objName;
 }
 
+inline void hide_objects_in_area(int16_t x, int16_t y, int16_t w, int16_t h){
+    MWR_LOG_WARN("hide_objects_in_area");
+    int16_t obj_x = 0, obj_y = 0, obj_w = 0, obj_h = 0;
+    for (auto obj : registertable_objects) {
+        if(obj->isEnabled()){
+            obj->getBounds(obj_x, obj_y, obj_w, obj_h);
+            uint16_t left   = std::max(x, obj_x);
+            uint16_t top    = std::max(y, obj_y);
+            uint16_t right  = std::min<uint32_t>(x + w, obj_x + obj_w);
+            uint16_t bottom = std::min<uint32_t>(y + h, obj_y + obj_h);
+            if((left < right) && (top < bottom)) MWR_LOG_ERROR("Obj {}", obj->getName().c_get());
+        }
+    }
+}
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 class slider : public RegisterTable {
@@ -547,9 +562,9 @@ class textbox : public RegisterTable {
     uint8_t      m_paddig_top = 0;    // top margin
     uint8_t      m_paddig_bottom = 0; // bottom margin
     uint8_t      m_borderWidth = 0;
-    uint32_t     m_bgColor = 0;
-    uint32_t     m_fgColor = 0;
-    uint32_t     m_borderColor = 0;
+    int32_t      m_bgColor = 0;
+    int32_t      m_textColor = 0;
+    int32_t      m_borderColor = 0;
     ps_ptr<char> m_text;
     ps_ptr<char> m_name;
     bool         m_enabled = false;
@@ -566,9 +581,9 @@ class textbox : public RegisterTable {
     textbox(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
-        m_bgColor = TFT_BLACK;
-        m_fgColor = TFT_LIGHTGREY;
-        m_borderColor = TFT_BLACK;
+        m_bgColor = TFT_TRANSPARENT;
+        m_textColor = TFT_LIGHTGREY;
+        m_borderColor = TFT_LIGHTGREY;
         m_fontSize = 1;
     }
     ~textbox() {}
@@ -608,11 +623,8 @@ class textbox : public RegisterTable {
     void show() {
         m_enabled = true;
         m_clicked = false;
-        if (m_backgroundTransparency) {
-            if (m_saveBackground)
-                getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
-            else
-                getTFT().copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+        if (m_bgColor == -1) {
+            getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         }
@@ -646,7 +658,7 @@ class textbox : public RegisterTable {
             m_autoSize = true;
         }
     }
-    void setTextColor(uint32_t color) { m_fgColor = color; }
+    void setTextColor(uint32_t color) { m_textColor = color; }
     void setBGcolor(uint32_t color) { m_bgColor = color; }
     void setBorderColor(uint32_t color) { m_borderColor = color; }
     void setBorderWidth(uint8_t width) { // 0 = no border
@@ -687,19 +699,12 @@ class textbox : public RegisterTable {
     void writeText(ps_ptr<char> txt) {
         m_text = txt;
         if (m_enabled) {
-            uint16_t txtColor_tmp = getTFT().getTextColor();
-            uint16_t bgColor_tmp = getTFT().getBackGroundColor();
-            getTFT().setTextColor(m_fgColor);
-            getTFT().setBackGoundColor(m_bgColor);
-            if (m_backgroundTransparency) {
-                if (m_saveBackground)
-                    getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
-                else
-                    getTFT().copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
-            } else {
-                getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-            }
+            getTFT().copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+            // } else {
+            //     getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+            // }
             if (m_fontSize != 0) { getTFT().setFont(m_fontSize); }
+            getTFT().setTextColor(m_textColor);
             int x = m_x + m_padding_left;
             int y = m_y + m_paddig_top;
             int w = m_w - (m_paddig_right + m_padding_left);
@@ -707,8 +712,6 @@ class textbox : public RegisterTable {
             if (m_borderWidth > 0) { getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor); }
             if (m_borderWidth > 1) { getTFT().drawRect(m_x + 1, m_y + 1, m_w - 2, m_h - 2, m_borderColor); }
             getTFT().writeText(m_text.c_get(), x, y, w, h, m_h_align, m_v_align, m_narrow, m_noWrap, m_autoSize);
-            getTFT().setTextColor(txtColor_tmp);
-            getTFT().setBackGoundColor(bgColor_tmp);
         }
     }
 };

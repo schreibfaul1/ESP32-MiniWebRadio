@@ -1686,7 +1686,7 @@ void changeState(int8_t state, int8_t subState) {
     MWR_LOG_DEBUG("state {}, s_state {}, subState {}, s_subState_radio {}, s_subState_player {}", state, s_state, subState, s_subState_radio, s_subState_player);
     bool newState = false;
     bool newSubState = false;
-    disableAllObjects();
+   // disableAllObjects();
     setTimeCounter(0);
     if (state == RADIO          && s_state != RADIO)              { dispHeader.setTransparency(true, false);  dispHeader.show(); dispFooter.setTransparency(true, false);  dispFooter.show(); newState = true;}
     if (state == STATIONSLIST   && s_state != STATIONSLIST)       { dispHeader.setTransparency(false, false); dispHeader.show(); dispFooter.setTransparency(false, false); dispFooter.show(); newState = true;}
@@ -1707,6 +1707,8 @@ void changeState(int8_t state, int8_t subState) {
     if (state == RADIO          && s_subState_radio  != subState) { newSubState = true;  }
     if (state == PLAYER         && s_subState_player != subState) { newSubState = true;  }
     if (state == CLOCK          && s_subState_clock  != subState) { newSubState = true;  }
+
+    if(newState)disableAllObjects();
 
     s_subState_radio  = UNDEFINED;
     s_subState_player = UNDEFINED;
@@ -1730,6 +1732,7 @@ void changeState(int8_t state, int8_t subState) {
             dispFooter.enable();
             txt_RA_staName.enable();
             pic_RA_logo.enable();
+            if(newSubState) hide_objects_in_area(layout.winArea2.x, layout.winArea2.y, layout.winArea2.w, layout.winArea2.h);
             if (subState == 0) {
                 if(newSubState) {
                     VUmeter_RA.show();

@@ -37,7 +37,8 @@ struct Layout {
     const coor& winLogo;
     const coor& winName;
     const coor& winProgbar;
-    const coor& winTitle;
+    const coor& winArea1;
+    const coor& winArea2;
     const coor& winSTitle;
     const coor& winVUmeter;
     const coor& winFooter;
@@ -82,17 +83,17 @@ namespace layout_320x240 {
 //
 //  Display 320x240
 //  +-------------------------------------------+ _yHeader=0
-//  | Header                                    |       _hHeader=20px
+//  | Header                                    |       winHeader=20px
 //  +-------------------------------------------+ _yName=20
-//  |                                           |
-//  | Logo                   StationName        |       _hName=100px
+//  | winArea1                                  |
+//  | Logo                   StationName        |       winName=100px
 //  |                                           |
 //  +-------------------------------------------+ _yTitle=120
-//  |                                           |
-//  |              StreamTitle                  |       _hTitle=100px
+//  | winArea2                                  |
+//  |              StreamTitle                  |       winSTitle=100px
 //  |                                           |
 //  +-------------------------------------------+ _yFooter=220
-//  | Footer                                    |       _hFooter=20px
+//  | Footer                                    |       winFooter=20px
 //  +-------------------------------------------+ 240
 //                                             320
 
@@ -117,7 +118,8 @@ constexpr coor winHeader = coor().pos(0, 0).size(h_res, h_footer);
 constexpr coor winLogo = coor().pos(0, h_footer).size(h_area, h_area).pad(1, 1, 1, 1);
 constexpr coor winName = coor().pos(h_area, h_footer).size(h_res - h_area, h_area).pad(1, 1, 0, 0); // StationName
 constexpr coor winProgbar = coor().pos(0, y_progbar).size(h_res, h_progBar).pad(5, 5, 0, 0);        // or volume slider
-constexpr coor winTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(0, 5, 0, 3);
+constexpr coor winArea1 = coor().pos(0, h_footer).size(h_res, h_area).pad(0, 5, 0, 3);
+constexpr coor winArea2 = coor().pos(0, y_area2).size(h_res, h_area).pad(0, 5, 0, 3);
 constexpr coor winSTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(0, 4, 0, 3);
 constexpr coor winVUmeter = coor().pos(h_res - w_vuMeter, y_area2).size(w_vuMeter, h_area);
 constexpr coor winFooter = coor().pos(0, v_res - h_footer).size(h_res, h_footer);
@@ -170,12 +172,12 @@ namespace layout_480x320 {
 //  +-------------------------------------------+ _yHeader=0
 //  | Header                                    |       winHeader=30px
 //  +-------------------------------------------+ _yName=30
-//  |                                           |
+//  | winArea1                                  |
 //  | Logo                   StationName        |       winName=130px
 //  |                                           |
 //  +-------------------------------------------+ _yTitle=160
-//  |                                           |
-//  |              StreamTitle                  |       winTitle=130px
+//  | winArea2                                  |
+//  |              StreamTitle                  |       winSTitle=130px
 //  |                                           |
 //  +-------------------------------------------+ _yFooter=290
 //  | Footer                                    |       winFooter=30px
@@ -202,7 +204,8 @@ constexpr coor winHeader = coor().pos(0, 0).size(h_res, h_footer);
 constexpr coor winLogo = coor().pos(0, h_footer).size(h_area, h_area).pad(1, 1, 1, 1);
 constexpr coor winName = coor().pos(h_area, h_footer).size(h_res - h_area, h_area).pad(1, 1, 0, 0); // StationName
 constexpr coor winProgbar = coor().pos(0, y_progbar).size(h_res, h_progBar).pad(5, 5, 0, 0);        // or volume slider
-constexpr coor winTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(0, 5, 0, 3);
+constexpr coor winArea1 = coor().pos(0, h_footer).size(h_res, h_area).pad(0, 5, 0, 3);
+constexpr coor winArea2 = coor().pos(0, y_area2).size(h_res, h_area).pad(0, 5, 0, 3);
 constexpr coor winSTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(0, 4, 0, 3);
 constexpr coor winVUmeter = coor().pos(h_res - w_vuMeter, y_area2).size(w_vuMeter, h_area);
 constexpr coor winFooter = coor().pos(0, v_res - h_footer).size(h_res, h_footer);
@@ -255,12 +258,12 @@ namespace layout_800x480 {
 //  +-------------------------------------------+ _yHeader=0
 //  | Header                                    |       winHeader=50px
 //  +-------------------------------------------+ _yName=50
-//  |                                           |
+//  | winArea1                                  |
 //  | Logo                   StationName        |       winName=190px
 //  |                                           |
 //  +-------------------------------------------+ _yTitle=240
-//  |                                           |
-//  |              StreamTitle                  |       winTitle=190px
+//  | winArea2                                  |
+//  |              StreamTitle                  |       winSTitle=190px
 //  |                                           |
 //  +-------------------------------------------+ _yFooter=430
 //  | Footer                                    |       winFooter=50px
@@ -288,7 +291,8 @@ constexpr coor winHeader = coor().pos(0, 0).size(h_res, h_footer);
 constexpr coor winLogo = coor().pos(0, h_footer).size(h_area, h_area).pad(4, 4, 4, 4);
 constexpr coor winName = coor().pos(h_area, h_footer).size(h_res - h_area, h_area).pad(15, 5, 0, 0); // StationName
 constexpr coor winProgbar = coor().pos(0, y_progbar).size(h_res, h_progBar).pad(15, 15, 0, 0);       // or volume slider
-constexpr coor winTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(0, 5, 0, 3);
+constexpr coor winArea1 = coor().pos(0, h_footer).size(h_res, h_area).pad(0, 5, 0, 3);
+constexpr coor winArea2 = coor().pos(0, y_area2).size(h_res, h_area).pad(0, 5, 0, 3);
 constexpr coor winSTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(10, 5, 2, 2);
 constexpr coor winVUmeter = coor().pos(h_res - w_vuMeter, y_area2).size(w_vuMeter, h_area);
 constexpr coor winFooter = coor().pos(0, v_res - h_footer).size(h_res, h_footer);
@@ -339,12 +343,12 @@ namespace layout_1024x600 {
 //  +-------------------------------------------+ _yHeader=0
 //  | Header                                    |       winHeader=60px
 //  +-------------------------------------------+ _yName=60
-//  |                                           |
+//  | winArea1                                  |
 //  | Logo                   StationName        |       winName=240px, area1
 //  |                                           |
 //  +-------------------------------------------+ _yTitle=300
-//  |                                           |
-//  |              StreamTitle                  |       winTitle=240px, area2
+//  | winArea2                                  |
+//  |              StreamTitle                  |       winSTitle=240px, area2
 //  |                                           |
 //  +-------------------------------------------+ _yFooter=540
 //  | Footer                                    |       winFooter=60px
@@ -372,7 +376,8 @@ constexpr coor winHeader = coor().pos(0, 0).size(h_res, h_footer);
 constexpr coor winLogo = coor().pos(0, h_footer).size(h_area, h_area).pad(4, 4, 4, 4);
 constexpr coor winName = coor().pos(h_area, h_footer).size(h_res - h_area, h_area).pad(15, 5, 0, 0); // StationName
 constexpr coor winProgbar = coor().pos(0, y_progbar).size(h_res, h_progBar).pad(5, 5, 20, 20);       // or volume slider
-constexpr coor winTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(0, 5, 0, 3);
+constexpr coor winArea1 = coor().pos(0, h_footer).size(h_res, h_area).pad(0, 5, 0, 3);
+constexpr coor winArea2 = coor().pos(0, y_area2).size(h_res, h_area).pad(0, 5, 0, 3);
 constexpr coor winSTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(10, 5, 2, 2);
 constexpr coor winVUmeter = coor().pos(h_res - w_vuMeter, y_area2).size(w_vuMeter, h_area).pad(5, 5, 5, 5);
 constexpr coor winFooter = coor().pos(0, v_res - h_footer).size(h_res, h_footer);
@@ -432,7 +437,7 @@ inline Layout makeLayout() {
 #else
     printf()"Unsupported TFT_LAYOUT\n"
 #endif
-    return {winHeader, winLogo, winName, winProgbar, winTitle, winSTitle, winVUmeter, winFooter, winButton, winDigits, winWoHF, sdrHP,
+    return {winHeader, winLogo, winName, winProgbar, winArea1, winArea2, winSTitle, winVUmeter, winFooter, winButton, winDigits, winWoHF, sdrHP,
             sdrBP,     sdrLP,   sdrBAL,  btnHP,      btnBP,    btnLP,     btnBAL,     txtHP,     txtBP,     txtLP,     txtBAL};
 }
 
