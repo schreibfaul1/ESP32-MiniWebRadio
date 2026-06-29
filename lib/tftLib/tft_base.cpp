@@ -3085,6 +3085,8 @@ exit:
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 size_t TFT_Base::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, uint8_t h_align, uint8_t v_align, bool narrow, bool noWrap, bool autoSize) {
+    if(str == NULL) return 0;
+    if(strlen(str) == 0) return 0;
     uint16_t idx = 0;
     uint16_t utfPosArr[strlen(str) + 1] = {0};
     uint16_t colorArr[strlen(str) + 1] = {0};

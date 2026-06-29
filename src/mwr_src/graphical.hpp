@@ -152,7 +152,7 @@ inline const char* isObjectClicked(uint16_t x, uint16_t y) {
 }
 
 inline void hide_objects_in_area(int16_t x, int16_t y, int16_t w, int16_t h) {
-    MWR_LOG_WARN("hide_objects_in_area");
+    MWR_LOG_DEBUG("hide_objects_in_area");
     int16_t obj_x = 0, obj_y = 0, obj_w = 0, obj_h = 0;
     for (auto obj : registertable_objects) {
         if (obj->isEnabled()) {
@@ -162,7 +162,7 @@ inline void hide_objects_in_area(int16_t x, int16_t y, int16_t w, int16_t h) {
             uint16_t right = std::min<uint32_t>(x + w, obj_x + obj_w);
             uint16_t bottom = std::min<uint32_t>(y + h, obj_y + obj_h);
             if ((left < right) && (top < bottom)) {
-                MWR_LOG_ERROR("Obj {}", obj->getName().c_get());
+                MWR_LOG_DEBUG("Obj {}", obj->getName().c_get());
                 obj->hide();
             }
         }
@@ -650,7 +650,10 @@ class textbox : public RegisterTable {
         }
     }
     void setTextColor(int32_t color) { m_textColor = color; }
-    void setBGcolor(int32_t color) { m_bgColor = color; }
+    void setBGcolor(int32_t color) {
+        m_bgColor = color;
+        writeText(m_text);
+    }
     void setBorderColor(int32_t color) { m_borderColor = color; }
     void setBorderWidth(uint8_t width) { // 0 = no border
         m_borderWidth = width;
@@ -2167,8 +2170,7 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
 
     void setFont(uint8_t size) { // size 0 -> auto, choose besr font size
         m_fontSize = size;
-        m_fontSize = size;
-        getTFT().setFont(m_fontSize);
+        for (uint8_t i = 0; i < 8; i++) { txt_time[i].setFont(m_fontSize); }
     }
     void setTextColor(int32_t color) {
         m_fgColor = color;
@@ -2176,7 +2178,7 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     }
     void setBGcolor(int32_t color) {
         m_bgColor = color;
-        for (uint8_t i = 0; i < 8; i++) { txt_time[i].setTextColor(m_bgColor); }
+        for (uint8_t i = 0; i < 8; i++) { txt_time[i].setBGcolor(m_bgColor); }
     }
     void setBorderColor(int32_t color) { m_borderColor = color; }
     void updateTime(ps_ptr<char> hl_time, bool complete = true) {
@@ -2184,8 +2186,8 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
         if (!m_enabled) return;
         m_time = hl_time;               // hhmmss
         static char oldtime[8] = {255}; // hhmmss
-        getTFT().setFont(m_fontSize);
-        getTFT().setTextColor(m_fgColor);
+                                        //    getTFT().setFont(m_fontSize);
+                                        //    getTFT().setTextColor(m_fgColor);
         if (complete == true) {
             for (uint8_t i = 0; i < 8; i++) { oldtime[i] = 255; }
         }
@@ -5792,11 +5794,15 @@ class displayHeader : public RegisterTable {
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         }
+        txt_Item->show();
+        pic_Speaker->show();
+        txt_Volume->show();
+        pic_RSSID->show();
         m_timeStringObject->show();
         m_enabled = true;
         m_clicked = false;
         m_old_rssi = -1;
-        updateItem(m_item);
+        //    updateItem(m_item);
         speakerOnOff(m_speakerOn);
         updateVolume(m_volume);
         updateRSSI(m_rssi, true);
@@ -5814,16 +5820,28 @@ class displayHeader : public RegisterTable {
     }
 
     void hide() {
+        txt_Item->hide();
+        pic_Speaker->hide();
+        txt_Volume->hide();
+        pic_RSSID->hide();
         getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         m_enabled = false;
         m_timeStringObject->hide();
     }
     void enable() {
         m_enabled = true;
+        txt_Item->enable();
+        pic_Speaker->enable();
+        txt_Volume->enable();
+        pic_RSSID->enable();
         m_timeStringObject->enable();
     }
     void disable() {
         m_enabled = false;
+        txt_Item->disable();
+        pic_Speaker->disable();
+        txt_Volume->disable();
+        pic_RSSID->disable();
         m_timeStringObject->disable();
     }
     void setBGcolor(int32_t color) {
@@ -5832,9 +5850,9 @@ class displayHeader : public RegisterTable {
     }
     void updateItem(ps_ptr<char> hl_item) { // radio, clock, audioplayer...
         if (!m_enabled) return;
+        log_e("item %s", hl_item.c_get());
         m_item = hl_item;
-        txt_Item->setText(hl_item.c_get());
-        txt_Item->show();
+        txt_Item->writeText(hl_item.c_get());
     }
     void setItemColor(uint16_t itemColor) {
         m_itemColor = itemColor;
