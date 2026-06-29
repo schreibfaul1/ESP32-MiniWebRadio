@@ -471,11 +471,19 @@ inline void clearStationName() {
 inline void clearStreamTitle() {
     getTFT().copyFramebuffer(1, 0, layout.winSTitle.x, layout.winSTitle.y, layout.winSTitle.w, layout.winSTitle.h);
 } // without VUmeter
-inline void clearWithOutHeaderFooter() {
-    getTFT().copyFramebuffer(1, 0, layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h);
+inline void clearWithOutHeaderFooter(int32_t bgColor) {
+    if (bgColor == TFT_TRANSPARENT) {
+        getTFT().copyFramebuffer(1, 0, layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h);
+    } else {
+        getTFT().fillRect(layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, TFT_BLACK);
+    }
 }
-inline void clearAll() {
-    getTFT().copyFramebuffer(1, 0, 0, 0, displayConfig.dispWidth, displayConfig.dispHeight);
+inline void clearAll(int32_t bgColor) {
+    if (bgColor == TFT_TRANSPARENT) {
+        getTFT().copyFramebuffer(1, 0, 0, 0, displayConfig.dispWidth, displayConfig.dispHeight); // copy wallpaper
+    } else {
+        getTFT().fillRect(0, 0, displayConfig.dispWidth, displayConfig.dispHeight, TFT_BLACK);
+    }
 }
 
 void showStationName() {
@@ -1313,7 +1321,7 @@ bool init_SD_card() {
     s_f_sd_card_found = SD_MMC.begin("/sdcard", false, false, sdmmc_frequency);
 #endif
     if (!s_f_sd_card_found) {
-        clearAll();
+        clearAll(TFT_BLACK);
         getTFT().setFont(displayConfig.fonts[6]);
         getTFT().setTextColor(TFT_YELLOW);
         getTFT().writeText("SD Card Mount Failed", 0, 50, displayConfig.dispWidth, displayConfig.dispHeight, TFT_ALIGN_CENTER, TFT_ALIGN_TOP, false, false);
@@ -1558,31 +1566,26 @@ void fall_asleep() {
     s_f_isWebConnected = false;
     audio.stopSong();
     if (s_sleepMode == 0) {
-        clearAll();
-        setTFTbrightness(0);
+        changeState(SLEEP, 0);
     } else {
-        changeState(CLOCK, 0);
+        changeState(SLEEP, 1);
     }
     if (s_bt_emitter.found) bt_emitter.power_off();
     printfln(s_tag.action, "falling asleep");
-    dispHeader.hide();
-    dispFooter.hide();
 }
 
 void wake_up() {
     s_f_sleeping = false;
     muteChanged(false);
     printfln(s_tag.action, "awake");
-    clearAll();
+    clearAll(TFT_TRANSPARENT);
+    clk_CL_24.hide();
     setTFTbrightness(s_brightness);
-    setStation(s_cur_station);
-    showLogoAndStationName();
-    dispHeader.setTransparency(true, false);
+    dispHeader.setBGcolor(TFT_TRANSPARENT);
+    dispFooter.setBGcolor(TFT_TRANSPARENT);
     dispHeader.show();
-    dispHeader.speakerOnOff(!s_f_mute);
-    dispHeader.updateRSSI(WiFi.RSSI(), true);
-    dispFooter.setTransparency(true, false);
     dispFooter.show();
+    changeState(RADIO, 0);
     if (s_bt_emitter.found && s_bt_emitter.enabled) bt_emitter.power_on(s_bt_emitter.mode.c_get());
 }
 
@@ -1707,6 +1710,8 @@ void changeState(int8_t state, int8_t subState) {
     if (state == IR_SETTINGS    && s_state != IR_SETTINGS)        { dispHeader.setTransparency(true, false); dispHeader.setBGcolor(TFT_TRANSPARENT); /*dispHeader.show();*/ dispFooter.setTransparency(true, false);  dispFooter.show(); newState = true;}
     if (state == RINGING        && s_state != RINGING)            { dispHeader.setTransparency(true, false); dispHeader.setBGcolor(TFT_TRANSPARENT); /*dispHeader.show();*/ dispFooter.setTransparency(true, false);  dispFooter.show(); newState = true;}
     if (state == WIFI_SETTINGS  && s_state != WIFI_SETTINGS)      { dispHeader.setTransparency(true, false); dispHeader.setBGcolor(TFT_TRANSPARENT); /*dispHeader.show();*/ dispFooter.setTransparency(true, false);  dispFooter.show(); newState = true;}
+    if (state == SLEEP          && s_state != SLEEP)              { dispHeader.setTransparency(true, false); dispHeader.setBGcolor(TFT_BLACK);       /*dispHeader.show();*/ dispFooter.setTransparency(true, false);                     newState = true;}
+
     if (state == RADIO          && s_subState_radio  != subState) { newSubState = true;  }
     if (state == PLAYER         && s_subState_player != subState) { newSubState = true;  }
     if (state == CLOCK          && s_subState_clock  != subState) { newSubState = true;  }
@@ -1726,7 +1731,7 @@ void changeState(int8_t state, int8_t subState) {
     switch (state) {
         case RADIO: {
             if (newState) {
-                clearWithOutHeaderFooter();
+                clearWithOutHeaderFooter(TFT_TRANSPARENT);
                 txt_RA_staName.setText(" ");
                 txt_RA_staName.show();
                 webSrv.send("changeState=", "RADIO");
@@ -1792,7 +1797,7 @@ void changeState(int8_t state, int8_t subState) {
         }
 
         case STATIONSLIST: {
-            clearWithOutHeaderFooter();
+            clearWithOutHeaderFooter(TFT_BLACK);
             lst_RADIO.show();
             setTimeCounter(LIST_TIMER);
             break;
@@ -1800,7 +1805,7 @@ void changeState(int8_t state, int8_t subState) {
         case PLAYER: {
             if (newState) {
                 stopSong();
-                clearWithOutHeaderFooter();
+                clearWithOutHeaderFooter(TFT_TRANSPARENT);
                 webSrv.send("changeState=", "PLAYER");
             }
             dispHeader.enable();
@@ -1839,14 +1844,14 @@ void changeState(int8_t state, int8_t subState) {
             break;
         }
         case AUDIOFILESLIST: {
-            clearWithOutHeaderFooter();
+            clearWithOutHeaderFooter(TFT_TRANSPARENT);
             lst_PLAYER.show(s_cur_AudioFolder, s_cur_AudioFileNr);
             setTimeCounter(LIST_TIMER);
             break;
         }
         case DLNA: {
             if (newState && s_state != DLNAITEMSLIST) audio.stopSong();
-            clearWithOutHeaderFooter();
+            clearWithOutHeaderFooter(TFT_TRANSPARENT);
             pic_DL_logo.enable();
             dispHeader.enable();
             dispFooter.enable();
@@ -1879,6 +1884,7 @@ void changeState(int8_t state, int8_t subState) {
                 sdr_CL_volume.show();
                 btn_CL_mute.show(); btn_CL_alarm.show(); btn_CL_radio.show(); btn_CL_off.show();
             }
+
             s_subState_clock = subState;
             break;
         }
@@ -1892,7 +1898,7 @@ void changeState(int8_t state, int8_t subState) {
         case SLEEPTIMER: {
             dispHeader.enable(); dispFooter.enable();
             if (newState) {
-                clearWithOutHeaderFooter();
+                clearWithOutHeaderFooter(TFT_TRANSPARENT);
                 otb_SL_stime.show(s_sleeptime);
                 pic_SL_logo.setPicturePath("/common/Night_Gown.jpg");
                 pic_SL_logo.align(true, true);
@@ -1904,7 +1910,7 @@ void changeState(int8_t state, int8_t subState) {
         case SETTINGS: {
             dispHeader.enable(); dispFooter.enable();
             if (newState) {
-                clearWithOutHeaderFooter();
+                clearWithOutHeaderFooter(TFT_TRANSPARENT);
                 showFileLogo(SETTINGS, subState);
             }
             btn_SE_bright.show(!s_f_brightnessIsChangeable);
@@ -1914,7 +1920,7 @@ void changeState(int8_t state, int8_t subState) {
         case BRIGHTNESS: {
             dispHeader.enable(); dispFooter.enable();
             if (newState) {
-                clearWithOutHeaderFooter();
+                clearWithOutHeaderFooter(TFT_TRANSPARENT);
                 pic_BR_logo.show();
                 sdr_BR_value.setValue(s_brightness);
                 sdr_BR_value.show();
@@ -1929,7 +1935,7 @@ void changeState(int8_t state, int8_t subState) {
         }
         case EQUALIZER:
             dispHeader.enable(); dispFooter.enable();
-            if (newState) clearWithOutHeaderFooter();
+            if (newState) clearWithOutHeaderFooter(TFT_TRANSPARENT);
             sdr_EQ_lowPass.show();
             sdr_EQ_bandPass.show();
             sdr_EQ_highPass.show();
@@ -1949,7 +1955,7 @@ void changeState(int8_t state, int8_t subState) {
 
         case BLUETOOTH: {
             dispHeader.enable(); dispFooter.enable();
-            clearWithOutHeaderFooter();
+            clearWithOutHeaderFooter(TFT_TRANSPARENT);
             btn_BT_volUp.show(); btn_BT_volDown.show(); btn_BT_pause.show(); btn_BT_mode.show();
             btn_BT_radio.show(); btn_BT_power.show();
             pic_BT_mode.show();
@@ -1965,12 +1971,12 @@ void changeState(int8_t state, int8_t subState) {
         }
         case IR_SETTINGS:
             dispHeader.enable(); dispFooter.enable();
-            clearWithOutHeaderFooter();
+            clearWithOutHeaderFooter(TFT_TRANSPARENT);
             btn_IR_radio.show();
             break;
         case RINGING:
             dispHeader.enable(); dispFooter.enable();
-            clearWithOutHeaderFooter();
+            clearWithOutHeaderFooter(TFT_TRANSPARENT);
             if (s_volume.ringVolume > 0) { // alarm with bell
                 pic_RI_logo.enable();
                 showFileLogo(RINGING, subState);
@@ -1988,19 +1994,34 @@ void changeState(int8_t state, int8_t subState) {
 
         case WIFI_SETTINGS:
             dispHeader.enable(); dispFooter.enable();
-            clearWithOutHeaderFooter();
+            clearWithOutHeaderFooter(TFT_BLACK);
             cls_wifiSettings.clearText();
             cls_wifiSettings.setBorderWidth(1);
             cls_wifiSettings.setFontSize(displayConfig.listFontSize);
-            int16_t n = WiFi.scanNetworks();
-            printfln(s_tag.wifi_info, ANSI_ESC_CYAN "{}" ANSI_ESC_RESET " WiFi networks found", n);
-            for (int i = 0; i < n; i++) {
-                printfln(s_tag.wifi_info, ANSI_ESC_GREEN"{} ({})", WiFi.SSID(i).c_str(), (int16_t)WiFi.RSSI(i));
-                ps_ptr<char> pw = get_WiFi_PW(WiFi.SSID(i).c_str());
-                cls_wifiSettings.add_WiFi_Items(WiFi.SSID(i).c_str(), pw.c_get());
+            {
+                int16_t n = WiFi.scanNetworks();
+                printfln(s_tag.wifi_info, ANSI_ESC_CYAN "{}" ANSI_ESC_RESET " WiFi networks found", n);
+                for (int i = 0; i < n; i++) {
+                    printfln(s_tag.wifi_info, ANSI_ESC_GREEN"{} ({})", WiFi.SSID(i).c_str(), (int16_t)WiFi.RSSI(i));
+                    ps_ptr<char> pw = get_WiFi_PW(WiFi.SSID(i).c_str());
+                    cls_wifiSettings.add_WiFi_Items(WiFi.SSID(i).c_str(), pw.c_get());
+                }
             }
             cls_wifiSettings.show();
             break;
+
+        case SLEEP:
+            dispHeader.hide();
+            dispFooter.hide();
+            if (subState == 0) {
+                setTFTbrightness(0);
+                clearWithOutHeaderFooter(TFT_BLACK);
+            }
+            if (subState == 1) {
+                clearWithOutHeaderFooter(TFT_BLACK);
+                clk_CL_24.show();
+            }
+        break;
     }
     s_ir_btn_select = UNDEFINED;
     s_state = state;
@@ -2229,7 +2250,7 @@ void loop() {
                 }
                 if (s_audioFileDuration) {
                     printfcr(s_tag.action, ANSI_ESC_GREEN "AudioCurrentTime " ANSI_ESC_GREEN "{}:{:02}s, " ANSI_ESC_GREEN "AudioFileDuration " ANSI_ESC_GREEN "{}:{:02}s      ",
-                                   (long int)s_audioCurrentTime / 60, (long int)s_audioCurrentTime % 60, (long int)s_audioFileDuration / 60, (long int)s_audioFileDuration % 60);
+                             (long int)s_audioCurrentTime / 60, (long int)s_audioCurrentTime % 60, (long int)s_audioFileDuration / 60, (long int)s_audioFileDuration % 60);
                 }
             }
         }
@@ -2402,7 +2423,7 @@ void loop() {
         if (r.startsWith("rts")) { // run time stats
             char* timeStatsBuffer = x_ps_calloc(2000, sizeof(char));
             GetRunTimeStats(timeStatsBuffer);
-            { printfln(s_tag.terminal,  ANSI_ESC_YELLOW "task statistics\n\n{}", timeStatsBuffer); }
+            { printfln(s_tag.terminal, ANSI_ESC_YELLOW "task statistics\n\n{}", timeStatsBuffer); }
             x_ps_free(&timeStatsBuffer);
         }
         if (r.startsWith("cts")) { // connect to speech
@@ -2717,8 +2738,12 @@ void on_BH1750(int32_t ambVal) { //--AMBIENT LIGHT SENSOR BH1750--
     int16_t bh1750Value = 0;
     bh1750Value = map_l(ambVal, 0, 1600, displayConfig.brightnessMin, displayConfig.brightnessMax);
     MWR_LOG_DEBUG("ambVal {}, bh1750Value {}, s_brightness {}", ambVal, bh1750Value, s_brightness);
-    if (TFT_CONTROLLER == 8) bh1750Value = 255 - bh1750Value; // invert brightness
-    setTFTbrightness(max(bh1750Value, s_brightness));
+    int16_t brightness = s_brightness;
+    if(BRIGHTNESS_INVERSION) {
+        brightness = 255 - s_brightness;
+        bh1750Value = 255 - bh1750Value;
+    }
+    setTFTbrightness(max(bh1750Value, brightness));
 }
 // ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void ftp_debug(const char* info) {
@@ -3630,7 +3655,10 @@ void on_dlna_client(const DLNA_Client::msg_s& msg) {
                         printfln(s_tag.dlna_server, "title " ANSI_ESC_YELLOW "{}", item.title.c_get());
                     }
                 } else {
-                    printfln(s_tag.dlna_server, "title " ANSI_ESC_YELLOW "{}" ANSI_ESC_RESET ", duration "  "{}", item.title, item.duration);
+                    printfln(s_tag.dlna_server,
+                             "title " ANSI_ESC_YELLOW "{}" ANSI_ESC_RESET ", duration "
+                             "{}",
+                             item.title, item.duration);
                 }
             }
             if (item.childCount) {
@@ -3771,7 +3799,7 @@ void on_websrv(const WebSrv::msg_s& msg) {
         printfln(s_tag.webserver, ANSI_ESC_GREEN "{} ", msg.arg.c_get());
     }
     if (msg.e == WebSrv::evt_error) { printfln(s_tag.webserver, ANSI_ESC_RED "{}", msg.arg); }
-    if (msg.e == WebSrv::evt_warn) {  printfln(s_tag.webserver, ANSI_ESC_YELLOW "{}", msg.arg); }
+    if (msg.e == WebSrv::evt_warn) { printfln(s_tag.webserver, ANSI_ESC_YELLOW "{}", msg.arg); }
     if (msg.e == WebSrv::evt_command) { WEBSRV_onCommand(msg.cmd, msg.param1, msg.arg1); }
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

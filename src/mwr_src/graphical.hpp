@@ -701,8 +701,11 @@ class textbox : public RegisterTable {
             int y = m_y + m_paddig_top;
             int w = m_w - (m_paddig_right + m_padding_left);
             int h = m_h - (m_paddig_bottom + m_paddig_top);
-            if(m_borderColor != TFT_TRANSPARENT) {
-                x+=1; y+=1; w -= 2; h -= 2;
+            if (m_borderColor != TFT_TRANSPARENT) {
+                x += 1;
+                y += 1;
+                w -= 2;
+                h -= 2;
                 getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
             }
             getTFT().writeText(m_text.c_get(), x, y, w, h, m_h_align, m_v_align, m_narrow, m_noWrap, m_autoSize);
@@ -1342,7 +1345,7 @@ class selectbox : public RegisterTable {
         if (m_borderWidth > 2) m_borderWidth = 2;
         m_txt_btn_down->setBorderWidth(m_borderWidth);
         m_txt_btn_up->setBorderWidth(m_borderWidth);
-     }
+    }
     bool positionXY(uint16_t x, uint16_t y) {
         if (x < m_x) return false;
         if (y < m_y) return false;
@@ -5801,13 +5804,17 @@ class displayHeader : public RegisterTable {
     }
 
     void hide() {
+        m_enabled = false;
         txt_Item->hide();
         pic_Speaker->hide();
         txt_Volume->hide();
         pic_RSSID->hide();
-        getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        m_enabled = false;
         m_timeStringObject->hide();
+        if (m_bgColor == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        }
     }
     void enable() {
         m_enabled = true;
@@ -5929,7 +5936,7 @@ class displayFooter : public RegisterTable {
     uint16_t     m_staNr = 0;
     uint16_t     m_offTime = 0;
     uint32_t     m_bitRate = 0;
-    uint16_t     m_bgColor = TFT_BLACK;
+    int32_t      m_bgColor = TFT_BLACK;
     uint16_t     m_stationColor = TFT_LAVENDER;
     uint16_t     m_bitRateColor = TFT_LAVENDER;
     uint16_t     m_ipAddrColor = TFT_GREENYELLOW;
@@ -6320,12 +6327,26 @@ class displayFooter : public RegisterTable {
     }
 
     void hide() {
-        getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         m_enabled = false;
+        pic_Antenna->hide();
+        txt_StaNr->hide();
+        txt_FileNr->hide();
+        pic_Flag->hide();
+        txt_OffTimer->hide();
+        pic_Hourglass->hide();
+        txt_BitRate->hide();
+        txt_OffTimer->hide();
+        txt_IpAddr->hide();
+        if (m_bgColor == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        }
     }
+
     void enable() { m_enabled = true; }
     void disable() { m_enabled = false; }
-    void setBGcolor(uint32_t color) { m_bgColor = color; }
+    void setBGcolor(int32_t color) { m_bgColor = color; }
 
     void updateAntenna(bool WiFi_lost) {
         if (WiFi_lost && !m_WiFi_lost) {

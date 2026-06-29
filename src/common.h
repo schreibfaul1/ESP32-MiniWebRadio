@@ -198,6 +198,7 @@ enum status {
     IR_SETTINGS = 14,
     RINGING = 15,
     WIFI_SETTINGS = 16,
+    SLEEP = 17,
     UNDEFINED = -1
 };
 
@@ -221,6 +222,7 @@ inline ps_ptr<char> getStatusName(int8_t status) {
         case 14: name = "IR_SETTINGS"; break;
         case 15: name = "RINGING"; break;
         case 16: name = "WIFI_SETTINGS"; break;
+        case 17: name = "SLEEP"; break;
         default: name = "UNDEFINED"; break;
     }
     return name;
