@@ -4110,8 +4110,9 @@ void graphicObjects_OnClick(ps_ptr<char> name, uint8_t val) { // val = 0 --> is 
         if (val && name.equals("btn_SE_wifi"))                 { goto exit; }
         if (val && name.equals("select_txtbtn_down"))          { goto exit; }
         if (val && name.equals("wifiSettings_selectbox_ssid")) { goto exit; }
-        if (val && name.equals("wifiSettings_selectbox_ssid")) { goto exit; }
+        if (val && name.equals("wifiSettings_txtbox_pwd"))     { goto exit; }
         if (val && name.equals("wifiSettings_keyBoard"))       { goto exit; }
+        if (val && name.equals("select_txtbox_ssid"))          { goto exit; }
         if (val && name.equals("select_txtbtn_up"))            { goto exit; }
         if (val && name.equals("select_txtbtn_down"))          { goto exit; }
     }
@@ -4287,8 +4288,10 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
                                               goto exit; }
         if (name.starts_with("txt_btn"))                { goto exit; }
         if (name.equals("wifiSettings_selectbox_ssid")) { goto exit; }
+        if (name.equals("wifiSettings_txtbox_pwd"))     { goto exit; }
         if (name.equals("select_txtbtn_up"))            { goto exit; }
         if (name.equals("select_txtbtn_down"))          { goto exit; }
+        if (name.equals("select_txtbox_ssid"))          { goto exit; }
     }
     MWR_LOG_WARN("unused event: graphicObject {} was released", name);
 exit:

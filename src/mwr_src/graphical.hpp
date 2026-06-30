@@ -585,6 +585,13 @@ class textbox : public RegisterTable {
         // writeText(m_text);
     }
 
+    void setBGcolor(int32_t color) {
+        if (m_bgColor == color) return;
+        m_bgColor = color;
+        if (!m_enabled) return;
+        writeText(m_text);
+    }
+
     void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
         x = m_x;
         y = m_y;
@@ -620,11 +627,6 @@ class textbox : public RegisterTable {
     }
     void setTextColor(int32_t color) { m_textColor = color; }
 
-    void setBGcolor(int32_t color) {
-        if (m_bgColor == color) return;
-        m_bgColor = color;
-        writeText(m_text);
-    }
     void setBorderColor(int32_t color) { // TFT_TRANSPARENT -> no border
         m_borderColor = color;
     }
@@ -697,9 +699,9 @@ class inputbox : public RegisterTable {
     uint8_t      m_paddig_top = 0;    // top margin
     uint8_t      m_paddig_bottom = 0; // bottom margin
     uint8_t      m_borderWidth = 0;
-    uint32_t     m_bgColor = 0;
-    uint32_t     m_fgColor = 0;
-    uint32_t     m_borderColor = 0;
+    int32_t      m_bgColor = 0;
+    int32_t      m_fgColor = 0;
+    int32_t      m_borderColor = 0;
     ps_ptr<char> m_text;
     ps_ptr<char> m_name;
     bool         m_enabled = false;
@@ -708,15 +710,13 @@ class inputbox : public RegisterTable {
     bool         m_autoSize = false;
     bool         m_narrow = false;
     bool         m_noWrap = false;
-    bool         m_backgroundTransparency = false;
-    bool         m_saveBackground = false;
     releasedArg  m_ra;
 
   public:
     inputbox(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
-        m_bgColor = TFT_BLACK;
+        m_bgColor = TFT_TRANSPARENT;
         m_fgColor = TFT_LIGHTGREY;
         m_borderColor = TFT_BLACK;
         m_fontSize = 1;
@@ -748,6 +748,13 @@ class inputbox : public RegisterTable {
         // writeText(m_text);
     }
 
+    void setBGcolor(int32_t color) {
+        if (m_bgColor == color) return;
+        m_bgColor = color;
+        if (!m_enabled) return;
+        writeText(m_text);
+    }
+
     void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
         x = m_x;
         y = m_y;
@@ -758,31 +765,15 @@ class inputbox : public RegisterTable {
     void show() {
         m_enabled = true;
         m_clicked = false;
-        if (m_backgroundTransparency) {
-            if (m_saveBackground)
-                getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
-            else
-                getTFT().copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
-        } else {
+        getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+        if(m_bgColor != TFT_TRANSPARENT){
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         }
         writeText(m_text);
     }
 
-    void setTransparency(bool backgroundTransparency, bool saveBackground) {
-        m_backgroundTransparency = backgroundTransparency;
-        m_saveBackground = saveBackground;
-    }
-
     void hide() {
-        if (m_backgroundTransparency) {
-            if (m_saveBackground)
-                getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
-            else
-                getTFT().copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
-        } else {
-            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        }
+        getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
         m_enabled = false;
     }
     void disable() { m_enabled = false; }
@@ -840,12 +831,9 @@ class inputbox : public RegisterTable {
             uint16_t bgColor_tmp = getTFT().getBackGroundColor();
             getTFT().setTextColor(m_fgColor);
             getTFT().setBackGoundColor(m_bgColor);
-            if (m_backgroundTransparency) {
-                if (m_saveBackground)
-                    getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
-                else
-                    getTFT().copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
-            } else {
+            if (m_bgColor == TFT_TRANSPARENT) {
+                getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+             } else {
                 getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
             }
             if (m_fontSize != 0) { getTFT().setFont(m_fontSize); }
@@ -1896,7 +1884,6 @@ class wifiSettings : public RegisterTable {
         m_backgroundTransparency = backgroundTransparency;
         m_saveBackground = saveBackground;
         m_sel_ssid->setTransparency(m_backgroundTransparency, m_saveBackground);
-        m_in_password->setTransparency(m_backgroundTransparency, m_saveBackground);
         m_keyboard->setTransparency(m_backgroundTransparency, m_saveBackground);
     }
 
@@ -1967,7 +1954,6 @@ class wifiSettings : public RegisterTable {
             MWR_LOG_INFO("key pressed {}", m_keyboard->getVal());
             changePassword(m_keyboard->getVal(), m_credentials_idx);
             m_in_password->setText(m_credentials[m_credentials_idx].password.c_get());
-            m_in_password->setTransparency(m_backgroundTransparency, m_saveBackground);
             m_in_password->show();
         }
         if (!m_enabled) return false;
@@ -1983,7 +1969,6 @@ class wifiSettings : public RegisterTable {
                 for (int i = 0; i < m_credentials.size(); i++) {
                     if (m_credentials[i].ssid.equals(selTxt)) {
                         m_in_password->setText(m_credentials[i].password);
-                        m_in_password->setTransparency(m_backgroundTransparency, m_saveBackground);
                         m_in_password->show();
                         m_credentials_idx = i;
                     }
