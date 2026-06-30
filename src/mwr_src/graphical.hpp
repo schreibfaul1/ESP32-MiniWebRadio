@@ -296,6 +296,7 @@ class slider : public RegisterTable {
     int16_t getValue() { return m_val; }
 
     void show() {
+        if (m_enabled == false) getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
         m_enabled = true;
         int x = m_x + m_padding_left;
         int y = m_middle_h - (m_railHigh / 2);
@@ -303,7 +304,6 @@ class slider : public RegisterTable {
         int h = m_railHigh;
         (void)h;
         int r = m_railHigh / 4;
-        getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
         if (m_bgColor != TFT_TRANSPARENT) { getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor); }
         getTFT().fillRoundRect(x, y, w, m_railHigh, r, m_railColor);
         drawNewSpot(m_spotPos);
@@ -463,7 +463,7 @@ class progressbar : public RegisterTable {
         m_maxVal = maxVal;
     }
     void show() {
-        getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+        if (m_enabled == false) getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
         if (m_bgColor != TFT_TRANSPARENT) { getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor); }
         getTFT().drawRect(m_x + m_padding_left, m_rail_y_pos, m_w - m_padding_left - m_padding_right, m_railHight, m_frameColor); // draw border
         drawNewValue();
@@ -598,7 +598,7 @@ class textbox : public RegisterTable {
     void show() {
         m_enabled = true;
         m_clicked = false;
-        getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+        if (m_enabled == false) getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
         if (m_bgColor != TFT_TRANSPARENT) { getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor); }
         writeText(m_text.c_get());
     }
@@ -759,7 +759,7 @@ class inputbox : public RegisterTable {
     void show() {
         m_enabled = true;
         m_clicked = false;
-        getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+        if (m_enabled == false) getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
         if (m_bgColor != TFT_TRANSPARENT) { getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor); }
         writeText(m_text);
     }
@@ -881,8 +881,6 @@ class textbutton : public RegisterTable {
     bool         m_autoSize = false;
     bool         m_narrow = false;
     bool         m_noWrap = false;
-    bool         m_backgroundTransparency = false;
-    bool         m_saveBackground = false;
     releasedArg  m_ra;
 
   public:
@@ -973,33 +971,15 @@ class textbutton : public RegisterTable {
     }
 
     void show() {
+        if (m_enabled == false) getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
         m_enabled = true;
         m_clicked = false;
-        if (m_backgroundTransparency) {
-            if (m_saveBackground)
-                getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
-            else
-                getTFT().copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
-        } else {
-            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        }
+        if (m_bgColor != TFT_TRANSPARENT) { getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor); }
         writeText(m_text.c_get());
     }
 
-    void setTransparency(bool backgroundTransparency, bool saveBackground) {
-        m_backgroundTransparency = backgroundTransparency;
-        m_saveBackground = saveBackground;
-    }
-
     void hide() {
-        if (m_backgroundTransparency) {
-            if (m_saveBackground)
-                getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
-            else
-                getTFT().copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
-        } else {
-            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        }
+        getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
         m_enabled = false;
     }
     void disable() { m_enabled = false; }
@@ -1063,16 +1043,14 @@ class textbutton : public RegisterTable {
         if (m_enabled) {
             uint16_t txtColor_tmp = getTFT().getTextColor();
             uint16_t bgColor_tmp = getTFT().getBackGroundColor();
-            if (!m_clicked)
+            if (!m_clicked) {
                 getTFT().setTextColor(m_fgColor);
-            else
+            } else {
                 getTFT().setTextColor(m_clickColor);
-            getTFT().setBackGoundColor(m_bgColor);
-            if (m_backgroundTransparency) {
-                if (m_saveBackground)
-                    getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
-                else
-                    getTFT().copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+            }
+
+            if (m_bgColor == TFT_TRANSPARENT) {
+                getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
             } else {
                 getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
             }
@@ -1502,7 +1480,7 @@ class keyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     void show() {
         m_enabled = true;
         m_clicked = false;
-        getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+        if (m_enabled == false) getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
         if (m_bgColor != TFT_TRANSPARENT) { getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor); }
         for (int i = 0; i < 34; i++) {
             txt_btn_array[i].setBGcolor(TFT_BLACK);
@@ -2071,7 +2049,7 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
 
     void show() {
         m_enabled = true;
-        getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+        if (m_enabled == false) getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
         if (m_bgColor != TFT_TRANSPARENT) { getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor); }
         for (uint8_t i = 0; i < 8; i++) { txt_time[i].show(); }
         updateTime(m_time, true);
@@ -2202,7 +2180,7 @@ class button1state : public RegisterTable { // click button
 
     void show(bool inactive = false) {
         m_clicked = false;
-        getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+        if (m_enabled == false) getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
         if (inactive) {
             setInactive();
             return;
@@ -2359,7 +2337,7 @@ class button2state : public RegisterTable { // on off switch
 
     void show() {
         m_clicked = false;
-        getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+        if (m_enabled == false) getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
         if (m_active) {
             if (m_state)
                 drawImage(m_on_idlePicturePath, m_x, m_y, m_w, m_h);
@@ -2509,7 +2487,7 @@ class numbersBox : public RegisterTable { // range 000...999
 
     bool show(uint16_t color) {
         m_clicked = false;
-        if(m_enabled == false) getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+        if (m_enabled == false) getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
         if (color == TFT_BLUE)
             m_color = "blue";
         else if (color == TFT_ORANGE)
@@ -2530,7 +2508,7 @@ class numbersBox : public RegisterTable { // range 000...999
     }
 
     void hide() {
-        if(m_enabled == false) return;
+        if (m_enabled == false) return;
         getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
         m_enabled = false;
     }
