@@ -592,7 +592,6 @@ void placingGraphicObjects() { // and initialize them
     txt_RA_irNum.setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
     txt_RA_irNum.setTextColor(TFT_GOLD);
     txt_RA_irNum.setFontSize(displayConfig.bigNumbersFontSize);
-    pic_RA_logo.setTransparency(true, false);
     pic_RA_logo.begin(layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h, layout.winLogo.pl, layout.winLogo.pr, layout.winLogo.pt, layout.winLogo.pb);
     VUmeter_RA.setTransparency(true, false);
     VUmeter_RA.begin(layout.winVUmeter.x, layout.winVUmeter.y, layout.winVUmeter.w, layout.winVUmeter.h, layout.winVUmeter.pl, layout.winVUmeter.pr, layout.winVUmeter.pt, layout.winVUmeter.pb);
@@ -632,7 +631,6 @@ void placingGraphicObjects() { // and initialize them
     txt_PL_fName.begin(layout.winName.x, layout.winName.y, layout.winName.w, layout.winName.h, layout.winName.pl, layout.winName.pr, layout.winName.pt, layout.winName.pb);
     txt_PL_fName.setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
     txt_PL_fName.setFontSize(0); // 0 -> auto
-    pic_PL_logo.setTransparency(true, false);
     pic_PL_logo.begin(layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h, layout.winLogo.pl, layout.winLogo.pr, layout.winLogo.pt, layout.winLogo.pb);
     pgb_PL_progress.begin(layout.winProgbar.x, layout.winProgbar.y, layout.winProgbar.w, layout.winProgbar.h, layout.winProgbar.pl, layout.winProgbar.pr, layout.winProgbar.pt, layout.winProgbar.pb, 0,
                           30);
@@ -656,7 +654,6 @@ void placingGraphicObjects() { // and initialize them
     txt_DL_fName.begin(layout.winName.x, layout.winName.y, layout.winName.w, layout.winName.h, layout.winName.pl, layout.winName.pr, layout.winName.pt, layout.winName.pb);
     txt_DL_fName.setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
     txt_DL_fName.setFontSize(0); // 0 -> auto)
-    pic_DL_logo.setTransparency(true, false);
     pic_DL_logo.begin(layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h, layout.winLogo.pl, layout.winLogo.pr, layout.winLogo.pt, layout.winLogo.pb);
     pgb_DL_progress.begin(layout.winProgbar.x, layout.winProgbar.y, layout.winProgbar.w, layout.winProgbar.h, layout.winProgbar.pl, layout.winProgbar.pr, layout.winProgbar.pt, layout.winProgbar.pb, 0,
                           30);
@@ -664,7 +661,6 @@ void placingGraphicObjects() { // and initialize them
     // DLNAITEMSLIST -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     lst_DLNA.begin(layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, displayConfig.tftSize, displayConfig.listFontSize);
     // CLOCK -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    clk_CL_24.setTransparency(false, false);
     clk_CL_24.begin(layout.winDigits.x, layout.winDigits.y, layout.winDigits.w, layout.winDigits.h);
     btn_CL_alarm.begin(0 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_CL_alarm.setPicturePath("/btn/Button_Bell");
@@ -691,9 +687,7 @@ void placingGraphicObjects() { // and initialize them
     btn_AC_ready.setPicturePath("/btn/Button_Ready");
 
     // RINGING -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    pic_RI_logo.setTransparency(true, false);
     pic_RI_logo.begin(layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h, layout.winLogo.pl, layout.winLogo.pr, layout.winLogo.pt, layout.winLogo.pb);
-    clk_RI_24small.setTransparency(false, false);
     clk_RI_24small.begin(layout.winName.x, layout.winName.y, layout.winName.w, layout.winName.h);
     // SLEEPTIMER --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     btn_SL_up.begin(0 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
@@ -705,7 +699,6 @@ void placingGraphicObjects() { // and initialize them
     btn_SL_cancel.begin(4 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_SL_cancel.setPicturePath("/btn/Button_Cancel");
     otb_SL_stime.begin(0, layout.winFooter.h, layout.winFooter.w / 2, layout.winButton.y - layout.winHeader.h);
-    pic_SL_logo.setTransparency(false, false);
     pic_SL_logo.begin(layout.winFooter.w / 2, layout.winFooter.h, layout.winFooter.w / 2, layout.winButton.y - layout.winHeader.h, 0, 0, 10, 0);
     // SETTINGS ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     btn_SE_bright.begin(0 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
@@ -716,14 +709,12 @@ void placingGraphicObjects() { // and initialize them
     btn_SE_wifi.setPicturePath("/btn/Button_WiFi");
     btn_SE_radio.begin(3 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_SE_radio.setPicturePath("/btn/Button_Radio");
-    pic_SE_logo.setTransparency(true, false);
     pic_SE_logo.begin(layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h, layout.winLogo.pl, layout.winLogo.pr, layout.winLogo.pt, layout.winLogo.pb);
     // BRIGHTNESS --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     sdr_BR_value.begin(2 * layout.winButton.w, layout.winButton.y, 4 * layout.winButton.w, layout.winButton.h, 0, 0, 0, 0);
     sdr_BR_value.setMinMaxVal(displayConfig.brightnessMin, displayConfig.brightnessMax);
     btn_BR_ready.begin(7 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_BR_ready.setPicturePath("/btn/Button_Ready");
-    pic_BR_logo.setTransparency(false, false);
     pic_BR_logo.begin(0, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, layout.winWoHF.pl, layout.winWoHF.pr, layout.winWoHF.pt, layout.winWoHF.pb);
     pic_BR_logo.setPicturePath("/common/Brightness.jpg");
     txt_BR_value.begin(0, layout.winButton.y, layout.winButton.w * 2, layout.winButton.h, layout.winButton.pl, layout.winButton.pr, layout.winButton.pt, layout.winButton.pb);
@@ -777,7 +768,6 @@ void placingGraphicObjects() { // and initialize them
     btn_BT_radio.setPicturePath("/btn/Button_Radio");
     btn_BT_power.begin(5 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_BT_power.setPicturePath("/btn/Button_Bluetooth");
-    pic_BT_mode.setTransparency(true, false);
     pic_BT_mode.begin(layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h, layout.winLogo.pl, layout.winLogo.pr, layout.winLogo.pt, layout.winLogo.pb);
     pic_BT_mode.setPicturePath("/common/BTnc.png");
     pic_BT_mode.setAlternativPicturePath("/common/BTnc.png");

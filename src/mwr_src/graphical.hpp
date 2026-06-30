@@ -2721,15 +2721,13 @@ class pictureBox : public RegisterTable {
     uint8_t      m_padding_right = 0;  // right margin
     uint8_t      m_padding_top = 0;    // top margin
     uint8_t      m_padding_bottom = 0; // bottom margin
-    uint32_t     m_bgColor = 0;
+    int32_t      m_bgColor = 0;
     ps_ptr<char> m_PicturePath;
     ps_ptr<char> m_altPicturePath;
     ps_ptr<char> m_name;
     bool         m_enabled = false;
     bool         m_focus = false;
     bool         m_clicked = false;
-    bool         m_backgroundTransparency = false;
-    bool         m_saveBackground = false; // is used and to draw further objects on this box
     releasedArg  m_ra;
 
   public:
@@ -2782,23 +2780,12 @@ class pictureBox : public RegisterTable {
         int w = m_w - (m_padding_right + m_padding_left);
         int h = m_h - (m_padding_bottom + m_padding_top);
         if (m_image_w == 0 || m_image_h == 0) {
-            if (m_saveBackground) { getTFT().copyFramebuffer(1, 2, m_x, m_y, m_w, m_h); }
-            if (m_backgroundTransparency) { getTFT().copyFramebuffer(1, 0, m_x, m_y, m_w, m_h); }
-            m_enabled = drawImage(m_altPicturePath.c_get(), x, y, w, h);
-            if (m_saveBackground) { getTFT().copyFramebuffer(0, 1, m_x, m_y, m_w, m_h); }
-            return m_enabled;
+              m_enabled = drawImage(m_altPicturePath.c_get(), x, y, w, h);
+              return m_enabled;
         } else {
-            if (m_saveBackground) { getTFT().copyFramebuffer(1, 2, m_x, m_y, m_w, m_h); }
-            if (m_backgroundTransparency) { getTFT().copyFramebuffer(1, 0, m_x, m_y, m_w, m_h); }
             m_enabled = drawImage(m_PicturePath.c_get(), x, y, w, h);
-            if (m_saveBackground) { getTFT().copyFramebuffer(0, 1, m_x, m_y, m_w, m_h); }
             return m_enabled;
         }
-    }
-
-    void setTransparency(bool backgroundTransparency, bool saveBackground) {
-        m_backgroundTransparency = backgroundTransparency;
-        m_saveBackground = saveBackground;
     }
 
     void hide() {
@@ -2806,9 +2793,6 @@ class pictureBox : public RegisterTable {
         m_enabled = false;
     }
     void disable() {
-        if (m_saveBackground) {
-            getTFT().copyFramebuffer(2, 1, m_x, m_y, m_w, m_h); // restore background
-        }
         m_enabled = false;
     }
     void enable() { m_enabled = true; }
@@ -2954,16 +2938,16 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
         writeTime(m_hour, m_min);
     }
 
-    void setTransparency(bool backgroundTransparency, bool saveBackground) {
-        m_backgroundTransparency = backgroundTransparency;
-        m_saveBackground = saveBackground;
-        pic_clock24_digitsH10->setTransparency(m_backgroundTransparency, m_saveBackground);
-        pic_clock24_digitsH01->setTransparency(m_backgroundTransparency, m_saveBackground);
-        pic_clock24_digitsM10->setTransparency(m_backgroundTransparency, m_saveBackground);
-        pic_clock24_digitsM01->setTransparency(m_backgroundTransparency, m_saveBackground);
-        pic_clock24_digitsColon->setTransparency(m_backgroundTransparency, m_saveBackground);
-        pic_clock24_digitsColon->setTransparency(m_backgroundTransparency, m_saveBackground);
-    }
+    // void setTransparency(bool backgroundTransparency, bool saveBackground) {
+    //     m_backgroundTransparency = backgroundTransparency;
+    //     m_saveBackground = saveBackground;
+    //     pic_clock24_digitsH10->setTransparency(m_backgroundTransparency, m_saveBackground);
+    //     pic_clock24_digitsH01->setTransparency(m_backgroundTransparency, m_saveBackground);
+    //     pic_clock24_digitsM10->setTransparency(m_backgroundTransparency, m_saveBackground);
+    //     pic_clock24_digitsM01->setTransparency(m_backgroundTransparency, m_saveBackground);
+    //     pic_clock24_digitsColon->setTransparency(m_backgroundTransparency, m_saveBackground);
+    //     pic_clock24_digitsColon->setTransparency(m_backgroundTransparency, m_saveBackground);
+    // }
 
     void hide() {
         getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
@@ -3189,16 +3173,16 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
         writeTime(m_hour, m_min);
     }
 
-    void setTransparency(bool backgroundTransparency, bool saveBackground) {
-        m_backgroundTransparency = backgroundTransparency;
-        m_saveBackground = saveBackground;
-        pic_clock24_digitsH10->setTransparency(m_backgroundTransparency, m_saveBackground);
-        pic_clock24_digitsH01->setTransparency(m_backgroundTransparency, m_saveBackground);
-        pic_clock24_digitsM10->setTransparency(m_backgroundTransparency, m_saveBackground);
-        pic_clock24_digitsM01->setTransparency(m_backgroundTransparency, m_saveBackground);
-        pic_clock24_digitsColon->setTransparency(m_backgroundTransparency, m_saveBackground);
-        pic_clock24_digitsColon->setTransparency(m_backgroundTransparency, m_saveBackground);
-    }
+    // void setTransparency(bool backgroundTransparency, bool saveBackground) {
+    //     m_backgroundTransparency = backgroundTransparency;
+    //     m_saveBackground = saveBackground;
+    //     pic_clock24_digitsH10->setTransparency(m_backgroundTransparency, m_saveBackground);
+    //     pic_clock24_digitsH01->setTransparency(m_backgroundTransparency, m_saveBackground);
+    //     pic_clock24_digitsM10->setTransparency(m_backgroundTransparency, m_saveBackground);
+    //     pic_clock24_digitsM01->setTransparency(m_backgroundTransparency, m_saveBackground);
+    //     pic_clock24_digitsColon->setTransparency(m_backgroundTransparency, m_saveBackground);
+    //     pic_clock24_digitsColon->setTransparency(m_backgroundTransparency, m_saveBackground);
+    // }
 
     void hide() {
         getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
@@ -3469,11 +3453,11 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
             txt_alarm_days[i].setBGcolor(TFT_BLACK);
             txt_alarm_time[i].setBGcolor(TFT_BLACK);
         }
-        pic_alarm_digitsH10->setTransparency(m_backgroundTransparency, m_saveBackground);
-        pic_alarm_digitsH01->setTransparency(m_backgroundTransparency, m_saveBackground);
-        pic_alarm_digitsM10->setTransparency(m_backgroundTransparency, m_saveBackground);
-        pic_alarm_digitsM01->setTransparency(m_backgroundTransparency, m_saveBackground);
-        pic_alarm_digitsColon->setTransparency(m_backgroundTransparency, m_saveBackground);
+        // pic_alarm_digitsH10->setTransparency(m_backgroundTransparency, m_saveBackground);
+        // pic_alarm_digitsH01->setTransparency(m_backgroundTransparency, m_saveBackground);
+        // pic_alarm_digitsM10->setTransparency(m_backgroundTransparency, m_saveBackground);
+        // pic_alarm_digitsM01->setTransparency(m_backgroundTransparency, m_saveBackground);
+        // pic_alarm_digitsColon->setTransparency(m_backgroundTransparency, m_saveBackground);
     }
 
     void hide() {
@@ -5670,9 +5654,9 @@ class displayHeader : public RegisterTable {
         m_saveBackground = saveBackground;
         timeStringObject->setBGcolor(m_bgColor);
         txt_Item->setBGcolor(m_bgColor);
-        pic_Speaker->setTransparency(m_backgroundTransparency, m_saveBackground);
+    //    pic_Speaker->setTransparency(m_backgroundTransparency, m_saveBackground);
         txt_Volume->setBGcolor(m_bgColor);
-        pic_RSSID->setTransparency(m_backgroundTransparency, m_saveBackground);
+    //    pic_RSSID->setTransparency(m_backgroundTransparency, m_saveBackground);
     }
 
     void hide() {
