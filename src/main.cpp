@@ -2014,7 +2014,7 @@ void changeState(int8_t state, int8_t subState) {
             dispHeader.hide();
             dispFooter.hide();
             if (subState == 0) {
-                setTFTbrightness(0, s_bh1750Value);
+                setTFTbrightness(s_brightness, s_bh1750Value);
                 clearWithOutHeaderFooter(TFT_BLACK);
             }
             if (subState == 1) {

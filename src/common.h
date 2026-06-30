@@ -776,8 +776,9 @@ inline void setupBacklight(int pin, uint32_t freq_hz) {
 }
 
 inline void setTFTbrightness(uint8_t brightness, uint8_t bh1750Value) {
-
+    extern bool s_f_sleeping;
     uint8_t duty = std::min(brightness, bh1750Value);
+    if(s_f_sleeping){ duty = 0; }
     if(BRIGHTNESS_INVERSION) {
         duty = 255 - duty;
     }
