@@ -313,7 +313,7 @@ class slider : public RegisterTable {
     void disable() { m_enabled = false; }
     void enable() { m_enabled = true; }
     void hide() {
-        getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+        if(m_enabled) getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
         m_enabled = false;
         m_show = false;
     }
@@ -780,7 +780,6 @@ class inputbox : public RegisterTable {
         }
     }
     void setTextColor(uint32_t color) { m_fgColor = color; }
-    void setBGcolor(uint32_t color) { m_bgColor = color; }
     void setBorderColor(uint32_t color) { m_borderColor = color; }
     void setBorderWidth(uint8_t width) { // 0 = no border
         m_borderWidth = width;
@@ -2190,7 +2189,7 @@ class button1state : public RegisterTable { // click button
     }
 
     void hide() {
-        getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+        if(m_enabled) getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
         m_enabled = false;
     }
 
@@ -2372,7 +2371,7 @@ class button2state : public RegisterTable { // on off switch
     }
 
     void hide() {
-        getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+        if(m_enabled) getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
         m_enabled = false;
     }
 

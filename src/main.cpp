@@ -1796,8 +1796,6 @@ void changeState(int8_t state, int8_t subState) {
                 stopSong();
                 webSrv.send("changeState=", "PLAYER");
             }
-            dispHeader.enable();
-            dispFooter.enable();
             pic_PL_logo.enable();
             if (subState == 0){
                 s_SD_content.listFilesInDir(s_cur_AudioFolder.c_get(), true, false);
@@ -1839,8 +1837,6 @@ void changeState(int8_t state, int8_t subState) {
         case DLNA: {
             if (newState && s_state != DLNAITEMSLIST) audio.stopSong();
             pic_DL_logo.enable();
-            dispHeader.enable();
-            dispFooter.enable();
             pgb_DL_progress.setValue(0);
             pgb_DL_progress.show();
             txt_DL_fName.show();
@@ -1858,8 +1854,6 @@ void changeState(int8_t state, int8_t subState) {
             break;
         }
         case CLOCK: {
-            dispHeader.enable();
-            dispFooter.enable();
             clk_CL_24.show();
             if (subState == 0) {
                 btn_CL_mute.hide(); btn_CL_alarm.hide(); btn_CL_radio.hide(); sdr_CL_volume.hide(); btn_CL_off.hide();
@@ -1874,13 +1868,10 @@ void changeState(int8_t state, int8_t subState) {
             break;
         }
         case ALARMCLOCK: {
-            dispHeader.enable();
-            dispFooter.enable();
             btn_AC_left.show(); btn_AC_right.show(); btn_AC_up.show(); btn_AC_down.show(); btn_AC_ready.show(); clk_AC_red.show();
             break;
         }
         case SLEEPTIMER: {
-            dispHeader.enable(); dispFooter.enable();
             if (newState) {
                 otb_SL_stime.show(s_sleeptime);
                 pic_SL_logo.setPicturePath("/common/Night_Gown.jpg");
@@ -1891,7 +1882,6 @@ void changeState(int8_t state, int8_t subState) {
             break;
         }
         case SETTINGS: {
-            dispHeader.enable(); dispFooter.enable();
             if (newState) {
                 showFileLogo(SETTINGS, subState);
             }
@@ -1900,7 +1890,6 @@ void changeState(int8_t state, int8_t subState) {
             break;
         }
         case BRIGHTNESS: {
-            dispHeader.enable(); dispFooter.enable();
             if (newState) {
                 pic_BR_logo.show();
                 sdr_BR_value.setValue(s_brightness);
@@ -1915,7 +1904,6 @@ void changeState(int8_t state, int8_t subState) {
             break;
         }
         case EQUALIZER:
-            dispHeader.enable(); dispFooter.enable();
             sdr_EQ_lowPass.show();
             sdr_EQ_bandPass.show();
             sdr_EQ_highPass.show();
@@ -1934,7 +1922,6 @@ void changeState(int8_t state, int8_t subState) {
             break;
 
         case BLUETOOTH: {
-            dispHeader.enable(); dispFooter.enable();
             btn_BT_volUp.show(); btn_BT_volDown.show(); btn_BT_pause.show(); btn_BT_mode.show();
             btn_BT_radio.show(); btn_BT_power.show();
             pic_BT_mode.show();
@@ -1949,11 +1936,9 @@ void changeState(int8_t state, int8_t subState) {
             break;
         }
         case IR_SETTINGS:
-            dispHeader.enable(); dispFooter.enable();
             btn_IR_radio.show();
             break;
         case RINGING:
-            dispHeader.enable(); dispFooter.enable();
             if (s_volume.ringVolume > 0) { // alarm with bell
                 pic_RI_logo.enable();
                 showFileLogo(RINGING, subState);
@@ -1970,7 +1955,6 @@ void changeState(int8_t state, int8_t subState) {
             break;
 
         case WIFI_SETTINGS:
-            dispHeader.enable(); dispFooter.enable();
             cls_wifiSettings.clearText();
             cls_wifiSettings.setFontSize(displayConfig.listFontSize);
             {
@@ -2085,7 +2069,7 @@ void loop() {
                 if (f_tc) {
                     f_tc = false;
                     dispFooter.updateTC(0);
-                    volBox.hide();
+                    if(volBox.isEnabled()) volBox.hide();
                     if (s_f_sleeping) return; // tc is active by pressing a button, but do nothing if "off"
 
                     if (s_state == RADIO) {
