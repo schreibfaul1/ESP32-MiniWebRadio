@@ -2111,6 +2111,7 @@ void loop() {
                 if (f_tc) {
                     f_tc = false;
                     dispFooter.updateTC(0);
+                    volBox.hide();
                     if (s_f_sleeping) return; // tc is active by pressing a button, but do nothing if "off"
 
                     if (s_state == RADIO) {
@@ -2779,7 +2780,6 @@ void ir_res(uint32_t res) {
 void ir_number(uint16_t num) {
     if (s_state != RADIO) return;
     if (s_f_sleeping) return;
-    txt_RA_staName.hide();
     nbr_RA_staBox.enable();
     nbr_RA_staBox.setNumbers(num);
     nbr_RA_staBox.show(TFT_ORANGE);

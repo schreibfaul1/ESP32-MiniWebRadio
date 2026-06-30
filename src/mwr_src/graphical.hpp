@@ -1691,7 +1691,6 @@ class wifiSettings : public RegisterTable {
         m_sel_ssid->setBGcolor(m_bgColor);
         m_sel_ssid->setBorderColor(m_borderColor);
         m_sel_ssid->setFontSize(0); // auto size
-
     }
     ~wifiSettings() {
         m_credentials.clear();
@@ -1999,8 +1998,6 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     ps_ptr<char> m_time = "00:00:00";
     bool         m_enabled = false;
     bool         m_focus = false;
-    bool         m_backgroundTransparency = false;
-    bool         m_saveBackground = false;
     bool         m_clicked = false;
     releasedArg  m_ra;
     textbox*     txt_time = new textbox[8]{textbox("txt_timeH10"), textbox("txt_timeH01"), textbox("txt_timeC1"),  textbox("txt_timeM10"),
@@ -2078,11 +2075,6 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
         if (m_bgColor != TFT_TRANSPARENT) { getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor); }
         for (uint8_t i = 0; i < 8; i++) { txt_time[i].show(); }
         updateTime(m_time, true);
-    }
-
-    void setTransparency(bool backgroundTransparency, bool saveBackground) {
-        m_backgroundTransparency = backgroundTransparency;
-        m_saveBackground = saveBackground;
     }
 
     void hide() {
@@ -2476,12 +2468,10 @@ class numbersBox : public RegisterTable { // range 000...999
     int16_t      m_box_y = 0;
     int16_t      m_box_w = 0;
     int16_t      m_box_h = 0;
-    uint32_t     m_bgColor = TFT_BLACK;
+    int32_t      m_bgColor = TFT_BLACK;
     bool         m_enabled = false;
     bool         m_focus = false;
     bool         m_clicked = false;
-    bool         m_backgroundTransparency = false; // unused yet
-    bool         m_saveBackground = false;         // unused yet
     releasedArg  m_ra;
     ps_ptr<char> m_name;
     ps_ptr<char> m_color = "blue";
@@ -2518,6 +2508,8 @@ class numbersBox : public RegisterTable { // range 000...999
     }
 
     bool show(uint16_t color) {
+        m_clicked = false;
+        if(m_enabled == false) getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
         if (color == TFT_BLUE)
             m_color = "blue";
         else if (color == TFT_ORANGE)
@@ -2537,13 +2529,9 @@ class numbersBox : public RegisterTable { // range 000...999
         return true;
     }
 
-    void setTransparency(bool backgroundTransparency, bool saveBackground) {
-        m_backgroundTransparency = backgroundTransparency;
-        m_saveBackground = saveBackground;
-    }
-
     void hide() {
-        getTFT().fillRect(m_x + m_box_x, m_y + m_box_y, m_box_w, m_box_h, m_bgColor);
+        if(m_enabled == false) return;
+        getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
         m_enabled = false;
     }
 
@@ -5432,11 +5420,11 @@ class vuMeter : public RegisterTable {
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class displayHeader : public RegisterTable {
   private:
-    textbox*     txt_Item = new textbox("header_Item");          // Radio, Player, Clock....
-    pictureBox*  pic_Speaker = new pictureBox("header_Speaker"); // loudspeaker symbol
-    textbox*     txt_Volume = new textbox("header_Volume");      // volume
-    pictureBox*  pic_RSSID = new pictureBox("header_RSSID");     // RSSID symbol
-    timeString*  m_timeStringObject;
+    textbox*     txt_Item = new textbox("header_Item");              // Radio, Player, Clock....
+    pictureBox*  pic_Speaker = new pictureBox("header_Speaker");     // loudspeaker symbol
+    textbox*     txt_Volume = new textbox("header_Volume");          // volume
+    pictureBox*  pic_RSSID = new pictureBox("header_RSSID");         // RSSID symbol
+    timeString*  timeStringObject = new timeString("timeString", 0); // 10:34:09
     int16_t      m_x = 0;
     int16_t      m_y = 0;
     int16_t      m_w = 0;
@@ -5640,14 +5628,14 @@ class displayHeader : public RegisterTable {
         m_name = name;
         m_bgColor = TFT_TRANSPARENT;
         m_fontSize = fontSize;
-        m_timeStringObject = new timeString("timeString", m_fontSize);
+        timeStringObject->setFontSize(m_fontSize);
     }
     ~displayHeader() {
         delete txt_Item;
         delete pic_Speaker;
         delete txt_Volume;
         delete pic_RSSID;
-        delete m_timeStringObject;
+        delete timeStringObject;
     }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
         m_x = x; // x pos
@@ -5658,7 +5646,7 @@ class displayHeader : public RegisterTable {
         pic_Speaker->begin(s_Speaker.x, m_y, s_Speaker.w, m_h, s_Speaker.pl, s_Speaker.pr, s_Speaker.pt, s_Speaker.pb);
         txt_Volume->begin(s_Volume.x, m_y, s_Volume.w, m_h, s_Volume.pl, s_Volume.pr, s_Volume.pt, s_Volume.pb);
         pic_RSSID->begin(s_RSSID.x, m_y, s_RSSID.w, m_h, s_RSSID.pl, s_RSSID.pr, s_RSSID.pt, s_RSSID.pb);
-        m_timeStringObject->begin(s_time.x, m_y, s_time.w, m_h, s_time.pl, s_time.pr, s_time.pt, s_time.pb);
+        timeStringObject->begin(s_time.x, m_y, s_time.w, m_h, s_time.pl, s_time.pr, s_time.pt, s_time.pb);
 
         txt_Item->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
         txt_Item->setTextColor(m_itemColor);
@@ -5701,7 +5689,7 @@ class displayHeader : public RegisterTable {
         pic_Speaker->show();
         txt_Volume->show();
         pic_RSSID->show();
-        m_timeStringObject->show();
+        timeStringObject->show();
         m_enabled = true;
         m_clicked = false;
         m_old_rssi = -1;
@@ -5715,7 +5703,7 @@ class displayHeader : public RegisterTable {
     void setTransparency(bool backgroundTransparency, bool saveBackground) {
         m_backgroundTransparency = backgroundTransparency;
         m_saveBackground = saveBackground;
-        m_timeStringObject->setTransparency(m_backgroundTransparency, m_saveBackground);
+        timeStringObject->setBGcolor(m_bgColor);
         txt_Item->setBGcolor(m_bgColor);
         pic_Speaker->setTransparency(m_backgroundTransparency, m_saveBackground);
         txt_Volume->setBGcolor(m_bgColor);
@@ -5728,7 +5716,7 @@ class displayHeader : public RegisterTable {
         pic_Speaker->hide();
         txt_Volume->hide();
         pic_RSSID->hide();
-        m_timeStringObject->hide();
+        timeStringObject->hide();
         if (m_bgColor == TFT_TRANSPARENT) {
             getTFT().copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
         } else {
@@ -5741,7 +5729,7 @@ class displayHeader : public RegisterTable {
         pic_Speaker->enable();
         txt_Volume->enable();
         pic_RSSID->enable();
-        m_timeStringObject->enable();
+        timeStringObject->enable();
     }
     void disable() {
         m_enabled = false;
@@ -5749,11 +5737,11 @@ class displayHeader : public RegisterTable {
         pic_Speaker->disable();
         txt_Volume->disable();
         pic_RSSID->disable();
-        m_timeStringObject->disable();
+        timeStringObject->disable();
     }
     void setBGcolor(int32_t color) {
         m_bgColor = color;
-        m_timeStringObject->setBGcolor(color);
+        timeStringObject->setBGcolor(color);
     }
     void updateItem(ps_ptr<char> hl_item) { // radio, clock, audioplayer...
         if (!m_enabled) return;
@@ -5809,11 +5797,11 @@ class displayHeader : public RegisterTable {
     void updateTime(ps_ptr<char> hl_time, bool complete = true) {
         if (!m_enabled) return;
         m_time = hl_time; // hhmmss
-        m_timeStringObject->updateTime(m_time, false);
+        timeStringObject->updateTime(m_time, false);
     }
     void setTimeColor(int32_t timeColor) {
         m_timeColor = timeColor;
-        m_timeStringObject->setTextColor(m_timeColor);
+        timeStringObject->setTextColor(m_timeColor);
         updateTime(m_time, true);
     }
     bool positionXY(uint16_t x, uint16_t y) {
