@@ -2585,8 +2585,6 @@ class offTimerBox : public RegisterTable { // range 000...999
     bool         m_enabled = false;
     bool         m_focus = false;
     bool         m_clicked = false;
-    bool         m_backgroundTransparency = false; // unused yet
-    bool         m_saveBackground = false;         // unused yet
     releasedArg  m_ra;
     ps_ptr<char> m_name;
     ps_ptr<char> m_path;
@@ -2641,11 +2639,6 @@ class offTimerBox : public RegisterTable { // range 000...999
         drawImage(m_path.c_get(), m_x + m_digitsXpos[3], m_y + m_box_y);
         m_enabled = true;
         return true;
-    }
-
-    void setTransparency(bool backgroundTransparency, bool saveBackground) {
-        m_backgroundTransparency = backgroundTransparency;
-        m_saveBackground = saveBackground;
     }
 
     void hide() {
@@ -5825,8 +5818,6 @@ class displayFooter : public RegisterTable {
     bool         m_enabled = false;
     bool         m_focus = false;
     bool         m_clicked = false;
-    bool         m_backgroundTransparency = false;
-    bool         m_saveBackground = false;
     releasedArg  m_ra;
     const char   m_Antenna_red[27] = "/common/Antenna_red.png";
     const char   m_Antenna_green[27] = "/common/Antenna_green.png";
@@ -6186,24 +6177,15 @@ class displayFooter : public RegisterTable {
         m_enabled = true;
         m_clicked = false;
         pic_Antenna->show();
+    //    txt_StaNr->show();
+    //    pic_Flag->show();
+    //    txt_OffTimer->show();
+    //    txt_BitRate->show();
         txt_IpAddr->show();
-        updateStation(m_staNr);
+    //    txt_FileNr->show();
+    //    updateStation(m_staNr);
         updateOffTime(m_offTime);
-        updateBitRate(m_bitRate);
-    }
-
-    void setTransparency(bool backgroundTransparency, bool saveBackground) {
-        m_backgroundTransparency = backgroundTransparency;
-        m_saveBackground = saveBackground;
-        pic_Antenna->setTransparency(m_backgroundTransparency, false);
-        txt_StaNr->setBGcolor(m_bgColor);
-        txt_FileNr->setBGcolor(m_bgColor);
-        pic_Flag->setTransparency(m_backgroundTransparency, false);
-        txt_OffTimer->setBGcolor(m_bgColor);
-        pic_Hourglass->setTransparency(m_backgroundTransparency, false);
-        txt_BitRate->setBGcolor(m_bgColor);
-        txt_OffTimer->setBGcolor(m_bgColor);
-        txt_IpAddr->setBGcolor(m_bgColor);
+    //    updateBitRate(m_bitRate);
     }
 
     void hide() {
@@ -6226,7 +6208,18 @@ class displayFooter : public RegisterTable {
 
     void enable() { m_enabled = true; }
     void disable() { m_enabled = false; }
-    void setBGcolor(int32_t color) { m_bgColor = color; }
+    void setBGcolor(int32_t color) {
+        m_bgColor = color;
+//        pic_Antenna->setBGcolor(m_bgColor);
+        txt_StaNr->setBGcolor(m_bgColor);
+        txt_FileNr->setBGcolor(m_bgColor);
+//        pic_Flag->setBGcolor(m_bgColor);
+        txt_OffTimer->setBGcolor(m_bgColor);
+//        pic_Hourglass->setBGcolor(m_bgColor);
+        txt_BitRate->setBGcolor(m_bgColor);
+        txt_OffTimer->setBGcolor(m_bgColor);
+        txt_IpAddr->setBGcolor(m_bgColor);
+    }
 
     void updateAntenna(bool WiFi_lost) {
         if (WiFi_lost && !m_WiFi_lost) {
@@ -6257,6 +6250,7 @@ class displayFooter : public RegisterTable {
         txt_FileNr->show();
     }
     void setStationNrColor(uint16_t stationColor) { m_stationColor = stationColor; }
+
     void updateFlag(ps_ptr<char> flag) {
         if (flag.strlen() > 0) {
             pic_Flag->hide(); // Don't draw over it, the new flag could be smaller
@@ -6296,7 +6290,7 @@ class displayFooter : public RegisterTable {
             uint16_t x1x2 = round(s_BitRate.x + ((float)((s_BitRate.w) / 10) * timeCounter)) - 1;
             uint16_t y0y1 = m_y + m_h - 5;
             uint16_t y2 = round((m_y + m_h - 5) - ((float)(m_h - 6) / 10) * timeCounter);
-            if (m_backgroundTransparency) {
+            if (m_bgColor == TFT_TRANSPARENT) {
                 getTFT().copyFramebuffer(1, 0, s_BitRate.x, m_y, s_BitRate.w, m_h);
             } else {
                 getTFT().fillRect(s_BitRate.x, m_y, s_BitRate.w, m_h, m_bgColor);
