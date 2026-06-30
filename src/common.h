@@ -775,7 +775,13 @@ inline void setupBacklight(int pin, uint32_t freq_hz) {
     ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1);
 }
 
-inline void setTFTbrightness(uint8_t duty) {
+inline void setTFTbrightness(uint8_t brightness, uint8_t bh1750Value) {
+
+    uint8_t duty = std::min(brightness, bh1750Value);
+    if(BRIGHTNESS_INVERSION) {
+        duty = 255 - duty;
+    }
+
     if (TFT_BL >= 0) {
         ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1, duty);
         ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1);

@@ -110,14 +110,14 @@ int16_t  s_dlnaMaxItems = -1;
 int16_t  s_dlnaMaXServers = -1;
 int16_t  s_alarmtime[7] = {0};  // in minutes (23:59 = 23 *60 + 59) [0] Sun, [1] Mon
 int16_t  s_cur_AudioFileNr = 0; // this is the position of the file within the (alpha ordered) folder starting with 0
-int16_t  s_brightness = UINT8_MAX;
+uint8_t  s_brightness = UINT8_MAX;
+uint8_t  s_bh1750Value = UINT8_MAX;
 uint16_t s_staListNr = 0;
 uint16_t s_fileListNr = 0;
 uint16_t s_cur_station = 0; // current station(nr), will be set later
 uint16_t s_sleeptime = 0;   // time in min until MiniWebRadio goes to sleep
 uint16_t s_plsCurPos = 0;
 uint16_t s_dlnaItemNr = 0;
-uint16_t s_bh1750Value = 50;
 uint16_t s_h_resolution = 320;
 uint16_t s_v_resolution = 240;
 uint32_t s_icyBitRate = 0;     // from http response header via event
@@ -1061,7 +1061,7 @@ void setup() {
     if (TFT_BL >= 0) {
         s_f_brightnessIsChangeable = true;
         setupBacklight(TFT_BL, 512);
-        setTFTbrightness(5);
+        setTFTbrightness(5, s_bh1750Value);
     }
     if (IR_PIN >= 0) {
         pinMode(IR_PIN, INPUT_PULLUP); // if ir_pin is read only, have a external resistor (~10...40KOhm)
@@ -1078,7 +1078,7 @@ void setup() {
     updateSettings();
 
     if (s_volume.volumeSteps < 21) s_volume.volumeSteps = 21;
-    setTFTbrightness(s_brightness);
+    setTFTbrightness(s_brightness, s_bh1750Value);
 
     s_f_isWiFiConnected = connectToWiFi();
 
@@ -1162,7 +1162,7 @@ void setup() {
         s_f_dlnaSeekServer = true;
     } else {
         s_state = UNDEFINED;
-        setTFTbrightness(80); // duty 80%
+        setTFTbrightness(80, s_bh1750Value); // duty 80%
         changeState(WIFI_SETTINGS, 0);
         return;
     }
@@ -1580,7 +1580,7 @@ void wake_up() {
     printfln(s_tag.action, "awake");
     clearAll(TFT_TRANSPARENT);
     clk_CL_24.hide();
-    setTFTbrightness(s_brightness);
+    setTFTbrightness(s_brightness, s_bh1750Value);
     dispHeader.setBGcolor(TFT_TRANSPARENT);
     dispFooter.setBGcolor(TFT_TRANSPARENT);
     dispHeader.show();
@@ -1980,7 +1980,7 @@ void changeState(int8_t state, int8_t subState) {
             if (s_volume.ringVolume > 0) { // alarm with bell
                 pic_RI_logo.enable();
                 showFileLogo(RINGING, subState);
-                setTFTbrightness(s_brightness);
+                setTFTbrightness(s_brightness, s_bh1750Value);
                 printfln(s_tag.action, ANSI_ESC_MAGENTA "Alarm");
                 setVolume(s_volume.ringVolume);
                 audio.setVolume(s_volume.ringVolume);
@@ -2014,7 +2014,7 @@ void changeState(int8_t state, int8_t subState) {
             dispHeader.hide();
             dispFooter.hide();
             if (subState == 0) {
-                setTFTbrightness(0);
+                setTFTbrightness(0, s_bh1750Value);
                 clearWithOutHeaderFooter(TFT_BLACK);
             }
             if (subState == 1) {
@@ -2736,14 +2736,9 @@ void my_audio_info(Audio::msg_t m) {
 // ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void on_BH1750(int32_t ambVal) { //--AMBIENT LIGHT SENSOR BH1750--
     int16_t bh1750Value = 0;
-    bh1750Value = map_l(ambVal, 0, 1600, displayConfig.brightnessMin, displayConfig.brightnessMax);
+    s_bh1750Value = map_l(ambVal, 0, 1600, displayConfig.brightnessMin, displayConfig.brightnessMax);
     MWR_LOG_DEBUG("ambVal {}, bh1750Value {}, s_brightness {}", ambVal, bh1750Value, s_brightness);
-    int16_t brightness = s_brightness;
-    if(BRIGHTNESS_INVERSION) {
-        brightness = 255 - s_brightness;
-        bh1750Value = 255 - bh1750Value;
-    }
-    setTFTbrightness(max(bh1750Value, brightness));
+    setTFTbrightness(s_brightness, s_bh1750Value);
 }
 // ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void ftp_debug(const char* info) {
@@ -3941,7 +3936,7 @@ void graphicObjects_OnChange(ps_ptr<char> name, int32_t val) {
     if (name.equals("sdr_PL_volume"))   { setVolume(val); goto exit; }
     if (name.equals("sdr_DL_volume"))   { setVolume(val); goto exit; }
     if (name.equals("sdr_CL_volume"))   { setVolume(val); goto exit; }
-    if (name.equals("sdr_BR_value"))    { s_brightness = val; setTFTbrightness(val); txt_BR_value.writeText(int2str(val)); goto exit; }
+    if (name.equals("sdr_BR_value"))    { s_brightness = val; setTFTbrightness(s_brightness, s_bh1750Value); txt_BR_value.writeText(int2str(val)); goto exit; }
     if (name.equals("sdr_EQ_LP"))       { c.assignf("{} dB", val); s_tone.LP  = val; webSrv.send("settone=", getI2STone().c_get()); setI2STone(); txt_EQ_lowPass.writeText(c.c_get());  goto exit; }
     if (name.equals("sdr_EQ_BP"))       { c.assignf("{} dB", val); s_tone.BP  = val; webSrv.send("settone=", getI2STone().c_get()); setI2STone(); txt_EQ_bandPass.writeText(c.c_get()); goto exit; }
     if (name.equals("sdr_EQ_HP"))       { c.assignf("{} dB", val); s_tone.HP  = val; webSrv.send("settone=", getI2STone().c_get()); setI2STone(); txt_EQ_highPass.writeText(c.c_get()); goto exit; }
