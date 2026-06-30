@@ -182,8 +182,8 @@ class slider : public RegisterTable {
     uint16_t     m_leftStop = 0;
     uint16_t     m_rightStop = 0;
     int32_t      m_bgColor = 0;
-    uint32_t     m_railColor = 0;
-    uint32_t     m_spotColor = 0;
+    int32_t      m_railColor = 0;
+    int32_t      m_spotColor = 0;
     bool         m_enabled = false;
     bool         m_clicked = false;
     bool         m_show = false;
@@ -371,16 +371,14 @@ class progressbar : public RegisterTable {
     uint16_t     m_padding_bottom = 0;
     uint16_t     m_railHight = 0;
     uint16_t     m_rail_y_pos = 0;
-    uint32_t     m_bgColor = 0;
-    uint32_t     m_frameColor = 0;
-    uint32_t     m_railColorLeft = 0;
+    int32_t      m_bgColor = 0;
+    int32_t      m_frameColor = 0;
+    int32_t      m_railColorLeft = 0;
     uint32_t     m_railColorRight = 0;
     bool         m_enabled = false;
     bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_objectInit = false;
-    bool         m_backgroundTransparency = true;
-    bool         m_saveBackground = false;
     ps_ptr<char> m_name;
     releasedArg  m_ra;
 
@@ -426,6 +424,14 @@ class progressbar : public RegisterTable {
         // writeText(m_text);
     }
 
+    void setBGcolor(int32_t color) {
+        if (m_bgColor == color) return;
+        m_bgColor = color;
+        if(!m_enabled) return;
+        getTFT().drawRect(m_x + m_padding_left, m_rail_y_pos, m_w - m_padding_left - m_padding_right, m_railHight, m_frameColor); // draw border
+        drawNewValue();
+    }
+
     void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
         x = m_x;
         y = m_y;
@@ -459,12 +465,8 @@ class progressbar : public RegisterTable {
         m_maxVal = maxVal;
     }
     void show() {
-        if (m_backgroundTransparency) {
-            if (m_saveBackground)
-                getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
-            else
-                getTFT().copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
-        } else {
+        getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+        if (m_bgColor != TFT_TRANSPARENT) {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         }
         getTFT().drawRect(m_x + m_padding_left, m_rail_y_pos, m_w - m_padding_left - m_padding_right, m_railHight, m_frameColor); // draw border
@@ -472,23 +474,10 @@ class progressbar : public RegisterTable {
         m_enabled = true;
     }
 
-    void setTransparency(bool backgroundTransparency, bool saveBackground) {
-        m_backgroundTransparency = backgroundTransparency;
-        m_saveBackground = saveBackground;
-    }
-
     void disable() { m_enabled = false; }
     void enable() { m_enabled = true; }
     void hide() {
-        if (m_backgroundTransparency) {
-            if (m_saveBackground) {
-                getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
-            } else {
-                getTFT().copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
-            }
-        } else {
-            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        }
+        getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
         m_enabled = false;
     }
     bool released() {

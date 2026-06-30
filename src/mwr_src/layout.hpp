@@ -634,7 +634,6 @@ void placingGraphicObjects() { // and initialize them
     txt_PL_fName.setFont(0); // 0 -> auto
     pic_PL_logo.setTransparency(true, false);
     pic_PL_logo.begin(layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h, layout.winLogo.pl, layout.winLogo.pr, layout.winLogo.pt, layout.winLogo.pb);
-    pgb_PL_progress.setTransparency(true, false);
     pgb_PL_progress.begin(layout.winProgbar.x, layout.winProgbar.y, layout.winProgbar.w, layout.winProgbar.h, layout.winProgbar.pl, layout.winProgbar.pr, layout.winProgbar.pt, layout.winProgbar.pb, 0,
                           30);
     pgb_PL_progress.setValue(0);
@@ -659,7 +658,6 @@ void placingGraphicObjects() { // and initialize them
     txt_DL_fName.setFont(0); // 0 -> auto)
     pic_DL_logo.setTransparency(true, false);
     pic_DL_logo.begin(layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h, layout.winLogo.pl, layout.winLogo.pr, layout.winLogo.pt, layout.winLogo.pb);
-    pgb_DL_progress.setTransparency(true, false);
     pgb_DL_progress.begin(layout.winProgbar.x, layout.winProgbar.y, layout.winProgbar.w, layout.winProgbar.h, layout.winProgbar.pl, layout.winProgbar.pr, layout.winProgbar.pt, layout.winProgbar.pb, 0,
                           30);
     pgb_DL_progress.setValue(0);
