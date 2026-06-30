@@ -1322,7 +1322,7 @@ bool init_SD_card() {
 #endif
     if (!s_f_sd_card_found) {
         clearAll(TFT_BLACK);
-        getTFT().setFont(displayConfig.fonts[6]);
+        getTFT().setFontSize(displayConfig.fonts[6]);
         getTFT().setTextColor(TFT_YELLOW);
         getTFT().writeText("SD Card Mount Failed", 0, 50, displayConfig.dispWidth, displayConfig.dispHeight, TFT_ALIGN_CENTER, TFT_ALIGN_TOP, false, false);
         printfln(s_tag.sd_card, ANSI_ESC_RED "SD Card Mount Failed");
@@ -1996,7 +1996,6 @@ void changeState(int8_t state, int8_t subState) {
             dispHeader.enable(); dispFooter.enable();
             clearWithOutHeaderFooter(TFT_BLACK);
             cls_wifiSettings.clearText();
-            cls_wifiSettings.setBorderWidth(1);
             cls_wifiSettings.setFontSize(displayConfig.listFontSize);
             {
                 int16_t n = WiFi.scanNetworks();

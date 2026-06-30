@@ -2130,7 +2130,7 @@ uint8_t TFT_Base::JPEG_jd_decomp(JDEC* jd, uint8_t scale) {
     return rc;
 }
 
-void TFT_Base::setFont(uint16_t font) {
+void TFT_Base::setFontSize(uint16_t font) {
     #define SET_FONT_DATA(CMAP, BITMAP, DSC)    \
         do {                                    \
             m_current_font.cmaps = CMAP;        \
@@ -3061,7 +3061,7 @@ uint8_t TFT_Base::fitInAddrWindow(uint16_t* cpArr, uint16_t chLength, int16_t wi
     while (true) {
         currentFontSize = fontSizes[nrOfFonts - 1];
         if (currentFontSize == 0) break;
-        setFont(currentFontSize);
+        setFontSize(currentFontSize);
         drawableCharsTotal = 0;
         startPos = 0;
         nrOfLines = 1;

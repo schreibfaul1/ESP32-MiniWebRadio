@@ -610,11 +610,11 @@ class textbox : public RegisterTable {
 
     void disable() { m_enabled = false; }
     void enable() { m_enabled = true; }
-    void setFont(uint8_t size) { // size 0 -> auto, choose besr font size
+    void setFontSize(uint8_t size) { // size 0 -> auto, choose besr font size
         m_fontSize = 0;
         if (size != 0) {
             m_fontSize = size;
-            getTFT().setFont(m_fontSize);
+            getTFT().setFontSize(m_fontSize);
         } else {
             m_autoSize = true;
         }
@@ -661,7 +661,7 @@ class textbox : public RegisterTable {
             } else {
                 getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
             }
-            if (m_fontSize != 0) { getTFT().setFont(m_fontSize); }
+            if (m_fontSize != 0) { getTFT().setFontSize(m_fontSize); }
             getTFT().setTextColor(m_textColor);
             int x = m_x + m_padding_left;
             int y = m_y + m_paddig_top;
@@ -770,11 +770,11 @@ class inputbox : public RegisterTable {
     }
     void disable() { m_enabled = false; }
     void enable() { m_enabled = true; }
-    void setFont(uint8_t size) { // size 0 -> auto, choose besr font size
+    void setFontSize(uint8_t size) { // size 0 -> auto, choose besr font size
         m_fontSize = 0;
         if (size != 0) {
             m_fontSize = size;
-            getTFT().setFont(m_fontSize);
+            getTFT().setFontSize(m_fontSize);
         } else {
             m_autoSize = true;
         }
@@ -828,7 +828,7 @@ class inputbox : public RegisterTable {
             } else {
                 getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
             }
-            if (m_fontSize != 0) { getTFT().setFont(m_fontSize); }
+            if (m_fontSize != 0) { getTFT().setFontSize(m_fontSize); }
             int x = m_x + m_padding_left;
             int y = m_y + m_paddig_top;
             int w = m_w - (m_paddig_right + m_padding_left);
@@ -1004,11 +1004,11 @@ class textbutton : public RegisterTable {
     }
     void disable() { m_enabled = false; }
     void enable() { m_enabled = true; }
-    void setFont(uint8_t size) { // size 0 -> auto, choose besr font size
+    void setFontSize(uint8_t size) { // size 0 -> auto, choose besr font size
         m_fontSize = 0;
         if (size != 0) {
             m_fontSize = size;
-            getTFT().setFont(m_fontSize);
+            getTFT().setFontSize(m_fontSize);
         } else {
             m_autoSize = true;
         }
@@ -1076,7 +1076,7 @@ class textbutton : public RegisterTable {
             } else {
                 getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
             }
-            if (m_fontSize != 0) { getTFT().setFont(m_fontSize); }
+            if (m_fontSize != 0) { getTFT().setFontSize(m_fontSize); }
             int x = m_x + m_padding_left;
             int y = m_y + m_paddig_top;
             int w = m_w - (m_paddig_right + m_padding_left);
@@ -1249,14 +1249,14 @@ class selectbox : public RegisterTable {
         m_fontSize = 0;
         if (size != 0) {
             m_fontSize = size;
-            getTFT().setFont(m_fontSize);
+            getTFT().setFontSize(m_fontSize);
         } else {
             m_autoSize = true;
         }
-        m_txt_select->setFont(m_fontSize);
-        m_txt_btn_down->setFont(m_fontSize);
-        m_txt_btn_up->setFont(m_fontSize);
-        m_txt_btn_idx->setFont(m_fontSize);
+        m_txt_select->setFontSize(m_fontSize);
+        m_txt_btn_down->setFontSize(m_fontSize);
+        m_txt_btn_up->setFontSize(m_fontSize);
+        m_txt_btn_idx->setFontSize(m_fontSize);
     }
     void setTextColor(uint32_t color) {
         m_fgColor = color;
@@ -1440,7 +1440,7 @@ class keyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
             txt_btn_array[i].setBorderColor(m_color1[i]);
             txt_btn_array[i].setClickColor(m_clickColor);
             txt_btn_array[i].setBorderWidth(1);
-            txt_btn_array[i].setFont(m_fontSize);
+            txt_btn_array[i].setFontSize(m_fontSize);
             txt_btn_array[i].setText(m_alpha1[i]);
             txt_btn_array[i].setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
             posX += m_row1[i] * btnW + margin;
@@ -1454,7 +1454,7 @@ class keyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
             txt_btn_array[i + 12].setBorderColor(m_color2[i]);
             txt_btn_array[i + 12].setClickColor(m_clickColor);
             txt_btn_array[i + 12].setBorderWidth(1);
-            txt_btn_array[i + 12].setFont(m_fontSize);
+            txt_btn_array[i + 12].setFontSize(m_fontSize);
             txt_btn_array[i + 12].setText(m_alpha2[i]);
             txt_btn_array[i + 12].setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
             posX += m_row2[i] * btnW + margin;
@@ -1468,7 +1468,7 @@ class keyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
             txt_btn_array[i + 23].setBorderColor(m_color3[i]);
             txt_btn_array[i + 23].setClickColor(m_clickColor);
             txt_btn_array[i + 23].setBorderWidth(1);
-            txt_btn_array[i + 23].setFont(m_fontSize);
+            txt_btn_array[i + 23].setFontSize(m_fontSize);
             txt_btn_array[i + 23].setText(m_alpha3[i]);
             txt_btn_array[i + 23].setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
             posX += m_row3[i] * btnW + margin;
@@ -1618,10 +1618,9 @@ class wifiSettings : public RegisterTable {
     uint8_t      m_padding_top = 0;    // top margin
     uint8_t      m_padding_bottom = 0; // bottom margin
     uint8_t      m_credentials_idx = 0;
-    uint8_t      m_borderWidth = 0;
-    uint32_t     m_bgColor = 0;
-    uint32_t     m_fgColor = 0;
-    uint32_t     m_borderColor = TFT_BLACK;
+    int32_t      m_bgColor = 0;
+    int32_t      m_fgColor = 0;
+    int32_t      m_borderColor = 0;
     ps_ptr<char> m_name;
     bool         m_enabled = false;
     bool         m_focus = false;
@@ -1687,8 +1686,12 @@ class wifiSettings : public RegisterTable {
         m_in_password->setTextColor(m_fgColor);
         m_in_password->setBGcolor(m_bgColor);
         m_in_password->setBorderColor(m_borderColor);
-        m_in_password->setBorderWidth(m_borderWidth);
-        m_in_password->setFont(0); // auto size
+        m_in_password->setFontSize(0); // auto size
+        m_sel_ssid->setTextColor(m_fgColor);
+        m_sel_ssid->setBGcolor(m_bgColor);
+        m_sel_ssid->setBorderColor(m_borderColor);
+        m_sel_ssid->setFontSize(0); // auto size
+
     }
     ~wifiSettings() {
         m_credentials.clear();
@@ -1876,12 +1879,12 @@ class wifiSettings : public RegisterTable {
         m_fontSize = 0;
         if (size != 0) {
             m_fontSize = size;
-            getTFT().setFont(m_fontSize);
+            getTFT().setFontSize(m_fontSize);
         } else {
             m_autoSize = true;
         }
         m_sel_ssid->setFontSize(m_fontSize);
-        m_in_password->setFont(m_fontSize);
+        m_in_password->setFontSize(m_fontSize);
         //    m_keyboard->setFontSize(m_fontSize);
     }
     void setTextColor(uint32_t color) {
@@ -1901,13 +1904,7 @@ class wifiSettings : public RegisterTable {
         m_sel_ssid->setBorderColor(m_borderColor);
         m_in_password->setBorderColor(m_borderColor);
     }
-    void setBorderWidth(uint8_t width) { // 0 = no border
-        m_borderWidth = width;
-        if (m_borderWidth > 2) m_borderWidth = 2;
-        m_sel_ssid->setBorderWidth(m_borderWidth);
-        m_in_password->setBorderWidth(m_borderWidth);
-        //    m_keyboard->setBorderWidth(m_borderWidth);
-    }
+
     bool positionXY(uint16_t x, uint16_t y) {
         if (x < m_x) return false;
         if (y < m_y) return false;
@@ -2039,7 +2036,7 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
             txt_time[i].begin(xPos[i], m_y + pt, width[i], h, 0, 0, 0, 0);
             txt_time[i].setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
             txt_time[i].setTextColor(m_fgColor);
-            txt_time[i].setFont(m_fontSize);
+            txt_time[i].setFontSize(m_fontSize);
             txt_time[i].setNarrow(true);
         }
     }
@@ -2095,9 +2092,9 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
         m_enabled = false;
     }
 
-    void setFont(uint8_t size) { // size 0 -> auto, choose besr font size
+    void setFontSize(uint8_t size) { // size 0 -> auto, choose besr font size
         m_fontSize = size;
-        for (uint8_t i = 0; i < 8; i++) { txt_time[i].setFont(m_fontSize); }
+        for (uint8_t i = 0; i < 8; i++) { txt_time[i].setFontSize(m_fontSize); }
     }
     void setTextColor(int32_t color) {
         m_fgColor = color;
@@ -2113,7 +2110,7 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
         if (!m_enabled) return;
         m_time = hl_time;               // hhmmss
         static char oldtime[8] = {255}; // hhmmss
-                                        //    getTFT().setFont(m_fontSize);
+                                        //    getTFT().setFontSize(m_fontSize);
                                         //    getTFT().setTextColor(m_fgColor);
         if (complete == true) {
             for (uint8_t i = 0; i < 8; i++) { oldtime[i] = 255; }
@@ -3464,12 +3461,12 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
             txt_alarm_days[i].begin(m_alarmdaysXPos[i], m_alarmdaysYPos, m_alarmdaysW, m_alarmdaysH, 0, 0, 0, 0);
             txt_alarm_days[i].setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
             txt_alarm_days[i].setBorderColor(TFT_LIGHTGREY);
-            txt_alarm_days[i].setFont(m_fontSize);
+            txt_alarm_days[i].setFontSize(m_fontSize);
             txt_alarm_days[i].setText(m_WD[i]);
             txt_alarm_time[i].begin(m_alarmdaysXPos[i], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, 0, 0, 0, 0);
             txt_alarm_time[i].setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
             txt_alarm_time[i].setBorderColor(TFT_LIGHTGREY);
-            txt_alarm_time[i].setFont(m_fontSize);
+            txt_alarm_time[i].setFontSize(m_fontSize);
         }
     }
     ps_ptr<char> getName() { return m_name; }
@@ -3904,7 +3901,7 @@ class uniList {
     }
     void drawLine(uint8_t pos, ps_ptr<char> txt, ps_ptr<char> ext1 = "", ps_ptr<char> ext2 = "", ps_ptr<char> color = ANSI_ESC_WHITE, int32_t nr = -1) {
         if (pos > 9) return;
-        getTFT().setFont(m_fontSize);
+        getTFT().setFontSize(m_fontSize);
         if (m_mode == RADIO) {
             m_buff.assignf(ANSI_ESC_YELLOW "{:03} {}{}", nr, color.c_get(), txt.c_get());
             if (txt != "") { m_txt[pos] = txt; }
@@ -3953,7 +3950,7 @@ class uniList {
     }
     void colourLine(uint8_t pos, ps_ptr<char> color = ANSI_ESC_WHITE) {
         if (pos > 9) return;
-        getTFT().setFont(m_fontSize);
+        getTFT().setFontSize(m_fontSize);
         if (m_mode == RADIO) { m_buff.assignf(ANSI_ESC_YELLOW "{:03} {}{}", m_nr[pos], color.c_get(), m_txt[pos].c_get()); }
         if (m_mode == PLAYER) {
             if (m_nr[pos])
@@ -4906,7 +4903,7 @@ class fileList : public RegisterTable {
         if (viewPos >= s_SD_content.getSize()) { viewPos = s_SD_content.getSize() - 1; } // viewPos too high
         //--------------------------------------------------------------------------------------------------------------------------------------------
 
-        getTFT().setFont(m_fontSize);
+        getTFT().setFontSize(m_fontSize);
         myList.setMode(PLAYER, m_tftSize, m_fontSize);
         myList.clearList();
         ps_ptr<char> color;
@@ -5665,10 +5662,10 @@ class displayHeader : public RegisterTable {
 
         txt_Item->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
         txt_Item->setTextColor(m_itemColor);
-        txt_Item->setFont(m_fontSize); // 0 -> auto
+        txt_Item->setFontSize(m_fontSize); // 0 -> auto
         pic_Speaker->setPicturePath(m_speakerSymbol[0]);
         txt_Volume->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
-        txt_Volume->setFont(m_fontSize); // 0 -> auto
+        txt_Volume->setFontSize(m_fontSize); // 0 -> auto
         pic_RSSID->setPicturePath(m_rssiSymbol[0]);
     }
     ps_ptr<char> getName() { return m_name; }
@@ -6179,23 +6176,23 @@ class displayFooter : public RegisterTable {
 
         txt_StaNr->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
         txt_StaNr->setTextColor(m_stationColor);
-        txt_StaNr->setFont(m_fontSize); // 0 -> auto
+        txt_StaNr->setFontSize(m_fontSize); // 0 -> auto
         txt_OffTimer->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
-        txt_OffTimer->setFont(m_fontSize); // 0 -> auto
+        txt_OffTimer->setFontSize(m_fontSize); // 0 -> auto
         txt_BitRate->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
         txt_BitRate->setTextColor(m_bitRateColor);
         txt_BitRate->setBorderColor(m_bitRateColor);
-        txt_BitRate->setFont(m_fontSize); // 0 -> auto
+        txt_BitRate->setFontSize(m_fontSize); // 0 -> auto
         txt_IpAddr->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
         txt_IpAddr->setNarrow(true);
         txt_IpAddr->setNoWrap(true);
         txt_IpAddr->setTextColor(m_ipAddrColor);
-        txt_IpAddr->setFont(m_fontSize); // 0 -> auto
+        txt_IpAddr->setFontSize(m_fontSize); // 0 -> auto
         pic_Antenna->setPicturePath(m_Antenna_red);
         txt_IpAddr->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
         txt_FileNr->setTextColor(TFT_ORANGE);
         txt_FileNr->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
-        txt_FileNr->setFont(m_fontSize); // 0 -> auto
+        txt_FileNr->setFontSize(m_fontSize); // 0 -> auto
     }
     ps_ptr<char> getName() { return m_name; }
     bool         isEnabled() { return m_enabled; }
@@ -6536,7 +6533,7 @@ class messageBox : public RegisterTable {
         m_narrow = narrow;
         m_noWrap = noWrap;
         txt_msgBox->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
-        txt_msgBox->setFont(0); // auto
+        txt_msgBox->setFontSize(0); // auto
         txt_msgBox->setText(m_text.c_get());
     }
 

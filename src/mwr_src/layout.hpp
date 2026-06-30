@@ -584,14 +584,14 @@ void placingGraphicObjects() { // and initialize them
     btn_RA_off.setPicturePath("/btn/Button_Off");
     txt_RA_sTitle.begin(layout.winSTitle.x, layout.winSTitle.y, layout.winSTitle.w, layout.winSTitle.h, layout.winSTitle.pl, layout.winSTitle.pr, layout.winSTitle.pt, layout.winSTitle.pb);
     txt_RA_sTitle.setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
-    txt_RA_sTitle.setFont(0); // 0 -> auto
+    txt_RA_sTitle.setFontSize(0); // 0 -> auto
     txt_RA_staName.begin(layout.winName.x, layout.winName.y, layout.winName.w, layout.winName.h, layout.winName.pl, layout.winName.pr, layout.winName.pt, layout.winName.pb);
     txt_RA_staName.setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_TOP);
-    txt_RA_staName.setFont(0); // 0 -> auto
+    txt_RA_staName.setFontSize(0); // 0 -> auto
     txt_RA_irNum.begin(layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, layout.winWoHF.pl, layout.winWoHF.pr, layout.winWoHF.pt, layout.winWoHF.pb);
     txt_RA_irNum.setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
     txt_RA_irNum.setTextColor(TFT_GOLD);
-    txt_RA_irNum.setFont(displayConfig.bigNumbersFontSize);
+    txt_RA_irNum.setFontSize(displayConfig.bigNumbersFontSize);
     pic_RA_logo.setTransparency(true, false);
     pic_RA_logo.begin(layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h, layout.winLogo.pl, layout.winLogo.pr, layout.winLogo.pt, layout.winLogo.pb);
     VUmeter_RA.setTransparency(true, false);
@@ -631,7 +631,7 @@ void placingGraphicObjects() { // and initialize them
     btn_PL_playNext.setPicturePath("/btn/Button_Next");
     txt_PL_fName.begin(layout.winName.x, layout.winName.y, layout.winName.w, layout.winName.h, layout.winName.pl, layout.winName.pr, layout.winName.pt, layout.winName.pb);
     txt_PL_fName.setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
-    txt_PL_fName.setFont(0); // 0 -> auto
+    txt_PL_fName.setFontSize(0); // 0 -> auto
     pic_PL_logo.setTransparency(true, false);
     pic_PL_logo.begin(layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h, layout.winLogo.pl, layout.winLogo.pr, layout.winLogo.pt, layout.winLogo.pb);
     pgb_PL_progress.begin(layout.winProgbar.x, layout.winProgbar.y, layout.winProgbar.w, layout.winProgbar.h, layout.winProgbar.pl, layout.winProgbar.pr, layout.winProgbar.pt, layout.winProgbar.pb, 0,
@@ -655,7 +655,7 @@ void placingGraphicObjects() { // and initialize them
                         layout.winButton.pt, layout.winButton.pb);
     txt_DL_fName.begin(layout.winName.x, layout.winName.y, layout.winName.w, layout.winName.h, layout.winName.pl, layout.winName.pr, layout.winName.pt, layout.winName.pb);
     txt_DL_fName.setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
-    txt_DL_fName.setFont(0); // 0 -> auto)
+    txt_DL_fName.setFontSize(0); // 0 -> auto)
     pic_DL_logo.setTransparency(true, false);
     pic_DL_logo.begin(layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h, layout.winLogo.pl, layout.winLogo.pr, layout.winLogo.pt, layout.winLogo.pb);
     pgb_DL_progress.begin(layout.winProgbar.x, layout.winProgbar.y, layout.winProgbar.w, layout.winProgbar.h, layout.winProgbar.pl, layout.winProgbar.pr, layout.winProgbar.pt, layout.winProgbar.pb, 0,
@@ -728,7 +728,7 @@ void placingGraphicObjects() { // and initialize them
     pic_BR_logo.setPicturePath("/common/Brightness.jpg");
     txt_BR_value.begin(0, layout.winButton.y, layout.winButton.w * 2, layout.winButton.h, layout.winButton.pl, layout.winButton.pr, layout.winButton.pt, layout.winButton.pb);
     txt_BR_value.setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
-    txt_BR_value.setFont(displayConfig.fonts[4]);
+    txt_BR_value.setFontSize(displayConfig.fonts[4]);
     // EQUALIZER ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     sdr_EQ_lowPass.begin(layout.sdrLP.x, layout.sdrLP.y, layout.sdrLP.w, layout.sdrLP.h, layout.sdrLP.pl, layout.sdrLP.pr, layout.sdrLP.pt, layout.sdrLP.pb);
     sdr_EQ_lowPass.setMinMaxVal(-12, 12);
@@ -740,16 +740,16 @@ void placingGraphicObjects() { // and initialize them
     sdr_EQ_balance.setMinMaxVal(-16, 16);
     txt_EQ_lowPass.begin(layout.txtLP.x, layout.txtLP.y, layout.txtLP.w, layout.txtLP.h, layout.txtLP.pl, layout.txtLP.pr, layout.txtLP.pt, layout.txtLP.pb);
     txt_EQ_lowPass.setAlign(TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER);
-    txt_EQ_lowPass.setFont(0); // 0 -> auto
+    txt_EQ_lowPass.setFontSize(0); // 0 -> auto
     txt_EQ_bandPass.begin(layout.txtBP.x, layout.txtBP.y, layout.txtBP.w, layout.txtBP.h, layout.txtBP.pl, layout.txtBP.pr, layout.txtBP.pt, layout.txtBP.pb);
     txt_EQ_bandPass.setAlign(TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER);
-    txt_EQ_bandPass.setFont(0); // 0 -> auto
+    txt_EQ_bandPass.setFontSize(0); // 0 -> auto
     txt_EQ_highPass.begin(layout.txtHP.x, layout.txtHP.y, layout.txtHP.w, layout.txtHP.h, layout.txtHP.pl, layout.txtHP.pr, layout.txtHP.pt, layout.txtHP.pb);
     txt_EQ_highPass.setAlign(TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER);
-    txt_EQ_highPass.setFont(0); // 0 -> auto
+    txt_EQ_highPass.setFontSize(0); // 0 -> auto
     txt_EQ_balance.begin(layout.txtBAL.x, layout.txtBAL.y, layout.txtBAL.w, layout.txtBAL.h, layout.txtBAL.pl, layout.txtBAL.pr, layout.txtBAL.pt, layout.txtBAL.pb);
     txt_EQ_balance.setAlign(TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER);
-    txt_EQ_balance.setFont(0); // 0 -> auto
+    txt_EQ_balance.setFontSize(0); // 0 -> auto
     btn_EQ_lowPass.begin(layout.btnLP.x, layout.btnLP.y, layout.btnLP.w, layout.btnLP.h);
     btn_EQ_lowPass.setPicturePath("/btn/s/Button_LP");
     btn_EQ_bandPass.begin(layout.btnBP.x, layout.btnBP.y, layout.btnBP.w, layout.btnBP.h);
@@ -783,7 +783,7 @@ void placingGraphicObjects() { // and initialize them
     pic_BT_mode.setAlternativPicturePath("/common/BTnc.png");
     txt_BT_mode.begin(layout.winName.x, layout.winName.y, layout.winName.w, layout.winName.h, layout.winName.pl, layout.winName.pr, layout.winName.pt, layout.winName.pb);
     txt_BT_mode.setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
-    txt_BT_mode.setFont(displayConfig.fonts[5]);
+    txt_BT_mode.setFontSize(displayConfig.fonts[5]);
     // IR_SETTINGS -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     btn_IR_radio.begin(0 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_IR_radio.setPicturePath("/btn/Button_Radio");

@@ -30,7 +30,7 @@ class TFT_Base {
     uint16_t getBackGroundColor() { return m_backGroundColor; }
     void setTextColor(uint16_t FGcolor) { m_textColor = FGcolor; }
     uint16_t getTextColor() { return m_textColor; }
-    void setFont(uint16_t font);
+    void setFontSize(uint16_t font);
     void setTextOrientation(uint16_t orientation = 0) { m_textorientation = orientation; }
     bool drawBmpFile(fs::FS& fs, const char* path, uint16_t x = 0, uint16_t y = 0, uint16_t maxWidth = 0, uint16_t maxHeight = 0, float scale = 1.0f);
     bool drawGifFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint8_t repeat);
