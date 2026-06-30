@@ -593,7 +593,6 @@ void placingGraphicObjects() { // and initialize them
     txt_RA_irNum.setTextColor(TFT_GOLD);
     txt_RA_irNum.setFontSize(displayConfig.bigNumbersFontSize);
     pic_RA_logo.begin(layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h, layout.winLogo.pl, layout.winLogo.pr, layout.winLogo.pt, layout.winLogo.pb);
-    VUmeter_RA.setTransparency(true, false);
     VUmeter_RA.begin(layout.winVUmeter.x, layout.winVUmeter.y, layout.winVUmeter.w, layout.winVUmeter.h, layout.winVUmeter.pl, layout.winVUmeter.pr, layout.winVUmeter.pt, layout.winVUmeter.pb);
     nbr_RA_staBox.begin(layout.winName.x, layout.winName.y, layout.winName.w, layout.winName.h);
     // STATIONSLIST ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -673,7 +672,6 @@ void placingGraphicObjects() { // and initialize them
     sdr_CL_volume.begin(5 * layout.winButton.w + 10, layout.winButton.y, layout.winButton.w * 3 - 10, layout.winButton.h, layout.winButton.pl, layout.winButton.pr, layout.winButton.pt,
                         layout.winButton.pb);
     // ALARM -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    clk_AC_red.setTransparency(false, false);
     clk_AC_red.begin(layout.winDigits.x, layout.winDigits.y, layout.winDigits.w, layout.winDigits.h);
     btn_AC_left.begin(0 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_AC_left.setPicturePath("/btn/Button_Left");
@@ -778,10 +776,8 @@ void placingGraphicObjects() { // and initialize them
     btn_IR_radio.begin(0 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_IR_radio.setPicturePath("/btn/Button_Radio");
     // WIFI_SETTINGS -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    cls_wifiSettings.setTransparency(false, false);
     cls_wifiSettings.begin(layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, layout.winWoHF.pl, layout.winWoHF.pr, layout.winWoHF.pt, layout.winWoHF.pb);
     // ALL_STATE ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    msg_box.setTransparency(false, false);
     msg_box.begin(-1, -1, -1, -1);
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

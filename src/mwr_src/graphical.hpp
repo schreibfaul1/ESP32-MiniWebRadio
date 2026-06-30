@@ -245,9 +245,6 @@ class slider : public RegisterTable {
 
     void draw() override {
         if (!m_enabled) return;
-        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
-        // writeText(m_text);
     }
 
     void setBGcolor(int32_t color) {
@@ -384,7 +381,7 @@ class progressbar : public RegisterTable {
     progressbar(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
-        m_bgColor = TFT_BLACK;
+        m_bgColor = TFT_TRANSPARENT;
         m_frameColor = TFT_WHITE;
         m_railColorLeft = TFT_RED;
         m_railColorRight = TFT_GREEN;
@@ -417,9 +414,6 @@ class progressbar : public RegisterTable {
 
     void draw() override {
         if (!m_enabled) return;
-        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
-        // writeText(m_text);
     }
 
     void setBGcolor(int32_t color) {
@@ -576,9 +570,6 @@ class textbox : public RegisterTable {
 
     void draw() override {
         if (!m_enabled) return;
-        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
-        // writeText(m_text);
     }
 
     void setBGcolor(int32_t color) {
@@ -737,9 +728,6 @@ class inputbox : public RegisterTable {
 
     void draw() override {
         if (!m_enabled) return;
-        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
-        // writeText(m_text);
     }
 
     void setBGcolor(int32_t color) {
@@ -957,9 +945,6 @@ class textbutton : public RegisterTable {
 
     void draw() override {
         if (!m_enabled) return;
-        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
-        // writeText(m_text);
     }
 
     void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
@@ -1172,9 +1157,6 @@ class selectbox : public RegisterTable {
 
     void draw() override {
         if (!m_enabled) return;
-        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
-        // writeText(m_text);
     }
 
     void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
@@ -1462,9 +1444,6 @@ class keyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
 
     void draw() override {
         if (!m_enabled) return;
-        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
-        // writeText(m_text);
     }
 
     void setBGcolor(uint32_t color) { m_bgColor = color; }
@@ -1605,8 +1584,6 @@ class wifiSettings : public RegisterTable {
     bool         m_autoSize = false;
     bool         m_narrow = false;
     bool         m_noWrap = false;
-    bool         m_backgroundTransparency = false;
-    bool         m_saveBackground = false;
     releasedArg  m_ra;
     selectbox*   m_sel_ssid = new selectbox("wifiSettings_selectbox_ssid", 0);
     inputbox*    m_in_password = new inputbox("wifiSettings_txtbox_pwd");
@@ -1805,9 +1782,6 @@ class wifiSettings : public RegisterTable {
 
     void draw() override {
         if (!m_enabled) return;
-        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
-        // writeText(m_text);
     }
 
     void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
@@ -1825,12 +1799,6 @@ class wifiSettings : public RegisterTable {
         m_keyboard->show();
         m_enabled = true;
         m_clicked = false;
-    }
-
-    void setTransparency(bool backgroundTransparency, bool saveBackground) {
-        m_backgroundTransparency = backgroundTransparency;
-        m_saveBackground = saveBackground;
-        m_sel_ssid->setBGcolor(TFT_BLACK);
     }
 
     void hide() {
@@ -2034,9 +2002,6 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
 
     void draw() override {
         if (!m_enabled) return;
-        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
-        // writeText(m_text);
     }
 
     void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
@@ -2165,9 +2130,6 @@ class button1state : public RegisterTable { // click button
 
     void draw() override {
         if (!m_enabled) return;
-        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
-        // writeText(m_text);
     }
 
     void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
@@ -2322,9 +2284,6 @@ class button2state : public RegisterTable { // on off switch
 
     void draw() override {
         if (!m_enabled) return;
-        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
-        // writeText(m_text);
     }
 
     void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
@@ -2472,9 +2431,6 @@ class numbersBox : public RegisterTable { // range 000...999
 
     void draw() override {
         if (!m_enabled) return;
-        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
-        // writeText(m_text);
     }
 
     void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
@@ -2606,9 +2562,6 @@ class offTimerBox : public RegisterTable { // range 000...999
 
     void draw() override {
         if (!m_enabled) return;
-        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
-        // writeText(m_text);
     }
 
     void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
@@ -2760,9 +2713,6 @@ class pictureBox : public RegisterTable {
 
     void draw() override {
         if (!m_enabled) return;
-        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
-        // writeText(m_text);
     }
 
    void setBGcolor(int32_t color) {
@@ -2870,8 +2820,6 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
     bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_state = false;
-    bool         m_backgroundTransparency = false;
-    bool         m_saveBackground = false;
     bool         m_showAll = false;
     ps_ptr<char> m_name;
     ps_ptr<char> m_pathBuff;
@@ -2918,9 +2866,6 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
 
     void draw() override {
         if (!m_enabled) return;
-        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
-        // writeText(m_text);
     }
 
     void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
@@ -3100,8 +3045,6 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
     bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_state = false;
-    bool         m_backgroundTransparency = false;
-    bool         m_saveBackground = false;
     bool         m_showAll = false;
     ps_ptr<char> m_name;
     ps_ptr<char> m_pathBuff;
@@ -3159,9 +3102,6 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
 
     void draw() override {
         if (!m_enabled) return;
-        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
-        // writeText(m_text);
     }
 
     void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
@@ -3182,17 +3122,6 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
         m_showAll = true;
         writeTime(m_hour, m_min);
     }
-
-    // void setTransparency(bool backgroundTransparency, bool saveBackground) {
-    //     m_backgroundTransparency = backgroundTransparency;
-    //     m_saveBackground = saveBackground;
-    //     pic_clock24_digitsH10->setTransparency(m_backgroundTransparency, m_saveBackground);
-    //     pic_clock24_digitsH01->setTransparency(m_backgroundTransparency, m_saveBackground);
-    //     pic_clock24_digitsM10->setTransparency(m_backgroundTransparency, m_saveBackground);
-    //     pic_clock24_digitsM01->setTransparency(m_backgroundTransparency, m_saveBackground);
-    //     pic_clock24_digitsColon->setTransparency(m_backgroundTransparency, m_saveBackground);
-    //     pic_clock24_digitsColon->setTransparency(m_backgroundTransparency, m_saveBackground);
-    // }
 
     void hide() {
         getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
@@ -3359,8 +3288,6 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
     bool         m_clicked = false;
     bool         m_state = false;
     bool         m_showAll = false;
-    bool         m_backgroundTransparency = false;
-    bool         m_saveBackground = false;
     ps_ptr<char> m_name;
     ps_ptr<char> m_pathBuff;
     uint8_t*     m_alarmDays;
@@ -3430,9 +3357,6 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
 
     void draw() override {
         if (!m_enabled) return;
-        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
-        // writeText(m_text);
     }
 
     void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
@@ -3453,21 +3377,6 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
         m_showAll = true;
         updateDigits();
         updateAlarmDaysAndTime();
-    }
-
-    void setTransparency(bool backgroundTransparency, bool saveBackground) {
-        m_backgroundTransparency = backgroundTransparency;
-        m_saveBackground = saveBackground;
-
-        for (uint8_t i = 0; i < 7; i++) {
-            txt_alarm_days[i].setBGcolor(TFT_BLACK);
-            txt_alarm_time[i].setBGcolor(TFT_BLACK);
-        }
-        // pic_alarm_digitsH10->setTransparency(m_backgroundTransparency, m_saveBackground);
-        // pic_alarm_digitsH01->setTransparency(m_backgroundTransparency, m_saveBackground);
-        // pic_alarm_digitsM10->setTransparency(m_backgroundTransparency, m_saveBackground);
-        // pic_alarm_digitsM01->setTransparency(m_backgroundTransparency, m_saveBackground);
-        // pic_alarm_digitsColon->setTransparency(m_backgroundTransparency, m_saveBackground);
     }
 
     void hide() {
@@ -4033,9 +3942,6 @@ class dlnaList : public RegisterTable {
 
     void draw() override {
         if (!m_enabled) return;
-        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
-        // writeText(m_text);
     }
 
     void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
@@ -4618,9 +4524,6 @@ class fileList : public RegisterTable {
 
     void draw() override {
         if (!m_enabled) return;
-        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
-        // writeText(m_text);
     }
 
     void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
@@ -5019,9 +4922,6 @@ class stationsList : public RegisterTable {
 
     void draw() override {
         if (!m_enabled) return;
-        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
-        // writeText(m_text);
     }
 
     void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
@@ -5226,8 +5126,6 @@ class vuMeter : public RegisterTable {
     bool         m_enabled = false;
     bool         m_focus = false;
     bool         m_clicked = false;
-    bool         m_backgroundTransparency = false;
-    bool         m_saveBackground = false;
     uint8_t      m_VUleftCh = 0;  // VU meter left channel
     uint8_t      m_VUrightCh = 0; // VU meter right channel
     releasedArg  m_ra;
@@ -5271,9 +5169,6 @@ class vuMeter : public RegisterTable {
 
     void draw() override {
         if (!m_enabled) return;
-        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
-        // writeText(m_text);
     }
 
     void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
@@ -5287,8 +5182,8 @@ class vuMeter : public RegisterTable {
         if (m_enabled == false) getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
         m_enabled = true;
         m_clicked = false;
-        if (m_backgroundTransparency) {
-            getTFT().copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+        if (m_bgColor == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         }
@@ -5299,11 +5194,6 @@ class vuMeter : public RegisterTable {
         }
         m_VUleftCh = 0;
         m_VUrightCh = 0;
-    }
-
-    void setTransparency(bool backgroundTransparency, bool saveBackground) {
-        m_backgroundTransparency = backgroundTransparency;
-        m_saveBackground = saveBackground;
     }
 
     void hide() {
@@ -5400,8 +5290,6 @@ class displayHeader : public RegisterTable {
     bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_speakerOn = false;
-    bool         m_backgroundTransparency = false;
-    bool         m_saveBackground = false;
     const char   m_rssiSymbol[5][18] = {"/common/RSSI0.png", "/common/RSSI1.png", "/common/RSSI2.png", "/common/RSSI3.png", "/common/RSSI4.png"};
     const char   m_speakerSymbol[2][25] = {"/common/Speaker_off.png", "/common/Speaker_on.png"};
     releasedArg  m_ra;
@@ -5626,9 +5514,6 @@ class displayHeader : public RegisterTable {
 
     void draw() override {
         if (!m_enabled) return;
-        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
-        // writeText(m_text);
     }
 
     void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
@@ -5657,16 +5542,6 @@ class displayHeader : public RegisterTable {
         updateVolume(m_volume);
         updateRSSI(m_rssi, true);
         updateTime(m_time, true);
-    }
-
-    void setTransparency(bool backgroundTransparency, bool saveBackground) {
-        m_backgroundTransparency = backgroundTransparency;
-        m_saveBackground = saveBackground;
-        timeStringObject->setBGcolor(m_bgColor);
-        txt_Item->setBGcolor(m_bgColor);
-    //    pic_Speaker->setTransparency(m_backgroundTransparency, m_saveBackground);
-        txt_Volume->setBGcolor(m_bgColor);
-    //    pic_RSSID->setTransparency(m_backgroundTransparency, m_saveBackground);
     }
 
     void hide() {
@@ -5701,6 +5576,8 @@ class displayHeader : public RegisterTable {
     void setBGcolor(int32_t color) {
         m_bgColor = color;
         timeStringObject->setBGcolor(color);
+        txt_Volume->setBGcolor(m_bgColor);
+        txt_Item->setBGcolor(m_bgColor);
     }
     void updateItem(ps_ptr<char> hl_item) { // radio, clock, audioplayer...
         if (!m_enabled) return;
@@ -6150,9 +6027,6 @@ class displayFooter : public RegisterTable {
 
     void draw() override {
         if (!m_enabled) return;
-        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
-        // writeText(m_text);
     }
 
     void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
@@ -6373,8 +6247,6 @@ class messageBox : public RegisterTable {
     releasedArg  m_ra;
     uint16_t     m_bgColor = TFT_YELLOW;
     uint16_t     m_textColor = TFT_DARKRED;
-    bool         m_backgroundTransparency = false;
-    bool         m_saveBackground = false;
     textbox*     txt_msgBox = new textbox("msgBox txt");
 
 #ifdef TFT_LAYOUT_S // 320 x 240px
@@ -6467,9 +6339,6 @@ class messageBox : public RegisterTable {
 
     void draw() override {
         if (!m_enabled) return;
-        // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
-        // writeText(m_text);
     }
 
     void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
@@ -6486,11 +6355,6 @@ class messageBox : public RegisterTable {
         txt_msgBox->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
         txt_msgBox->setFontSize(0); // auto
         txt_msgBox->setText(m_text.c_get());
-    }
-
-    void setTransparency(bool backgroundTransparency, bool saveBackground) {
-        m_backgroundTransparency = backgroundTransparency;
-        m_saveBackground = saveBackground;
     }
 
     void hide() {
