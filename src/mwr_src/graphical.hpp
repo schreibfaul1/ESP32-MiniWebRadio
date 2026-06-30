@@ -181,7 +181,7 @@ class slider : public RegisterTable {
     int16_t      m_maxVal = 0;
     uint16_t     m_leftStop = 0;
     uint16_t     m_rightStop = 0;
-    uint32_t     m_bgColor = 0;
+    int32_t      m_bgColor = 0;
     uint32_t     m_railColor = 0;
     uint32_t     m_spotColor = 0;
     bool         m_enabled = false;
@@ -189,8 +189,6 @@ class slider : public RegisterTable {
     bool         m_show = false;
     bool         m_focus = false;
     bool         m_objectInit = false;
-    bool         m_backgroundTransparency = false;
-    bool         m_saveBackground = false;
     uint8_t      m_railHigh = 0;
     uint16_t     m_middle_h = 0;
     uint16_t     m_spotPos = 0;
@@ -208,7 +206,7 @@ class slider : public RegisterTable {
         m_name = name;
         m_railHigh = 6;
         m_spotRadius = 12;
-        m_bgColor = TFT_BLACK;
+        m_bgColor = TFT_TRANSPARENT;
         m_railColor = TFT_BEIGE;
         m_spotColor = TFT_RED;
     }
@@ -250,6 +248,12 @@ class slider : public RegisterTable {
         // if (!m_backgroundTransparency) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         // if (m_borderWidth > 0) getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
         // writeText(m_text);
+    }
+
+    void setBGcolor(int32_t color) {
+        if (m_bgColor == color) return;
+        m_bgColor = color;
+        drawNewSpot(m_spotPos);
     }
 
     void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
@@ -299,13 +303,8 @@ class slider : public RegisterTable {
         int h = m_railHigh;
         (void)h;
         int r = m_railHigh / 4;
-        if (m_backgroundTransparency) {
-            if (m_saveBackground) {
-                getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
-            } else {
-                getTFT().copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
-            }
-        } else {
+        getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+        if (m_bgColor != TFT_TRANSPARENT) {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         }
         getTFT().fillRoundRect(x, y, w, m_railHigh, r, m_railColor);
@@ -313,23 +312,10 @@ class slider : public RegisterTable {
         m_show = true;
     }
 
-    void setTransparency(bool backgroundTransparency, bool saveBackground) {
-        m_backgroundTransparency = backgroundTransparency;
-        m_saveBackground = saveBackground;
-    }
-
     void disable() { m_enabled = false; }
     void enable() { m_enabled = true; }
     void hide() {
-        //    if (!m_show) return;
-        if (m_backgroundTransparency) {
-            if (m_saveBackground)
-                getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
-            else
-                getTFT().copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
-        } else {
-            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        }
+        getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
         m_enabled = false;
         m_show = false;
     }
@@ -354,12 +340,8 @@ class slider : public RegisterTable {
     }
     void drawNewSpot(uint16_t xPos) {
         if (m_enabled) {
-            if (m_backgroundTransparency) {
-                if (m_saveBackground) {
+            if (m_bgColor == TFT_TRANSPARENT) {
                     getTFT().copyFramebuffer(2, 0, m_spotPos - m_spotRadius - 1, m_middle_h - m_spotRadius - 1, 2 * m_spotRadius + 2, 2 * m_spotRadius + 2);
-                } else {
-                    getTFT().copyFramebuffer(1, 0, m_spotPos - m_spotRadius - 1, m_middle_h - m_spotRadius - 1, 2 * m_spotRadius + 2, 2 * m_spotRadius + 2);
-                }
             } else {
                 getTFT().fillRect(m_spotPos - m_spotRadius, m_middle_h - m_spotRadius, 2 * m_spotRadius, 2 * m_spotRadius + 1, m_bgColor);
             }
@@ -624,9 +606,8 @@ class textbox : public RegisterTable {
     void show() {
         m_enabled = true;
         m_clicked = false;
-        if (m_bgColor == -1) {
-            getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
-        } else {
+        getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+        if (m_bgColor != TFT_TRANSPARENT) {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         }
         writeText(m_text.c_get());
