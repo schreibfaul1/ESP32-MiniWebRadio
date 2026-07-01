@@ -1,5 +1,5 @@
 #include "../common.h"
-//#include "function.hpp"
+// #include "function.hpp"
 
 #pragma once
 
@@ -2156,12 +2156,19 @@ class button1state : public RegisterTable { // click button
             m_first_call = false;
         }
         m_clicked = false;
-        if (m_enabled == false) getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
         if (inactive) {
             setInactive();
             return;
         }
-        drawImage(m_idlePicturePath, m_x, m_y, m_w, m_h);
+        if (!m_cache_idle_pic.valid()) {
+            bool res = drawImage(m_idlePicturePath, m_x, m_y, m_w, m_h);
+            if (res) {
+                m_cache_idle_pic.alloc_array(m_w * m_h, m_name.c_get());
+                getTFT().copyFramebufferToBuffer(0, m_cache_idle_pic.get(), m_x, m_y, m_w, m_h);
+            }
+        } else {
+            getTFT().copyBufferToFramebuffer(m_cache_idle_pic.get(), 0, m_x, m_y, m_w, m_h);
+        }
         m_enabled = true;
     }
 
@@ -2184,6 +2191,7 @@ class button1state : public RegisterTable { // click button
         drawImage(m_focusPicturePath, m_x, m_y, m_w, m_h);
     }
     void showClickedPic() { drawImage(m_clickPicturePath, m_x, m_y, m_w, m_h); }
+
     void setPicturePath(ps_ptr<char> path) {
         if (path.strlen() > 0) {
             m_idlePicturePath = path + "_idle.png";
