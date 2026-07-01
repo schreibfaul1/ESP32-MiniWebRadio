@@ -1,4 +1,5 @@
 #include "../common.h"
+//#include "function.hpp"
 
 #pragma once
 
@@ -189,6 +190,8 @@ class slider : public RegisterTable {
     bool         m_show = false;
     bool         m_focus = false;
     bool         m_objectInit = false;
+    bool         m_content_has_changed = false;
+    bool         m_first_call = true;
     uint8_t      m_railHigh = 0;
     uint16_t     m_middle_h = 0;
     uint16_t     m_spotPos = 0;
@@ -310,7 +313,7 @@ class slider : public RegisterTable {
     void disable() { m_enabled = false; }
     void enable() { m_enabled = true; }
     void hide() {
-        if(m_enabled) getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+        if (m_enabled) getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
         m_enabled = false;
         m_show = false;
     }
@@ -374,6 +377,8 @@ class progressbar : public RegisterTable {
     bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_objectInit = false;
+    bool         m_content_has_changed = false;
+    bool         m_first_call = true;
     ps_ptr<char> m_name;
     releasedArg  m_ra;
 
@@ -537,6 +542,8 @@ class textbox : public RegisterTable {
     bool         m_autoSize = false;
     bool         m_narrow = false;
     bool         m_noWrap = false;
+    bool         m_content_has_changed = false;
+    bool         m_first_call = true;
     releasedArg  m_ra;
 
   public:
@@ -868,6 +875,8 @@ class textbutton : public RegisterTable {
     bool         m_autoSize = false;
     bool         m_narrow = false;
     bool         m_noWrap = false;
+    bool         m_content_has_changed = false;
+    bool         m_first_call = true;
     releasedArg  m_ra;
 
   public:
@@ -2079,20 +2088,22 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class button1state : public RegisterTable { // click button
   private:
-    int16_t      m_x = 0;
-    int16_t      m_y = 0;
-    int16_t      m_w = 0;
-    int16_t      m_h = 0;
-    ps_ptr<char> m_idlePicturePath;
-    ps_ptr<char> m_clickPicturePath;
-    ps_ptr<char> m_inactivePicturePath;
-    ps_ptr<char> m_focusPicturePath; // e.g. IR select
-    bool         m_enabled = false;
-    bool         m_focus = false;
-    bool         m_clicked = false;
-    bool         m_active = true;
-    ps_ptr<char> m_name;
-    releasedArg  m_ra;
+    int16_t          m_x = 0;
+    int16_t          m_y = 0;
+    int16_t          m_w = 0;
+    int16_t          m_h = 0;
+    ps_ptr<char>     m_idlePicturePath;
+    ps_ptr<char>     m_clickPicturePath;
+    ps_ptr<char>     m_inactivePicturePath;
+    ps_ptr<char>     m_focusPicturePath; // e.g. IR select
+    bool             m_enabled = false;
+    bool             m_focus = false;
+    bool             m_clicked = false;
+    bool             m_active = true;
+    bool             m_first_call = true;
+    ps_ptr<char>     m_name;
+    ps_ptr<uint16_t> m_cache_idle_pic = {};
+    releasedArg      m_ra;
 
   public:
     button1state(ps_ptr<char> name) {
@@ -2140,6 +2151,10 @@ class button1state : public RegisterTable { // click button
     }
 
     void show(bool inactive = false) {
+        if (m_first_call) { // save background
+            getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+            m_first_call = false;
+        }
         m_clicked = false;
         if (m_enabled == false) getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
         if (inactive) {
@@ -2151,7 +2166,7 @@ class button1state : public RegisterTable { // click button
     }
 
     void hide() {
-        if(m_enabled) getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+        if (!m_first_call) getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
         m_enabled = false;
     }
 
@@ -2233,6 +2248,8 @@ class button2state : public RegisterTable { // on off switch
     bool         m_active = true;
     bool         m_clicked = false;
     bool         m_state = false;
+    bool         m_content_has_changed = false;
+    bool         m_first_call = true;
     ps_ptr<char> m_name;
     releasedArg  m_ra;
 
@@ -2294,8 +2311,11 @@ class button2state : public RegisterTable { // on off switch
     }
 
     void show() {
+        if (m_first_call) { // save background
+            getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+            m_first_call = false;
+        }
         m_clicked = false;
-        if (m_enabled == false) getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
         if (m_active) {
             if (m_state)
                 drawImage(m_on_idlePicturePath, m_x, m_y, m_w, m_h);
@@ -2330,7 +2350,7 @@ class button2state : public RegisterTable { // on off switch
     }
 
     void hide() {
-        if(m_enabled) getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+        if (!m_first_call) getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
         m_enabled = false;
     }
 
@@ -2680,6 +2700,8 @@ class pictureBox : public RegisterTable {
     bool         m_enabled = false;
     bool         m_focus = false;
     bool         m_clicked = false;
+    bool         m_content_has_changed = false;
+    bool         m_first_call = true;
     releasedArg  m_ra;
 
   public:
@@ -2715,7 +2737,7 @@ class pictureBox : public RegisterTable {
         if (!m_enabled) return;
     }
 
-   void setBGcolor(int32_t color) {
+    void setBGcolor(int32_t color) {
         if (m_bgColor == color) return;
         m_bgColor = color;
     }
@@ -2728,30 +2750,35 @@ class pictureBox : public RegisterTable {
     }
 
     bool show() {
-        if (m_enabled == false) getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+        if (m_first_call) { // save background
+            getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+            m_first_call = false;
+        }
+        if (m_content_has_changed) { // restore background
+            getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+            m_content_has_changed = false;
+        }
         int x = m_x + m_padding_left + m_image_x;
         int y = m_y + m_padding_top + m_image_y;
         int w = m_w - (m_padding_right + m_padding_left);
         int h = m_h - (m_padding_bottom + m_padding_top);
         if (m_image_w == 0 || m_image_h == 0) {
-              m_enabled = drawImage(m_altPicturePath.c_get(), x, y, w, h);
-              return m_enabled;
+            m_enabled = drawImage(m_altPicturePath, x, y, w, h);
         } else {
-            m_enabled = drawImage(m_PicturePath.c_get(), x, y, w, h);
-            return m_enabled;
+            m_enabled = drawImage(m_PicturePath, x, y, w, h);
         }
+        return m_enabled;
     }
 
     void hide() {
-        getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+        if (!m_first_call) getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
         m_enabled = false;
     }
-    void disable() {
-        m_enabled = false;
-    }
+    void disable() { m_enabled = false; }
     void enable() { m_enabled = true; }
 
     void setPicturePath(ps_ptr<char> path) {
+        if (m_PicturePath != path) m_content_has_changed = true;
         m_PicturePath = path;
         imgSize img = GetImageSize(path);
         m_image_w = img.w;
@@ -2875,7 +2902,7 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
         h = m_h;
     }
 
-   void setBGcolor(int32_t color) {
+    void setBGcolor(int32_t color) {
         if (m_bgColor == color) return;
         m_bgColor = color;
         pic_clock24_digitsH10->setBGcolor(m_bgColor);
@@ -5126,6 +5153,8 @@ class vuMeter : public RegisterTable {
     bool         m_enabled = false;
     bool         m_focus = false;
     bool         m_clicked = false;
+    bool         m_content_has_changed = false;
+    bool         m_first_call = true;
     uint8_t      m_VUleftCh = 0;  // VU meter left channel
     uint8_t      m_VUrightCh = 0; // VU meter right channel
     releasedArg  m_ra;
@@ -6045,15 +6074,15 @@ class displayFooter : public RegisterTable {
         m_enabled = true;
         m_clicked = false;
         pic_Antenna->show();
-    //    txt_StaNr->show();
-    //    pic_Flag->show();
-    //    txt_OffTimer->show();
-    //    txt_BitRate->show();
+        //    txt_StaNr->show();
+        //    pic_Flag->show();
+        //    txt_OffTimer->show();
+        //    txt_BitRate->show();
         txt_IpAddr->show();
-    //    txt_FileNr->show();
-    //    updateStation(m_staNr);
+        //    txt_FileNr->show();
+        //    updateStation(m_staNr);
         updateOffTime(m_offTime);
-    //    updateBitRate(m_bitRate);
+        //    updateBitRate(m_bitRate);
     }
 
     void hide() {
@@ -6078,12 +6107,12 @@ class displayFooter : public RegisterTable {
     void disable() { m_enabled = false; }
     void setBGcolor(int32_t color) {
         m_bgColor = color;
-//        pic_Antenna->setBGcolor(m_bgColor);
+        //        pic_Antenna->setBGcolor(m_bgColor);
         txt_StaNr->setBGcolor(m_bgColor);
         txt_FileNr->setBGcolor(m_bgColor);
-//        pic_Flag->setBGcolor(m_bgColor);
+        //        pic_Flag->setBGcolor(m_bgColor);
         txt_OffTimer->setBGcolor(m_bgColor);
-//        pic_Hourglass->setBGcolor(m_bgColor);
+        //        pic_Hourglass->setBGcolor(m_bgColor);
         txt_BitRate->setBGcolor(m_bgColor);
         txt_OffTimer->setBGcolor(m_bgColor);
         txt_IpAddr->setBGcolor(m_bgColor);
@@ -6236,6 +6265,8 @@ class messageBox : public RegisterTable {
     bool         m_clicked = false;
     bool         m_narrow = false;
     bool         m_noWrap = false;
+    bool         m_content_has_changed = false;
+    bool         m_first_call = true;
     uint16_t     m_x = 0;
     uint16_t     m_y = 0;
     uint16_t     m_w = 0;

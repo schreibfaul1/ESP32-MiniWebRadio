@@ -1,14 +1,12 @@
-#include "../../src/settings.h"
 #include "tft_base.h"
-
-#include <utility>
-
+#include "../../src/settings.h"
 #include "fonts/Arial.h"
 #include "fonts/BigNumbers.h"
 #include "fonts/FreeSerifItalic.h"
 #include "fonts/Garamond.h"
 #include "fonts/TimesNewRoman.h"
 #include "fonts/Z003.h"
+#include <utility>
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 uint16_t TFT_Base::logicalWidth() const {
     if (m_rotation & 1) return m_v_res;
@@ -26,12 +24,8 @@ bool TFT_Base::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y,
     auto bmpRead32 = [](const uint8_t* data, size_t offset) -> uint32_t {
         return data[offset] | (uint16_t)(data[offset + 1]) << 8 | (uint32_t)(data[offset + 2]) << 16 | (uint32_t)(data[offset + 3]) << 24;
     };
-    auto bmpRead16 = [](const uint8_t* data, size_t offset) -> uint16_t {
-        return data[offset] | (uint16_t)(data[offset + 1]) << 8;
-    };
-    auto bmpColor16 = [](const uint8_t* pixel) -> uint16_t {
-        return ((uint8_t*)pixel)[0] | ((uint16_t)((uint8_t*)pixel)[1]) << 8;
-    };
+    auto bmpRead16 = [](const uint8_t* data, size_t offset) -> uint16_t { return data[offset] | (uint16_t)(data[offset + 1]) << 8; };
+    auto bmpColor16 = [](const uint8_t* pixel) -> uint16_t { return ((uint8_t*)pixel)[0] | ((uint16_t)((uint8_t*)pixel)[1]) << 8; };
     auto bmpColor24 = [](const uint8_t* pixel) -> uint16_t {
         return ((uint16_t)(((uint8_t*)pixel)[2] & 0xF8) << 8) | ((uint16_t)(((uint8_t*)pixel)[1] & 0xFC) << 3) | ((((uint8_t*)pixel)[0] & 0xF8) >> 3);
     };
@@ -60,7 +54,7 @@ bool TFT_Base::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y,
     if (compression != 0) return false;
     if (!(bpp == 16 || bpp == 24 || bpp == 32)) return false;
 
-    const bool bottomUp = (bmpHeightI > 0);
+    const bool   bottomUp = (bmpHeightI > 0);
     const size_t bmpWidth = abs(bmpWidthI);
     const size_t bmpHeight = abs(bmpHeightI);
     const size_t scaledWidth = bmpWidth * scale;
@@ -92,7 +86,7 @@ bool TFT_Base::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y,
         bmp.read(m_rowBuffer, rowSize);
 
         for (size_t dx = 0; dx < drawWidth; ++dx) {
-            const size_t srcXScaled = (dx * bmpWidth) / scaledWidth;
+            const size_t   srcXScaled = (dx * bmpWidth) / scaledWidth;
             const uint8_t* pixelPtr = m_rowBuffer + srcXScaled * (bpp / 8);
 
             uint16_t color = 0;
@@ -1149,12 +1143,12 @@ uint8_t TFT_Base::JPEG_getSdJpgSize(uint16_t* w, uint16_t* h) {
     m_jpgSdFile.seek(0);
     return r;
 }
-    // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-    #if JD_FASTDECODE == 2
-        #define HUFF_BIT  10 /* Bit length to apply fast huffman decode */
-        #define HUFF_LEN  (1 << HUFF_BIT)
-        #define HUFF_MASK (HUFF_LEN - 1)
-    #endif
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+#if JD_FASTDECODE == 2
+    #define HUFF_BIT  10 /* Bit length to apply fast huffman decode */
+    #define HUFF_LEN  (1 << HUFF_BIT)
+    #define HUFF_MASK (HUFF_LEN - 1)
+#endif
 
 const uint8_t Zig[64] = {/* Zigzag-order to raster-order conversion table */
                          0,  1,  8,  16, 9,  2,  3,  10, 17, 24, 32, 25, 18, 11, 4,  5,  12, 19, 26, 33, 40, 48, 41, 34, 27, 20, 13, 6,  7,  14, 21, 28,
@@ -1173,8 +1167,8 @@ const uint16_t Ipsf[64] = {/* See also aa_idct.png */
                            (uint16_t)(0.29290 * 8192), (uint16_t)(0.14932 * 8192), (uint16_t)(0.27590 * 8192), (uint16_t)(0.38268 * 8192), (uint16_t)(0.36048 * 8192), (uint16_t)(0.32442 * 8192),
                            (uint16_t)(0.27590 * 8192), (uint16_t)(0.21678 * 8192), (uint16_t)(0.14932 * 8192), (uint16_t)(0.07612 * 8192)};
 
-    #if JD_TBLCLIP
-        #define BYTECLIP(v) Clip8[(unsigned int)(v) & 0x3FF]
+#if JD_TBLCLIP
+    #define BYTECLIP(v) Clip8[(unsigned int)(v) & 0x3FF]
 const uint8_t Clip8[1024] = {/* 0..255 */
                              0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44,
                              45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87,
@@ -1204,9 +1198,9 @@ const uint8_t Clip8[1024] = {/* 0..255 */
                              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    #endif
+#endif
 
-    #if JD_TBLCLIP == 0 /* JD_TBLCLIP */
+#if JD_TBLCLIP == 0 /* JD_TBLCLIP */
 uint8_t TFT_Base::JPEG_BYTECLIP(int val) {
     if (val < 0)
         return 0;
@@ -1214,7 +1208,7 @@ uint8_t TFT_Base::JPEG_BYTECLIP(int val) {
         return 255;
     return (uint8_t)val;
 }
-    #endif
+#endif
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void* TFT_Base::JPEG_alloc_pool(JDEC* jd, size_t ndata) {
     char* rp = 0;
@@ -1291,7 +1285,7 @@ uint8_t TFT_Base::JPEG_create_huffman_tbl(JDEC* jd, const uint8_t* data, size_t 
             if (!cls && d > 11) return JDR_FMT1;
             pd[i] = d;
         }
-    #if JD_FASTDECODE == 2
+#if JD_FASTDECODE == 2
         { /* Create fast huffman decode table */
             unsigned int span, td, ti;
             uint16_t*    tbl_ac = 0;
@@ -1322,7 +1316,7 @@ uint8_t TFT_Base::JPEG_create_huffman_tbl(JDEC* jd, const uint8_t* data, size_t 
             }
             jd->longofs[num][cls] = i; /* Code table offset for long code */
         }
-    #endif
+#endif
     }
 
     return JDR_OK;
@@ -1333,7 +1327,7 @@ int TFT_Base::JPEG_huffext(JDEC* jd, unsigned int id, unsigned int cls) {
     uint8_t*     dp = jd->dptr;
     unsigned int d, flg = 0;
 
-    #if JD_FASTDECODE == 0
+#if JD_FASTDECODE == 0
     uint8_t         bm, nd, bl;
     const uint8_t*  hb = jd->huffbits[id][cls]; /* Bit distribution table */
     const uint16_t* hc = jd->huffcode[id][cls]; /* Code word table */
@@ -1380,7 +1374,7 @@ int TFT_Base::JPEG_huffext(JDEC* jd, unsigned int id, unsigned int cls) {
         bl--;
     } while (bl);
 
-    #else
+#else
     const uint8_t * hb, *hd;
     const uint16_t* hc;
     unsigned int    nc, bl, wbit = jd->dbit % 32;
@@ -1415,7 +1409,7 @@ int TFT_Base::JPEG_huffext(JDEC* jd, unsigned int id, unsigned int cls) {
     jd->dptr = dp;
     jd->wreg = w;
 
-        #if JD_FASTDECODE == 2
+    #if JD_FASTDECODE == 2
     /* Table serch for the short codes */
     d = (unsigned int)(w >> (wbit - HUFF_BIT)); /* Short code as table index */
     if (cls) {                                  /* AC element */
@@ -1437,13 +1431,13 @@ int TFT_Base::JPEG_huffext(JDEC* jd, unsigned int id, unsigned int cls) {
     hc = jd->huffcode[id][cls] + jd->longofs[id][cls]; /* Code word table */
     hd = jd->huffdata[id][cls] + jd->longofs[id][cls]; /* Data table */
     bl = HUFF_BIT + 1;
-        #else
+    #else
     /* Incremental serch for all codes */
     hb = jd->huffbits[id][cls]; /* Bit distribution table */
     hc = jd->huffcode[id][cls]; /* Code word table */
     hd = jd->huffdata[id][cls]; /* Data table */
     bl = 1;
-        #endif
+    #endif
     for (; bl <= 16; bl++) { /* Incremental search */
         nc = *hb++;
         if (nc) {
@@ -1457,7 +1451,7 @@ int TFT_Base::JPEG_huffext(JDEC* jd, unsigned int id, unsigned int cls) {
             } while (--nc);
         }
     }
-    #endif
+#endif
     return 0 - (int)JDR_FMT1; /* Err: code not found (may be collapted data) */
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -1466,7 +1460,7 @@ int TFT_Base::JPEG_bitext(JDEC* jd, unsigned int nbit) {
     uint8_t*     dp = jd->dptr;
     unsigned int d, flg = 0;
 
-    #if JD_FASTDECODE == 0
+#if JD_FASTDECODE == 0
     uint8_t mbit = jd->dbit;
     d = 0;
     do {
@@ -1502,7 +1496,7 @@ int TFT_Base::JPEG_bitext(JDEC* jd, unsigned int nbit) {
     jd->dptr = dp;
     return (int)d;
 
-    #else
+#else
     unsigned int wbit = jd->dbit % 32;
     uint32_t     w = jd->wreg & ((1UL << wbit) - 1);
 
@@ -1537,7 +1531,7 @@ int TFT_Base::JPEG_bitext(JDEC* jd, unsigned int nbit) {
     jd->dptr = dp;
 
     return (int)(w >> ((wbit - nbit) % 32));
-    #endif
+#endif
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 uint8_t TFT_Base::JPEG_restart(JDEC* jd, uint16_t rstn) {
@@ -1545,7 +1539,7 @@ uint8_t TFT_Base::JPEG_restart(JDEC* jd, uint16_t rstn) {
     uint8_t*     dp = jd->dptr;
     size_t       dc = jd->dctr;
 
-    #if JD_FASTDECODE == 0
+#if JD_FASTDECODE == 0
     uint16_t d = 0;
 
     /* Get two bytes from the input stream */
@@ -1567,7 +1561,7 @@ uint8_t TFT_Base::JPEG_restart(JDEC* jd, uint16_t rstn) {
     /* Check the marker */
     if ((d & 0xFFD8) != 0xFFD0 || (d & 7) != (rstn & 7)) { return JDR_FMT1; /* Err: expected RSTn marker is not detected (may be collapted data) */ }
 
-    #else
+#else
     uint16_t marker;
 
     if (jd->marker) { /* Generate a maker if it has been detected */
@@ -1592,7 +1586,7 @@ uint8_t TFT_Base::JPEG_restart(JDEC* jd, uint16_t rstn) {
     if ((marker & 0xFFD8) != 0xFFD0 || (marker & 7) != (rstn & 7)) { return JDR_FMT1; /* Err: expected RSTn marker was not detected (may be collapted data) */ }
 
     jd->dbit = 0; /* Discard stuff bits */
-    #endif
+#endif
 
     jd->dcv[2] = jd->dcv[1] = jd->dcv[0] = 0; /* Reset DC offset */
     return JDR_OK;
@@ -1686,7 +1680,7 @@ void TFT_Base::JPEG_block_idct(int32_t* src, jd_yuv_t* dst) {
         v4 -= v5;
 
         /* Descale the transformed values 8 bits and output a row */
-    #if JD_FASTDECODE >= 1
+#if JD_FASTDECODE >= 1
         dst[0] = (int16_t)((v0 + v7) >> 8);
         dst[7] = (int16_t)((v0 - v7) >> 8);
         dst[1] = (int16_t)((v1 + v6) >> 8);
@@ -1695,7 +1689,7 @@ void TFT_Base::JPEG_block_idct(int32_t* src, jd_yuv_t* dst) {
         dst[5] = (int16_t)((v2 - v5) >> 8);
         dst[3] = (int16_t)((v3 + v4) >> 8);
         dst[4] = (int16_t)((v3 - v4) >> 8);
-    #else
+#else
         dst[0] = BYTECLIP((v0 + v7) >> 8);
         dst[7] = BYTECLIP((v0 - v7) >> 8);
         dst[1] = BYTECLIP((v1 + v6) >> 8);
@@ -1704,7 +1698,7 @@ void TFT_Base::JPEG_block_idct(int32_t* src, jd_yuv_t* dst) {
         dst[5] = BYTECLIP((v2 - v5) >> 8);
         dst[3] = BYTECLIP((v3 + v4) >> 8);
         dst[4] = BYTECLIP((v3 - v4) >> 8);
-    #endif
+#endif
 
         dst += 8;
         src += 8; /* Next row */
@@ -2131,123 +2125,123 @@ uint8_t TFT_Base::JPEG_jd_decomp(JDEC* jd, uint8_t scale) {
 }
 
 void TFT_Base::setFontSize(uint16_t font) {
-    #define SET_FONT_DATA(CMAP, BITMAP, DSC)    \
-        do {                                    \
-            m_current_font.cmaps = CMAP;        \
-            m_current_font.glyph_bitmap = BITMAP; \
-            m_current_font.glyph_dsc = DSC;     \
-            m_current_font.range_start = CMAP->range_start; \
-            m_current_font.range_length = CMAP->range_length; \
-            m_current_font.line_height = CMAP->line_height; \
-            m_current_font.font_height = CMAP->font_height; \
-            m_current_font.base_line = CMAP->base_line; \
-            m_current_font.lookup_table = CMAP->lookup_table; \
-        } while (0)
+#define SET_FONT_DATA(CMAP, BITMAP, DSC)                  \
+    do {                                                  \
+        m_current_font.cmaps = CMAP;                      \
+        m_current_font.glyph_bitmap = BITMAP;             \
+        m_current_font.glyph_dsc = DSC;                   \
+        m_current_font.range_start = CMAP->range_start;   \
+        m_current_font.range_length = CMAP->range_length; \
+        m_current_font.line_height = CMAP->line_height;   \
+        m_current_font.font_height = CMAP->font_height;   \
+        m_current_font.base_line = CMAP->base_line;       \
+        m_current_font.lookup_table = CMAP->lookup_table; \
+    } while (0)
 
-    #ifdef TFT_TIMES_NEW_ROMAN
-        switch (font) {
-            case 15: SET_FONT_DATA(cmaps_Times15, glyph_bitmap_Times15, glyph_dsc_Times15); break;
-            case 16: SET_FONT_DATA(cmaps_Times16, glyph_bitmap_Times16, glyph_dsc_Times16); break;
-            case 18: SET_FONT_DATA(cmaps_Times18, glyph_bitmap_Times18, glyph_dsc_Times18); break;
-            case 21: SET_FONT_DATA(cmaps_Times21, glyph_bitmap_Times21, glyph_dsc_Times21); break;
-            case 25:
-                SET_FONT_DATA(cmaps_Times25, glyph_bitmap_Times25, glyph_dsc_Times25);
-                m_current_font.lookup_table = cmaps_Times15->lookup_table;
-                break;
-            case 27: SET_FONT_DATA(cmaps_Times27, glyph_bitmap_Times27, glyph_dsc_Times27); break;
-            case 34: SET_FONT_DATA(cmaps_Times34, glyph_bitmap_Times34, glyph_dsc_Times34); break;
-            case 38: SET_FONT_DATA(cmaps_Times38, glyph_bitmap_Times38, glyph_dsc_Times38); break;
-            case 43: SET_FONT_DATA(cmaps_Times43, glyph_bitmap_Times43, glyph_dsc_Times43); break;
-            case 56: SET_FONT_DATA(cmaps_Times56, glyph_bitmap_Times56, glyph_dsc_Times56); break;
-            case 66: SET_FONT_DATA(cmaps_Times66, glyph_bitmap_Times66, glyph_dsc_Times66); break;
-            case 81: SET_FONT_DATA(cmaps_Times81, glyph_bitmap_Times81, glyph_dsc_Times81); break;
-            case 96: SET_FONT_DATA(cmaps_Times96, glyph_bitmap_Times96, glyph_dsc_Times96); break;
-            case 156: SET_FONT_DATA(cmaps_BigNumbers, glyph_bitmap_BiGNumbers, glyph_dsc_BigNumbers); break;
-            default: log_e("unknown font size for Times New Roman, size is %i", font); break;
-        }
-    #endif
+#ifdef TFT_TIMES_NEW_ROMAN
+    switch (font) {
+        case 15: SET_FONT_DATA(cmaps_Times15, glyph_bitmap_Times15, glyph_dsc_Times15); break;
+        case 16: SET_FONT_DATA(cmaps_Times16, glyph_bitmap_Times16, glyph_dsc_Times16); break;
+        case 18: SET_FONT_DATA(cmaps_Times18, glyph_bitmap_Times18, glyph_dsc_Times18); break;
+        case 21: SET_FONT_DATA(cmaps_Times21, glyph_bitmap_Times21, glyph_dsc_Times21); break;
+        case 25:
+            SET_FONT_DATA(cmaps_Times25, glyph_bitmap_Times25, glyph_dsc_Times25);
+            m_current_font.lookup_table = cmaps_Times15->lookup_table;
+            break;
+        case 27: SET_FONT_DATA(cmaps_Times27, glyph_bitmap_Times27, glyph_dsc_Times27); break;
+        case 34: SET_FONT_DATA(cmaps_Times34, glyph_bitmap_Times34, glyph_dsc_Times34); break;
+        case 38: SET_FONT_DATA(cmaps_Times38, glyph_bitmap_Times38, glyph_dsc_Times38); break;
+        case 43: SET_FONT_DATA(cmaps_Times43, glyph_bitmap_Times43, glyph_dsc_Times43); break;
+        case 56: SET_FONT_DATA(cmaps_Times56, glyph_bitmap_Times56, glyph_dsc_Times56); break;
+        case 66: SET_FONT_DATA(cmaps_Times66, glyph_bitmap_Times66, glyph_dsc_Times66); break;
+        case 81: SET_FONT_DATA(cmaps_Times81, glyph_bitmap_Times81, glyph_dsc_Times81); break;
+        case 96: SET_FONT_DATA(cmaps_Times96, glyph_bitmap_Times96, glyph_dsc_Times96); break;
+        case 156: SET_FONT_DATA(cmaps_BigNumbers, glyph_bitmap_BiGNumbers, glyph_dsc_BigNumbers); break;
+        default: log_e("unknown font size for Times New Roman, size is %i", font); break;
+    }
+#endif
 
-    #ifdef TFT_GARAMOND
-        switch (font) {
-            case 15: SET_FONT_DATA(cmaps_Garamond15, glyph_bitmap_Garamond15, glyph_dsc_Garamond15); break;
-            case 16: SET_FONT_DATA(cmaps_Garamond16, glyph_bitmap_Garamond16, glyph_dsc_Garamond16); break;
-            case 18: SET_FONT_DATA(cmaps_Garamond18, glyph_bitmap_Garamond18, glyph_dsc_Garamond18); break;
-            case 21: SET_FONT_DATA(cmaps_Garamond21, glyph_bitmap_Garamond21, glyph_dsc_Garamond21); break;
-            case 25: SET_FONT_DATA(cmaps_Garamond25, glyph_bitmap_Garamond25, glyph_dsc_Garamond25); break;
-            case 27: SET_FONT_DATA(cmaps_Garamond27, glyph_bitmap_Garamond27, glyph_dsc_Garamond27); break;
-            case 34: SET_FONT_DATA(cmaps_Garamond34, glyph_bitmap_Garamond34, glyph_dsc_Garamond34); break;
-            case 38: SET_FONT_DATA(cmaps_Garamond38, glyph_bitmap_Garamond38, glyph_dsc_Garamond38); break;
-            case 43: SET_FONT_DATA(cmaps_Garamond43, glyph_bitmap_Garamond43, glyph_dsc_Garamond43); break;
-            case 56: SET_FONT_DATA(cmaps_Garamond56, glyph_bitmap_Garamond56, glyph_dsc_Garamond56); break;
-            case 66: SET_FONT_DATA(cmaps_Garamond66, glyph_bitmap_Garamond66, glyph_dsc_Garamond66); break;
-            case 81: SET_FONT_DATA(cmaps_Garamond81, glyph_bitmap_Garamond81, glyph_dsc_Garamond81); break;
-            case 96: SET_FONT_DATA(cmaps_Garamond96, glyph_bitmap_Garamond96, glyph_dsc_Garamond96); break;
-            case 156: SET_FONT_DATA(cmaps_BigNumbers, glyph_bitmap_BiGNumbers, glyph_dsc_BigNumbers); break;
-            default: break;
-        }
-    #endif
+#ifdef TFT_GARAMOND
+    switch (font) {
+        case 15: SET_FONT_DATA(cmaps_Garamond15, glyph_bitmap_Garamond15, glyph_dsc_Garamond15); break;
+        case 16: SET_FONT_DATA(cmaps_Garamond16, glyph_bitmap_Garamond16, glyph_dsc_Garamond16); break;
+        case 18: SET_FONT_DATA(cmaps_Garamond18, glyph_bitmap_Garamond18, glyph_dsc_Garamond18); break;
+        case 21: SET_FONT_DATA(cmaps_Garamond21, glyph_bitmap_Garamond21, glyph_dsc_Garamond21); break;
+        case 25: SET_FONT_DATA(cmaps_Garamond25, glyph_bitmap_Garamond25, glyph_dsc_Garamond25); break;
+        case 27: SET_FONT_DATA(cmaps_Garamond27, glyph_bitmap_Garamond27, glyph_dsc_Garamond27); break;
+        case 34: SET_FONT_DATA(cmaps_Garamond34, glyph_bitmap_Garamond34, glyph_dsc_Garamond34); break;
+        case 38: SET_FONT_DATA(cmaps_Garamond38, glyph_bitmap_Garamond38, glyph_dsc_Garamond38); break;
+        case 43: SET_FONT_DATA(cmaps_Garamond43, glyph_bitmap_Garamond43, glyph_dsc_Garamond43); break;
+        case 56: SET_FONT_DATA(cmaps_Garamond56, glyph_bitmap_Garamond56, glyph_dsc_Garamond56); break;
+        case 66: SET_FONT_DATA(cmaps_Garamond66, glyph_bitmap_Garamond66, glyph_dsc_Garamond66); break;
+        case 81: SET_FONT_DATA(cmaps_Garamond81, glyph_bitmap_Garamond81, glyph_dsc_Garamond81); break;
+        case 96: SET_FONT_DATA(cmaps_Garamond96, glyph_bitmap_Garamond96, glyph_dsc_Garamond96); break;
+        case 156: SET_FONT_DATA(cmaps_BigNumbers, glyph_bitmap_BiGNumbers, glyph_dsc_BigNumbers); break;
+        default: break;
+    }
+#endif
 
-    #ifdef TFT_FREE_SERIF_ITALIC
-        switch (font) {
-            case 15: SET_FONT_DATA(cmaps_FreeSerifItalic15, glyph_bitmap_FreeSerifItalic15, glyph_dsc_FreeSerifItalic15); break;
-            case 16: SET_FONT_DATA(cmaps_FreeSerifItalic16, glyph_bitmap_FreeSerifItalic16, glyph_dsc_FreeSerifItalic16); break;
-            case 18: SET_FONT_DATA(cmaps_FreeSerifItalic18, glyph_bitmap_FreeSerifItalic18, glyph_dsc_FreeSerifItalic18); break;
-            case 21: SET_FONT_DATA(cmaps_FreeSerifItalic21, glyph_bitmap_FreeSerifItalic21, glyph_dsc_FreeSerifItalic21); break;
-            case 25: SET_FONT_DATA(cmaps_FreeSerifItalic25, glyph_bitmap_FreeSerifItalic25, glyph_dsc_FreeSerifItalic25); break;
-            case 27: SET_FONT_DATA(cmaps_FreeSerifItalic27, glyph_bitmap_FreeSerifItalic27, glyph_dsc_FreeSerifItalic27); break;
-            case 34: SET_FONT_DATA(cmaps_FreeSerifItalic34, glyph_bitmap_FreeSerifItalic34, glyph_dsc_FreeSerifItalic34); break;
-            case 38: SET_FONT_DATA(cmaps_FreeSerifItalic38, glyph_bitmap_FreeSerifItalic38, glyph_dsc_FreeSerifItalic38); break;
-            case 43: SET_FONT_DATA(cmaps_FreeSerifItalic43, glyph_bitmap_FreeSerifItalic43, glyph_dsc_FreeSerifItalic43); break;
-            case 56: SET_FONT_DATA(cmaps_FreeSerifItalic56, glyph_bitmap_FreeSerifItalic56, glyph_dsc_FreeSerifItalic56); break;
-            case 66: SET_FONT_DATA(cmaps_FreeSerifItalic66, glyph_bitmap_FreeSerifItalic66, glyph_dsc_FreeSerifItalic66); break;
-            case 81: SET_FONT_DATA(cmaps_FreeSerifItalic81, glyph_bitmap_FreeSerifItalic81, glyph_dsc_FreeSerifItalic81); break;
-            case 96: SET_FONT_DATA(cmaps_FreeSerifItalic96, glyph_bitmap_FreeSerifItalic96, glyph_dsc_FreeSerifItalic96); break;
-            case 156: SET_FONT_DATA(cmaps_BigNumbers, glyph_bitmap_BiGNumbers, glyph_dsc_BigNumbers); break;
-            default: break;
-        }
-    #endif
+#ifdef TFT_FREE_SERIF_ITALIC
+    switch (font) {
+        case 15: SET_FONT_DATA(cmaps_FreeSerifItalic15, glyph_bitmap_FreeSerifItalic15, glyph_dsc_FreeSerifItalic15); break;
+        case 16: SET_FONT_DATA(cmaps_FreeSerifItalic16, glyph_bitmap_FreeSerifItalic16, glyph_dsc_FreeSerifItalic16); break;
+        case 18: SET_FONT_DATA(cmaps_FreeSerifItalic18, glyph_bitmap_FreeSerifItalic18, glyph_dsc_FreeSerifItalic18); break;
+        case 21: SET_FONT_DATA(cmaps_FreeSerifItalic21, glyph_bitmap_FreeSerifItalic21, glyph_dsc_FreeSerifItalic21); break;
+        case 25: SET_FONT_DATA(cmaps_FreeSerifItalic25, glyph_bitmap_FreeSerifItalic25, glyph_dsc_FreeSerifItalic25); break;
+        case 27: SET_FONT_DATA(cmaps_FreeSerifItalic27, glyph_bitmap_FreeSerifItalic27, glyph_dsc_FreeSerifItalic27); break;
+        case 34: SET_FONT_DATA(cmaps_FreeSerifItalic34, glyph_bitmap_FreeSerifItalic34, glyph_dsc_FreeSerifItalic34); break;
+        case 38: SET_FONT_DATA(cmaps_FreeSerifItalic38, glyph_bitmap_FreeSerifItalic38, glyph_dsc_FreeSerifItalic38); break;
+        case 43: SET_FONT_DATA(cmaps_FreeSerifItalic43, glyph_bitmap_FreeSerifItalic43, glyph_dsc_FreeSerifItalic43); break;
+        case 56: SET_FONT_DATA(cmaps_FreeSerifItalic56, glyph_bitmap_FreeSerifItalic56, glyph_dsc_FreeSerifItalic56); break;
+        case 66: SET_FONT_DATA(cmaps_FreeSerifItalic66, glyph_bitmap_FreeSerifItalic66, glyph_dsc_FreeSerifItalic66); break;
+        case 81: SET_FONT_DATA(cmaps_FreeSerifItalic81, glyph_bitmap_FreeSerifItalic81, glyph_dsc_FreeSerifItalic81); break;
+        case 96: SET_FONT_DATA(cmaps_FreeSerifItalic96, glyph_bitmap_FreeSerifItalic96, glyph_dsc_FreeSerifItalic96); break;
+        case 156: SET_FONT_DATA(cmaps_BigNumbers, glyph_bitmap_BiGNumbers, glyph_dsc_BigNumbers); break;
+        default: break;
+    }
+#endif
 
-    #ifdef TFT_ARIAL
-        switch (font) {
-            case 15: SET_FONT_DATA(cmaps_Arial15, glyph_bitmap_Arial15, glyph_dsc_Arial15); break;
-            case 16: SET_FONT_DATA(cmaps_Arial16, glyph_bitmap_Arial16, glyph_dsc_Arial16); break;
-            case 18: SET_FONT_DATA(cmaps_Arial18, glyph_bitmap_Arial18, glyph_dsc_Arial18); break;
-            case 21: SET_FONT_DATA(cmaps_Arial21, glyph_bitmap_Arial21, glyph_dsc_Arial21); break;
-            case 25: SET_FONT_DATA(cmaps_Arial25, glyph_bitmap_Arial25, glyph_dsc_Arial25); break;
-            case 27: SET_FONT_DATA(cmaps_Arial27, glyph_bitmap_Arial27, glyph_dsc_Arial27); break;
-            case 34: SET_FONT_DATA(cmaps_Arial34, glyph_bitmap_Arial34, glyph_dsc_Arial34); break;
-            case 38: SET_FONT_DATA(cmaps_Arial38, glyph_bitmap_Arial38, glyph_dsc_Arial38); break;
-            case 43: SET_FONT_DATA(cmaps_Arial43, glyph_bitmap_Arial43, glyph_dsc_Arial43); break;
-            case 56: SET_FONT_DATA(cmaps_Arial56, glyph_bitmap_Arial56, glyph_dsc_Arial56); break;
-            case 66: SET_FONT_DATA(cmaps_Arial66, glyph_bitmap_Arial66, glyph_dsc_Arial66); break;
-            case 81: SET_FONT_DATA(cmaps_Arial81, glyph_bitmap_Arial81, glyph_dsc_Arial81); break;
-            case 96: SET_FONT_DATA(cmaps_Arial96, glyph_bitmap_Arial96, glyph_dsc_Arial96); break;
-            case 156: SET_FONT_DATA(cmaps_BigNumbers, glyph_bitmap_BiGNumbers, glyph_dsc_BigNumbers); break;
-            default: break;
-        }
-    #endif
+#ifdef TFT_ARIAL
+    switch (font) {
+        case 15: SET_FONT_DATA(cmaps_Arial15, glyph_bitmap_Arial15, glyph_dsc_Arial15); break;
+        case 16: SET_FONT_DATA(cmaps_Arial16, glyph_bitmap_Arial16, glyph_dsc_Arial16); break;
+        case 18: SET_FONT_DATA(cmaps_Arial18, glyph_bitmap_Arial18, glyph_dsc_Arial18); break;
+        case 21: SET_FONT_DATA(cmaps_Arial21, glyph_bitmap_Arial21, glyph_dsc_Arial21); break;
+        case 25: SET_FONT_DATA(cmaps_Arial25, glyph_bitmap_Arial25, glyph_dsc_Arial25); break;
+        case 27: SET_FONT_DATA(cmaps_Arial27, glyph_bitmap_Arial27, glyph_dsc_Arial27); break;
+        case 34: SET_FONT_DATA(cmaps_Arial34, glyph_bitmap_Arial34, glyph_dsc_Arial34); break;
+        case 38: SET_FONT_DATA(cmaps_Arial38, glyph_bitmap_Arial38, glyph_dsc_Arial38); break;
+        case 43: SET_FONT_DATA(cmaps_Arial43, glyph_bitmap_Arial43, glyph_dsc_Arial43); break;
+        case 56: SET_FONT_DATA(cmaps_Arial56, glyph_bitmap_Arial56, glyph_dsc_Arial56); break;
+        case 66: SET_FONT_DATA(cmaps_Arial66, glyph_bitmap_Arial66, glyph_dsc_Arial66); break;
+        case 81: SET_FONT_DATA(cmaps_Arial81, glyph_bitmap_Arial81, glyph_dsc_Arial81); break;
+        case 96: SET_FONT_DATA(cmaps_Arial96, glyph_bitmap_Arial96, glyph_dsc_Arial96); break;
+        case 156: SET_FONT_DATA(cmaps_BigNumbers, glyph_bitmap_BiGNumbers, glyph_dsc_BigNumbers); break;
+        default: break;
+    }
+#endif
 
-    #ifdef TFT_Z003
-        switch (font) {
-            case 15: SET_FONT_DATA(cmaps_Z003_15, glyph_bitmap_Z003_15, glyph_dsc_Z003_15); break;
-            case 16: SET_FONT_DATA(cmaps_Z003_16, glyph_bitmap_Z003_16, glyph_dsc_Z003_16); break;
-            case 18: SET_FONT_DATA(cmaps_Z003_18, glyph_bitmap_Z003_18, glyph_dsc_Z003_18); break;
-            case 21: SET_FONT_DATA(cmaps_Z003_21, glyph_bitmap_Z003_21, glyph_dsc_Z003_21); break;
-            case 25: SET_FONT_DATA(cmaps_Z003_25, glyph_bitmap_Z003_25, glyph_dsc_Z003_25); break;
-            case 27: SET_FONT_DATA(cmaps_Z003_27, glyph_bitmap_Z003_27, glyph_dsc_Z003_27); break;
-            case 34: SET_FONT_DATA(cmaps_Z003_34, glyph_bitmap_Z003_34, glyph_dsc_Z003_34); break;
-            case 38: SET_FONT_DATA(cmaps_Z003_38, glyph_bitmap_Z003_38, glyph_dsc_Z003_38); break;
-            case 43: SET_FONT_DATA(cmaps_Z003_43, glyph_bitmap_Z003_43, glyph_dsc_Z003_43); break;
-            case 56: SET_FONT_DATA(cmaps_Z003_56, glyph_bitmap_Z003_56, glyph_dsc_Z003_56); break;
-            case 66: SET_FONT_DATA(cmaps_Z003_66, glyph_bitmap_Z003_66, glyph_dsc_Z003_66); break;
-            case 81: SET_FONT_DATA(cmaps_Z003_81, glyph_bitmap_Z003_81, glyph_dsc_Z003_81); break;
-            case 96: SET_FONT_DATA(cmaps_Z003_96, glyph_bitmap_Z003_96, glyph_dsc_Z003_96); break;
-            case 156: SET_FONT_DATA(cmaps_BigNumbers, glyph_bitmap_BiGNumbers, glyph_dsc_BigNumbers); break;
-            default: break;
-        }
-    #endif
+#ifdef TFT_Z003
+    switch (font) {
+        case 15: SET_FONT_DATA(cmaps_Z003_15, glyph_bitmap_Z003_15, glyph_dsc_Z003_15); break;
+        case 16: SET_FONT_DATA(cmaps_Z003_16, glyph_bitmap_Z003_16, glyph_dsc_Z003_16); break;
+        case 18: SET_FONT_DATA(cmaps_Z003_18, glyph_bitmap_Z003_18, glyph_dsc_Z003_18); break;
+        case 21: SET_FONT_DATA(cmaps_Z003_21, glyph_bitmap_Z003_21, glyph_dsc_Z003_21); break;
+        case 25: SET_FONT_DATA(cmaps_Z003_25, glyph_bitmap_Z003_25, glyph_dsc_Z003_25); break;
+        case 27: SET_FONT_DATA(cmaps_Z003_27, glyph_bitmap_Z003_27, glyph_dsc_Z003_27); break;
+        case 34: SET_FONT_DATA(cmaps_Z003_34, glyph_bitmap_Z003_34, glyph_dsc_Z003_34); break;
+        case 38: SET_FONT_DATA(cmaps_Z003_38, glyph_bitmap_Z003_38, glyph_dsc_Z003_38); break;
+        case 43: SET_FONT_DATA(cmaps_Z003_43, glyph_bitmap_Z003_43, glyph_dsc_Z003_43); break;
+        case 56: SET_FONT_DATA(cmaps_Z003_56, glyph_bitmap_Z003_56, glyph_dsc_Z003_56); break;
+        case 66: SET_FONT_DATA(cmaps_Z003_66, glyph_bitmap_Z003_66, glyph_dsc_Z003_66); break;
+        case 81: SET_FONT_DATA(cmaps_Z003_81, glyph_bitmap_Z003_81, glyph_dsc_Z003_81); break;
+        case 96: SET_FONT_DATA(cmaps_Z003_96, glyph_bitmap_Z003_96, glyph_dsc_Z003_96); break;
+        case 156: SET_FONT_DATA(cmaps_BigNumbers, glyph_bitmap_BiGNumbers, glyph_dsc_BigNumbers); break;
+        default: break;
+    }
+#endif
 
-    #undef SET_FONT_DATA
+#undef SET_FONT_DATA
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool TFT_Base::renderRGB565(int16_t x, int16_t y, uint16_t w, uint16_t h, const uint16_t* rgb, const uint8_t* alpha) {
@@ -2308,9 +2302,7 @@ bool TFT_Base::renderRGB565(int16_t x, int16_t y, uint16_t w, uint16_t h, const 
         }
     }
 
-    if (maxX >= minX && maxY >= minY) {
-        panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
-    }
+    if (maxX >= minX && maxY >= minY) { panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]); }
 
     return true;
 }
@@ -2386,6 +2378,61 @@ bool TFT_Base::copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, 
 
     return true;
 }
+
+bool TFT_Base::copyFramebufferToBuffer(uint8_t source, uint16_t* buffer, uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
+    if (!buffer) return false;
+    if (w == 0 || h == 0) return false;
+
+    uint16_t lw = logicalWidth();
+    uint16_t lh = logicalHeight();
+
+    if (x >= lw || y >= lh) return false;
+    if (x + w > lw) w = lw - x;
+    if (y + h > lh) h = lh - y;
+
+    for (uint16_t row = 0; row < h; row++) {
+        for (uint16_t col = 0; col < w; col++) {
+
+            int32_t physX, physY;
+            mapRotation(m_rotation, x + col, y + row, physX, physY);
+
+            if (physX < 0 || physY < 0 || physX >= m_h_res || physY >= m_v_res) continue;
+
+            buffer[row * w + col] = m_framebuffer[source][physY * m_h_res + physX];
+        }
+    }
+
+    return true;
+}
+
+bool TFT_Base::copyBufferToFramebuffer(const uint16_t* buffer, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
+    if (!buffer) return false;
+    if (w == 0 || h == 0) return false;
+
+    uint16_t lw = logicalWidth();
+    uint16_t lh = logicalHeight();
+
+    if (x >= lw || y >= lh) return false;
+    if (x + w > lw) w = lw - x;
+    if (y + h > lh) h = lh - y;
+
+    for (uint16_t row = 0; row < h; row++) {
+        for (uint16_t col = 0; col < w; col++) {
+
+            int32_t physX, physY;
+            mapRotation(m_rotation, x + col, y + row, physX, physY);
+
+            if (physX < 0 || physY < 0 || physX >= m_h_res || physY >= m_v_res) continue;
+
+            m_framebuffer[destination][physY * m_h_res + physX] = buffer[row * w + col];
+        }
+    }
+
+    if (destination == 0) drawRectLogicalFromFB(0, x, y, w, h);
+
+    return true;
+}
+
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_Base::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
     if (w <= 0 || h <= 0) return;
@@ -2395,9 +2442,7 @@ void TFT_Base::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t col
     uint16_t lineBuffer[w];
     for (int16_t i = 0; i < w; ++i) lineBuffer[i] = color;
 
-    for (int16_t row = 0; row < h; ++row) {
-        renderRGB565(x, y + row, w, 1, lineBuffer, nullptr);
-    }
+    for (int16_t row = 0; row < h; ++row) { renderRGB565(x, y + row, w, 1, lineBuffer, nullptr); }
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_Base::fillScreen(uint16_t color) {
@@ -2442,9 +2487,7 @@ void TFT_Base::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t
         }
     }
 
-    if (maxX >= minX && maxY >= minY) {
-        panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
-    }
+    if (maxX >= minX && maxY >= minY) { panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]); }
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_Base::drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color) {
@@ -2516,9 +2559,7 @@ void TFT_Base::fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int1
         }
     }
 
-    if (maxX >= minX && maxY >= minY) {
-        panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
-    }
+    if (maxX >= minX && maxY >= minY) { panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]); }
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_Base::drawRect(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t color) {
@@ -2552,9 +2593,7 @@ void TFT_Base::drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t
             int32_t rotX, rotY;
             mapRotation(m_rotation, px, py, rotX, rotY);
 
-            if (rotX >= 0 && rotX < m_h_res && rotY >= 0 && rotY < m_v_res) {
-                m_framebuffer[0][rotY * m_h_res + rotX] = color;
-            }
+            if (rotX >= 0 && rotX < m_h_res && rotY >= 0 && rotY < m_v_res) { m_framebuffer[0][rotY * m_h_res + rotX] = color; }
         };
 
         plot(x + w - r - 1 + cx, y + r - cy);
@@ -2597,9 +2636,7 @@ void TFT_Base::drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t
     includeCorner(x, y + h - 1);
     includeCorner(x + w - 1, y + h - 1);
 
-    if (maxX >= minX && maxY >= minY) {
-        panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
-    }
+    if (maxX >= minX && maxY >= minY) { panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]); }
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_Base::fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color) {
@@ -2657,9 +2694,7 @@ void TFT_Base::fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t
         f += ddF_x;
     }
 
-    if (maxX >= minX && maxY >= minY) {
-        panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
-    }
+    if (maxX >= minX && maxY >= minY) { panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]); }
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_Base::drawCircle(int16_t cx, int16_t cy, int16_t r, uint16_t color) {
@@ -2716,9 +2751,7 @@ void TFT_Base::drawCircle(int16_t cx, int16_t cy, int16_t r, uint16_t color) {
         plot(cx - y, cy - x);
     }
 
-    if (maxX >= minX && maxY >= minY) {
-        panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
-    }
+    if (maxX >= minX && maxY >= minY) { panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]); }
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_Base::fillCircle(int16_t cx, int16_t cy, uint16_t r, uint16_t color) {
@@ -2774,9 +2807,7 @@ void TFT_Base::fillCircle(int16_t cx, int16_t cy, uint16_t r, uint16_t color) {
         f += ddF_x;
     }
 
-    if (maxX >= minX && maxY >= minY) {
-        panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
-    }
+    if (maxX >= minX && maxY >= minY) { panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]); }
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_Base::writeTheFramebuffer(const uint8_t* bmi, uint16_t posX, uint16_t posY, uint16_t width, uint16_t height) {
@@ -2808,20 +2839,19 @@ void TFT_Base::writeTheFramebuffer(const uint8_t* bmi, uint16_t posX, uint16_t p
     bitreader(bmi);
 
     uint16_t* rgbBuffer = (uint16_t*)ps_malloc(width * height * sizeof(uint16_t));
-    uint8_t* alphaBuffer = (uint8_t*)ps_malloc(width * height);
+    uint8_t*  alphaBuffer = (uint8_t*)ps_malloc(width * height);
 
     if (!rgbBuffer || !alphaBuffer) return;
 
     for (uint16_t row = 0; row < height; row++) {
         for (uint16_t col = 0; col < width; col++) {
             int32_t color = bitreader(nullptr);
-            size_t idx = row * width + col;
+            size_t  idx = row * width + col;
 
             if (color == -1) {
                 rgbBuffer[idx] = 0;
                 alphaBuffer[idx] = 0;
-            }
-            else {
+            } else {
                 rgbBuffer[idx] = (uint16_t)color;
                 alphaBuffer[idx] = 255;
             }
@@ -2844,45 +2874,196 @@ uint16_t TFT_Base::analyzeText(const char* str, uint16_t* chArr, uint16_t* color
         colorArr[chLen + 1] = colorArr[chLen];
         switch ((uint8_t)str[idx]) {
             case '\033':
-                if (strncmp(str + idx, "\033[30m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_BLACK; break; }
-                if (strncmp(str + idx, "\033[31m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_RED; break; }
-                if (strncmp(str + idx, "\033[32m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_GREEN; break; }
-                if (strncmp(str + idx, "\033[33m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_YELLOW; break; }
-                if (strncmp(str + idx, "\033[34m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_BLUE; break; }
-                if (strncmp(str + idx, "\033[35m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_MAGENTA; break; }
-                if (strncmp(str + idx, "\033[36m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_CYAN; break; }
-                if (strncmp(str + idx, "\033[37m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_WHITE; break; }
-                if (strncmp(str + idx, "\033[38;5;130m", 11) == 0) { idx += 11; colorArr[chLen] = TFT_BROWN; break; }
-                if (strncmp(str + idx, "\033[38;5;214m", 11) == 0) { idx += 11; colorArr[chLen] = TFT_ORANGE; break; }
-                if (strncmp(str + idx, "\033[90m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_GREY; break; }
-                if (strncmp(str + idx, "\033[91m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_LIGHTRED; break; }
-                if (strncmp(str + idx, "\033[92m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_LIGHTGREEN; break; }
-                if (strncmp(str + idx, "\033[93m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_LIGHTYELLOW; break; }
-                if (strncmp(str + idx, "\033[94m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_LIGHTBLUE; break; }
-                if (strncmp(str + idx, "\033[95m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_LIGHTMAGENTA; break; }
-                if (strncmp(str + idx, "\033[96m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_LIGHTCYAN; break; }
-                if (strncmp(str + idx, "\033[97m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_LIGHTGREY; break; }
-                if (strncmp(str + idx, "\033[38;5;52m", 10) == 0) { idx += 10; colorArr[chLen] = TFT_DARKRED; break; }
-                if (strncmp(str + idx, "\033[38;5;22m", 10) == 0) { idx += 10; colorArr[chLen] = TFT_DARKGREEN; break; }
-                if (strncmp(str + idx, "\033[38;5;136m", 11) == 0) { idx += 11; colorArr[chLen] = TFT_DARKYELLOW; break; }
-                if (strncmp(str + idx, "\033[38;5;17m", 10) == 0) { idx += 10; colorArr[chLen] = TFT_DARKBLUE; break; }
-                if (strncmp(str + idx, "\033[38;5;53m", 10) == 0) { idx += 10; colorArr[chLen] = TFT_DARKMAGENTA; break; }
-                if (strncmp(str + idx, "\033[38;5;23m", 10) == 0) { idx += 10; colorArr[chLen] = TFT_DARKCYAN; break; }
-                if (strncmp(str + idx, "\033[38;5;240m", 11) == 0) { idx += 11; colorArr[chLen] = TFT_DARKGREY; break; }
-                if (strncmp(str + idx, "\033[38;5;166m", 11) == 0) { idx += 11; colorArr[chLen] = TFT_DARKORANGE; break; }
-                if (strncmp(str + idx, "\033[38;5;215m", 11) == 0) { idx += 11; colorArr[chLen] = TFT_LIGHTORANGE; break; }
-                if (strncmp(str + idx, "\033[38;5;129m", 11) == 0) { idx += 11; colorArr[chLen] = TFT_PURPLE; break; }
-                if (strncmp(str + idx, "\033[38;5;213m", 11) == 0) { idx += 11; colorArr[chLen] = TFT_PINK; break; }
-                if (strncmp(str + idx, "\033[38;5;190m", 11) == 0) { idx += 11; colorArr[chLen] = TFT_LIME; break; }
-                if (strncmp(str + idx, "\033[38;5;25m", 10) == 0) { idx += 10; colorArr[chLen] = TFT_NAVY; break; }
-                if (strncmp(str + idx, "\033[38;5;51m", 10) == 0) { idx += 10; colorArr[chLen] = TFT_AQUAMARINE; break; }
-                if (strncmp(str + idx, "\033[38;5;189m", 11) == 0) { idx += 11; colorArr[chLen] = TFT_LAVENDER; break; }
-                if (strncmp(str + idx, "\033[38;2;210;180;140m", 19) == 0) { idx += 19; colorArr[chLen] = TFT_LIGHTBROWN; break; }
-                if (strncmp(str + idx, "\033[0m", 4) == 0) { idx += 4; break; }
-                if (strncmp(str + idx, "\033[1m", 4) == 0) { idx += 4; break; }
-                if (strncmp(str + idx, "\033[2m", 4) == 0) { idx += 4; break; }
-                if (strncmp(str + idx, "\033[3m", 4) == 0) { idx += 4; break; }
-                if (strncmp(str + idx, "\033[4m", 4) == 0) { idx += 4; break; }
+                if (strncmp(str + idx, "\033[30m", 5) == 0) {
+                    idx += 5;
+                    colorArr[chLen] = TFT_BLACK;
+                    break;
+                }
+                if (strncmp(str + idx, "\033[31m", 5) == 0) {
+                    idx += 5;
+                    colorArr[chLen] = TFT_RED;
+                    break;
+                }
+                if (strncmp(str + idx, "\033[32m", 5) == 0) {
+                    idx += 5;
+                    colorArr[chLen] = TFT_GREEN;
+                    break;
+                }
+                if (strncmp(str + idx, "\033[33m", 5) == 0) {
+                    idx += 5;
+                    colorArr[chLen] = TFT_YELLOW;
+                    break;
+                }
+                if (strncmp(str + idx, "\033[34m", 5) == 0) {
+                    idx += 5;
+                    colorArr[chLen] = TFT_BLUE;
+                    break;
+                }
+                if (strncmp(str + idx, "\033[35m", 5) == 0) {
+                    idx += 5;
+                    colorArr[chLen] = TFT_MAGENTA;
+                    break;
+                }
+                if (strncmp(str + idx, "\033[36m", 5) == 0) {
+                    idx += 5;
+                    colorArr[chLen] = TFT_CYAN;
+                    break;
+                }
+                if (strncmp(str + idx, "\033[37m", 5) == 0) {
+                    idx += 5;
+                    colorArr[chLen] = TFT_WHITE;
+                    break;
+                }
+                if (strncmp(str + idx, "\033[38;5;130m", 11) == 0) {
+                    idx += 11;
+                    colorArr[chLen] = TFT_BROWN;
+                    break;
+                }
+                if (strncmp(str + idx, "\033[38;5;214m", 11) == 0) {
+                    idx += 11;
+                    colorArr[chLen] = TFT_ORANGE;
+                    break;
+                }
+                if (strncmp(str + idx, "\033[90m", 5) == 0) {
+                    idx += 5;
+                    colorArr[chLen] = TFT_GREY;
+                    break;
+                }
+                if (strncmp(str + idx, "\033[91m", 5) == 0) {
+                    idx += 5;
+                    colorArr[chLen] = TFT_LIGHTRED;
+                    break;
+                }
+                if (strncmp(str + idx, "\033[92m", 5) == 0) {
+                    idx += 5;
+                    colorArr[chLen] = TFT_LIGHTGREEN;
+                    break;
+                }
+                if (strncmp(str + idx, "\033[93m", 5) == 0) {
+                    idx += 5;
+                    colorArr[chLen] = TFT_LIGHTYELLOW;
+                    break;
+                }
+                if (strncmp(str + idx, "\033[94m", 5) == 0) {
+                    idx += 5;
+                    colorArr[chLen] = TFT_LIGHTBLUE;
+                    break;
+                }
+                if (strncmp(str + idx, "\033[95m", 5) == 0) {
+                    idx += 5;
+                    colorArr[chLen] = TFT_LIGHTMAGENTA;
+                    break;
+                }
+                if (strncmp(str + idx, "\033[96m", 5) == 0) {
+                    idx += 5;
+                    colorArr[chLen] = TFT_LIGHTCYAN;
+                    break;
+                }
+                if (strncmp(str + idx, "\033[97m", 5) == 0) {
+                    idx += 5;
+                    colorArr[chLen] = TFT_LIGHTGREY;
+                    break;
+                }
+                if (strncmp(str + idx, "\033[38;5;52m", 10) == 0) {
+                    idx += 10;
+                    colorArr[chLen] = TFT_DARKRED;
+                    break;
+                }
+                if (strncmp(str + idx, "\033[38;5;22m", 10) == 0) {
+                    idx += 10;
+                    colorArr[chLen] = TFT_DARKGREEN;
+                    break;
+                }
+                if (strncmp(str + idx, "\033[38;5;136m", 11) == 0) {
+                    idx += 11;
+                    colorArr[chLen] = TFT_DARKYELLOW;
+                    break;
+                }
+                if (strncmp(str + idx, "\033[38;5;17m", 10) == 0) {
+                    idx += 10;
+                    colorArr[chLen] = TFT_DARKBLUE;
+                    break;
+                }
+                if (strncmp(str + idx, "\033[38;5;53m", 10) == 0) {
+                    idx += 10;
+                    colorArr[chLen] = TFT_DARKMAGENTA;
+                    break;
+                }
+                if (strncmp(str + idx, "\033[38;5;23m", 10) == 0) {
+                    idx += 10;
+                    colorArr[chLen] = TFT_DARKCYAN;
+                    break;
+                }
+                if (strncmp(str + idx, "\033[38;5;240m", 11) == 0) {
+                    idx += 11;
+                    colorArr[chLen] = TFT_DARKGREY;
+                    break;
+                }
+                if (strncmp(str + idx, "\033[38;5;166m", 11) == 0) {
+                    idx += 11;
+                    colorArr[chLen] = TFT_DARKORANGE;
+                    break;
+                }
+                if (strncmp(str + idx, "\033[38;5;215m", 11) == 0) {
+                    idx += 11;
+                    colorArr[chLen] = TFT_LIGHTORANGE;
+                    break;
+                }
+                if (strncmp(str + idx, "\033[38;5;129m", 11) == 0) {
+                    idx += 11;
+                    colorArr[chLen] = TFT_PURPLE;
+                    break;
+                }
+                if (strncmp(str + idx, "\033[38;5;213m", 11) == 0) {
+                    idx += 11;
+                    colorArr[chLen] = TFT_PINK;
+                    break;
+                }
+                if (strncmp(str + idx, "\033[38;5;190m", 11) == 0) {
+                    idx += 11;
+                    colorArr[chLen] = TFT_LIME;
+                    break;
+                }
+                if (strncmp(str + idx, "\033[38;5;25m", 10) == 0) {
+                    idx += 10;
+                    colorArr[chLen] = TFT_NAVY;
+                    break;
+                }
+                if (strncmp(str + idx, "\033[38;5;51m", 10) == 0) {
+                    idx += 10;
+                    colorArr[chLen] = TFT_AQUAMARINE;
+                    break;
+                }
+                if (strncmp(str + idx, "\033[38;5;189m", 11) == 0) {
+                    idx += 11;
+                    colorArr[chLen] = TFT_LAVENDER;
+                    break;
+                }
+                if (strncmp(str + idx, "\033[38;2;210;180;140m", 19) == 0) {
+                    idx += 19;
+                    colorArr[chLen] = TFT_LIGHTBROWN;
+                    break;
+                }
+                if (strncmp(str + idx, "\033[0m", 4) == 0) {
+                    idx += 4;
+                    break;
+                }
+                if (strncmp(str + idx, "\033[1m", 4) == 0) {
+                    idx += 4;
+                    break;
+                }
+                if (strncmp(str + idx, "\033[2m", 4) == 0) {
+                    idx += 4;
+                    break;
+                }
+                if (strncmp(str + idx, "\033[3m", 4) == 0) {
+                    idx += 4;
+                    break;
+                }
+                if (strncmp(str + idx, "\033[4m", 4) == 0) {
+                    idx += 4;
+                    break;
+                }
                 if (tft_info) tft_info("unknown ANSI ESC SEQUENCE");
                 idx += 4;
                 break;
@@ -2897,8 +3078,7 @@ uint16_t TFT_Base::analyzeText(const char* str, uint16_t* chArr, uint16_t* color
                 if (m_current_font.lookup_table[codePoint] != 0) {
                     chArr[chLen] = codePoint;
                     chLen += 1;
-                }
-                else {
+                } else {
                     log_w("character 0x%02X%02X is not in table", str[idx], str[idx + 1]);
                 }
                 idx += 2;
@@ -2912,15 +3092,12 @@ uint16_t TFT_Base::analyzeText(const char* str, uint16_t* chArr, uint16_t* color
                     codePoint = 0xA4;
                     chArr[chLen] = codePoint;
                     chLen += 1;
-                }
-                else {
+                } else {
                     log_w("character 0x%02X%02X  is not in table", str[idx], str[idx + 1]);
                 }
                 idx += 3;
                 break;
-            case 0xE1 ... 0xEF:
-                idx += 3;
-                break;
+            case 0xE1 ... 0xEF: idx += 3; break;
             case 0xF0 ... 0xFF:
                 codePoint = -1;
                 if (!strncmp(str + idx, "🟢", 4)) { codePoint = 0xF9A2; }
@@ -2940,15 +3117,12 @@ uint16_t TFT_Base::analyzeText(const char* str, uint16_t* chArr, uint16_t* color
                 if (codePoint != -1) {
                     chArr[chLen] = codePoint;
                     chLen += 1;
-                }
-                else {
+                } else {
                     log_w("character 0x%02X%02X%02X%02X  is not in table", str[idx], str[idx + 1], str[idx + 2], str[idx + 3]);
                 }
                 idx += 4;
                 break;
-            default:
-                idx++;
-                break;
+            default: idx++; break;
         }
     }
     return chLen;
@@ -3027,8 +3201,7 @@ uint16_t TFT_Base::fitinline(uint16_t* cpArr, uint16_t chLength, uint16_t begin,
                 uint16_t fh = m_current_font.font_height;
                 pxLength += fh - fh / 3;
             }
-        }
-        else {
+        } else {
             glyphPos = m_current_font.lookup_table[cpArr[idx]];
             pxLength += m_current_font.glyph_dsc[glyphPos].adv_w / 16;
             int ofsX = m_current_font.glyph_dsc[glyphPos].ofs_x;
@@ -3085,8 +3258,8 @@ exit:
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 size_t TFT_Base::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, uint8_t h_align, uint8_t v_align, bool narrow, bool noWrap, bool autoSize) {
-    if(str == NULL) return 0;
-    if(strlen(str) == 0) return 0;
+    if (str == NULL) return 0;
+    if (strlen(str) == 0) return 0;
     uint16_t idx = 0;
     uint16_t utfPosArr[strlen(str) + 1] = {0};
     uint16_t colorArr[strlen(str) + 1] = {0};
@@ -3099,20 +3272,62 @@ size_t TFT_Base::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int1
         uint16_t color = 0;
         char     shape = 'x';
         switch (emoji) {
-            case 0xA2: color = TFT_GREEN; shape = 'c'; break;
-            case 0xA1: color = TFT_YELLOW; shape = 'c'; break;
-            case 0xB4: color = TFT_RED; shape = 'c'; break;
-            case 0xB5: color = TFT_BLUE; shape = 'c'; break;
-            case 0xA0: color = TFT_ORANGE; shape = 'c'; break;
-            case 0xA3: color = TFT_VIOLET; shape = 'c'; break;
-            case 0xA4: color = TFT_BROWN; shape = 'c'; break;
-            case 0xA9: color = TFT_GREEN; shape = 's'; break;
-            case 0xA8: color = TFT_YELLOW; shape = 's'; break;
-            case 0xA5: color = TFT_RED; shape = 's'; break;
-            case 0xA6: color = TFT_BLUE; shape = 's'; break;
-            case 0xA7: color = TFT_ORANGE; shape = 's'; break;
-            case 0xAA: color = TFT_VIOLET; shape = 's'; break;
-            case 0xAB: color = TFT_BROWN; shape = 's'; break;
+            case 0xA2:
+                color = TFT_GREEN;
+                shape = 'c';
+                break;
+            case 0xA1:
+                color = TFT_YELLOW;
+                shape = 'c';
+                break;
+            case 0xB4:
+                color = TFT_RED;
+                shape = 'c';
+                break;
+            case 0xB5:
+                color = TFT_BLUE;
+                shape = 'c';
+                break;
+            case 0xA0:
+                color = TFT_ORANGE;
+                shape = 'c';
+                break;
+            case 0xA3:
+                color = TFT_VIOLET;
+                shape = 'c';
+                break;
+            case 0xA4:
+                color = TFT_BROWN;
+                shape = 'c';
+                break;
+            case 0xA9:
+                color = TFT_GREEN;
+                shape = 's';
+                break;
+            case 0xA8:
+                color = TFT_YELLOW;
+                shape = 's';
+                break;
+            case 0xA5:
+                color = TFT_RED;
+                shape = 's';
+                break;
+            case 0xA6:
+                color = TFT_BLUE;
+                shape = 's';
+                break;
+            case 0xA7:
+                color = TFT_ORANGE;
+                shape = 's';
+                break;
+            case 0xAA:
+                color = TFT_VIOLET;
+                shape = 's';
+                break;
+            case 0xAB:
+                color = TFT_BROWN;
+                shape = 's';
+                break;
         }
         if (shape == 'c') {
             uint16_t fh = m_current_font.font_height;
@@ -4284,5 +4499,3 @@ void TFT_Base::png_draw_into_Framebuffer(uint16_t x, uint16_t y, uint16_t w, uin
     free(alphaBuffer);
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-
