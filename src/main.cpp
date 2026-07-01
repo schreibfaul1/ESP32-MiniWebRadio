@@ -458,24 +458,24 @@ void timer100ms() {
 
 
 inline void clearLogo() {
-    getTFT().copyFramebuffer(1, 0, layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h);
+    getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h);
 }
 inline void clearStationName() {
-    getTFT().copyFramebuffer(1, 0, layout.winName.x, layout.winName.y, layout.winName.w, layout.winName.h);
+    getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, layout.winName.x, layout.winName.y, layout.winName.w, layout.winName.h);
 }
 inline void clearStreamTitle() { // without VUmeter
-    getTFT().copyFramebuffer(1, 0, layout.winSTitle.x, layout.winSTitle.y, layout.winSTitle.w, layout.winSTitle.h);
+    getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, layout.winSTitle.x, layout.winSTitle.y, layout.winSTitle.w, layout.winSTitle.h);
 }
 inline void clearWithOutHeaderFooter(int32_t bgColor) {
     if (bgColor == TFT_TRANSPARENT) {
-        getTFT().copyFramebuffer(1, 0, layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h);
+        getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h);
     } else {
         getTFT().fillRect(layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, TFT_BLACK);
     }
 }
 inline void clearAll(int32_t bgColor) {
     if (bgColor == TFT_TRANSPARENT) {
-        getTFT().copyFramebuffer(1, 0, 0, 0, displayConfig.dispWidth, displayConfig.dispHeight); // copy wallpaper
+        getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, 0, 0, displayConfig.dispWidth, displayConfig.dispHeight); // copy wallpaper
     } else {
         getTFT().fillRect(0, 0, displayConfig.dispWidth, displayConfig.dispHeight, TFT_BLACK);
     }
@@ -1185,7 +1185,7 @@ void setup() {
     printfln(s_tag.setup, "Recorder task started, free heap: " ANSI_ESC_CYAN "{}", ESP.getFreeHeap());
 
     drawImage("/common/Wallpaper.jpg", 0, 0);    // Wallpaper
-    getTFT().copyFramebuffer(0, 1, 0, 0, displayConfig.dispWidth, displayConfig.dispHeight); // copy wallpaper to background
+    getTFT().copyFramebuffer(FB_VISIBLE, FB_BACKGROUND, 0, 0, displayConfig.dispWidth, displayConfig.dispHeight); // copy wallpaper to background
 
     dispHeader.updateVolume(s_volume.cur_volume);
     dispHeader.speakerOnOff(!s_f_mute);

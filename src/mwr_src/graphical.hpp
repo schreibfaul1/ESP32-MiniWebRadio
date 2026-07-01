@@ -297,7 +297,7 @@ class slider : public RegisterTable {
 
     void show() {
         if (m_first_call) { // save background
-            getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+            getTFT().copyFramebuffer(FB_VISIBLE, FB_TEMP, m_x, m_y, m_w, m_h);
             m_first_call = false;
         }
         m_enabled = true;
@@ -316,7 +316,7 @@ class slider : public RegisterTable {
     void disable() { m_enabled = false; }
     void enable() { m_enabled = true; }
     void hide() {
-        if (!m_first_call) getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+        if (!m_first_call) getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
         m_enabled = false;
         m_show = false;
     }
@@ -342,7 +342,7 @@ class slider : public RegisterTable {
     void drawNewSpot(uint16_t xPos) {
         if (m_enabled) {
             if (m_bgColor == TFT_TRANSPARENT) {
-                getTFT().copyFramebuffer(2, 0, m_spotPos - m_spotRadius - 1, m_middle_h - m_spotRadius - 1, 2 * m_spotRadius + 2, 2 * m_spotRadius + 2);
+                getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_spotPos - m_spotRadius - 1, m_middle_h - m_spotRadius - 1, 2 * m_spotRadius + 2, 2 * m_spotRadius + 2);
             } else {
                 getTFT().fillRect(m_spotPos - m_spotRadius, m_middle_h - m_spotRadius, 2 * m_spotRadius, 2 * m_spotRadius + 1, m_bgColor);
             }
@@ -466,7 +466,7 @@ class progressbar : public RegisterTable {
     }
     void show() {
         if (m_first_call) { // save background
-            getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+            getTFT().copyFramebuffer(FB_VISIBLE, FB_TEMP, m_x, m_y, m_w, m_h);
             m_first_call = false;
         }
         if (m_bgColor != TFT_TRANSPARENT) { getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor); }
@@ -478,7 +478,7 @@ class progressbar : public RegisterTable {
     void disable() { m_enabled = false; }
     void enable() { m_enabled = true; }
     void hide() {
-        if (!m_first_call) getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+        if (!m_first_call) getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
         m_enabled = false;
     }
     bool released() {
@@ -601,11 +601,11 @@ class textbox : public RegisterTable {
 
     void show() {
         if (m_first_call) { // save background
-            getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+            getTFT().copyFramebuffer(FB_VISIBLE, FB_TEMP, m_x, m_y, m_w, m_h);
             m_first_call = false;
         }
         if (m_content_has_changed) { // restore background
-            getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+            getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
             m_content_has_changed = false;
         }
         m_enabled = true;
@@ -615,7 +615,7 @@ class textbox : public RegisterTable {
     }
 
     void hide() {
-        if (!m_first_call) getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+        if (!m_first_call) getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
         m_enabled = false;
     }
 
@@ -673,7 +673,7 @@ private:
     void writeText(ps_ptr<char> txt) {
         if (m_enabled) {
             if (m_bgColor == -1) {
-                getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+                getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
             } else {
                 getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
             }
@@ -770,7 +770,7 @@ class inputbox : public RegisterTable {
     }
 
     void show() {
-        if (m_enabled == false) getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+        if (m_enabled == false) getTFT().copyFramebuffer(FB_VISIBLE, FB_TEMP, m_x, m_y, m_w, m_h);
         m_enabled = true;
         m_clicked = false;
         if (m_bgColor != TFT_TRANSPARENT) { getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor); }
@@ -778,7 +778,7 @@ class inputbox : public RegisterTable {
     }
 
     void hide() {
-        getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+        getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
         m_enabled = false;
     }
     void disable() { m_enabled = false; }
@@ -836,7 +836,7 @@ class inputbox : public RegisterTable {
             getTFT().setTextColor(m_fgColor);
             getTFT().setBackGoundColor(m_bgColor);
             if (m_bgColor == TFT_TRANSPARENT) {
-                getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+                getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
             } else {
                 getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
             }
@@ -983,7 +983,7 @@ class textbutton : public RegisterTable {
 
     void show() {
         if (m_first_call) { // save background
-            getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+            getTFT().copyFramebuffer(FB_VISIBLE, FB_TEMP, m_x, m_y, m_w, m_h);
             m_first_call = false;
         }
         m_enabled = true;
@@ -993,7 +993,7 @@ class textbutton : public RegisterTable {
     }
 
     void hide() {
-        if (!m_first_call) getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+        if (!m_first_call) getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
         m_enabled = false;
     }
     void disable() { m_enabled = false; }
@@ -1064,7 +1064,7 @@ class textbutton : public RegisterTable {
             }
 
             if (m_bgColor == TFT_TRANSPARENT) {
-                getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+                getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
             } else {
                 getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
             }
@@ -1486,7 +1486,7 @@ class keyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     }
 
     void show() {
-        if (m_enabled == false) getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+        if (m_enabled == false) getTFT().copyFramebuffer(FB_VISIBLE, FB_TEMP, m_x, m_y, m_w, m_h);
         m_enabled = true;
         m_clicked = false;
         if (m_bgColor != TFT_TRANSPARENT) { getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor); }
@@ -1497,7 +1497,7 @@ class keyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     }
 
     void hide() {
-        getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+        getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
         m_enabled = false;
     }
     void    disable() { m_enabled = false; }
@@ -2042,7 +2042,7 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     }
 
     void show() {
-        if (m_enabled == false) getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+        if (m_enabled == false) getTFT().copyFramebuffer(FB_VISIBLE, FB_TEMP, m_x, m_y, m_w, m_h);
         m_enabled = true;
         if (m_bgColor != TFT_TRANSPARENT) { getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor); }
         for (uint8_t i = 0; i < 8; i++) { txt_time[i].show(); }
@@ -2050,7 +2050,7 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     }
 
     void hide() {
-        getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+        getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
 
         for (uint8_t i = 0; i < 8; i++) { txt_time[i].hide(); }
         m_enabled = false;
@@ -2174,7 +2174,7 @@ class button1state : public RegisterTable { // click button
 
     void show(bool inactive = false) {
         if (m_first_call) { // save background
-            getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+            getTFT().copyFramebuffer(FB_VISIBLE, FB_TEMP, m_x, m_y, m_w, m_h);
             m_first_call = false;
         }
         m_clicked = false;
@@ -2186,16 +2186,16 @@ class button1state : public RegisterTable { // click button
             bool res = drawImage(m_idlePicturePath, m_x, m_y, m_w, m_h);
             if (res) {
                 m_cache_idle_pic.alloc_array(m_w * m_h, m_name.c_get());
-                getTFT().copyFramebufferToBuffer(0, m_cache_idle_pic.get(), m_x, m_y, m_w, m_h);
+                getTFT().copyFramebuffer(FB_VISIBLE, m_cache_idle_pic.get(), m_x, m_y, m_w, m_h);
             }
         } else {
-            getTFT().copyBufferToFramebuffer(m_cache_idle_pic.get(), 0, m_x, m_y, m_w, m_h);
+            getTFT().copyFramebuffer(m_cache_idle_pic.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
         }
         m_enabled = true;
     }
 
     void hide() {
-        if (!m_first_call) getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+        if (!m_first_call) getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
         m_enabled = false;
     }
 
@@ -2342,7 +2342,7 @@ class button2state : public RegisterTable { // on off switch
 
     void show() {
         if (m_first_call) { // save background
-            getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+            getTFT().copyFramebuffer(FB_VISIBLE, FB_TEMP, m_x, m_y, m_w, m_h);
             m_first_call = false;
         }
         m_clicked = false;
@@ -2380,7 +2380,7 @@ class button2state : public RegisterTable { // on off switch
     }
 
     void hide() {
-        if (!m_first_call) getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+        if (!m_first_call) getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
         m_enabled = false;
     }
 
@@ -2492,7 +2492,7 @@ class numbersBox : public RegisterTable { // range 000...999
 
     bool show(uint16_t color) {
         m_clicked = false;
-        if (m_enabled == false) getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+        if (m_enabled == false) getTFT().copyFramebuffer(FB_VISIBLE, FB_TEMP, m_x, m_y, m_w, m_h);
         if (color == TFT_BLUE)
             m_color = "blue";
         else if (color == TFT_ORANGE)
@@ -2513,7 +2513,7 @@ class numbersBox : public RegisterTable { // range 000...999
     }
 
     void hide() {
-        getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+        getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
         m_enabled = false;
     }
 
@@ -2622,7 +2622,7 @@ class offTimerBox : public RegisterTable { // range 000...999
     }
 
     bool show(uint16_t time) {
-        if (m_enabled == false) getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+        if (m_enabled == false) getTFT().copyFramebuffer(FB_VISIBLE, FB_TEMP, m_x, m_y, m_w, m_h);
         if (!time)
             m_color = "red";
         else
@@ -2644,7 +2644,7 @@ class offTimerBox : public RegisterTable { // range 000...999
     }
 
     void hide() {
-        getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+        getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
         m_enabled = false;
     }
 
@@ -2781,11 +2781,11 @@ class pictureBox : public RegisterTable {
 
     bool show() {
         if (m_first_call) { // save background
-            getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+            getTFT().copyFramebuffer(FB_VISIBLE, FB_TEMP, m_x, m_y, m_w, m_h);
             m_first_call = false;
         }
         if (m_content_has_changed) { // restore background
-            getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+            getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
             m_content_has_changed = false;
         }
         int x = m_x + m_padding_left + m_image_x;
@@ -2801,7 +2801,7 @@ class pictureBox : public RegisterTable {
     }
 
     void hide() {
-        if (!m_first_call) getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+        if (!m_first_call) getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
         m_enabled = false;
     }
     void disable() { m_enabled = false; }
@@ -2944,7 +2944,7 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
     }
 
     void show(bool inactive = false) {
-        if (m_enabled == false) getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+        if (m_enabled == false) getTFT().copyFramebuffer(FB_VISIBLE, FB_TEMP, m_x, m_y, m_w, m_h);
         m_clicked = false;
         if (inactive) {
             //    setInactive();
@@ -2956,7 +2956,7 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
     }
 
     void hide() {
-        getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+        getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
         pic_clock24_digitsH10->hide();
         pic_clock24_digitsH01->hide();
         pic_clock24_digitsM10->hide();
@@ -3169,7 +3169,7 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
     }
 
     void show(bool inactive = false) {
-        if (m_enabled == false) getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+        if (m_enabled == false) getTFT().copyFramebuffer(FB_VISIBLE, FB_TEMP, m_x, m_y, m_w, m_h);
         m_clicked = false;
         if (inactive) {
             //    setInactive();
@@ -3181,7 +3181,7 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
     }
 
     void hide() {
-        getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+        getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
         m_enabled = false;
     }
     void disable() {
@@ -3424,7 +3424,7 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
     }
 
     void show(bool inactive = false) {
-        if (m_enabled == false) getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+        if (m_enabled == false) getTFT().copyFramebuffer(FB_VISIBLE, FB_TEMP, m_x, m_y, m_w, m_h);
         m_clicked = false;
         if (inactive) {
             //    setInactive();
@@ -3437,7 +3437,7 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
     }
 
     void hide() {
-        getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+        getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
         m_enabled = false;
     }
 
@@ -4022,7 +4022,7 @@ class dlnaList : public RegisterTable {
         dlnaItemsList();
     }
     void hide() {
-        getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+        getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
         m_enabled = false;
     }
     void disable() { m_enabled = false; }
@@ -4606,7 +4606,7 @@ class fileList : public RegisterTable {
         audioFileslist(m_viewPos);
     }
     void hide() {
-        getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+        getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
         m_enabled = false;
     }
     void disable() { m_enabled = false; }
@@ -4995,7 +4995,7 @@ class stationsList : public RegisterTable {
         stationslist(true);
     }
     void hide() {
-        getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+        getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
         m_enabled = false;
     }
     void disable() { m_enabled = false; }
@@ -5239,13 +5239,13 @@ class vuMeter : public RegisterTable {
 
     void show() {
         if (m_first_call) { // save background
-            getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+            getTFT().copyFramebuffer(FB_VISIBLE, FB_TEMP, m_x, m_y, m_w, m_h);
             m_first_call = false;
         }
         m_enabled = true;
         m_clicked = false;
         if (m_bgColor == TFT_TRANSPARENT) {
-            getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+            getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         }
@@ -5259,7 +5259,7 @@ class vuMeter : public RegisterTable {
     }
 
     void hide() {
-        if (!m_first_call) getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+        if (!m_first_call) getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
         m_enabled = false;
     }
     void disable() { m_enabled = false; }
@@ -5587,7 +5587,7 @@ class displayHeader : public RegisterTable {
 
     void show() {
         if (m_bgColor == TFT_TRANSPARENT) {
-            getTFT().copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         }
@@ -5614,7 +5614,7 @@ class displayHeader : public RegisterTable {
         pic_RSSID->hide();
         timeStringObject->hide();
         if (m_bgColor == TFT_TRANSPARENT) {
-            getTFT().copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         }
@@ -6101,7 +6101,7 @@ class displayFooter : public RegisterTable {
 
     void show() {
         if (m_bgColor == TFT_TRANSPARENT) {
-            getTFT().copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         }
@@ -6131,7 +6131,7 @@ class displayFooter : public RegisterTable {
         txt_OffTimer->hide();
         txt_IpAddr->hide();
         if (m_bgColor == TFT_TRANSPARENT) {
-            getTFT().copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         }
@@ -6222,7 +6222,7 @@ class displayFooter : public RegisterTable {
             uint16_t y0y1 = m_y + m_h - 5;
             uint16_t y2 = round((m_y + m_h - 5) - ((float)(m_h - 6) / 10) * timeCounter);
             if (m_bgColor == TFT_TRANSPARENT) {
-                getTFT().copyFramebuffer(1, 0, s_BitRate.x, m_y, s_BitRate.w, m_h);
+                getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, s_BitRate.x, m_y, s_BitRate.w, m_h);
             } else {
                 getTFT().fillRect(s_BitRate.x, m_y, s_BitRate.w, m_h, m_bgColor);
             }
@@ -6397,7 +6397,7 @@ class messageBox : public RegisterTable {
 
     void show() {
         if (m_first_call) { // save background
-            getTFT().copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+            getTFT().copyFramebuffer(FB_VISIBLE, FB_TEMP, m_x, m_y, m_w, m_h);
             m_first_call = false;
         }
         txt_msgBox->setBGcolor(m_bgColor);
@@ -6426,7 +6426,7 @@ class messageBox : public RegisterTable {
     }
 
     void hide() {
-        if (!m_first_call) getTFT().copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+        if (!m_first_call) getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
         m_enabled = false;
     }
 

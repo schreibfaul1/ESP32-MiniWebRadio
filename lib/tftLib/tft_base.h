@@ -6,6 +6,12 @@
 #include "fonts/fontsdef.h"
 #include "tft_common_defs.h"
 
+
+enum Framebuffer : uint8_t {
+    FB_VISIBLE    = 0,
+    FB_BACKGROUND = 1,
+    FB_TEMP       = 2
+};
 class TFT_Base {
   public:
     virtual ~TFT_Base() = default;
@@ -15,8 +21,8 @@ class TFT_Base {
 
     void drawRectLogicalFromFB(uint8_t fb, int16_t x, int16_t y, uint16_t w, uint16_t h);
     bool copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h); // framebuffer zu framebuffer
-    bool copyFramebufferToBuffer(uint8_t source, uint16_t* buffer, uint16_t x, uint16_t y, uint16_t w, uint16_t h); // framebuffer to buffer
-    bool copyBufferToFramebuffer(const uint16_t* buffer, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h); // buffer to framebuffer
+    bool copyFramebuffer(uint8_t source, uint16_t* buffer, uint16_t x, uint16_t y, uint16_t w, uint16_t h); // framebuffer to buffer
+    bool copyFramebuffer(const uint16_t* buffer, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h); // buffer to framebuffer
 
     void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
     void fillScreen(uint16_t color);

@@ -2379,7 +2379,7 @@ bool TFT_Base::copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, 
     return true;
 }
 
-bool TFT_Base::copyFramebufferToBuffer(uint8_t source, uint16_t* buffer, uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
+bool TFT_Base::copyFramebuffer(uint8_t source, uint16_t* buffer, uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
     if (!buffer) return false;
     if (w == 0 || h == 0) return false;
 
@@ -2405,7 +2405,7 @@ bool TFT_Base::copyFramebufferToBuffer(uint8_t source, uint16_t* buffer, uint16_
     return true;
 }
 
-bool TFT_Base::copyBufferToFramebuffer(const uint16_t* buffer, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
+bool TFT_Base::copyFramebuffer(const uint16_t* buffer, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
     if (!buffer) return false;
     if (w == 0 || h == 0) return false;
 
