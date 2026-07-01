@@ -484,7 +484,8 @@ inline void clearAll(int32_t bgColor) {
 void showStationName() {
     if (s_f_sleeping) return;
     txt_RA_staName.setTextColor(TFT_CYAN);
-    txt_RA_staName.writeText(getStationName());
+    txt_RA_staName.setText(getStationName());
+    txt_RA_staName.show();
 }
 
 void showStreamTitle(ps_ptr<char> streamtitle) {
@@ -496,7 +497,8 @@ void showStreamTitle(ps_ptr<char> streamtitle) {
     // replacestr(st, "|", "\n");
 
     txt_RA_sTitle.setTextColor(TFT_CORNSILK);
-    txt_RA_sTitle.writeText(streamtitle.c_get());
+    txt_RA_sTitle.setText(streamtitle.c_get());
+    txt_RA_sTitle.show();
 }
 
 void showLogoAndStationName() {
@@ -589,13 +591,15 @@ void showFileLogo(int8_t state, int8_t subState) {
 void showPlayerFileName(const char* fname) {
     if (!fname) return;
     txt_PL_fName.setTextColor(TFT_CYAN);
-    txt_PL_fName.writeText(fname);
+    txt_PL_fName.setText(fname);
+    txt_PL_fName.show();
 }
 
 void show_DLNA_FileName(const char* fname) {
     if (!fname) return;
     txt_DL_fName.setTextColor(TFT_CYAN);
-    txt_DL_fName.writeText(fname);
+    txt_DL_fName.setText(fname);
+    txt_DL_fName.show();
 }
 
 void showPlsFileNumber() {
@@ -695,7 +699,8 @@ start:
 
     if (idx == 0) { // first
         changeState(PLAYER, 1);
-        txt_PL_fName.writeText("");
+        txt_PL_fName.setText("");
+        txt_PL_fName.show();
     }
 
     printfln(s_tag.playlist, ANSI_ESC_YELLOW "next playlist file");
@@ -718,7 +723,7 @@ start:
         printfln(s_tag.playlist, ANSI_ESC_YELLOW, path.c_get());
         webSrv.send("SD_playFile=", path);
         if (s_state == PLAYER) dispFooter.updateFileNr(playlist.get_coloured_index().c_get());
-        txt_PL_fName.writeText(playlist.get_items().c_get());
+        txt_PL_fName.setText(playlist.get_items().c_get()); txt_PL_fName.show();
     } else {
         printfln(s_tag.playlist, ANSI_ESC_YELLOW "can't connect to {}", path.c_get());
         goto start;
@@ -1925,8 +1930,8 @@ void changeState(int8_t state, int8_t subState) {
             btn_BT_volUp.show(); btn_BT_volDown.show(); btn_BT_pause.show(); btn_BT_mode.show();
             btn_BT_radio.show(); btn_BT_power.show();
             pic_BT_mode.show();
-            if (s_bt_emitter.mode.equals("RX")) { txt_BT_mode.writeText("RECEIVER");}
-            else                                { txt_BT_mode.writeText("EMITTER"); }
+            if (s_bt_emitter.mode.equals("RX")) { txt_BT_mode.setText("RECEIVER"); txt_BT_mode.show(); }
+            else                                { txt_BT_mode.setText("EMITTER"); txt_BT_mode.show(); }
             txt_BT_mode.setBGcolor(TFT_BROWN);
             txt_BT_mode.show();
             ps_ptr<char> v;
@@ -2222,8 +2227,10 @@ void loop() {
                     showStreamTitle(s_icyDescription);
                     s_f_newIcyDescription = false;
                     webSrv.send("icy_description=", s_icyDescription.c_get());
-                } else
-                    txt_RA_sTitle.writeText("");
+                } else {
+                    txt_RA_sTitle.setText("");
+                    txt_RA_sTitle.show();
+                }
             }
             webSrv.send("streamtitle=", s_streamTitle.c_get());
         }
@@ -3660,7 +3667,8 @@ void on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg) {
     if (msg.e == KCX_BT_Emitter::evt_connect) {
         s_bt_emitter.connect = true;
         if (s_bt_emitter.mode.equals("TX")) {
-            txt_BT_mode.writeText("EMITTER");
+            txt_BT_mode.setText("EMITTER");
+            txt_BT_mode.show();
             pic_BT_mode.setPicturePath("/common/BT_TX.png");
             if (s_state == BLUETOOTH) {
                 pic_BT_mode.show();
@@ -3668,7 +3676,8 @@ void on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg) {
             }
             webSrv.send("KCX_BT_MODE=", "TX");
         } else {
-            txt_BT_mode.writeText("RECEIVER");
+            txt_BT_mode.setText("RECEIVER");
+            txt_BT_mode.show();
             pic_BT_mode.setPicturePath("/common/BT_RX.png");
             if (s_state == BLUETOOTH) {
                 pic_BT_mode.show();
@@ -3723,7 +3732,7 @@ void on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg) {
     }
     if (msg.e == KCX_BT_Emitter::evt_mode) {
         webSrv.send("KCX_BT_MODE=", msg.arg);
-        if (s_state == BLUETOOTH) txt_BT_mode.writeText(msg.arg[0] == 'R' ? "RECEIVER" : "EMITTER");
+        if (s_state == BLUETOOTH) { txt_BT_mode.setText(msg.arg[0] == 'R' ? "RECEIVER" : "EMITTER"); txt_BT_mode.show(); }
         s_bt_emitter.mode = msg.arg;
         printfln(s_tag.bt_emitter, "RX_TX_mode: " ANSI_ESC_YELLOW "{}", msg.arg);
     }
@@ -3893,14 +3902,14 @@ void graphicObjects_OnChange(ps_ptr<char> name, int32_t val) {
     if (name.equals("sdr_PL_volume"))   { setVolume(val); goto exit; }
     if (name.equals("sdr_DL_volume"))   { setVolume(val); goto exit; }
     if (name.equals("sdr_CL_volume"))   { setVolume(val); goto exit; }
-    if (name.equals("sdr_BR_value"))    { s_brightness = val; setTFTbrightness(s_brightness, s_bh1750Value); txt_BR_value.writeText(int2str(val)); goto exit; }
-    if (name.equals("sdr_EQ_LP"))       { c.assignf("{} dB", val); s_tone.LP  = val; webSrv.send("settone=", getI2STone().c_get()); setI2STone(); txt_EQ_lowPass.writeText(c.c_get());  goto exit; }
-    if (name.equals("sdr_EQ_BP"))       { c.assignf("{} dB", val); s_tone.BP  = val; webSrv.send("settone=", getI2STone().c_get()); setI2STone(); txt_EQ_bandPass.writeText(c.c_get()); goto exit; }
-    if (name.equals("sdr_EQ_HP"))       { c.assignf("{} dB", val); s_tone.HP  = val; webSrv.send("settone=", getI2STone().c_get()); setI2STone(); txt_EQ_highPass.writeText(c.c_get()); goto exit; }
+    if (name.equals("sdr_BR_value"))    { s_brightness = val; setTFTbrightness(s_brightness, s_bh1750Value); txt_BR_value.setText(int2str(val)); txt_BR_value.show(); goto exit; }
+    if (name.equals("sdr_EQ_LP"))       { c.assignf("{} dB", val); s_tone.LP  = val; webSrv.send("settone=", getI2STone().c_get()); setI2STone(); txt_EQ_lowPass.setText(c.c_get());  txt_EQ_lowPass.show(); goto exit; }
+    if (name.equals("sdr_EQ_BP"))       { c.assignf("{} dB", val); s_tone.BP  = val; webSrv.send("settone=", getI2STone().c_get()); setI2STone(); txt_EQ_bandPass.setText(c.c_get()); txt_EQ_bandPass.show(); goto exit; }
+    if (name.equals("sdr_EQ_HP"))       { c.assignf("{} dB", val); s_tone.HP  = val; webSrv.send("settone=", getI2STone().c_get()); setI2STone(); txt_EQ_highPass.setText(c.c_get()); txt_EQ_highPass.show(); goto exit; }
     if (name.equals("sdr_EQ_BAL"))      { if(val < 0)       c.assignf("{}/0 dB", val);  // e.g. -10/0 dB
                                           else if (val > 0) c.assignf("0/-{} dB", val); // e.g. 0/-8 dB
                                           else              c.assignf("0/0 dB", val);   // 0/0 dB
-                                          s_tone.BAL = val; webSrv.send("settone=", getI2STone().c_get()); setI2STone(); txt_EQ_balance.writeText(c.c_get());  goto exit; }
+                                          s_tone.BAL = val; webSrv.send("settone=", getI2STone().c_get()); setI2STone(); txt_EQ_balance.setText(c.c_get()); txt_EQ_balance.show(); goto exit; }
     if (name.equals("pgb_PL_progress")) { goto exit; }
     if (name.equals("pgb_DL_progress")) { goto exit; }
 
