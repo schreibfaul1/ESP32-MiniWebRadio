@@ -1058,15 +1058,6 @@ void setup() {
 
     if (!detect_i2_c_devices(&i2cBusOne, I2C_SDA, I2C_SCL, &s_i2c_items)) { printfln(s_tag.setup, "No i2c device found"); }
 
-    if (TFT_BL >= 0) {
-        s_f_brightnessIsChangeable = true;
-        setupBacklight(TFT_BL, 512);
-        setTFTbrightness(5, s_bh1750Value);
-    }
-    if (IR_PIN >= 0) {
-        pinMode(IR_PIN, INPUT_PULLUP); // if ir_pin is read only, have a external resistor (~10...40KOhm)
-    }
-
     set_display_items(); // TFT, TP, Resolotion
     if (!init_SD_card()) return;
 
@@ -1105,6 +1096,8 @@ void setup() {
     lst_DLNA.client_and_history(&dlna, &s_dlnaHistory[0], 10);
     lst_RADIO.currentStationNr(&s_cur_station);
     clk_AC_red.alarm_time_and_days(&s_alarmdays, s_alarmtime);
+    btn_RA_bt.set_active(false);
+    btn_SE_bright.set_active(false);
 
     audio.setAudioTaskCore(AUDIOTASK_CORE);
     audio.setConnectionTimeout(CONN_TIMEOUT, CONN_TIMEOUT_SSL);
@@ -1122,6 +1115,15 @@ void setup() {
     printfln(s_tag.setup, "last connected host: " ANSI_ESC_YELLOW "{}", s_settings.lastconnectedhost);
     printfln(s_tag.setup, "connection timeout: " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET " ms", CONN_TIMEOUT);
     printfln(s_tag.setup, "connection timeout SSL: " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET " ms", CONN_TIMEOUT_SSL);
+
+    if (TFT_BL >= 0) {
+        s_f_brightnessIsChangeable = true;
+         setupBacklight(TFT_BL, 512);
+        setTFTbrightness(5, s_bh1750Value);
+    }
+    if (IR_PIN >= 0) {
+        pinMode(IR_PIN, INPUT_PULLUP); // if ir_pin is read only, have a external resistor (~10...40KOhm)
+    }
 
     ir.begin(); // Init InfraredDecoder
 
@@ -1776,7 +1778,7 @@ void changeState(int8_t state, int8_t subState) {
                     sdr_RA_volume.hide();
                     btn_RA_staList.show();
                     btn_RA_player.show(); btn_RA_dlna.show(); btn_RA_clock.show(); btn_RA_sleep.show(); btn_RA_settings.show();
-                    btn_RA_bt.show(!s_bt_emitter.found);
+                    btn_RA_bt.show();
                     btn_RA_off.show();
                     setTimeCounter(2);
                 }
@@ -1890,7 +1892,6 @@ void changeState(int8_t state, int8_t subState) {
             if (newState) {
                 showFileLogo(SETTINGS, subState);
             }
-            btn_SE_bright.show(!s_f_brightnessIsChangeable);
             btn_SE_bright.show(); btn_SE_equal.show(); btn_SE_wifi.show(); btn_SE_radio.show();
             break;
         }
@@ -2323,6 +2324,7 @@ void loop() {
         }
         //--------------------------------------------- BT EMITTER ----------------------------------------------------------------------------------
         if (s_bt_emitter.found) {
+            btn_RA_bt.set_active(true);
             if (s_bt_emitter.enabled) {
                 if (!s_f_sleeping) {
                     if (!bt_emitter.get_power_state()) bt_emitter.power_on(s_bt_emitter.mode.c_get());

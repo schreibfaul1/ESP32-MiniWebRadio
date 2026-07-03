@@ -216,13 +216,13 @@ class button1state : public RegisterTable { // click button
     void         set_bg_color(int32_t color) { m_bg_color = color; }
     bool         set_focus(bool focus) { return draw_focus(focus); }
 
-    void show(bool inactive = false) {
+    void show() {
         if (m_first_call) { // save background
             getTFT().copyFramebuffer(FB_VISIBLE, FB_TEMP, m_x, m_y, m_w, m_h);
             m_first_call = false;
         }
         m_clicked = false;
-        if (inactive) {
+        if (!m_active) {
             setInactive();
             return;
         }
