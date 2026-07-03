@@ -177,6 +177,7 @@ class button1state : public RegisterTable { // click button
     int16_t          m_y = 0;
     int16_t          m_w = 0;
     int16_t          m_h = 0;
+    int32_t          m_bgColor = TFT_TRANSPARENT;
     ps_ptr<char>     m_idlePicturePath;
     ps_ptr<char>     m_clickPicturePath;
     ps_ptr<char>     m_inactivePicturePath;
@@ -210,6 +211,7 @@ class button1state : public RegisterTable { // click button
     void         disable() { m_enabled = false; }
     bool         isEnabled() { return m_enabled; }
     bool         hasFocus() { return m_focus; }
+    void         setBGcolor(int32_t color) { m_bgColor = color; }
 
     bool setFocus(bool f) {
         if (!m_active) return false;
@@ -325,6 +327,7 @@ class button2state : public RegisterTable { // on off switch
     int16_t      m_y = 0;
     int16_t      m_w = 0;
     int16_t      m_h = 0;
+    int32_t      m_bgColor = TFT_TRANSPARENT;
     ps_ptr<char> m_off_idlePicturePath;
     ps_ptr<char> m_on_idlePicturePath;
     ps_ptr<char> m_off_clickPicturePath;
@@ -367,6 +370,7 @@ class button2state : public RegisterTable { // on off switch
     void         disable() { m_enabled = false; }
     bool         isEnabled() { return m_enabled; }
     bool         hasFocus() { return m_focus; }
+    void         setBGcolor(int32_t color) { m_bgColor = color; }
 
     bool setFocus(bool f) {
         if (!m_active) return false;
@@ -512,7 +516,7 @@ class pictureBox : public RegisterTable {
     uint8_t      m_padding_right = 0;  // right margin
     uint8_t      m_padding_top = 0;    // top margin
     uint8_t      m_padding_bottom = 0; // bottom margin
-    int32_t      m_bgColor = 0;
+    int32_t      m_bgColor = TFT_TRANSPARENT;
     ps_ptr<char> m_PicturePath;
     ps_ptr<char> m_altPicturePath;
     ps_ptr<char> m_name;
@@ -549,6 +553,7 @@ class pictureBox : public RegisterTable {
     void         enable() { m_enabled = true; }
     bool         isEnabled() { return m_enabled; }
     bool         hasFocus() { return m_focus; }
+    void         setBGcolor(int32_t color) { m_bgColor = color; }
 
     bool setFocus(bool f) {
         if (!m_active)
@@ -556,11 +561,6 @@ class pictureBox : public RegisterTable {
         else
             m_focus = f;
         return m_focus;
-    }
-
-    void setBGcolor(int32_t color) {
-        if (m_bgColor == color) return;
-        m_bgColor = color;
     }
 
     void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
@@ -650,7 +650,7 @@ class slider : public RegisterTable {
     int16_t      m_maxVal = 0;
     uint16_t     m_leftStop = 0;
     uint16_t     m_rightStop = 0;
-    int32_t      m_bgColor = 0;
+    int32_t      m_bgColor = TFT_TRANSPARENT;
     int32_t      m_railColor = 0;
     int32_t      m_spotColor = 0;
     bool         m_enabled = false;
@@ -678,7 +678,6 @@ class slider : public RegisterTable {
         m_name = name;
         m_railHigh = 6;
         m_spotRadius = 12;
-        m_bgColor = TFT_TRANSPARENT;
         m_railColor = TFT_BEIGE;
         m_spotColor = TFT_RED;
     }
@@ -709,6 +708,7 @@ class slider : public RegisterTable {
     void         enable() { m_enabled = true; }
     bool         isEnabled() { return m_enabled; }
     bool         hasFocus() { return m_focus; }
+    void         setBGcolor(int32_t color) { m_bgColor = color; }
 
     bool setFocus(bool f) {
         if (!m_active)
@@ -716,12 +716,6 @@ class slider : public RegisterTable {
         else
             m_focus = f;
         return m_focus;
-    }
-
-    void setBGcolor(int32_t color) {
-        if (m_bgColor == color) return;
-        m_bgColor = color;
-        drawNewSpot(m_spotPos);
     }
 
     void setMinMaxVal(int16_t minVal, int16_t maxVal) {
@@ -843,7 +837,7 @@ class progressbar : public RegisterTable {
     uint16_t     m_padding_bottom = 0;
     uint16_t     m_railHight = 0;
     uint16_t     m_rail_y_pos = 0;
-    int32_t      m_bgColor = 0;
+    int32_t      m_bgColor = TFT_TRANSPARENT;
     int32_t      m_frameColor = 0;
     int32_t      m_railColorLeft = 0;
     uint32_t     m_railColorRight = 0;
@@ -861,7 +855,6 @@ class progressbar : public RegisterTable {
     progressbar(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
-        m_bgColor = TFT_TRANSPARENT;
         m_frameColor = TFT_WHITE;
         m_railColorLeft = TFT_RED;
         m_railColorRight = TFT_GREEN;
@@ -886,10 +879,11 @@ class progressbar : public RegisterTable {
     }
 
     ps_ptr<char> getName() { return m_name; }
-    bool         isEnabled() { return m_enabled; }
     void         disable() { m_enabled = false; }
     void         enable() { m_enabled = true; }
+    bool         isEnabled() { return m_enabled; }
     bool         hasFocus() { return m_focus; }
+    void         setBGcolor(int32_t color) { m_bgColor = color; }
 
     bool setFocus(bool f) {
         if (!m_active)
@@ -897,14 +891,6 @@ class progressbar : public RegisterTable {
         else
             m_focus = f;
         return m_focus;
-    }
-
-    void setBGcolor(int32_t color) {
-        if (m_bgColor == color) return;
-        m_bgColor = color;
-        if (!m_enabled) return;
-        getTFT().drawRect(m_x + m_padding_left, m_rail_y_pos, m_w - m_padding_left - m_padding_right, m_railHight, m_frameColor); // draw border
-        drawNewValue();
     }
 
     void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
@@ -1010,7 +996,7 @@ class textbox : public RegisterTable {
     uint8_t      m_paddig_right = 0;  // right margin
     uint8_t      m_paddig_top = 0;    // top margin
     uint8_t      m_paddig_bottom = 0; // bottom margin
-    int32_t      m_bgColor = 0;
+    int32_t      m_bgColor = TFT_TRANSPARENT;
     int32_t      m_textColor = 0;
     int32_t      m_borderColor = 0;
     ps_ptr<char> m_text;
@@ -1030,7 +1016,6 @@ class textbox : public RegisterTable {
     textbox(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
-        m_bgColor = TFT_TRANSPARENT;
         m_textColor = TFT_LIGHTGREY;
         m_borderColor = TFT_TRANSPARENT;
         m_fontSize = 1;
@@ -1051,6 +1036,7 @@ class textbox : public RegisterTable {
     void         enable() { m_enabled = true; }
     bool         isEnabled() { return m_enabled; }
     bool         hasFocus() { return m_focus; }
+    void         setBGcolor(int32_t color) { m_bgColor = color; }
 
     bool setFocus(bool f) {
         if (!m_active)
@@ -1058,13 +1044,6 @@ class textbox : public RegisterTable {
         else
             m_focus = f;
         return m_focus;
-    }
-
-    void setBGcolor(int32_t color) {
-        if (m_bgColor == color) return;
-        m_bgColor = color;
-        if (!m_enabled) return;
-        writeText(m_text);
     }
 
     void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
@@ -1182,7 +1161,7 @@ class inputbox : public RegisterTable {
     uint8_t      m_paddig_top = 0;    // top margin
     uint8_t      m_paddig_bottom = 0; // bottom margin
     uint8_t      m_borderWidth = 0;
-    int32_t      m_bgColor = 0;
+    int32_t      m_bgColor = TFT_TRANSPARENT;
     int32_t      m_fgColor = 0;
     int32_t      m_borderColor = 0;
     ps_ptr<char> m_text;
@@ -1200,7 +1179,6 @@ class inputbox : public RegisterTable {
     inputbox(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
-        m_bgColor = TFT_TRANSPARENT;
         m_fgColor = TFT_LIGHTGREY;
         m_borderColor = TFT_BLACK;
         m_fontSize = 1;
@@ -1221,6 +1199,7 @@ class inputbox : public RegisterTable {
     void         enable() { m_enabled = true; }
     bool         isEnabled() { return m_enabled; }
     bool         hasFocus() { return m_focus; }
+    void         setBGcolor(int32_t color) { m_bgColor = color; }
 
     bool setFocus(bool f) {
         if (!m_active)
@@ -1228,13 +1207,6 @@ class inputbox : public RegisterTable {
         else
             m_focus = f;
         return m_focus;
-    }
-
-    void setBGcolor(int32_t color) {
-        if (m_bgColor == color) return;
-        m_bgColor = color;
-        if (!m_enabled) return;
-        writeText(m_text);
     }
 
     void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
@@ -1355,7 +1327,7 @@ class textbutton : public RegisterTable {
     uint8_t      m_paddig_top = 0;    // top margin
     uint8_t      m_paddig_bottom = 0; // bottom margin
     uint8_t      m_borderWidth = 0;
-    int32_t      m_bgColor = 0;
+    int32_t      m_bgColor = TFT_TRANSPARENT;
     int32_t      m_fgColor = 0;
     int32_t      m_borderColor = 0;
     int32_t      m_clickColor = 0;
@@ -1376,7 +1348,6 @@ class textbutton : public RegisterTable {
     textbutton(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
-        m_bgColor = TFT_BLACK;
         m_fgColor = TFT_LIGHTGREY;
         m_borderColor = TFT_BLACK;
         m_fontSize = 1;
@@ -1438,10 +1409,11 @@ class textbutton : public RegisterTable {
         m_paddig_bottom = paddig_bottom;
     }
     ps_ptr<char> getName() { return m_name; }
+    void         enable() { m_enabled = true; }
+    void         disable() { m_enabled = false; }
     bool         isEnabled() { return m_enabled; }
     bool         hasFocus() { return m_focus; }
-    void         disable() { m_enabled = false; }
-    void         enable() { m_enabled = true; }
+    void         setBGcolor(int32_t color) { m_bgColor = color; }
 
     bool setFocus(bool f) {
         if (!m_active)
@@ -1484,7 +1456,7 @@ class textbutton : public RegisterTable {
         }
     }
     void setTextColor(uint32_t color) { m_fgColor = color; }
-    void setBGcolor(int32_t color) { m_bgColor = color; }
+
     void setBorderColor(uint32_t color) { m_borderColor = color; }
     void setClickColor(uint32_t color) { m_clickColor = color; }
     void setBorderWidth(uint8_t width) { // 0 = no border
@@ -1572,6 +1544,163 @@ class textbutton : public RegisterTable {
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class vuMeter : public RegisterTable {
+  private:
+    uint16_t     m_x = 0;
+    uint16_t     m_y = 0;
+    uint16_t     m_w = 0;
+    uint16_t     m_h = 0;
+    int32_t      m_bgColor = TFT_TRANSPARENT;
+    uint32_t     m_frameColor = TFT_DARKGREY;
+    ps_ptr<char> m_name;
+    bool         m_enabled = false;
+    bool         m_focus = false;
+    bool         m_clicked = false;
+    bool         m_content_has_changed = false;
+    bool         m_first_call = true;
+    uint8_t      m_VUleftCh = 0;  // VU meter left channel
+    uint8_t      m_VUrightCh = 0; // VU meter right channel
+    releasedArg  m_ra;
+    uint8_t      m_segm_w = 0;
+    uint8_t      m_segm_h = 0;
+    uint8_t      m_frameSize = 1;
+    uint16_t     m_frame_x = 0;
+    uint16_t     m_frame_y = 0;
+    uint16_t     m_frame_w = 0;
+    uint16_t     m_frame_h = 0;
+
+  public:
+    vuMeter(ps_ptr<char> name) {
+        register_object(this);
+        m_name = name;
+    }
+    ~vuMeter() {}
+
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom) {
+        m_x = x; // x pos
+        m_y = y; // y pos
+        m_w = w;
+        m_h = h;
+        m_frame_x = x + paddig_left;
+        m_frame_y = y + paddig_top;
+        uint16_t frame_w = m_w - paddig_left - paddig_right;
+        uint16_t frame_h = m_h - paddig_top - paddig_bottom;
+        m_segm_w = ((frame_w - 3 * m_frameSize) / 2) - m_frameSize;  // 2 columns + 3 frameSizes
+        m_segm_h = ((frame_h - 2 * m_frameSize) / 12) - m_frameSize; // 12 rows + 2 frameSizes
+        m_frame_w = 2 * m_segm_w + 3 * m_frameSize;
+        m_frame_h = 12 * m_segm_h + 13 * m_frameSize;
+    }
+
+    ps_ptr<char> getName() { return m_name; }
+    void         enable() { m_enabled = true; }
+    void         disable() { m_enabled = false; }
+    bool         isEnabled() { return m_enabled; }
+    bool         hasFocus() { return m_focus; }
+    void         setBGcolor(int32_t color) { m_bgColor = color; }
+
+    bool setFocus(bool f) {
+        m_focus = f;
+        return true;
+    }
+
+    void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
+        x = m_x;
+        y = m_y;
+        w = m_w;
+        h = m_h;
+    }
+
+    void show() {
+        if (m_first_call) { // save background
+            getTFT().copyFramebuffer(FB_VISIBLE, FB_TEMP, m_x, m_y, m_w, m_h);
+            m_first_call = false;
+        }
+        m_enabled = true;
+        m_clicked = false;
+        if (m_bgColor == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        }
+        getTFT().drawRect(m_frame_x, m_frame_y, m_frame_w, m_frame_h, m_frameColor);
+        for (uint8_t i = 0; i < 12; i++) {
+            drawRect(i, 0, 0);
+            drawRect(i, 1, 0);
+        }
+        m_VUleftCh = 0;
+        m_VUrightCh = 0;
+    }
+
+    void hide() {
+        if (!m_first_call) getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        m_enabled = false;
+    }
+
+    void setBGcolor(uint32_t color) { m_bgColor = color; }
+    void update(uint16_t vum) {
+        if (!m_enabled) return;
+        uint8_t left = map_l(vum >> 8, 0, 255, 0, 12);
+        uint8_t right = map_l(vum & 0x00FF, 0, 255, 0, 12);
+
+        xSemaphoreTake(mutex_display, portMAX_DELAY);
+        if (left > m_VUleftCh) {
+            for (int32_t i = m_VUleftCh; i < left; i++) { drawRect(i, 1, 1); }
+        }
+        if (left < m_VUleftCh) {
+            for (int32_t i = left; i < m_VUleftCh; i++) { drawRect(i, 1, 0); }
+        }
+        m_VUleftCh = left;
+
+        if (right > m_VUrightCh) {
+            for (int32_t i = m_VUrightCh; i < right; i++) { drawRect(i, 0, 1); }
+        }
+        if (right < m_VUrightCh) {
+            for (int32_t i = right; i < m_VUrightCh; i++) { drawRect(i, 0, 0); }
+        }
+        m_VUrightCh = right;
+        xSemaphoreGive(mutex_display);
+    }
+
+    bool positionXY(uint16_t x, uint16_t y) {
+        if (x < m_x) return false;
+        if (y < m_y) return false;
+        if (x > m_x + m_w) return false;
+        if (y > m_y + m_h) return false;
+        if (m_enabled) m_clicked = true;
+        if (graphicObjects_OnClick) graphicObjects_OnClick(m_name, m_enabled);
+        if (!m_enabled) return false;
+        return true;
+    }
+    bool released() {
+        if (!m_enabled) return false;
+        if (!m_clicked) return false;
+        m_clicked = false;
+        if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
+        return true;
+    }
+
+  private:
+    void drawRect(uint8_t row, uint8_t col, bool br) {
+        uint16_t color = 0;
+        uint16_t y_end = m_frame_y + m_frame_h - m_frameSize - m_segm_h;
+        uint16_t xPos = m_frame_x + m_frameSize + col * (m_segm_w + m_frameSize);
+        uint16_t yPos = y_end - row * (m_frameSize + m_segm_h);
+        if (row > 12) return;
+        switch (row) {
+            case 0 ... 6: // green
+                br ? color = TFT_GREEN : color = TFT_DARKGREEN;
+                break;
+            case 7 ... 9: // yellow
+                br ? color = TFT_YELLOW : color = TFT_DARKYELLOW;
+                break;
+            case 10 ... 11: // red
+                br ? color = TFT_RED : color = TFT_DARKRED;
+                break;
+        }
+        getTFT().fillRect(xPos, yPos, m_segm_w, m_segm_h, color);
+    };
+};
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // *** C O M P O S E D   O B J E C T S
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class selectbox : public RegisterTable {
@@ -1592,7 +1721,7 @@ class selectbox : public RegisterTable {
     uint8_t                   m_paddig_bottom = 0; // bottom margin
     uint8_t                   m_borderWidth = 0;
     int8_t                    m_idx = 0;
-    int32_t                   m_bgColor = 0;
+    int32_t                   m_bgColor = TFT_TRANSPARENT;
     int32_t                   m_fgColor = 0;
     int32_t                   m_borderColor = 0;
     ps_ptr<char>              m_name;
@@ -1614,7 +1743,6 @@ class selectbox : public RegisterTable {
     selectbox(ps_ptr<char> name, uint8_t fontSize) {
         register_object(this);
         m_name = name;
-        m_bgColor = TFT_BLACK;
         m_fgColor = TFT_LIGHTGREY;
         m_borderColor = TFT_BLACK;
         setFontSize(fontSize);
@@ -1660,6 +1788,7 @@ class selectbox : public RegisterTable {
     void         disable() { disable_all(); }
     bool         isEnabled() { return m_enabled; }
     bool         hasFocus() { return m_focus; }
+    void         setBGcolor(int32_t color) { setBGcolor_all(color); }
 
     bool setFocus(bool f) {
         m_focus = f;
@@ -1731,13 +1860,7 @@ class selectbox : public RegisterTable {
         m_txt_btn_up->setTextColor(m_fgColor);
         m_txt_btn_idx->setTextColor(m_fgColor);
     }
-    void setBGcolor(uint32_t color) {
-        m_bgColor = color;
-        m_txt_select->setBGcolor(m_bgColor);
-        m_txt_btn_down->setBGcolor(m_bgColor);
-        m_txt_btn_up->setBGcolor(m_bgColor);
-        m_txt_btn_idx->setBGcolor(m_bgColor);
-    }
+
     void setBorderColor(uint32_t color) {
         m_borderColor = color;
         m_txt_select->setBorderColor(m_borderColor);
@@ -1822,6 +1945,15 @@ class selectbox : public RegisterTable {
         if (m_selContent.size() > 0) { return m_selContent[m_idx]; }
         return "";
     }
+
+  private:
+    void setBGcolor_all(int32_t color) {
+        m_bgColor = color;
+        m_txt_select->setBGcolor(m_bgColor);
+        m_txt_btn_down->setBGcolor(m_bgColor);
+        m_txt_btn_up->setBGcolor(m_bgColor);
+        m_txt_btn_idx->setBGcolor(m_bgColor);
+    }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class keyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
@@ -1861,7 +1993,7 @@ class keyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
                                  TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_YELLOW};
     int32_t      m_color2[11] = {TFT_YELLOW, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_RED};
     int32_t      m_color3[11] = {TFT_YELLOW, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY};
-    int32_t      m_bgColor = 0;
+    int32_t      m_bgColor = TFT_TRANSPARENT;
     int32_t      m_fgColor = 0;
     int32_t      m_clickColor = TFT_CYAN;
     textbutton* txt_btn_array = new textbutton[34]{textbutton("txt_btn0"),  textbutton("txt_btn1"),  textbutton("txt_btn2"),  textbutton("txt_btn3"),  textbutton("txt_btn4"),  textbutton("txt_btn5"),
@@ -1875,7 +2007,6 @@ class keyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     keyBoard(ps_ptr<char> name, uint8_t fontSize) {
         register_object(this);
         m_name = name;
-        m_bgColor = TFT_TRANSPARENT;
         m_fgColor = TFT_LIGHTGREY;
         m_fontSize = fontSize;
     }
@@ -1941,17 +2072,16 @@ class keyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
         }
     }
     ps_ptr<char> getName() { return m_name; }
-    void         disable() { m_enabled = false; }
     void         enable() { m_enabled = true; }
+    void         disable() { m_enabled = false; }
     bool         isEnabled() { return m_enabled; }
     bool         hasFocus() { return m_focus; }
+    void         setBGcolor(int32_t color) { setBGcolor_all(color); }
 
     bool setFocus(bool f) {
         m_focus = f;
         return true;
     }
-
-    void setBGcolor(uint32_t color) { m_bgColor = color; }
 
     void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
         x = m_x;
@@ -2050,6 +2180,12 @@ class keyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
         }
         return true;
     }
+
+  private:
+    void setBGcolor_all(int32_t color) {
+        m_bgColor = color;
+        ;
+    }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class wifiSettings : public RegisterTable {
@@ -2078,7 +2214,7 @@ class wifiSettings : public RegisterTable {
     uint8_t      m_padding_top = 0;    // top margin
     uint8_t      m_padding_bottom = 0; // bottom margin
     uint8_t      m_credentials_idx = 0;
-    int32_t      m_bgColor = 0;
+    int32_t      m_bgColor = TFT_TRANSPARENT;
     int32_t      m_fgColor = 0;
     int32_t      m_borderColor = 0;
     ps_ptr<char> m_name;
@@ -2096,7 +2232,6 @@ class wifiSettings : public RegisterTable {
     struct credentials {
         ps_ptr<char> ssid;
         ps_ptr<char> password;
-
         credentials(ps_ptr<char> s, ps_ptr<char> p) : ssid(s), password(p) {}
     };
     deque<credentials> m_credentials;
@@ -2136,7 +2271,6 @@ class wifiSettings : public RegisterTable {
     wifiSettings(ps_ptr<char> name, uint8_t fontSize) {
         register_object(this);
         m_name = name;
-        m_bgColor = TFT_BLACK;
         m_fgColor = TFT_LIGHTGREY;
         m_borderColor = TFT_LIGHTGREY;
         setFontSize(fontSize);
@@ -2280,6 +2414,7 @@ class wifiSettings : public RegisterTable {
     void         disable() { disable_all(); }
     bool         isEnabled() { return m_enabled; }
     bool         hasFocus() { return m_focus; }
+    void         setBGcolor(int32_t color) { setBGcolor_all(color); }
 
     bool setFocus(bool f) {
         m_focus = f;
@@ -2339,12 +2474,7 @@ class wifiSettings : public RegisterTable {
         m_in_password->setTextColor(m_fgColor);
         // m_keyboard->setTextColor(m_fgColor);
     }
-    void setBGcolor(uint32_t color) {
-        m_bgColor = color;
-        m_sel_ssid->setBGcolor(m_bgColor);
-        m_in_password->setBGcolor(m_bgColor);
-        //    m_keyboard->setBGcolor(m_bgColor);
-    }
+
     void setBorderColor(uint32_t color) {
         m_borderColor = color;
         m_sel_ssid->setBorderColor(m_borderColor);
@@ -2412,6 +2542,13 @@ class wifiSettings : public RegisterTable {
     }
 
   private:
+    void setBGcolor_all(uint32_t color) {
+        m_bgColor = color;
+        m_sel_ssid->setBGcolor(m_bgColor);
+        m_in_password->setBGcolor(m_bgColor);
+        //    m_keyboard->setBGcolor(m_bgColor);
+    }
+
     void changePassword(char ch, uint8_t idx) {
         int len = m_credentials[idx].password.strlen();
         if (ch == 0x08) { // backspace
@@ -2438,7 +2575,7 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     uint8_t      m_fontSize = 0;
     uint8_t      m_h_align = TFT_ALIGN_CENTER;
     uint8_t      m_v_align = TFT_ALIGN_CENTER;
-    int32_t      m_bgColor = 0;
+    int32_t      m_bgColor = TFT_TRANSPARENT;
     int32_t      m_fgColor = 0;
     int32_t      m_borderColor = 0;
     ps_ptr<char> m_name;
@@ -2453,7 +2590,6 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     timeString(ps_ptr<char> name, uint8_t fontSize) {
         register_object(this);
         m_name = name;
-        m_bgColor = TFT_TRANSPARENT;
         m_fgColor = TFT_LIGHTGREY;
         m_fontSize = fontSize;
     }
@@ -2491,6 +2627,7 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     void         disable() { disable_all(); }
     bool         isEnabled() { return m_enabled; }
     bool         hasFocus() { return m_focus; }
+    void         setBGcolor(int32_t color) { setBGcolor_all(color); }
 
     void disable_all() {
         m_enabled = false;
@@ -2536,10 +2673,7 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
         m_fgColor = color;
         for (uint8_t i = 0; i < 8; i++) { txt_time[i].setTextColor(m_fgColor); }
     }
-    void setBGcolor(int32_t color) {
-        m_bgColor = color;
-        for (uint8_t i = 0; i < 8; i++) { txt_time[i].setBGcolor(m_bgColor); }
-    }
+
     void setBorderColor(int32_t color) { m_borderColor = color; }
     void updateTime(ps_ptr<char> hl_time, bool complete = true) {
         if (hl_time.strlen() != 8) return;
@@ -2578,6 +2712,12 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
         if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
         return true;
     }
+
+  private:
+    void setBGcolor_all(int32_t color) {
+        m_bgColor = color;
+        for (uint8_t i = 0; i < 8; i++) { txt_time[i].setBGcolor(m_bgColor); }
+    }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class numbersBox : public RegisterTable { // range 000...999
@@ -2592,7 +2732,7 @@ class numbersBox : public RegisterTable { // range 000...999
     int16_t      m_box_y = 0;
     int16_t      m_box_w = 0;
     int16_t      m_box_h = 0;
-    int32_t      m_bgColor = TFT_BLACK;
+    int32_t      m_bgColor = TFT_TRANSPARENT;
     bool         m_enabled = false;
     bool         m_focus = false;
     bool         m_clicked = false;
@@ -2616,6 +2756,13 @@ class numbersBox : public RegisterTable { // range 000...999
         placingDigits(w, h);
         m_enabled = false;
     }
+
+    ps_ptr<char> getName() { return m_name; }
+    void         enable() { m_enabled = true; }
+    void         disable() { m_enabled = false; }
+    bool         isEnabled() { return m_enabled; }
+    bool         hasFocus() { return m_focus; }
+    void         setBGcolor(int32_t color) { setBGcolor_all(color); }
 
     void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
         x = m_x;
@@ -2651,12 +2798,6 @@ class numbersBox : public RegisterTable { // range 000...999
         m_enabled = false;
     }
 
-    ps_ptr<char> getName() { return m_name; }
-    void         enable() { m_enabled = true; }
-    void         disable() { m_enabled = false; }
-    bool         isEnabled() { return m_enabled; }
-    bool         hasFocus() { return m_focus; }
-
     bool setFocus(bool f) {
         m_focus = f;
         return true;
@@ -2685,8 +2826,12 @@ class numbersBox : public RegisterTable { // range 000...999
     }
 
   private:
-    void placingDigits(uint16_t w, uint16_t h) {
+    void setBGcolor_all(int32_t color) {
+        m_bgColor = color;
+        ;
+    }
 
+    void placingDigits(uint16_t w, uint16_t h) {
         imgSize img = GetImageSize("/digits/s/0green.jpg"); // get size of digit '0'
         if (img.w == 0 || img.h == 0) {
             MWR_LOG_ERROR("cannot get digit size");
@@ -2717,7 +2862,7 @@ class offTimerBox : public RegisterTable { // range 000...999
     int16_t      m_box_y = 0;
     int16_t      m_box_w = 0;
     int16_t      m_box_h = 0;
-    uint32_t     m_bgColor = 0;
+    int32_t      m_bgColor = TFT_TRANSPARENT;
     ps_ptr<char> m_color = "green";
     uint16_t     m_offColor = TFT_RED;
     uint16_t     m_onColor = TFT_GREEN;
@@ -2735,6 +2880,7 @@ class offTimerBox : public RegisterTable { // range 000...999
         m_name = name;
     }
     ~offTimerBox() { ; }
+
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
         m_x = x; // x pos
         m_y = y; // y pos
@@ -2743,6 +2889,13 @@ class offTimerBox : public RegisterTable { // range 000...999
         placingDigits(m_w, m_h);
         m_enabled = false;
     }
+
+    ps_ptr<char> getName() { return m_name; }
+    void         enable() { m_enabled = true; }
+    void         disable() { m_enabled = false; }
+    bool         isEnabled() { return m_enabled; }
+    bool         hasFocus() { return m_focus; }
+    void         setBGcolor(int32_t color) { setBGcolor_all(color); }
 
     void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
         x = m_x;
@@ -2778,12 +2931,6 @@ class offTimerBox : public RegisterTable { // range 000...999
         m_enabled = false;
     }
 
-    ps_ptr<char> getName() { return m_name; }
-    void         enable() { m_enabled = true; }
-    void         disable() { m_enabled = false; }
-    bool         isEnabled() { return m_enabled; }
-    bool         hasFocus() { return m_focus; }
-
     bool setFocus(bool f) {
         m_focus = f;
         return true;
@@ -2808,8 +2955,12 @@ class offTimerBox : public RegisterTable { // range 000...999
     }
 
   private:
-    void placingDigits(uint16_t w, uint16_t h) {
+    void setBGcolor_all(int32_t color) {
+        m_bgColor = color;
+        ;
+    }
 
+    void placingDigits(uint16_t w, uint16_t h) {
         imgSize img = GetImageSize("/digits/s/0green.jpg"); // get size of digit '0'
         if (img.w == 0 || img.h == 0) {
             MWR_LOG_ERROR("cannot get digit size");
@@ -2861,7 +3012,7 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
         uint8_t  pb = 0;
     } m_h10, m_h01, m_c, m_m10, m_m01;
 
-    int32_t      m_bgColor = 0;
+    int32_t      m_bgColor = TFT_TRANSPARENT;
     bool         m_enabled = false;
     bool         m_focus = false;
     bool         m_clicked = false;
@@ -2876,7 +3027,6 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
     imgClock24(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
-        m_bgColor = TFT_BLACK;
         m_enabled = false;
         m_clicked = false;
         m_state = false;
@@ -2908,6 +3058,7 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
     void         disable() { m_enabled = false; }
     bool         isEnabled() { return m_enabled; }
     bool         hasFocus() { return m_focus; }
+    void         setBGcolor(int32_t color) { setBGcolor_all(color); }
 
     bool setFocus(bool f) {
         m_focus = f;
@@ -2919,17 +3070,6 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
         y = m_y;
         w = m_w;
         h = m_h;
-    }
-
-    void setBGcolor(int32_t color) {
-        if (m_bgColor == color) return;
-        m_bgColor = color;
-        pic_clock24_digitsH10->setBGcolor(m_bgColor);
-        pic_clock24_digitsH01->setBGcolor(m_bgColor);
-        pic_clock24_digitsM10->setBGcolor(m_bgColor);
-        pic_clock24_digitsM01->setBGcolor(m_bgColor);
-        pic_clock24_digitsColon->setBGcolor(m_bgColor);
-        pic_clock24_digitsColon->setBGcolor(m_bgColor);
     }
 
     void show(bool inactive = false) {
@@ -3068,6 +3208,18 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
         m_m01.w = digits_w;
         m_m01.h = digits_h;
     }
+
+  private:
+    void setBGcolor_all(int32_t color) {
+        if (m_bgColor == color) return;
+        m_bgColor = color;
+        pic_clock24_digitsH10->setBGcolor(m_bgColor);
+        pic_clock24_digitsH01->setBGcolor(m_bgColor);
+        pic_clock24_digitsM10->setBGcolor(m_bgColor);
+        pic_clock24_digitsM01->setBGcolor(m_bgColor);
+        pic_clock24_digitsColon->setBGcolor(m_bgColor);
+        pic_clock24_digitsColon->setBGcolor(m_bgColor);
+    }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class imgClock24small : public RegisterTable { // draw a clock in 24h format
@@ -3081,7 +3233,7 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
     int16_t      m_y = 0;
     int16_t      m_w = 0;
     int16_t      m_h = 0;
-    uint32_t     m_bgColor = 0;
+    int32_t      m_bgColor = TFT_TRANSPARENT;
     bool         m_enabled = false;
     bool         m_focus = false;
     bool         m_clicked = false;
@@ -3107,7 +3259,6 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
     imgClock24small(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
-        m_bgColor = TFT_BLACK;
         m_enabled = false;
         m_clicked = false;
         m_state = false;
@@ -3137,6 +3288,7 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
     void         disable() { m_enabled = false; }
     bool         isEnabled() { return m_enabled; }
     bool         hasFocus() { return m_focus; }
+    void         setBGcolor(int32_t color) { setBGcolor_all(color); }
 
     bool setFocus(bool f) {
         m_focus = f;
@@ -3238,6 +3390,10 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
     }
 
   private:
+    void setBGcolor_all(int32_t color) {
+        m_bgColor = color;
+        ;
+    }
     void placingDigits(uint16_t w, uint16_t h) {
         uint16_t digits_y = 0, digits_w = 0, colon_w = 0, digits_h = 0, paddig_l = 0;
 
@@ -3316,7 +3472,7 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
     uint16_t     m_alarmdaysW = 0;
     uint16_t     m_alarmdaysH = 0;
     uint16_t     m_fontSize = 0; // auto
-    uint32_t     m_bgColor = 0;
+    int32_t      m_bgColor = TFT_TRANSPARENT;
     bool         m_enabled = false;
     bool         m_focus = false;
     bool         m_clicked = false;
@@ -3338,7 +3494,6 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
     alarmClock(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
-        m_bgColor = TFT_BLACK;
         m_enabled = false;
         m_clicked = false;
         m_state = false;
@@ -3386,6 +3541,7 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
     void         disable() { m_enabled = false; }
     bool         isEnabled() { return m_enabled; }
     bool         hasFocus() { return m_focus; }
+    void         setBGcolor(int32_t color) { setBGcolor_all(color); }
 
     bool setFocus(bool f) {
         m_focus = f;
@@ -3542,6 +3698,10 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
     }
 
   private:
+    void setBGcolor_all(int32_t color) {
+        m_bgColor = color;
+        ;
+    }
     void updateDigits() {
         static uint8_t m_oldAlarmDigits[4] = {0};
         for (uint8_t i = 0; i < 4; i++) {
@@ -3689,7 +3849,7 @@ class uniList {
     uint8_t      m_tftSize = 0;
     uint8_t      m_lineHight = 0;
     uint8_t      m_mode = 0;
-    uint32_t     m_bgColor = 0;
+    int32_t      m_bgColor = TFT_TRANSPARENT;
     uint8_t      m_indentContent = 0;
     uint8_t      m_indentDirectory = 0;
     ps_ptr<char> m_name;
@@ -3701,10 +3861,7 @@ class uniList {
     bool         m_focus = false;
 
   public:
-    uniList(ps_ptr<char> name) {
-        m_name = name;
-        m_bgColor = TFT_BLACK;
-    }
+    uniList(ps_ptr<char> name) { m_name = name; }
     ~uniList() {}
 
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t fontSize) {
@@ -3716,6 +3873,7 @@ class uniList {
         m_enabled = false;
         m_lineHight = m_h / 10;
     }
+
     void setMode(uint8_t mode, ps_ptr<char> tftSize, uint8_t fontSize) {
         if (mode == RADIO) { m_mode = RADIO; }
         if (mode == PLAYER) { m_mode = PLAYER; }
@@ -3906,7 +4064,7 @@ class dlnaList : public RegisterTable {
     int16_t                                    m_viewPoint = 0;
     int16_t                                    m_dlnaMaxItems = -1;
     int16_t                                    m_dlnaMaxServers = -1;
-    uint32_t                                   m_bgColor = 0;
+    int32_t                                    m_bgColor = TFT_TRANSPARENT;
     bool                                       m_enabled = false;
     bool                                       m_focus = false;
     bool                                       m_clicked = false;
@@ -3932,7 +4090,6 @@ class dlnaList : public RegisterTable {
         } else {
             m_name = "dlnaList";
         }
-        m_bgColor = TFT_BLACK;
         m_enabled = false;
         m_clicked = false;
         m_state = false;
@@ -3959,6 +4116,7 @@ class dlnaList : public RegisterTable {
     void         disable() { m_enabled = false; }
     bool         isEnabled() { return m_enabled; }
     bool         hasFocus() { return m_focus; }
+    void         setBGcolor(int32_t color) { setBGcolor_all(color); }
 
     void client_and_history(DLNA_Client* dlna, dlnaHistory_s* dh, uint8_t historySize) {
         m_dlna = dlna;
@@ -4058,6 +4216,10 @@ class dlnaList : public RegisterTable {
     }
 
   private:
+    void setBGcolor_all(int32_t color) {
+        m_bgColor = color;
+        ;
+    }
     void dlnaItemsList() {
         uint8_t pos = 0;
         myList.setMode(DLNA, m_tftSize, m_fontSize);
@@ -4501,7 +4663,7 @@ class fileList : public RegisterTable {
     int16_t      m_curAudioFileNr = 0;
     uint16_t     m_viewPos = 0;
     uint8_t      m_fontSize = 0;
-    uint32_t     m_bgColor = 0;
+    int32_t      m_bgColor = TFT_TRANSPARENT;
     bool         m_enabled = false;
     bool         m_focus = false;
     bool         m_clicked = false;
@@ -4526,7 +4688,6 @@ class fileList : public RegisterTable {
         m_curAudioFolder = "";
         m_curAudioPath = "";
         m_curAudioName = "";
-        m_bgColor = TFT_BLACK;
         m_enabled = false;
         m_clicked = false;
         m_state = false;
@@ -4551,6 +4712,7 @@ class fileList : public RegisterTable {
     void         disable() { m_enabled = false; }
     bool         isEnabled() { return m_enabled; }
     bool         hasFocus() { return m_focus; }
+    void         setBGcolor(int32_t color) { setBGcolor_all(color); }
 
     bool setFocus(bool f) {
         m_focus = f;
@@ -4781,6 +4943,10 @@ class fileList : public RegisterTable {
     uint16_t getSelectedFileNr() { return m_curAudioFileNr; }
 
   private:
+    void setBGcolor_all(int32_t color) {
+        m_bgColor = color;
+        ;
+    }
     void audioFileslist(uint16_t viewPos) {
         // guard -------------------------------------------------------------------------------------------------------------------------------------
         if (s_SD_content.getSize() == 0) { ; }                                           // folder empty
@@ -4905,7 +5071,7 @@ class stationsList : public RegisterTable {
     uint8_t      m_browseOnRelease = 0;
     uint8_t      m_fontSize = 0;
     uint8_t      m_stationListPos = 0;
-    uint32_t     m_bgColor = 0;
+    int32_t      m_bgColor = TFT_TRANSPARENT;
     bool         m_enabled = false;
     bool         m_focus = false;
     bool         m_clicked = false;
@@ -4921,7 +5087,6 @@ class stationsList : public RegisterTable {
     stationsList(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
-        m_bgColor = TFT_BLACK;
         m_enabled = false;
         m_clicked = false;
         m_state = false;
@@ -4948,6 +5113,7 @@ class stationsList : public RegisterTable {
     void         disable() { m_enabled = false; }
     bool         isEnabled() { return m_enabled; }
     bool         hasFocus() { return m_focus; }
+    void         setBGcolor(int32_t color) { setBGcolor_all(color); }
 
     bool setFocus(bool f) {
         m_focus = f;
@@ -5011,6 +5177,10 @@ class stationsList : public RegisterTable {
     }
 
   private:
+    void setBGcolor_all(int32_t color) {
+        m_bgColor = color;
+        ;
+    }
     void stationslist(bool first) {
         xSemaphoreTake(mutex_display, portMAX_DELAY);
         if (first) {
@@ -5146,163 +5316,6 @@ class stationsList : public RegisterTable {
     }
 };
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class vuMeter : public RegisterTable {
-  private:
-    uint16_t     m_x = 0;
-    uint16_t     m_y = 0;
-    uint16_t     m_w = 0;
-    uint16_t     m_h = 0;
-    uint32_t     m_bgColor = TFT_BLACK;
-    uint32_t     m_frameColor = TFT_DARKGREY;
-    ps_ptr<char> m_name;
-    bool         m_enabled = false;
-    bool         m_focus = false;
-    bool         m_clicked = false;
-    bool         m_content_has_changed = false;
-    bool         m_first_call = true;
-    uint8_t      m_VUleftCh = 0;  // VU meter left channel
-    uint8_t      m_VUrightCh = 0; // VU meter right channel
-    releasedArg  m_ra;
-    uint8_t      m_segm_w = 0;
-    uint8_t      m_segm_h = 0;
-    uint8_t      m_frameSize = 1;
-    uint16_t     m_frame_x = 0;
-    uint16_t     m_frame_y = 0;
-    uint16_t     m_frame_w = 0;
-    uint16_t     m_frame_h = 0;
-
-  public:
-    vuMeter(ps_ptr<char> name) {
-        register_object(this);
-        m_name = name;
-        m_bgColor = TFT_BLACK;
-    }
-    ~vuMeter() {}
-
-    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom) {
-        m_x = x; // x pos
-        m_y = y; // y pos
-        m_w = w;
-        m_h = h;
-        m_frame_x = x + paddig_left;
-        m_frame_y = y + paddig_top;
-        uint16_t frame_w = m_w - paddig_left - paddig_right;
-        uint16_t frame_h = m_h - paddig_top - paddig_bottom;
-        m_segm_w = ((frame_w - 3 * m_frameSize) / 2) - m_frameSize;  // 2 columns + 3 frameSizes
-        m_segm_h = ((frame_h - 2 * m_frameSize) / 12) - m_frameSize; // 12 rows + 2 frameSizes
-        m_frame_w = 2 * m_segm_w + 3 * m_frameSize;
-        m_frame_h = 12 * m_segm_h + 13 * m_frameSize;
-    }
-
-    ps_ptr<char> getName() { return m_name; }
-    void         enable() { m_enabled = true; }
-    void         disable() { m_enabled = false; }
-    bool         isEnabled() { return m_enabled; }
-    bool         hasFocus() { return m_focus; }
-
-    bool setFocus(bool f) {
-        m_focus = f;
-        return true;
-    }
-
-    void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
-        x = m_x;
-        y = m_y;
-        w = m_w;
-        h = m_h;
-    }
-
-    void show() {
-        if (m_first_call) { // save background
-            getTFT().copyFramebuffer(FB_VISIBLE, FB_TEMP, m_x, m_y, m_w, m_h);
-            m_first_call = false;
-        }
-        m_enabled = true;
-        m_clicked = false;
-        if (m_bgColor == TFT_TRANSPARENT) {
-            getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
-        } else {
-            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        }
-        getTFT().drawRect(m_frame_x, m_frame_y, m_frame_w, m_frame_h, m_frameColor);
-        for (uint8_t i = 0; i < 12; i++) {
-            drawRect(i, 0, 0);
-            drawRect(i, 1, 0);
-        }
-        m_VUleftCh = 0;
-        m_VUrightCh = 0;
-    }
-
-    void hide() {
-        if (!m_first_call) getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
-        m_enabled = false;
-    }
-
-    void setBGcolor(uint32_t color) { m_bgColor = color; }
-    void update(uint16_t vum) {
-        if (!m_enabled) return;
-        uint8_t left = map_l(vum >> 8, 0, 255, 0, 12);
-        uint8_t right = map_l(vum & 0x00FF, 0, 255, 0, 12);
-
-        xSemaphoreTake(mutex_display, portMAX_DELAY);
-        if (left > m_VUleftCh) {
-            for (int32_t i = m_VUleftCh; i < left; i++) { drawRect(i, 1, 1); }
-        }
-        if (left < m_VUleftCh) {
-            for (int32_t i = left; i < m_VUleftCh; i++) { drawRect(i, 1, 0); }
-        }
-        m_VUleftCh = left;
-
-        if (right > m_VUrightCh) {
-            for (int32_t i = m_VUrightCh; i < right; i++) { drawRect(i, 0, 1); }
-        }
-        if (right < m_VUrightCh) {
-            for (int32_t i = right; i < m_VUrightCh; i++) { drawRect(i, 0, 0); }
-        }
-        m_VUrightCh = right;
-        xSemaphoreGive(mutex_display);
-    }
-
-    bool positionXY(uint16_t x, uint16_t y) {
-        if (x < m_x) return false;
-        if (y < m_y) return false;
-        if (x > m_x + m_w) return false;
-        if (y > m_y + m_h) return false;
-        if (m_enabled) m_clicked = true;
-        if (graphicObjects_OnClick) graphicObjects_OnClick(m_name, m_enabled);
-        if (!m_enabled) return false;
-        return true;
-    }
-    bool released() {
-        if (!m_enabled) return false;
-        if (!m_clicked) return false;
-        m_clicked = false;
-        if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
-        return true;
-    }
-
-  private:
-    void drawRect(uint8_t row, uint8_t col, bool br) {
-        uint16_t color = 0;
-        uint16_t y_end = m_frame_y + m_frame_h - m_frameSize - m_segm_h;
-        uint16_t xPos = m_frame_x + m_frameSize + col * (m_segm_w + m_frameSize);
-        uint16_t yPos = y_end - row * (m_frameSize + m_segm_h);
-        if (row > 12) return;
-        switch (row) {
-            case 0 ... 6: // green
-                br ? color = TFT_GREEN : color = TFT_DARKGREEN;
-                break;
-            case 7 ... 9: // yellow
-                br ? color = TFT_YELLOW : color = TFT_DARKYELLOW;
-                break;
-            case 10 ... 11: // red
-                br ? color = TFT_RED : color = TFT_DARKRED;
-                break;
-        }
-        getTFT().fillRect(xPos, yPos, m_segm_w, m_segm_h, color);
-    };
-};
-// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class displayHeader : public RegisterTable {
   private:
     textbox*     txt_Item = new textbox("header_Item");              // Radio, Player, Clock....
@@ -5318,7 +5331,7 @@ class displayHeader : public RegisterTable {
     int8_t       m_old_rssi = -1;
     uint8_t      m_fontSize = 0;
     uint8_t      m_volume = 0;
-    int32_t      m_bgColor = 0;
+    int32_t      m_bgColor = TFT_TRANSPARENT;
     ps_ptr<char> m_name;
     ps_ptr<char> m_item;
     ps_ptr<char> m_time = "00:00:00";
@@ -5509,7 +5522,6 @@ class displayHeader : public RegisterTable {
     displayHeader(ps_ptr<char> name, uint8_t fontSize) {
         register_object(this);
         m_name = name;
-        m_bgColor = TFT_TRANSPARENT;
         m_fontSize = fontSize;
         timeStringObject->setFontSize(m_fontSize);
     }
@@ -5544,6 +5556,7 @@ class displayHeader : public RegisterTable {
     void         disable() { disable_all(); }
     bool         isEnabled() { return m_enabled; }
     bool         hasFocus() { return m_focus; }
+    void         setBGcolor(int32_t color) { setBGcolor_all(color); }
 
     bool setFocus(bool f) {
         m_focus = f;
@@ -5607,12 +5620,7 @@ class displayHeader : public RegisterTable {
         pic_RSSID->disable();
         timeStringObject->disable();
     }
-    void setBGcolor(int32_t color) {
-        m_bgColor = color;
-        timeStringObject->setBGcolor(color);
-        txt_Volume->setBGcolor(m_bgColor);
-        txt_Item->setBGcolor(m_bgColor);
-    }
+
     void updateItem(ps_ptr<char> hl_item) { // radio, clock, audioplayer...
         if (!m_enabled) return;
         m_item = hl_item;
@@ -5692,6 +5700,14 @@ class displayHeader : public RegisterTable {
         if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
         return true;
     }
+
+  private:
+    void setBGcolor_all(int32_t color) {
+        m_bgColor = color;
+        timeStringObject->setBGcolor(color);
+        txt_Volume->setBGcolor(m_bgColor);
+        txt_Item->setBGcolor(m_bgColor);
+    }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class displayFooter : public RegisterTable {
@@ -5714,7 +5730,7 @@ class displayFooter : public RegisterTable {
     uint16_t     m_staNr = 0;
     uint16_t     m_offTime = 0;
     uint32_t     m_bitRate = 0;
-    int32_t      m_bgColor = TFT_BLACK;
+    int32_t      m_bgColor = TFT_TRANSPARENT;
     uint16_t     m_stationColor = TFT_LAVENDER;
     uint16_t     m_bitRateColor = TFT_LAVENDER;
     uint16_t     m_ipAddrColor = TFT_GREENYELLOW;
@@ -6003,7 +6019,6 @@ class displayFooter : public RegisterTable {
     displayFooter(ps_ptr<char> name, uint8_t fontSize) {
         register_object(this);
         m_name = name;
-        m_bgColor = TFT_BLACK;
         m_fontSize = fontSize;
         m_fileNr = "000/000";
     }
@@ -6058,6 +6073,7 @@ class displayFooter : public RegisterTable {
     void         disable() { m_enabled = false; }
     bool         isEnabled() { return m_enabled; }
     bool         hasFocus() { return m_focus; }
+    void         setBGcolor(int32_t color) { setBGcolor_all(color); }
 
     bool setFocus(bool f) {
         m_focus = f;
@@ -6107,19 +6123,6 @@ class displayFooter : public RegisterTable {
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         }
-    }
-
-    void setBGcolor(int32_t color) {
-        m_bgColor = color;
-        //        pic_Antenna->setBGcolor(m_bgColor);
-        txt_StaNr->setBGcolor(m_bgColor);
-        txt_FileNr->setBGcolor(m_bgColor);
-        //        pic_Flag->setBGcolor(m_bgColor);
-        txt_OffTimer->setBGcolor(m_bgColor);
-        //        pic_Hourglass->setBGcolor(m_bgColor);
-        txt_BitRate->setBGcolor(m_bgColor);
-        txt_OffTimer->setBGcolor(m_bgColor);
-        txt_IpAddr->setBGcolor(m_bgColor);
     }
 
     void updateAntenna(bool WiFi_lost) {
@@ -6258,6 +6261,18 @@ class displayFooter : public RegisterTable {
     }
 
   private:
+    void setBGcolor_all(int32_t color) {
+        m_bgColor = color;
+        //        pic_Antenna->setBGcolor(m_bgColor);
+        txt_StaNr->setBGcolor(m_bgColor);
+        txt_FileNr->setBGcolor(m_bgColor);
+        //        pic_Flag->setBGcolor(m_bgColor);
+        txt_OffTimer->setBGcolor(m_bgColor);
+        //        pic_Hourglass->setBGcolor(m_bgColor);
+        txt_BitRate->setBGcolor(m_bgColor);
+        txt_OffTimer->setBGcolor(m_bgColor);
+        txt_IpAddr->setBGcolor(m_bgColor);
+    }
 }; // displayFooter
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class messageBox : public RegisterTable {
@@ -6280,8 +6295,8 @@ class messageBox : public RegisterTable {
     uint16_t     m_pt = 0;
     uint16_t     m_pb = 0;
     releasedArg  m_ra;
-    uint16_t     m_bgColor = TFT_YELLOW;
-    uint16_t     m_textColor = TFT_DARKRED;
+    int32_t      m_bgColor = TFT_YELLOW;
+    int32_t      m_textColor = TFT_DARKRED;
     textbox*     txt_msgBox = new textbox("msgBox txt");
 
 #ifdef TFT_LAYOUT_S // 320 x 240px
@@ -6359,10 +6374,9 @@ class messageBox : public RegisterTable {
     void         disable() { m_enabled = false; }
     bool         isEnabled() { return m_enabled; }
     bool         hasFocus() { return m_focus; }
+    void         setBGcolor(int32_t color) { setBGcolor_all(color); }
 
-
-
-    void         setBGcolor(uint32_t color) { m_bgColor = color; }
+    void setBGcolor(uint32_t color) { m_bgColor = color; }
 
     bool setFocus(bool f) {
         m_focus = f;
@@ -6416,6 +6430,12 @@ class messageBox : public RegisterTable {
         m_clicked = false;
         if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
         return true;
+    }
+
+  private:
+    void setBGcolor_all(int32_t color) {
+        m_bgColor = color;
+        ;
     }
 };
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
