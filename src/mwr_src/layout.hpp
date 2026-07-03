@@ -800,14 +800,14 @@ next:
     if (lr == IR_RESET) return;
     bool res = false;
     switch (s_ir_btn_select) {
-        case 0: res = btn_RA_staList.setFocus(true); break;
-        case 1: res = btn_RA_player.setFocus(true); break;
-        case 2: res = btn_RA_dlna.setFocus(true); break;
-        case 3: res = btn_RA_clock.setFocus(true); break;
-        case 4: res = btn_RA_sleep.setFocus(true); break;
-        case 5: res = btn_RA_settings.setFocus(true); break;
-        case 6: res = btn_RA_bt.setFocus(true); break;
-        case 7: res = btn_RA_off.setFocus(true); break;
+        case 0: res = btn_RA_staList.set_focus(true); break;
+        case 1: res = btn_RA_player.set_focus(true); break;
+        case 2: res = btn_RA_dlna.set_focus(true); break;
+        case 3: res = btn_RA_clock.set_focus(true); break;
+        case 4: res = btn_RA_sleep.set_focus(true); break;
+        case 5: res = btn_RA_settings.set_focus(true); break;
+        case 6: res = btn_RA_bt.set_focus(true); break;
+        case 7: res = btn_RA_off.set_focus(true); break;
     }
     if(i == 2) return;
     if(res == false) goto next;
@@ -832,14 +832,14 @@ next0:
         if (lr == IR_RESET) return;
         bool res = true;
         switch (s_ir_btn_select) {
-            case 0: res = btn_PL_prevFile.setFocus(true); break;
-            case 1: res = btn_PL_nextFile.setFocus(true); break;
-            case 2: res = btn_PL_ready.setFocus(true); break;
-            case 3: res = btn_PL_playAll.setFocus(true); break;
-            case 4: res = btn_PL_shuffle.setFocus(true); break;
-            case 5: res = btn_PL_fileList.setFocus(true); break;
-            case 6: res = btn_PL_radio.setFocus(true); break;
-            case 7: res = btn_PL_off.setFocus(true); break;
+            case 0: res = btn_PL_prevFile.set_focus(true); break;
+            case 1: res = btn_PL_nextFile.set_focus(true); break;
+            case 2: res = btn_PL_ready.set_focus(true); break;
+            case 3: res = btn_PL_playAll.set_focus(true); break;
+            case 4: res = btn_PL_shuffle.set_focus(true); break;
+            case 5: res = btn_PL_fileList.set_focus(true); break;
+            case 6: res = btn_PL_radio.set_focus(true); break;
+            case 7: res = btn_PL_off.set_focus(true); break;
         }
         if(i == 2) return;
         if(res == false) goto next0;
@@ -861,11 +861,11 @@ next1:
         if (lr == IR_RESET) return;
         bool res = true;
         switch (s_ir_btn_select) {
-            case 0: res = btn_PL_mute.setFocus(true); break;
-            case 1: res = btn_PL_pause.setFocus(true); break;
-            case 2: res = btn_PL_cancel.setFocus(true); break;
-            case 3: res = btn_PL_playPrev.setFocus(true); break;
-            case 4: res = btn_PL_playNext.setFocus(true); break;
+            case 0: res = btn_PL_mute.set_focus(true); break;
+            case 1: res = btn_PL_pause.set_focus(true); break;
+            case 2: res = btn_PL_cancel.set_focus(true); break;
+            case 3: res = btn_PL_playPrev.set_focus(true); break;
+            case 4: res = btn_PL_playNext.set_focus(true); break;
         }
         if(i == 2) return;
         if(res == false) goto next1;
@@ -891,11 +891,11 @@ next:
     if (lr == IR_RESET) return;
     bool res = false;
     switch (s_ir_btn_select) {
-        case 0: res = btn_DL_mute.setFocus(true); break;
-        case 1: res = btn_DL_pause.setFocus(true); break;
-        case 2: res = btn_DL_cancel.setFocus(true); break;
-        case 3: res = btn_DL_fileList.setFocus(true); break;
-        case 4: res = btn_DL_radio.setFocus(true); break;
+        case 0: res = btn_DL_mute.set_focus(true); break;
+        case 1: res = btn_DL_pause.set_focus(true); break;
+        case 2: res = btn_DL_cancel.set_focus(true); break;
+        case 3: res = btn_DL_fileList.set_focus(true); break;
+        case 4: res = btn_DL_radio.set_focus(true); break;
     }
     if(i == 2) return;
     if(res == false) goto next;
@@ -919,10 +919,10 @@ next:
     if (lr == IR_RESET) return;
     bool res = false;
     switch (s_ir_btn_select) {
-        case 0: res = btn_CL_alarm.setFocus(true); break;
-        case 1: res = btn_CL_radio.setFocus(true); break;
-        case 2: res = btn_CL_mute.setFocus(true); break;
-        case 3: res = btn_CL_off.setFocus(true); break;
+        case 0: res = btn_CL_alarm.set_focus(true); break;
+        case 1: res = btn_CL_radio.set_focus(true); break;
+        case 2: res = btn_CL_mute.set_focus(true); break;
+        case 3: res = btn_CL_off.set_focus(true); break;
     }
     if(i == 2) return;
     if(res == false) goto next;
@@ -946,11 +946,11 @@ next:
     if (lr == IR_RESET) return;
     bool res = false;
     switch (s_ir_btn_select) {
-        case 0: res = btn_AC_left.setFocus(true); break;
-        case 1: res = btn_AC_right.setFocus(true); break;
-        case 2: res = btn_AC_up.setFocus(true); break;
-        case 3: res = btn_AC_down.setFocus(true); break;
-        case 4: res = btn_AC_ready.setFocus(true); break;
+        case 0: res = btn_AC_left.set_focus(true); break;
+        case 1: res = btn_AC_right.set_focus(true); break;
+        case 2: res = btn_AC_up.set_focus(true); break;
+        case 3: res = btn_AC_down.set_focus(true); break;
+        case 4: res = btn_AC_ready.set_focus(true); break;
     }
     if(i == 2) return;
     if(res == false) goto next;
@@ -974,10 +974,10 @@ next:
     if (lr == IR_RESET) return;
     bool res = false;
     switch (s_ir_btn_select) {
-        case 0: res = btn_SL_up.setFocus(true); break;
-        case 1: res = btn_SL_down.setFocus(true); break;
-        case 2: res = btn_SL_ready.setFocus(true); break;
-        case 3: res = btn_SL_cancel.setFocus(true); break;
+        case 0: res = btn_SL_up.set_focus(true); break;
+        case 1: res = btn_SL_down.set_focus(true); break;
+        case 2: res = btn_SL_ready.set_focus(true); break;
+        case 3: res = btn_SL_cancel.set_focus(true); break;
     }
     if(i == 2) return;
     if(res == false) goto next;
@@ -1001,10 +1001,10 @@ next:
     if (lr == IR_RESET) return;
     bool res = false;
     switch (s_ir_btn_select) {
-        case 0: res = btn_SE_bright.setFocus(true); break;
-        case 1: res = btn_SE_equal.setFocus(true); break;
-        case 2: res = btn_SE_wifi.setFocus(true); break;
-        case 3: res = btn_SE_radio.setFocus(true); break;
+        case 0: res = btn_SE_bright.set_focus(true); break;
+        case 1: res = btn_SE_equal.set_focus(true); break;
+        case 2: res = btn_SE_wifi.set_focus(true); break;
+        case 3: res = btn_SE_radio.set_focus(true); break;
     }
     if(i == 2) return;
     if(res == false) goto next;
@@ -1028,7 +1028,7 @@ next:
     if (lr == IR_RESET) return;
     bool res = false;
     switch (s_ir_btn_select) {
-        case 0: res = btn_BR_ready.setFocus(true); break;
+        case 0: res = btn_BR_ready.set_focus(true); break;
     }
     if(i == 2) return;
     if(res == false) goto next;
@@ -1065,13 +1065,13 @@ next:
     if (lr == IR_RESET) return;
     bool res = false;
     switch (s_ir_btn_select) {
-        case 0: res = btn_EQ_Radio.setFocus(true); break;
-        case 1: res = btn_EQ_Player.setFocus(true); break;
-        case 2: res = btn_EQ_mute.setFocus(true); break;
-        case 3: res = btn_EQ_balance.setFocus(true); break;
-        case 4: res = btn_EQ_lowPass.setFocus(true); break;
-        case 5: res = btn_EQ_bandPass.setFocus(true); break;
-        case 6: res = btn_EQ_highPass.setFocus(true); break;
+        case 0: res = btn_EQ_Radio.set_focus(true); break;
+        case 1: res = btn_EQ_Player.set_focus(true); break;
+        case 2: res = btn_EQ_mute.set_focus(true); break;
+        case 3: res = btn_EQ_balance.set_focus(true); break;
+        case 4: res = btn_EQ_lowPass.set_focus(true); break;
+        case 5: res = btn_EQ_bandPass.set_focus(true); break;
+        case 6: res = btn_EQ_highPass.set_focus(true); break;
     }
     if(i == 2) return;
     if(res == false) goto next;
@@ -1096,12 +1096,12 @@ next:
     if (lr == IR_RESET) return;
     bool res = false;
     switch (s_ir_btn_select) {
-        case 0: res = btn_BT_volDown.setFocus(true); break;
-        case 1: res = btn_BT_volUp.setFocus(true); break;
-        case 2: res = btn_BT_pause.setFocus(true); break;
-        case 3: res = btn_BT_mode.setFocus(true); break;
-        case 4: res = btn_BT_radio.setFocus(true); break;
-        case 5: res = btn_BT_power.setFocus(true); break;
+        case 0: res = btn_BT_volDown.set_focus(true); break;
+        case 1: res = btn_BT_volUp.set_focus(true); break;
+        case 2: res = btn_BT_pause.set_focus(true); break;
+        case 3: res = btn_BT_mode.set_focus(true); break;
+        case 4: res = btn_BT_radio.set_focus(true); break;
+        case 5: res = btn_BT_power.set_focus(true); break;
     }
     if(i == 2) return;
     if(res == false) goto next;
