@@ -107,8 +107,8 @@ imgSize GetImageSize(ps_ptr<char> picturePath) {
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class RegisterTable {
   public:
-    virtual ps_ptr<char> getName() = 0;
-    virtual bool         isEnabled() = 0;
+    virtual ps_ptr<char> get_name() = 0;
+    virtual bool         is_enabled() = 0;
     virtual void         disable() = 0;
     virtual bool         positionXY(uint16_t, uint16_t) = 0;
     virtual void         hide() = 0;
@@ -125,8 +125,8 @@ inline void get_registered_names() {
     rn.set_name("rn");
     int16_t x = 0, y = 0, w = 0, h = 0;
     for (auto obj : registertable_objects) {
-        rn.assignf(ANSI_ESC_RESET "    registered object:" ANSI_ESC_YELLOW " {:27}" ANSI_ESC_RESET " is enabled: {}" ANSI_ESC_RESET ",", obj->getName().c_get(),
-                   obj->isEnabled() ? ANSI_ESC_RED "yes" : ANSI_ESC_BLUE " no");
+        rn.assignf(ANSI_ESC_RESET "    registered object:" ANSI_ESC_YELLOW " {:27}" ANSI_ESC_RESET " is enabled: {}" ANSI_ESC_RESET ",", obj->get_name().c_get(),
+                   obj->is_enabled() ? ANSI_ESC_RED "yes" : ANSI_ESC_BLUE " no");
         obj->getBounds(x, y, w, h);
         rn.appendf(" x: {:4}, y: {:4}, w: {:4}, h: {:4}", x, y, w, h);
         rn.println();
@@ -143,9 +143,9 @@ inline const char* isObjectClicked(uint16_t x, uint16_t y) {
     static char objName[100];
     objName[0] = '\0';
     for (auto obj : registertable_objects) {
-        if (obj->isEnabled() && obj->positionXY(x, y)) {
+        if (obj->is_enabled() && obj->positionXY(x, y)) {
             if (strlen(objName) > 0) strcat(objName, ", ");
-            strcat(objName, obj->getName().get());
+            strcat(objName, obj->get_name().get());
         }
     }
     return objName;
@@ -155,14 +155,14 @@ inline void hide_objects_in_area(int16_t x, int16_t y, int16_t w, int16_t h) {
     MWR_LOG_DEBUG("hide_objects_in_area");
     int16_t obj_x = 0, obj_y = 0, obj_w = 0, obj_h = 0;
     for (auto obj : registertable_objects) {
-        if (obj->isEnabled()) {
+        if (obj->is_enabled()) {
             obj->getBounds(obj_x, obj_y, obj_w, obj_h);
             uint16_t left = std::max(x, obj_x);
             uint16_t top = std::max(y, obj_y);
             uint16_t right = std::min<uint32_t>(x + w, obj_x + obj_w);
             uint16_t bottom = std::min<uint32_t>(y + h, obj_y + obj_h);
             if ((left < right) && (top < bottom)) {
-                MWR_LOG_DEBUG("Obj {}", obj->getName().c_get());
+                MWR_LOG_DEBUG("Obj {}", obj->get_name().c_get());
                 obj->hide();
             }
         }
@@ -206,21 +206,18 @@ class button1state : public RegisterTable { // click button
         m_h = h; // high
         m_enabled = false;
     }
-    ps_ptr<char> getName() { return m_name; }
+    ps_ptr<char> get_name() { return m_name; }
     void         enable() { m_enabled = true; }
     void         disable() { m_enabled = false; }
-    bool         isEnabled() { return m_enabled; }
+    bool         is_enabled() { return m_enabled; }
     bool         is_active() { return m_active; }
-    void         set_active(bool active) {m_active = active; }
+    void         set_active(bool active) { m_active = active; }
     bool         has_focus() { return m_focus; }
     void         set_bg_color(int32_t color) { m_bg_color = color; }
     bool         set_focus(bool focus) { return draw_focus(focus); }
 
     void show() {
-        if (m_first_call) { // save background
-            getTFT().copyFramebuffer(FB_VISIBLE, FB_TEMP, m_x, m_y, m_w, m_h);
-            m_first_call = false;
-        }
+        if (m_first_call) m_first_call = false;
         m_clicked = false;
         if (!m_active) {
             setInactive();
@@ -239,7 +236,12 @@ class button1state : public RegisterTable { // click button
     }
 
     void hide() {
-        if (!m_first_call) getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        if (m_first_call) return;
+        if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+        }
         m_enabled = false;
     }
 
@@ -366,38 +368,43 @@ class button2state : public RegisterTable { // on off switch
         m_active = true;
     }
 
-    ps_ptr<char> getName() { return m_name; }
+    ps_ptr<char> get_name() { return m_name; }
     void         enable() { m_enabled = true; }
     void         disable() { m_enabled = false; }
-    bool         isEnabled() { return m_enabled; }
+    bool         is_enabled() { return m_enabled; }
     bool         is_active() { return m_active; }
-    void         set_active(bool active) {m_active = active; }
+    void         set_active(bool active) { m_active = active; }
     bool         has_focus() { return m_focus; }
     void         set_bg_color(int32_t color) { m_bg_color = color; }
     bool         set_focus(bool focus) { return draw_focus(focus); }
 
     void show() {
-        if (m_first_call) { // save background
-            getTFT().copyFramebuffer(FB_VISIBLE, FB_TEMP, m_x, m_y, m_w, m_h);
-            m_first_call = false;
+        if (m_first_call) m_first_call = false;
+        if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
         }
         m_clicked = false;
-        if (m_active) {
-            if (m_state)
-                drawImage(m_on_idlePicturePath, m_x, m_y, m_w, m_h);
-            else
-                drawImage(m_off_idlePicturePath, m_x, m_y, m_w, m_h);
-            m_enabled = true;
-        } else {
-            if (m_state)
-                drawImage(m_on_inactivePicturePath, m_x, m_y, m_w, m_h);
-            else
-                drawImage(m_off_inactivePicturePath, m_x, m_y, m_w, m_h);
+        if (!m_active) {
+            setInactive();
+            return;
         }
+        if (m_state) {
+            drawImage(m_on_idlePicturePath, m_x, m_y, m_w, m_h);
+        } else {
+            drawImage(m_off_idlePicturePath, m_x, m_y, m_w, m_h);
+        }
+        m_enabled = true;
     }
 
     void hide() {
-        if (!m_first_call) getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        if (!m_first_call) return;
+        if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+        }
         m_enabled = false;
     }
 
@@ -498,6 +505,16 @@ class button2state : public RegisterTable { // on off switch
         }
         return m_focus;
     }
+
+    void setInactive() {
+        if (m_state) {
+            drawImage(m_on_inactivePicturePath, m_x, m_y, m_w, m_h);
+        } else {
+            drawImage(m_off_inactivePicturePath, m_x, m_y, m_w, m_h);
+        }
+        m_enabled = false;
+        m_active = false;
+    }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class pictureBox : public RegisterTable {
@@ -547,23 +564,24 @@ class pictureBox : public RegisterTable {
         m_enabled = false;
     }
 
-    ps_ptr<char> getName() { return m_name; }
+    ps_ptr<char> get_name() { return m_name; }
     void         disable() { m_enabled = false; }
     void         enable() { m_enabled = true; }
-    bool         isEnabled() { return m_enabled; }
+    bool         is_enabled() { return m_enabled; }
     bool         is_active() { return m_active; }
-    void         set_active(bool active) {m_active = active; }
+    void         set_active(bool active) { m_active = active; }
     bool         has_focus() { return m_focus; }
     void         set_bg_color(int32_t color) { m_bg_color = color; }
     bool         set_focus(bool focus) { return false; }
 
     bool show() {
-        if (m_first_call) { // save background
-            getTFT().copyFramebuffer(FB_VISIBLE, FB_TEMP, m_x, m_y, m_w, m_h);
-            m_first_call = false;
-        }
+        if (m_first_call) { m_first_call = false; }
         if (m_content_has_changed) { // restore background
-            getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
+            if (m_bg_color == TFT_TRANSPARENT) {
+                getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+            } else {
+                getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+            }
             m_content_has_changed = false;
         }
         int x = m_x + m_padding_left + m_image_x;
@@ -579,7 +597,12 @@ class pictureBox : public RegisterTable {
     }
 
     void hide() {
-        if (!m_first_call) getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        if (!m_first_call) return;
+        if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+        }
         m_enabled = false;
     }
 
@@ -649,7 +672,6 @@ class slider : public RegisterTable {
     int32_t      m_spotColor = 0;
     bool         m_enabled = false;
     bool         m_clicked = false;
-    bool         m_show = false;
     bool         m_focus = false;
     bool         m_objectInit = false;
     bool         m_active = true;
@@ -694,23 +716,24 @@ class slider : public RegisterTable {
         m_middle_h = m_y + (m_h / 2);
         m_spotPos = (m_leftStop + m_rightStop) / 2; // in the middle
         m_objectInit = true;
-        m_show = false;
     }
 
-    ps_ptr<char> getName() { return m_name; }
+    ps_ptr<char> get_name() { return m_name; }
     void         disable() { m_enabled = false; }
     void         enable() { m_enabled = true; }
-    bool         isEnabled() { return m_enabled; }
+    bool         is_enabled() { return m_enabled; }
     bool         is_active() { return m_active; }
-    void         set_active(bool active) {m_active = active; }
+    void         set_active(bool active) { m_active = active; }
     bool         has_focus() { return m_focus; }
     void         set_bg_color(int32_t color) { m_bg_color = color; }
     bool         set_focus(bool focus) { return false; }
 
     void show() {
-        if (m_first_call) { // save background
-            getTFT().copyFramebuffer(FB_VISIBLE, FB_TEMP, m_x, m_y, m_w, m_h);
-            m_first_call = false;
+        if (m_first_call) { m_first_call = false; }
+        if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
         }
         m_enabled = true;
         int x = m_x + m_padding_left;
@@ -722,13 +745,16 @@ class slider : public RegisterTable {
         if (m_bg_color != TFT_TRANSPARENT) { getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color); }
         getTFT().fillRoundRect(x, y, w, m_railHigh, r, m_railColor);
         drawNewSpot(m_spotPos);
-        m_show = true;
     }
 
     void hide() {
-        if (!m_first_call) getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        if (!m_first_call) return;
+        if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+        }
         m_enabled = false;
-        m_show = false;
     }
 
     void setMinMaxVal(int16_t minVal, int16_t maxVal) {
@@ -797,7 +823,7 @@ class slider : public RegisterTable {
     void drawNewSpot(uint16_t xPos) {
         if (m_enabled) {
             if (m_bg_color == TFT_TRANSPARENT) {
-                getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_spotPos - m_spotRadius - 1, m_middle_h - m_spotRadius - 1, 2 * m_spotRadius + 2, 2 * m_spotRadius + 2);
+                getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_spotPos - m_spotRadius - 1, m_middle_h - m_spotRadius - 1, 2 * m_spotRadius + 2, 2 * m_spotRadius + 2);
             } else {
                 getTFT().fillRect(m_spotPos - m_spotRadius, m_middle_h - m_spotRadius, 2 * m_spotRadius, 2 * m_spotRadius + 1, m_bg_color);
             }
@@ -868,29 +894,35 @@ class progressbar : public RegisterTable {
         m_objectInit = true;
     }
 
-    ps_ptr<char> getName() { return m_name; }
+    ps_ptr<char> get_name() { return m_name; }
     void         disable() { m_enabled = false; }
     void         enable() { m_enabled = true; }
-    bool         isEnabled() { return m_enabled; }
+    bool         is_enabled() { return m_enabled; }
     bool         is_active() { return m_active; }
-    void         set_active(bool active) {m_active = active; }
+    void         set_active(bool active) { m_active = active; }
     bool         has_focus() { return m_focus; }
     void         set_bg_color(int32_t color) { m_bg_color = color; }
     bool         set_focus(bool focus) { return false; }
 
     void show() {
-        if (m_first_call) { // save background
-            getTFT().copyFramebuffer(FB_VISIBLE, FB_TEMP, m_x, m_y, m_w, m_h);
-            m_first_call = false;
+        if (m_first_call) { m_first_call = false; }
+        if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
         }
-        if (m_bg_color != TFT_TRANSPARENT) { getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color); }
         getTFT().drawRect(m_x + m_padding_left, m_rail_y_pos, m_w - m_padding_left - m_padding_right, m_railHight, m_frameColor); // draw border
         drawNewValue();
         m_enabled = true;
     }
 
     void hide() {
-        if (!m_first_call) getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        if (m_first_call) return;
+        if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+        }
         m_enabled = false;
     }
 
@@ -1019,33 +1051,38 @@ class textbox : public RegisterTable {
         m_paddig_bottom = paddig_bottom;
     }
 
-    ps_ptr<char> getName() { return m_name; }
+    ps_ptr<char> get_name() { return m_name; }
     void         disable() { m_enabled = false; }
     void         enable() { m_enabled = true; }
-    bool         isEnabled() { return m_enabled; }
+    bool         is_enabled() { return m_enabled; }
     bool         is_active() { return m_active; }
-    void         set_active(bool active) {m_active = active; }
+    void         set_active(bool active) { m_active = active; }
     bool         has_focus() { return m_focus; }
     void         set_bg_color(int32_t color) { m_bg_color = color; }
     bool         set_focus(bool focus) { return false; }
 
     void show() {
-        if (m_first_call) { // save background
-            getTFT().copyFramebuffer(FB_VISIBLE, FB_TEMP, m_x, m_y, m_w, m_h);
-            m_first_call = false;
-        }
-        if (m_content_has_changed) { // restore background
-            getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        if (m_first_call) { m_first_call = false; }
+        if (m_content_has_changed) {
+            if (m_bg_color == TFT_TRANSPARENT) {
+                getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+            } else {
+                getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+            }
             m_content_has_changed = false;
         }
         m_enabled = true;
         m_clicked = false;
-        if (m_bg_color != TFT_TRANSPARENT) { getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color); }
         writeText(m_text.c_get());
     }
 
     void hide() {
-        if (!m_first_call) getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        if (m_first_call) return;
+        if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+        }
         m_enabled = false;
     }
 
@@ -1107,11 +1144,6 @@ class textbox : public RegisterTable {
   private:
     void writeText(ps_ptr<char> txt) {
         if (m_enabled) {
-            if (m_bg_color == -1) {
-                getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
-            } else {
-                getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
-            }
             if (m_fontSize != 0) { getTFT().setFontSize(m_fontSize); }
             getTFT().setTextColor(m_textColor);
             int x = m_x + m_padding_left;
@@ -1156,6 +1188,7 @@ class inputbox : public RegisterTable {
     bool         m_autoSize = false;
     bool         m_narrow = false;
     bool         m_noWrap = false;
+    bool         m_first_call = true;
     releasedArg  m_ra;
 
   public:
@@ -1177,26 +1210,35 @@ class inputbox : public RegisterTable {
         m_paddig_top = paddig_top;
         m_paddig_bottom = paddig_bottom;
     }
-    ps_ptr<char> getName() { return m_name; }
+    ps_ptr<char> get_name() { return m_name; }
     void         disable() { m_enabled = false; }
     void         enable() { m_enabled = true; }
-    bool         isEnabled() { return m_enabled; }
+    bool         is_enabled() { return m_enabled; }
     bool         is_active() { return m_active; }
-    void         set_active(bool active) {m_active = active; }
+    void         set_active(bool active) { m_active = active; }
     bool         has_focus() { return m_focus; }
     void         set_bg_color(int32_t color) { m_bg_color = color; }
     bool         set_focus(bool focus) { return false; }
 
     void show() {
-        if (m_enabled == false) getTFT().copyFramebuffer(FB_VISIBLE, FB_TEMP, m_x, m_y, m_w, m_h);
+        if (m_first_call) { m_first_call = false; }
+        if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+        }
         m_enabled = true;
         m_clicked = false;
-        if (m_bg_color != TFT_TRANSPARENT) { getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color); }
         writeText(m_text);
     }
 
     void hide() {
-        getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        if (m_first_call) return;
+        if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+        }
         m_enabled = false;
     }
 
@@ -1260,7 +1302,7 @@ class inputbox : public RegisterTable {
             getTFT().setTextColor(m_fgColor);
             getTFT().setBackGoundColor(m_bg_color);
             if (m_bg_color == TFT_TRANSPARENT) {
-                getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
+                getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
             } else {
                 getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
             }
@@ -1386,29 +1428,35 @@ class textbutton : public RegisterTable {
         m_paddig_top = paddig_top;
         m_paddig_bottom = paddig_bottom;
     }
-    ps_ptr<char> getName() { return m_name; }
+    ps_ptr<char> get_name() { return m_name; }
     void         enable() { m_enabled = true; }
     void         disable() { m_enabled = false; }
-    bool         isEnabled() { return m_enabled; }
+    bool         is_enabled() { return m_enabled; }
     bool         is_active() { return m_active; }
-    void         set_active(bool active) {m_active = active; }
+    void         set_active(bool active) { m_active = active; }
     bool         has_focus() { return m_focus; }
     void         set_bg_color(int32_t color) { m_bg_color = color; }
     bool         set_focus(bool focus) { return false; }
 
     void show() {
-        if (m_first_call) { // save background
-            getTFT().copyFramebuffer(FB_VISIBLE, FB_TEMP, m_x, m_y, m_w, m_h);
-            m_first_call = false;
+        if (m_first_call) { m_first_call = false; }
+        if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
         }
         m_enabled = true;
         m_clicked = false;
-        if (m_bg_color != TFT_TRANSPARENT) { getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color); }
         writeText(m_text.c_get());
     }
 
     void hide() {
-        if (!m_first_call) getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        if (m_first_call) return;
+        if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+        }
         m_enabled = false;
     }
 
@@ -1485,7 +1533,7 @@ class textbutton : public RegisterTable {
             }
 
             if (m_bg_color == TFT_TRANSPARENT) {
-                getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
+                getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
             } else {
                 getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
             }
@@ -1565,25 +1613,22 @@ class vuMeter : public RegisterTable {
         m_frame_h = 12 * m_segm_h + 13 * m_frameSize;
     }
 
-    ps_ptr<char> getName() { return m_name; }
+    ps_ptr<char> get_name() { return m_name; }
     void         enable() { m_enabled = true; }
     void         disable() { m_enabled = false; }
-    bool         isEnabled() { return m_enabled; }
+    bool         is_enabled() { return m_enabled; }
     bool         is_active() { return m_active; }
-    void         set_active(bool active) {m_active = active; }
+    void         set_active(bool active) { m_active = active; }
     bool         has_focus() { return m_focus; }
     void         set_bg_color(int32_t color) { m_bg_color = color; }
     bool         set_focus(bool focus) { return false; }
 
     void show() {
-        if (m_first_call) { // save background
-            getTFT().copyFramebuffer(FB_VISIBLE, FB_TEMP, m_x, m_y, m_w, m_h);
-            m_first_call = false;
-        }
+        if (m_first_call) { m_first_call = false; }
         m_enabled = true;
         m_clicked = false;
         if (m_bg_color == TFT_TRANSPARENT) {
-            getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
         }
@@ -1597,7 +1642,12 @@ class vuMeter : public RegisterTable {
     }
 
     void hide() {
-        if (!m_first_call) getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        if (m_first_call) return;
+        if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+        }
         m_enabled = false;
     }
 
@@ -1758,12 +1808,12 @@ class selectbox : public RegisterTable {
         m_txt_btn_idx->setNoWrap(m_noWrap);
         m_txt_btn_idx->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
     }
-    ps_ptr<char> getName() { return m_name; }
+    ps_ptr<char> get_name() { return m_name; }
     void         enable() { enable_all(); }
     void         disable() { disable_all(); }
-    bool         isEnabled() { return m_enabled; }
+    bool         is_enabled() { return m_enabled; }
     bool         is_active() { return m_active; }
-    void         set_active(bool active) {m_active = active; }
+    void         set_active(bool active) { m_active = active; }
     bool         has_focus() { return m_focus; }
     void         set_bg_color(int32_t color) { set_bg_color_all(color); }
     bool         set_focus(bool focus) { return false; }
@@ -1780,11 +1830,16 @@ class selectbox : public RegisterTable {
     }
 
     void hide() {
+        if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+        }
         m_enabled = false;
-        m_txt_select->hide();
-        m_txt_btn_down->hide();
-        m_txt_btn_up->hide();
-        m_txt_btn_idx->hide();
+        m_txt_select->disable();
+        m_txt_btn_down->disable();
+        m_txt_btn_up->disable();
+        m_txt_btn_idx->disable();
     }
 
     void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
@@ -1980,6 +2035,7 @@ class keyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
         m_fontSize = fontSize;
     }
     ~keyBoard() { delete[] txt_btn_array; }
+
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom) {
         m_x = x; // x pos
         m_y = y; // y pos
@@ -2040,29 +2096,38 @@ class keyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
             posX += m_row3[i] * btnW + margin;
         }
     }
-    ps_ptr<char> getName() { return m_name; }
+
+    ps_ptr<char> get_name() { return m_name; }
     void         enable() { m_enabled = true; }
     void         disable() { m_enabled = false; }
-    bool         isEnabled() { return m_enabled; }
+    bool         is_enabled() { return m_enabled; }
     bool         is_active() { return m_active; }
-    void         set_active(bool active) {m_active = active; }
+    void         set_active(bool active) { m_active = active; }
     bool         has_focus() { return m_focus; }
     void         set_bg_color(int32_t color) { set_bg_color_all(color); }
     bool         set_focus(bool focus) { return false; }
 
     void show() {
-        if (m_enabled == false) getTFT().copyFramebuffer(FB_VISIBLE, FB_TEMP, m_x, m_y, m_w, m_h);
+        if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+        }
         m_enabled = true;
         m_clicked = false;
-        if (m_bg_color != TFT_TRANSPARENT) { getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color); }
         for (int i = 0; i < 34; i++) {
-            txt_btn_array[i].set_bg_color(TFT_BLACK);
+            txt_btn_array[i].set_bg_color(m_bg_color);
             txt_btn_array[i].show();
         }
     }
 
     void hide() {
-        getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+        }
+        for (int i = 0; i < 34; i++) { txt_btn_array[i].disable(); }
         m_enabled = false;
     }
 
@@ -2377,12 +2442,12 @@ class wifiSettings : public RegisterTable {
         m_in_password->begin(m_winPWD.x, m_winPWD.y, m_winPWD.w, m_winPWD.h, m_winPWD.pl, m_winPWD.pr, m_winPWD.pt, m_winPWD.pb);
         m_keyboard->begin(m_winKeybrd.x, m_winKeybrd.y, m_winKeybrd.w, m_winKeybrd.h, m_winKeybrd.pl, m_winKeybrd.pr, m_winKeybrd.pt, m_winKeybrd.pb);
     }
-    ps_ptr<char> getName() { return m_name; }
+    ps_ptr<char> get_name() { return m_name; }
     void         enable() { enable_all(); }
     void         disable() { disable_all(); }
-    bool         isEnabled() { return m_enabled; }
+    bool         is_enabled() { return m_enabled; }
     bool         is_active() { return m_active; }
-    void         set_active(bool active) {m_active = active; }
+    void         set_active(bool active) { m_active = active; }
     bool         has_focus() { return m_focus; }
     void         set_bg_color(int32_t color) { set_bg_color_all(color); }
     bool         set_focus(bool focus) { return false; }
@@ -2398,10 +2463,12 @@ class wifiSettings : public RegisterTable {
     }
 
     void hide() {
-        m_enabled = false;
-        m_sel_ssid->hide();
-        m_in_password->hide();
-        m_keyboard->hide();
+        if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+        }
+        disable_all();
     }
 
     void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
@@ -2411,18 +2478,6 @@ class wifiSettings : public RegisterTable {
         h = m_h;
     }
 
-    void disable_all() {
-        m_enabled = false;
-        m_sel_ssid->disable();
-        m_in_password->disable();
-        m_keyboard->disable();
-    }
-    void enable_all() {
-        m_enabled = true;
-        m_sel_ssid->enable();
-        m_in_password->enable();
-        m_keyboard->enable();
-    }
     void setFontSize(uint8_t size) { // size 0 -> auto, choose besr font size
         m_fontSize = 0;
         if (size != 0) {
@@ -2516,6 +2571,19 @@ class wifiSettings : public RegisterTable {
         //    m_keyboard->set_bg_color(m_bg_color);
     }
 
+    void disable_all() {
+        m_enabled = false;
+        m_sel_ssid->disable();
+        m_in_password->disable();
+        m_keyboard->disable();
+    }
+    void enable_all() {
+        m_enabled = true;
+        m_sel_ssid->enable();
+        m_in_password->enable();
+        m_keyboard->enable();
+    }
+
     void changePassword(char ch, uint8_t idx) {
         int len = m_credentials[idx].password.strlen();
         if (ch == 0x08) { // backspace
@@ -2590,29 +2658,33 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
         }
     }
 
-    ps_ptr<char> getName() { return m_name; }
+    ps_ptr<char> get_name() { return m_name; }
     void         enable() { enable_all(); }
     void         disable() { disable_all(); }
-    bool         isEnabled() { return m_enabled; }
+    bool         is_enabled() { return m_enabled; }
     bool         is_active() { return m_active; }
-    void         set_active(bool active) {m_active = active; }
+    void         set_active(bool active) { m_active = active; }
     bool         has_focus() { return m_focus; }
     void         set_bg_color(int32_t color) { set_bg_color_all(color); }
     bool         set_focus(bool focus) { return false; }
 
     void show() {
-        if (m_enabled == false) getTFT().copyFramebuffer(FB_VISIBLE, FB_TEMP, m_x, m_y, m_w, m_h);
-        m_enabled = true;
-        if (m_bg_color != TFT_TRANSPARENT) { getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color); }
-        for (uint8_t i = 0; i < 8; i++) { txt_time[i].show(); }
+        if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+        }
+        enable_all();
         updateTime(m_time, true);
     }
 
     void hide() {
-        getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
-
-        for (uint8_t i = 0; i < 8; i++) { txt_time[i].hide(); }
-        m_enabled = false;
+        if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+        }
+        disable_all();
     }
 
     void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
@@ -2724,19 +2796,18 @@ class numbersBox : public RegisterTable { // range 000...999
         m_enabled = false;
     }
 
-    ps_ptr<char> getName() { return m_name; }
+    ps_ptr<char> get_name() { return m_name; }
     void         enable() { m_enabled = true; }
     void         disable() { m_enabled = false; }
-    bool         isEnabled() { return m_enabled; }
+    bool         is_enabled() { return m_enabled; }
     bool         is_active() { return m_active; }
-    void         set_active(bool active) {m_active = active; }
+    void         set_active(bool active) { m_active = active; }
     bool         has_focus() { return m_focus; }
     void         set_bg_color(int32_t color) { set_bg_color_all(color); }
     bool         set_focus(bool focus) { return false; }
 
     bool show(uint16_t color) {
         m_clicked = false;
-        if (m_enabled == false) getTFT().copyFramebuffer(FB_VISIBLE, FB_TEMP, m_x, m_y, m_w, m_h);
         if (color == TFT_BLUE)
             m_color = "blue";
         else if (color == TFT_ORANGE)
@@ -2757,7 +2828,11 @@ class numbersBox : public RegisterTable { // range 000...999
     }
 
     void hide() {
-        getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+        }
         m_enabled = false;
     }
 
@@ -2856,18 +2931,17 @@ class offTimerBox : public RegisterTable { // range 000...999
         m_enabled = false;
     }
 
-    ps_ptr<char> getName() { return m_name; }
+    ps_ptr<char> get_name() { return m_name; }
     void         enable() { m_enabled = true; }
     void         disable() { m_enabled = false; }
-    bool         isEnabled() { return m_enabled; }
+    bool         is_enabled() { return m_enabled; }
     bool         is_active() { return m_active; }
-    void         set_active(bool active) {m_active = active; }
+    void         set_active(bool active) { m_active = active; }
     bool         has_focus() { return m_focus; }
     void         set_bg_color(int32_t color) { set_bg_color_all(color); }
     bool         set_focus(bool focus) { return false; }
 
     bool show(uint16_t time) {
-        if (m_enabled == false) getTFT().copyFramebuffer(FB_VISIBLE, FB_TEMP, m_x, m_y, m_w, m_h);
         if (!time)
             m_color = "red";
         else
@@ -2889,7 +2963,11 @@ class offTimerBox : public RegisterTable { // range 000...999
     }
 
     void hide() {
-        getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+        }
         m_enabled = false;
     }
 
@@ -3018,18 +3096,17 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
         pic_clock24_digitsM01->begin(m_x + m_m01.x, m_y + m_m01.y, m_m01.w, m_m10.h, m_m01.pl, m_m01.pr, m_m01.pt, m_m01.pb);
     }
 
-    ps_ptr<char> getName() { return m_name; }
-    bool         enable() { return m_enabled = true; }
-    void         disable() { m_enabled = false; }
-    bool         isEnabled() { return m_enabled; }
+    ps_ptr<char> get_name() { return m_name; }
+    void         enable() { enable_all(); }
+    void         disable() { disable_all(); }
+    bool         is_enabled() { return m_enabled; }
     bool         is_active() { return m_active; }
-    void         set_active(bool active) {m_active = active; }
+    void         set_active(bool active) { m_active = active; }
     bool         has_focus() { return m_focus; }
     void         set_bg_color(int32_t color) { set_bg_color_all(color); }
     bool         set_focus(bool focus) { return false; }
 
     void show(bool inactive = false) {
-        if (m_enabled == false) getTFT().copyFramebuffer(FB_VISIBLE, FB_TEMP, m_x, m_y, m_w, m_h);
         m_clicked = false;
         if (inactive) {
             //    setInactive();
@@ -3041,14 +3118,12 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
     }
 
     void hide() {
-        getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
-        pic_clock24_digitsH10->hide();
-        pic_clock24_digitsH01->hide();
-        pic_clock24_digitsM10->hide();
-        pic_clock24_digitsM01->hide();
-        pic_clock24_digitsColon->hide();
-        pic_clock24_digitsColon->hide();
-        m_enabled = false;
+        if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+        }
+        disable_all();
     }
 
     void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
@@ -3129,6 +3204,26 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
     }
 
   private:
+    void enable_all() {
+        pic_clock24_digitsH10->enable();
+        pic_clock24_digitsH01->enable();
+        pic_clock24_digitsM10->enable();
+        pic_clock24_digitsM01->enable();
+        pic_clock24_digitsColon->enable();
+        pic_clock24_digitsColon->enable();
+        m_enabled = true;
+    }
+
+    void disable_all() {
+        pic_clock24_digitsH10->disable();
+        pic_clock24_digitsH01->disable();
+        pic_clock24_digitsM10->disable();
+        pic_clock24_digitsM01->disable();
+        pic_clock24_digitsColon->disable();
+        pic_clock24_digitsColon->disable();
+        m_enabled = false;
+    }
+
     void placingDigits(uint16_t w, uint16_t h) {
         uint16_t digits_y = 0, digits_w = 0, colon_w = 0, digits_h = 0, paddig_l = 0;
 
@@ -3247,30 +3342,30 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
         pic_clock24_digitsM10->begin(m_x + m_m10.x, m_y + m_m10.y, m_m10.w, m_m10.h, m_m10.pl, m_m10.pr, m_m10.pt, m_m10.pb);
         pic_clock24_digitsM01->begin(m_x + m_m01.x, m_y + m_m01.y, m_m01.w, m_m10.h, m_m01.pl, m_m01.pr, m_m01.pt, m_m01.pb);
     }
-    ps_ptr<char> getName() { return m_name; }
-    void         enable() { m_enabled = true; }
-    void         disable() { m_enabled = false; }
-    bool         isEnabled() { return m_enabled; }
+    ps_ptr<char> get_name() { return m_name; }
+    void         enable() { enable_all(); }
+    void         disable() { disable_all(); }
+    bool         is_enabled() { return m_enabled; }
     bool         is_active() { return m_active; }
-    void         set_active(bool active) {m_active = active; }
+    void         set_active(bool active) { m_active = active; }
     bool         has_focus() { return m_focus; }
     void         set_bg_color(int32_t color) { set_bg_color_all(color); }
     bool         set_focus(bool focus) { return false; }
 
     void show(bool inactive = false) {
-        if (m_enabled == false) getTFT().copyFramebuffer(FB_VISIBLE, FB_TEMP, m_x, m_y, m_w, m_h);
         m_clicked = false;
-        if (inactive) {
-            //    setInactive();
-            return;
-        }
         m_enabled = true;
         m_showAll = true;
         writeTime(m_hour, m_min);
     }
 
     void hide() {
-        getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+        }
+        disable_all();
         m_enabled = false;
     }
 
@@ -3352,10 +3447,33 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
     }
 
   private:
+    void enable_all() {
+        pic_clock24_digitsH10->enable();
+        pic_clock24_digitsH01->enable();
+        pic_clock24_digitsColon->enable();
+        pic_clock24_digitsM10->enable();
+        pic_clock24_digitsM01->enable();
+        m_enabled = true;
+    }
+
+    void disable_all() {
+        pic_clock24_digitsH10->disable();
+        pic_clock24_digitsH01->disable();
+        pic_clock24_digitsColon->disable();
+        pic_clock24_digitsM10->disable();
+        pic_clock24_digitsM01->disable();
+        m_enabled = false;
+    }
+
     void set_bg_color_all(int32_t color) {
         m_bg_color = color;
-        ;
+        pic_clock24_digitsH10->set_bg_color(m_bg_color);
+        pic_clock24_digitsH01->set_bg_color(m_bg_color);
+        pic_clock24_digitsColon->set_bg_color(m_bg_color);
+        pic_clock24_digitsM10->set_bg_color(m_bg_color);
+        pic_clock24_digitsM01->set_bg_color(m_bg_color);
     }
+
     void placingDigits(uint16_t w, uint16_t h) {
         uint16_t digits_y = 0, digits_w = 0, colon_w = 0, digits_h = 0, paddig_l = 0;
 
@@ -3441,6 +3559,7 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
     bool         m_clicked = false;
     bool         m_state = false;
     bool         m_showAll = false;
+    bool         m_first_call = true;
     ps_ptr<char> m_name;
     ps_ptr<char> m_pathBuff;
     uint8_t*     m_alarmDays;
@@ -3499,18 +3618,17 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
         }
     }
 
-    ps_ptr<char> getName() { return m_name; }
-    void         enable() { m_enabled = true; }
-    void         disable() { m_enabled = false; }
-    bool         isEnabled() { return m_enabled; }
+    ps_ptr<char> get_name() { return m_name; }
+    void         enable() { enable_all(); }
+    void         disable() { disable_all(); }
+    bool         is_enabled() { return m_enabled; }
     bool         is_active() { return m_active; }
-    void         set_active(bool active) {m_active = active; }
+    void         set_active(bool active) { m_active = active; }
     bool         has_focus() { return m_focus; }
     void         set_bg_color(int32_t color) { set_bg_color_all(color); }
     bool         set_focus(bool focus) { return false; }
 
     void show(bool inactive = false) {
-        if (m_enabled == false) getTFT().copyFramebuffer(FB_VISIBLE, FB_TEMP, m_x, m_y, m_w, m_h);
         m_clicked = false;
         if (inactive) {
             //    setInactive();
@@ -3523,7 +3641,12 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
     }
 
     void hide() {
-        getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+        }
+        disable_all();
         m_enabled = false;
     }
 
@@ -3659,11 +3782,32 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
     }
 
   private:
+    void enable_all() {
+        pic_alarm_digitsH10->enable();
+        pic_alarm_digitsH01->enable();
+        pic_alarm_digitsColon->enable();
+        pic_alarm_digitsM10->enable();
+        pic_alarm_digitsM01->enable();
+        for (uint8_t i = 0; i < 7; i++) { txt_alarm_days[i].enable(); }
+        m_enabled = true;
+    }
+
+    void disable_all() {
+        pic_alarm_digitsH10->disable();
+        pic_alarm_digitsH01->disable();
+        pic_alarm_digitsColon->disable();
+        pic_alarm_digitsM10->disable();
+        pic_alarm_digitsM01->disable();
+        for (uint8_t i = 0; i < 7; i++) { txt_alarm_days[i].disable(); }
+        m_enabled = false;
+    }
+
     void set_bg_color_all(int32_t color) {
         m_bg_color = color;
         ;
     }
     void updateDigits() {
+        if(!m_enabled) return;
         static uint8_t m_oldAlarmDigits[4] = {0};
         for (uint8_t i = 0; i < 4; i++) {
             if (m_oldAlarmDigits[i] != m_alarmDigits[i] || m_showAll) {
@@ -3700,6 +3844,7 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
         }
     }
     void updateAlarmDaysAndTime() {
+        if(!m_enabled) return;
         uint8_t  mask = 0b00000001;
         uint16_t color = TFT_BLACK;
 
@@ -4073,12 +4218,12 @@ class dlnaList : public RegisterTable {
         m_tftSize = tftSize;
     }
 
-    ps_ptr<char> getName() { return m_name; }
+    ps_ptr<char> get_name() { return m_name; }
     void         enable() { m_enabled = true; }
     void         disable() { m_enabled = false; }
-    bool         isEnabled() { return m_enabled; }
+    bool         is_enabled() { return m_enabled; }
     bool         is_active() { return m_active; }
-    void         set_active(bool active) {m_active = active; }
+    void         set_active(bool active) { m_active = active; }
     bool         has_focus() { return m_focus; }
     void         set_bg_color(int32_t color) { set_bg_color_all(color); }
     bool         set_focus(bool focus) { return false; }
@@ -4117,7 +4262,11 @@ class dlnaList : public RegisterTable {
         dlnaItemsList();
     }
     void hide() {
-        getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+        }
         m_enabled = false;
     }
 
@@ -4668,12 +4817,12 @@ class fileList : public RegisterTable {
         m_enabled = false;
         m_tftSize = tftSize;
     }
-    ps_ptr<char> getName() { return m_name; }
+    ps_ptr<char> get_name() { return m_name; }
     void         enable() { m_enabled = true; }
     void         disable() { m_enabled = false; }
-    bool         isEnabled() { return m_enabled; }
+    bool         is_enabled() { return m_enabled; }
     bool         is_active() { return m_active; }
-    void         set_active(bool active) {m_active = active; }
+    void         set_active(bool active) { m_active = active; }
     bool         has_focus() { return m_focus; }
     void         set_bg_color(int32_t color) { set_bg_color_all(color); }
     bool         set_focus(bool focus) { return false; }
@@ -4701,7 +4850,11 @@ class fileList : public RegisterTable {
         audioFileslist(m_viewPos);
     }
     void hide() {
-        getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+        }
         m_enabled = false;
     }
 
@@ -5068,12 +5221,12 @@ class stationsList : public RegisterTable {
         m_tftSize = tftSize;
     }
 
-    ps_ptr<char> getName() { return m_name; }
+    ps_ptr<char> get_name() { return m_name; }
     void         enable() { m_enabled = true; }
     void         disable() { m_enabled = false; }
-    bool         isEnabled() { return m_enabled; }
+    bool         is_enabled() { return m_enabled; }
     bool         is_active() { return m_active; }
-    void         set_active(bool active) {m_active = active; }
+    void         set_active(bool active) { m_active = active; }
     bool         has_focus() { return m_focus; }
     void         set_bg_color(int32_t color) { set_bg_color_all(color); }
     bool         set_focus(bool focus) { return false; }
@@ -5094,7 +5247,11 @@ class stationsList : public RegisterTable {
         stationslist(true);
     }
     void hide() {
-        getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+        }
         m_enabled = false;
     }
 
@@ -5510,12 +5667,12 @@ class displayHeader : public RegisterTable {
         txt_Volume->setFontSize(m_fontSize); // 0 -> auto
         pic_RSSID->setPicturePath(m_rssiSymbol[0]);
     }
-    ps_ptr<char> getName() { return m_name; }
+    ps_ptr<char> get_name() { return m_name; }
     void         enable() { enable_all(); }
     void         disable() { disable_all(); }
-    bool         isEnabled() { return m_enabled; }
+    bool         is_enabled() { return m_enabled; }
     bool         is_active() { return m_active; }
-    void         set_active(bool active) {m_active = active; }
+    void         set_active(bool active) { m_active = active; }
     bool         has_focus() { return m_focus; }
     void         set_bg_color(int32_t color) { set_bg_color_all(color); }
     bool         set_focus(bool focus) { return false; }
@@ -5549,33 +5706,12 @@ class displayHeader : public RegisterTable {
     }
 
     void hide() {
-        m_enabled = false;
-        txt_Item->hide();
-        pic_Speaker->hide();
-        txt_Volume->hide();
-        pic_RSSID->hide();
-        timeStringObject->hide();
         if (m_bg_color == TFT_TRANSPARENT) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
         }
-    }
-    void enable_all() {
-        m_enabled = true;
-        txt_Item->enable();
-        pic_Speaker->enable();
-        txt_Volume->enable();
-        pic_RSSID->enable();
-        timeStringObject->enable();
-    }
-    void disable_all() {
-        m_enabled = false;
-        txt_Item->disable();
-        pic_Speaker->disable();
-        txt_Volume->disable();
-        pic_RSSID->disable();
-        timeStringObject->disable();
+        disable_all();
     }
 
     void updateItem(ps_ptr<char> hl_item) { // radio, clock, audioplayer...
@@ -5659,6 +5795,22 @@ class displayHeader : public RegisterTable {
     }
 
   private:
+    void enable_all() {
+        m_enabled = true;
+        txt_Item->enable();
+        pic_Speaker->enable();
+        txt_Volume->enable();
+        pic_RSSID->enable();
+        timeStringObject->enable();
+    }
+    void disable_all() {
+        m_enabled = false;
+        txt_Item->disable();
+        pic_Speaker->disable();
+        txt_Volume->disable();
+        pic_RSSID->disable();
+        timeStringObject->disable();
+    }
     void set_bg_color_all(int32_t color) {
         m_bg_color = color;
         timeStringObject->set_bg_color(color);
@@ -6026,22 +6178,15 @@ class displayFooter : public RegisterTable {
         txt_FileNr->setFontSize(m_fontSize); // 0 -> auto
     }
 
-    ps_ptr<char> getName() { return m_name; }
-    void         enable() { m_enabled = true; }
-    void         disable() { m_enabled = false; }
-    bool         isEnabled() { return m_enabled; }
+    ps_ptr<char> get_name() { return m_name; }
+    void         enable() { enable_all(); }
+    void         disable() { disable_all(); }
+    bool         is_enabled() { return m_enabled; }
     bool         is_active() { return m_active; }
-    void         set_active(bool active) {m_active = active; }
+    void         set_active(bool active) { m_active = active; }
     bool         has_focus() { return m_focus; }
     void         set_bg_color(int32_t color) { set_bg_color_all(color); }
     bool         set_focus(bool focus) { return false; }
-
-    void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
-        x = m_x;
-        y = m_y;
-        w = m_w;
-        h = m_h;
-    }
 
     void show() {
         if (m_bg_color == TFT_TRANSPARENT) {
@@ -6064,21 +6209,19 @@ class displayFooter : public RegisterTable {
     }
 
     void hide() {
-        m_enabled = false;
-        pic_Antenna->hide();
-        txt_StaNr->hide();
-        txt_FileNr->hide();
-        pic_Flag->hide();
-        txt_OffTimer->hide();
-        pic_Hourglass->hide();
-        txt_BitRate->hide();
-        txt_OffTimer->hide();
-        txt_IpAddr->hide();
         if (m_bg_color == TFT_TRANSPARENT) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
         }
+        disable_all();
+    }
+
+    void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
+        x = m_x;
+        y = m_y;
+        w = m_w;
+        h = m_h;
     }
 
     void updateAntenna(bool WiFi_lost) {
@@ -6095,7 +6238,7 @@ class displayFooter : public RegisterTable {
     }
 
     void updateStation(uint16_t staNr) {
-        if (txt_FileNr->isEnabled()) txt_FileNr->hide();
+        if (txt_FileNr->is_enabled()) txt_FileNr->hide();
         m_staNr = staNr;
         char buff[10];
         sprintf(buff, "%03d", m_staNr);
@@ -6103,8 +6246,8 @@ class displayFooter : public RegisterTable {
         txt_StaNr->show();
     }
     void updateFileNr(ps_ptr<char> fNr) { // or BT Volume
-        if (txt_StaNr->isEnabled()) txt_StaNr->hide();
-        if (pic_Flag->isEnabled()) pic_Flag->hide();
+        if (txt_StaNr->is_enabled()) txt_StaNr->hide();
+        if (pic_Flag->is_enabled()) pic_Flag->hide();
         m_fileNr = fNr;
         txt_FileNr->setText(m_fileNr);
         txt_FileNr->show();
@@ -6217,6 +6360,28 @@ class displayFooter : public RegisterTable {
     }
 
   private:
+    void enable_all() {
+        pic_Antenna->enable();
+        txt_StaNr->enable();
+        txt_FileNr->enable();
+        pic_Flag->enable();
+        txt_OffTimer->enable();
+        pic_Hourglass->enable();
+        txt_BitRate->enable();
+        txt_OffTimer->enable();
+        txt_IpAddr->enable();
+    }
+    void disable_all() {
+        pic_Antenna->disable();
+        txt_StaNr->disable();
+        txt_FileNr->disable();
+        pic_Flag->disable();
+        txt_OffTimer->disable();
+        pic_Hourglass->disable();
+        txt_BitRate->disable();
+        txt_OffTimer->disable();
+        txt_IpAddr->disable();
+    }
     void set_bg_color_all(int32_t color) {
         m_bg_color = color;
         //        pic_Antenna->set_bg_color(m_bg_color);
@@ -6325,26 +6490,28 @@ class messageBox : public RegisterTable {
     }
     // clang-format on
 
-    ps_ptr<char> getName() { return m_name; }
+    ps_ptr<char> get_name() { return m_name; }
     void         enable() { m_enabled = true; }
     void         disable() { m_enabled = false; }
-    bool         isEnabled() { return m_enabled; }
+    bool         is_enabled() { return m_enabled; }
     bool         has_focus() { return m_focus; }
     void         set_bg_color(int32_t color) { set_bg_color_all(color); }
     bool         set_focus(bool focus) { return false; }
 
     void show() {
-        if (m_first_call) { // save background
-            getTFT().copyFramebuffer(FB_VISIBLE, FB_TEMP, m_x, m_y, m_w, m_h);
-            m_first_call = false;
-        }
+        if (m_first_call) { m_first_call = false; }
         txt_msgBox->set_bg_color(m_bg_color);
         txt_msgBox->show();
         m_enabled = true;
     }
 
     void hide() {
-        if (!m_first_call) getTFT().copyFramebuffer(FB_TEMP, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        if (m_first_call) return;
+        if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+        }
         m_enabled = false;
     }
 

@@ -597,6 +597,7 @@ void placingGraphicObjects() { // and initialize them
     nbr_RA_staBox.begin(layout.winName.x, layout.winName.y, layout.winName.w, layout.winName.h);
     // STATIONSLIST ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     lst_RADIO.begin(layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, displayConfig.tftSize, displayConfig.listFontSize);
+    lst_RADIO.set_bg_color(TFT_BLACK);
     // PLAYER-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     btn_PL_mute.begin(0 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_PL_mute.setPicturePath("/btn/Button_Mute");
@@ -636,6 +637,7 @@ void placingGraphicObjects() { // and initialize them
     pgb_PL_progress.setValue(0);
     // AUDIOFILESLIST-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     lst_PLAYER.begin(layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, displayConfig.tftSize, displayConfig.listFontSize);
+    lst_PLAYER.set_bg_color(TFT_BLACK);
     // DLNA --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     btn_DL_mute.begin(0 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_DL_mute.setPicturePath("/btn/Button_Mute");
@@ -659,31 +661,43 @@ void placingGraphicObjects() { // and initialize them
     pgb_DL_progress.setValue(0);
     // DLNAITEMSLIST -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     lst_DLNA.begin(layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, displayConfig.tftSize, displayConfig.listFontSize);
+    lst_DLNA.set_bg_color(TFT_BLACK);
     // CLOCK -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     clk_CL_24.begin(layout.winDigits.x, layout.winDigits.y, layout.winDigits.w, layout.winDigits.h);
+    clk_CL_24.set_bg_color(TFT_BLACK);
     btn_CL_alarm.begin(0 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_CL_alarm.setPicturePath("/btn/Button_Bell");
+    btn_CL_alarm.set_bg_color(TFT_BLACK);
     btn_CL_radio.begin(1 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_CL_radio.setPicturePath("/btn/Button_Radio");
+    btn_CL_radio.set_bg_color(TFT_BLACK);
     btn_CL_mute.begin(2 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_CL_mute.setPicturePath("/btn/Button_Mute");
+    btn_CL_mute.set_bg_color(TFT_BLACK);
     btn_CL_off.begin(3 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_CL_off.setPicturePath("/btn/Button_Off");
+    btn_CL_off.set_bg_color(TFT_BLACK);
     sdr_CL_volume.begin(5 * layout.winButton.w + 10, layout.winButton.y, layout.winButton.w * 3 - 10, layout.winButton.h, layout.winButton.pl, layout.winButton.pr, layout.winButton.pt,
                         layout.winButton.pb);
+    sdr_CL_volume.set_bg_color(TFT_BLACK);
     // ALARM -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     clk_AC_red.begin(layout.winDigits.x, layout.winDigits.y, layout.winDigits.w, layout.winDigits.h);
+    clk_AC_red.set_bg_color(TFT_BLACK);
     btn_AC_left.begin(0 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_AC_left.setPicturePath("/btn/Button_Left");
+    btn_AC_left.set_bg_color(TFT_BLACK);
     btn_AC_right.begin(1 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_AC_right.setPicturePath("/btn/Button_Right");
+    btn_AC_right.set_bg_color(TFT_BLACK);
     btn_AC_up.begin(2 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_AC_up.setPicturePath("/btn/Button_Up");
+    btn_AC_up.set_bg_color(TFT_BLACK);
     btn_AC_down.begin(3 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_AC_down.setPicturePath("/btn/Button_Down");
+    btn_AC_down.set_bg_color(TFT_BLACK);
     btn_AC_ready.begin(4 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_AC_ready.setPicturePath("/btn/Button_Ready");
-
+    btn_AC_ready.set_bg_color(TFT_BLACK);
     // RINGING -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     pic_RI_logo.begin(layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h, layout.winLogo.pl, layout.winLogo.pr, layout.winLogo.pt, layout.winLogo.pb);
     clk_RI_24small.begin(layout.winName.x, layout.winName.y, layout.winName.w, layout.winName.h);

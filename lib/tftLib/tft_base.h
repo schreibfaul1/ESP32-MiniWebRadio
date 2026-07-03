@@ -10,7 +10,6 @@
 enum Framebuffer : uint8_t {
     FB_VISIBLE    = 0,
     FB_BACKGROUND = 1,
-    FB_TEMP       = 2
 };
 class TFT_Base {
   public:
