@@ -45,9 +45,9 @@ void TFT_SPI::setTFTcontroller(uint8_t TFTcontroller) {
     if(!m_framebuffer[1]) {if(tft_info) tft_info("Error allocating memory framebuffer 1"); return; }
     memset(m_framebuffer[1], 0, m_h_res * m_v_res * 2);
 
-    m_framebuffer[2] = (uint16_t*)ps_malloc(m_h_res * m_v_res * 2);
-    if(!m_framebuffer[2]) {if(tft_info) tft_info("Error allocating memory framebuffer 2"); return; }
-    memset(m_framebuffer[2], 0, m_h_res * m_v_res * 2);
+    // m_framebuffer[2] = (uint16_t*)ps_malloc(m_h_res * m_v_res * 2);
+    // if(!m_framebuffer[2]) {if(tft_info) tft_info("Error allocating memory framebuffer 2"); return; }
+    // memset(m_framebuffer[2], 0, m_h_res * m_v_res * 2);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::setDisplayInversion(uint8_t i) {

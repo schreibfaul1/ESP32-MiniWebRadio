@@ -1070,6 +1070,9 @@ void setup() {
 
     if (!detect_i2_c_devices(&i2cBusOne, I2C_SDA, I2C_SCL, &s_i2c_items)) { printfln(s_tag.setup, "No i2c device found"); }
 
+    MWR_LOG_ERROR("hier");
+    vTaskDelay(3000);
+
     set_display_items(); // TFT, TP, Resolotion
     if (!init_SD_card()) return;
 
@@ -1222,11 +1225,11 @@ bool detect_i2_c_devices(TwoWire* twi, int8_t sda, int8_t scl, i2c_items_s* i2c_
             if (addr == 0x18 || addr == 0x19) {
                 i2c_items->es8311_found = true;
                 i2c_items->es8311_addr = addr;
-                if (log) MWR_LOG_WARN("es8311 found at 0x{X}", addr);
+                if (log) MWR_LOG_WARN("es8311 found at 0x{:X}", addr);
             } else if (addr == 0x14 || addr == 0x5D) {
                 i2c_items->gt911_found = true;
                 i2c_items->gt911_addr = addr;
-                if (log) MWR_LOG_WARN("gt911 found at 0x{X}", addr);
+                if (log) MWR_LOG_WARN("gt911 found at 0x{:X}", addr);
                 //-- BH1750 -------------------------------------------------------------------------------------------------------------------------------
             } else if (addr == 0x23 || addr == 0x5C) {
                 i2c_items->bh1750_found = true;
