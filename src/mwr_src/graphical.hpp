@@ -125,8 +125,7 @@ inline void get_registered_names() {
     rn.set_name("rn");
     int16_t x = 0, y = 0, w = 0, h = 0;
     for (auto obj : registertable_objects) {
-        rn.assignf(ANSI_ESC_RESET "    registered object:" ANSI_ESC_YELLOW " {:27}" ANSI_ESC_RESET " is enabled: {}" ANSI_ESC_RESET ",", obj->get_name().c_get(),
-                   obj->is_enabled() ? ANSI_ESC_RED "yes" : ANSI_ESC_BLUE " no");
+        rn.assignf(ANSI_ESC_RESET "    registered object:" ANSI_ESC_YELLOW " {:27}" ANSI_ESC_RESET " is enabled: {}" ANSI_ESC_RESET ",", obj->get_name().c_get(), obj->is_enabled() ? ANSI_ESC_RED "yes" : ANSI_ESC_BLUE " no");
         obj->getBounds(x, y, w, h);
         rn.appendf(" x: {:4}, y: {:4}, w: {:4}, h: {:4}", x, y, w, h);
         rn.println();
@@ -658,35 +657,37 @@ class pictureBox : public RegisterTable {
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class slider : public RegisterTable {
   private:
-    int16_t      m_x = 0;
-    int16_t      m_y = 0;
-    int16_t      m_w = 0;
-    int16_t      m_h = 0;
-    int16_t      m_val = 0;
-    int16_t      m_minVal = 0;
-    int16_t      m_maxVal = 0;
-    uint16_t     m_leftStop = 0;
-    uint16_t     m_rightStop = 0;
-    int32_t      m_bg_color = TFT_TRANSPARENT;
-    int32_t      m_railColor = 0;
-    int32_t      m_spotColor = 0;
-    bool         m_enabled = false;
-    bool         m_clicked = false;
-    bool         m_focus = false;
-    bool         m_objectInit = false;
-    bool         m_active = true;
-    bool         m_content_has_changed = false;
-    bool         m_first_call = true;
-    uint8_t      m_railHigh = 0;
-    uint16_t     m_middle_h = 0;
-    uint16_t     m_spotPos = 0;
-    uint8_t      m_spotRadius = 0;
-    uint8_t      m_padding_left = 0;
-    uint8_t      m_padding_right = 0;
-    uint8_t      m_padding_top = 0;
-    uint8_t      m_padding_bottom = 0;
-    ps_ptr<char> m_name;
-    releasedArg  m_ra;
+    bool             m_enabled = false;
+    bool             m_clicked = false;
+    bool             m_focus = false;
+    bool             m_objectInit = false;
+    bool             m_active = true;
+    bool             m_content_has_changed = false;
+    bool             m_first_call = true;
+    bool             m_transparency = false;
+    int16_t          m_x = 0;
+    int16_t          m_y = 0;
+    int16_t          m_w = 0;
+    int16_t          m_h = 0;
+    int16_t          m_val = 0;
+    int16_t          m_minVal = 0;
+    int16_t          m_maxVal = 0;
+    uint16_t         m_leftStop = 0;
+    uint16_t         m_rightStop = 0;
+    int32_t          m_bg_color = TFT_TRANSPARENT;
+    int32_t          m_railColor = 0;
+    int32_t          m_spotColor = 0;
+    uint8_t          m_railHigh = 0;
+    uint16_t         m_middle_h = 0;
+    uint16_t         m_spotPos = 0;
+    uint8_t          m_spotRadius = 0;
+    uint8_t          m_padding_left = 0;
+    uint8_t          m_padding_right = 0;
+    uint8_t          m_padding_top = 0;
+    uint8_t          m_padding_bottom = 0;
+    ps_ptr<char>     m_name;
+    ps_ptr<uint16_t> m_cache_bg = {};
+    releasedArg      m_ra;
 
   public:
     slider(ps_ptr<char> name) {
@@ -727,10 +728,17 @@ class slider : public RegisterTable {
     bool         has_focus() { return m_focus; }
     void         set_bg_color(int32_t color) { m_bg_color = color; }
     bool         set_focus(bool focus) { return false; }
+    void         set_transparency(bool transparency) { m_transparency = transparency; }
 
     void show() {
-        if (m_first_call) { m_first_call = false; }
-        if (m_bg_color == TFT_TRANSPARENT) {
+        if (m_first_call) {
+            m_cache_bg.alloc_array(m_w * m_h, m_name.c_get());
+            getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
+            m_first_call = false;
+        }
+        if (m_transparency) {
+            getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else if (m_bg_color == TFT_TRANSPARENT) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -742,14 +750,15 @@ class slider : public RegisterTable {
         int h = m_railHigh;
         (void)h;
         int r = m_railHigh / 4;
-        if (m_bg_color != TFT_TRANSPARENT) { getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color); }
         getTFT().fillRoundRect(x, y, w, m_railHigh, r, m_railColor);
         drawNewSpot(m_spotPos);
     }
 
     void hide() {
         if (!m_first_call) return;
-        if (m_bg_color == TFT_TRANSPARENT) {
+        if (m_transparency) {
+            getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else if (m_bg_color == TFT_TRANSPARENT) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -822,12 +831,20 @@ class slider : public RegisterTable {
     }
     void drawNewSpot(uint16_t xPos) {
         if (m_enabled) {
-            if (m_bg_color == TFT_TRANSPARENT) {
-                getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_spotPos - m_spotRadius - 1, m_middle_h - m_spotRadius - 1, 2 * m_spotRadius + 2, 2 * m_spotRadius + 2);
+            uint16_t dstX = m_spotPos - m_spotRadius - 1;
+            uint16_t dstY = m_middle_h - m_spotRadius - 1;
+            uint16_t srcX = dstX - m_x;
+            uint16_t srcY = dstY - m_y;
+            uint16_t w = 2 * m_spotRadius + 2;
+            uint16_t h = 2 * m_spotRadius + 2;
+            if (m_transparency) {
+                getTFT().copyFramebuffer(m_cache_bg.get(), m_w, m_h, srcX, srcY, FB_VISIBLE, dstX, dstY, w, h);
+            } else if (m_bg_color == TFT_TRANSPARENT) {
+                getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, dstX, dstY, w, h);
             } else {
                 getTFT().fillRect(m_spotPos - m_spotRadius, m_middle_h - m_spotRadius, 2 * m_spotRadius, 2 * m_spotRadius + 1, m_bg_color);
             }
-            getTFT().fillRect(m_spotPos - m_spotRadius - 1, m_middle_h - (m_railHigh / 2), 2 * m_spotRadius + 2, m_railHigh, m_railColor);
+            getTFT().fillRect(dstX, m_middle_h - (m_railHigh / 2), w, m_railHigh, m_railColor);
             getTFT().fillCircle(xPos, m_middle_h, m_spotRadius, m_spotColor);
         }
         m_spotPos = xPos;
@@ -2013,19 +2030,16 @@ class keyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     const char   m_Special1[12][4] = {"1..", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "BS"};
     const char   m_Special2[11][4] = {"a..", ";", "<", "=", ">", "?", "@", "[", "\\", "]", "RET"};
     const char   m_Special3[11][6] = {"#..", "^", "_", "`", "{", "|", "}", "~", "#", "$", "   "};
-    int32_t      m_color1[12] = {TFT_YELLOW,    TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY,
-                                 TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_YELLOW};
+    int32_t      m_color1[12] = {TFT_YELLOW, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_YELLOW};
     int32_t      m_color2[11] = {TFT_YELLOW, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_RED};
     int32_t      m_color3[11] = {TFT_YELLOW, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY};
     int32_t      m_bg_color = TFT_TRANSPARENT;
     int32_t      m_fgColor = 0;
     int32_t      m_clickColor = TFT_CYAN;
-    textbutton* txt_btn_array = new textbutton[34]{textbutton("txt_btn0"),  textbutton("txt_btn1"),  textbutton("txt_btn2"),  textbutton("txt_btn3"),  textbutton("txt_btn4"),  textbutton("txt_btn5"),
-                                                   textbutton("txt_btn6"),  textbutton("txt_btn7"),  textbutton("txt_btn8"),  textbutton("txt_btn9"),  textbutton("txt_btn10"), textbutton("txt_btn11"),
-                                                   textbutton("txt_btn12"), textbutton("txt_btn13"), textbutton("txt_btn14"), textbutton("txt_btn15"), textbutton("txt_btn16"), textbutton("txt_btn17"),
-                                                   textbutton("txt_btn18"), textbutton("txt_btn19"), textbutton("txt_btn20"), textbutton("txt_btn21"), textbutton("txt_btn22"), textbutton("txt_btn23"),
-                                                   textbutton("txt_btn24"), textbutton("txt_btn25"), textbutton("txt_btn26"), textbutton("txt_btn27"), textbutton("txt_btn28"), textbutton("txt_btn29"),
-                                                   textbutton("txt_btn30"), textbutton("txt_btn31"), textbutton("txt_btn32"), textbutton("txt_btn33")};
+    textbutton*  txt_btn_array = new textbutton[34]{textbutton("txt_btn0"),  textbutton("txt_btn1"),  textbutton("txt_btn2"),  textbutton("txt_btn3"),  textbutton("txt_btn4"),  textbutton("txt_btn5"),  textbutton("txt_btn6"),  textbutton("txt_btn7"),  textbutton("txt_btn8"),
+                                                    textbutton("txt_btn9"),  textbutton("txt_btn10"), textbutton("txt_btn11"), textbutton("txt_btn12"), textbutton("txt_btn13"), textbutton("txt_btn14"), textbutton("txt_btn15"), textbutton("txt_btn16"), textbutton("txt_btn17"),
+                                                    textbutton("txt_btn18"), textbutton("txt_btn19"), textbutton("txt_btn20"), textbutton("txt_btn21"), textbutton("txt_btn22"), textbutton("txt_btn23"), textbutton("txt_btn24"), textbutton("txt_btn25"), textbutton("txt_btn26"),
+                                                    textbutton("txt_btn27"), textbutton("txt_btn28"), textbutton("txt_btn29"), textbutton("txt_btn30"), textbutton("txt_btn31"), textbutton("txt_btn32"), textbutton("txt_btn33")};
 
   public:
     keyBoard(ps_ptr<char> name, uint8_t fontSize) {
@@ -2620,8 +2634,7 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     bool         m_focus = false;
     bool         m_clicked = false;
     releasedArg  m_ra;
-    textbox*     txt_time = new textbox[8]{textbox("txt_timeH10"), textbox("txt_timeH01"), textbox("txt_timeC1"),  textbox("txt_timeM10"),
-                                           textbox("txt_timeM01"), textbox("txt_timeC2"),  textbox("txt_timeS10"), textbox("txt_timeS01")}; // time of the day
+    textbox*     txt_time = new textbox[8]{textbox("txt_timeH10"), textbox("txt_timeH01"), textbox("txt_timeC1"), textbox("txt_timeM10"), textbox("txt_timeM01"), textbox("txt_timeC2"), textbox("txt_timeS10"), textbox("txt_timeS01")}; // time of the day
   public:
     timeString(ps_ptr<char> name, uint8_t fontSize) {
         register_object(this);
@@ -3520,15 +3533,13 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
   private:
-    pictureBox* pic_alarm_digitsH10 = new pictureBox("alarm_digitsH10");     // digits hour   * 10
-    pictureBox* pic_alarm_digitsH01 = new pictureBox("alarm_digitsH01");     // digits hour   * 01
-    pictureBox* pic_alarm_digitsM10 = new pictureBox("alarm_digitsM10");     // digits minute * 10
-    pictureBox* pic_alarm_digitsM01 = new pictureBox("alarm_digitsM01");     // digits minute * 01
-    pictureBox* pic_alarm_digitsColon = new pictureBox("alarm_digitsColon"); // digits colon
-    textbox*    txt_alarm_days = new textbox[7]{textbox("txt_alarm_days0"), textbox("txt_alarm_days1"), textbox("txt_alarm_days2"), textbox("txt_alarm_days3"),
-                                                textbox("txt_alarm_days4"), textbox("txt_alarm_days5"), textbox("txt_alarm_days6")}; // days of the week
-    textbox*    txt_alarm_time = new textbox[7]{textbox("txt_alarm_time0"), textbox("txt_alarm_time1"), textbox("txt_alarm_time2"), textbox("txt_alarm_time3"),
-                                                textbox("txt_alarm_time4"), textbox("txt_alarm_time5"), textbox("txt_alarm_time6")}; // time of the day
+    pictureBox* pic_alarm_digitsH10 = new pictureBox("alarm_digitsH10");                                                                                                                                                                             // digits hour   * 10
+    pictureBox* pic_alarm_digitsH01 = new pictureBox("alarm_digitsH01");                                                                                                                                                                             // digits hour   * 01
+    pictureBox* pic_alarm_digitsM10 = new pictureBox("alarm_digitsM10");                                                                                                                                                                             // digits minute * 10
+    pictureBox* pic_alarm_digitsM01 = new pictureBox("alarm_digitsM01");                                                                                                                                                                             // digits minute * 01
+    pictureBox* pic_alarm_digitsColon = new pictureBox("alarm_digitsColon");                                                                                                                                                                         // digits colon
+    textbox*    txt_alarm_days = new textbox[7]{textbox("txt_alarm_days0"), textbox("txt_alarm_days1"), textbox("txt_alarm_days2"), textbox("txt_alarm_days3"), textbox("txt_alarm_days4"), textbox("txt_alarm_days5"), textbox("txt_alarm_days6")}; // days of the week
+    textbox*    txt_alarm_time = new textbox[7]{textbox("txt_alarm_time0"), textbox("txt_alarm_time1"), textbox("txt_alarm_time2"), textbox("txt_alarm_time3"), textbox("txt_alarm_time4"), textbox("txt_alarm_time5"), textbox("txt_alarm_time6")}; // time of the day
 
     int16_t m_x = 0;
     int16_t m_y = 0;
@@ -3807,7 +3818,7 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
         ;
     }
     void updateDigits() {
-        if(!m_enabled) return;
+        if (!m_enabled) return;
         static uint8_t m_oldAlarmDigits[4] = {0};
         for (uint8_t i = 0; i < 4; i++) {
             if (m_oldAlarmDigits[i] != m_alarmDigits[i] || m_showAll) {
@@ -3844,7 +3855,7 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
         }
     }
     void updateAlarmDaysAndTime() {
-        if(!m_enabled) return;
+        if (!m_enabled) return;
         uint8_t  mask = 0b00000001;
         uint16_t color = TFT_BLACK;
 
