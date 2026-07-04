@@ -52,6 +52,7 @@
 #include "IR.h"
 #include "SPIFFS.h"
 #include "base64.h"
+#include "esp_psram.h"
 #include "driver/ledc.h"
 #include "es8311.h"
 #include "esp_log.h"

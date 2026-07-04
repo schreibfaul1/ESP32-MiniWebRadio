@@ -84,53 +84,6 @@ ps_ptr<char> s_TZString = "CET-1CEST,M3.5.0,M10.5.0/3";
 ps_ptr<char> s_timeSpeechLang = "en";
 ps_ptr<char> s_lyrics = "";
 
-int8_t   s_state = UNDEFINED; // statemaschine
-int8_t   s_subState = UNDEFINED;
-int8_t   s_subState_radio = UNDEFINED;
-int8_t   s_subState_player = UNDEFINED;
-int8_t   s_subState_clock = UNDEFINED;
-int8_t   s_ir_btn_select = UNDEFINED; // IR menue item
-int8_t   s_currDLNAsrvNr = -1;
-uint8_t  s_alarmdays = 0;
-uint8_t  s_cur_Codec = 0;
-uint8_t  s_numServers = 0; //
-uint8_t  s_level = 0;
-uint8_t  s_sleepMode = 1; // 0 display off, 1 show the clock
-uint8_t  s_staListPos = 0;
-uint8_t  s_cthFailCounter = 0; // connecttohost fail
-uint8_t  s_itemListPos = 0;    // DLNA items
-uint8_t  s_fileListPos = 0;
-int8_t   s_alarmSubMenue = -1;
-int8_t   s_sleepTimerSubMenue = -1;
-uint8_t  s_ambientValue = 50;
-uint8_t  s_dlnaLevel = 0;
-uint8_t  s_resetReason = (esp_reset_reason_t)ESP_RST_UNKNOWN;
-int16_t  s_totalNumberReturned = -1;
-int16_t  s_dlnaMaxItems = -1;
-int16_t  s_dlnaMaXServers = -1;
-int16_t  s_alarmtime[7] = {0};  // in minutes (23:59 = 23 *60 + 59) [0] Sun, [1] Mon
-int16_t  s_cur_AudioFileNr = 0; // this is the position of the file within the (alpha ordered) folder starting with 0
-uint8_t  s_brightness = UINT8_MAX;
-uint8_t  s_bh1750Value = UINT8_MAX;
-uint16_t s_staListNr = 0;
-uint16_t s_fileListNr = 0;
-uint16_t s_cur_station = 0; // current station(nr), will be set later
-uint16_t s_sleeptime = 0;   // time in min until MiniWebRadio goes to sleep
-uint16_t s_plsCurPos = 0;
-uint16_t s_dlnaItemNr = 0;
-uint16_t s_h_resolution = 320;
-uint16_t s_v_resolution = 240;
-uint32_t s_icyBitRate = 0;     // from http response header via event
-uint32_t s_decoderBitRate = 0; // from decoder via getBitRate(false)
-uint32_t s_playlistTime = 0;   // playlist start time millis() for timeout
-uint32_t s_settingsHash = 0;
-uint32_t s_audioFileSize = 0;
-uint32_t s_media_downloadPort = 0;
-uint32_t s_audioCurrentTime = 0;
-uint32_t s_timestamp = 0;
-uint32_t s_audioFileDuration = 0;
-uint64_t s_totalRuntime = 0; // total runtime in seconds since start
-
 bool s_f_rtc = false; // true if time from ntp is received
 bool s_f_100ms = false;
 bool s_f_1sec = false;
@@ -177,6 +130,53 @@ bool s_f_stationsChanged = false;
 bool s_f_sd_card_found = false;
 bool s_f_isWiFiConnected = false;
 bool s_f_ok_from_ir = false;
+
+int8_t   s_state = UNDEFINED; // statemaschine
+int8_t   s_subState = UNDEFINED;
+int8_t   s_subState_radio = UNDEFINED;
+int8_t   s_subState_player = UNDEFINED;
+int8_t   s_subState_clock = UNDEFINED;
+int8_t   s_ir_btn_select = UNDEFINED; // IR menue item
+int8_t   s_currDLNAsrvNr = -1;
+uint8_t  s_alarmdays = 0;
+uint8_t  s_cur_Codec = 0;
+uint8_t  s_numServers = 0; //
+uint8_t  s_level = 0;
+uint8_t  s_sleepMode = 1; // 0 display off, 1 show the clock
+uint8_t  s_staListPos = 0;
+uint8_t  s_cthFailCounter = 0; // connecttohost fail
+uint8_t  s_itemListPos = 0;    // DLNA items
+uint8_t  s_fileListPos = 0;
+int8_t   s_alarmSubMenue = -1;
+int8_t   s_sleepTimerSubMenue = -1;
+uint8_t  s_ambientValue = 50;
+uint8_t  s_dlnaLevel = 0;
+uint8_t  s_resetReason = (esp_reset_reason_t)ESP_RST_UNKNOWN;
+int16_t  s_totalNumberReturned = -1;
+int16_t  s_dlnaMaxItems = -1;
+int16_t  s_dlnaMaXServers = -1;
+int16_t  s_alarmtime[7] = {0};  // in minutes (23:59 = 23 *60 + 59) [0] Sun, [1] Mon
+int16_t  s_cur_AudioFileNr = 0; // this is the position of the file within the (alpha ordered) folder starting with 0
+uint8_t  s_brightness = UINT8_MAX;
+uint8_t  s_bh1750Value = UINT8_MAX;
+uint16_t s_staListNr = 0;
+uint16_t s_fileListNr = 0;
+uint16_t s_cur_station = 0; // current station(nr), will be set later
+uint16_t s_sleeptime = 0;   // time in min until MiniWebRadio goes to sleep
+uint16_t s_plsCurPos = 0;
+uint16_t s_dlnaItemNr = 0;
+uint16_t s_h_resolution = 320;
+uint16_t s_v_resolution = 240;
+uint32_t s_icyBitRate = 0;     // from http response header via event
+uint32_t s_decoderBitRate = 0; // from decoder via getBitRate(false)
+uint32_t s_playlistTime = 0;   // playlist start time millis() for timeout
+uint32_t s_settingsHash = 0;
+uint32_t s_audioFileSize = 0;
+uint32_t s_media_downloadPort = 0;
+uint32_t s_audioCurrentTime = 0;
+uint32_t s_timestamp = 0;
+uint32_t s_audioFileDuration = 0;
+uint64_t s_totalRuntime = 0; // total runtime in seconds since start
 
 std::deque<ps_ptr<char>> s_PLS_content;
 std::deque<ps_ptr<char>> s_logBuffer;
@@ -1054,10 +1054,13 @@ void setup() {
     esp_log_set_vprintf(log_redirect_handler);
     if (!get_esp_items(&s_resetReason, &s_f_FFatFound)) return;
 
+    btn_RA_bt.set_active(false);
+    btn_SE_bright.set_active(false);
     if (TFT_BL >= 0) {
         s_f_brightnessIsChangeable = true;
         setupBacklight(TFT_BL, 512);
         setTFTbrightness(200, 200);
+        btn_SE_bright.set_active(true);
     }
     if (IR_PIN >= 0) {
         pinMode(IR_PIN, INPUT_PULLUP); // if ir_pin is read only, have a external resistor (~10...40KOhm)
@@ -1102,8 +1105,6 @@ void setup() {
     lst_DLNA.client_and_history(&dlna, &s_dlnaHistory[0], 10);
     lst_RADIO.currentStationNr(&s_cur_station);
     clk_AC_red.alarm_time_and_days(&s_alarmdays, s_alarmtime);
-    btn_RA_bt.set_active(false);
-    btn_SE_bright.set_active(false);
 
     audio.setAudioTaskCore(AUDIOTASK_CORE);
     audio.setConnectionTimeout(CONN_TIMEOUT, CONN_TIMEOUT_SSL);
