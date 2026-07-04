@@ -1070,10 +1070,24 @@ void setup() {
 
     if (!detect_i2_c_devices(&i2cBusOne, I2C_SDA, I2C_SCL, &s_i2c_items)) { printfln(s_tag.setup, "No i2c device found"); }
 
+    if (s_i2c_items.bh1750_found) {
+        BH1750.begin(&i2cBusOne, s_i2c_items.bh1750_addr); // init the sensor
+        printfln(s_tag.setup, "Ambient Light Sensor BH1750 found at " ANSI_ESC_CYAN "0x{:02X}", s_i2c_items.bh1750_addr);
+        BH1750.setResolutionMode(BH1750.ONE_TIME_H_RESOLUTION_MODE);
+        BH1750.setSensitivity(BH1750.SENSITIVITY_ADJ_MAX);
+    }
+
+    if (s_i2c_items.es8311_found) {
+        bool res = es8311.begin(&i2cBusOne, s_i2c_items.es8311_addr); // init the dac
+        if(res) printfln(s_tag.setup, "DAC ES8311 found at " ANSI_ESC_CYAN "0x{:02X}", s_i2c_items.es8311_addr);
+        es8311.setVolume(90);
+    }
+
     MWR_LOG_ERROR("hier");
     vTaskDelay(3000);
 
-    set_display_items(); // TFT, TP, Resolotion
+    set_tft_items(); // TFT, Resolotion
+    set_tp_items(); // TP, Resolotion
     if (!init_SD_card()) return;
 
     defaultsettings();
@@ -1169,18 +1183,7 @@ void setup() {
         return;
     }
 
-    if (s_i2c_items.bh1750_found) {
-        BH1750.begin(&i2cBusOne, s_i2c_items.bh1750_addr); // init the sensor
-        printfln(s_tag.setup, "Ambient Light Sensor BH1750 found at " ANSI_ESC_CYAN "0x{:02X}", s_i2c_items.bh1750_addr);
-        BH1750.setResolutionMode(BH1750.ONE_TIME_H_RESOLUTION_MODE);
-        BH1750.setSensitivity(BH1750.SENSITIVITY_ADJ_MAX);
-    }
 
-    if (s_i2c_items.es8311_found) {
-        es8311.begin(&i2cBusOne, s_i2c_items.es8311_addr); // init the dac
-        printfln(s_tag.setup, "DAC ES8311 found at " ANSI_ESC_CYAN "0x{:02X}", s_i2c_items.es8311_addr);
-        es8311.setVolume(90);
-    }
 
     if (BT_EMITTER_RX >= 0) bt_emitter.begin();
 
@@ -1210,6 +1213,31 @@ void setup() {
 // 📌📌📌  C O M M O N  📌📌📌
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
+static bool i2c_read_reg(TwoWire* twi, uint8_t addr, uint8_t reg, uint8_t& value) {
+    twi->beginTransmission(addr);
+    twi->write(reg);
+    if (twi->endTransmission(false) != 0) return false;
+    if (twi->requestFrom((uint16_t)addr, (uint8_t)1, (uint8_t)true) != 1) return false;
+    if (!twi->available()) return false;
+    value = twi->read();
+    return true;
+}
+
+static bool i2c_looks_like_es8311(TwoWire* twi, uint8_t addr) {
+    uint8_t r00 = 0, r01 = 0, r02 = 0, r03 = 0;
+    if (!i2c_read_reg(twi, addr, 0x00, r00)) return false;
+log_w("r00 %i", r00);
+    if (!i2c_read_reg(twi, addr, 0x01, r01)) return false;
+log_w("r01 %i", r01);
+    if (!i2c_read_reg(twi, addr, 0x02, r02)) return false;
+log_w("r02 %i", r02);
+    if (!i2c_read_reg(twi, addr, 0x03, r03)) return false;
+log_w("r03 %i", r03);
+    bool res = (0x1F == r00 && 0x00 == r01 && 0xF0 == r02 && 0x10 == r03);
+log_w("res %i", res );
+    return res;
+}
+
 bool detect_i2_c_devices(TwoWire* twi, int8_t sda, int8_t scl, i2c_items_s* i2c_items) {
     if (sda < 0) return false;
     if (scl < 0) return false;
@@ -1223,9 +1251,13 @@ bool detect_i2_c_devices(TwoWire* twi, int8_t sda, int8_t scl, i2c_items_s* i2c_
         twi->beginTransmission(addr);
         if (twi->endTransmission() == 0) {
             if (addr == 0x18 || addr == 0x19) {
-                i2c_items->es8311_found = true;
-                i2c_items->es8311_addr = addr;
-                if (log) MWR_LOG_WARN("es8311 found at 0x{:X}", addr);
+                if (i2c_looks_like_es8311(twi, addr)) {
+                    i2c_items->es8311_found = true;
+                    i2c_items->es8311_addr = addr;
+                    if (log) MWR_LOG_WARN("es8311 found at 0x{:X}", addr);
+                } else {
+                    MWR_LOG_WARN("unknown i2c device at 0x{:X} found", addr);
+                }
             } else if (addr == 0x14 || addr == 0x5D) {
                 i2c_items->gt911_found = true;
                 i2c_items->gt911_addr = addr;
@@ -1252,7 +1284,7 @@ bool detect_i2_c_devices(TwoWire* twi, int8_t sda, int8_t scl, i2c_items_s* i2c_
 }
 //---------------------------------------------------------------------------------------
 
-void set_display_items() {
+void set_tft_items() {
 //---- LAYOUT -----------
 #ifdef TFT_LAYOUT_S
     s_h_resolution = 320;
@@ -1291,7 +1323,9 @@ void set_display_items() {
     getTFT().setDisplayInversion(DISPLAY_INVERSION);
     vTaskDelay(100 / portTICK_PERIOD_MS); // wait for TFT to be ready
 #endif
+}
 
+void set_tp_items(){
 //---- TP_MODE ---------
 #ifdef TP_MODE_XPT2046 // XPT2046
     getTP().begin(TP_IRQ, s_h_resolution, s_v_resolution);

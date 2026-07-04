@@ -22,7 +22,6 @@ TFT_SPI::TFT_SPI(SPIClass& spiInstance, int csPin){
 TFT_SPI::~TFT_SPI() {
     if(m_framebuffer[0]) {free(m_framebuffer[0]);}
     if(m_framebuffer[1]) {free(m_framebuffer[1]);}
-    if(m_framebuffer[2]) {free(m_framebuffer[2]);}
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::loop(){
