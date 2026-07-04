@@ -1082,8 +1082,6 @@ void setup() {
         if(res) printfln(s_tag.setup, "DAC ES8311 found at " ANSI_ESC_CYAN "0x{:02X}", s_i2c_items.es8311_addr);
         es8311.setVolume(90);
     }
-
-    MWR_LOG_ERROR("hier");
     vTaskDelay(3000);
 
     set_tft_items(); // TFT, Resolotion

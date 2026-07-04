@@ -57,8 +57,8 @@ class TP_XPT2046 {
     };
 
     const cal m_cal_28 = {.xMax = 1923, .xMin = 155, .yMax = 1890, .yMin = 140}; // 2.8 inch
-    const cal m_cal_35 = {.xMax = 1970, .xMin = 114, .yMax = 1923, .yMin = 96}; // 3.5 inch
-    const cal m_cal_40 = {.xMax = 1946, .xMin = 110, .yMax = 1907, .yMin = 108}; // 4.0 inch
+    const cal m_cal_35_40 = {.xMax = 1959, .xMin = 140, .yMax = 1923, .yMin = 114}; // 3.5 or 4.0 inch
+    // const cal m_cal_40 = {.xMax = 1946, .xMin = 110, .yMax = 1907, .yMin = 108}; // 4.0 inch
 
     cal m_cal = {0};
 };

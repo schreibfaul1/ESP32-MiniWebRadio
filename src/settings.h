@@ -4,9 +4,8 @@
 
 // predifined displays
 // #define SPI_DISPlAY 0              // ILI9341   SPI display 320x240, 2.8inch, XPT2046, ESP32-S3 or ESP32-P4
-// #define SPI_DISPLAY 1              // ILI9488   SPI display 480x320, 3.5inch, XPT2046, ESP32-S3 or ESP32-P4
-// #define SPI_DISPLAY 2              // ILI9488   SPI display 480x320, 4.0inch, XPT2046, ESP32-S3 or ESP32-P4
-#define SPI_DISPLAY 4              // ST7796    SPI display 480x320, 3.5inch, FT6x63,  ESP32-S3 or ESP32-P4
+#define SPI_DISPLAY 2              // ILI9488 or ST7796, SPI display 480x320, XPT2046, ESP32-S3 or ESP32-P4
+//#define SPI_DISPLAY 3                 // ILI9488 or ST7796, SPI display 480x320, FT6x63,  ESP32-S3 or ESP32-P4
 // #define ESP32_8048S070             // Sunton    RGB display 800x480, 7inch,   ESP32-S3 N16R8
 // #define ESP32_WZ8048C050           // Elecrow   RGB display 800x480, 5inch,   ESP32-S3 N4R8
 // #define ESP32_DIS08070H            // Elecrow   RGB display 800x480, 7inch,   ESP32-S3 N4R8
@@ -14,12 +13,12 @@
 // #define USER_DEFINED_DISPLAY       // Selfmade  ESP32-S3 or ESP32-P4 devBoard with SPI display
 
 
-#define TFT_CONTROLLER       7        // (0)SPI-ILI9341[320x240], (3)SPI-ILI9486[480x320], (4)SPI-ILI9488[480x320], (5)SPI-ST7796[480x320], (7)RGB[800x480], (8)DSI-EK97001[1024x600], (9)DSI-JD9165[1024x600], (10)ST7701[480x800]
+#define TFT_CONTROLLER       7        // (0)SPI-ILI9341[320x240], (3)SPI-ILI9486[480x320], (5)SPI-ILI9488 or ST7796[480x320], (7)RGB[800x480], (8)DSI-EK97001[1024x600], (9)DSI-JD9165[1024x600], (10)ST7701[480x800]
 #define DISPLAY_INVERSION    0        // only SPI displays, (0) off (1) on
 #define TFT_ROTATION         2        // (0) none, (1) 90°CW, (2) 180°CW, (3) 270°CW
 #define TFT_FREQUENCY        40000000 // only SPI displays, 80000000, 40000000, 27000000, 20000000, 10000000
 #define BRIGHTNESS_INVERSION 0        // (0) off (1) on
-#define TP_CONTROLLER        7        // (0)XPT2046 2.8", (1)XPT2046 3.5", (2)XPT2046 4.0", (7)GT911, (8)FT6x63
+#define TP_CONTROLLER        7        // (0)XPT2046 2.8", (1)XPT2046 3.5" or 4.0", (7)GT911, (8)FT6x63
 #define TP_ROTATION          1        // (0) none, (1) 90°CW, (2) 180°CW, (3) 270°CW
 #define TP_H_MIRROR          0        // (0) default, (1) mirror up <-> down
 #define TP_V_MIRROR          0        // (0) default, (1) mirror left <-> right
@@ -113,22 +112,15 @@
         #define TP_ROTATION 0
         #define DISPLAY_INVERSION 0
     #endif
-    #if(SPI_DISPLAY == 1)
-        #define TFT_CONTROLLER 4 // ILI9488
-        #define TFT_ROTATION 0
-        #define TP_CONTROLLER 1 // 3.5"
-        #define TP_ROTATION 2
-        #define DISPLAY_INVERSION 0
-    #endif
     #if(SPI_DISPLAY == 2)
-        #define TFT_CONTROLLER 5 // ILI9488
+        #define TFT_CONTROLLER 5 // ILI9488 or ST7796
         #define TFT_ROTATION 0
-        #define TP_CONTROLLER 1 // 4.0"
+        #define TP_CONTROLLER 1 // 3.5" or 4.0"
         #define TP_ROTATION 2
         #define DISPLAY_INVERSION 0
     #endif
-    #if(SPI_DISPLAY == 4)
-        #define TFT_CONTROLLER 5 // ILI9488
+    #if(SPI_DISPLAY == 3)
+        #define TFT_CONTROLLER 5 // ILI9488 or ST7796
         #define TFT_ROTATION 0
         #define TP_CONTROLLER 8 // FT6x63
         #define TP_ROTATION 1
