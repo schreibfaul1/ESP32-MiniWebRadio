@@ -1021,32 +1021,34 @@ class progressbar : public RegisterTable {
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class textbox : public RegisterTable {
   private:
-    int16_t      m_x = 0;
-    int16_t      m_y = 0;
-    int16_t      m_w = 0;
-    int16_t      m_h = 0;
-    uint8_t      m_fontSize = 0;
-    uint8_t      m_h_align = TFT_ALIGN_RIGHT;
-    uint8_t      m_v_align = TFT_ALIGN_TOP;
-    uint8_t      m_padding_left = 0;  // left margin
-    uint8_t      m_paddig_right = 0;  // right margin
-    uint8_t      m_paddig_top = 0;    // top margin
-    uint8_t      m_paddig_bottom = 0; // bottom margin
-    int32_t      m_bg_color = TFT_TRANSPARENT;
-    int32_t      m_textColor = 0;
-    int32_t      m_borderColor = 0;
-    ps_ptr<char> m_text;
-    ps_ptr<char> m_name;
-    bool         m_enabled = false;
-    bool         m_focus = false;
-    bool         m_active = true;
-    bool         m_clicked = false;
-    bool         m_autoSize = false;
-    bool         m_narrow = false;
-    bool         m_noWrap = false;
-    bool         m_content_has_changed = false;
-    bool         m_first_call = true;
-    releasedArg  m_ra;
+    bool             m_enabled = false;
+    bool             m_focus = false;
+    bool             m_active = true;
+    bool             m_clicked = false;
+    bool             m_autoSize = false;
+    bool             m_narrow = false;
+    bool             m_noWrap = false;
+    bool             m_content_has_changed = false;
+    bool             m_first_call = true;
+    bool             m_transparency = false;
+    int16_t          m_x = 0;
+    int16_t          m_y = 0;
+    int16_t          m_w = 0;
+    int16_t          m_h = 0;
+    uint8_t          m_fontSize = 0;
+    uint8_t          m_h_align = TFT_ALIGN_RIGHT;
+    uint8_t          m_v_align = TFT_ALIGN_TOP;
+    uint8_t          m_padding_left = 0;  // left margin
+    uint8_t          m_paddig_right = 0;  // right margin
+    uint8_t          m_paddig_top = 0;    // top margin
+    uint8_t          m_paddig_bottom = 0; // bottom margin
+    int32_t          m_bg_color = TFT_TRANSPARENT;
+    int32_t          m_textColor = 0;
+    int32_t          m_borderColor = 0;
+    ps_ptr<char>     m_text;
+    ps_ptr<char>     m_name;
+    ps_ptr<uint16_t> m_cache_bg = {};
+    releasedArg      m_ra;
 
   public:
     textbox(ps_ptr<char> name) {
@@ -1077,11 +1079,18 @@ class textbox : public RegisterTable {
     bool         has_focus() { return m_focus; }
     void         set_bg_color(int32_t color) { m_bg_color = color; }
     bool         set_focus(bool focus) { return false; }
+    void         set_transparency(bool transparency) { m_transparency = transparency; }
 
     void show() {
-        if (m_first_call) { m_first_call = false; }
+        if (m_first_call) {
+            m_cache_bg.alloc_array(m_w * m_h, m_name.c_get());
+            getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
+            m_first_call = false;
+        }
         if (m_content_has_changed) {
-            if (m_bg_color == TFT_TRANSPARENT) {
+            if (m_transparency) {
+                getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
+            } else if (m_bg_color == TFT_TRANSPARENT) {
                 getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
             } else {
                 getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -1095,7 +1104,9 @@ class textbox : public RegisterTable {
 
     void hide() {
         if (m_first_call) return;
-        if (m_bg_color == TFT_TRANSPARENT) {
+        if (m_transparency) {
+            getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else if (m_bg_color == TFT_TRANSPARENT) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -5181,6 +5192,11 @@ extern stationManagement staMgnt; /*
 */
 class stationsList : public RegisterTable {
   private:
+    bool         m_enabled = false;
+    bool         m_active = true;
+    bool         m_focus = false;
+    bool         m_clicked = false;
+    bool         m_state = false;
     int16_t      m_x = 0;
     int16_t      m_y = 0;
     int16_t      m_w = 0;
@@ -5195,11 +5211,6 @@ class stationsList : public RegisterTable {
     uint8_t      m_fontSize = 0;
     uint8_t      m_stationListPos = 0;
     int32_t      m_bg_color = TFT_TRANSPARENT;
-    bool         m_enabled = false;
-    bool         m_active = true;
-    bool         m_focus = false;
-    bool         m_clicked = false;
-    bool         m_state = false;
     ps_ptr<char> m_name;
     releasedArg  m_ra;
     ps_ptr<char> m_colorToDraw;
