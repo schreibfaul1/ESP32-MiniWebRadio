@@ -515,7 +515,7 @@ inline int32_t str2int(const char* str) {
                 return 0;
             }
         }
-        return stoi(str);
+        return std::stoi(str);
     }
     return 0;
 }

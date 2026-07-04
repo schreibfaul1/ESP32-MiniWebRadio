@@ -456,7 +456,6 @@ void timer100ms() {
  *                                                               D I S P L A Y                                                                       *
  *****************************************************************************************************************************************************/
 
-
 inline void clearLogo() {
     getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h);
 }
@@ -654,17 +653,12 @@ boolean drawImage(ps_ptr<char> path, uint16_t posX, uint16_t posY, uint16_t maxW
  *****************************************************************************************************************************************************/
 
 boolean isAudio(File file) {
-    if (endsWith(file.name(), ".mp3") || endsWith(file.name(), ".aac") || endsWith(file.name(), ".m4a") || endsWith(file.name(), ".wav") || endsWith(file.name(), ".flac") ||
-        endsWith(file.name(), ".opus") || endsWith(file.name(), ".ogg")) {
-        return true;
-    }
+    if (endsWith(file.name(), ".mp3") || endsWith(file.name(), ".aac") || endsWith(file.name(), ".m4a") || endsWith(file.name(), ".wav") || endsWith(file.name(), ".flac") || endsWith(file.name(), ".opus") || endsWith(file.name(), ".ogg")) { return true; }
     return false;
 }
 
 boolean isAudio(const char* path) {
-    if (endsWith(path, ".mp3") || endsWith(path, ".aac") || endsWith(path, ".m4a") || endsWith(path, ".wav") || endsWith(path, ".flac") || endsWith(path, ".opus") || endsWith(path, ".ogg")) {
-        return true;
-    }
+    if (endsWith(path, ".mp3") || endsWith(path, ".aac") || endsWith(path, ".m4a") || endsWith(path, ".wav") || endsWith(path, ".flac") || endsWith(path, ".opus") || endsWith(path, ".ogg")) { return true; }
     return false;
 }
 
@@ -723,7 +717,8 @@ start:
         printfln(s_tag.playlist, ANSI_ESC_YELLOW, path.c_get());
         webSrv.send("SD_playFile=", path);
         if (s_state == PLAYER) dispFooter.updateFileNr(playlist.get_coloured_index().c_get());
-        txt_PL_fName.setText(playlist.get_items().c_get()); txt_PL_fName.show();
+        txt_PL_fName.setText(playlist.get_items().c_get());
+        txt_PL_fName.show();
     } else {
         printfln(s_tag.playlist, ANSI_ESC_YELLOW "can't connect to {}", path.c_get());
         goto start;
@@ -826,9 +821,7 @@ bool connectToWiFi() {
     if (WIFI_TX_POWER >= 2 && WIFI_TX_POWER <= 21) WiFi.setTxPower((wifi_power_t)(WIFI_TX_POWER * 4));
     s_myIP = WiFi.localIP().toString().c_str();
 
-    printfln(s_tag.wifi_info,
-             "connected to " ANSI_ESC_YELLOW "{}" ANSI_ESC_RESET ", IP address is " ANSI_ESC_ORANGE "{}" ANSI_ESC_RESET ", Received Signal Strength " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET " dB",
-             WiFi.SSID().c_str(), s_myIP.c_get(), WiFi.RSSI());
+    printfln(s_tag.wifi_info, "connected to " ANSI_ESC_YELLOW "{}" ANSI_ESC_RESET ", IP address is " ANSI_ESC_ORANGE "{}" ANSI_ESC_RESET ", Received Signal Strength " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET " dB", WiFi.SSID().c_str(), s_myIP.c_get(), WiFi.RSSI());
 
     return true; // can't connect to any network
 }
@@ -982,8 +975,7 @@ void connecttohost(ps_ptr<char> host) {
             url = host.substr(idx1); // extract url
             user = host.substr(idx1 + 1, idx2 - idx1 - 1);
             pwd = host.substr(idx2 + 1);
-            printfln(s_tag.new_host, ANSI_ESC_YELLOW "\"{}\"" ANSI_ESC_RESET ", user: " ANSI_ESC_YELLOW "\"{}\"" ANSI_ESC_RESET ", pwd: " ANSI_ESC_YELLOW "\"{}\"", url.c_get(), user.c_get(),
-                     pwd.c_get());
+            printfln(s_tag.new_host, ANSI_ESC_YELLOW "\"{}\"" ANSI_ESC_RESET ", user: " ANSI_ESC_YELLOW "\"{}\"" ANSI_ESC_RESET ", pwd: " ANSI_ESC_YELLOW "\"{}\"", url.c_get(), user.c_get(), pwd.c_get());
             s_f_isWebConnected = audio.connecttohost(url.c_get(), user.c_get(), pwd.c_get());
         }
     }
@@ -1079,13 +1071,13 @@ void setup() {
 
     if (s_i2c_items.es8311_found) {
         bool res = es8311.begin(&i2cBusOne, s_i2c_items.es8311_addr); // init the dac
-        if(res) printfln(s_tag.setup, "DAC ES8311 found at " ANSI_ESC_CYAN "0x{:02X}", s_i2c_items.es8311_addr);
+        if (res) printfln(s_tag.setup, "DAC ES8311 found at " ANSI_ESC_CYAN "0x{:02X}", s_i2c_items.es8311_addr);
         es8311.setVolume(90);
     }
     vTaskDelay(3000);
 
     set_tft_items(); // TFT, Resolotion
-    set_tp_items(); // TP, Resolotion
+    set_tp_items();  // TP, Resolotion
     if (!init_SD_card()) return;
 
     defaultsettings();
@@ -1181,8 +1173,6 @@ void setup() {
         return;
     }
 
-
-
     if (BT_EMITTER_RX >= 0) bt_emitter.begin();
 
     rec_buffer.alloc_array(REC_BUFFER_SIZE, "rec_buffer");                             // allocate in PSRAM
@@ -1190,7 +1180,7 @@ void setup() {
     xTaskCreatePinnedToCore(wavWriterTask, "wavWriter", 4096, nullptr, 1, nullptr, 0); // start recorder task
     printfln(s_tag.setup, "Recorder task started, free heap: " ANSI_ESC_CYAN "{}", ESP.getFreeHeap());
 
-    drawImage("/common/Wallpaper.jpg", 0, 0);    // Wallpaper
+    drawImage("/common/Wallpaper.jpg", 0, 0);                                                                     // Wallpaper
     getTFT().copyFramebuffer(FB_VISIBLE, FB_BACKGROUND, 0, 0, displayConfig.dispWidth, displayConfig.dispHeight); // copy wallpaper to background
 
     dispHeader.updateVolume(s_volume.cur_volume);
@@ -1224,15 +1214,15 @@ static bool i2c_read_reg(TwoWire* twi, uint8_t addr, uint8_t reg, uint8_t& value
 static bool i2c_looks_like_es8311(TwoWire* twi, uint8_t addr) {
     uint8_t r00 = 0, r01 = 0, r02 = 0, r03 = 0;
     if (!i2c_read_reg(twi, addr, 0x00, r00)) return false;
-log_w("r00 %i", r00);
+    log_w("r00 %i", r00);
     if (!i2c_read_reg(twi, addr, 0x01, r01)) return false;
-log_w("r01 %i", r01);
+    log_w("r01 %i", r01);
     if (!i2c_read_reg(twi, addr, 0x02, r02)) return false;
-log_w("r02 %i", r02);
+    log_w("r02 %i", r02);
     if (!i2c_read_reg(twi, addr, 0x03, r03)) return false;
-log_w("r03 %i", r03);
+    log_w("r03 %i", r03);
     bool res = (0x1F == r00 && 0x00 == r01 && 0xF0 == r02 && 0x10 == r03);
-log_w("res %i", res );
+    log_w("res %i", res);
     return res;
 }
 
@@ -1323,7 +1313,7 @@ void set_tft_items() {
 #endif
 }
 
-void set_tp_items(){
+void set_tp_items() {
 //---- TP_MODE ---------
 #ifdef TP_MODE_XPT2046 // XPT2046
     getTP().begin(TP_IRQ, s_h_resolution, s_v_resolution);
@@ -2001,6 +1991,7 @@ void changeState(int8_t state, int8_t subState) {
             {
                 int16_t n = WiFi.scanNetworks();
                 printfln(s_tag.wifi_info, ANSI_ESC_CYAN "{}" ANSI_ESC_RESET " WiFi networks found", n);
+                if(n <= 0) break;
                 for (int i = 0; i < n; i++) {
                     printfln(s_tag.wifi_info, ANSI_ESC_GREEN"{} ({})", WiFi.SSID(i).c_str(), (int16_t)WiFi.RSSI(i));
                     ps_ptr<char> pw = get_WiFi_PW(WiFi.SSID(i).c_str());
@@ -2110,13 +2101,13 @@ void loop() {
                 if (f_tc) {
                     f_tc = false;
                     dispFooter.updateTC(0);
-                    if(volBox.is_enabled()) volBox.hide();
+                    if (volBox.is_enabled()) volBox.hide();
                     if (s_f_sleeping) return; // tc is active by pressing a button, but do nothing if "off"
 
                     if (s_state == RADIO) {
                         if (!txt_RA_staName.is_enabled()) { txt_RA_staName.show(); } // assume volBox is shown
-                        if (s_subState_radio == 1) { changeState(RADIO, 0); }       // Mute, Vol+, Vol-, Sta+, Sta-, StaList
-                        if (s_subState_radio == 2) { changeState(RADIO, 0); }       // Player, DLNA, Clock, SleepTime, Brightness, EQ, BT, Off
+                        if (s_subState_radio == 1) { changeState(RADIO, 0); }        // Mute, Vol+, Vol-, Sta+, Sta-, StaList
+                        if (s_subState_radio == 2) { changeState(RADIO, 0); }        // Player, DLNA, Clock, SleepTime, Brightness, EQ, BT, Off
                     } else if (s_state == STATIONSLIST) {
                         changeState(RADIO, 0);
                     } else if (s_state == PLAYER) {
@@ -2248,8 +2239,8 @@ void loop() {
                     pgb_DL_progress.setValue(s_audioCurrentTime);
                 }
                 if (s_audioFileDuration) {
-                    printfcr(s_tag.action, ANSI_ESC_GREEN "AudioCurrentTime " ANSI_ESC_GREEN "{}:{:02}s, " ANSI_ESC_GREEN "AudioFileDuration " ANSI_ESC_GREEN "{}:{:02}s      ",
-                             (long int)s_audioCurrentTime / 60, (long int)s_audioCurrentTime % 60, (long int)s_audioFileDuration / 60, (long int)s_audioFileDuration % 60);
+                    printfcr(s_tag.action, ANSI_ESC_GREEN "AudioCurrentTime " ANSI_ESC_GREEN "{}:{:02}s, " ANSI_ESC_GREEN "AudioFileDuration " ANSI_ESC_GREEN "{}:{:02}s      ", (long int)s_audioCurrentTime / 60, (long int)s_audioCurrentTime % 60, (long int)s_audioFileDuration / 60,
+                             (long int)s_audioFileDuration % 60);
                 }
             }
         }
@@ -3769,7 +3760,10 @@ void on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg) {
     }
     if (msg.e == KCX_BT_Emitter::evt_mode) {
         webSrv.send("KCX_BT_MODE=", msg.arg);
-        if (s_state == BLUETOOTH) { txt_BT_mode.setText(msg.arg[0] == 'R' ? "RECEIVER" : "EMITTER"); txt_BT_mode.show(); }
+        if (s_state == BLUETOOTH) {
+            txt_BT_mode.setText(msg.arg[0] == 'R' ? "RECEIVER" : "EMITTER");
+            txt_BT_mode.show();
+        }
         s_bt_emitter.mode = msg.arg;
         printfln(s_tag.bt_emitter, "RX_TX_mode: " ANSI_ESC_YELLOW "{}", msg.arg);
     }

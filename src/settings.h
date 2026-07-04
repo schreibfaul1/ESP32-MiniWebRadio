@@ -3,14 +3,16 @@
 #include "tft_structures.h"
 
 // predifined displays
-// #define SPI_DISPlAY 0              // ILI9341   SPI display 320x240, 2.8inch, XPT2046, ESP32-S3 or ESP32-P4
-#define SPI_DISPLAY 2              // ILI9488 or ST7796, SPI display 480x320, XPT2046, ESP32-S3 or ESP32-P4
-//#define SPI_DISPLAY 3                 // ILI9488 or ST7796, SPI display 480x320, FT6x63,  ESP32-S3 or ESP32-P4
-// #define ESP32_8048S070             // Sunton    RGB display 800x480, 7inch,   ESP32-S3 N16R8
-// #define ESP32_WZ8048C050           // Elecrow   RGB display 800x480, 5inch,   ESP32-S3 N4R8
-// #define ESP32_DIS08070H            // Elecrow   RGB display 800x480, 7inch,   ESP32-S3 N4R8
-// #define ESP32_S3_Touch_LCD7        // Waveshare RGB display 800x480, 7inch,   ESP32-S3 N8R8
-// #define USER_DEFINED_DISPLAY       // Selfmade  ESP32-S3 or ESP32-P4 devBoard with SPI display
+// #define SPI_DISPlAY 0                  // ILI9341            SPI display  320x240, 2.8inch,    XPT2046, ESP32-S3 or ESP32-P4
+// #define SPI_DISPLAY 2                  // ILI9488 or ST7796, SPI display  480x320, 3.5" od 4"  XPT2046, ESP32-S3 or ESP32-P4
+// #define SPI_DISPLAY 3                  // ILI9488 or ST7796, SPI display  480x320, 3.5" od 4"  FT6x63,  ESP32-S3 or ESP32-P4
+// #define ESP32_8048S070                 // Sunton             RGB display  800x480, 7",         GT911    ESP32-S3 N16R8
+// #define ESP32_WZ8048C050               // Elecrow            RGB display  800x480, 5",         GT911    ESP32-S3 N4R8
+// #define ESP32_DIS08070H                // Elecrow            RGB display  800x480, 7",         GT911    ESP32-S3 N4R8
+// #define ESP32_S3_TOUCH_LCD7            // Waveshare          RGB display  800x480, 7",         GT911    ESP32-S3 N8R8
+// #define ESP32_P4_WIFI6_TOUCH_LCD7_7B   // Waveshare          DSI display 1024x600, 7",         GT911    ESP32-P4 N32R32
+#define JC4880P443                     // Guition            DSI display  800x480, 4.3",       GT911    ESP32-P4 N16R32
+// #define USER_DEFINED_DISPLAY           // Selfconf. ESP32-S3 or ESP32-P4 devBoard with SPI display
 
 
 #define TFT_CONTROLLER       7        // (0)SPI-ILI9341[320x240], (3)SPI-ILI9486[480x320], (5)SPI-ILI9488 or ST7796[480x320], (7)RGB[800x480], (8)DSI-EK97001[1024x600], (9)DSI-JD9165[1024x600], (10)ST7701[480x800]
@@ -189,8 +191,8 @@
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 #if (CONFIG_IDF_TARGET_ESP32S3 == 1)
     #ifdef ESP32_8048S070
-        #undef TFT_Controller
-        #define TFT_Controller 7
+        #undef TFT_CONTROLLER
+        #define TFT_CONTROLLER 7
         #undef TFT_ROTATION
         #define TFT_ROTATION 2
         #undef TP_CONTROLLER
@@ -227,8 +229,8 @@ const Timing RGB_TIMING = {.h_res = 800, .v_res = 480, .pixel_clock_hz = 1000000
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 #if (CONFIG_IDF_TARGET_ESP32S3 == 1)
     #ifdef ESP32_WZ8048C050
-        #undef TFT_Controller
-        #define TFT_Controller 7
+        #undef TFT_CONTROLLER
+        #define TFT_CONTROLLER 7
         #undef TFT_ROTATION
         #define TFT_ROTATION 2
         #undef TP_CONTROLLER
@@ -273,8 +275,8 @@ const Timing RGB_TIMING = {.h_res = 800, .v_res = 480, .pixel_clock_hz = 1100000
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 #if (CONFIG_IDF_TARGET_ESP32S3 == 1)
     #ifdef ESP32_DIS08070H
-        #undef TFT_Controller
-        #define TFT_Controller 7
+        #undef TFT_CONTROLLER
+        #define TFT_CONTROLLER 7
         #undef TFT_ROTATION
         #define TFT_ROTATION 2
         #undef TP_CONTROLLER
@@ -322,8 +324,8 @@ const Timing RGB_TIMING = {.h_res = 800,
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 #if (CONFIG_IDF_TARGET_ESP32S3 == 1)
     #ifdef ESP32_S3_Touch_LCD7
-        #undef TFT_Controller
-        #define TFT_Controller 7
+        #undef TFT_CONTROLLER
+        #define TFT_CONTROLLER 7
         #undef TFT_ROTATION
         #define TFT_ROTATION 2
         #undef TP_CONTROLLER
@@ -373,8 +375,16 @@ const Timing RGB_TIMING = {.h_res = 800,
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // 📌📌📌  DSI-DISPLAY [1024x600] ESP32-P4 WAVESHARE 7"   📌📌📌
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-#if 1                       // 0 deactivated, 1 activated
-    #if TFT_CONTROLLER == 8 // RGB display
+#if (CONFIG_IDF_TARGET_ESP32P4 == 1)
+#ifdef ESP32_P4_WIFI6_TOUCH_LCD7_7B
+        #undef TFT_CONTROLLER
+        #define TFT_CONTROLLER 8
+        #undef TFT_ROTATION
+        #define TFT_ROTATION 0
+        #undef TP_CONTROLLER
+        #define TP_CONTROLLER 7
+        #undef TP_ROTATION
+        #define TP_ROTATION 1
 
 const Timing DSI_TIMING = {.h_res = 1024, .v_res = 600, .pixel_clock_mhz = 52, .hsync_pulse_width = 10, .hsync_back_porch = 160, .hsync_front_porch = 160, .vsync_pulse_width = 1, .vsync_back_porch = 23, .vsync_front_porch = 22, .lane_bit_rate_mbps = 900};
 
@@ -419,8 +429,8 @@ const Timing DSI_TIMING = {.h_res = 1024, .v_res = 600, .pixel_clock_mhz = 52, .
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // 📌📌📌  DSI-DISPLAY [1024x600] ESP32-P4 GUITION 7"   📌📌📌 JC1060P470
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-#if 1                       // 0 deactivated, 1 activated
-    #if TFT_CONTROLLER == 9 // RGB display
+#if 0                       // 0 deactivated, 1 activated
+    #ifdef tttt
 
 const Timing DSI_TIMING = {.h_res = 1024, .v_res = 600, .pixel_clock_mhz = 52, .hsync_pulse_width = 40, .hsync_back_porch = 160, .hsync_front_porch = 160, .vsync_pulse_width = 10, .vsync_back_porch = 23, .vsync_front_porch = 12, .lane_bit_rate_mbps = 750};
 
@@ -464,8 +474,17 @@ const Timing DSI_TIMING = {.h_res = 1024, .v_res = 600, .pixel_clock_mhz = 52, .
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // 📌📌📌 DSI-DISPLAY [480x800] ESP32-P4 GUITION 4.3" 📌📌📌 JC4880P443
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-#if 1                        // 0 deactivated, 1 activated
-    #if TFT_CONTROLLER == 10 // RGB display
+#if (CONFIG_IDF_TARGET_ESP32P4 == 1)
+    #ifdef JC4880P443
+        #undef TFT_CONTROLLER
+        #define TFT_CONTROLLER 10
+        #undef TFT_ROTATION
+        #define TFT_ROTATION 3
+        #undef TP_CONTROLLER
+        #define TP_CONTROLLER 7
+        #undef TP_ROTATION
+        #define TP_ROTATION 2
+
 
 const Timing DSI_TIMING = {.h_res = 480, .v_res = 800, .pixel_clock_mhz = 34, .hsync_pulse_width = 12, .hsync_back_porch = 42, .hsync_front_porch = 42, .vsync_pulse_width = 2, .vsync_back_porch = 8, .vsync_front_porch = 166, .lane_bit_rate_mbps = 500};
 
