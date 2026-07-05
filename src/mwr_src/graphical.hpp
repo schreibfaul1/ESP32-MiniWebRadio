@@ -4002,6 +4002,8 @@ class uniList {
         m_lineHight = m_h / 10;
     }
 
+    void set_bg_color(int32_t color) { m_bg_color = color; }
+
     void setMode(uint8_t mode, ps_ptr<char> tftSize, uint8_t fontSize) {
         if (mode == RADIO) { m_mode = RADIO; }
         if (mode == PLAYER) { m_mode = PLAYER; }
@@ -4349,6 +4351,7 @@ class dlnaList : public RegisterTable {
   private:
     void set_bg_color_all(int32_t color) {
         m_bg_color = color;
+        myList.set_bg_color(m_bg_color);
         ;
     }
     void dlnaItemsList() {
@@ -5079,6 +5082,7 @@ class fileList : public RegisterTable {
   private:
     void set_bg_color_all(int32_t color) {
         m_bg_color = color;
+        myList.set_bg_color(m_bg_color);
         ;
     }
     void audioFileslist(uint16_t viewPos) {
@@ -5266,7 +5270,7 @@ class stationsList : public RegisterTable {
         m_clicked = false;
         m_enabled = true;
         m_browseOnRelease = 0;
-        stationslist(true);
+        create_list(true);
     }
     void hide() {
         if (m_bg_color == TFT_TRANSPARENT) {
@@ -5293,10 +5297,10 @@ class stationsList : public RegisterTable {
         if (!m_clicked) return false;
 
         if (m_browseOnRelease == 1) {
-            stationslist(false); // wipe up
+            create_list(false); // wipe up
         }
         if (m_browseOnRelease == 2) {
-            stationslist(false); // wipe down
+            create_list(false); // wipe down
         }
         if (m_browseOnRelease == 3) {
             myList.getTxtByPos(m_stationListPos); // click
@@ -5316,9 +5320,10 @@ class stationsList : public RegisterTable {
   private:
     void set_bg_color_all(int32_t color) {
         m_bg_color = color;
+        myList.set_bg_color(TFT_BLACK);
         ;
     }
-    void stationslist(bool first) {
+    void create_list(bool first) {
         xSemaphoreTake(mutex_display, portMAX_DELAY);
         if (first) {
             if (staMgnt.getSumStations() <= 10)
@@ -5400,7 +5405,7 @@ class stationsList : public RegisterTable {
             m_firstStationsLineNr -= 9;
             m_curStaNrCpy -= 9;
         }
-        stationslist(false);
+        create_list(false);
     }
     void nextPage() { // from IR control
         if (m_firstStationsLineNr + 10 >= staMgnt.getSumStations()) {
@@ -5412,7 +5417,7 @@ class stationsList : public RegisterTable {
             m_curStaNrCpy += 9;
             if (m_curStaNrCpy > staMgnt.getSumStations()) m_curStaNrCpy = staMgnt.getSumStations();
         }
-        stationslist(false);
+        create_list(false);
     }
     void prevStation() { // from IR control
         if (m_curStaNrCpy < 2) return;
@@ -5424,7 +5429,7 @@ class stationsList : public RegisterTable {
             else
                 m_firstStationsLineNr = 0;
             m_curStaNrCpy--;
-            stationslist(false);
+            create_list(false);
             return;
         }
         myList.colourLine(pos, staMgnt.getStationFav(m_curStaNrCpy) == '*' ? ANSI_ESC_WHITE : ANSI_ESC_GREY);
@@ -5438,7 +5443,7 @@ class stationsList : public RegisterTable {
         if (pos == 9) { // next Page
             m_firstStationsLineNr += 9;
             m_curStaNrCpy++;
-            stationslist(false);
+            create_list(false);
             return;
         }
         myList.colourLine(pos, staMgnt.getStationFav(m_curStaNrCpy) == '*' ? ANSI_ESC_WHITE : ANSI_ESC_GREY);
