@@ -6485,9 +6485,9 @@ class messageBox : public RegisterTable {
 #elifdef TFT_LAYOUT_XL
     struct p { // 1024x600
         uint16_t x = 1024 / 4;
-        uint16_t y = 6000 / 4;
+        uint16_t y =  600 / 4;
         uint16_t w = 1024 / 2;
-        uint16_t h = 6000 / 2;
+        uint16_t h =  600 / 2;
         uint8_t  pl = 30;
         uint8_t  pr = 30;
         uint8_t  pt = 30;
@@ -6555,7 +6555,7 @@ class messageBox : public RegisterTable {
         m_noWrap = noWrap;
         txt_msgBox->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
         txt_msgBox->setFontSize(0); // auto
-        txt_msgBox->setText(m_text.c_get());
+        txt_msgBox->setText(m_text);
     }
 
     bool positionXY(uint16_t x, uint16_t y) {
