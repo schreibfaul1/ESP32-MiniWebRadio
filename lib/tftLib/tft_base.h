@@ -2,10 +2,14 @@
 
 #include "Arduino.h"
 #include "FS.h"
-#include <vector>
 #include "fonts/fontsdef.h"
 #include "tft_common_defs.h"
+#include <vector>
 
+enum Framebuffer : uint8_t {
+    FB_VISIBLE = 0,
+    FB_BACKGROUND = 1,
+};
 class TFT_Base {
   public:
     virtual ~TFT_Base() = default;
@@ -14,29 +18,32 @@ class TFT_Base {
     uint16_t logicalHeight() const;
 
     void drawRectLogicalFromFB(uint8_t fb, int16_t x, int16_t y, uint16_t w, uint16_t h);
-    bool copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h);
+    bool copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h);                                                                                          // framebuffer zu framebuffer
+    bool copyFramebuffer(uint8_t source, uint16_t* buffer, uint16_t x, uint16_t y, uint16_t w, uint16_t h);                                                                                             // framebuffer to buffer
+    bool copyFramebuffer(const uint16_t* buffer, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h);                                                                                  // buffer to framebuffer
+    bool copyFramebuffer(uint8_t source, uint16_t srcX, uint16_t srcY, uint16_t* buffer, uint16_t bufferWidth, uint16_t bufferHeight, uint16_t dstX, uint16_t dstY, uint16_t w, uint16_t h);            // framebuffer to buffer with window
+    bool copyFramebuffer(const uint16_t* buffer, uint16_t bufferWidth, uint16_t bufferHeight, uint16_t srcX, uint16_t srcY, uint8_t destination, uint16_t dstX, uint16_t dstY, uint16_t w, uint16_t h); // buffer to framebuffer with window
 
-    void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
-    void fillScreen(uint16_t color);
-    void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color);
-    void drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color);
-    void fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color);
-    void drawRect(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t color);
-    void drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color);
-    void fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color);
-    void drawCircle(int16_t cx, int16_t cy, int16_t r, uint16_t color);
-    void fillCircle(int16_t cx, int16_t cy, uint16_t r, uint16_t color);
-    void setBackGoundColor(uint16_t BGcolor) { m_backGroundColor = BGcolor; }
+    void     fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
+    void     fillScreen(uint16_t color);
+    void     drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color);
+    void     drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color);
+    void     fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color);
+    void     drawRect(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t color);
+    void     drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color);
+    void     fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color);
+    void     drawCircle(int16_t cx, int16_t cy, int16_t r, uint16_t color);
+    void     fillCircle(int16_t cx, int16_t cy, uint16_t r, uint16_t color);
+    void     setBackGoundColor(uint16_t BGcolor) { m_backGroundColor = BGcolor; }
     uint16_t getBackGroundColor() { return m_backGroundColor; }
-    void setTextColor(uint16_t FGcolor) { m_textColor = FGcolor; }
+    void     setTextColor(uint16_t FGcolor) { m_textColor = FGcolor; }
     uint16_t getTextColor() { return m_textColor; }
-    void setFont(uint16_t font);
-    void setTextOrientation(uint16_t orientation = 0) { m_textorientation = orientation; }
-    bool drawBmpFile(fs::FS& fs, const char* path, uint16_t x = 0, uint16_t y = 0, uint16_t maxWidth = 0, uint16_t maxHeight = 0, float scale = 1.0f);
-    bool drawGifFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint8_t repeat);
-    bool drawJpgFile(fs::FS& fs, const char* path, uint16_t x = 0, uint16_t y = 0, uint16_t maxWidth = 0, uint16_t maxHeight = 0);
-    size_t writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, uint8_t h_align = TFT_ALIGN_LEFT, uint8_t v_align = TFT_ALIGN_CENTER, bool narrow = false,
-                     bool noWrap = false, bool autoSize = false);
+    void     setFontSize(uint16_t font);
+    void     setTextOrientation(uint16_t orientation = 0) { m_textorientation = orientation; }
+    bool     drawBmpFile(fs::FS& fs, const char* path, uint16_t x = 0, uint16_t y = 0, uint16_t maxWidth = 0, uint16_t maxHeight = 0, float scale = 1.0f);
+    bool     drawGifFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint8_t repeat);
+    bool     drawJpgFile(fs::FS& fs, const char* path, uint16_t x = 0, uint16_t y = 0, uint16_t maxWidth = 0, uint16_t maxHeight = 0);
+    size_t   writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, uint8_t h_align = TFT_ALIGN_LEFT, uint8_t v_align = TFT_ALIGN_CENTER, bool narrow = false, bool noWrap = false, bool autoSize = false);
     uint16_t getLineLength(const char* txt, bool narrow);
 
   protected:
@@ -52,31 +59,31 @@ class TFT_Base {
         uint16_t*                          lookup_table;
     } fonts_t;
 
-    bool renderRGB565(int16_t x, int16_t y, uint16_t w, uint16_t h, const uint16_t* rgb, const uint8_t* alpha);
-    void mapRotation(uint8_t rot, int32_t srcX, int32_t srcY, int32_t& dstX, int32_t& dstY) const;
-    void writeTheFramebuffer(const uint8_t* bmi, uint16_t posX, uint16_t posY, uint16_t width, uint16_t height);
+    bool     renderRGB565(int16_t x, int16_t y, uint16_t w, uint16_t h, const uint16_t* rgb, const uint8_t* alpha);
+    void     mapRotation(uint8_t rot, int32_t srcX, int32_t srcY, int32_t& dstX, int32_t& dstY) const;
+    void     writeTheFramebuffer(const uint8_t* bmi, uint16_t posX, uint16_t posY, uint16_t width, uint16_t height);
     uint16_t analyzeText(const char* str, uint16_t* chArr, uint16_t* colorArr, uint16_t startColor);
     uint16_t fitinline(uint16_t* cpArr, uint16_t chLength, uint16_t begin, int16_t win_W, uint16_t* usedPxLength, bool narrow, bool noWrap);
-    uint8_t fitInAddrWindow(uint16_t* cpArr, uint16_t chLength, int16_t win_W, int16_t win_H, bool narrow, bool noWrap);
-    int32_t GIF_readGifItems();
-    bool    GIF_decodeGif(uint16_t x, uint16_t y);
-    bool    GIF_loop();
-    void    GIF_freeMemory();
-    void    GIF_DecoderReset();
-    void    GIF_readHeader();
-    void    GIF_readLogicalScreenDescriptor();
-    void    GIF_readImageDescriptor();
-    void    GIF_readLocalColorTable();
-    void    GIF_readGlobalColorTable();
-    void    GIF_readGraphicControlExtension();
-    uint8_t GIF_readPlainTextExtension(char* buf);
-    uint8_t GIF_readApplicationExtension(char* buf);
-    uint8_t GIF_readCommentExtension(char* buf);
-    uint8_t GIF_readDataSubBlock(char* buf);
-    bool    GIF_readExtension(char Label);
-    int32_t GIF_GetCode(int32_t code_size, int32_t flag);
-    int32_t GIF_LZWReadByte(bool init);
-    bool    GIF_ReadImage(uint16_t x, uint16_t y);
+    uint8_t  fitInAddrWindow(uint16_t* cpArr, uint16_t chLength, int16_t win_W, int16_t win_H, bool narrow, bool noWrap);
+    int32_t  GIF_readGifItems();
+    bool     GIF_decodeGif(uint16_t x, uint16_t y);
+    bool     GIF_loop();
+    void     GIF_freeMemory();
+    void     GIF_DecoderReset();
+    void     GIF_readHeader();
+    void     GIF_readLogicalScreenDescriptor();
+    void     GIF_readImageDescriptor();
+    void     GIF_readLocalColorTable();
+    void     GIF_readGlobalColorTable();
+    void     GIF_readGraphicControlExtension();
+    uint8_t  GIF_readPlainTextExtension(char* buf);
+    uint8_t  GIF_readApplicationExtension(char* buf);
+    uint8_t  GIF_readCommentExtension(char* buf);
+    uint8_t  GIF_readDataSubBlock(char* buf);
+    bool     GIF_readExtension(char Label);
+    int32_t  GIF_GetCode(int32_t code_size, int32_t flag);
+    int32_t  GIF_LZWReadByte(bool init);
+    bool     GIF_ReadImage(uint16_t x, uint16_t y);
 
     virtual bool panelDrawBitmap(int16_t x0, int16_t y0, int16_t x1, int16_t y1, const void* bitmap) = 0;
 
@@ -140,30 +147,30 @@ class TFT_Base {
     std::vector<uint8_t>        gif_stack;
     std::vector<uint16_t>       gif_GlobalColorTable;
     std::vector<uint16_t>       gif_LocalColorTable;
-    const uint8_t gif_MaxLzwBits = 12;
-    uint16_t*     gif_ImageBuffer = nullptr;
-    uint16_t*     gif_RestoreBuffer = nullptr;
-    char          gif_buffer[15];
-    char          gif_DSBbuffer[256];
-    String        gif_GifHeader = "";
+    const uint8_t               gif_MaxLzwBits = 12;
+    uint16_t*                   gif_ImageBuffer = nullptr;
+    uint16_t*                   gif_RestoreBuffer = nullptr;
+    char                        gif_buffer[15];
+    char                        gif_DSBbuffer[256];
+    String                      gif_GifHeader = "";
 #define LDB_WORD(ptr) (uint16_t)(((uint16_t)*((uint8_t*)(ptr)) << 8) | (uint16_t)*(uint8_t*)((ptr) + 1))
-    #define JD_SZBUF      512 /* Specifies size of stream input buffer */
-    #define JD_FORMAT     1   /* Specifies output pixel format. 0: RGB888 (24-bit/pix) 1: RGB565 (16-bit/pix) 2: Grayscale (8-bit/pix) */
-    #define JD_USE_SCALE  1   /* Switches output descaling feature. 0: Disable 1: Enable */
-    #define JD_TBLCLIP    0   /* Use table conversion for saturation arithmetic. A bit faster, but increases 1 KB of code size. 0: Disable 1: Enable */
-    #define JD_FASTDECODE 1   /* Optimization level  0: Basic optimization. Suitable for 8/16-bit MCUs. Workspace of 3100 bytes needed. */
-                              /*                                1: + 32-bit barrel shifter. Suitable for 32-bit MCUs. Workspace of 3480 bytes needed.*/
-                              /*                              2: + Table conversion for huffman decoding (wants 6 << HUFF_BIT bytes of RAM). Workspace of 9644 bytes needed. */
-    // Do not change this, it is the minimum size in bytes of the workspace needed by the decoder
-    #if JD_FASTDECODE == 0
-        #define TJPGD_WORKSPACE_SIZE 3100
-    #endif
-    #if JD_FASTDECODE == 1
-        #define TJPGD_WORKSPACE_SIZE 3500
-    #endif
-    #if JD_FASTDECODE == 2
-        #define TJPGD_WORKSPACE_SIZE (3500 + 6144)
-    #endif
+#define JD_SZBUF      512 /* Specifies size of stream input buffer */
+#define JD_FORMAT     1   /* Specifies output pixel format. 0: RGB888 (24-bit/pix) 1: RGB565 (16-bit/pix) 2: Grayscale (8-bit/pix) */
+#define JD_USE_SCALE  1   /* Switches output descaling feature. 0: Disable 1: Enable */
+#define JD_TBLCLIP    0   /* Use table conversion for saturation arithmetic. A bit faster, but increases 1 KB of code size. 0: Disable 1: Enable */
+#define JD_FASTDECODE 1   /* Optimization level  0: Basic optimization. Suitable for 8/16-bit MCUs. Workspace of 3100 bytes needed. */
+                          /*                                1: + 32-bit barrel shifter. Suitable for 32-bit MCUs. Workspace of 3480 bytes needed.*/
+                          /*                              2: + Table conversion for huffman decoding (wants 6 << HUFF_BIT bytes of RAM). Workspace of 9644 bytes needed. */
+// Do not change this, it is the minimum size in bytes of the workspace needed by the decoder
+#if JD_FASTDECODE == 0
+    #define TJPGD_WORKSPACE_SIZE 3100
+#endif
+#if JD_FASTDECODE == 1
+    #define TJPGD_WORKSPACE_SIZE 3500
+#endif
+#if JD_FASTDECODE == 2
+    #define TJPGD_WORKSPACE_SIZE (3500 + 6144)
+#endif
 
   private:
     enum { TJPG_ARRAY = 0, TJPG_FS_FILE, TJPG_SD_FILE };
@@ -179,11 +186,11 @@ class TFT_Base {
                JDR_FMT2,   /* 7: Right format but not supported */
                JDR_FMT3    /* 8: Not supported JPEG standard */
     };
-    #if JD_FASTDECODE >= 1
+#if JD_FASTDECODE >= 1
     typedef int16_t jd_yuv_t;
-    #else
+#else
     typedef uint8_t jd_yuv_t;
-    #endif
+#endif
 
     typedef struct {     /* Rectangular region in the output image */
         uint16_t left;   /* Left end */
@@ -208,15 +215,15 @@ class TFT_Base {
         uint16_t* huffcode[2][2]; /* Huffman code word tables [id][dcac] */
         uint8_t*  huffdata[2][2]; /* Huffman decoded data tables [id][dcac] */
         int32_t*  qttbl[4];       /* Dequantizer tables [id] */
-    #if JD_FASTDECODE >= 1
+#if JD_FASTDECODE >= 1
         uint32_t wreg;   /* Working shift register */
         uint8_t  marker; /* Detected marker (0:None) */
-        #if JD_FASTDECODE == 2
+    #if JD_FASTDECODE == 2
         uint8_t   longofs[2][2]; /* Table offset of long code [id][dcac] */
         uint16_t* hufflut_ac[2]; /* Fast huffman decode tables for AC short code [id] */
         uint8_t*  hufflut_dc[2]; /* Fast huffman decode tables for DC short code [id] */
-        #endif
     #endif
+#endif
         void*     workbuf; /* Working buffer for IDCT and RGB output */
         jd_yuv_t* mcubuf;  /* Working buffer for the MCU */
         void*     pool;    /* Pointer to available memory pool */
@@ -265,39 +272,39 @@ class TFT_Base {
     uint8_t      JPEG_jd_decomp(JDEC* jd, uint8_t scale);
 
   private:
-    #if JD_TBLCLIP == 0 /* JD_TBLCLIP */
+#if JD_TBLCLIP == 0 /* JD_TBLCLIP */
     uint8_t JPEG_BYTECLIP(int val);
-    #endif
+#endif
 #define MAKE_BYTE(b)           ((b) & 0xFF)
-    #define MAKE_DWORD(a, b, c, d) ((MAKE_BYTE(a) << 24) | (MAKE_BYTE(b) << 16) | (MAKE_BYTE(c) << 8) | MAKE_BYTE(d))
-    #define MAKE_DWORD_PTR(p)      MAKE_DWORD((p)[0], (p)[1], (p)[2], (p)[3])
+#define MAKE_DWORD(a, b, c, d) ((MAKE_BYTE(a) << 24) | (MAKE_BYTE(b) << 16) | (MAKE_BYTE(c) << 8) | MAKE_BYTE(d))
+#define MAKE_DWORD_PTR(p)      MAKE_DWORD((p)[0], (p)[1], (p)[2], (p)[3])
 
-    #define CHUNK_IHDR MAKE_DWORD('I', 'H', 'D', 'R')
-    #define CHUNK_IDAT MAKE_DWORD('I', 'D', 'A', 'T')
-    #define CHUNK_IEND MAKE_DWORD('I', 'E', 'N', 'D')
+#define CHUNK_IHDR MAKE_DWORD('I', 'H', 'D', 'R')
+#define CHUNK_IDAT MAKE_DWORD('I', 'D', 'A', 'T')
+#define CHUNK_IEND MAKE_DWORD('I', 'E', 'N', 'D')
 
-    #define FIRST_LENGTH_CODE_INDEX 257
-    #define LAST_LENGTH_CODE_INDEX  285
+#define FIRST_LENGTH_CODE_INDEX 257
+#define LAST_LENGTH_CODE_INDEX  285
 
-    #define NUM_DEFLATE_CODE_SYMBOLS 288 /*256 literals, the end code, some length codes, and 2 unused codes */
-    #define NUM_DISTANCE_SYMBOLS     32  /*the distance codes have their own symbols, 30 used, 2 unused */
-    #define NUM_CODE_LENGTH_CODES    19  /*the code length codes. 0-15: code lengths, 16: copy previous 3-6 times, 17: 3-10 zeros, 18: 11-138 zeros */
-    #define MAX_SYMBOLS              288 /* largest number of symbols used by any tree type */
+#define NUM_DEFLATE_CODE_SYMBOLS 288 /*256 literals, the end code, some length codes, and 2 unused codes */
+#define NUM_DISTANCE_SYMBOLS     32  /*the distance codes have their own symbols, 30 used, 2 unused */
+#define NUM_CODE_LENGTH_CODES    19  /*the code length codes. 0-15: code lengths, 16: copy previous 3-6 times, 17: 3-10 zeros, 18: 11-138 zeros */
+#define MAX_SYMBOLS              288 /* largest number of symbols used by any tree type */
 
-    #define DEFLATE_CODE_BITLEN 15
-    #define DISTANCE_BITLEN     15
-    #define CODE_LENGTH_BITLEN  7
-    #define MAX_BIT_LENGTH      15 /* largest bitlen used by any tree type */
+#define DEFLATE_CODE_BITLEN 15
+#define DISTANCE_BITLEN     15
+#define CODE_LENGTH_BITLEN  7
+#define MAX_BIT_LENGTH      15 /* largest bitlen used by any tree type */
 
-    #define DEFLATE_CODE_BUFFER_SIZE (NUM_DEFLATE_CODE_SYMBOLS * 2)
-    #define DISTANCE_BUFFER_SIZE     (NUM_DISTANCE_SYMBOLS * 2)
-    #define CODE_LENGTH_BUFFER_SIZE  (NUM_DISTANCE_SYMBOLS * 2)
+#define DEFLATE_CODE_BUFFER_SIZE (NUM_DEFLATE_CODE_SYMBOLS * 2)
+#define DISTANCE_BUFFER_SIZE     (NUM_DISTANCE_SYMBOLS * 2)
+#define CODE_LENGTH_BUFFER_SIZE  (NUM_DISTANCE_SYMBOLS * 2)
 
     // #define SET_ERROR(upng,code) do { (upng)->error = (code); (upng)->error_line = __LINE__; } while (0)
 
-    #define upng_chunk_length(chunk)   MAKE_DWORD_PTR(chunk)
-    #define upng_chunk_type(chunk)     MAKE_DWORD_PTR((chunk) + 4)
-    #define upng_chunk_critical(chunk) (((chunk)[4] & 32) == 0)
+#define upng_chunk_length(chunk)   MAKE_DWORD_PTR(chunk)
+#define upng_chunk_type(chunk)     MAKE_DWORD_PTR((chunk) + 4)
+#define upng_chunk_critical(chunk) (((chunk)[4] & 32) == 0)
 
   private:
     char*    png_buffer = NULL; // contains the input data
@@ -335,22 +342,16 @@ class TFT_Base {
         = {16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15};
 
     const uint16_t FIXED_DEFLATE_CODE_TREE[NUM_DEFLATE_CODE_SYMBOLS * 2] = {
-        289, 370, 290, 307, 546, 291, 561, 292, 293, 300, 294, 297, 295, 296, 0,   1,   2,   3,   298, 299, 4,   5,   6,   7,   301, 304, 302, 303, 8,   9,   10,  11,  305, 306, 12,  13,
-        14,  15,  308, 339, 309, 324, 310, 317, 311, 314, 312, 313, 16,  17,  18,  19,  315, 316, 20,  21,  22,  23,  318, 321, 319, 320, 24,  25,  26,  27,  322, 323, 28,  29,  30,  31,
-        325, 332, 326, 329, 327, 328, 32,  33,  34,  35,  330, 331, 36,  37,  38,  39,  333, 336, 334, 335, 40,  41,  42,  43,  337, 338, 44,  45,  46,  47,  340, 355, 341, 348, 342, 345,
-        343, 344, 48,  49,  50,  51,  346, 347, 52,  53,  54,  55,  349, 352, 350, 351, 56,  57,  58,  59,  353, 354, 60,  61,  62,  63,  356, 363, 357, 360, 358, 359, 64,  65,  66,  67,
-        361, 362, 68,  69,  70,  71,  364, 367, 365, 366, 72,  73,  74,  75,  368, 369, 76,  77,  78,  79,  371, 434, 372, 403, 373, 388, 374, 381, 375, 378, 376, 377, 80,  81,  82,  83,
-        379, 380, 84,  85,  86,  87,  382, 385, 383, 384, 88,  89,  90,  91,  386, 387, 92,  93,  94,  95,  389, 396, 390, 393, 391, 392, 96,  97,  98,  99,  394, 395, 100, 101, 102, 103,
-        397, 400, 398, 399, 104, 105, 106, 107, 401, 402, 108, 109, 110, 111, 404, 419, 405, 412, 406, 409, 407, 408, 112, 113, 114, 115, 410, 411, 116, 117, 118, 119, 413, 416, 414, 415,
-        120, 121, 122, 123, 417, 418, 124, 125, 126, 127, 420, 427, 421, 424, 422, 423, 128, 129, 130, 131, 425, 426, 132, 133, 134, 135, 428, 431, 429, 430, 136, 137, 138, 139, 432, 433,
-        140, 141, 142, 143, 435, 483, 436, 452, 568, 437, 438, 445, 439, 442, 440, 441, 144, 145, 146, 147, 443, 444, 148, 149, 150, 151, 446, 449, 447, 448, 152, 153, 154, 155, 450, 451,
-        156, 157, 158, 159, 453, 468, 454, 461, 455, 458, 456, 457, 160, 161, 162, 163, 459, 460, 164, 165, 166, 167, 462, 465, 463, 464, 168, 169, 170, 171, 466, 467, 172, 173, 174, 175,
-        469, 476, 470, 473, 471, 472, 176, 177, 178, 179, 474, 475, 180, 181, 182, 183, 477, 480, 478, 479, 184, 185, 186, 187, 481, 482, 188, 189, 190, 191, 484, 515, 485, 500, 486, 493,
-        487, 490, 488, 489, 192, 193, 194, 195, 491, 492, 196, 197, 198, 199, 494, 497, 495, 496, 200, 201, 202, 203, 498, 499, 204, 205, 206, 207, 501, 508, 502, 505, 503, 504, 208, 209,
-        210, 211, 506, 507, 212, 213, 214, 215, 509, 512, 510, 511, 216, 217, 218, 219, 513, 514, 220, 221, 222, 223, 516, 531, 517, 524, 518, 521, 519, 520, 224, 225, 226, 227, 522, 523,
-        228, 229, 230, 231, 525, 528, 526, 527, 232, 233, 234, 235, 529, 530, 236, 237, 238, 239, 532, 539, 533, 536, 534, 535, 240, 241, 242, 243, 537, 538, 244, 245, 246, 247, 540, 543,
-        541, 542, 248, 249, 250, 251, 544, 545, 252, 253, 254, 255, 547, 554, 548, 551, 549, 550, 256, 257, 258, 259, 552, 553, 260, 261, 262, 263, 555, 558, 556, 557, 264, 265, 266, 267,
-        559, 560, 268, 269, 270, 271, 562, 565, 563, 564, 272, 273, 274, 275, 566, 567, 276, 277, 278, 279, 569, 572, 570, 571, 280, 281, 282, 283, 573, 574, 284, 285, 286, 287, 0,   0};
+        289, 370, 290, 307, 546, 291, 561, 292, 293, 300, 294, 297, 295, 296, 0,   1,   2,   3,   298, 299, 4,   5,   6,   7,   301, 304, 302, 303, 8,   9,   10,  11,  305, 306, 12,  13,  14,  15,  308, 339, 309, 324, 310, 317, 311, 314, 312, 313, 16,  17,  18,  19,  315, 316, 20,  21,  22,  23,
+        318, 321, 319, 320, 24,  25,  26,  27,  322, 323, 28,  29,  30,  31,  325, 332, 326, 329, 327, 328, 32,  33,  34,  35,  330, 331, 36,  37,  38,  39,  333, 336, 334, 335, 40,  41,  42,  43,  337, 338, 44,  45,  46,  47,  340, 355, 341, 348, 342, 345, 343, 344, 48,  49,  50,  51,  346, 347,
+        52,  53,  54,  55,  349, 352, 350, 351, 56,  57,  58,  59,  353, 354, 60,  61,  62,  63,  356, 363, 357, 360, 358, 359, 64,  65,  66,  67,  361, 362, 68,  69,  70,  71,  364, 367, 365, 366, 72,  73,  74,  75,  368, 369, 76,  77,  78,  79,  371, 434, 372, 403, 373, 388, 374, 381, 375, 378,
+        376, 377, 80,  81,  82,  83,  379, 380, 84,  85,  86,  87,  382, 385, 383, 384, 88,  89,  90,  91,  386, 387, 92,  93,  94,  95,  389, 396, 390, 393, 391, 392, 96,  97,  98,  99,  394, 395, 100, 101, 102, 103, 397, 400, 398, 399, 104, 105, 106, 107, 401, 402, 108, 109, 110, 111, 404, 419,
+        405, 412, 406, 409, 407, 408, 112, 113, 114, 115, 410, 411, 116, 117, 118, 119, 413, 416, 414, 415, 120, 121, 122, 123, 417, 418, 124, 125, 126, 127, 420, 427, 421, 424, 422, 423, 128, 129, 130, 131, 425, 426, 132, 133, 134, 135, 428, 431, 429, 430, 136, 137, 138, 139, 432, 433, 140, 141,
+        142, 143, 435, 483, 436, 452, 568, 437, 438, 445, 439, 442, 440, 441, 144, 145, 146, 147, 443, 444, 148, 149, 150, 151, 446, 449, 447, 448, 152, 153, 154, 155, 450, 451, 156, 157, 158, 159, 453, 468, 454, 461, 455, 458, 456, 457, 160, 161, 162, 163, 459, 460, 164, 165, 166, 167, 462, 465,
+        463, 464, 168, 169, 170, 171, 466, 467, 172, 173, 174, 175, 469, 476, 470, 473, 471, 472, 176, 177, 178, 179, 474, 475, 180, 181, 182, 183, 477, 480, 478, 479, 184, 185, 186, 187, 481, 482, 188, 189, 190, 191, 484, 515, 485, 500, 486, 493, 487, 490, 488, 489, 192, 193, 194, 195, 491, 492,
+        196, 197, 198, 199, 494, 497, 495, 496, 200, 201, 202, 203, 498, 499, 204, 205, 206, 207, 501, 508, 502, 505, 503, 504, 208, 209, 210, 211, 506, 507, 212, 213, 214, 215, 509, 512, 510, 511, 216, 217, 218, 219, 513, 514, 220, 221, 222, 223, 516, 531, 517, 524, 518, 521, 519, 520, 224, 225,
+        226, 227, 522, 523, 228, 229, 230, 231, 525, 528, 526, 527, 232, 233, 234, 235, 529, 530, 236, 237, 238, 239, 532, 539, 533, 536, 534, 535, 240, 241, 242, 243, 537, 538, 244, 245, 246, 247, 540, 543, 541, 542, 248, 249, 250, 251, 544, 545, 252, 253, 254, 255, 547, 554, 548, 551, 549, 550,
+        256, 257, 258, 259, 552, 553, 260, 261, 262, 263, 555, 558, 556, 557, 264, 265, 266, 267, 559, 560, 268, 269, 270, 271, 562, 565, 563, 564, 272, 273, 274, 275, 566, 567, 276, 277, 278, 279, 569, 572, 570, 571, 280, 281, 282, 283, 573, 574, 284, 285, 286, 287, 0,   0};
 
     const uint8_t FIXED_DISTANCE_TREE[NUM_DISTANCE_SYMBOLS * 2] = {33, 48, 34, 41, 35, 38, 36, 37, 0,  1,  2,  3,  39, 40, 4,  5,  6,  7,  42, 45, 43, 44, 8,  9,  10, 11, 46, 47, 12, 13, 14, 15,
                                                                    49, 56, 50, 53, 51, 52, 16, 17, 18, 19, 54, 55, 20, 21, 22, 23, 57, 60, 58, 59, 24, 25, 26, 27, 61, 62, 28, 29, 30, 31, 0,  0};

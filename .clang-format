@@ -14,7 +14,7 @@ IncludeBlocks: Merge
 Cpp11BracedListStyle: true
 
 
-ColumnLimit: 200  # Setzt eine maximale Zeilenlänge (erhöhe bei Bedarf)
+ColumnLimit: 300  # Setzt eine maximale Zeilenlänge (erhöhe bei Bedarf)
 BinPackArguments: true  # Packt Funktionsargumente in eine Zeile
 BinPackParameters: true  # Packt Funktionsparameter in eine Zeile
 AllowShortBlocksOnASingleLine: true  # Erlaubt kleine Blöcke auf einer Zeile

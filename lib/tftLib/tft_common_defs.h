@@ -42,33 +42,32 @@ extern __attribute__((weak)) void tft_info(const char*);
 #define ANSI_ESC_LAVENDER    "\033[38;5;189m"
 
 // RGB565 Color definitions            R    G    B
-#define TFT_RED          0xF800 // 255,   0,   0
-#define TFT_DARKRED      0x8000 // 128,   0,   0
-#define TFT_LIGHTRED     0xFBEF // 255, 127, 127
-#define TFT_GREEN        0x07E0 //   0, 255,   0
-#define TFT_DARKGREEN    0x0400 //   0, 128,   0
-#define TFT_LIGHTGREEN   0x7FE0 // 127, 255, 127
-#define TFT_BLUE         0x001F //   0,   0, 255
-#define TFT_DARKBLUE     0x0010 //   0,   0, 128
-#define TFT_LIGHTBLUE    0x7BFF // 127, 127, 255
-#define TFT_CYAN         0x07FF //   0, 255, 255
-#define TFT_DARKCYAN     0x0410 //   0, 128, 128
-#define TFT_LIGHTCYAN    0x7FFF // 127, 255, 255
-#define TFT_MAGENTA      0xF81F // 255,   0, 255
-#define TFT_DARKMAGENTA  0x8010 // 128,   0, 128
-#define TFT_LIGHTMAGENTA 0xF97F // 255, 127, 255
-#define TFT_YELLOW       0xFFE0 // 255, 255,   0
-#define TFT_DARKYELLOW   0x8400 // 128, 128,   0
-#define TFT_LIGHTYELLOW  0xFFF7 // 255, 255, 127
-#define TFT_WHITE        0xFFFF // 255, 255, 255
-#define TFT_BLACK        0x0000 //   0,   0,   0
-#define TFT_GREY         0x8410 // 128, 128, 128
-#define TFT_LIGHTGREY    0xC618 // 192, 192, 192
-#define TFT_DARKGREY     0xAD55 //  64,  64,  64
-#define TFT_BROWN        0xA145 // 165,  42,  42
-#define TFT_DARKBROWN    0x8200 // 128,  64,   0
-#define TFT_LIGHTBROWN   0xFDB2 // 254, 198, 125
-
+#define TFT_RED             0xF800 // 255,   0,   0
+#define TFT_DARKRED         0x8000 // 128,   0,   0
+#define TFT_LIGHTRED        0xFBEF // 255, 127, 127
+#define TFT_GREEN           0x07E0 //   0, 255,   0
+#define TFT_DARKGREEN       0x0400 //   0, 128,   0
+#define TFT_LIGHTGREEN      0x7FE0 // 127, 255, 127
+#define TFT_BLUE            0x001F //   0,   0, 255
+#define TFT_DARKBLUE        0x0010 //   0,   0, 128
+#define TFT_LIGHTBLUE       0x7BFF // 127, 127, 255
+#define TFT_CYAN            0x07FF //   0, 255, 255
+#define TFT_DARKCYAN        0x0410 //   0, 128, 128
+#define TFT_LIGHTCYAN       0x7FFF // 127, 255, 255
+#define TFT_MAGENTA         0xF81F // 255,   0, 255
+#define TFT_DARKMAGENTA     0x8010 // 128,   0, 128
+#define TFT_LIGHTMAGENTA    0xF97F // 255, 127, 255
+#define TFT_YELLOW          0xFFE0 // 255, 255,   0
+#define TFT_DARKYELLOW      0x8400 // 128, 128,   0
+#define TFT_LIGHTYELLOW     0xFFF7 // 255, 255, 127
+#define TFT_WHITE           0xFFFF // 255, 255, 255
+#define TFT_BLACK           0x0000 //   0,   0,   0
+#define TFT_GREY            0x8410 // 128, 128, 128
+#define TFT_LIGHTGREY       0xC618 // 192, 192, 192
+#define TFT_DARKGREY        0xAD55 //  64,  64,  64
+#define TFT_BROWN           0xA145 // 165,  42,  42
+#define TFT_DARKBROWN       0x8200 // 128,  64,   0
+#define TFT_LIGHTBROWN      0xFDB2 // 254, 198, 125
 #define TFT_AQUAMARINE      0x7FFA // 127, 255, 212
 #define TFT_BEIGE           0xF7BB // 245, 245, 220
 #define TFT_CHOCOLATE       0xD342 // 210, 105,  30
@@ -92,6 +91,8 @@ extern __attribute__((weak)) void tft_info(const char*);
 #define TFT_SANDYBROWN      0xF52C // 244, 164,  96
 #define TFT_TURQUOISE       0x471A //  64, 224, 208
 #define TFT_VIOLET          0x801F // 128,   0, 255
+
+#define TFT_TRANSPARENT -1
 
 #if TFT_FONT == 0
     #define TFT_GARAMOND

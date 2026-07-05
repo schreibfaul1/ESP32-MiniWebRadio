@@ -55,6 +55,7 @@
 #include "driver/ledc.h"
 #include "es8311.h"
 #include "esp_log.h"
+#include "esp_psram.h"
 #include "kcx_bt_emitter.h"
 #include "mbedtls/sha1.h"
 #include "rtime.h"
@@ -198,8 +199,35 @@ enum status {
     IR_SETTINGS = 14,
     RINGING = 15,
     WIFI_SETTINGS = 16,
+    SLEEP = 17,
     UNDEFINED = -1
 };
+
+inline ps_ptr<char> getStatusName(int8_t status) {
+    ps_ptr<char> name;
+    switch (status) {
+        case 0: name = "NONE"; break;
+        case 1: name = "RADIO"; break;
+        case 2: name = "PLAYER"; break;
+        case 3: name = "DLNA"; break;
+        case 4: name = "CLOCK"; break;
+        case 5: name = "BRIGHTNESS"; break;
+        case 6: name = "ALARMCLOCK"; break;
+        case 7: name = "SLEEPTIMER"; break;
+        case 8: name = "STATIONSLIST"; break;
+        case 9: name = "AUDIOFILESLIST"; break;
+        case 10: name = "DLNAITEMSLIST"; break;
+        case 11: name = "BLUETOOTH"; break;
+        case 12: name = "EQUALIZER"; break;
+        case 13: name = "SETTINGS"; break;
+        case 14: name = "IR_SETTINGS"; break;
+        case 15: name = "RINGING"; break;
+        case 16: name = "WIFI_SETTINGS"; break;
+        case 17: name = "SLEEP"; break;
+        default: name = "UNDEFINED"; break;
+    }
+    return name;
+}
 
 enum ir_shift { IR_RIGHT = +100, IR_LEFT = -100, IR_UP = +101, IR_DOWN = -101, IR_RESET = -127 };
 
@@ -224,6 +252,7 @@ struct releasedArg {
 struct timecounter_s {
     uint8_t timer = 0;
     uint8_t factor = 2;
+    uint8_t tmp = 0;
 };
 struct irButtons {
     int16_t val;
@@ -273,7 +302,7 @@ struct i2c_items_s {
     int  bh1750_addr = -1;
 } s_i2c_items;
 
-struct tag_s{
+struct tag_s {
     ps_ptr<char> none = "";
     ps_ptr<char> arduino = "Arduino:";
     ps_ptr<char> audio_info = "Audio_Info:";
@@ -309,7 +338,7 @@ template <typename... Args> void printfln(ps_ptr<char> tag, const char* fmt, Arg
     myLog.reserve(200);
     rtc.hasValidTime() ? myLog.append(rtc.gettime_s()) : myLog.append("00:00:00");
     myLog.appendf(" {} ", tag);
-    while(myLog.strlen() < 25){ myLog.append(".");}
+    while (myLog.strlen() < 25) { myLog.append("."); }
     myLog.append(" ");
     myLog.append(" \033[0m");
     myLog.appendf(fmt, std::forward<Args>(args)...);
@@ -326,7 +355,7 @@ template <typename... Args> void printfcr(ps_ptr<char> tag, const char* fmt, Arg
     myLog.reserve(200);
     rtc.hasValidTime() ? myLog.append(rtc.gettime_s()) : myLog.append("00:00:00");
     myLog.appendf(" {} ", tag);
-    while(myLog.strlen() < 25){ myLog.append(".");}
+    while (myLog.strlen() < 25) { myLog.append("."); }
     myLog.append(" ");
     myLog.append(" \033[0m");
     myLog.appendf(fmt, std::forward<Args>(args)...);
@@ -337,8 +366,8 @@ template <typename... Args> void printfcr(ps_ptr<char> tag, const char* fmt, Arg
 }
 
 inline void printflnCut(ps_ptr<char> tag, ps_ptr<char> item, const char* color, ps_ptr<char> str) {
-        uint8_t maxLength = 100;
-        if(str.strlen() > maxLength){
+    uint8_t maxLength = 100;
+    if (str.strlen() > maxLength) {
         ps_ptr<char> tmp1 = str.substr(0, 70);
         ps_ptr<char> tmp2 = str.substr(str.strlen() - 20);
         str.assignf("{}...{}", tmp1, tmp2);
@@ -364,12 +393,12 @@ int log_redirect_handler(const char* format, va_list args) {
     vsnprintf(log_dst, len, format, args_msg);
     va_end(args_msg);
     if (len > 0) {
-        //0x1B 0x5B 0x30 0x3B 0x33 0x32 0x6D 0x49 0x20 0x28    0x31 0x35 0x33 0x37 0x29 0x20 0x41 0x52 0x44 0x55    0x49 0x4E 0x4F 0x3A 0x20
-        // ESC  [    0    ;    3    2    m    I         (       1    5    3    7    )         A    R    D    U       I    N    O    :
-        int idx = log_buffer.index_of("ARDUINO:");
+        // 0x1B 0x5B 0x30 0x3B 0x33 0x32 0x6D 0x49 0x20 0x28    0x31 0x35 0x33 0x37 0x29 0x20 0x41 0x52 0x44 0x55    0x49 0x4E 0x4F 0x3A 0x20
+        //  ESC  [    0    ;    3    2    m    I         (       1    5    3    7    )         A    R    D    U       I    N    O    :
+        int  idx = log_buffer.index_of("ARDUINO:");
         char c = log_buffer[7]; // 0...7 is ANSI_ESC_CODE
         if (idx > 0) {
-            idx += 9;  // after "ARDUINO: "
+            idx += 9; // after "ARDUINO: "
             log_buffer.remove_before(idx, true);
             log_buffer.truncate_at(log_buffer.strlen() - 1); // remove '\n'
             if (c == 'E') log_buffer.insert(ANSI_ESC_RED, 0);
@@ -392,7 +421,7 @@ boolean      defaultsettings();
 void         updateSettings();
 void         urldecode(char* str);
 void         fall_asleep();
-void         wake_up();
+void         wake_up(int8_t state, int8_t substate);
 void         setRTC(ps_ptr<char> TZString);
 boolean      isAlarm(uint8_t weekDay, uint8_t alarmDays, uint16_t minuteOfTheDay, int16_t* alarmTime);
 boolean      copySDtoFFat(const char* path);
@@ -416,7 +445,8 @@ bool         connectToWiFi();
 void         setWiFiCredentials(ps_ptr<char> ssid, ps_ptr<char> password);
 ps_ptr<char> scaleImage(ps_ptr<char> path);
 bool         detect_i2_c_devices(TwoWire* twi, int8_t sda, int8_t scl, i2c_items_s* i2c_items);
-void         set_display_items();
+void         set_tft_items();
+void         set_tp_items();
 bool         init_SD_card();
 void         setVolume(uint8_t vol);
 uint8_t      downvolume();
@@ -486,7 +516,7 @@ inline int32_t str2int(const char* str) {
                 return 0;
             }
         }
-        return stoi(str);
+        return std::stoi(str);
     }
     return 0;
 }
@@ -726,8 +756,7 @@ inline int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min,
 
 inline void setupBacklight(int pin, uint32_t freq_hz) {
 
-    ledc_channel_config_t ch =
-        {.gpio_num = (gpio_num_t)pin, .speed_mode = LEDC_LOW_SPEED_MODE, .channel = LEDC_CHANNEL_1, .intr_type = LEDC_INTR_DISABLE, .timer_sel = LEDC_TIMER_3, .duty = 0, .hpoint = 0};
+    ledc_channel_config_t ch = {.gpio_num = (gpio_num_t)pin, .speed_mode = LEDC_LOW_SPEED_MODE, .channel = LEDC_CHANNEL_1, .intr_type = LEDC_INTR_DISABLE, .timer_sel = LEDC_TIMER_3, .duty = 0, .hpoint = 0};
 
     ledc_timer_config_t tmr = {
         .speed_mode = LEDC_LOW_SPEED_MODE,
@@ -748,7 +777,12 @@ inline void setupBacklight(int pin, uint32_t freq_hz) {
     ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1);
 }
 
-inline void setTFTbrightness(uint8_t duty) {
+inline void setTFTbrightness(uint8_t brightness, uint8_t bh1750Value) {
+    extern bool s_f_sleeping;
+    uint8_t     duty = std::min(brightness, bh1750Value);
+    if (s_f_sleeping) { duty = 0; }
+    if (BRIGHTNESS_INVERSION) { duty = 255 - duty; }
+
     if (TFT_BL >= 0) {
         ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1, duty);
         ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1);
@@ -756,9 +790,6 @@ inline void setTFTbrightness(uint8_t duty) {
 }
 
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-
-
 
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 #ifdef TFT_MODE_SPI // ⏹⏹⏹⏹

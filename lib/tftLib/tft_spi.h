@@ -1,5 +1,5 @@
 // first release on 09/2019
-// updated on Apr 19 2025
+// updated on Jul 05 2026
 
 #pragma once
 
@@ -51,8 +51,8 @@ class TFT_SPI : public TFT_Base {
     bool        panelDrawBitmap(int16_t x0, int16_t y0, int16_t x1, int16_t y1, const void* bitmap) override;
     void        displayInversion();
 
-    enum Ctrl { ILI9341 = 0, ILI9486 = 3, ILI9488 = 4, ST7796 = 5 };
-    uint8_t     _TFTcontroller = ILI9341;
+    enum Ctrl { ILI9341 = 0, ILI9486 = 3, ILI9488_ST7796 = 5 };
+    uint8_t     m_TFTcontroller = ILI9341;
     SPISettings SPIset; // SPI settings for this slave
 
     bool      m_framebuffer_index = 0;

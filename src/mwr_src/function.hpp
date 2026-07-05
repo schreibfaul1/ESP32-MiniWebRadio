@@ -233,7 +233,7 @@ bool get_esp_items(uint8_t* s_resetReason, bool* s_f_FFatFound) {
     if (!psramInit()) {
         printfln(s_tag.sys_info, ANSI_ESC_RED "PSRAM not found! MiniWebRadio doesn't work properly without PSRAM!");
     } else {
-        printfln(s_tag.sys_info, "PSRAM total size: {} bytes", ESP.getPsramSize());
+        printfln(s_tag.sys_info, "PSRAM total size: {} bytes, usable {} bytes", esp_psram_get_size(), ESP.getPsramSize());
     }
     if (ESP.getFlashChipSize() > 80000000) {
         if (!FFat.begin()) {
