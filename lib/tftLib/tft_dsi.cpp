@@ -1,5 +1,5 @@
 // first release on 01/2025
-// updated on Mar 17 2026
+// updated on Jul 05 2026
 
 #include "Arduino.h"
 #ifdef CONFIG_IDF_TARGET_ESP32P4
@@ -81,9 +81,9 @@ void TFT_DSI::begin(const Timing& newTiming) {
 
     #if TFT_CONTROLLER == 8
     // --------------------------------------------------
-    // 4. Init Display-Controller (EK97001)
+    // 4. Init Display-Controller (EK97007)
     // --------------------------------------------------
-    controller = "EK97001";
+    controller = "EK97007";
     /*
      * R00h: NOP ( No Operation)
      * R01h: GRB (Software Reset)

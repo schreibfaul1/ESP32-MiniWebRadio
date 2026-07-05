@@ -1340,8 +1340,14 @@ bool init_SD_card() {
     SD_MMC.setPins(SD_MMC_CLK, SD_MMC_CMD, SD_MMC_D0);
     s_f_sd_card_found = SD_MMC.begin("/sdcard", true, false, sdmmc_frequency);
 #elifdef CONFIG_IDF_TARGET_ESP32P4
-    SD_MMC.setPins(SD_MMC_CLK, SD_MMC_CMD, SD_MMC_D0, SD_MMC_D1, SD_MMC_D2, SD_MMC_D3);
-    s_f_sd_card_found = SD_MMC.begin("/sdcard", false, false, sdmmc_frequency);
+    if (SD_MMC_D1 == -1) {
+        SD_MMC.setPins(SD_MMC_CLK, SD_MMC_CMD, SD_MMC_D0);
+        s_f_sd_card_found = SD_MMC.begin("/sdcard", true, false, sdmmc_frequency); // mode1bit
+    } else {
+        SD_MMC.setPins(SD_MMC_CLK, SD_MMC_CMD, SD_MMC_D0, SD_MMC_D1, SD_MMC_D2, SD_MMC_D3);
+        s_f_sd_card_found = SD_MMC.begin("/sdcard", false, false, sdmmc_frequency); // mode4bit
+    }
+
 #endif
     if (!s_f_sd_card_found) {
         clearAll(TFT_BLACK);
