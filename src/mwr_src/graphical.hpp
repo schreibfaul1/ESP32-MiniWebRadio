@@ -398,7 +398,7 @@ class button2state : public RegisterTable { // on off switch
     }
 
     void hide() {
-        if (!m_first_call) return;
+        if (m_first_call) return;
         if (m_bg_color == TFT_TRANSPARENT) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
@@ -755,7 +755,7 @@ class slider : public RegisterTable {
     }
 
     void hide() {
-        if (!m_first_call) return;
+        if (m_first_call) return;
         if (m_transparency) {
             getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else if (m_bg_color == TFT_TRANSPARENT) {
