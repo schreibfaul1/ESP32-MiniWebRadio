@@ -6305,23 +6305,23 @@ class displayFooter : public RegisterTable {
             pic_Hourglass->show();
         }
     }
+
     void updateTC(uint8_t timeCounter) {
+        if (m_timeCounter == timeCounter) return;
         m_timeCounter = timeCounter;
         if (!m_enabled) return;
-        if (!m_timeCounter) {
-            txt_BitRate->show();
+
+        uint16_t x0 = s_BitRate.x;
+        uint16_t x1x2 = round(s_BitRate.x + ((float)((s_BitRate.w) / 10) * timeCounter)) - 1;
+        uint16_t y0y1 = m_y + m_h - 5;
+        uint16_t y2 = round((m_y + m_h - 5) - ((float)(m_h - 6) / 10) * timeCounter);
+        if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, s_BitRate.x, m_y, s_BitRate.w, m_h);
         } else {
-            uint16_t x0 = s_BitRate.x;
-            uint16_t x1x2 = round(s_BitRate.x + ((float)((s_BitRate.w) / 10) * timeCounter)) - 1;
-            uint16_t y0y1 = m_y + m_h - 5;
-            uint16_t y2 = round((m_y + m_h - 5) - ((float)(m_h - 6) / 10) * timeCounter);
-            if (m_bg_color == TFT_TRANSPARENT) {
-                getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, s_BitRate.x, m_y, s_BitRate.w, m_h);
-            } else {
-                getTFT().fillRect(s_BitRate.x, m_y, s_BitRate.w, m_h, m_bg_color);
-            }
-            getTFT().fillTriangle(x0, y0y1, x1x2, y0y1, x1x2, y2, TFT_RED);
+            getTFT().fillRect(s_BitRate.x, m_y, s_BitRate.w, m_h, m_bg_color);
         }
+        getTFT().fillTriangle(x0, y0y1, x1x2, y0y1, x1x2, y2, TFT_RED);
+        if (!m_timeCounter) { txt_BitRate->show(); }
     }
 
     void updateBitRate(uint32_t bitRate) {

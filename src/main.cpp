@@ -1701,6 +1701,7 @@ void setTimeCounter(uint8_t sec) {
     if (sec) {
         s_timeCounter.timer = 10;
         s_timeCounter.factor = sec;
+        s_timeCounter.tmp = sec;
     } else {
         s_timeCounter.timer = 0;
         s_timeCounter.factor = 0;
@@ -2093,44 +2094,36 @@ void loop() {
 
         if (s_state == RADIO && s_subState_radio == 0) VUmeter_RA.update(audio.getVUlevel());
 
-        static uint8_t factor = 0;
-        static bool    f_tc = false;
-        if (factor > 0) {
-            factor--;
-        } else {
-            if (s_timeCounter.timer > 0) {
-                factor = s_timeCounter.factor;
-                dispFooter.updateTC(s_timeCounter.timer);
-                s_timeCounter.timer--;
-                f_tc = true;
-            } else {
-                if (f_tc) {
-                    f_tc = false;
-                    dispFooter.updateTC(0);
-                    if (volBox.is_enabled()) volBox.hide();
-                    if (s_f_sleeping) return; // tc is active by pressing a button, but do nothing if "off"
+        while (s_timeCounter.timer) {
+            s_timeCounter.tmp--;
+            if (s_timeCounter.tmp) break;
+            s_timeCounter.tmp = s_timeCounter.factor;
+            s_timeCounter.timer--;
+            dispFooter.updateTC(s_timeCounter.timer);
+            if (s_timeCounter.timer) break;
 
-                    if (s_state == RADIO) {
-                        if (!txt_RA_staName.is_enabled()) { txt_RA_staName.show(); } // assume volBox is shown
-                        if (s_subState_radio == 1) { changeState(RADIO, 0); }        // Mute, Vol+, Vol-, Sta+, Sta-, StaList
-                        if (s_subState_radio == 2) { changeState(RADIO, 0); }        // Player, DLNA, Clock, SleepTime, Brightness, EQ, BT, Off
-                    } else if (s_state == STATIONSLIST) {
-                        changeState(RADIO, 0);
-                    } else if (s_state == PLAYER) {
-                        if (!txt_PL_fName.is_enabled()) { txt_PL_fName.show(); } // assume volBox is shown
-                    } else if (s_state == AUDIOFILESLIST) {
-                        changeState(PLAYER, 0);
-                    } else if (s_state == DLNA) {
-                        if (!txt_DL_fName.is_enabled()) { txt_DL_fName.show(); } // assume volBox is shown
-                    } else if (s_state == DLNAITEMSLIST) {
-                        changeState(DLNA, 0);
-                    } else if (s_state == CLOCK) {
-                        changeState(CLOCK, 0);
-                    } else {
-                        ;
-                    } // all other, do nothing
-                }
-            }
+            // s_timeCounter.timer is 0
+            if (volBox.is_enabled()) volBox.hide();
+            if (s_f_sleeping) return; // tc is active by pressing a button, but do nothing if "off"
+            if (s_state == RADIO) {
+                if (!txt_RA_staName.is_enabled()) { txt_RA_staName.show(); } // assume volBox is shown
+                if (s_subState_radio == 1) { changeState(RADIO, 0); }        // Mute, Vol+, Vol-, Sta+, Sta-, StaList
+                if (s_subState_radio == 2) { changeState(RADIO, 0); }        // Player, DLNA, Clock, SleepTime, Brightness, EQ, BT, Off
+            } else if (s_state == STATIONSLIST) {
+                changeState(RADIO, 0);
+            } else if (s_state == PLAYER) {
+                if (!txt_PL_fName.is_enabled()) { txt_PL_fName.show(); } // assume volBox is shown
+            } else if (s_state == AUDIOFILESLIST) {
+                changeState(PLAYER, 0);
+            } else if (s_state == DLNA) {
+                if (!txt_DL_fName.is_enabled()) { txt_DL_fName.show(); } // assume volBox is shown
+            } else if (s_state == DLNAITEMSLIST) {
+                changeState(DLNA, 0);
+            } else if (s_state == CLOCK) {
+                changeState(CLOCK, 0);
+            } else {
+                ;
+            } // all other, do nothing
         }
 
         if (!s_f_rtc) { s_f_rtc = rtc.hasValidTime(); }
@@ -2251,7 +2244,7 @@ void loop() {
             }
         }
         //------------------------------------------NEW STREAMTITLE-----------------------------------------------------------------------------------
-        if (s_f_newStreamTitle && !s_timeCounter.timer) {
+        if (s_f_newStreamTitle && s_timeCounter.timer == 0) {
             s_f_newStreamTitle = false;
             if (s_state == RADIO) {
                 if (s_streamTitle.strlen())
@@ -2274,7 +2267,7 @@ void loop() {
             if (s_state == DLNA) show_DLNA_FileName(s_lyrics.c_get());
         }
         //------------------------------------------NEW ICY-DESCRIPTION-------------------------------------------------------------------------------
-        if (s_f_newIcyDescription && !s_timeCounter.timer) {
+        if (s_f_newIcyDescription && s_timeCounter.timer == 0) {
             if (s_state == RADIO) {
                 if (!s_streamTitle.strlen()) showStreamTitle(s_icyDescription);
             }

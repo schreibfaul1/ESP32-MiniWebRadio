@@ -52,10 +52,10 @@
 #include "IR.h"
 #include "SPIFFS.h"
 #include "base64.h"
-#include "esp_psram.h"
 #include "driver/ledc.h"
 #include "es8311.h"
 #include "esp_log.h"
+#include "esp_psram.h"
 #include "kcx_bt_emitter.h"
 #include "mbedtls/sha1.h"
 #include "rtime.h"
@@ -252,6 +252,7 @@ struct releasedArg {
 struct timecounter_s {
     uint8_t timer = 0;
     uint8_t factor = 2;
+    uint8_t tmp = 0;
 };
 struct irButtons {
     int16_t val;
@@ -755,8 +756,7 @@ inline int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min,
 
 inline void setupBacklight(int pin, uint32_t freq_hz) {
 
-    ledc_channel_config_t ch =
-        {.gpio_num = (gpio_num_t)pin, .speed_mode = LEDC_LOW_SPEED_MODE, .channel = LEDC_CHANNEL_1, .intr_type = LEDC_INTR_DISABLE, .timer_sel = LEDC_TIMER_3, .duty = 0, .hpoint = 0};
+    ledc_channel_config_t ch = {.gpio_num = (gpio_num_t)pin, .speed_mode = LEDC_LOW_SPEED_MODE, .channel = LEDC_CHANNEL_1, .intr_type = LEDC_INTR_DISABLE, .timer_sel = LEDC_TIMER_3, .duty = 0, .hpoint = 0};
 
     ledc_timer_config_t tmr = {
         .speed_mode = LEDC_LOW_SPEED_MODE,
@@ -779,11 +779,9 @@ inline void setupBacklight(int pin, uint32_t freq_hz) {
 
 inline void setTFTbrightness(uint8_t brightness, uint8_t bh1750Value) {
     extern bool s_f_sleeping;
-    uint8_t duty = std::min(brightness, bh1750Value);
-    if(s_f_sleeping){ duty = 0; }
-    if(BRIGHTNESS_INVERSION) {
-        duty = 255 - duty;
-    }
+    uint8_t     duty = std::min(brightness, bh1750Value);
+    if (s_f_sleeping) { duty = 0; }
+    if (BRIGHTNESS_INVERSION) { duty = 255 - duty; }
 
     if (TFT_BL >= 0) {
         ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1, duty);
