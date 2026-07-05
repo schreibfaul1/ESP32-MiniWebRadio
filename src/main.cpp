@@ -1603,8 +1603,9 @@ void fall_asleep() {
     printfln(s_tag.action, "falling asleep");
 }
 
-void wake_up() {
+void wake_up(int8_t state, int8_t subState) {
     s_f_sleeping = false;
+    if (s_bt_emitter.found && s_bt_emitter.enabled) bt_emitter.power_on(s_bt_emitter.mode);
     muteChanged(false);
     printfln(s_tag.action, "awake");
     clearAll(TFT_TRANSPARENT);
@@ -1614,8 +1615,7 @@ void wake_up() {
     dispFooter.set_bg_color(TFT_TRANSPARENT);
     dispHeader.show();
     dispFooter.show();
-    changeState(RADIO, 0);
-    if (s_bt_emitter.found && s_bt_emitter.enabled) bt_emitter.power_on(s_bt_emitter.mode.c_get());
+    changeState(state, subState);
 }
 
 void setRTC(ps_ptr<char> TZString) {
@@ -1738,7 +1738,7 @@ void changeState(int8_t state, int8_t subState) {
     if (state == EQUALIZER      && s_state != EQUALIZER)          { dispHeader.set_bg_color(TFT_TRANSPARENT); dispHeader.show(); dispFooter.set_bg_color(TFT_TRANSPARENT); dispFooter.show(); clearWithOutHeaderFooter(TFT_TRANSPARENT); newState = true;}
     if (state == BLUETOOTH      && s_state != BLUETOOTH)          { dispHeader.set_bg_color(TFT_TRANSPARENT); dispHeader.show(); dispFooter.set_bg_color(TFT_TRANSPARENT); dispFooter.show(); clearWithOutHeaderFooter(TFT_TRANSPARENT); newState = true;}
     if (state == IR_SETTINGS    && s_state != IR_SETTINGS)        { dispHeader.set_bg_color(TFT_TRANSPARENT); dispHeader.show(); dispFooter.set_bg_color(TFT_TRANSPARENT); dispFooter.show(); clearWithOutHeaderFooter(TFT_TRANSPARENT); newState = true;}
-    if (state == RINGING        && s_state != RINGING)            { dispHeader.set_bg_color(TFT_TRANSPARENT); dispHeader.show(); dispFooter.set_bg_color(TFT_TRANSPARENT); dispFooter.show(); clearWithOutHeaderFooter(TFT_TRANSPARENT); newState = true;}
+    if (state == RINGING        && s_state != RINGING)            { dispHeader.set_bg_color(TFT_BLACK);       dispHeader.show(); dispFooter.set_bg_color(TFT_BLACK);       dispFooter.show(); clearWithOutHeaderFooter(TFT_BLACK);       newState = true;}
     if (state == WIFI_SETTINGS  && s_state != WIFI_SETTINGS)      { dispHeader.set_bg_color(TFT_TRANSPARENT); dispHeader.show(); dispFooter.set_bg_color(TFT_TRANSPARENT); dispFooter.show(); clearWithOutHeaderFooter(TFT_TRANSPARENT); newState = true;}
     if (state == SLEEP          && s_state != SLEEP)              { dispHeader.set_bg_color(TFT_BLACK);       dispFooter.set_bg_color(TFT_BLACK);        clearAll(TFT_BLACK);                                                            newState = true;}
 
@@ -1963,9 +1963,9 @@ void changeState(int8_t state, int8_t subState) {
             btn_BT_volUp.show(); btn_BT_volDown.show(); btn_BT_pause.show(); btn_BT_mode.show();
             btn_BT_radio.show(); btn_BT_power.show();
             pic_BT_mode.show();
-            if (s_bt_emitter.mode.equals("RX")) { txt_BT_mode.setText("RECEIVER"); txt_BT_mode.show(); }
-            else                                { txt_BT_mode.setText("EMITTER"); txt_BT_mode.show(); }
             txt_BT_mode.set_bg_color(TFT_BROWN);
+            if (s_bt_emitter.mode.equals("RX")) { txt_BT_mode.setText("RECEIVER"); }
+            else                                { txt_BT_mode.setText("EMITTER"); }
             txt_BT_mode.show();
             ps_ptr<char> v;
             v.assignf("Vol: {:02}", bt_emitter.getVolume());
@@ -1986,6 +1986,7 @@ void changeState(int8_t state, int8_t subState) {
                 audio.setVolume(s_volume.ringVolume);
                 muteChanged(false);
                 connecttoFS("SD_MMC", "/ring/alarm_clock.mp3");
+                clk_RI_24small.set_bg_color(TFT_BLACK);
                 clk_RI_24small.show();
             } else { // alarm without bell
                 s_f_eof_alarm = true;
@@ -2168,16 +2169,14 @@ void loop() {
         //------------------------------------------ALARM MANAGEMENT----------------------------------------------------------------------------------
         if (s_f_alarm) {
             s_f_alarm = false;
-            changeState(RINGING, 0);
+            if (s_f_sleeping) wake_up(RINGING, 0);
+            else changeState(RINGING, 0);
         }
         if (s_f_eof_alarm) { // AFTER RINGING
             s_f_eof_alarm = false;
             if (!s_f_rtc) return;
             s_volume.cur_volume = s_volume.volumeAfterAlarm;
-            setVolume(s_volume.cur_volume);
-            audio.setVolume(s_volume.cur_volume);
-            dispHeader.updateVolume(s_volume.cur_volume);
-            wake_up();
+            changeState(RADIO, 0);
         }
 
         if (s_f_stationsChanged) {
@@ -2789,7 +2788,7 @@ void ir_long_key(int8_t key) {
         if (!s_f_sleeping)
             fall_asleep(); // long OK
         else
-            wake_up();
+            wake_up(RADIO, 0);
     }
 }
 // ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -3229,7 +3228,7 @@ void ir_short_key(int8_t key) {
             if (!s_f_sleeping){
                 fall_asleep();
             } else {
-                wake_up();
+                wake_up(RADIO, 0);
             }
             break;
         case 21: // RADIO  ---------------------------------------------------------------------------------------------------------------------------
@@ -3695,7 +3694,6 @@ void on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg) {
         s_bt_emitter.connect = true;
         if (s_bt_emitter.mode.equals("TX")) {
             txt_BT_mode.setText("EMITTER");
-            txt_BT_mode.show();
             pic_BT_mode.setPicturePath("/common/BT_TX.png");
             if (s_state == BLUETOOTH) {
                 pic_BT_mode.show();
@@ -3704,7 +3702,6 @@ void on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg) {
             webSrv.send("KCX_BT_MODE=", "TX");
         } else {
             txt_BT_mode.setText("RECEIVER");
-            txt_BT_mode.show();
             pic_BT_mode.setPicturePath("/common/BT_RX.png");
             if (s_state == BLUETOOTH) {
                 pic_BT_mode.show();
@@ -3856,7 +3853,7 @@ void tp_moved(uint16_t x, uint16_t y) {
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void tp_released(uint16_t x, uint16_t y){
 
-    if(s_f_sleeping && x > 0 && y > 0){ wake_up(); return;}   // if sleeping
+    if(s_f_sleeping && x > 0 && y > 0){ wake_up(RADIO, 0); return;}   // if sleeping
 
     // all state
     dispHeader.released();

@@ -3377,6 +3377,11 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
     bool         set_focus(bool focus) { return false; }
 
     void show(bool inactive = false) {
+        if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+        }
         m_clicked = false;
         m_enabled = true;
         m_showAll = true;

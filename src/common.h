@@ -421,7 +421,7 @@ boolean      defaultsettings();
 void         updateSettings();
 void         urldecode(char* str);
 void         fall_asleep();
-void         wake_up();
+void         wake_up(int8_t state, int8_t substate);
 void         setRTC(ps_ptr<char> TZString);
 boolean      isAlarm(uint8_t weekDay, uint8_t alarmDays, uint16_t minuteOfTheDay, int16_t* alarmTime);
 boolean      copySDtoFFat(const char* path);
