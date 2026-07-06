@@ -18,11 +18,12 @@ class TFT_Base {
     uint16_t logicalHeight() const;
 
     void drawRectLogicalFromFB(uint8_t fb, int16_t x, int16_t y, uint16_t w, uint16_t h);
-    bool copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h);                                                                                          // framebuffer zu framebuffer
+    bool copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool updateDisplay = true);                                                               // framebuffer to framebuffer
     bool copyFramebuffer(uint8_t source, uint16_t* buffer, uint16_t x, uint16_t y, uint16_t w, uint16_t h);                                                                                             // framebuffer to buffer
-    bool copyFramebuffer(const uint16_t* buffer, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h);                                                                                  // buffer to framebuffer
+    bool copyFramebuffer(const uint16_t* buffer, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool updateDisplay = true);                                                       // buffer to framebuffer
     bool copyFramebuffer(uint8_t source, uint16_t srcX, uint16_t srcY, uint16_t* buffer, uint16_t bufferWidth, uint16_t bufferHeight, uint16_t dstX, uint16_t dstY, uint16_t w, uint16_t h);            // framebuffer to buffer with window
-    bool copyFramebuffer(const uint16_t* buffer, uint16_t bufferWidth, uint16_t bufferHeight, uint16_t srcX, uint16_t srcY, uint8_t destination, uint16_t dstX, uint16_t dstY, uint16_t w, uint16_t h); // buffer to framebuffer with window
+    bool copyFramebuffer(const uint16_t* buffer, uint16_t bufferWidth, uint16_t bufferHeight, uint16_t srcX, uint16_t srcY, uint8_t destination, uint16_t dstX, uint16_t dstY, uint16_t w, uint16_t h,
+                         bool updateDisplay = true); // buffer to framebuffer with window
 
     void     fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
     void     fillScreen(uint16_t color);
@@ -33,7 +34,7 @@ class TFT_Base {
     void     drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color);
     void     fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color);
     void     drawCircle(int16_t cx, int16_t cy, int16_t r, uint16_t color);
-    void     fillCircle(int16_t cx, int16_t cy, uint16_t r, uint16_t color);
+    void     fillCircle(int16_t cx, int16_t cy, uint16_t r, uint16_t color, bool updateDisplay = true);
     void     setBackGoundColor(uint16_t BGcolor) { m_backGroundColor = BGcolor; }
     uint16_t getBackGroundColor() { return m_backGroundColor; }
     void     setTextColor(uint16_t FGcolor) { m_textColor = FGcolor; }
