@@ -18,7 +18,7 @@ class TFT_Base {
     uint16_t logicalHeight() const;
 
     void drawRectLogicalFromFB(uint8_t fb, int16_t x, int16_t y, uint16_t w, uint16_t h);
-    bool copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h);                                                                                          // framebuffer zu framebuffer
+    bool copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h);                                                                                          // framebuffer to framebuffer
     bool copyFramebuffer(uint8_t source, uint16_t* buffer, uint16_t x, uint16_t y, uint16_t w, uint16_t h);                                                                                             // framebuffer to buffer
     bool copyFramebuffer(const uint16_t* buffer, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h);                                                                                  // buffer to framebuffer
     bool copyFramebuffer(uint8_t source, uint16_t srcX, uint16_t srcY, uint16_t* buffer, uint16_t bufferWidth, uint16_t bufferHeight, uint16_t dstX, uint16_t dstY, uint16_t w, uint16_t h);            // framebuffer to buffer with window

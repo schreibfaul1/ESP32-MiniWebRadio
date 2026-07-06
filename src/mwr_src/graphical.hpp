@@ -687,6 +687,7 @@ class slider : public RegisterTable {
     uint8_t          m_padding_bottom = 0;
     ps_ptr<char>     m_name;
     ps_ptr<uint16_t> m_cache_bg = {};
+    ps_ptr<uint16_t> m_cache_slider_base = {};
     releasedArg      m_ra;
 
   public:
@@ -734,7 +735,6 @@ class slider : public RegisterTable {
         if (m_first_call) {
             m_cache_bg.alloc_array(m_w * m_h, m_name.c_get());
             getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
-            m_first_call = false;
         }
         if (m_transparency) {
             getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
@@ -751,7 +751,12 @@ class slider : public RegisterTable {
         (void)h;
         int r = m_railHigh / 4;
         getTFT().fillRoundRect(x, y, w, m_railHigh, r, m_railColor);
+        if (m_first_call) {
+            m_cache_slider_base.alloc_array(m_w * m_h, m_name.c_get());
+            getTFT().copyFramebuffer(FB_VISIBLE, m_cache_slider_base.get(), m_x, m_y, m_w, m_h);
+        }
         drawNewSpot(m_spotPos);
+        m_first_call = false;
     }
 
     void hide() {
@@ -837,14 +842,7 @@ class slider : public RegisterTable {
             uint16_t srcY = dstY - m_y;
             uint16_t w = 2 * m_spotRadius + 2;
             uint16_t h = 2 * m_spotRadius + 2;
-            if (m_transparency) {
-                getTFT().copyFramebuffer(m_cache_bg.get(), m_w, m_h, srcX, srcY, FB_VISIBLE, dstX, dstY, w, h);
-            } else if (m_bg_color == TFT_TRANSPARENT) {
-                getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, dstX, dstY, w, h);
-            } else {
-                getTFT().fillRect(m_spotPos - m_spotRadius, m_middle_h - m_spotRadius, 2 * m_spotRadius, 2 * m_spotRadius + 1, m_bg_color);
-            }
-            getTFT().fillRect(dstX, m_middle_h - (m_railHigh / 2), w, m_railHigh, m_railColor);
+            if (m_cache_slider_base.valid()) { getTFT().copyFramebuffer(m_cache_slider_base.get(), m_w, m_h, srcX, srcY, FB_VISIBLE, dstX, dstY, w, h); }
             getTFT().fillCircle(xPos, m_middle_h, m_spotRadius, m_spotColor);
         }
         m_spotPos = xPos;
@@ -6490,9 +6488,9 @@ class messageBox : public RegisterTable {
 #elifdef TFT_LAYOUT_XL
     struct p { // 1024x600
         uint16_t x = 1024 / 4;
-        uint16_t y =  600 / 4;
+        uint16_t y = 600 / 4;
         uint16_t w = 1024 / 2;
-        uint16_t h =  600 / 2;
+        uint16_t h = 600 / 2;
         uint8_t  pl = 30;
         uint8_t  pr = 30;
         uint8_t  pt = 30;
