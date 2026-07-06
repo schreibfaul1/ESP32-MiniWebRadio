@@ -2330,7 +2330,7 @@ void TFT_Base::drawRectLogicalFromFB(uint8_t fb, int16_t x, int16_t y, uint16_t 
     panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[fb]);
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-bool TFT_Base::copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
+bool TFT_Base::copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool updateDisplay) {
     if (w == 0 || h == 0) return false;
 
     uint16_t lw = logicalWidth();
@@ -2351,7 +2351,7 @@ bool TFT_Base::copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, 
         }
     }
 
-    if (destination == 0) drawRectLogicalFromFB(0, x, y, w, h);
+    if (updateDisplay && destination == 0) drawRectLogicalFromFB(0, x, y, w, h);
 
     return true;
 }
@@ -2382,7 +2382,7 @@ bool TFT_Base::copyFramebuffer(uint8_t source, uint16_t* buffer, uint16_t x, uin
     return true;
 }
 
-bool TFT_Base::copyFramebuffer(const uint16_t* buffer, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
+bool TFT_Base::copyFramebuffer(const uint16_t* buffer, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool updateDisplay) {
     if (!buffer) return false;
     if (w == 0 || h == 0) return false;
 
@@ -2405,7 +2405,7 @@ bool TFT_Base::copyFramebuffer(const uint16_t* buffer, uint8_t destination, uint
         }
     }
 
-    if (destination == 0) drawRectLogicalFromFB(0, x, y, w, h);
+    if (updateDisplay && destination == 0) drawRectLogicalFromFB(0, x, y, w, h);
 
     return true;
 }
@@ -2443,7 +2443,8 @@ bool TFT_Base::copyFramebuffer(uint8_t source, uint16_t srcX, uint16_t srcY, uin
     return true;
 }
 
-bool TFT_Base::copyFramebuffer(const uint16_t* buffer, uint16_t bufferWidth, uint16_t bufferHeight, uint16_t srcX, uint16_t srcY, uint8_t destination, uint16_t dstX, uint16_t dstY, uint16_t w, uint16_t h) {
+bool TFT_Base::copyFramebuffer(const uint16_t* buffer, uint16_t bufferWidth, uint16_t bufferHeight, uint16_t srcX, uint16_t srcY, uint8_t destination, uint16_t dstX, uint16_t dstY, uint16_t w, uint16_t h,
+                               bool updateDisplay) {
 
     if (!buffer) return false;
     if (w == 0 || h == 0) return false;
@@ -2473,7 +2474,7 @@ bool TFT_Base::copyFramebuffer(const uint16_t* buffer, uint16_t bufferWidth, uin
         }
     }
 
-    if (destination == 0) drawRectLogicalFromFB(0, dstX, dstY, w, h);
+    if (updateDisplay && destination == 0) drawRectLogicalFromFB(0, dstX, dstY, w, h);
 
     return true;
 }
@@ -2807,7 +2808,7 @@ void TFT_Base::drawCircle(int16_t cx, int16_t cy, int16_t r, uint16_t color) {
     if (maxX >= minX && maxY >= minY) { panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]); }
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_Base::fillCircle(int16_t cx, int16_t cy, uint16_t r, uint16_t color) {
+void TFT_Base::fillCircle(int16_t cx, int16_t cy, uint16_t r, uint16_t color, bool updateDisplay) {
     if (r == 0) return;
 
     int16_t f = 1 - r;
@@ -2860,7 +2861,7 @@ void TFT_Base::fillCircle(int16_t cx, int16_t cy, uint16_t r, uint16_t color) {
         f += ddF_x;
     }
 
-    if (maxX >= minX && maxY >= minY) { panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]); }
+    if (updateDisplay && maxX >= minX && maxY >= minY) { panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]); }
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_Base::writeTheFramebuffer(const uint8_t* bmi, uint16_t posX, uint16_t posY, uint16_t width, uint16_t height) {

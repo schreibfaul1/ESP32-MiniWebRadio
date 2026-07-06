@@ -836,14 +836,26 @@ class slider : public RegisterTable {
     }
     void drawNewSpot(uint16_t xPos) {
         if (m_enabled) {
-            uint16_t dstX = m_spotPos - m_spotRadius - 1;
-            uint16_t dstY = m_middle_h - m_spotRadius - 1;
-            uint16_t srcX = dstX - m_x;
-            uint16_t srcY = dstY - m_y;
-            uint16_t w = 2 * m_spotRadius + 2;
-            uint16_t h = 2 * m_spotRadius + 2;
-            if (m_cache_slider_base.valid()) { getTFT().copyFramebuffer(m_cache_slider_base.get(), m_w, m_h, srcX, srcY, FB_VISIBLE, dstX, dstY, w, h); }
-            getTFT().fillCircle(xPos, m_middle_h, m_spotRadius, m_spotColor);
+            const uint16_t oldX = m_spotPos - m_spotRadius - 1;
+            const uint16_t oldY = m_middle_h - m_spotRadius - 1;
+            const uint16_t newX = xPos - m_spotRadius - 1;
+            const uint16_t boxW = 2 * m_spotRadius + 2;
+            const uint16_t boxH = 2 * m_spotRadius + 2;
+
+            if (m_cache_slider_base.valid()) {
+                const uint16_t srcX = oldX - m_x;
+                const uint16_t srcY = oldY - m_y;
+                const uint16_t dirtyX = oldX < newX ? oldX : newX;
+                const uint16_t dirtyY = oldY;
+                const uint16_t dirtyRight = oldX > newX ? oldX + boxW : newX + boxW;
+                const uint16_t dirtyW = dirtyRight - dirtyX;
+
+                getTFT().copyFramebuffer(m_cache_slider_base.get(), m_w, m_h, srcX, srcY, FB_VISIBLE, oldX, oldY, boxW, boxH, false);
+                getTFT().fillCircle(xPos, m_middle_h, m_spotRadius, m_spotColor, false);
+                getTFT().drawRectLogicalFromFB(FB_VISIBLE, dirtyX, dirtyY, dirtyW, boxH);
+            } else {
+                getTFT().fillCircle(xPos, m_middle_h, m_spotRadius, m_spotColor);
+            }
         }
         m_spotPos = xPos;
         int32_t val = map_l(m_spotPos, m_leftStop, m_rightStop, m_minVal, m_maxVal); // xPos -> val
