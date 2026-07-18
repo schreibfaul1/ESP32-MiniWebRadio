@@ -70,7 +70,7 @@ void TFT_RGB::begin(const Pins& newPins, const Timing& newTiming) {
     panel_config.timings.flags.pclk_idle_high = true;
 
     panel_config.data_width = 16; // RGB565
-    panel_config.bits_per_pixel = 16;
+    // panel_config.bits_per_pixel = 16;
     panel_config.num_fbs = 2;
     panel_config.bounce_buffer_size_px = 0;
     panel_config.dma_burst_size = 64;
@@ -80,7 +80,7 @@ void TFT_RGB::begin(const Pins& newPins, const Timing& newTiming) {
     panel_config.pclk_gpio_num = m_pins.pclk;
     panel_config.disp_gpio_num = m_pins.bl;
 
-    int8_t pinArr[16] = {               // Daten-Pins für RGB565
+    gpio_num_t pinArr[16] = {               // data-pins for RGB565
         m_pins.b0, m_pins.b1, m_pins.b2, m_pins.b3, m_pins.b4,
         m_pins.g0, m_pins.g1, m_pins.g2, m_pins.g3, m_pins.g4, m_pins.g5,
         m_pins.r0, m_pins.r1, m_pins.r2, m_pins.r3, m_pins.r4

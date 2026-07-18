@@ -27,18 +27,44 @@ void WebSrv::show_not_found() {
     return;
 }
 //--------------------------------------------------------------------------------------------------------------
-String WebSrv::calculateWebSocketResponseKey(String sec_WS_key) {
-    // input  Sec-WebSocket-Key from client
-    // output Sec-WebSocket-Accept-Key (used in response message to client)
+String WebSrv::calculateWebSocketResponseKey(const String& sec_WS_key) {
+    // input : Sec-WebSocket-Key from client
+    // output: Sec-WebSocket-Accept-Key for the response
+
     uint8_t sha1_result[20];
     String  concat = sec_WS_key + WS_sec_conKey;
-    mbedtls_sha1((unsigned char*)concat.c_str(), concat.length(), (unsigned char*)sha1_result);
-    return base64::encode(sha1_result, 20);
+
+#if ESP_IDF_VERSION_MAJOR >= 6
+
+    static bool crypto_initialized = false;
+    if (!crypto_initialized) {
+        psa_status_t status = psa_crypto_init();
+        if (status != PSA_SUCCESS) {
+            log_e("psa_crypto_init() failed (%d)", status);
+            return "";
+        }
+        crypto_initialized = true;
+    }
+
+    size_t       hash_len;
+    psa_status_t status = psa_hash_compute(PSA_ALG_SHA_1, reinterpret_cast<const uint8_t*>(concat.c_str()), concat.length(), sha1_result, sizeof(sha1_result), &hash_len);
+
+    if (status != PSA_SUCCESS || hash_len != sizeof(sha1_result)) {
+        log_e("psa_hash_compute() failed (%d)", status);
+        return "";
+    }
+
+#else
+
+    mbedtls_sha1(reinterpret_cast<const unsigned char*>(concat.c_str()), concat.length(), sha1_result);
+
+#endif
+
+    return base64::encode(sha1_result, sizeof(sha1_result));
 }
 //--------------------------------------------------------------------------------------------------------------
 void WebSrv::printWebSocketHeader(String wsRespKey) {
-    String wsHeader = (String) "HTTP/1.1 101 Switching Protocols\r\n" + "Upgrade: websocket\r\n" + "Connection: Upgrade\r\n" + "Sec-WebSocket-Accept: " + wsRespKey + "\r\n" +
-                      "Access-Control-Allow-Origin: \r\n\r\n";
+    String wsHeader = (String) "HTTP/1.1 101 Switching Protocols\r\n" + "Upgrade: websocket\r\n" + "Connection: Upgrade\r\n" + "Sec-WebSocket-Accept: " + wsRespKey + "\r\n" + "Access-Control-Allow-Origin: \r\n\r\n";
     // "Sec-WebSocket-Protocol: chat\r\n\r\n";
     // log_i("wsheader %s", wsHeader.c_str());
     webSocketClient.print(wsHeader); // header sent
@@ -46,7 +72,7 @@ void WebSrv::printWebSocketHeader(String wsRespKey) {
 //--------------------------------------------------------------------------------------------------------------
 void WebSrv::show(const char* pagename, const char* MIMEType, int16_t len) {
     constexpr size_t TCP_CHUNK_SIZE = 4096; // optimal für WiFi/Ethernet
-    size_t pagelen = 0;
+    size_t           pagelen = 0;
 
     // --- Check whether source comes from PROGMEM ---
     bool isProgmem = !esp_ptr_in_dram(pagename);
@@ -57,7 +83,7 @@ void WebSrv::show(const char* pagename, const char* MIMEType, int16_t len) {
     else if (len > 0)
         pagelen = len;
 
-  // --- Skip leading newlines ---
+    // --- Skip leading newlines ---
     while (pagelen && (isProgmem ? pgm_read_byte(pagename) : *pagename) == '\n') {
         ++pagename;
         --pagelen;
@@ -83,7 +109,7 @@ void WebSrv::show(const char* pagename, const char* MIMEType, int16_t len) {
 
     if (m_websrv_callback) {
         m_msg.e = evt_info;
-        m_msg.arg.assignf("{} {} {}",  isProgmem ? "PROGMEM" : "RAM", ", page length:", pagelen);
+        m_msg.arg.assignf("{} {} {}", isProgmem ? "PROGMEM" : "RAM", ", page length:", pagelen);
         m_websrv_callback(m_msg);
     }
 
@@ -92,9 +118,7 @@ void WebSrv::show(const char* pagename, const char* MIMEType, int16_t len) {
     while (sent < pagelen) {
         size_t chunk = std::min(TCP_CHUNK_SIZE, pagelen - sent);
 
-        size_t res = isProgmem
-                     ? cmdclient.write_P(pagename + sent, chunk)
-                     : cmdclient.write((const uint8_t*)pagename + sent, chunk);
+        size_t res = isProgmem ? cmdclient.write_P(pagename + sent, chunk) : cmdclient.write((const uint8_t*)pagename + sent, chunk);
 
         if (res != chunk) {
             m_msg.e = evt_error;
@@ -123,7 +147,7 @@ bool WebSrv::streamfile(fs::FS& fs, ps_ptr<char> path) { // transfer file from S
         if (m_websrv_callback) m_websrv_callback(m_msg);
         return false;
     } // guard
-    for (int i = 0; path[i] != '\0'; ++i) {  // Validate path for illegal characters
+    for (int i = 0; path[i] != '\0'; ++i) { // Validate path for illegal characters
         if (path[i] < 32) {
             m_msg.e = evt_info;
             m_msg.arg.assignf(ANSI_ESC_RED "Illegal character in path");
@@ -215,7 +239,7 @@ bool WebSrv::send(ps_ptr<char> cmd, ps_ptr<char> msg, uint8_t opcode) { // sends
         std::string combined = std::string(cmd.c_get(), cmdLen) + std::string(msg.c_get(), msgLen);
         sanitized = sanitize_utf8_replace(combined.c_str(), combined.size());
         cmdLen = sanitized.size();
-        msgLen = 0;  // alles in sanitized
+        msgLen = 0; // alles in sanitized
     }
 
     if (cmdLen + msgLen > UINT16_MAX) {
@@ -457,14 +481,14 @@ exit:
 */
 bool WebSrv::uploadfile(fs::FS& fs, ps_ptr<char> path, uint32_t contentLength, ps_ptr<char> contentType) {
     ps_ptr<char> msg;
-    File file;
-    uint32_t av;
-    int32_t  bytesInTransBuf = 0;
-    int32_t  startBoundaryEndPos = 0;
-    int32_t  startBoundaryLength = 0;
+    File         file;
+    uint32_t     av;
+    int32_t      bytesInTransBuf = 0;
+    int32_t      startBoundaryEndPos = 0;
+    int32_t      startBoundaryLength = 0;
     ps_ptr<char> transBuf;
     ps_ptr<char> startBoundary;
-    uint32_t t = 0;
+    uint32_t     t = 0;
     // m_upload_items.reset();
 
     // check whether multipart/form-data
@@ -481,7 +505,7 @@ bool WebSrv::uploadfile(fs::FS& fs, ps_ptr<char> path, uint32_t contentLength, p
 
     if (!multipart) {
         // === simple Upload (no boundaries, e.g. json, text, binary) ===
-        uint8_t buffer[1024];
+        uint8_t  buffer[1024];
         uint32_t bytesRemaining = contentLength;
         uint32_t bytesRead = 0;
         uint32_t totalWritten = 0;
@@ -563,8 +587,7 @@ bool WebSrv::uploadfile(fs::FS& fs, ps_ptr<char> path, uint32_t contentLength, p
         m_upload_items.uploadfile = file;
         m_upload_items.bytes_left = contentLength - startBoundaryEndPos;
 
-        int written = file.write((uint8_t*)transBuf.get() + startBoundaryEndPos,
-                                 bytesInTransBuf - startBoundaryEndPos);
+        int written = file.write((uint8_t*)transBuf.get() + startBoundaryEndPos, bytesInTransBuf - startBoundaryEndPos);
         if (written > 0) m_upload_items.bytes_left -= written;
         m_handle_upload = true;
         break;
@@ -1185,9 +1208,8 @@ void WebSrv::sendStatus(uint16_t HTTPstatusCode) {
 String WebSrv::UTF8toASCII(String str) {
     uint16_t i = 0;
     String   res = "";
-    char     tab[96] = {96,  173, 155, 156, 32,  157, 32,  32,  32,  32,  166, 174, 170, 32,  32,  32,  248, 241, 253, 32,  32,  230, 32,  250, 32, 32,  167, 175, 172, 171, 32, 168,
-                        32,  32,  32,  32,  142, 143, 146, 128, 32,  144, 32,  32,  32,  32,  32,  32,  32,  165, 32,  32,  32,  32,  153, 32,  32, 32,  32,  32,  154, 32,  32, 225,
-                        133, 160, 131, 32,  132, 134, 145, 135, 138, 130, 136, 137, 141, 161, 140, 139, 32,  164, 149, 162, 147, 32,  148, 246, 32, 151, 163, 150, 129, 32,  32, 152};
+    char     tab[96] = {96, 173, 155, 156, 32, 157, 32,  32, 32, 32, 166, 174, 170, 32, 32, 32,  248, 241, 253, 32, 32,  230, 32,  250, 32,  32,  167, 175, 172, 171, 32,  168, 32, 32,  32,  32,  142, 143, 146, 128, 32, 144, 32,  32,  32,  32, 32, 32,
+                        32, 165, 32,  32,  32, 32,  153, 32, 32, 32, 32,  32,  154, 32, 32, 225, 133, 160, 131, 32, 132, 134, 145, 135, 138, 130, 136, 137, 141, 161, 140, 139, 32, 164, 149, 162, 147, 32,  148, 246, 32, 151, 163, 150, 129, 32, 32, 152};
     while (str[i] != 0) {
         if (str[i] == 0xC2) { // compute unicode from utf8
             i++;
@@ -1227,26 +1249,17 @@ std::string WebSrv::sanitize_utf8_replace(const char* input, size_t len) {
             s++;
         }
         // 2-Byte Sequenz
-        else if ((c >> 5) == 0x6 &&
-                 s + 1 < end &&
-                 (s[1] & 0xC0) == 0x80) {
+        else if ((c >> 5) == 0x6 && s + 1 < end && (s[1] & 0xC0) == 0x80) {
             output.append(reinterpret_cast<const char*>(s), 2);
             s += 2;
         }
         // 3-Byte Sequenz
-        else if ((c >> 4) == 0xE &&
-                 s + 2 < end &&
-                 (s[1] & 0xC0) == 0x80 &&
-                 (s[2] & 0xC0) == 0x80) {
+        else if ((c >> 4) == 0xE && s + 2 < end && (s[1] & 0xC0) == 0x80 && (s[2] & 0xC0) == 0x80) {
             output.append(reinterpret_cast<const char*>(s), 3);
             s += 3;
         }
         // 4-Byte Sequenz
-        else if ((c >> 3) == 0x1E &&
-                 s + 3 < end &&
-                 (s[1] & 0xC0) == 0x80 &&
-                 (s[2] & 0xC0) == 0x80 &&
-                 (s[3] & 0xC0) == 0x80) {
+        else if ((c >> 3) == 0x1E && s + 3 < end && (s[1] & 0xC0) == 0x80 && (s[2] & 0xC0) == 0x80 && (s[3] & 0xC0) == 0x80) {
             output.append(reinterpret_cast<const char*>(s), 4);
             s += 4;
         }

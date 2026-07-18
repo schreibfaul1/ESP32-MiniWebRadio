@@ -46,20 +46,11 @@
 #pragma once
 
 #include "Audio.h"
-#include "BH1750.h"
-#include "DLNAClient.h"
-#include "ESP32FtpServer.h"
-#include "IR.h"
 #include "SPIFFS.h"
 #include "base64.h"
 #include "driver/ledc.h"
-#include "es8311.h"
 #include "esp_log.h"
 #include "esp_psram.h"
-#include "kcx_bt_emitter.h"
-#include "mbedtls/sha1.h"
-#include "rtime.h"
-#include "websrv.h"
 #include <Arduino.h>
 #include <ArduinoOTA.h>
 #include <ESPmDNS.h>
@@ -73,19 +64,27 @@
 #include <WiFiClientSecure.h>
 #include <WiFiMulti.h>
 #include <Wire.h>
-#include <mbedtls/aes.h>
 #include <mbedtls/base64.h>
 #include <vector>
 
-Audio       audio;
-Preferences pref;
-WebSrv      webSrv;
-WiFiMulti   wifiMulti;
-RTIME       rtc;
-Ticker      ticker100ms;
-TwoWire     i2cBusOne = TwoWire(0); // additional HW, sensors, buttons, encoder etc
-TwoWire     i2cBusTwo = TwoWire(1); // external DAC, AC101 or ES8388
-SPIClass    spiBus(FSPI);
+#include "kcx_bt_emitter.h"
+#include "rtime.h"
+#include "websrv.h"
+#include "es8311.h"
+#include "BH1750.h"
+#include "DLNAClient.h"
+#include "ESP32FtpServer.h"
+#include "IR.h"
+
+extern Audio       audio;
+extern Preferences pref;
+extern WebSrv      webSrv;
+extern WiFiMulti   wifiMulti;
+extern RTIME       rtc;
+extern Ticker      ticker100ms;
+extern TwoWire     i2cBusOne; // additional HW, sensors, buttons, encoder etc
+extern TwoWire     i2cBusTwo; // external DAC, AC101 or ES8388
+extern SPIClass    spiBus;
 
 #ifdef TFT_MODE_SPI
     #include "tft_spi.h"
@@ -178,7 +177,8 @@ struct _emojis {
     const char orangeSquare[5] = {0xF0, 0x9F, 0x9F, 0xA7, 0x00}; // UTF-8: "🟧"
     const char purpleSquare[5] = {0xF0, 0x9F, 0x9F, 0xAA, 0x00}; // UTF-8: "🟪"
     const char brownSquare[5] = {0xF0, 0x9F, 0x9F, 0xAB, 0x00};  // UTF-8: "🟫"
-} emoji;
+};
+extern _emojis emoji;
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 enum status {
@@ -263,14 +263,16 @@ struct settings_s {
     uint8_t      numOfIrButtons = 0;
     ps_ptr<char> lastconnectedhost = {};
     ps_ptr<char> lastconnectedfile = {};
-} s_settings;
+};
+extern settings_s s_settings;
 
 struct volume_s {
     uint8_t cur_volume = 21;
     uint8_t ringVolume = 21;
     uint8_t volumeAfterAlarm = 12;
     uint8_t volumeSteps = 21;
-} s_volume;
+};
+extern volume_s s_volume;
 
 struct bt_emitter_s {
     bool         found = false;
@@ -280,14 +282,16 @@ struct bt_emitter_s {
     uint8_t      volume = 0;
     ps_ptr<char> mode = {};
     ps_ptr<char> version = {};
-} s_bt_emitter;
+};
+extern bt_emitter_s s_bt_emitter;
 
 struct tone_s {
     int16_t LP = 0;  // -40 ... +6 (dB)        audioI2S
     int16_t BP = 0;  // -40 ... +6 (dB)        audioI2S
     int16_t HP = 0;  // -40 ... +6 (dB)        audioI2S
     int16_t BAL = 0; // -16...0....+16         audioI2S
-} s_tone;
+};
+extern tone_s s_tone;
 
 struct i2c_items_s {
     bool es8311_found = false;
@@ -300,7 +304,8 @@ struct i2c_items_s {
     int  ft6x36u_addr = -1;
     bool bh1750_found = false;
     int  bh1750_addr = -1;
-} s_i2c_items;
+};
+extern i2c_items_s s_i2c_items;
 
 struct tag_s {
     ps_ptr<char> none = "";
@@ -327,7 +332,8 @@ struct tag_s {
     ps_ptr<char> bt_emitter = "BT_Emitter:";
     ps_ptr<char> sys_info = "System_Info:";
     ps_ptr<char> recorder = "Recorder:";
-} s_tag;
+};
+extern tag_s s_tag;
 
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
@@ -375,7 +381,7 @@ inline void printflnCut(ps_ptr<char> tag, ps_ptr<char> item, const char* color, 
     printfln(tag, "{}{}{}", item, color, str);
 }
 
-int log_redirect_handler(const char* format, va_list args) {
+inline int log_redirect_handler(const char* format, va_list args) {
     va_list args_len;
     va_copy(args_len, args);
     char probe[1];
@@ -710,7 +716,7 @@ inline char* x_ps_strndup(const char* str, uint16_t n) { // with '\0' terminatio
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-int find_first_of(const char* source, const char* delimiters, int start = 0) {
+inline int find_first_of(const char* source, const char* delimiters, int start = 0) {
     for (int i = start; source[i] != '\0'; ++i) {     // search at start
         for (int j = 0; delimiters[j] != '\0'; ++j) { // search delimiters
             if (source[i] == delimiters[j]) {

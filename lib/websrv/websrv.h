@@ -2,7 +2,7 @@
  * websrv.h
  *
  *  Created on: 09.07.2017
- *  updated on: 05.05.2025
+ *  updated on:#include "psa/crypto.h" 05.05.2025
  *      Author: Wolle
  */
 
@@ -11,7 +11,14 @@
 #include "Audio.h"
 #include "base64.h"
 #include "mbedtls/base64.h"
-#include "mbedtls/sha1.h"
+#include <esp_idf_version.h>
+
+#if ESP_IDF_VERSION_MAJOR >= 6
+    #include "psa/crypto.h"
+#else
+    #include "mbedtls/sha1.h"
+#endif
+
 
 extern __attribute__((weak)) void WEBSRV_onCommand(const char* cmd, const String param, const String arg);
 extern __attribute__((weak)) void WEBSRV_onRequest(const char* cmd, const char* param, const char* arg, const char* contentType, uint32_t contentLength);
@@ -82,7 +89,7 @@ class WebSrv {
     upload_items m_upload_items;
 
   protected:
-    String      calculateWebSocketResponseKey(String sec_WS_key);
+    String      calculateWebSocketResponseKey(const String& sec_WS_key);
     void        printWebSocketHeader(String wsRespKey);
     const char* getContentType(ps_ptr<char>& filename);
     boolean     handlehttp();

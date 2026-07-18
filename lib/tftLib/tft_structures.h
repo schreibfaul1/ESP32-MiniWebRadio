@@ -3,27 +3,27 @@
 #include <stdint-gcc.h>
 
 struct Pins {
-    int8_t b0;
-    int8_t b1;
-    int8_t b2;
-    int8_t b3;
-    int8_t b4;
-    int8_t g0;
-    int8_t g1;
-    int8_t g2;
-    int8_t g3;
-    int8_t g4;
-    int8_t g5;
-    int8_t r0;
-    int8_t r1;
-    int8_t r2;
-    int8_t r3;
-    int8_t r4;
-    int8_t hsync;
-    int8_t vsync;
-    int8_t de;
-    int8_t pclk;
-    int8_t bl;
+    gpio_num_t b0;
+    gpio_num_t b1;
+    gpio_num_t b2;
+    gpio_num_t b3;
+    gpio_num_t b4;
+    gpio_num_t g0;
+    gpio_num_t g1;
+    gpio_num_t g2;
+    gpio_num_t g3;
+    gpio_num_t g4;
+    gpio_num_t g5;
+    gpio_num_t r0;
+    gpio_num_t r1;
+    gpio_num_t r2;
+    gpio_num_t r3;
+    gpio_num_t r4;
+    gpio_num_t hsync;
+    gpio_num_t vsync;
+    gpio_num_t de;
+    gpio_num_t pclk;
+    gpio_num_t bl;
 };
 
 struct Timing {

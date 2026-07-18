@@ -34,6 +34,24 @@ SET_LOOP_TASK_STACK_SIZE(14 * 1024);
 
 // global variables
 
+Audio       audio;
+Preferences pref;
+WebSrv      webSrv;
+WiFiMulti   wifiMulti;
+RTIME       rtc;
+Ticker      ticker100ms;
+TwoWire     i2cBusOne = TwoWire(0); // additional HW, sensors, buttons, encoder etc
+TwoWire     i2cBusTwo = TwoWire(1); // external DAC, AC101 or ES8388
+SPIClass    spiBus(FSPI);
+
+_emojis     emoji;
+settings_s  s_settings;
+volume_s    s_volume;
+bt_emitter_s s_bt_emitter;
+tone_s      s_tone;
+i2c_items_s s_i2c_items;
+tag_s       s_tag;
+
 char _hl_item[18][40]{"",                    // none
                       "Internet Radio",      // "* интернет-радио *"  "ραδιόφωνο Internet"
                       "Audio Player",        // "** цифрово́й плеер **
@@ -602,7 +620,7 @@ void show_DLNA_FileName(const char* fname) {
 }
 
 void showPlsFileNumber() {
-    char buf[15];
+    char buf[20];
     sprintf(buf, "%03u/%03u", s_plsCurPos, s_PLS_content.size());
     dispFooter.updateFileNr(buf);
 }
@@ -2561,6 +2579,9 @@ void loop() {
             printfln(s_tag.terminal, "set volume fading speed {}, current: {}", t, audio.settings.VOL_FADING_SPEED);
             audio.settings.VOL_FADING_SPEED = t;
         }
+        if (r.startsWith("ssbs")) { //show samples buffer status
+        //    audio.samplesBufferStatus();
+        }
     }
 }
 
@@ -2706,21 +2727,15 @@ void my_audio_info(Audio::msg_t m) {
 // ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // void audio_process_i2s(int32_t* outBuff, int16_t validSamples, bool* continueI2S) {
 
-//     int16_t* buff16 = reinterpret_cast<int16_t*>(outBuff);
-
-//     int16_t sineWaveTable[44] = {
-//          0,   3743,   7377,  10793,  14082,  17136,  19848,  22113,  23825,  24908,
-//       25311,  24908,  23825,  22113,  19848,  17136,  14082,  10793,   7377,   3743,
-//          0,  -3743,  -7377, -10793, -14082, -17136, -19848, -22113, -23825, -24908,
-//      -25311, -24908, -23825, -22113, -19848, -17136, -14082, -10793,  -7377,  -3743
-//     };
+//     int32_t sineWaveTable[40] = {0, 245301248,  483459072,  707329024,  922877952,  1123024896,  1300758528,  1449197568,  1561395200,  1632370688,  1658781696,  1632370688,  1561395200,  1449197568,  1300758528,  1123024896,  922877952,  707329024,  483459072,  245301248,
+//                                  0, -245301248, -483459072, -707329024, -922877952, -1123024896, -1300758528, -1449197568, -1561395200, -1632370688, -1658781696, -1632370688, -1561395200, -1449197568, -1300758528, -1123024896, -922877952, -707329024, -483459072, -245301248};
 
 //     static uint8_t tabPtr = 0;
-//     for(int i= 0; i < validSamples; i++){
-//        buff16[i * 4 + 1] += sineWaveTable[tabPtr] /50; // channel left
-//        buff16[i * 4 + 3] += sineWaveTable[tabPtr] /50; // channel right
+//     for (int i = 0; i < validSamples / 2; i++) {
+//         outBuff[i * 2] += sineWaveTable[tabPtr] / 50;     // channel left
+//         outBuff[i * 2 + 1] += sineWaveTable[tabPtr] / 50; // channel right
 //         tabPtr++;
-//         if(tabPtr == 44) tabPtr = 0;
+//         if (tabPtr == 40) tabPtr = 0;
 //     }
 //     *continueI2S = true;
 // }
