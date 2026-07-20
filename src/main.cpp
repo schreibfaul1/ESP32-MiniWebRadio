@@ -1195,6 +1195,11 @@ void setup() {
     s_stationURL = s_settings.lastconnectedhost;
     setStation(s_cur_station);
     changeState(RADIO, 0);
+
+    // ES8311 es;
+    // es.begin(&i2cBusOne, 0x18);
+    // es.setVolume(50);
+    // es.setBitsPerSample(32);
 }
 
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
