@@ -2098,8 +2098,6 @@ void loop() {
     if (s_f_100ms) { // calls every 0.1 second
         s_f_100ms = false;
 
-        if (s_state == RADIO && s_subState_radio == 0) VUmeter_RA.update(audio.getVUlevel());
-
         while (s_timeCounter.timer) {
             s_timeCounter.tmp--;
             if (s_timeCounter.tmp) break;
@@ -2701,6 +2699,9 @@ void my_audio_info(Audio::msg_t m) {
             break;
 
         case Audio::evt_genre: printfln(s_tag.audio_info, "genre: " ANSI_ESC_YELLOW "{}", m.msg); break;
+
+        case Audio::evt_vu:
+            {if (s_state == RADIO && s_subState_radio == 0) VUmeter_RA.update(m.vec[0], m.vec[1], m.vec[2], m.vec[3]);} break;
 
         case Audio::evt_log: printfln(m.s, "{}", m.msg); break;
 

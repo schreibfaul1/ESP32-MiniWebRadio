@@ -1618,8 +1618,12 @@ class vuMeter : public RegisterTable {
     bool         m_clicked = false;
     bool         m_content_has_changed = false;
     bool         m_first_call = true;
-    uint8_t      m_VUleftCh = 0;  // VU meter left channel
-    uint8_t      m_VUrightCh = 0; // VU meter right channel
+    uint8_t      m_VUleftCh = 0;      // VU meter left channel
+    uint8_t      m_VUrightCh = 0;     // VU meter right channel
+    uint8_t      m_max_VUleftCh = 0;  // VU meter max_left channel
+    uint8_t      m_max_VUrightCh = 0; // VU meter max_right channel
+    uint64_t     m_barLeft;           // Bit = Bars
+    uint64_t     m_peakLeft;          // Bit = Peak
     releasedArg  m_ra;
     uint8_t      m_segm_w = 0;
     uint8_t      m_segm_h = 0;
@@ -1628,6 +1632,11 @@ class vuMeter : public RegisterTable {
     uint16_t     m_frame_y = 0;
     uint16_t     m_frame_w = 0;
     uint16_t     m_frame_h = 0;
+
+#define NUM_SEGMENTS 26
+    enum SegmentState : uint8_t { OFF, BAR, PEAK };
+    SegmentState m_leftState[NUM_SEGMENTS];
+    SegmentState m_rightState[NUM_SEGMENTS];
 
   public:
     vuMeter(ps_ptr<char> name) {
@@ -1645,10 +1654,10 @@ class vuMeter : public RegisterTable {
         m_frame_y = y + paddig_top;
         uint16_t frame_w = m_w - paddig_left - paddig_right;
         uint16_t frame_h = m_h - paddig_top - paddig_bottom;
-        m_segm_w = ((frame_w - 3 * m_frameSize) / 2) - m_frameSize;  // 2 columns + 3 frameSizes
-        m_segm_h = ((frame_h - 2 * m_frameSize) / 12) - m_frameSize; // 12 rows + 2 frameSizes
+        m_segm_w = ((frame_w - 3 * m_frameSize) / 2) - m_frameSize;            // 2 columns + 3 frameSizes
+        m_segm_h = ((frame_h - 2 * m_frameSize) / NUM_SEGMENTS) - m_frameSize; // 12 rows + 2 frameSizes
         m_frame_w = 2 * m_segm_w + 3 * m_frameSize;
-        m_frame_h = 12 * m_segm_h + 13 * m_frameSize;
+        m_frame_h = NUM_SEGMENTS * m_segm_h + (NUM_SEGMENTS + 1) * m_frameSize;
     }
 
     ps_ptr<char> get_name() { return m_name; }
@@ -1671,7 +1680,7 @@ class vuMeter : public RegisterTable {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
         }
         getTFT().drawRect(m_frame_x, m_frame_y, m_frame_w, m_frame_h, m_frameColor);
-        for (uint8_t i = 0; i < 12; i++) {
+        for (uint8_t i = 0; i < NUM_SEGMENTS; i++) {
             drawRect(i, 0, 0);
             drawRect(i, 1, 0);
         }
@@ -1696,27 +1705,41 @@ class vuMeter : public RegisterTable {
         h = m_h;
     }
 
-    void update(uint16_t vum) {
+    void update(uint8_t l, uint8_t r, uint8_t peak_l, uint8_t peak_r) {
         if (!m_enabled) return;
-        uint8_t left = map_l(vum >> 8, 0, 255, 0, 12);
-        uint8_t right = map_l(vum & 0x00FF, 0, 255, 0, 12);
+        uint8_t bars_left = map_l(l, 0, 255, 0, NUM_SEGMENTS - 1);
+        uint8_t bars_right = map_l(r, 0, 255, 0, NUM_SEGMENTS - 1);
+        uint8_t peak_left = map_l(peak_l, 0, 255, 0, NUM_SEGMENTS - 1);
+        uint8_t peak_right = map_l(peak_r, 0, 255, 0, NUM_SEGMENTS - 1);
 
         xSemaphoreTake(mutex_display, portMAX_DELAY);
-        if (left > m_VUleftCh) {
-            for (int32_t i = m_VUleftCh; i < left; i++) { drawRect(i, 1, 1); }
+        for (int i = 0; i < NUM_SEGMENTS; i++) {
+            SegmentState newState = OFF;
+            if (i < bars_left) newState = BAR;
+            if (i == peak_left) newState = PEAK; // Peak hat Vorrang
+            if (newState != m_leftState[i]) {
+                switch (newState) {
+                    case OFF: drawRect(i, 1, 0); break;
+                    case BAR: drawRect(i, 1, 1); break;
+                    case PEAK: drawRect(i, 1, 1); break;
+                }
+                m_leftState[i] = newState;
+            }
         }
-        if (left < m_VUleftCh) {
-            for (int32_t i = left; i < m_VUleftCh; i++) { drawRect(i, 1, 0); }
-        }
-        m_VUleftCh = left;
 
-        if (right > m_VUrightCh) {
-            for (int32_t i = m_VUrightCh; i < right; i++) { drawRect(i, 0, 1); }
+        for (int i = 0; i < NUM_SEGMENTS; i++) {
+            SegmentState newState = OFF;
+            if (i < bars_right) newState = BAR;
+            if (i == peak_right) newState = PEAK; // Peak hat Vorrang
+            if (newState != m_rightState[i]) {
+                switch (newState) {
+                    case OFF: drawRect(i, 0, 0); break;
+                    case BAR: drawRect(i, 0, 1); break;
+                    case PEAK: drawRect(i, 0, 1); break;
+                }
+                m_rightState[i] = newState;
+            }
         }
-        if (right < m_VUrightCh) {
-            for (int32_t i = right; i < m_VUrightCh; i++) { drawRect(i, 0, 0); }
-        }
-        m_VUrightCh = right;
         xSemaphoreGive(mutex_display);
     }
 
@@ -1744,18 +1767,18 @@ class vuMeter : public RegisterTable {
         uint16_t y_end = m_frame_y + m_frame_h - m_frameSize - m_segm_h;
         uint16_t xPos = m_frame_x + m_frameSize + col * (m_segm_w + m_frameSize);
         uint16_t yPos = y_end - row * (m_frameSize + m_segm_h);
-        if (row > 12) return;
-        switch (row) {
-            case 0 ... 6: // green
-                br ? color = TFT_GREEN : color = TFT_DARKGREEN;
-                break;
-            case 7 ... 9: // yellow
-                br ? color = TFT_YELLOW : color = TFT_DARKYELLOW;
-                break;
-            case 10 ... 11: // red
-                br ? color = TFT_RED : color = TFT_DARKRED;
-                break;
-        }
+        if (row > NUM_SEGMENTS) return;
+
+        float s = (float)NUM_SEGMENTS / 100.0;
+        uint8_t green = 58.0 * s;
+        uint8_t yellow = 85.0 * s;
+//log_i("g %f, y %f", green, yellow);
+        if (row < green)
+            br ? color = TFT_GREEN : color = TFT_DARKGREEN; // green
+        else if (row < yellow)
+            br ? color = TFT_YELLOW : color = TFT_DARKYELLOW; // yellow
+        else
+            br ? color = TFT_LIGHTRED : color = TFT_DARKRED; // red
         getTFT().fillRect(xPos, yPos, m_segm_w, m_segm_h, color);
     };
 };
