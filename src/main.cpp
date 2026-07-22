@@ -3391,6 +3391,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
                                         webSrv.send("test=", p.c_get());
                                         printfln(s_tag.webserver, "audiotask .. stackHighWaterMark: {} bytes", (long unsigned)audio.getHighWatermark() * 4);
                                         printfln(s_tag.webserver, "looptask ... stackHighWaterMark: {} bytes", (long unsigned)uxTaskGetStackHighWaterMark(NULL) * 4);
+                                        printfln(s_tag.webserver, "maxAllocHeap {}, maxAllocPsram {} ", ESP.getMaxAllocHeap(), ESP.getMaxAllocPsram());
                                         return;}
 
     CMD_EQUALS("get_mute"){             s_f_mute == true ? webSrv.send("mute=", "1") : webSrv.send("mute=", "0"); return;}

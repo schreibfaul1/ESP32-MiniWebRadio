@@ -1705,41 +1705,36 @@ class vuMeter : public RegisterTable {
         h = m_h;
     }
 
+    void buildState(uint8_t bars, uint8_t peak, bool hasSignal, SegmentState* state, bool channel) {
+        for (int i = 0; i < NUM_SEGMENTS; i++) {
+            SegmentState newState = OFF;
+            if (i < bars) newState = BAR;
+            if (hasSignal && i == peak) newState = PEAK;
+            if (newState == state[i]) continue;
+            switch (newState) {
+                case OFF: drawRect(i, channel, 0); break;
+                case BAR: drawRect(i, channel, 1); break;
+                case PEAK:
+                    drawRect(i, channel, 1); // später drawPeak()
+                    break;
+            }
+            state[i] = newState;
+        }
+    }
+
     void update(uint8_t l, uint8_t r, uint8_t peak_l, uint8_t peak_r) {
         if (!m_enabled) return;
+
         uint8_t bars_left = map_l(l, 0, 255, 0, NUM_SEGMENTS - 1);
         uint8_t bars_right = map_l(r, 0, 255, 0, NUM_SEGMENTS - 1);
         uint8_t peak_left = map_l(peak_l, 0, 255, 0, NUM_SEGMENTS - 1);
         uint8_t peak_right = map_l(peak_r, 0, 255, 0, NUM_SEGMENTS - 1);
 
         xSemaphoreTake(mutex_display, portMAX_DELAY);
-        for (int i = 0; i < NUM_SEGMENTS; i++) {
-            SegmentState newState = OFF;
-            if (i < bars_left) newState = BAR;
-            if (i == peak_left) newState = PEAK; // Peak hat Vorrang
-            if (newState != m_leftState[i]) {
-                switch (newState) {
-                    case OFF: drawRect(i, 1, 0); break;
-                    case BAR: drawRect(i, 1, 1); break;
-                    case PEAK: drawRect(i, 1, 1); break;
-                }
-                m_leftState[i] = newState;
-            }
-        }
 
-        for (int i = 0; i < NUM_SEGMENTS; i++) {
-            SegmentState newState = OFF;
-            if (i < bars_right) newState = BAR;
-            if (i == peak_right) newState = PEAK; // Peak hat Vorrang
-            if (newState != m_rightState[i]) {
-                switch (newState) {
-                    case OFF: drawRect(i, 0, 0); break;
-                    case BAR: drawRect(i, 0, 1); break;
-                    case PEAK: drawRect(i, 0, 1); break;
-                }
-                m_rightState[i] = newState;
-            }
-        }
+        buildState(bars_left, peak_left, l > 0, m_leftState, true);
+        buildState(bars_right, peak_right, r > 0, m_rightState, false);
+
         xSemaphoreGive(mutex_display);
     }
 
@@ -1769,10 +1764,10 @@ class vuMeter : public RegisterTable {
         uint16_t yPos = y_end - row * (m_frameSize + m_segm_h);
         if (row > NUM_SEGMENTS) return;
 
-        float s = (float)NUM_SEGMENTS / 100.0;
+        float   s = (float)NUM_SEGMENTS / 100.0;
         uint8_t green = 58.0 * s;
         uint8_t yellow = 85.0 * s;
-//log_i("g %f, y %f", green, yellow);
+        // log_i("g %f, y %f", green, yellow);
         if (row < green)
             br ? color = TFT_GREEN : color = TFT_DARKGREEN; // green
         else if (row < yellow)
