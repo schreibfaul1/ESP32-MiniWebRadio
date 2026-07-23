@@ -551,7 +551,7 @@ class pictureBox : public RegisterTable {
     }
     ~pictureBox() {}
 
-    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t padding_left, uint8_t padding_right, uint8_t padding_top, uint8_t padding_bottom) {
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t padding_left = 0, uint8_t padding_right = 0, uint8_t padding_top = 0, uint8_t padding_bottom = 0) {
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w; // width
@@ -3990,7 +3990,7 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
     }
     void placingDigits(uint16_t w, uint16_t h) {
         uint16_t digits_y = 0, digits_w = 0, colon_w = 0, digits_h = 0, digits_paddig_l = 0, alarmdays_padding_l = 0;
-        uint16_t h4 = h / 4 + 2; // [1/4 days, time + 3/4 digits]
+        uint16_t h4 = h / 4 + 2; // [1/4 days + 2px, time + 3/4 digits - 2px]  (2px for disp size s)
 
         imgSize img = GetImageSize("/digits/m/0green.jpg"); // get size of digit '0'
         if (img.w == 0 || img.h == 0) {
