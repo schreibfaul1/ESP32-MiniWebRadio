@@ -1620,8 +1620,8 @@ class vuMeter : public RegisterTable {
     bool             m_content_has_changed = false;
     bool             m_first_call = true;
     bool             m_transparency = false;
-    uint64_t         m_barLeft;           // Bit = Bars
-    uint64_t         m_peakLeft;          // Bit = Peak
+    uint64_t         m_barLeft;  // Bit = Bars
+    uint64_t         m_peakLeft; // Bit = Peak
     releasedArg      m_ra;
     uint8_t          m_segm_w = 0;
     uint8_t          m_segm_h = 0;
@@ -1680,9 +1680,9 @@ class vuMeter : public RegisterTable {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+            getTFT().drawRect(m_frame_x, m_frame_y, m_frame_w, m_frame_h, m_frameColor);
         }
 
-        getTFT().drawRect(m_frame_x, m_frame_y, m_frame_w, m_frame_h, m_frameColor);
         for (uint8_t i = 0; i < NUM_SEGMENTS; i++) {
             m_leftState[i] = OFF;
             m_rightState[i] = OFF;
@@ -1766,24 +1766,40 @@ class vuMeter : public RegisterTable {
 
   private:
     void drawRect(uint8_t row, uint8_t col, bool br) {
-        uint16_t color = 0;
+        if (row >= NUM_SEGMENTS || col > 1) return;
+
         uint16_t y_end = m_frame_y + m_frame_h - m_frameSize - m_segm_h;
         uint16_t xPos = m_frame_x + m_frameSize + col * (m_segm_w + m_frameSize);
         uint16_t yPos = y_end - row * (m_frameSize + m_segm_h);
-        if (row > NUM_SEGMENTS) return;
 
         float   s = (float)NUM_SEGMENTS / 100.0;
-        uint8_t green = 58.0 * s;
-        uint8_t yellow = 85.0 * s;
-        // log_i("g %f, y %f", green, yellow);
-        if (row < green)
-            br ? color = TFT_GREEN : color = TFT_DARKGREEN; // green
-        else if (row < yellow)
-            br ? color = TFT_YELLOW : color = TFT_DARKYELLOW; // yellow
-        else
-            br ? color = TFT_LIGHTRED : color = TFT_DARKRED; // red
-        getTFT().fillRect(xPos, yPos, m_segm_w, m_segm_h, color);
-    };
+        uint8_t greenLimit = 58.0 * s;
+        uint8_t yellowLimit = 85.0 * s;
+
+        int32_t activeColor;
+        int32_t inactiveColor;
+
+        if (row < greenLimit) {
+            activeColor = TFT_GREEN;
+            inactiveColor = m_transparency ? TFT_TRANSPARENT : TFT_DARKGREEN;
+        } else if (row < yellowLimit) {
+            activeColor = TFT_YELLOW;
+            inactiveColor = m_transparency ? TFT_TRANSPARENT : TFT_DARKYELLOW;
+        } else {
+            activeColor = TFT_LIGHTRED;
+            inactiveColor = m_transparency ? TFT_TRANSPARENT : TFT_DARKRED;
+        }
+
+        int32_t color = br ? activeColor : inactiveColor;
+
+        if (color == TFT_TRANSPARENT) {
+            uint16_t srcX = xPos - m_x;
+            uint16_t srcY = yPos - m_y;
+            getTFT().copyFramebuffer(m_cache_bg.get(), m_w, m_h, srcX, srcY, FB_VISIBLE, xPos, yPos, m_segm_w, m_segm_h);
+        } else {
+            getTFT().fillRect(xPos, yPos, m_segm_w, m_segm_h, color);
+        }
+    }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // *** C O M P O S E D   O B J E C T S
