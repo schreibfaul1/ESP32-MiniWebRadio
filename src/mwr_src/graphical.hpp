@@ -177,10 +177,16 @@ class button1state : public RegisterTable { // click button
     bool             m_clicked = false;
     bool             m_active = true;
     bool             m_first_call = true;
+    uint8_t          m_h_align = TFT_ALIGN_CENTER;
+    uint8_t          m_v_align = TFT_ALIGN_CENTER;
     int16_t          m_x = 0;
     int16_t          m_y = 0;
     int16_t          m_w = 0;
     int16_t          m_h = 0;
+    uint16_t         m_button_image_w = 0;
+    uint16_t         m_button_image_h = 0;
+    uint16_t         m_button_image_x = 0;
+    uint16_t         m_button_image_y = 0;
     int32_t          m_bg_color = TFT_TRANSPARENT;
     ps_ptr<char>     m_idlePicturePath;
     ps_ptr<char>     m_clickPicturePath;
@@ -223,7 +229,7 @@ class button1state : public RegisterTable { // click button
             return;
         }
         if (!m_cache_idle_pic.valid()) {
-            bool res = drawImage(m_idlePicturePath, m_x, m_y, m_w, m_h);
+            bool res = drawImage(m_idlePicturePath, m_button_image_x, m_button_image_y, m_button_image_w, m_button_image_h);
             if (res) {
                 m_cache_idle_pic.alloc_array(m_w * m_h, m_name.c_get());
                 getTFT().copyFramebuffer(FB_VISIBLE, m_cache_idle_pic.get(), m_x, m_y, m_w, m_h);
@@ -263,11 +269,21 @@ class button1state : public RegisterTable { // click button
             m_focusPicturePath = m_name + "_focus.png";
             m_inactivePicturePath = m_name + "_inactive.png";
         }
+        imgSize img = GetImageSize(m_idlePicturePath);
+        m_button_image_w = img.w;
+        m_button_image_h = img.h;
+        if (m_button_image_w > m_w || m_button_image_h > m_h) {
+            MWR_LOG_ERROR("m_button_image_w: {} > m_w or m_button_image_h {} > m_h", m_button_image_w, m_w, m_button_image_h, m_h);
+            return;
+        }
+        m_button_image_x = m_x + (m_w - m_button_image_w) / 2;
+        m_button_image_y = m_y + (m_h - m_button_image_h) / 2;
     }
 
     bool click() { // e.g. from IR
         if (!m_enabled) { return false; }
-        drawImage(m_clickPicturePath, m_x, m_y, m_w, m_h);
+        MWR_LOG_DEBUG("m_button_image_x {}, m_button_image_y {}, m_button_image_w {}, m_button_image_h {}, m_x {}, m_y {}, m_w {}, m_h {}", m_button_image_x, m_button_image_y, m_button_image_w, m_button_image_h, m_x, m_y, m_w, m_h);
+        drawImage(m_clickPicturePath, m_button_image_x, m_button_image_y, m_button_image_w, m_button_image_h);
         m_clicked = true;
         if (graphicObjects_OnClick) graphicObjects_OnClick(m_name, m_enabled);
         return true;
@@ -279,7 +295,8 @@ class button1state : public RegisterTable { // click button
         if (x > m_x + m_w) return false;
         if (y > m_y + m_h) return false;
         if (m_enabled) {
-            drawImage(m_clickPicturePath, m_x, m_y, m_w, m_h);
+            MWR_LOG_DEBUG("m_button_image_x {}, m_button_image_y {}, m_button_image_w {}, m_button_image_h {}, m_x {}, m_y {}, m_w {}, m_h {}", m_button_image_x, m_button_image_y, m_button_image_w, m_button_image_h, m_x, m_y, m_w, m_h);
+            drawImage(m_clickPicturePath, m_button_image_x, m_button_image_y, m_button_image_w, m_button_image_h);
             m_clicked = true;
         }
         if (graphicObjects_OnClick) graphicObjects_OnClick(m_name, m_enabled);
@@ -289,7 +306,7 @@ class button1state : public RegisterTable { // click button
     bool released() {
         if (!m_enabled) return false;
         if (!m_clicked) return false;
-        drawImage(m_idlePicturePath, m_x, m_y, m_w, m_h);
+        drawImage(m_idlePicturePath, m_button_image_x, m_button_image_y, m_button_image_w, m_button_image_h);
         m_clicked = false;
         if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
         return true;
@@ -307,17 +324,17 @@ class button1state : public RegisterTable { // click button
         }
         if (focus == m_focus) return m_focus;
         if (focus) {
-            drawImage(m_focusPicturePath, m_x, m_y, m_w, m_h);
+            drawImage(m_focusPicturePath, m_button_image_x, m_button_image_y, m_button_image_w, m_button_image_h);
             m_focus = true;
         } else {
-            drawImage(m_idlePicturePath, m_x, m_y, m_w, m_h);
+            drawImage(m_idlePicturePath, m_button_image_x, m_button_image_y, m_button_image_w, m_button_image_h);
             m_focus = false;
         }
         return m_focus;
     }
 
     void setInactive() {
-        drawImage(m_inactivePicturePath, m_x, m_y, m_w, m_h);
+        drawImage(m_inactivePicturePath, m_button_image_x, m_button_image_y, m_button_image_w, m_button_image_h);
         m_enabled = false;
         m_active = false;
     }
@@ -622,28 +639,28 @@ class pictureBox : public RegisterTable {
 
   private:
     void align() {
-        if(m_image_w > m_w){
+        if (m_image_w > m_w) {
             MWR_LOG_ERROR("m_image_w: {} > m_w: {}, {}", m_image_w, m_w, m_PicturePath);
             return;
         }
-        if(m_image_h > m_h){
+        if (m_image_h > m_h) {
             MWR_LOG_ERROR("m_image_h: {} > m_h: {}, {}", m_image_h, m_h, m_PicturePath);
             return;
         }
-        if(m_padding_left + m_padding_right + m_image_w > m_w){
+        if (m_padding_left + m_padding_right + m_image_w > m_w) {
             MWR_LOG_WARN("m_padding_left: {}, m_padding_right: {}, m_image_w: {} > m_w; {}, {}", m_padding_left, m_padding_right, m_image_w, m_w, m_PicturePath);
             return;
         }
-        if(m_padding_top + m_padding_bottom + m_image_h > m_h){
+        if (m_padding_top + m_padding_bottom + m_image_h > m_h) {
             MWR_LOG_WARN("m_padding_top: {}, m_padding_bottom: {}, m_image_h: {} > m_h; {}, {}", m_padding_top, m_padding_bottom, m_image_h, m_h, m_PicturePath);
             return;
         }
-        if(m_h_align == TFT_ALIGN_LEFT) m_image_x = m_x + m_padding_left;
-        if(m_h_align == TFT_ALIGN_CENTER) m_image_x = m_x + (m_w - m_image_w) / 2;
-        if(m_h_align == TFT_ALIGN_RIGHT) m_image_x = m_x + (m_w -m_image_w) - m_padding_right;
-        if(m_v_align == TFT_ALIGN_TOP) m_image_y = m_y + m_padding_top;
-        if(m_v_align == TFT_ALIGN_CENTER) m_image_y = m_y + (m_h - m_image_h) / 2;
-        if(m_v_align == TFT_ALIGN_DOWN) m_image_y = m_y + (m_h - m_image_h) - m_padding_bottom;
+        if (m_h_align == TFT_ALIGN_LEFT) m_image_x = m_x + m_padding_left;
+        if (m_h_align == TFT_ALIGN_CENTER) m_image_x = m_x + (m_w - m_image_w) / 2;
+        if (m_h_align == TFT_ALIGN_RIGHT) m_image_x = m_x + (m_w - m_image_w) - m_padding_right;
+        if (m_v_align == TFT_ALIGN_TOP) m_image_y = m_y + m_padding_top;
+        if (m_v_align == TFT_ALIGN_CENTER) m_image_y = m_y + (m_h - m_image_h) / 2;
+        if (m_v_align == TFT_ALIGN_DOWN) m_image_y = m_y + (m_h - m_image_h) - m_padding_bottom;
     }
 
   public:

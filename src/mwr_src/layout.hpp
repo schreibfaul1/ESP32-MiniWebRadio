@@ -108,7 +108,7 @@ constexpr uint16_t y_area2 = v_res - h_footer - h_area;                      // 
 constexpr uint16_t y_btn = y_area2 + h_area / 2 + (h_area / 4 - hw_btn / 2); // center in the lower half of area2
 constexpr uint16_t h_progBar = (h_area / 2);                                 // height progressBar and volumeSlider = half of y_area - 20%
 constexpr uint16_t y_progbar = y_area2;                                      // y_area2 + 10%
-constexpr uint16_t h_EQ = (2 * h_area - hw_btn) / 4;
+constexpr uint16_t h_EQ = (y_btn - h_footer) / 4;
 
 // -----------------------------------------------------------------------------------
 // window definitions .pos(x, y) .size(w, h) .padding(l, r, t, b)
@@ -195,7 +195,7 @@ constexpr uint16_t y_area2 = v_res - h_footer - h_area;                      // 
 constexpr uint16_t y_btn = y_area2 + h_area / 2 + (h_area / 4 - hw_btn / 2); // center in the lower half of area2
 constexpr uint16_t h_progBar = (h_area / 2);                                 // height progressBar and volumeSlider = half of y_area
 constexpr uint16_t y_progbar = y_area2;                                      // y_area2
-constexpr uint16_t h_EQ = (2 * h_area - hw_btn) / 4;
+constexpr uint16_t h_EQ = (y_btn - h_footer) / 4;
 
 // -----------------------------------------------------------------------------------
 // window definitions .pos(x, y) .size(w, h) .padding(l, r, t, b)
@@ -281,7 +281,7 @@ constexpr uint16_t y_area2 = v_res - h_footer - h_area;                      // 
 constexpr uint16_t y_btn = y_area2 + h_area / 2 + (h_area / 4 - hw_btn / 2); // center in the lower half of area2
 constexpr uint16_t h_progBar = (h_area / 2);                                 // height progressBar and volumeSlider = half of y_area
 constexpr uint16_t y_progbar = y_area2;                                      // y_area2
-constexpr uint16_t h_EQ = (2 * h_area - hw_btn) / 4;
+constexpr uint16_t h_EQ = (y_btn - h_footer) / 4;
 
 // -----------------------------------------------------------------------------------
 // window definitions .pos(x, y) .size(w, h) .padding(l, r, t, b)
@@ -366,7 +366,7 @@ constexpr uint16_t y_area2 = v_res - h_footer - h_area;                      // 
 constexpr uint16_t y_btn = y_area2 + h_area / 2 + (h_area / 4 - hw_btn / 2); // center in the lower half of area2
 constexpr uint16_t h_progBar = (h_area / 2);                                 // height progressBar and volumeSlider = half of y_area
 constexpr uint16_t y_progbar = y_area2;                                      // y_area2
-constexpr uint16_t h_EQ = (2 * h_area - hw_btn) / 4;
+constexpr uint16_t h_EQ = (y_btn - h_footer) / 4;
 
 // -----------------------------------------------------------------------------------
 // window definitions .pos(x, y) .size(w, h) .padding(l, r, t, b)
