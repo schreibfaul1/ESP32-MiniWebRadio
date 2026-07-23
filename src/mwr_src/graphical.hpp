@@ -1605,33 +1605,35 @@ class textbutton : public RegisterTable {
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class vuMeter : public RegisterTable {
   private:
-    uint16_t     m_x = 0;
-    uint16_t     m_y = 0;
-    uint16_t     m_w = 0;
-    uint16_t     m_h = 0;
-    int32_t      m_bg_color = TFT_TRANSPARENT;
-    uint32_t     m_frameColor = TFT_DARKGREY;
-    ps_ptr<char> m_name;
-    bool         m_enabled = false;
-    bool         m_focus = false;
-    bool         m_active = true;
-    bool         m_clicked = false;
-    bool         m_content_has_changed = false;
-    bool         m_first_call = true;
-    uint8_t      m_VUleftCh = 0;      // VU meter left channel
-    uint8_t      m_VUrightCh = 0;     // VU meter right channel
-    uint8_t      m_max_VUleftCh = 0;  // VU meter max_left channel
-    uint8_t      m_max_VUrightCh = 0; // VU meter max_right channel
-    uint64_t     m_barLeft;           // Bit = Bars
-    uint64_t     m_peakLeft;          // Bit = Peak
-    releasedArg  m_ra;
-    uint8_t      m_segm_w = 0;
-    uint8_t      m_segm_h = 0;
-    uint8_t      m_frameSize = 1;
-    uint16_t     m_frame_x = 0;
-    uint16_t     m_frame_y = 0;
-    uint16_t     m_frame_w = 0;
-    uint16_t     m_frame_h = 0;
+    uint16_t         m_x = 0;
+    uint16_t         m_y = 0;
+    uint16_t         m_w = 0;
+    uint16_t         m_h = 0;
+    int32_t          m_bg_color = TFT_TRANSPARENT;
+    uint32_t         m_frameColor = TFT_DARKGREY;
+    ps_ptr<char>     m_name;
+    ps_ptr<uint16_t> m_cache_bg = {};
+    bool             m_enabled = false;
+    bool             m_focus = false;
+    bool             m_active = true;
+    bool             m_clicked = false;
+    bool             m_content_has_changed = false;
+    bool             m_first_call = true;
+    bool             m_transparency = false;
+    uint8_t          m_VUleftCh = 0;      // VU meter left channel
+    uint8_t          m_VUrightCh = 0;     // VU meter right channel
+    uint8_t          m_max_VUleftCh = 0;  // VU meter max_left channel
+    uint8_t          m_max_VUrightCh = 0; // VU meter max_right channel
+    uint64_t         m_barLeft;           // Bit = Bars
+    uint64_t         m_peakLeft;          // Bit = Peak
+    releasedArg      m_ra;
+    uint8_t          m_segm_w = 0;
+    uint8_t          m_segm_h = 0;
+    uint8_t          m_frameSize = 1;
+    uint16_t         m_frame_x = 0;
+    uint16_t         m_frame_y = 0;
+    uint16_t         m_frame_w = 0;
+    uint16_t         m_frame_h = 0;
 
 #define NUM_SEGMENTS 26
     enum SegmentState : uint8_t { OFF, BAR, PEAK };
@@ -1669,28 +1671,40 @@ class vuMeter : public RegisterTable {
     bool         has_focus() { return m_focus; }
     void         set_bg_color(int32_t color) { m_bg_color = color; }
     bool         set_focus(bool focus) { return false; }
+    void         set_transparency(bool transparency) { m_transparency = transparency; }
 
     void show() {
-        if (m_first_call) { m_first_call = false; }
-        m_enabled = true;
-        m_clicked = false;
-        if (m_bg_color == TFT_TRANSPARENT) {
+        if (m_first_call) {
+            m_cache_bg.alloc_array(m_w * m_h, m_name.c_get());
+            getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
+        }
+        if (m_transparency) {
+            getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else if (m_bg_color == TFT_TRANSPARENT) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
         }
+
         getTFT().drawRect(m_frame_x, m_frame_y, m_frame_w, m_frame_h, m_frameColor);
         for (uint8_t i = 0; i < NUM_SEGMENTS; i++) {
+            m_leftState[i] = OFF;
+            m_rightState[i] = OFF;
             drawRect(i, 0, 0);
             drawRect(i, 1, 0);
         }
+        m_first_call = false;
+        m_enabled = true;
+        m_clicked = false;
         m_VUleftCh = 0;
         m_VUrightCh = 0;
     }
 
     void hide() {
         if (m_first_call) return;
-        if (m_bg_color == TFT_TRANSPARENT) {
+        if (m_transparency) {
+            getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else if (m_bg_color == TFT_TRANSPARENT) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);

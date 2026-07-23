@@ -1113,6 +1113,8 @@ void setup() {
     lst_RADIO.currentStationNr(&s_cur_station);
     clk_AC_red.alarm_time_and_days(&s_alarmdays, s_alarmtime);
 
+    audio.settings.VU_LEVEL = true;
+    audio.settings.SPECTRUM = true;
     audio.setAudioTaskCore(AUDIOTASK_CORE);
     audio.setConnectionTimeout(CONN_TIMEOUT, CONN_TIMEOUT_SSL);
     audio.setVolumeSteps(s_volume.volumeSteps);
@@ -1797,8 +1799,6 @@ void changeState(int8_t state, int8_t subState) {
             }
             if (subState == 1) {  // Mute, Vol+, Vol-, Sta+, Sta-, StaList
                 if(newSubState) {
-                    txt_RA_sTitle.hide();
-                    VUmeter_RA.hide();
                     sdr_RA_volume.show();
                     btn_RA_mute.show(); btn_RA_prevSta.show(); btn_RA_nextSta.show(); btn_RA_recorder.show();
                     setTimeCounter(2);
@@ -1810,9 +1810,6 @@ void changeState(int8_t state, int8_t subState) {
             }
             if (subState == 2){ // Player, DLNA, Clock, SleepTime, Brightness, EQ, BT, Off
                 if(newSubState) {
-                    txt_RA_sTitle.hide();
-                    VUmeter_RA.hide();
-                    sdr_RA_volume.hide();
                     btn_RA_staList.show();
                     btn_RA_player.show(); btn_RA_dlna.show(); btn_RA_clock.show(); btn_RA_sleep.show(); btn_RA_settings.show();
                     btn_RA_bt.show();
@@ -2702,6 +2699,10 @@ void my_audio_info(Audio::msg_t m) {
 
         case Audio::evt_vu:
             {if (s_state == RADIO && s_subState_radio == 0) VUmeter_RA.update(m.vec[0], m.vec[1], m.vec[2], m.vec[3]);} break;
+
+        case Audio::evt_spectrum:
+            // todo
+            break;
 
         case Audio::evt_log: printfln(m.s, "{}", m.msg); break;
 
