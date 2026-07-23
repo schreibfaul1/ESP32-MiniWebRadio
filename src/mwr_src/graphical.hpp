@@ -1631,10 +1631,10 @@ class vuMeter : public RegisterTable {
     uint16_t         m_frame_w = 0;
     uint16_t         m_frame_h = 0;
 
-#define NUM_SEGMENTS 26
     enum SegmentState : uint8_t { OFF, BAR, PEAK };
-    SegmentState m_leftState[NUM_SEGMENTS];
-    SegmentState m_rightState[NUM_SEGMENTS];
+    uint16_t                  m_numSegments = 26;
+    std::vector<SegmentState> m_leftState;
+    std::vector<SegmentState> m_rightState;
 
   public:
     vuMeter(ps_ptr<char> name) {
@@ -1652,10 +1652,14 @@ class vuMeter : public RegisterTable {
         m_frame_y = y + paddig_top;
         uint16_t frame_w = m_w - paddig_left - paddig_right;
         uint16_t frame_h = m_h - paddig_top - paddig_bottom;
-        m_segm_w = ((frame_w - 3 * m_frameSize) / 2) - m_frameSize;            // 2 columns + 3 frameSizes
-        m_segm_h = ((frame_h - 2 * m_frameSize) / NUM_SEGMENTS) - m_frameSize; // 12 rows + 2 frameSizes
+        m_numSegments = frame_h / 3;
+        if (m_numSegments == 0) m_numSegments = 1;
+        m_leftState.resize(m_numSegments, OFF);
+        m_rightState.resize(m_numSegments, OFF);
+        m_segm_w = ((frame_w - 3 * m_frameSize) / 2) - m_frameSize;              // 2 columns + 3 frameSizes
+        m_segm_h = ((frame_h - 2 * m_frameSize) / m_numSegments) - m_frameSize;
         m_frame_w = 2 * m_segm_w + 3 * m_frameSize;
-        m_frame_h = NUM_SEGMENTS * m_segm_h + (NUM_SEGMENTS + 1) * m_frameSize;
+        m_frame_h = m_numSegments * m_segm_h + (m_numSegments + 1) * m_frameSize;
     }
 
     ps_ptr<char> get_name() { return m_name; }
@@ -1683,7 +1687,7 @@ class vuMeter : public RegisterTable {
             getTFT().drawRect(m_frame_x, m_frame_y, m_frame_w, m_frame_h, m_frameColor);
         }
 
-        for (uint8_t i = 0; i < NUM_SEGMENTS; i++) {
+        for (uint16_t i = 0; i < m_numSegments; i++) {
             m_leftState[i] = OFF;
             m_rightState[i] = OFF;
             drawRect(i, 0, 0);
@@ -1713,8 +1717,8 @@ class vuMeter : public RegisterTable {
         h = m_h;
     }
 
-    void buildState(uint8_t bars, uint8_t peak, bool hasSignal, SegmentState* state, bool channel) {
-        for (int i = 0; i < NUM_SEGMENTS; i++) {
+    void buildState(uint16_t bars, uint16_t peak, bool hasSignal, std::vector<SegmentState>& state, bool channel) {
+        for (uint16_t i = 0; i < m_numSegments; i++) {
             SegmentState newState = OFF;
             if (i < bars) newState = BAR;
             if (hasSignal && i == peak) newState = PEAK;
@@ -1733,10 +1737,10 @@ class vuMeter : public RegisterTable {
     void update(uint8_t l, uint8_t r, uint8_t peak_l, uint8_t peak_r) {
         if (!m_enabled) return;
 
-        uint8_t bars_left = map_l(l, 0, 255, 0, NUM_SEGMENTS - 1);
-        uint8_t bars_right = map_l(r, 0, 255, 0, NUM_SEGMENTS - 1);
-        uint8_t peak_left = map_l(peak_l, 0, 255, 0, NUM_SEGMENTS - 1);
-        uint8_t peak_right = map_l(peak_r, 0, 255, 0, NUM_SEGMENTS - 1);
+        uint16_t bars_left = map_l(l, 0, 255, 0, m_numSegments - 1);
+        uint16_t bars_right = map_l(r, 0, 255, 0, m_numSegments - 1);
+        uint16_t peak_left = map_l(peak_l, 0, 255, 0, m_numSegments - 1);
+        uint16_t peak_right = map_l(peak_r, 0, 255, 0, m_numSegments - 1);
 
         xSemaphoreTake(mutex_display, portMAX_DELAY);
 
@@ -1765,16 +1769,16 @@ class vuMeter : public RegisterTable {
     }
 
   private:
-    void drawRect(uint8_t row, uint8_t col, bool br) {
-        if (row >= NUM_SEGMENTS || col > 1) return;
+    void drawRect(uint16_t row, uint8_t col, bool br) {
+        if (row >= m_numSegments || col > 1) return;
 
         uint16_t y_end = m_frame_y + m_frame_h - m_frameSize - m_segm_h;
         uint16_t xPos = m_frame_x + m_frameSize + col * (m_segm_w + m_frameSize);
         uint16_t yPos = y_end - row * (m_frameSize + m_segm_h);
 
-        float   s = (float)NUM_SEGMENTS / 100.0;
-        uint8_t greenLimit = 58.0 * s;
-        uint8_t yellowLimit = 85.0 * s;
+        float    s = (float)m_numSegments / 100.0;
+        uint16_t greenLimit = 58.0 * s;
+        uint16_t yellowLimit = 85.0 * s;
 
         int32_t activeColor;
         int32_t inactiveColor;

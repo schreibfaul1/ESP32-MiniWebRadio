@@ -465,6 +465,9 @@ inline void clearStationName() {
 inline void clearStreamTitle() { // without VUmeter
     getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, layout.winSTitle.x, layout.winSTitle.y, layout.winSTitle.w, layout.winSTitle.h);
 }
+inline void clearArea2() { // without VUmeter
+    getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, layout.winArea2.x, layout.winArea2.y, layout.winArea2.w, layout.winArea2.h);
+}
 inline void clearWithOutHeaderFooter(int32_t bgColor) {
     if (bgColor == TFT_TRANSPARENT) {
         getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h);
@@ -1468,7 +1471,7 @@ void setStation(uint16_t sta) {
     s_homepage = "";
     s_streamTitle = "";
     s_icyDescription = "";
-    clearStreamTitle();
+    clearArea2();
     s_f_newStreamTitle = true;
     s_f_newIcyDescription = true;
     showLogoAndStationName();
@@ -1724,7 +1727,7 @@ void setTimeCounter(uint8_t sec) {
 /*🟢🟡🔴*/
 void changeState(int8_t state, int8_t subState) {
 
-    printfln(s_tag.action, "required state " ANSI_ESC_GREEN "{}({})" ANSI_ESC_RESET ", current state is " ANSI_ESC_GREEN "{}({})", getStatusName(state), subState, getStatusName(s_state), s_subState);
+    printfln(s_tag.action, "current state is " ANSI_ESC_GREEN "{}({})" ANSI_ESC_RESET ", required state " ANSI_ESC_GREEN "{}({})", getStatusName(s_state), s_subState, getStatusName(state), subState);
     MWR_LOG_DEBUG("state {}, s_state {}, subState {}, s_subState_radio {}, s_subState_player {}", state, s_state, subState, s_subState_radio, s_subState_player);
     bool newState = false;
     bool newSubState = false;

@@ -111,7 +111,7 @@
         #define TFT_CONTROLLER    0
         #define TFT_ROTATION      0
         #define TP_CONTROLLER     1
-        #define TP_ROTATION       0
+        #define TP_ROTATION       2
         #define DISPLAY_INVERSION 0
     #endif
     #if (SPI_DISPLAY == 2)
