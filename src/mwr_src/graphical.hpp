@@ -1620,10 +1620,6 @@ class vuMeter : public RegisterTable {
     bool             m_content_has_changed = false;
     bool             m_first_call = true;
     bool             m_transparency = false;
-    uint8_t          m_VUleftCh = 0;      // VU meter left channel
-    uint8_t          m_VUrightCh = 0;     // VU meter right channel
-    uint8_t          m_max_VUleftCh = 0;  // VU meter max_left channel
-    uint8_t          m_max_VUrightCh = 0; // VU meter max_right channel
     uint64_t         m_barLeft;           // Bit = Bars
     uint64_t         m_peakLeft;          // Bit = Peak
     releasedArg      m_ra;
@@ -1696,8 +1692,6 @@ class vuMeter : public RegisterTable {
         m_first_call = false;
         m_enabled = true;
         m_clicked = false;
-        m_VUleftCh = 0;
-        m_VUrightCh = 0;
     }
 
     void hide() {
