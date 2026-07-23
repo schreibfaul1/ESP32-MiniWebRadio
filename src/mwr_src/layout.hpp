@@ -83,22 +83,22 @@ namespace layout_320x240 {
 //
 //  Display 320x240
 //  +-------------------------------------------+ _yHeader=0
-//  | Header                                    |       winHeader=20px
+//  | Header                                    |       winHeader=24px
 //  +-------------------------------------------+ _yName=20
 //  | winArea1                                  |
-//  | Logo                   StationName        |       winName=100px
+//  | Logo                   StationName        |       winName=96px
 //  |                                           |
 //  +-------------------------------------------+ _yTitle=120
 //  | winArea2                                  |
-//  |              StreamTitle                  |       winSTitle=100px
+//  |              StreamTitle                  |       winSTitle=96px
 //  |                                           |
-//  +-------------------------------------------+ _yFooter=220
-//  | Footer                                    |       winFooter=20px
+//  +-------------------------------------------+ _yFooter=216
+//  | Footer                                    |       winFooter=24px
 //  +-------------------------------------------+ 240
 //                                             320
 
 constexpr uint16_t h_res = 320, v_res = 240; // horizontal - vertical resolution
-constexpr uint16_t h_footer = 20;            // footer height
+constexpr uint16_t h_footer = 24;            // footer height
 constexpr uint16_t hw_btn = 40 + 0;          // 40x40 + padding, normal buttons
 constexpr uint16_t hw_btn_s = 32 + 2;        // 32x32 + padding, small buttons
 constexpr uint16_t w_vuMeter = 24;           // width vuMeter
@@ -121,7 +121,7 @@ constexpr coor winProgbar = coor().pos(0, y_progbar).size(h_res, h_progBar).pad(
 constexpr coor winArea1 = coor().pos(0, h_footer).size(h_res, h_area).pad(0, 5, 0, 3);
 constexpr coor winArea2 = coor().pos(0, y_area2).size(h_res, h_area).pad(0, 5, 0, 3);
 constexpr coor winSTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(0, 4, 0, 3);
-constexpr coor winVUmeter = coor().pos(h_res - w_vuMeter, y_area2).size(w_vuMeter, h_area);
+constexpr coor winVUmeter = coor().pos(h_res - w_vuMeter, y_area2).size(w_vuMeter, h_area).pad(0, 0, 0, 0);
 constexpr coor winFooter = coor().pos(0, v_res - h_footer).size(h_res, h_footer);
 constexpr coor winButton = coor().pos(0, y_btn).size(hw_btn, hw_btn);
 constexpr coor winDigits = coor().pos(0, h_footer).size(h_res, y_btn - h_footer); // clock24, alarmclock
@@ -150,7 +150,7 @@ inline constexpr uint8_t fonts[13] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66
 
 inline constexpr DisplayConfig config = {
     fonts,
-    16,                  // listFontSize
+    15,                  // listFontSize
     0,                   // headerFontSize, 0 -> autoSize
     0,                   // footerFontSize, 0 -> autoSize
     156,                 // bigNumbersFontSize
@@ -170,17 +170,17 @@ namespace layout_480x320 {
 //
 //  Display 480x320
 //  +-------------------------------------------+ _yHeader=0
-//  | Header                                    |       winHeader=33px
+//  | Header   100%x10%                         |       winHeader=32px
 //  +-------------------------------------------+ _yName=32
-//  | winArea1                                  |
+//  | winArea1 100%x40%                         |
 //  | Logo                   StationName        |       winName=128px
 //  |                                           |
 //  +-------------------------------------------+ _yTitle=160
-//  | winArea2                                  |
+//  | winArea2 100%x40%                         |
 //  |              StreamTitle                  |       winSTitle=128px
 //  |                                           |
 //  +-------------------------------------------+ _yFooter=288
-//  | Footer                                    |       winFooter=32px
+//  | Footer   100%x10%                         |       winFooter=32px
 //  +-------------------------------------------+ 320
 //                                             480
 
@@ -435,10 +435,9 @@ inline Layout makeLayout() {
 #elifdef TFT_LAYOUT_XL
     using namespace layout_1024x600;
 #else
-    printf()"Unsupported TFT_LAYOUT\n"
+    printf() "Unsupported TFT_LAYOUT\n"
 #endif
-    return {winHeader, winLogo, winName, winProgbar, winArea1, winArea2, winSTitle, winVUmeter, winFooter, winButton, winDigits, winWoHF, sdrHP,
-            sdrBP,     sdrLP,   sdrBAL,  btnHP,      btnBP,    btnLP,     btnBAL,     txtHP,     txtBP,     txtLP,     txtBAL};
+    return {winHeader, winLogo, winName, winProgbar, winArea1, winArea2, winSTitle, winVUmeter, winFooter, winButton, winDigits, winWoHF, sdrHP, sdrBP, sdrLP, sdrBAL, btnHP, btnBP, btnLP, btnBAL, txtHP, txtBP, txtLP, txtBAL};
 }
 
 // global constant - finished initialized
@@ -607,8 +606,7 @@ void placingGraphicObjects() { // and initialize them
     btn_PL_pause.setValue(false);
     btn_PL_cancel.begin(2 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_PL_cancel.setPicturePath("/btn/Button_Cancel");
-    sdr_PL_volume.begin(5 * layout.winButton.w + 10, layout.winButton.y, displayConfig.dispWidth - (5 * layout.winButton.w + 20), layout.winButton.h, layout.winButton.pl, layout.winButton.pr,
-                        layout.winButton.pt, layout.winButton.pb);
+    sdr_PL_volume.begin(5 * layout.winButton.w + 10, layout.winButton.y, displayConfig.dispWidth - (5 * layout.winButton.w + 20), layout.winButton.h, layout.winButton.pl, layout.winButton.pr, layout.winButton.pt, layout.winButton.pb);
     btn_PL_prevFile.begin(0 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_PL_prevFile.setPicturePath("/btn/Button_Left");
     btn_PL_nextFile.begin(1 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
@@ -633,8 +631,7 @@ void placingGraphicObjects() { // and initialize them
     txt_PL_fName.setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
     txt_PL_fName.setFontSize(0); // 0 -> auto
     pic_PL_logo.begin(layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h, layout.winLogo.pl, layout.winLogo.pr, layout.winLogo.pt, layout.winLogo.pb);
-    pgb_PL_progress.begin(layout.winProgbar.x, layout.winProgbar.y, layout.winProgbar.w, layout.winProgbar.h, layout.winProgbar.pl, layout.winProgbar.pr, layout.winProgbar.pt, layout.winProgbar.pb, 0,
-                          30);
+    pgb_PL_progress.begin(layout.winProgbar.x, layout.winProgbar.y, layout.winProgbar.w, layout.winProgbar.h, layout.winProgbar.pl, layout.winProgbar.pr, layout.winProgbar.pt, layout.winProgbar.pb, 0, 30);
     pgb_PL_progress.setValue(0);
     // AUDIOFILESLIST-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     lst_PLAYER.begin(layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, displayConfig.tftSize, displayConfig.listFontSize);
@@ -651,14 +648,12 @@ void placingGraphicObjects() { // and initialize them
     btn_DL_fileList.setPicturePath("/btn/Button_List");
     btn_DL_radio.begin(4 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_DL_radio.setPicturePath("/btn/Button_Radio");
-    sdr_DL_volume.begin(5 * layout.winButton.w + 10, layout.winButton.y, displayConfig.dispWidth - (5 * layout.winButton.w + 20), layout.winButton.h, layout.winButton.pl, layout.winButton.pr,
-                        layout.winButton.pt, layout.winButton.pb);
+    sdr_DL_volume.begin(5 * layout.winButton.w + 10, layout.winButton.y, displayConfig.dispWidth - (5 * layout.winButton.w + 20), layout.winButton.h, layout.winButton.pl, layout.winButton.pr, layout.winButton.pt, layout.winButton.pb);
     txt_DL_fName.begin(layout.winName.x, layout.winName.y, layout.winName.w, layout.winName.h, layout.winName.pl, layout.winName.pr, layout.winName.pt, layout.winName.pb);
     txt_DL_fName.setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
     txt_DL_fName.setFontSize(0); // 0 -> auto)
     pic_DL_logo.begin(layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h, layout.winLogo.pl, layout.winLogo.pr, layout.winLogo.pt, layout.winLogo.pb);
-    pgb_DL_progress.begin(layout.winProgbar.x, layout.winProgbar.y, layout.winProgbar.w, layout.winProgbar.h, layout.winProgbar.pl, layout.winProgbar.pr, layout.winProgbar.pt, layout.winProgbar.pb, 0,
-                          30);
+    pgb_DL_progress.begin(layout.winProgbar.x, layout.winProgbar.y, layout.winProgbar.w, layout.winProgbar.h, layout.winProgbar.pl, layout.winProgbar.pr, layout.winProgbar.pt, layout.winProgbar.pb, 0, 30);
     pgb_DL_progress.setValue(0);
     // DLNAITEMSLIST -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     lst_DLNA.begin(layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, displayConfig.tftSize, displayConfig.listFontSize);
@@ -678,8 +673,7 @@ void placingGraphicObjects() { // and initialize them
     btn_CL_off.begin(3 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_CL_off.setPicturePath("/btn/Button_Off");
     btn_CL_off.set_bg_color(TFT_BLACK);
-    sdr_CL_volume.begin(5 * layout.winButton.w + 10, layout.winButton.y, layout.winButton.w * 3 - 10, layout.winButton.h, layout.winButton.pl, layout.winButton.pr, layout.winButton.pt,
-                        layout.winButton.pb);
+    sdr_CL_volume.begin(5 * layout.winButton.w + 10, layout.winButton.y, layout.winButton.w * 3 - 10, layout.winButton.h, layout.winButton.pl, layout.winButton.pr, layout.winButton.pt, layout.winButton.pb);
     sdr_CL_volume.set_bg_color(TFT_BLACK);
     // ALARM -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     clk_AC_red.begin(layout.winDigits.x, layout.winDigits.y, layout.winDigits.w, layout.winDigits.h);
@@ -785,7 +779,7 @@ void placingGraphicObjects() { // and initialize them
     btn_BT_power.setPicturePath("/btn/Button_Bluetooth");
     pic_BT_mode.begin(layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h, layout.winLogo.pl, layout.winLogo.pr, layout.winLogo.pt, layout.winLogo.pb);
     pic_BT_mode.setPicturePath("/common/BTnc.png");
-      txt_BT_mode.begin(layout.winName.x, layout.winName.y, layout.winName.w, layout.winName.h, layout.winName.pl, layout.winName.pr, layout.winName.pt, layout.winName.pb);
+    txt_BT_mode.begin(layout.winName.x, layout.winName.y, layout.winName.w, layout.winName.h, layout.winName.pl, layout.winName.pr, layout.winName.pt, layout.winName.pb);
     txt_BT_mode.setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
     txt_BT_mode.setFontSize(displayConfig.fonts[5]);
     // IR_SETTINGS -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -825,8 +819,8 @@ next:
         case 6: res = btn_RA_bt.set_focus(true); break;
         case 7: res = btn_RA_off.set_focus(true); break;
     }
-    if(i == 2) return;
-    if(res == false) goto next;
+    if (i == 2) return;
+    if (res == false) goto next;
 }
 //-------------------------------------------------------------------------------------
 void set_ir_pos_PL(int lr) { // PLAYER   -100 left, +100 right, -127 reset
@@ -835,7 +829,7 @@ void set_ir_pos_PL(int lr) { // PLAYER   -100 left, +100 right, -127 reset
         if (s_ir_btn_select == -1) return;
         if (s_ir_btn_select == 8) return;
         defocusAllObjects();
-next0:
+    next0:
         i++;
         if (lr == IR_LEFT) {
             s_ir_btn_select--;
@@ -857,14 +851,14 @@ next0:
             case 6: res = btn_PL_radio.set_focus(true); break;
             case 7: res = btn_PL_off.set_focus(true); break;
         }
-        if(i == 2) return;
-        if(res == false) goto next0;
+        if (i == 2) return;
+        if (res == false) goto next0;
     }
     if (s_subState_player == 1) {
         if (s_ir_btn_select == -1) return;
         if (s_ir_btn_select == 5) return;
         defocusAllObjects();
-next1:
+    next1:
         i++;
         if (lr == IR_LEFT) {
             s_ir_btn_select--;
@@ -883,10 +877,9 @@ next1:
             case 3: res = btn_PL_playPrev.set_focus(true); break;
             case 4: res = btn_PL_playNext.set_focus(true); break;
         }
-        if(i == 2) return;
-        if(res == false) goto next1;
+        if (i == 2) return;
+        if (res == false) goto next1;
     }
-
 }
 //-------------------------------------------------------------------------------------
 void set_ir_pos_DL(int lr) { // DLNA   -100 left, +100 right, -127 reset
@@ -913,8 +906,8 @@ next:
         case 3: res = btn_DL_fileList.set_focus(true); break;
         case 4: res = btn_DL_radio.set_focus(true); break;
     }
-    if(i == 2) return;
-    if(res == false) goto next;
+    if (i == 2) return;
+    if (res == false) goto next;
 }
 //-------------------------------------------------------------------------------------
 void set_ir_pos_CL(int lr) { // CLOCK   -100 left, +100 right, -127 reset
@@ -940,8 +933,8 @@ next:
         case 2: res = btn_CL_mute.set_focus(true); break;
         case 3: res = btn_CL_off.set_focus(true); break;
     }
-    if(i == 2) return;
-    if(res == false) goto next;
+    if (i == 2) return;
+    if (res == false) goto next;
 }
 //-------------------------------------------------------------------------------------
 void set_ir_pos_AC(int lr) { // ALARMCLOCK   -100 left, +100 right, -127 reset
@@ -968,8 +961,8 @@ next:
         case 3: res = btn_AC_down.set_focus(true); break;
         case 4: res = btn_AC_ready.set_focus(true); break;
     }
-    if(i == 2) return;
-    if(res == false) goto next;
+    if (i == 2) return;
+    if (res == false) goto next;
 }
 //-------------------------------------------------------------------------------------
 void set_ir_pos_SL(int lr) { // SLEEPTIMER   -100 left, +100 right, -127 reset
@@ -995,8 +988,8 @@ next:
         case 2: res = btn_SL_ready.set_focus(true); break;
         case 3: res = btn_SL_cancel.set_focus(true); break;
     }
-    if(i == 2) return;
-    if(res == false) goto next;
+    if (i == 2) return;
+    if (res == false) goto next;
 }
 //-------------------------------------------------------------------------------------
 void set_ir_pos_SE(int lr) { // SETTINGS   -100 left, +100 right, -127 reset
@@ -1022,8 +1015,8 @@ next:
         case 2: res = btn_SE_wifi.set_focus(true); break;
         case 3: res = btn_SE_radio.set_focus(true); break;
     }
-    if(i == 2) return;
-    if(res == false) goto next;
+    if (i == 2) return;
+    if (res == false) goto next;
 }
 //-------------------------------------------------------------------------------------
 void set_ir_pos_BR(int lr) { // SETTINGS   -100 left, +100 right, -127 reset
@@ -1046,8 +1039,8 @@ next:
     switch (s_ir_btn_select) {
         case 0: res = btn_BR_ready.set_focus(true); break;
     }
-    if(i == 2) return;
-    if(res == false) goto next;
+    if (i == 2) return;
+    if (res == false) goto next;
 }
 //-------------------------------------------------------------------------------------
 void set_ir_pos_EQ(int lr) { // EQUALIZER   -1 left, +1 right
@@ -1089,8 +1082,8 @@ next:
         case 5: res = btn_EQ_bandPass.set_focus(true); break;
         case 6: res = btn_EQ_highPass.set_focus(true); break;
     }
-    if(i == 2) return;
-    if(res == false) goto next;
+    if (i == 2) return;
+    if (res == false) goto next;
 }
 //-------------------------------------------------------------------------------------
 void set_ir_pos_BT(int lr) { // BLUETOOTH   -1 left, +1 right
@@ -1119,7 +1112,7 @@ next:
         case 4: res = btn_BT_radio.set_focus(true); break;
         case 5: res = btn_BT_power.set_focus(true); break;
     }
-    if(i == 2) return;
-    if(res == false) goto next;
+    if (i == 2) return;
+    if (res == false) goto next;
 }
 //-------------------------------------------------------------------------------------

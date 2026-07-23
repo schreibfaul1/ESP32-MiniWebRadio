@@ -3435,19 +3435,16 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
     CMD_EQUALS("get_streamtitle"){      webSrv.reply(s_streamTitle.c_get(), webSrv.TEXT); return;}
 
     CMD_EQUALS("LowPass"){              s_tone.LP = param.to_int32(); sdr_EQ_lowPass.setValue(s_tone.LP); // audioI2S tone
-                                        ps_ptr<char>lp; lp = "Lowpass set to " + param  + "dB";
                                         setI2STone(); return;}
 
     CMD_EQUALS("BandPass"){             s_tone.BP = param.to_int32(); sdr_EQ_bandPass.setValue(s_tone.BP); // audioI2S tone
-                                        ps_ptr<char>bp; bp = "Bandpass set to " + param + "dB";
                                         setI2STone(); return;}
 
     CMD_EQUALS("HighPass"){             s_tone.HP = param.to_int32(); sdr_EQ_highPass.setValue(s_tone.HP); // audioI2S tone
-                                        ps_ptr<char> hp; hp = "Highpass set to " + param + "dB";
                                         setI2STone(); return;}
 
     CMD_EQUALS("Balance"){              s_tone.BAL = param.to_int32(); sdr_EQ_balance.setValue(s_tone.BAL); // audioI2S tone
-                                        ps_ptr<char> bal = "Balance set to " + param;
+                                        ps_ptr<char> bal; bal = "Balance set to " + param;
                                         setI2STone(); return;}
 
     CMD_EQUALS("prev_station"){         prevFavStation(); return;}                                                                                           // via websocket
@@ -3949,7 +3946,7 @@ void graphicObjects_OnChange(ps_ptr<char> name, int32_t val) {
     if (name.equals("sdr_EQ_HP"))       { c.assignf("{} dB", val); s_tone.HP  = val; webSrv.send("settone=", getI2STone().c_get()); setI2STone(); txt_EQ_highPass.setText(c.c_get()); txt_EQ_highPass.show(); goto exit; }
     if (name.equals("sdr_EQ_BAL"))      { if(val < 0)       c.assignf("{}/0 dB", val);  // e.g. -10/0 dB
                                           else if (val > 0) c.assignf("0/-{} dB", val); // e.g. 0/-8 dB
-                                          else              c.assignf("0/0 dB", val);   // 0/0 dB
+                                          else              c.assign("0/0 dB");   // 0/0 dB
                                           s_tone.BAL = val; webSrv.send("settone=", getI2STone().c_get()); setI2STone(); txt_EQ_balance.setText(c.c_get()); txt_EQ_balance.show(); goto exit; }
     if (name.equals("pgb_PL_progress")) { goto exit; }
     if (name.equals("pgb_DL_progress")) { goto exit; }

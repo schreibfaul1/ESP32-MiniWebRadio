@@ -1668,9 +1668,9 @@ class vuMeter : public RegisterTable {
         m_leftState.resize(m_numSegments, OFF);
         m_rightState.resize(m_numSegments, OFF);
         m_segm_w = ((frame_w - 3 * m_frameSize) / 2) - m_frameSize; // 2 columns + 3 frameSizes
-        m_segm_h = ((frame_h - 2 * m_frameSize) / m_numSegments) - m_frameSize;
+        m_segm_h = (frame_h / m_numSegments) - m_frameSize;
         m_frame_w = 2 * m_segm_w + 3 * m_frameSize;
-        m_frame_h = m_numSegments * m_segm_h + (m_numSegments + 1) * m_frameSize;
+        m_frame_h = m_numSegments * (m_segm_h + m_frameSize) + m_frameSize;
     }
 
     ps_ptr<char> get_name() { return m_name; }
@@ -3629,10 +3629,10 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
     int16_t m_w = 0;
     int16_t m_h = 0;
     struct pos {
-        uint16_t x;
-        uint16_t y;
-        uint16_t w;
-        uint16_t h;
+        uint16_t x = 0;
+        uint16_t y = 0;
+        uint16_t w = 0;
+        uint16_t h = 0;
         uint8_t  pl = 0;
         uint8_t  pr = 0;
         uint8_t  pt = 0;
@@ -3990,7 +3990,7 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
     }
     void placingDigits(uint16_t w, uint16_t h) {
         uint16_t digits_y = 0, digits_w = 0, colon_w = 0, digits_h = 0, digits_paddig_l = 0, alarmdays_padding_l = 0;
-        uint16_t h4 = h / 4; // [1/4 days, time + 3/4 digits]
+        uint16_t h4 = h / 4 + 2; // [1/4 days, time + 3/4 digits]
 
         imgSize img = GetImageSize("/digits/m/0green.jpg"); // get size of digit '0'
         if (img.w == 0 || img.h == 0) {
@@ -4024,7 +4024,7 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
         s_h01.h = digits_h;
         s_c.x = s_h01.x + digits_w;
         s_c.y = digits_y;
-        s_c.w = digits_w;
+        s_c.w = colon_w;
         s_c.h = digits_h;
         s_m10.x = s_c.x + colon_w;
         s_m10.y = digits_y;
@@ -4034,6 +4034,7 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
         s_m01.y = digits_y;
         s_m01.w = digits_w;
         s_m01.h = digits_h;
+        MWR_LOG_DEBUG("s_h10.x: {}, s_h01.x: {}, s_c.x: {}, s_m10.x: {}, s_m01.x: {} ", s_h10.x, s_h01.x, s_c.x, s_m10.x, s_m01.x);
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
