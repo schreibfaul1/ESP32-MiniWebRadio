@@ -530,9 +530,10 @@ class pictureBox : public RegisterTable {
     uint8_t      m_padding_right = 0;  // right margin
     uint8_t      m_padding_top = 0;    // top margin
     uint8_t      m_padding_bottom = 0; // bottom margin
+    uint8_t      m_h_align = TFT_ALIGN_CENTER;
+    uint8_t      m_v_align = TFT_ALIGN_CENTER;
     int32_t      m_bg_color = TFT_TRANSPARENT;
     ps_ptr<char> m_PicturePath;
-    ps_ptr<char> m_altPicturePath;
     ps_ptr<char> m_name;
     bool         m_enabled = false;
     bool         m_focus = false;
@@ -547,7 +548,6 @@ class pictureBox : public RegisterTable {
         register_object(this);
         m_name = name;
         setPicturePath("");
-        setAlternativPicturePath("");
     }
     ~pictureBox() {}
 
@@ -583,15 +583,8 @@ class pictureBox : public RegisterTable {
             }
             m_content_has_changed = false;
         }
-        int x = m_x + m_padding_left + m_image_x;
-        int y = m_y + m_padding_top + m_image_y;
-        int w = m_w - (m_padding_right + m_padding_left);
-        int h = m_h - (m_padding_bottom + m_padding_top);
-        if (m_image_w == 0 || m_image_h == 0) {
-            m_enabled = drawImage(m_altPicturePath, x, y, w, h);
-        } else {
-            m_enabled = drawImage(m_PicturePath, x, y, w, h);
-        }
+        if (m_image_w > m_w || m_image_h > m_h) { MWR_LOG_WARN("image {}, w: {}, h: {} > {}x{}", m_PicturePath, m_image_w, m_image_h, m_w, m_h); }
+        m_enabled = drawImage(m_PicturePath, m_image_x, m_image_y, m_image_w, m_image_h);
         return m_enabled;
     }
 
@@ -618,24 +611,43 @@ class pictureBox : public RegisterTable {
         imgSize img = GetImageSize(path);
         m_image_w = img.w;
         m_image_h = img.h;
-    }
-    void setAlternativPicturePath(ps_ptr<char> path) { m_altPicturePath = path; }
-
-    void align(bool h, bool v) {
-        if (h) {
-            m_padding_left = 0;
-            m_padding_right = 0;
-            m_image_x = (m_w - m_image_w) / 2;
-        } else
-            m_image_x = 0;
-        if (v) {
-            m_padding_top = 0;
-            m_padding_bottom = 0;
-            m_image_y = (m_h - m_image_h) / 2;
-        } else
-            m_image_y = 0;
+        align();
     }
 
+    void setAlign(uint8_t h_align, uint8_t v_align) {
+        m_h_align = h_align;
+        m_v_align = v_align;
+        align();
+    }
+
+  private:
+    void align() {
+        if(m_image_w > m_w){
+            MWR_LOG_ERROR("m_image_w: {} > m_w: {}, {}", m_image_w, m_w, m_PicturePath);
+            return;
+        }
+        if(m_image_h > m_h){
+            MWR_LOG_ERROR("m_image_h: {} > m_h: {}, {}", m_image_h, m_h, m_PicturePath);
+            return;
+        }
+        if(m_padding_left + m_padding_right + m_image_w > m_w){
+            MWR_LOG_WARN("m_padding_left: {}, m_padding_right: {}, m_image_w: {} > m_w; {}, {}", m_padding_left, m_padding_right, m_image_w, m_w, m_PicturePath);
+            return;
+        }
+        if(m_padding_top + m_padding_bottom + m_image_h > m_h){
+            MWR_LOG_WARN("m_padding_top: {}, m_padding_bottom: {}, m_image_h: {} > m_h; {}, {}", m_padding_top, m_padding_bottom, m_image_h, m_h, m_PicturePath);
+            return;
+        }
+MWR_LOG_WARN("m_padding_top: {}, m_padding_bottom: {}, m_image_h: {}, {}", m_padding_top, m_padding_bottom, m_image_h, m_PicturePath);
+        if(m_h_align == TFT_ALIGN_LEFT) m_image_x = m_x + m_padding_left;
+        if(m_h_align == TFT_ALIGN_CENTER) m_image_x = m_x + (m_w - m_image_w) / 2;
+        if(m_h_align == TFT_ALIGN_RIGHT) m_image_x = m_x + (m_w -m_image_w) - m_padding_right;
+        if(m_v_align == TFT_ALIGN_TOP) m_image_y = m_y + m_padding_top;
+        if(m_v_align == TFT_ALIGN_CENTER) m_image_y = m_y + (m_h - m_image_h) / 2;
+        if(m_v_align == TFT_ALIGN_DOWN) m_image_y = m_y + (m_h - m_image_h) - m_padding_bottom;
+    }
+
+  public:
     bool positionXY(uint16_t x, uint16_t y) {
         if (x < m_x) return false;
         if (y < m_y) return false;
@@ -1656,7 +1668,7 @@ class vuMeter : public RegisterTable {
         if (m_numSegments == 0) m_numSegments = 1;
         m_leftState.resize(m_numSegments, OFF);
         m_rightState.resize(m_numSegments, OFF);
-        m_segm_w = ((frame_w - 3 * m_frameSize) / 2) - m_frameSize;              // 2 columns + 3 frameSizes
+        m_segm_w = ((frame_w - 3 * m_frameSize) / 2) - m_frameSize; // 2 columns + 3 frameSizes
         m_segm_h = ((frame_h - 2 * m_frameSize) / m_numSegments) - m_frameSize;
         m_frame_w = 2 * m_segm_w + 3 * m_frameSize;
         m_frame_h = m_numSegments * m_segm_h + (m_numSegments + 1) * m_frameSize;
@@ -5949,7 +5961,7 @@ class displayFooter : public RegisterTable {
     struct w_a {
         uint16_t x = 0;
         uint16_t w = 25;
-        uint8_t  pl = 2;
+        uint8_t  pl = 0;
         uint8_t  pr = 0;
         uint8_t  pt = 0;
         uint8_t  pb = 0;
@@ -5981,7 +5993,7 @@ class displayFooter : public RegisterTable {
     struct w_h {
         uint16_t x = 100;
         uint16_t w = 20;
-        uint8_t  pl = 2;
+        uint8_t  pl = 0;
         uint8_t  pr = 0;
         uint8_t  pt = 0;
         uint8_t  pb = 0;
@@ -6034,7 +6046,7 @@ class displayFooter : public RegisterTable {
         uint16_t w = 48;
         uint8_t  pl = 0;
         uint8_t  pr = 0;
-        uint8_t  pt = 3;
+        uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_Flag; // Flags:  40...48 x 24 px
     struct w_fn {
@@ -6083,9 +6095,9 @@ class displayFooter : public RegisterTable {
     struct w_a {
         uint16_t x = 0;
         uint16_t w = 51;
-        uint8_t  pl = 2;
+        uint8_t  pl = 0;
         uint8_t  pr = 0;
-        uint8_t  pt = 1;
+        uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_Antenna; // Antenna.png: 47 x 48 px
     struct w_s {
@@ -6101,7 +6113,7 @@ class displayFooter : public RegisterTable {
         uint16_t w = 80;
         uint8_t  pl = 0;
         uint8_t  pr = 0;
-        uint8_t  pt = 5;
+        uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_Flag; // Flags:  60...80 x 40 px
     struct w_fn {
@@ -6115,9 +6127,9 @@ class displayFooter : public RegisterTable {
     struct w_h {
         uint16_t x = 225;
         uint16_t w = 40;
-        uint8_t  pl = 2;
+        uint8_t  pl = 0;
         uint8_t  pr = 0;
-        uint8_t  pt = 3;
+        uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_Hourglass; // Hourglass:   35 x 44 px
     struct w_o {
@@ -6150,9 +6162,9 @@ class displayFooter : public RegisterTable {
     struct w_a { // antenna
         uint16_t x = 0;
         uint16_t w = 60;
-        uint8_t  pl = 15;
+        uint8_t  pl = 0;
         uint8_t  pr = 0;
-        uint8_t  pt = 1;
+        uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_Antenna; // Antenna.png: 55 x 56 px
     struct w_s {       // station number
@@ -6168,7 +6180,7 @@ class displayFooter : public RegisterTable {
         uint16_t w = 110;
         uint8_t  pl = 0;
         uint8_t  pr = 0;
-        uint8_t  pt = 5;
+        uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_Flag; // Flags:  max 100 x 50 px
     struct w_fn {
@@ -6181,10 +6193,10 @@ class displayFooter : public RegisterTable {
     } const s_FileNr; // FileNumber "030/432"
     struct w_h {
         uint16_t x = 300;
-        uint16_t w = 40;
-        uint8_t  pl = 2;
+        uint16_t w = 60;
+        uint8_t  pl = 0;
         uint8_t  pr = 0;
-        uint8_t  pt = 3;
+        uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_Hourglass; // Hourglass:   45 x 56 px
     struct w_o {
@@ -6345,7 +6357,7 @@ class displayFooter : public RegisterTable {
     void updateFlag(ps_ptr<char> flag) {
         if (flag.strlen() > 0) {
             pic_Flag->hide(); // Don't draw over it, the new flag could be smaller
-            pic_Flag->setAlternativPicturePath("/flags/unknown.jpg");
+            if (!SD_MMC.exists(scaleImage(flag).c_get())) flag = "/flags/unknown.jpg";
             pic_Flag->setPicturePath(flag);
             pic_Flag->show();
         } else {

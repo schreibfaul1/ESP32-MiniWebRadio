@@ -115,7 +115,7 @@ constexpr uint16_t h_EQ = (2 * h_area - hw_btn) / 4;
 // -----------------------------------------------------------------------------------
 
 constexpr coor winHeader = coor().pos(0, 0).size(h_res, h_footer);
-constexpr coor winLogo = coor().pos(0, h_footer).size(h_area, h_area).pad(1, 1, 1, 1);
+constexpr coor winLogo = coor().pos(0, h_footer).size(h_area, h_area).pad(0, 0, 0, 0);
 constexpr coor winName = coor().pos(h_area, h_footer).size(h_res - h_area, h_area).pad(1, 1, 0, 0); // StationName
 constexpr coor winProgbar = coor().pos(0, y_progbar).size(h_res, h_progBar).pad(5, 5, 0, 0);        // or volume slider
 constexpr coor winArea1 = coor().pos(0, h_footer).size(h_res, h_area).pad(0, 5, 0, 3);
@@ -201,7 +201,7 @@ constexpr uint16_t h_EQ = (2 * h_area - hw_btn) / 4;
 // window definitions .pos(x, y) .size(w, h) .padding(l, r, t, b)
 // -----------------------------------------------------------------------------------
 constexpr coor winHeader = coor().pos(0, 0).size(h_res, h_footer);
-constexpr coor winLogo = coor().pos(0, h_footer).size(h_area, h_area).pad(1, 1, 1, 1);
+constexpr coor winLogo = coor().pos(0, h_footer).size(h_area, h_area).pad(0, 0, 0, 0);
 constexpr coor winName = coor().pos(h_area, h_footer).size(h_res - h_area, h_area).pad(1, 1, 0, 0); // StationName
 constexpr coor winProgbar = coor().pos(0, y_progbar).size(h_res, h_progBar).pad(5, 5, 0, 0);        // or volume slider
 constexpr coor winArea1 = coor().pos(0, h_footer).size(h_res, h_area).pad(0, 5, 0, 3);
@@ -288,7 +288,7 @@ constexpr uint16_t h_EQ = (2 * h_area - hw_btn) / 4;
 // -----------------------------------------------------------------------------------
 
 constexpr coor winHeader = coor().pos(0, 0).size(h_res, h_footer);
-constexpr coor winLogo = coor().pos(0, h_footer).size(h_area, h_area).pad(4, 4, 4, 4);
+constexpr coor winLogo = coor().pos(0, h_footer).size(h_area, h_area).pad(0, 0, 0, 0);
 constexpr coor winName = coor().pos(h_area, h_footer).size(h_res - h_area, h_area).pad(15, 5, 0, 0); // StationName
 constexpr coor winProgbar = coor().pos(0, y_progbar).size(h_res, h_progBar).pad(15, 15, 0, 0);       // or volume slider
 constexpr coor winArea1 = coor().pos(0, h_footer).size(h_res, h_area).pad(0, 5, 0, 3);
@@ -373,7 +373,7 @@ constexpr uint16_t h_EQ = (2 * h_area - hw_btn) / 4;
 // -----------------------------------------------------------------------------------
 
 constexpr coor winHeader = coor().pos(0, 0).size(h_res, h_footer);
-constexpr coor winLogo = coor().pos(0, h_footer).size(h_area, h_area).pad(4, 4, 4, 4);
+constexpr coor winLogo = coor().pos(0, h_footer).size(h_area, h_area).pad(0, 0, 0, 0);
 constexpr coor winName = coor().pos(h_area, h_footer).size(h_res - h_area, h_area).pad(15, 5, 0, 0); // StationName
 constexpr coor winProgbar = coor().pos(0, y_progbar).size(h_res, h_progBar).pad(5, 5, 20, 20);       // or volume slider
 constexpr coor winArea1 = coor().pos(0, h_footer).size(h_res, h_area).pad(0, 5, 0, 3);
@@ -785,8 +785,7 @@ void placingGraphicObjects() { // and initialize them
     btn_BT_power.setPicturePath("/btn/Button_Bluetooth");
     pic_BT_mode.begin(layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h, layout.winLogo.pl, layout.winLogo.pr, layout.winLogo.pt, layout.winLogo.pb);
     pic_BT_mode.setPicturePath("/common/BTnc.png");
-    pic_BT_mode.setAlternativPicturePath("/common/BTnc.png");
-    txt_BT_mode.begin(layout.winName.x, layout.winName.y, layout.winName.w, layout.winName.h, layout.winName.pl, layout.winName.pr, layout.winName.pt, layout.winName.pb);
+      txt_BT_mode.begin(layout.winName.x, layout.winName.y, layout.winName.w, layout.winName.h, layout.winName.pl, layout.winName.pr, layout.winName.pt, layout.winName.pb);
     txt_BT_mode.setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
     txt_BT_mode.setFontSize(displayConfig.fonts[5]);
     // IR_SETTINGS -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

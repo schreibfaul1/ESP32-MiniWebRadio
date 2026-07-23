@@ -181,7 +181,7 @@ uint64_t s_totalRuntime = 0; // total runtime in seconds since start
 std::deque<ps_ptr<char>> s_PLS_content;
 std::deque<ps_ptr<char>> s_logBuffer;
 
-const char* codecname[10] = {"unknown", "WAV", "MP3", "AAC", "M4A", "FLAC", "OPUS", "VORBIS", "OGG"};
+ps_ptr<char> codecname[10] = {"unknown", "WAV", "MP3", "AAC", "M4A", "FLAC", "OPUS", "VORBIS", "OGG"};
 
 #ifdef TFT_MODE_SPI // ⏹⏹⏹⏹
 TFT_SPI  tft(spiBus, TFT_CS);
@@ -553,38 +553,38 @@ void webSrv_send_station_items() {
 }
 
 void showFileLogo(int8_t state, int8_t subState) {
-    String logo;
+    ps_ptr<char> logo;
     if (state == DLNA) {
         logo = "/common/DLNA.jpg";
-        pic_DL_logo.setPicturePath(logo.c_str());
-        pic_DL_logo.setAlternativPicturePath("/common/unknown.png");
+        if (!SD_MMC.exists(scaleImage(logo).c_get())) logo = "/common/unknown.png";
+        pic_DL_logo.setPicturePath(logo);
         pic_DL_logo.show();
-        webSrv.send("stationLogo=", logo.c_str());
+        webSrv.send("stationLogo=", logo);
         return;
     }
     if (state == PLAYER) { // s_state PLAYER
-        if (s_cur_Codec == 0)
+        if (s_cur_Codec == 0) {
             logo = "/common/AudioPlayer.png";
-        else if (s_subState_player == 0)
+        } else if (s_subState_player == 0) {
             logo = "/common/AudioPlayer.png";
-        else
-            logo = "/common/" + (String)codecname[s_cur_Codec] + ".png";
-        pic_PL_logo.setPicturePath(logo.c_str());
-        pic_PL_logo.setAlternativPicturePath("/common/unknown.png");
+        } else {
+            logo = "/common/" + codecname[s_cur_Codec] + ".png";
+        }
+        if (!SD_MMC.exists(scaleImage(logo).c_get())) logo = "/common/unknown.png";
+        pic_PL_logo.setPicturePath(logo);
         pic_PL_logo.show();
         return;
     }
     if (state == SETTINGS) {
         logo = "/common/Settings.png";
-        pic_SE_logo.setPicturePath(logo.c_str());
-        pic_SE_logo.setAlternativPicturePath("/common/unknown.png");
+        pic_SE_logo.setPicturePath(logo);
         pic_SE_logo.show();
         return;
     }
     if (state == RINGING) {
         logo = "/common/Alarm.png";
-        pic_RI_logo.setPicturePath(logo.c_str());
-        pic_RI_logo.setAlternativPicturePath("/common/unknown.png");
+        if (!SD_MMC.exists(scaleImage(logo).c_get())) logo = "/common/unknown.png";
+        pic_RI_logo.setPicturePath(logo);
         pic_RI_logo.show();
         return;
     }
@@ -1919,7 +1919,7 @@ void changeState(int8_t state, int8_t subState) {
             if (newState) {
                 otb_SL_stime.show(s_sleeptime);
                 pic_SL_logo.setPicturePath("/common/Night_Gown.jpg");
-                pic_SL_logo.align(true, true);
+                pic_SL_logo.setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
                 pic_SL_logo.show();
             }
             btn_SL_up.show(); btn_SL_up.show(); btn_SL_down.show(); btn_SL_ready.show(); btn_SL_cancel.show();
@@ -2172,8 +2172,10 @@ void loop() {
         //------------------------------------------ALARM MANAGEMENT----------------------------------------------------------------------------------
         if (s_f_alarm) {
             s_f_alarm = false;
-            if (s_f_sleeping) wake_up(RINGING, 0);
-            else changeState(RINGING, 0);
+            if (s_f_sleeping)
+                wake_up(RINGING, 0);
+            else
+                changeState(RINGING, 0);
         }
         if (s_f_eof_alarm) { // AFTER RINGING
             s_f_eof_alarm = false;
@@ -2700,8 +2702,9 @@ void my_audio_info(Audio::msg_t m) {
 
         case Audio::evt_genre: printfln(s_tag.audio_info, "genre: " ANSI_ESC_YELLOW "{}", m.msg); break;
 
-        case Audio::evt_vu:
-            {if (s_state == RADIO && s_subState_radio == 0) VUmeter_RA.update(m.vec[0], m.vec[1], m.vec[2], m.vec[3]);} break;
+        case Audio::evt_vu: {
+            if (s_state == RADIO && s_subState_radio == 0) VUmeter_RA.update(m.vec[0], m.vec[1], m.vec[2], m.vec[3]);
+        } break;
 
         case Audio::evt_spectrum:
             // todo
