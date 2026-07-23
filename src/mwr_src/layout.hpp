@@ -170,22 +170,22 @@ namespace layout_480x320 {
 //
 //  Display 480x320
 //  +-------------------------------------------+ _yHeader=0
-//  | Header                                    |       winHeader=30px
-//  +-------------------------------------------+ _yName=30
+//  | Header                                    |       winHeader=33px
+//  +-------------------------------------------+ _yName=32
 //  | winArea1                                  |
-//  | Logo                   StationName        |       winName=130px
+//  | Logo                   StationName        |       winName=128px
 //  |                                           |
 //  +-------------------------------------------+ _yTitle=160
 //  | winArea2                                  |
-//  |              StreamTitle                  |       winSTitle=130px
+//  |              StreamTitle                  |       winSTitle=128px
 //  |                                           |
-//  +-------------------------------------------+ _yFooter=290
-//  | Footer                                    |       winFooter=30px
+//  +-------------------------------------------+ _yFooter=288
+//  | Footer                                    |       winFooter=32px
 //  +-------------------------------------------+ 320
 //                                             480
 
 constexpr uint16_t h_res = 480, v_res = 320; // horizontal - vertical resolution
-constexpr uint16_t h_footer = 30;            // footer height
+constexpr uint16_t h_footer = 32;            // footer height
 constexpr uint16_t hw_btn = 56 + 2;          // 56x56 + padding, normal buttons
 constexpr uint16_t hw_btn_s = 44 + 2;        // 44x45 + padding, small buttons
 constexpr uint16_t w_vuMeter = 32;           // width vuMeter

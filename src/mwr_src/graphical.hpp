@@ -638,7 +638,6 @@ class pictureBox : public RegisterTable {
             MWR_LOG_WARN("m_padding_top: {}, m_padding_bottom: {}, m_image_h: {} > m_h; {}, {}", m_padding_top, m_padding_bottom, m_image_h, m_h, m_PicturePath);
             return;
         }
-MWR_LOG_WARN("m_padding_top: {}, m_padding_bottom: {}, m_image_h: {}, {}", m_padding_top, m_padding_bottom, m_image_h, m_PicturePath);
         if(m_h_align == TFT_ALIGN_LEFT) m_image_x = m_x + m_padding_left;
         if(m_h_align == TFT_ALIGN_CENTER) m_image_x = m_x + (m_w - m_image_w) / 2;
         if(m_h_align == TFT_ALIGN_RIGHT) m_image_x = m_x + (m_w -m_image_w) - m_padding_right;
