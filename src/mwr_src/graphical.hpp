@@ -6414,7 +6414,7 @@ class displayFooter : public RegisterTable {
 
         uint16_t triangle_x1x2 = x + w * m_timeCounter - 1;
         uint16_t triangle_y2 = triangle_y0y1 - h * m_timeCounter;
-        MWR_LOG_WARN("timeCounter {}", m_timeCounter);
+
         if (m_bg_color == TFT_TRANSPARENT) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, s_BitRate.x, m_y, s_BitRate.w, m_h);
         } else {
