@@ -256,22 +256,22 @@ namespace layout_800x480 {
 //
 //  Display 800x480
 //  +-------------------------------------------+ _yHeader=0
-//  | Header                                    |       winHeader=50px
+//  | Header                                    |       winHeader=48px
 //  +-------------------------------------------+ _yName=50
 //  | winArea1                                  |
-//  | Logo                   StationName        |       winName=190px
+//  | Logo                   StationName        |       winName=192px
 //  |                                           |
 //  +-------------------------------------------+ _yTitle=240
 //  | winArea2                                  |
-//  |              StreamTitle                  |       winSTitle=190px
+//  |              StreamTitle                  |       winSTitle=192px
 //  |                                           |
-//  +-------------------------------------------+ _yFooter=430
-//  | Footer                                    |       winFooter=50px
+//  +-------------------------------------------+ _yFooter=432
+//  | Footer                                    |       winFooter=48px
 //  +-------------------------------------------+ 480
 //                                             800
 
 constexpr uint16_t h_res = 800, v_res = 480; // horizontal - vertical resolution
-constexpr uint16_t h_footer = 50;            // footer height
+constexpr uint16_t h_footer = 48;            // footer height
 constexpr uint16_t hw_btn = 76 + 2;          // 76x76 + padding, normal buttons
 constexpr uint16_t hw_btn_s = 65 + 2;        // 65x65 + padding, small buttons
 constexpr uint16_t w_vuMeter = 40;           // width vuMeter
