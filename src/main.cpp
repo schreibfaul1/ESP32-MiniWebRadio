@@ -131,6 +131,7 @@ bool s_f_sd_card_found = false;
 bool s_f_isWiFiConnected = false;
 bool s_f_ok_from_ir = false;
 
+
 int8_t   s_state = UNDEFINED; // statemaschine
 int8_t   s_subState = UNDEFINED;
 int8_t   s_subState_radio = UNDEFINED;
