@@ -472,6 +472,8 @@ uniList       myList("myList");
 // RADIO
 button2state btn_RA_mute("btn_RA_mute");
 button2state btn_RA_recorder("btn_RA_recorder");
+button2state btn_RA_spectrum("btn_RA_spectrum");
+button2state btn_RA_vu_meter("btn_RA_vu_meter");
 button1state btn_RA_prevSta("btn_RA_prevSta"), btn_RA_nextSta("btn_RA_nextSta");
 button1state btn_RA_staList("btn_RA_staList"), btn_RA_player("btn_RA_player"), btn_RA_dlna("btn_RA_dlna"), btn_RA_clock("btn_RA_clock");
 button1state btn_RA_sleep("btn_RA_sleep"), btn_RA_bt("btn_RA_bt");
@@ -565,6 +567,10 @@ void placingGraphicObjects() { // and initialize them
     btn_RA_nextSta.setPicturePath("/btn/Button_Next");
     btn_RA_recorder.begin(3 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_RA_recorder.setPicturePath("/btn/Button_Recorder");
+    btn_RA_vu_meter.begin(6 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
+    btn_RA_vu_meter.setPicturePath("/btn/Button_VUmeter");
+    btn_RA_spectrum.begin(7 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
+    btn_RA_spectrum.setPicturePath("/btn/Button_Spectrum");
     btn_RA_staList.begin(0 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_RA_staList.setPicturePath("/btn/Button_List");
     btn_RA_player.begin(1 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
