@@ -6420,6 +6420,7 @@ class displayFooter : public RegisterTable {
     }
 
     void updateBitRate(uint32_t bitRate) {
+        if (m_timeCounter) return;
         m_bitRate = bitRate / 1000; // KBit/s
         if (!m_enabled) return;
         char sbr[10];
