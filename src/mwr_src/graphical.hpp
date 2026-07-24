@@ -5951,7 +5951,7 @@ class displayFooter : public RegisterTable {
     int16_t      m_w = 0;
     int16_t      m_h = 0;
     uint8_t      m_fontSize = 0;
-    int8_t       m_timeCounter = 0;
+    float        m_timeCounter = 0;
     uint8_t      m_volume = 0;
     uint16_t     m_staNr = 0;
     uint16_t     m_offTime = 0;
@@ -6401,26 +6401,32 @@ class displayFooter : public RegisterTable {
         }
     }
 
-    void updateTC(uint8_t timeCounter) {
-        if (m_timeCounter == timeCounter) return;
-        m_timeCounter = timeCounter;
+    void updateTC(float timeCounter) { // between 1.0 ... 0.0
         if (!m_enabled) return;
+        m_timeCounter = timeCounter;
+        uint16_t x = s_BitRate.x;
+        uint16_t y = m_y;
+        uint16_t w = s_BitRate.w;
+        uint16_t h = m_h - 5;
 
-        uint16_t x0 = s_BitRate.x;
-        uint16_t x1x2 = round(s_BitRate.x + ((float)((s_BitRate.w) / 10) * timeCounter)) - 1;
-        uint16_t y0y1 = m_y + m_h - 5;
-        uint16_t y2 = round((m_y + m_h - 5) - ((float)(m_h - 6) / 10) * timeCounter);
+        uint16_t triangle_x0 = x;             // left corner
+        uint16_t triangle_y0y1 = y + m_h - 5; // baseline
+
+        uint16_t triangle_x1x2 = x + w * m_timeCounter - 1;
+        uint16_t triangle_y2 = triangle_y0y1 - h * m_timeCounter;
+        MWR_LOG_WARN("timeCounter {}", m_timeCounter);
         if (m_bg_color == TFT_TRANSPARENT) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, s_BitRate.x, m_y, s_BitRate.w, m_h);
         } else {
             getTFT().fillRect(s_BitRate.x, m_y, s_BitRate.w, m_h, m_bg_color);
         }
-        getTFT().fillTriangle(x0, y0y1, x1x2, y0y1, x1x2, y2, TFT_RED);
-        if (!m_timeCounter) { txt_BitRate->show(); }
+        getTFT().fillTriangle(triangle_x0, triangle_y0y1, triangle_x1x2, triangle_y0y1, triangle_x1x2, triangle_y2, TFT_RED);
+        if (m_timeCounter == 0.0f) { txt_BitRate->show(); }
     }
 
     void updateBitRate(uint32_t bitRate) {
-        if (m_timeCounter) return;
+        if (m_timeCounter > 0.0f) return;
+
         m_bitRate = bitRate / 1000; // KBit/s
         if (!m_enabled) return;
         char sbr[10];

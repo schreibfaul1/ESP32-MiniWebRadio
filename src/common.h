@@ -250,9 +250,8 @@ struct releasedArg {
     int16_t      val2 = 0;
 };
 struct timecounter_s {
-    uint8_t timer = 0;
-    uint8_t factor = 2;
-    uint8_t tmp = 0;
+    float timer = 0;
+    float factor = 0;
 };
 struct irButtons {
     int16_t val;
