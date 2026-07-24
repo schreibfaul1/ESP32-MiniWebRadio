@@ -1152,6 +1152,33 @@ class textbox : public RegisterTable {
         m_enabled = false;
     }
 
+    void setBounds(int16_t x, int16_t y, int16_t w, int16_t h) {
+        bool new_bounds = false;
+        if (m_x != x) {
+            m_x = x;
+            new_bounds = true;
+        }
+        if (m_y != y) {
+            m_y = y;
+            new_bounds = true;
+        }
+        if (m_w != w) {
+            m_w = w;
+            new_bounds = true;
+        }
+        if (m_h != h) {
+            m_h = h;
+            new_bounds = true;
+        }
+        if (new_bounds) {
+            m_first_call = true;
+            if(m_enabled){
+            hide();
+            show();
+            }
+        }
+    }
+
     void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
         x = m_x;
         y = m_y;

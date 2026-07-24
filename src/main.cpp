@@ -130,7 +130,8 @@ bool s_f_stationsChanged = false;
 bool s_f_sd_card_found = false;
 bool s_f_isWiFiConnected = false;
 bool s_f_ok_from_ir = false;
-
+bool s_f_vu_meter_enabled = false;
+bool s_f_spectrum_enabled = false;
 
 int8_t   s_state = UNDEFINED; // statemaschine
 int8_t   s_subState = UNDEFINED;
@@ -1709,11 +1710,10 @@ void logAlarmItems() {
 }
 
 void setTimeCounter(uint8_t sec) {
-    if(sec == 0) {
+    if (sec == 0) {
         dispFooter.updateTC(0.0f);
         s_f_newBitRate = true;
-    }
-    else if(sec < 11){
+    } else if (sec < 11) {
         s_timeCounter.timer = 1.0f;
         dispFooter.updateTC(s_timeCounter.timer);
         s_timeCounter.factor = 1.0f / (10.0f * sec);
@@ -1787,6 +1787,17 @@ void changeState(int8_t state, int8_t subState) {
             if(newSubState) hide_objects_in_area(layout.winArea2.x, layout.winArea2.y, layout.winArea2.w, layout.winArea2.h);
             if (subState == 0) {
                 if(newSubState) {
+                    if(s_f_vu_meter_enabled) MWR_LOG_INFO("VU enabled");
+                    if(!s_f_vu_meter_enabled) MWR_LOG_INFO("VU disabled");
+                    if(s_f_spectrum_enabled) MWR_LOG_INFO("spectrum enabled");
+                    if(!s_f_spectrum_enabled) MWR_LOG_INFO("spectrum disabled");
+                    uint16_t x = layout.winSTitle.x, y = layout.winSTitle.y, w = layout.winSTitle.w, h = layout.winSTitle.h;
+                    if(s_f_spectrum_enabled){
+                        x += layout.winSTitle.h;
+                        w -= layout.winSTitle.h;
+                    }
+                    txt_RA_sTitle.setBounds(x, y, w, h);
+
                     VUmeter_RA.show();
                     txt_RA_sTitle.setText("");
                     txt_RA_sTitle.show();
@@ -4133,8 +4144,8 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
     if (s_state == RADIO) {
         if (name.equals("btn_RA_mute"))     { muteChanged(btn_RA_mute.getValue()); goto exit; }
         if (name.equals("btn_RA_recorder")) { s_f_recording = btn_RA_recorder.getValue(); goto exit; }
-        if (name.equals("btn_RA_vu_meter")) { goto exit; }
-        if (name.equals("btn_RA_spectrum")) { goto exit; }
+        if (name.equals("btn_RA_vu_meter")) { s_f_vu_meter_enabled = btn_RA_vu_meter.getValue(); goto exit; }
+        if (name.equals("btn_RA_spectrum")) { s_f_spectrum_enabled = btn_RA_spectrum.getValue(); goto exit; }
         if (name.equals("btn_RA_prevSta"))  { prevFavStation(); dispFooter.updateStation(s_cur_station); goto exit; }
         if (name.equals("btn_RA_nextSta"))  { nextFavStation(); dispFooter.updateStation(s_cur_station); goto exit; }
         if (name.equals("btn_RA_staList"))  { changeState(STATIONSLIST, 0); goto exit; }
