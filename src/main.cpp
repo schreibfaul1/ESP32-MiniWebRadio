@@ -949,6 +949,7 @@ void connecttohost(ps_ptr<char> host) {
     ps_ptr<char> pwd;
 
     dispFooter.updateBitRate(0);
+    spectrum_RA.clear();
     s_cur_Codec = 0;
     //    if(s_state == RADIO) clearStreamTitle();
     s_icyBitRate = 0;
@@ -992,6 +993,7 @@ void connecttohost(ps_ptr<char> host) {
 void connecttoFS(const char* FS, const char* filename, uint32_t fileStartTime) {
     if (!filename) return;
     dispFooter.updateBitRate(0);
+    spectrum_RA.clear();
     s_icyBitRate = 0;
     s_decoderBitRate = 0;
     s_cur_Codec = 0;
@@ -1012,6 +1014,7 @@ void connecttoFS(const char* FS, const char* filename, uint32_t fileStartTime) {
 }
 void stopSong() {
     audio.stopSong();
+    spectrum_RA.clear();
     s_f_isFSConnected = false;
     s_f_isWebConnected = false;
     if (s_f_playlistEnabled) {
@@ -1795,9 +1798,11 @@ void changeState(int8_t state, int8_t subState) {
                     if(s_f_spectrum_enabled){
                         x += layout.winSTitle.h;
                         w -= layout.winSTitle.h;
+
                     }
                     txt_RA_sTitle.setBounds(x, y, w, h);
 
+                    if(s_f_spectrum_enabled) spectrum_RA.show();
                     VUmeter_RA.show();
                     txt_RA_sTitle.setText("");
                     txt_RA_sTitle.show();
@@ -2686,7 +2691,7 @@ void my_audio_info(Audio::msg_t m) {
         case Audio::evt_id3data: printfln(s_tag.audio_info, "id3data: " ANSI_ESC_GREEN "{}", m.msg); break;
 
         case Audio::evt_image:
-            for (int i = 0; i < m.vec.size(); i += 2) { printfln(s_tag.audio_info, "CoverImage: " ANSI_ESC_GREEN "segment {:02}, pos {:08}, len {:08}", i / 2, m.vec[i], m.vec[i + 1]); }
+            for (int i = 0; i < m.vec1.size(); i += 2) { printfln(s_tag.audio_info, "CoverImage: " ANSI_ESC_GREEN "segment {:02}, pos {:08}, len {:08}", i / 2, m.vec1[i], m.vec1[i + 1]); }
             break;
 
         case Audio::evt_icydescription:
@@ -2711,11 +2716,11 @@ void my_audio_info(Audio::msg_t m) {
         case Audio::evt_genre: printfln(s_tag.audio_info, "genre: " ANSI_ESC_YELLOW "{}", m.msg); break;
 
         case Audio::evt_vu: {
-            if (s_state == RADIO && s_subState_radio == 0) VUmeter_RA.update(m.vec[0], m.vec[1], m.vec[2], m.vec[3]);
+            if (s_state == RADIO && s_subState_radio == 0) VUmeter_RA.update(m.vec1[0], m.vec1[1], m.vec1[2], m.vec1[3]);
         } break;
 
         case Audio::evt_spectrum:
-            // todo
+            if (s_state == RADIO && s_subState_radio == 0) spectrum_RA.update(m.vec1, m.vec2);
             break;
 
         case Audio::evt_log: printfln(m.s, "{}", m.msg); break;

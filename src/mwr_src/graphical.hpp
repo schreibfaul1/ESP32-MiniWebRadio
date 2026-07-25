@@ -1172,9 +1172,9 @@ class textbox : public RegisterTable {
         }
         if (new_bounds) {
             m_first_call = true;
-            if(m_enabled){
-            hide();
-            show();
+            if (m_enabled) {
+                hide();
+                show();
             }
         }
     }
@@ -1857,6 +1857,221 @@ class vuMeter : public RegisterTable {
             getTFT().copyFramebuffer(m_cache_bg.get(), m_w, m_h, srcX, srcY, FB_VISIBLE, xPos, yPos, m_segm_w, m_segm_h);
         } else {
             getTFT().fillRect(xPos, yPos, m_segm_w, m_segm_h, color);
+        }
+    }
+};
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class spectrum : public RegisterTable {
+  private:
+    uint16_t         m_x = 0;
+    uint16_t         m_y = 0;
+    uint16_t         m_w = 0;
+    uint16_t         m_h = 0;
+    int32_t          m_bg_color = TFT_TRANSPARENT;
+    ps_ptr<char>     m_name;
+    ps_ptr<uint16_t> m_colums_pos_x;
+    ps_ptr<uint16_t> m_bars_pos_y;
+    ps_ptr<uint16_t> m_cache_bg = {};
+    bool             m_enabled = false;
+    bool             m_focus = false;
+    bool             m_active = true;
+    bool             m_clicked = false;
+    // bool             m_content_has_changed = false;
+    bool m_first_call = true;
+    bool m_transparency = false;
+    // uint64_t         m_barLeft;  // Bit = Bars
+    // uint64_t         m_peakLeft; // Bit = Peak
+    releasedArg m_ra;
+    uint8_t     m_space_between_cols = 1;
+    uint8_t     m_space_between_bars = 1;
+    uint8_t     m_bar_w = 0;
+    uint8_t     m_bar_h = 0;
+    uint16_t    m_window_x = 0;
+    uint16_t    m_window_y = 0;
+    uint16_t    m_window_w = 0;
+    uint16_t    m_window_h = 0;
+
+    enum SegmentState : uint8_t { OFF, BAR, PEAK };
+    uint16_t                  m_numSegments = 26;
+    const uint16_t            m_numColums = 15;
+    std::vector<SegmentState> m_segmState[15];
+
+  public:
+    spectrum(ps_ptr<char> name) {
+        register_object(this);
+        m_name = name;
+    }
+    ~spectrum() {}
+
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom) {
+        m_x = x; // x pos
+        m_y = y; // y pos
+        m_w = w;
+        m_h = h;
+        m_window_x = x + paddig_left;
+        m_window_y = y + paddig_top;
+        m_window_w = m_w - paddig_left - paddig_right;
+        m_window_h = m_h - paddig_top - paddig_bottom;
+        m_numSegments = m_window_h / 3;
+        if (m_numSegments == 0) m_numSegments = 1;
+        m_bar_h = (m_window_h / m_numSegments) - m_space_between_bars;
+        m_bar_w = (m_window_w / m_numColums) - m_space_between_cols;
+        uint8_t center_x = (m_window_w - (m_bar_w + m_space_between_cols) * m_numColums - m_space_between_cols) / 2;
+        uint8_t center_y = (m_window_h - (m_bar_h + m_space_between_bars) * m_numSegments - m_space_between_bars) / 2;
+        MWR_LOG_DEBUG("x {} , y {}, w {}, h {}, win_x {}, win_y {}, win_w {}, win_h {}, numCol {}, numSegm {}, bar_w {}, bar_h {}, center_x {}, center_y {}", m_x, m_y, m_w, m_h, m_window_x, m_window_y, m_window_w, m_window_h, m_numColums, m_numSegments, m_bar_w, m_bar_h, center_x, center_y);
+        m_window_x += center_x;
+        m_window_y += center_y;
+        m_colums_pos_x.alloc_array(m_numColums);
+        for (int i = 0; i < m_numColums; i++) {
+            m_colums_pos_x[i] = m_window_x + i * (m_bar_w + m_space_between_bars);
+            m_segmState[i].resize(m_numSegments);
+        }
+        m_bars_pos_y.alloc_array(m_numSegments);
+        for (int i = 0; i < m_numSegments; i++) { m_bars_pos_y[i] = (m_window_y + m_window_h) - i * (m_bar_h + m_space_between_bars) - (m_bar_h + m_space_between_bars); }
+        for (int i = 0; i < m_numColums; i++) MWR_LOG_DEBUG("col_x  i{}: {}", i, m_colums_pos_x[i]);
+        for (int i = 0; i < m_numSegments; i++) MWR_LOG_DEBUG("bars_y i{}: {}", i, m_bars_pos_y[i]);
+    }
+
+    ps_ptr<char> get_name() { return m_name; }
+    void         enable() { m_enabled = true; }
+    void         disable() { m_enabled = false; }
+    bool         is_enabled() { return m_enabled; }
+    bool         is_active() { return m_active; }
+    void         set_active(bool active) { m_active = active; }
+    bool         has_focus() { return m_focus; }
+    void         set_bg_color(int32_t color) { m_bg_color = color; }
+    bool         set_focus(bool focus) { return false; }
+    void         set_transparency(bool transparency) { m_transparency = transparency; }
+
+    void show() {
+        if (m_first_call) {
+            m_cache_bg.alloc_array(m_w * m_h, m_name.c_get());
+            getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
+        }
+        if (m_transparency) {
+            getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+        }
+        clear();
+        m_first_call = false;
+        m_enabled = true;
+        m_clicked = false;
+    }
+
+    void hide() {
+        if (m_first_call) return;
+        if (m_transparency) {
+            getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+        }
+        m_enabled = false;
+    }
+
+    void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
+        x = m_x;
+        y = m_y;
+        w = m_w;
+        h = m_h;
+    }
+
+    void buildState(uint16_t bars, uint16_t peak, bool hasSignal, uint16_t col, std::vector<SegmentState>& state) {
+        for (uint16_t row = 0; row < m_numSegments; row++) {
+            SegmentState newState = OFF;
+
+            if (row < bars) newState = BAR;
+            if (hasSignal && row == peak) newState = PEAK;
+            if (newState == state[row]) continue;
+
+            switch (newState) {
+                case OFF: drawRect(row, col, 0); break;
+                case BAR: drawRect(row, col, 1); break;
+                case PEAK: drawRect(row, col, 1); break;
+            }
+
+            state[row] = newState;
+        }
+    }
+
+    void update(const std::vector<uint32_t>& v, const std::vector<uint32_t>& p) {
+        if (!m_enabled) return;
+        if (v.size() < m_numColums) return; // measured
+        if (p.size() < m_numColums) return; // peak
+
+        xSemaphoreTake(mutex_display, portMAX_DELAY);
+        for (uint16_t col = 0; col < m_numColums; col++) {
+            uint16_t bars = map_l(v[col], 0, 255, 0, m_numSegments - 1);
+            uint16_t peak = map_l(p[col], 0, 255, 0, m_numSegments - 1);
+            buildState(bars, peak, v[col] > 0, col, m_segmState[col]);
+        }
+        xSemaphoreGive(mutex_display);
+    }
+
+    bool positionXY(uint16_t x, uint16_t y) {
+        if (x < m_x) return false;
+        if (y < m_y) return false;
+        if (x > m_x + m_w) return false;
+        if (y > m_y + m_h) return false;
+        if (m_enabled) m_clicked = true;
+        if (graphicObjects_OnClick) graphicObjects_OnClick(m_name, m_enabled);
+        if (!m_enabled) return false;
+        return true;
+    }
+    bool released() {
+        if (!m_enabled) return false;
+        if (!m_clicked) return false;
+        m_clicked = false;
+        if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
+        return true;
+    }
+
+    void clear() {
+        for (uint16_t row = 0; row < m_numSegments; row++) {
+            for (uint16_t col = 0; col < m_numColums; col++) {
+                m_segmState[col][row] = OFF;
+                drawRect(row, col, 0);
+            }
+        }
+    }
+
+  private:
+    void drawRect(uint16_t row, uint8_t col, bool br) {
+        if (row >= m_numSegments || col >= m_numColums) return;
+
+        uint16_t xPos = m_colums_pos_x[col];
+        uint16_t yPos = m_bars_pos_y[row];
+
+        float    s = (float)m_numSegments / 100.0;
+        uint16_t greenLimit = 58.0 * s;
+        uint16_t yellowLimit = 85.0 * s;
+
+        int32_t activeColor;
+        int32_t inactiveColor;
+
+        if (row < greenLimit) {
+            activeColor = TFT_GREEN;
+            inactiveColor = m_transparency ? TFT_TRANSPARENT : TFT_DARKGREEN;
+        } else if (row < yellowLimit) {
+            activeColor = TFT_YELLOW;
+            inactiveColor = m_transparency ? TFT_TRANSPARENT : TFT_DARKYELLOW;
+        } else {
+            activeColor = TFT_LIGHTRED;
+            inactiveColor = m_transparency ? TFT_TRANSPARENT : TFT_DARKRED;
+        }
+
+        int32_t color = br ? activeColor : inactiveColor;
+
+        if (color == TFT_TRANSPARENT) {
+            uint16_t srcX = xPos - m_x;
+            uint16_t srcY = yPos - m_y;
+            getTFT().copyFramebuffer(m_cache_bg.get(), m_w, m_h, srcX, srcY, FB_VISIBLE, xPos, yPos, m_bar_w, m_bar_h);
+        } else {
+            getTFT().fillRect(m_colums_pos_x[col], m_bars_pos_y[row], m_bar_w, m_bar_h, color);
         }
     }
 };

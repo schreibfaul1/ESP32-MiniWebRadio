@@ -41,6 +41,7 @@ struct Layout {
     const coor& winArea2;
     const coor& winSTitle;
     const coor& winVUmeter;
+    const coor& winSpectrum;
     const coor& winFooter;
     const coor& winButton;
     const coor& winDigits;
@@ -126,6 +127,7 @@ constexpr coor winFooter = coor().pos(0, v_res - h_footer).size(h_res, h_footer)
 constexpr coor winButton = coor().pos(0, y_btn).size(hw_btn, hw_btn);
 constexpr coor winDigits = coor().pos(0, h_footer).size(h_res, y_btn - h_footer); // clock24, alarmclock
 constexpr coor winWoHF = coor().pos(0, h_footer).size(h_res, 2 * h_area);
+constexpr coor winSpectrum = coor().pos(0, y_area2).size(h_area, h_area).pad(0, 0, 0, 0);
 
 // -----------------------------------------------------------------------------------
 // window derived (calculated from others)
@@ -212,6 +214,7 @@ constexpr coor winFooter = coor().pos(0, v_res - h_footer).size(h_res, h_footer)
 constexpr coor winButton = coor().pos(0, y_btn).size(hw_btn, hw_btn);
 constexpr coor winDigits = coor().pos(0, h_footer).size(h_res, y_btn - h_footer); // clock24, alarmclock
 constexpr coor winWoHF = coor().pos(0, h_footer).size(h_res, 2 * h_area);         // window without header and footer
+constexpr coor winSpectrum = coor().pos(0, y_area2).size(h_area, h_area).pad(0, 0, 0, 0);
 
 // -----------------------------------------------------------------------------------
 // window derived (calculated from others)
@@ -299,6 +302,7 @@ constexpr coor winFooter = coor().pos(0, v_res - h_footer).size(h_res, h_footer)
 constexpr coor winButton = coor().pos(0, y_btn).size(hw_btn, hw_btn);
 constexpr coor winDigits = coor().pos(0, h_footer).size(h_res, y_btn - h_footer); // clock24, alarmclock
 constexpr coor winWoHF = coor().pos(0, h_footer).size(h_res, 2 * h_area);
+constexpr coor winSpectrum = coor().pos(0, y_area2).size(h_area, h_area).pad(0, 0, 0, 0);
 
 // -----------------------------------------------------------------------------------
 // window derived (calculated from others)
@@ -384,6 +388,7 @@ constexpr coor winFooter = coor().pos(0, v_res - h_footer).size(h_res, h_footer)
 constexpr coor winButton = coor().pos(0, y_btn).size(hw_btn, hw_btn);
 constexpr coor winDigits = coor().pos(0, h_footer).size(h_res, y_btn - h_footer); // clock24, alarmclock
 constexpr coor winWoHF = coor().pos(0, h_footer).size(h_res, 2 * h_area);
+constexpr coor winSpectrum = coor().pos(0, y_area2).size(h_area, h_area).pad(0, 0, 0, 0);
 
 // -----------------------------------------------------------------------------------
 // window derived (calculated from others)
@@ -437,7 +442,7 @@ inline Layout makeLayout() {
 #else
     printf() "Unsupported TFT_LAYOUT\n"
 #endif
-    return {winHeader, winLogo, winName, winProgbar, winArea1, winArea2, winSTitle, winVUmeter, winFooter, winButton, winDigits, winWoHF, sdrHP, sdrBP, sdrLP, sdrBAL, btnHP, btnBP, btnLP, btnBAL, txtHP, txtBP, txtLP, txtBAL};
+    return {winHeader, winLogo, winName, winProgbar, winArea1, winArea2, winSTitle, winVUmeter, winSpectrum, winFooter, winButton, winDigits, winWoHF, sdrHP, sdrBP, sdrLP, sdrBAL, btnHP, btnBP, btnLP, btnBAL, txtHP, txtBP, txtLP, txtBAL};
 }
 
 // global constant - finished initialized
@@ -481,6 +486,7 @@ button1state btn_RA_off("btn_RA_off"), btn_RA_settings("btn_RA_settings");
 pictureBox   pic_RA_logo("pic_RA_logo");
 textbox      txt_RA_sTitle("txt_RA_sTitle"), txt_RA_staName("txt_RA_staName"), txt_RA_irNum("txt_RA_irNum");
 vuMeter      VUmeter_RA("VUmeter_RA");
+spectrum     spectrum_RA("spectrum_RA");
 slider       sdr_RA_volume("sdr_RA_volume");
 numbersBox   nbr_RA_staBox("nbr_RA_staBox");
 // STATIONSLIST
@@ -600,6 +606,8 @@ void placingGraphicObjects() { // and initialize them
     pic_RA_logo.begin(layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h, layout.winLogo.pl, layout.winLogo.pr, layout.winLogo.pt, layout.winLogo.pb);
     VUmeter_RA.begin(layout.winVUmeter.x, layout.winVUmeter.y, layout.winVUmeter.w, layout.winVUmeter.h, layout.winVUmeter.pl, layout.winVUmeter.pr, layout.winVUmeter.pt, layout.winVUmeter.pb);
     VUmeter_RA.set_transparency(true);
+    spectrum_RA.begin(layout.winSpectrum.x, layout.winSpectrum.y, layout.winSpectrum.w, layout.winSpectrum.h, 0, 0, 0, 0);
+    spectrum_RA.set_transparency(true);
     nbr_RA_staBox.begin(layout.winName.x, layout.winName.y, layout.winName.w, layout.winName.h);
     // STATIONSLIST ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     lst_RADIO.begin(layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, displayConfig.tftSize, displayConfig.listFontSize);
