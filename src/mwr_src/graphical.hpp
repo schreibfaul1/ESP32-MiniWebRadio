@@ -3693,7 +3693,7 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
+class AlarmClock : public RegisterTable { // draw a clock in 12 or 24h format
   private:
     PictureBox* pic_alarm_digitsH10 = new PictureBox("alarm_digitsH10");                                                                                                                                                                             // digits hour   * 10
     PictureBox* pic_alarm_digitsH01 = new PictureBox("alarm_digitsH01");                                                                                                                                                                             // digits hour   * 01
@@ -3746,14 +3746,14 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
     releasedArg  m_ra;
 
   public:
-    alarmClock(ps_ptr<char> name) {
+    AlarmClock(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
         m_enabled = false;
         m_clicked = false;
         m_state = false;
     }
-    ~alarmClock() {
+    ~AlarmClock() {
         delete pic_alarm_digitsH10;
         delete pic_alarm_digitsH01;
         delete pic_alarm_digitsColon;
@@ -4325,7 +4325,7 @@ extern uniList myList;
   ———————————————————————————————————————————————————————
 */
 
-class dlnaList : public RegisterTable {
+class DlnaList : public RegisterTable {
 
   private:
     int16_t                                    m_x = 0;
@@ -4366,7 +4366,7 @@ class dlnaList : public RegisterTable {
     enum DLNA_Action { DLNA_NONE = 0, DLNA_FILE = 1, DLNA_SERVERLIST = 2, DLNA_PREV_LEVEL = 3, DLNA_NEXT_LEVEL = 4, DLNA_WIPE = 5 };
 
   public:
-    dlnaList(ps_ptr<char> name) {
+    DlnaList(ps_ptr<char> name) {
         register_object(this);
         if (name != "") {
             m_name = name;
@@ -4381,7 +4381,7 @@ class dlnaList : public RegisterTable {
         m_ra.val1 = 0;
         m_ra.val2 = 0;
     }
-    ~dlnaList() {}
+    ~DlnaList() {}
 
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, ps_ptr<char> tftSize, uint8_t fontSize) {
         m_x = x; // x pos
@@ -4935,7 +4935,7 @@ class dlnaList : public RegisterTable {
   ———————————————————————————————————————————————————————
 */
 
-class fileList : public RegisterTable {
+class FileList : public RegisterTable {
   private:
     int16_t      m_x = 0;
     int16_t      m_y = 0;
@@ -4969,7 +4969,7 @@ class fileList : public RegisterTable {
     releasedArg  m_ra;
 
   public:
-    fileList(ps_ptr<char> name) {
+    FileList(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
         m_curAudioFolder = "";
@@ -4983,7 +4983,7 @@ class fileList : public RegisterTable {
         m_ra.val1 = 0;
         m_ra.val2 = 0;
     }
-    ~fileList() {}
+    ~FileList() {}
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, ps_ptr<char> tftSize, uint8_t fontSize) {
         m_x = x; // x pos
         m_y = y; // y pos
@@ -5610,7 +5610,7 @@ class stationsList : public RegisterTable {
     }
 };
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class displayHeader : public RegisterTable {
+class DisplayHeader : public RegisterTable {
   private:
     Textbox*     txt_Item = new Textbox("header_Item");              // Radio, Player, Clock....
     PictureBox*  pic_Speaker = new PictureBox("header_Speaker");     // loudspeaker symbol
@@ -5814,13 +5814,13 @@ class displayHeader : public RegisterTable {
     } const s_time; // time object
 #endif
   public:
-    displayHeader(ps_ptr<char> name, uint8_t fontSize) {
+    DisplayHeader(ps_ptr<char> name, uint8_t fontSize) {
         register_object(this);
         m_name = name;
         m_fontSize = fontSize;
         timeStringObject->setFontSize(m_fontSize);
     }
-    ~displayHeader() {
+    ~DisplayHeader() {
         delete txt_Item;
         delete pic_Speaker;
         delete txt_Volume;
@@ -5998,7 +5998,7 @@ class displayHeader : public RegisterTable {
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class displayFooter : public RegisterTable {
+class DisplayFooter : public RegisterTable {
   private:
     PictureBox*  pic_Antenna = new PictureBox("footer_Antenna");     // antenna symbol
     Textbox*     txt_StaNr = new Textbox("footer_StaNr");            // station number
@@ -6305,13 +6305,13 @@ class displayFooter : public RegisterTable {
     //-----------------------------------------------------------------------------------------------------------------------------------
 #endif
   public:
-    displayFooter(ps_ptr<char> name, uint8_t fontSize) {
+    DisplayFooter(ps_ptr<char> name, uint8_t fontSize) {
         register_object(this);
         m_name = name;
         m_fontSize = fontSize;
         m_fileNr = "000/000";
     }
-    ~displayFooter() {
+    ~DisplayFooter() {
         delete pic_Antenna;
         delete txt_StaNr;
         delete pic_Flag;

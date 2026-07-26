@@ -470,8 +470,8 @@ inline const DisplayConfig displayConfig = makeDisplayConfig();
            ║                                                                                  M E N U E / B U T T O N S                                                                  ║
            ╚═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝   */
 
-displayHeader dispHeader("dispHeader", displayConfig.headerFontSize); // 0 -> autoSize
-displayFooter dispFooter("dispFooter", displayConfig.footerFontSize); // 0 -> autoSize
+DisplayHeader dispHeader("dispHeader", displayConfig.headerFontSize); // 0 -> autoSize
+DisplayFooter dispFooter("dispFooter", displayConfig.footerFontSize); // 0 -> autoSize
 numbersBox    volBox("volBox");
 uniList       myList("myList");
 // RADIO
@@ -514,7 +514,7 @@ Slider      sdr_PL_volume("sdr_PL_volume");
 PictureBox  pic_PL_logo("pic_PL_logo");
 progressbar pgb_PL_progress("pgb_PL_progress");
 // AUDIOFILESLIST
-fileList lst_PLAYER("lst_PLAYER");
+FileList lst_PLAYER("lst_PLAYER");
 // DLNA
 Button      btn_DL_mute("btn_DL_mute", ButtonType::ToggleButton);
 Button      btn_DL_pause("btn_DL_pause", ButtonType::ToggleButton);
@@ -526,7 +526,7 @@ Slider      sdr_DL_volume("sdr_DL_volume");
 PictureBox  pic_DL_logo("pic_DL_logo");
 progressbar pgb_DL_progress("pgb_DL_progress");
 // DLNAITEMSLIST
-dlnaList lst_DLNA("lst_DLNA");
+DlnaList lst_DLNA("lst_DLNA");
 // CLOCK
 Button     btn_CL_mute("btn_CL_mute", ButtonType::ToggleButton);
 Button     btn_CL_alarm("btn_CL_alarm", ButtonType::PushButton);
@@ -535,7 +535,7 @@ Button     btn_CL_off("btn_CL_off", ButtonType::PushButton);
 imgClock24 clk_CL_24("clk_CL_24");
 Slider     sdr_CL_volume("sdr_CL_volume");
 // ALARMCLOCK
-alarmClock clk_AC_red("clk_AC_red");
+AlarmClock clk_AC_red("clk_AC_red");
 Button     btn_AC_left("btn_AC_left", ButtonType::PushButton);
 Button     btn_AC_right("btn_AC_right", ButtonType::PushButton);
 Button     btn_AC_up("btn_AC_up", ButtonType::PushButton);
