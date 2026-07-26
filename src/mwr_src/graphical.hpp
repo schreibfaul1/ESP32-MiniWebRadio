@@ -27,7 +27,7 @@ struct imgSize {
     uint16_t h = 0;
 };
 
-imgSize GetImageSize(ps_ptr<char> picturePath) {
+imgSize getImageSize(ps_ptr<char> picturePath) {
     if (picturePath.strlen() == 0) {
         MWR_LOG_DEBUG("picturePath is empty");
         return imgSize{0, 0};
@@ -285,7 +285,7 @@ class Button : public RegisterTable {
             m_picturePath[ON][INACTIVE] = path + "_On_inactive.png";
         }
 
-        imgSize img = GetImageSize(m_picturePath[OFF][IDLE]);
+        imgSize img = getImageSize(m_picturePath[OFF][IDLE]);
         m_button_image_w = img.w;
         m_button_image_h = img.h;
         if (m_button_image_w > m_w || m_button_image_h > m_h) {
@@ -445,7 +445,7 @@ class PictureBox : public RegisterTable {
     void setPicturePath(ps_ptr<char> path) {
         if (m_PicturePath != path) m_content_has_changed = true;
         m_PicturePath = path;
-        imgSize img = GetImageSize(path);
+        imgSize img = getImageSize(path);
         m_image_w = img.w;
         m_image_h = img.h;
         align();
@@ -3042,7 +3042,7 @@ class numbersBox : public RegisterTable { // range 000...999
     }
 
     void placingDigits(uint16_t w, uint16_t h) {
-        imgSize img = GetImageSize("/digits/s/0green.jpg"); // get size of digit '0'
+        imgSize img = getImageSize("/digits/s/0green.jpg"); // get size of digit '0'
         if (img.w == 0 || img.h == 0) {
             MWR_LOG_ERROR("cannot get digit size");
             return;
@@ -3173,7 +3173,7 @@ class offTimerBox : public RegisterTable { // range 000...999
     }
 
     void placingDigits(uint16_t w, uint16_t h) {
-        imgSize img = GetImageSize("/digits/s/0green.jpg"); // get size of digit '0'
+        imgSize img = getImageSize("/digits/s/0green.jpg"); // get size of digit '0'
         if (img.w == 0 || img.h == 0) {
             MWR_LOG_ERROR("cannot get digit size");
             return;
@@ -3182,7 +3182,7 @@ class offTimerBox : public RegisterTable { // range 000...999
         m_digitsWidth = img.w;
         m_digitsHigh = img.h;
 
-        img = GetImageSize("/digits/s/cgreen.jpg"); // get size of colon
+        img = getImageSize("/digits/s/cgreen.jpg"); // get size of colon
         if (img.w == 0 || img.h == 0) {
             MWR_LOG_ERROR("cannot get colon size");
             return;
@@ -3397,7 +3397,7 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
     void placingDigits(uint16_t w, uint16_t h) {
         uint16_t digits_y = 0, digits_w = 0, colon_w = 0, digits_h = 0, paddig_l = 0;
 
-        imgSize img = GetImageSize("/digits/l/0green.jpg"); // get size of digit '0'
+        imgSize img = getImageSize("/digits/l/0green.jpg"); // get size of digit '0'
         if (img.w == 0 || img.h == 0) {
             MWR_LOG_ERROR("cannot get digit size");
             return;
@@ -3406,7 +3406,7 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
         digits_w = img.w;
         digits_h = img.h;
 
-        img = GetImageSize("/digits/l/cgreen.jpg"); // get size of colon
+        img = getImageSize("/digits/l/cgreen.jpg"); // get size of colon
         if (img.w == 0 || img.h == 0) {
             MWR_LOG_ERROR("cannot get colon size");
             return;
@@ -3652,7 +3652,7 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
     void placingDigits(uint16_t w, uint16_t h) {
         uint16_t digits_y = 0, digits_w = 0, colon_w = 0, digits_h = 0, paddig_l = 0;
 
-        imgSize img = GetImageSize("/digits/s/0green.jpg"); // get size of digit '0'
+        imgSize img = getImageSize("/digits/s/0green.jpg"); // get size of digit '0'
         if (img.w == 0 || img.h == 0) {
             MWR_LOG_ERROR("cannot get digit size");
             return;
@@ -3661,7 +3661,7 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
         digits_w = img.w;
         digits_h = img.h;
 
-        img = GetImageSize("/digits/s/cgreen.jpg"); // get size of colon
+        img = getImageSize("/digits/s/cgreen.jpg"); // get size of colon
         if (img.w == 0 || img.h == 0) {
             MWR_LOG_ERROR("cannot get colon size");
             return;
@@ -4071,7 +4071,7 @@ class AlarmClock : public RegisterTable { // draw a clock in 12 or 24h format
         uint16_t digits_y = 0, digits_w = 0, colon_w = 0, digits_h = 0, digits_paddig_l = 0, alarmdays_padding_l = 0;
         uint16_t h4 = h / 4 + 2; // [1/4 days + 2px, time + 3/4 digits - 2px]  (2px for disp size s)
 
-        imgSize img = GetImageSize("/digits/m/0green.jpg"); // get size of digit '0'
+        imgSize img = getImageSize("/digits/m/0green.jpg"); // get size of digit '0'
         if (img.w == 0 || img.h == 0) {
             MWR_LOG_ERROR("cannot get digit size");
             return;
@@ -4079,7 +4079,7 @@ class AlarmClock : public RegisterTable { // draw a clock in 12 or 24h format
         MWR_LOG_DEBUG("digits w = {}, h = {}", img.w, img.h);
         digits_w = img.w;
         digits_h = img.h;
-        img = GetImageSize("/digits/m/cred.jpg"); // get size of colon
+        img = getImageSize("/digits/m/cred.jpg"); // get size of colon
         if (img.w == 0 || img.h == 0) {
             MWR_LOG_ERROR("cannot get colon size");
             return;
