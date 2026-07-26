@@ -877,7 +877,7 @@ class progressbar : public RegisterTable {
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class textbox : public RegisterTable {
+class Textbox : public RegisterTable {
   private:
     bool             m_enabled = false;
     bool             m_focus = false;
@@ -909,14 +909,14 @@ class textbox : public RegisterTable {
     releasedArg      m_ra;
 
   public:
-    textbox(ps_ptr<char> name) {
+    Textbox(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
         m_textColor = TFT_LIGHTGREY;
         m_borderColor = TFT_TRANSPARENT;
         m_fontSize = 1;
     }
-    ~textbox() {}
+    ~Textbox() {}
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom) {
         m_x = x; // x pos
         m_y = y; // y pos
@@ -1928,10 +1928,10 @@ class selectbox : public RegisterTable {
     bool                      m_narrow = false;
     bool                      m_noWrap = false;
     releasedArg               m_ra;
-    textbox*                  m_txt_select = new textbox("select_txtbox_ssid");
+    Textbox*                  m_txt_select = new Textbox("select_txtbox_ssid");
     textbutton*               m_txt_btn_down = new textbutton("select_txtbtn_down");
     textbutton*               m_txt_btn_up = new textbutton("select_txtbtn_up");
-    textbox*                  m_txt_btn_idx = new textbox("select_txtbox_idx");
+    Textbox*                  m_txt_btn_idx = new Textbox("select_txtbox_idx");
     std::vector<ps_ptr<char>> m_selContent;
 
   public:
@@ -2791,7 +2791,7 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     bool         m_focus = false;
     bool         m_clicked = false;
     releasedArg  m_ra;
-    textbox*     txt_time = new textbox[8]{textbox("txt_timeH10"), textbox("txt_timeH01"), textbox("txt_timeC1"), textbox("txt_timeM10"), textbox("txt_timeM01"), textbox("txt_timeC2"), textbox("txt_timeS10"), textbox("txt_timeS01")}; // time of the day
+    Textbox*     txt_time = new Textbox[8]{Textbox("txt_timeH10"), Textbox("txt_timeH01"), Textbox("txt_timeC1"), Textbox("txt_timeM10"), Textbox("txt_timeM01"), Textbox("txt_timeC2"), Textbox("txt_timeS10"), Textbox("txt_timeS01")}; // time of the day
   public:
     timeString(ps_ptr<char> name, uint8_t fontSize) {
         register_object(this);
@@ -3700,8 +3700,8 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
     PictureBox* pic_alarm_digitsM10 = new PictureBox("alarm_digitsM10");                                                                                                                                                                             // digits minute * 10
     PictureBox* pic_alarm_digitsM01 = new PictureBox("alarm_digitsM01");                                                                                                                                                                             // digits minute * 01
     PictureBox* pic_alarm_digitsColon = new PictureBox("alarm_digitsColon");                                                                                                                                                                         // digits colon
-    textbox*    txt_alarm_days = new textbox[7]{textbox("txt_alarm_days0"), textbox("txt_alarm_days1"), textbox("txt_alarm_days2"), textbox("txt_alarm_days3"), textbox("txt_alarm_days4"), textbox("txt_alarm_days5"), textbox("txt_alarm_days6")}; // days of the week
-    textbox*    txt_alarm_time = new textbox[7]{textbox("txt_alarm_time0"), textbox("txt_alarm_time1"), textbox("txt_alarm_time2"), textbox("txt_alarm_time3"), textbox("txt_alarm_time4"), textbox("txt_alarm_time5"), textbox("txt_alarm_time6")}; // time of the day
+    Textbox*    txt_alarm_days = new Textbox[7]{Textbox("txt_alarm_days0"), Textbox("txt_alarm_days1"), Textbox("txt_alarm_days2"), Textbox("txt_alarm_days3"), Textbox("txt_alarm_days4"), Textbox("txt_alarm_days5"), Textbox("txt_alarm_days6")}; // days of the week
+    Textbox*    txt_alarm_time = new Textbox[7]{Textbox("txt_alarm_time0"), Textbox("txt_alarm_time1"), Textbox("txt_alarm_time2"), Textbox("txt_alarm_time3"), Textbox("txt_alarm_time4"), Textbox("txt_alarm_time5"), Textbox("txt_alarm_time6")}; // time of the day
 
     int16_t m_x = 0;
     int16_t m_y = 0;
@@ -5612,9 +5612,9 @@ class stationsList : public RegisterTable {
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class displayHeader : public RegisterTable {
   private:
-    textbox*     txt_Item = new textbox("header_Item");              // Radio, Player, Clock....
+    Textbox*     txt_Item = new Textbox("header_Item");              // Radio, Player, Clock....
     PictureBox*  pic_Speaker = new PictureBox("header_Speaker");     // loudspeaker symbol
-    textbox*     txt_Volume = new textbox("header_Volume");          // volume
+    Textbox*     txt_Volume = new Textbox("header_Volume");          // volume
     PictureBox*  pic_RSSID = new PictureBox("header_RSSID");         // RSSID symbol
     timeString*  timeStringObject = new timeString("timeString", 0); // 10:34:09
     int16_t      m_x = 0;
@@ -6001,13 +6001,13 @@ class displayHeader : public RegisterTable {
 class displayFooter : public RegisterTable {
   private:
     PictureBox*  pic_Antenna = new PictureBox("footer_Antenna");     // antenna symbol
-    textbox*     txt_StaNr = new textbox("footer_StaNr");            // station number
+    Textbox*     txt_StaNr = new Textbox("footer_StaNr");            // station number
     PictureBox*  pic_Flag = new PictureBox("footer_Flag");           // flag symbol
     PictureBox*  pic_Hourglass = new PictureBox("footer_Hourglass"); // hourglass symbol
-    textbox*     txt_OffTimer = new textbox("footer_OffTimer");      // off timer
-    textbox*     txt_BitRate = new textbox("footer_BitRate");        // bit rate
-    textbox*     txt_IpAddr = new textbox("footer_IPaddr");          // ip address
-    textbox*     txt_FileNr = new textbox("footer_FileNr");          // fileNr
+    Textbox*     txt_OffTimer = new Textbox("footer_OffTimer");      // off timer
+    Textbox*     txt_BitRate = new Textbox("footer_BitRate");        // bit rate
+    Textbox*     txt_IpAddr = new Textbox("footer_IPaddr");          // ip address
+    Textbox*     txt_FileNr = new Textbox("footer_FileNr");          // fileNr
     int16_t      m_x = 0;
     int16_t      m_y = 0;
     int16_t      m_w = 0;
@@ -6604,7 +6604,7 @@ class messageBox : public RegisterTable {
     releasedArg  m_ra;
     int32_t      m_bg_color = TFT_YELLOW;
     int32_t      m_textColor = TFT_DARKRED;
-    textbox*     txt_msgBox = new textbox("msgBox txt");
+    Textbox*     txt_msgBox = new Textbox("msgBox txt");
 
 #ifdef TFT_LAYOUT_S // 320 x 240px
 
