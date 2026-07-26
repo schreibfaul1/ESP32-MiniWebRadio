@@ -109,6 +109,8 @@ bool s_f_newLyrics = false;
 bool s_f_volBarVisible = false;
 bool s_f_switchToClock = false;   // jump into CLOCK mode at the next opportunity
 bool s_f_timeAnnouncement = true; // time announcement every full hour
+bool s_f_vu_meter_enabled = false;
+bool s_f_spectrum_enabled = false;
 bool s_f_playlistEnabled = false;
 bool s_f_playlistNextFile = false;
 bool s_f_logoUnknown = false;
@@ -130,8 +132,6 @@ bool s_f_stationsChanged = false;
 bool s_f_sd_card_found = false;
 bool s_f_isWiFiConnected = false;
 bool s_f_ok_from_ir = false;
-bool s_f_vu_meter_enabled = false;
-bool s_f_spectrum_enabled = false;
 
 int8_t   s_state = UNDEFINED; // statemaschine
 int8_t   s_subState = UNDEFINED;
@@ -316,6 +316,8 @@ boolean defaultsettings() {
     s_f_timeAnnouncement = (strcmp(parseJson("\"timeAnnouncing\":"), "true") == 0) ? 1 : 0;
     s_timeSpeechLang = parseJson("\"timeSpeechLang\":");
     s_f_mute = (strcmp(parseJson("\"mute\":"), "true") == 0) ? 1 : 0;
+    s_f_vu_meter_enabled = (strcmp(parseJson("\"vu_meter_enabled\":"), "true") == 0) ? 1 : 0;
+    s_f_spectrum_enabled = (strcmp(parseJson("\"spectrum_enabled\":"), "true") == 0) ? 1 : 0;
     s_brightness = max(5, atoi(parseJson("\"brightness\":")));
     s_sleeptime = atoi(parseJson("\"sleeptime\":"));
     s_cur_station = atoi(parseJson("\"station\":"));
@@ -374,6 +376,8 @@ void updateSettings() {
     jO.appendf(",\n  \"timeAnnouncing\":\"{}\"", s_f_timeAnnouncement);
     jO.appendf(",\n  \"timeSpeechLang\":\"{}\"", s_timeSpeechLang.c_get());
     jO.appendf(",\n  \"mute\":\"{}\"", s_f_mute);
+    jO.appendf(",\n  \"vu_meter_enabled\":\"{}\"", s_f_vu_meter_enabled);
+    jO.appendf(",\n  \"spectrum_enabled\":\"{}\"", s_f_spectrum_enabled);
     jO.appendf(",\n  \"brightness\":{}", s_brightness);
     jO.appendf(",\n  \"sleeptime\":{}", s_sleeptime);
     jO.appendf(",\n  \"lastconnectedhost\":\"{}\"", s_settings.lastconnectedhost.c_get());
@@ -1117,6 +1121,8 @@ void setup() {
     btn_PL_mute.setValue(s_f_mute);
     btn_DL_mute.setValue(s_f_mute);
     btn_BT_power.setValue(s_bt_emitter.enabled);
+    btn_SE_spectrum.setValue(s_f_spectrum_enabled);
+    btn_SE_vu_meter.setValue(s_f_vu_meter_enabled);
     lst_DLNA.client_and_history(&dlna, &s_dlnaHistory[0], 10);
     lst_RADIO.currentStationNr(&s_cur_station);
     clk_AC_red.alarm_time_and_days(&s_alarmdays, s_alarmtime);
@@ -1795,22 +1801,26 @@ void changeState(int8_t state, int8_t subState) {
                     if(s_f_spectrum_enabled) MWR_LOG_INFO("spectrum enabled");
                     if(!s_f_spectrum_enabled) MWR_LOG_INFO("spectrum disabled");
                     uint16_t x = layout.winSTitle.x, y = layout.winSTitle.y, w = layout.winSTitle.w, h = layout.winSTitle.h;
+                    txt_RA_sTitle.setBounds(x, y, w, h);
                     if(s_f_spectrum_enabled){
                         x += layout.winSTitle.h;
                         w -= layout.winSTitle.h;
-
+                        txt_RA_sTitle.setBounds(x, y, w, h);
+                        spectrum_RA.show();
                     }
-                    txt_RA_sTitle.setBounds(x, y, w, h);
-
-                    if(s_f_spectrum_enabled) spectrum_RA.show();
-                    VUmeter_RA.show();
+                    if(s_f_vu_meter_enabled){
+                        w -= layout.winVUmeter.w;
+                        txt_RA_sTitle.setBounds(x, y, w, h);
+                        VUmeter_RA.show();
+                    }
                     txt_RA_sTitle.setText("");
                     txt_RA_sTitle.show();
                     s_f_newIcyDescription = true;
                     s_f_newStreamTitle = true;
                 }
                 else {
-                    VUmeter_RA.enable();
+                    if(s_f_vu_meter_enabled) VUmeter_RA.enable();
+                    if(s_f_spectrum_enabled) spectrum_RA.enable();
                     txt_RA_sTitle.enable();
                     txt_RA_sTitle.enable();
                 }
@@ -1818,12 +1828,12 @@ void changeState(int8_t state, int8_t subState) {
             if (subState == 1) {  // Mute, Vol+, Vol-, Sta+, Sta-, StaList
                 if(newSubState) {
                     sdr_RA_volume.show();
-                    btn_RA_mute.show(); btn_RA_prevSta.show(); btn_RA_nextSta.show(); btn_RA_recorder.show(); btn_RA_vu_meter.show(); btn_RA_spectrum.show();
+                    btn_RA_mute.show(); btn_RA_prevSta.show(); btn_RA_nextSta.show(); btn_RA_recorder.show();
                     setTimeCounter(2);
                 }
                 else{
                     sdr_RA_volume.enable();
-                    btn_RA_mute.enable(); btn_RA_prevSta.enable(); btn_RA_nextSta.enable(); btn_RA_recorder.enable(); btn_RA_vu_meter.enable(); btn_RA_spectrum.enable();
+                    btn_RA_mute.enable(); btn_RA_prevSta.enable(); btn_RA_nextSta.enable(); btn_RA_recorder.enable();
                 }
             }
             if (subState == 2){ // Player, DLNA, Clock, SleepTime, Brightness, EQ, BT, Off
@@ -1944,7 +1954,7 @@ void changeState(int8_t state, int8_t subState) {
             if (newState) {
                 showFileLogo(SETTINGS, subState);
             }
-            btn_SE_bright.show(); btn_SE_equal.show(); btn_SE_wifi.show(); btn_SE_radio.show();
+            btn_SE_bright.show(); btn_SE_equal.show(); btn_SE_wifi.show(); btn_SE_radio.show(); btn_SE_vu_meter.show(); btn_SE_spectrum.show();
             break;
         }
         case BRIGHTNESS: {
@@ -3209,6 +3219,8 @@ void ir_short_key(int8_t key) {
                     if (s_ir_btn_select == 1) { btn_SE_equal.click(); }
                     if (s_ir_btn_select == 2) { btn_SE_wifi.click(); }
                     if (s_ir_btn_select == 3) { btn_SE_radio.click(); }
+                    if (s_ir_btn_select == 4) { btn_SE_vu_meter.click(); }
+                    if (s_ir_btn_select == 5) { btn_SE_spectrum.click(); }
                     if(s_ir_btn_select == -1) { s_ir_btn_select = 0; set_ir_pos_SE(0); }
                     break;
             }
@@ -3887,7 +3899,7 @@ void tp_released(uint16_t x, uint16_t y){
         case RADIO:
             VUmeter_RA.released();    sdr_RA_volume.released(); btn_RA_mute.released();    btn_RA_prevSta.released();  btn_RA_nextSta.released();
             btn_RA_player.released(); btn_RA_dlna.released();   btn_RA_clock.released();   btn_RA_sleep.released();    btn_RA_settings.released();
-            btn_RA_bt.released();     btn_RA_off.released();    btn_RA_staList.released(); btn_RA_recorder.released(); btn_RA_vu_meter.released(); btn_RA_spectrum.released();
+            btn_RA_bt.released();     btn_RA_off.released();    btn_RA_staList.released(); btn_RA_recorder.released();
             break;
         case STATIONSLIST:
             lst_RADIO.released();
@@ -3917,7 +3929,7 @@ void tp_released(uint16_t x, uint16_t y){
             btn_SL_up.released(); btn_SL_down.released(); btn_SL_ready.released(); btn_SL_cancel.released();
             break;
         case SETTINGS:
-            btn_SE_bright.released(); btn_SE_equal.released();  btn_SE_wifi.released(); btn_SE_radio.released();
+            btn_SE_bright.released(); btn_SE_equal.released();  btn_SE_wifi.released(); btn_SE_radio.released(); btn_SE_vu_meter.released(); btn_SE_spectrum.released();
             break;
         case BRIGHTNESS:
             sdr_BR_value.released();  btn_BR_ready.released(); pic_BR_logo.released();
@@ -3987,8 +3999,6 @@ void graphicObjects_OnClick(ps_ptr<char> name, uint8_t val) { // val = 0 --> is 
     if (s_state == RADIO) {
         if (val && name.equals("btn_RA_mute"))     { setTimeCounter(2); if (!s_f_mute) s_f_muteIsPressed = true; goto exit; }
         if (val && name.equals("btn_RA_recorder")) { setTimeCounter(2); goto exit; }
-        if (val && name.equals("btn_RA_vu_meter")) { setTimeCounter(2); goto exit; }
-        if (val && name.equals("btn_RA_spectrum")) { setTimeCounter(2) ;goto exit; }
         if (val && name.equals("btn_RA_prevSta"))  { setTimeCounter(2); goto exit; }
         if (val && name.equals("btn_RA_nextSta"))  { setTimeCounter(2); goto exit; }
         if (val && name.equals("btn_RA_staList"))  { goto exit; }
@@ -4078,20 +4088,22 @@ void graphicObjects_OnClick(ps_ptr<char> name, uint8_t val) { // val = 0 --> is 
         if (val && name.starts_with("txt_alarm_time")) { goto exit; }
     }
     if (s_state == SLEEPTIMER) {
-        if (val && name.equals("btn_SL_up"))      { goto exit; }
-        if (val && name.equals("btn_SL_down"))    { goto exit; }
-        if (val && name.equals("btn_SL_ready"))   { goto exit; }
-        if (val && name.equals("btn_SL_cancel"))  { goto exit; }
+        if (val && name.equals("btn_SL_up"))       { goto exit; }
+        if (val && name.equals("btn_SL_down"))     { goto exit; }
+        if (val && name.equals("btn_SL_ready"))    { goto exit; }
+        if (val && name.equals("btn_SL_cancel"))   { goto exit; }
     }
     if (s_state == SETTINGS) {
-        if (val && name.equals("btn_SE_bright"))  { goto exit; }
-        if (val && name.equals("btn_SE_equal"))   { goto exit; }
-        if (val && name.equals("btn_SE_wifi"))    { goto exit; }
-        if (val && name.equals("btn_SE_radio"))   { goto exit; }
+        if (val && name.equals("btn_SE_bright"))   { goto exit; }
+        if (val && name.equals("btn_SE_equal"))    { goto exit; }
+        if (val && name.equals("btn_SE_wifi"))     { goto exit; }
+        if (val && name.equals("btn_SE_radio"))    { goto exit; }
+        if (val && name.equals("btn_SE_vu_meter")) { goto exit; }
+        if (val && name.equals("btn_SE_spectrum")) { goto exit; }
     }
     if (s_state == BRIGHTNESS) {
-        if (val && name.equals("btn_BR_ready"))   { goto exit; }
-        if (val && name.equals("pic_BR_logo"))    { goto exit; }
+        if (val && name.equals("btn_BR_ready"))    { goto exit; }
+        if (val && name.equals("pic_BR_logo"))     { goto exit; }
     }
     if (s_state == EQUALIZER) {
         if (val && name.equals("btn_EQ_LP"))      { sdr_EQ_lowPass.setValue(0);  goto exit; }
@@ -4149,8 +4161,6 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
     if (s_state == RADIO) {
         if (name.equals("btn_RA_mute"))     { muteChanged(btn_RA_mute.getValue()); goto exit; }
         if (name.equals("btn_RA_recorder")) { s_f_recording = btn_RA_recorder.getValue(); goto exit; }
-        if (name.equals("btn_RA_vu_meter")) { s_f_vu_meter_enabled = btn_RA_vu_meter.getValue(); goto exit; }
-        if (name.equals("btn_RA_spectrum")) { s_f_spectrum_enabled = btn_RA_spectrum.getValue(); goto exit; }
         if (name.equals("btn_RA_prevSta"))  { prevFavStation(); dispFooter.updateStation(s_cur_station); goto exit; }
         if (name.equals("btn_RA_nextSta"))  { nextFavStation(); dispFooter.updateStation(s_cur_station); goto exit; }
         if (name.equals("btn_RA_staList"))  { changeState(STATIONSLIST, 0); goto exit; }
@@ -4287,6 +4297,8 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
         if (name.equals("btn_SE_equal"))    { changeState(EQUALIZER, 0);     if(s_f_ok_from_ir) { s_ir_btn_select = 0; set_ir_pos_EQ(0); } goto exit; }
         if (name.equals("btn_SE_wifi"))     { changeState(WIFI_SETTINGS, 0); goto exit; }
         if (name.equals("btn_SE_radio"))    { changeState(RADIO, 0); goto exit; }
+        if (name.equals("btn_SE_vu_meter")) { s_f_vu_meter_enabled = btn_SE_vu_meter.getValue(); goto exit; }
+        if (name.equals("btn_SE_spectrum")) { s_f_spectrum_enabled = btn_SE_spectrum.getValue(); goto exit; }
     }
     if (s_state == BLUETOOTH) {
         if (name.equals("btn_BT_volDown"))  { if(s_ir_btn_select == 0) set_ir_pos_BT(0); goto exit; }

@@ -477,8 +477,8 @@ uniList       myList("myList");
 // RADIO
 button2state btn_RA_mute("btn_RA_mute");
 button2state btn_RA_recorder("btn_RA_recorder");
-button2state btn_RA_spectrum("btn_RA_spectrum");
-button2state btn_RA_vu_meter("btn_RA_vu_meter");
+button2state btn_SE_spectrum("btn_SE_spectrum");
+button2state btn_SE_vu_meter("btn_SE_vu_meter");
 button1state btn_RA_prevSta("btn_RA_prevSta"), btn_RA_nextSta("btn_RA_nextSta");
 button1state btn_RA_staList("btn_RA_staList"), btn_RA_player("btn_RA_player"), btn_RA_dlna("btn_RA_dlna"), btn_RA_clock("btn_RA_clock");
 button1state btn_RA_sleep("btn_RA_sleep"), btn_RA_bt("btn_RA_bt");
@@ -573,10 +573,6 @@ void placingGraphicObjects() { // and initialize them
     btn_RA_nextSta.setPicturePath("/btn/Button_Next");
     btn_RA_recorder.begin(3 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_RA_recorder.setPicturePath("/btn/Button_Recorder");
-    btn_RA_vu_meter.begin(6 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_RA_vu_meter.setPicturePath("/btn/Button_VUmeter");
-    btn_RA_spectrum.begin(7 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_RA_spectrum.setPicturePath("/btn/Button_Spectrum");
     btn_RA_staList.begin(0 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_RA_staList.setPicturePath("/btn/Button_List");
     btn_RA_player.begin(1 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
@@ -730,6 +726,10 @@ void placingGraphicObjects() { // and initialize them
     btn_SE_wifi.setPicturePath("/btn/Button_WiFi");
     btn_SE_radio.begin(3 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_SE_radio.setPicturePath("/btn/Button_Radio");
+    btn_SE_vu_meter.begin(4 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
+    btn_SE_vu_meter.setPicturePath("/btn/Button_VUmeter");
+    btn_SE_spectrum.begin(5 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
+    btn_SE_spectrum.setPicturePath("/btn/Button_Spectrum");
     pic_SE_logo.begin(layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h, layout.winLogo.pl, layout.winLogo.pr, layout.winLogo.pt, layout.winLogo.pb);
     // BRIGHTNESS --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     sdr_BR_value.begin(2 * layout.winButton.w, layout.winButton.y, 4 * layout.winButton.w, layout.winButton.h, 0, 0, 0, 0);
@@ -1009,17 +1009,17 @@ next:
 void set_ir_pos_SE(int lr) { // SETTINGS   -100 left, +100 right, -127 reset
     uint8_t i = 0;
     if (s_ir_btn_select == -1) return;
-    if (s_ir_btn_select == 4) return;
+    if (s_ir_btn_select == 6) return;
     defocusAllObjects();
 next:
     i++;
     if (lr == IR_LEFT) {
         s_ir_btn_select--;
-        if (s_ir_btn_select == -1) s_ir_btn_select = 3;
+        if (s_ir_btn_select == -1) s_ir_btn_select = 5;
     }
     if (lr == IR_RIGHT) {
         s_ir_btn_select++;
-        if (s_ir_btn_select == 4) s_ir_btn_select = 0;
+        if (s_ir_btn_select == 6) s_ir_btn_select = 0;
     }
     if (lr == IR_RESET) return;
     bool res = false;
@@ -1028,6 +1028,8 @@ next:
         case 1: res = btn_SE_equal.set_focus(true); break;
         case 2: res = btn_SE_wifi.set_focus(true); break;
         case 3: res = btn_SE_radio.set_focus(true); break;
+        case 4: res = btn_SE_vu_meter.set_focus(true); break;
+        case 5: res = btn_SE_spectrum.set_focus(true); break;
     }
     if (i == 2) return;
     if (res == false) goto next;

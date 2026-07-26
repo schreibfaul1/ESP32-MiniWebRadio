@@ -1955,10 +1955,10 @@ class spectrum : public RegisterTable {
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
         }
-        clear();
         m_first_call = false;
         m_enabled = true;
         m_clicked = false;
+        clear();
     }
 
     void hide() {
@@ -2034,7 +2034,7 @@ class spectrum : public RegisterTable {
         for (uint16_t row = 0; row < m_numSegments; row++) {
             for (uint16_t col = 0; col < m_numColums; col++) {
                 m_segmState[col][row] = OFF;
-                drawRect(row, col, 0);
+                if(m_enabled) drawRect(row, col, 0);
             }
         }
     }
