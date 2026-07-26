@@ -487,7 +487,7 @@ Button     btn_RA_sleep("btn_RA_sleep", ButtonType::PushButton);         // subS
 Button     btn_RA_settings("btn_RA_settings", ButtonType::PushButton);   // subState 2
 Button     btn_RA_bt("btn_RA_bt", ButtonType::PushButton);               // subState 2
 Button     btn_RA_off("btn_RA_off", ButtonType::PushButton);             // subState 2
-pictureBox pic_RA_logo("pic_RA_logo");
+PictureBox pic_RA_logo("pic_RA_logo");
 textbox    txt_RA_sTitle("txt_RA_sTitle"), txt_RA_staName("txt_RA_staName"), txt_RA_irNum("txt_RA_irNum");
 vuMeter    VUmeter_RA("VUmeter_RA");
 spectrum   spectrum_RA("spectrum_RA");
@@ -511,7 +511,7 @@ Button      btn_PL_playNext("btn_PL_playNext", ButtonType::PushButton); // subSt
 Button      btn_PL_playPrev("btn_PL_playPrev", ButtonType::PushButton); // subState 1
 textbox     txt_PL_fName("txt_PL_fName");
 slider      sdr_PL_volume("sdr_PL_volume");
-pictureBox  pic_PL_logo("pic_PL_logo");
+PictureBox  pic_PL_logo("pic_PL_logo");
 progressbar pgb_PL_progress("pgb_PL_progress");
 // AUDIOFILESLIST
 fileList lst_PLAYER("lst_PLAYER");
@@ -523,7 +523,7 @@ Button      btn_DL_fileList("btn_DL_fileList", ButtonType::PushButton);
 Button      btn_DL_cancel("btn_DL_cancel", ButtonType::PushButton);
 textbox     txt_DL_fName("txt_DL_fName");
 slider      sdr_DL_volume("sdr_DL_volume");
-pictureBox  pic_DL_logo("pic_DL_logo");
+PictureBox  pic_DL_logo("pic_DL_logo");
 progressbar pgb_DL_progress("pgb_DL_progress");
 // DLNAITEMSLIST
 dlnaList lst_DLNA("lst_DLNA");
@@ -542,10 +542,10 @@ Button     btn_AC_up("btn_AC_up", ButtonType::PushButton);
 Button     btn_AC_down("btn_AC_down", ButtonType::PushButton);
 Button     btn_AC_ready("btn_AC_ready", ButtonType::PushButton);
 // RINGING
-pictureBox      pic_RI_logo("pic_RI_logo");
+PictureBox      pic_RI_logo("pic_RI_logo");
 imgClock24small clk_RI_24small("clk_RI_24small");
 // SETTINGS
-pictureBox pic_SE_logo("pic_SE_logo");
+PictureBox pic_SE_logo("pic_SE_logo");
 Button     btn_SE_bright("btn_SE_bright", ButtonType::PushButton);
 Button     btn_SE_equal("btn_SE_equal", ButtonType::PushButton);
 Button     btn_SE_wifi("btn_SE_wifi", ButtonType::PushButton);
@@ -554,7 +554,7 @@ Button     btn_SE_spectrum("btn_SE_spectrum", ButtonType::ToggleButton);
 Button     btn_SE_vu_meter("btn_SE_vu_meter", ButtonType::ToggleButton);
 // BRIGHTNESS
 Button     btn_BR_ready("btn_BR_ready", ButtonType::PushButton);
-pictureBox pic_BR_logo("pic_BR_logo");
+PictureBox pic_BR_logo("pic_BR_logo");
 slider     sdr_BR_value("sdr_BR_value");
 textbox    txt_BR_value("txt_BR_value");
 // SLEEPTIMER
@@ -563,7 +563,7 @@ Button      btn_SL_down("btn_SL_down", ButtonType::PushButton);
 Button      btn_SL_ready("btn_SL_ready", ButtonType::PushButton);
 Button      btn_SL_cancel("btn_SL_cancel", ButtonType::PushButton);
 offTimerBox otb_SL_stime("otb_SL_stime");
-pictureBox  pic_SL_logo("pic_SL_logo");
+PictureBox  pic_SL_logo("pic_SL_logo");
 // EQUALIZER
 slider  sdr_EQ_lowPass("sdr_EQ_LP"), sdr_EQ_bandPass("sdr_EQ_BP");
 slider  sdr_EQ_highPass("sdr_EQ_HP");
@@ -586,7 +586,7 @@ Button     btn_BT_volDown("btn_BT_volDown", ButtonType::PushButton);
 Button     btn_BT_volUp("btn_BT_volUp", ButtonType::PushButton);
 Button     btn_BT_radio("btn_BT_radio", ButtonType::PushButton);
 Button     btn_BT_mode("btn_BT_mode", ButtonType::PushButton);
-pictureBox pic_BT_mode("pic_BT_mode");
+PictureBox pic_BT_mode("pic_BT_mode");
 textbox    txt_BT_mode("txt_BT_mode");
 // IR_SETTINGS
 Button btn_IR_radio("btn_IR_radio", ButtonType::PushButton);

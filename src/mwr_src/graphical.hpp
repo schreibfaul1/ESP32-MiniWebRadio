@@ -353,200 +353,7 @@ class Button : public RegisterTable {
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-// class button2state : public RegisterTable { // on off switch
-//   private:
-//     int16_t      m_x = 0;
-//     int16_t      m_y = 0;
-//     int16_t      m_w = 0;
-//     int16_t      m_h = 0;
-//     int32_t      m_bg_color = TFT_TRANSPARENT;
-//     ps_ptr<char> m_off_idlePicturePath;
-//     ps_ptr<char> m_on_idlePicturePath;
-//     ps_ptr<char> m_off_clickPicturePath;
-//     ps_ptr<char> m_on_clickPicturePath;
-//     ps_ptr<char> m_off_inactivePicturePath;
-//     ps_ptr<char> m_on_inactivePicturePath;
-//     ps_ptr<char> m_off_focusPicturePath;
-//     ps_ptr<char> m_on_focusPicturePath;
-//     bool         m_enabled = false;
-//     bool         m_focus = false;
-//     bool         m_active = true;
-//     bool         m_clicked = false;
-//     bool         m_state = false;
-//     bool         m_content_has_changed = false;
-//     bool         m_first_call = true;
-//     ps_ptr<char> m_name;
-//     releasedArg  m_ra;
-
-//   public:
-//     button2state(ps_ptr<char> name) {
-//         register_object(this);
-//         m_name = name;
-//         m_enabled = false;
-//         m_clicked = false;
-//         m_state = false;
-//     }
-//     ~button2state() {}
-
-//     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
-//         m_x = x; // x pos
-//         m_y = y; // y pos
-//         m_w = w; // width
-//         m_h = h; // high
-//         m_enabled = false;
-//         m_active = true;
-//     }
-
-//     ps_ptr<char> get_name() { return m_name; }
-//     void         enable() { m_enabled = true; }
-//     void         disable() { m_enabled = false; }
-//     bool         is_enabled() { return m_enabled; }
-//     bool         is_active() { return m_active; }
-//     void         set_active(bool active) { m_active = active; }
-//     bool         has_focus() { return m_focus; }
-//     void         set_bg_color(int32_t color) { m_bg_color = color; }
-//     bool         set_focus(bool focus) { return draw_focus(focus); }
-
-//     void show() {
-//         if (m_first_call) m_first_call = false;
-//         if (m_bg_color == TFT_TRANSPARENT) {
-//             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
-//         } else {
-//             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
-//         }
-//         m_clicked = false;
-//         if (!m_active) {
-//             setInactive();
-//             return;
-//         }
-//         if (m_state) {
-//             drawImage(m_on_idlePicturePath, m_x, m_y, m_w, m_h);
-//         } else {
-//             drawImage(m_off_idlePicturePath, m_x, m_y, m_w, m_h);
-//         }
-//         m_enabled = true;
-//     }
-
-//     void hide() {
-//         if (m_first_call) return;
-//         if (m_bg_color == TFT_TRANSPARENT) {
-//             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
-//         } else {
-//             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
-//         }
-//         m_enabled = false;
-//     }
-
-//     void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
-//         x = m_x;
-//         y = m_y;
-//         w = m_w;
-//         h = m_h;
-//     }
-
-//     void setPicturePath(ps_ptr<char> path) {
-//         m_off_idlePicturePath = path + "_Off_Idle.png";
-//         m_on_idlePicturePath = path + "_On_Idle.png";
-//         m_off_clickPicturePath = path + "_Off_Click.png";
-//         m_on_clickPicturePath = path + "_On_Click.png";
-//         m_off_inactivePicturePath = path + "_Off_Inactive.png";
-//         m_on_inactivePicturePath = path + "_On_Inactive.png";
-//         m_off_focusPicturePath = path + "_Off_Focus.png";
-//         m_on_focusPicturePath = path + "_On_Focus.png";
-//     }
-
-//     void setValue(bool val) {
-//         m_state = val;
-//         if (m_enabled) {
-//             if (m_state)
-//                 drawImage(m_on_idlePicturePath, m_x, m_y, m_w, m_h);
-//             else
-//                 drawImage(m_off_idlePicturePath, m_x, m_y, m_w, m_h);
-//         }
-//     }
-//     bool getValue() { return m_state; }
-//     void setOn() { m_state = true; }
-//     void setOff() { m_state = false; }
-//     void setActive(bool act) { m_active = act; }
-//     bool getActive() { return m_active; }
-
-//     bool click() {
-//         if (!m_enabled) return false;
-//         if (m_state)
-//             drawImage(m_on_clickPicturePath, m_x, m_y, m_w, m_h);
-//         else
-//             drawImage(m_off_clickPicturePath, m_x, m_y, m_w, m_h);
-//         m_clicked = true;
-//         m_state = !m_state;
-
-//         if (graphicObjects_OnClick) graphicObjects_OnClick(m_name, m_enabled);
-//         return true;
-//     }
-
-//     bool positionXY(uint16_t x, uint16_t y) {
-//         if (x < m_x) return false;
-//         if (y < m_y) return false;
-//         if (x > m_x + m_w) return false;
-//         if (y > m_y + m_h) return false;
-//         if (m_enabled) {
-//             if (m_state)
-//                 drawImage(m_on_clickPicturePath, m_x, m_y, m_w, m_h);
-//             else
-//                 drawImage(m_off_clickPicturePath, m_x, m_y, m_w, m_h);
-//             m_clicked = true;
-//             m_state = !m_state;
-//         }
-//         if (graphicObjects_OnClick) graphicObjects_OnClick(m_name, m_enabled);
-//         //    if(!m_enabled) return false;
-//         return true;
-//     }
-//     bool released() {
-//         if (!m_enabled) return false;
-//         if (!m_clicked) return false;
-//         if (m_state)
-//             drawImage(m_on_idlePicturePath, m_x, m_y, m_w, m_h);
-//         else
-//             drawImage(m_off_idlePicturePath, m_x, m_y, m_w, m_h);
-//         m_clicked = false;
-//         if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
-//         return true;
-//     }
-
-//   private:
-//     bool draw_focus(bool focus) {
-//         if (!focus) m_focus = false;
-//         if (!m_active) return false;
-//         if (!m_enabled) return false;
-//         if (m_state) {
-//             if (focus) {
-//                 drawImage(m_on_focusPicturePath, m_x, m_y, m_w, m_h);
-//                 m_focus = true;
-//             } else {
-//                 drawImage(m_on_idlePicturePath, m_x, m_y, m_w, m_h);
-//             }
-//         } else {
-//             if (focus) {
-//                 drawImage(m_off_focusPicturePath, m_x, m_y, m_w, m_h);
-//                 m_focus = true;
-//             } else {
-//                 drawImage(m_off_idlePicturePath, m_x, m_y, m_w, m_h);
-//             }
-//         }
-//         return m_focus;
-//     }
-
-//     void setInactive() {
-//         if (m_state) {
-//             drawImage(m_on_inactivePicturePath, m_x, m_y, m_w, m_h);
-//         } else {
-//             drawImage(m_off_inactivePicturePath, m_x, m_y, m_w, m_h);
-//         }
-//         m_enabled = false;
-//         m_active = false;
-//     }
-// };
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class pictureBox : public RegisterTable {
+class PictureBox : public RegisterTable {
   private:
     int16_t      m_x = 0;
     int16_t      m_y = 0;
@@ -574,12 +381,12 @@ class pictureBox : public RegisterTable {
     releasedArg  m_ra;
 
   public:
-    pictureBox(ps_ptr<char> name) {
+    PictureBox(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
         setPicturePath("");
     }
-    ~pictureBox() {}
+    ~PictureBox() {}
 
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t padding_left = 0, uint8_t padding_right = 0, uint8_t padding_top = 0, uint8_t padding_bottom = 0) {
         m_x = x; // x pos
@@ -3397,11 +3204,11 @@ class offTimerBox : public RegisterTable { // range 000...999
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class imgClock24 : public RegisterTable { // draw a clock in 24h format
   private:
-    pictureBox* pic_clock24_digitsH10 = new pictureBox("clock24_digitsH10");     // digits hour   * 10
-    pictureBox* pic_clock24_digitsH01 = new pictureBox("clock24_digitsH01");     // digits hour   * 01
-    pictureBox* pic_clock24_digitsM10 = new pictureBox("clock24_digitsM10");     // digits minute * 10
-    pictureBox* pic_clock24_digitsM01 = new pictureBox("clock24_digitsM01");     // digits minute * 01
-    pictureBox* pic_clock24_digitsColon = new pictureBox("clock24_digitsColon"); // digits colon
+    PictureBox* pic_clock24_digitsH10 = new PictureBox("clock24_digitsH10");     // digits hour   * 10
+    PictureBox* pic_clock24_digitsH01 = new PictureBox("clock24_digitsH01");     // digits hour   * 01
+    PictureBox* pic_clock24_digitsM10 = new PictureBox("clock24_digitsM10");     // digits minute * 10
+    PictureBox* pic_clock24_digitsM01 = new PictureBox("clock24_digitsM01");     // digits minute * 01
+    PictureBox* pic_clock24_digitsColon = new PictureBox("clock24_digitsColon"); // digits colon
     int16_t     m_x = 0;
     int16_t     m_y = 0;
     int16_t     m_w = 0;
@@ -3645,11 +3452,11 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class imgClock24small : public RegisterTable { // draw a clock in 24h format
   private:
-    pictureBox*  pic_clock24_digitsH10 = new pictureBox("clock24_digitsH10");     // digits hour   * 10
-    pictureBox*  pic_clock24_digitsH01 = new pictureBox("clock24_digitsH01");     // digits hour   * 01
-    pictureBox*  pic_clock24_digitsM10 = new pictureBox("clock24_digitsM10");     // digits minute * 10
-    pictureBox*  pic_clock24_digitsM01 = new pictureBox("clock24_digitsM01");     // digits minute * 01
-    pictureBox*  pic_clock24_digitsColon = new pictureBox("clock24_digitsColon"); // digits colon
+    PictureBox*  pic_clock24_digitsH10 = new PictureBox("clock24_digitsH10");     // digits hour   * 10
+    PictureBox*  pic_clock24_digitsH01 = new PictureBox("clock24_digitsH01");     // digits hour   * 01
+    PictureBox*  pic_clock24_digitsM10 = new PictureBox("clock24_digitsM10");     // digits minute * 10
+    PictureBox*  pic_clock24_digitsM01 = new PictureBox("clock24_digitsM01");     // digits minute * 01
+    PictureBox*  pic_clock24_digitsColon = new PictureBox("clock24_digitsColon"); // digits colon
     int16_t      m_x = 0;
     int16_t      m_y = 0;
     int16_t      m_w = 0;
@@ -3888,11 +3695,11 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
   private:
-    pictureBox* pic_alarm_digitsH10 = new pictureBox("alarm_digitsH10");                                                                                                                                                                             // digits hour   * 10
-    pictureBox* pic_alarm_digitsH01 = new pictureBox("alarm_digitsH01");                                                                                                                                                                             // digits hour   * 01
-    pictureBox* pic_alarm_digitsM10 = new pictureBox("alarm_digitsM10");                                                                                                                                                                             // digits minute * 10
-    pictureBox* pic_alarm_digitsM01 = new pictureBox("alarm_digitsM01");                                                                                                                                                                             // digits minute * 01
-    pictureBox* pic_alarm_digitsColon = new pictureBox("alarm_digitsColon");                                                                                                                                                                         // digits colon
+    PictureBox* pic_alarm_digitsH10 = new PictureBox("alarm_digitsH10");                                                                                                                                                                             // digits hour   * 10
+    PictureBox* pic_alarm_digitsH01 = new PictureBox("alarm_digitsH01");                                                                                                                                                                             // digits hour   * 01
+    PictureBox* pic_alarm_digitsM10 = new PictureBox("alarm_digitsM10");                                                                                                                                                                             // digits minute * 10
+    PictureBox* pic_alarm_digitsM01 = new PictureBox("alarm_digitsM01");                                                                                                                                                                             // digits minute * 01
+    PictureBox* pic_alarm_digitsColon = new PictureBox("alarm_digitsColon");                                                                                                                                                                         // digits colon
     textbox*    txt_alarm_days = new textbox[7]{textbox("txt_alarm_days0"), textbox("txt_alarm_days1"), textbox("txt_alarm_days2"), textbox("txt_alarm_days3"), textbox("txt_alarm_days4"), textbox("txt_alarm_days5"), textbox("txt_alarm_days6")}; // days of the week
     textbox*    txt_alarm_time = new textbox[7]{textbox("txt_alarm_time0"), textbox("txt_alarm_time1"), textbox("txt_alarm_time2"), textbox("txt_alarm_time3"), textbox("txt_alarm_time4"), textbox("txt_alarm_time5"), textbox("txt_alarm_time6")}; // time of the day
 
@@ -5806,9 +5613,9 @@ class stationsList : public RegisterTable {
 class displayHeader : public RegisterTable {
   private:
     textbox*     txt_Item = new textbox("header_Item");              // Radio, Player, Clock....
-    pictureBox*  pic_Speaker = new pictureBox("header_Speaker");     // loudspeaker symbol
+    PictureBox*  pic_Speaker = new PictureBox("header_Speaker");     // loudspeaker symbol
     textbox*     txt_Volume = new textbox("header_Volume");          // volume
-    pictureBox*  pic_RSSID = new pictureBox("header_RSSID");         // RSSID symbol
+    PictureBox*  pic_RSSID = new PictureBox("header_RSSID");         // RSSID symbol
     timeString*  timeStringObject = new timeString("timeString", 0); // 10:34:09
     int16_t      m_x = 0;
     int16_t      m_y = 0;
@@ -6193,10 +6000,10 @@ class displayHeader : public RegisterTable {
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class displayFooter : public RegisterTable {
   private:
-    pictureBox*  pic_Antenna = new pictureBox("footer_Antenna");     // antenna symbol
+    PictureBox*  pic_Antenna = new PictureBox("footer_Antenna");     // antenna symbol
     textbox*     txt_StaNr = new textbox("footer_StaNr");            // station number
-    pictureBox*  pic_Flag = new pictureBox("footer_Flag");           // flag symbol
-    pictureBox*  pic_Hourglass = new pictureBox("footer_Hourglass"); // hourglass symbol
+    PictureBox*  pic_Flag = new PictureBox("footer_Flag");           // flag symbol
+    PictureBox*  pic_Hourglass = new PictureBox("footer_Hourglass"); // hourglass symbol
     textbox*     txt_OffTimer = new textbox("footer_OffTimer");      // off timer
     textbox*     txt_BitRate = new textbox("footer_BitRate");        // bit rate
     textbox*     txt_IpAddr = new textbox("footer_IPaddr");          // ip address
