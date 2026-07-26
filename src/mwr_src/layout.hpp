@@ -475,14 +475,15 @@ displayFooter dispFooter("dispFooter", displayConfig.footerFontSize); // 0 -> au
 numbersBox    volBox("volBox");
 uniList       myList("myList");
 // RADIO
-button2state btn_RA_mute("btn_RA_mute");
+Button       btn_RA_mute("btn_RA_mute", ButtonType::ToggleButton);
 button2state btn_RA_recorder("btn_RA_recorder");
 button2state btn_SE_spectrum("btn_SE_spectrum");
 button2state btn_SE_vu_meter("btn_SE_vu_meter");
-button1state btn_RA_prevSta("btn_RA_prevSta"), btn_RA_nextSta("btn_RA_nextSta");
-button1state btn_RA_staList("btn_RA_staList"), btn_RA_player("btn_RA_player"), btn_RA_dlna("btn_RA_dlna"), btn_RA_clock("btn_RA_clock");
-button1state btn_RA_sleep("btn_RA_sleep"), btn_RA_bt("btn_RA_bt");
-button1state btn_RA_off("btn_RA_off"), btn_RA_settings("btn_RA_settings");
+Button       btn_RA_prevSta("btn_RA_prevSta", ButtonType::PushButton), btn_RA_nextSta("btn_RA_nextSta", ButtonType::PushButton);
+Button       btn_RA_staList("btn_RA_staList", ButtonType::PushButton), btn_RA_player("btn_RA_player", ButtonType::PushButton);
+Button       btn_RA_dlna("btn_RA_dlna", ButtonType::PushButton), btn_RA_clock("btn_RA_clock", ButtonType::PushButton);
+Button       btn_RA_sleep("btn_RA_sleep", ButtonType::PushButton), btn_RA_bt("btn_RA_bt", ButtonType::PushButton);
+Button       btn_RA_off("btn_RA_off", ButtonType::PushButton), btn_RA_settings("btn_RA_settings", ButtonType::PushButton);
 pictureBox   pic_RA_logo("pic_RA_logo");
 textbox      txt_RA_sTitle("txt_RA_sTitle"), txt_RA_staName("txt_RA_staName"), txt_RA_irNum("txt_RA_irNum");
 vuMeter      VUmeter_RA("VUmeter_RA");
@@ -493,10 +494,11 @@ numbersBox   nbr_RA_staBox("nbr_RA_staBox");
 stationsList lst_RADIO("lst_RADIO");
 // PLAYER
 button2state btn_PL_mute("btn_PL_mute"), btn_PL_pause("btn_PL_pause");
-button1state btn_PL_ready("btn_PL_ready"), btn_PL_shuffle("btn_PL_shuffle");
-button1state btn_PL_playAll("btn_PL_playAll"), btn_PL_fileList("btn_PL_fileList"), btn_PL_radio("btn_PL_radio"), btn_PL_cancel("btn_PL_cancel");
-button1state btn_PL_prevFile("btn_PL_prevFile"), btn_PL_nextFile("btn_PL_nextFile"), btn_PL_off("btn_PL_off");
-button1state btn_PL_playNext("btn_PL_playNext"), btn_PL_playPrev("btn_PL_playPrev");
+Button       btn_PL_ready("btn_PL_ready", ButtonType::PushButton), btn_PL_shuffle("btn_PL_shuffle", ButtonType::PushButton);
+Button       btn_PL_playAll("btn_PL_playAll", ButtonType::PushButton), btn_PL_fileList("btn_PL_fileList", ButtonType::PushButton);
+Button       btn_PL_radio("btn_PL_radio", ButtonType::PushButton), btn_PL_cancel("btn_PL_cancel", ButtonType::PushButton);
+Button       btn_PL_prevFile("btn_PL_prevFile", ButtonType::PushButton), btn_PL_nextFile("btn_PL_nextFile", ButtonType::PushButton), btn_PL_off("btn_PL_off", ButtonType::PushButton);
+Button       btn_PL_playNext("btn_PL_playNext", ButtonType::PushButton), btn_PL_playPrev("btn_PL_playPrev", ButtonType::PushButton);
 textbox      txt_PL_fName("txt_PL_fName");
 slider       sdr_PL_volume("sdr_PL_volume");
 pictureBox   pic_PL_logo("pic_PL_logo");
@@ -505,7 +507,7 @@ progressbar  pgb_PL_progress("pgb_PL_progress");
 fileList lst_PLAYER("lst_PLAYER");
 // DLNA
 button2state btn_DL_mute("btn_DL_mute"), btn_DL_pause("btn_DL_pause");
-button1state btn_DL_radio("btn_DL_radio"), btn_DL_fileList("btn_DL_fileList"), btn_DL_cancel("btn_DL_cancel");
+Button       btn_DL_radio("btn_DL_radio", ButtonType::PushButton), btn_DL_fileList("btn_DL_fileList", ButtonType::PushButton), btn_DL_cancel("btn_DL_cancel", ButtonType::PushButton);
 textbox      txt_DL_fName("txt_DL_fName");
 slider       sdr_DL_volume("sdr_DL_volume");
 pictureBox   pic_DL_logo("pic_DL_logo");
@@ -515,41 +517,43 @@ dlnaList lst_DLNA("lst_DLNA");
 // CLOCK
 imgClock24   clk_CL_24("clk_CL_24");
 button2state btn_CL_mute("btn_CL_mute");
-button1state btn_CL_alarm("btn_CL_alarm"), btn_CL_radio("btn_CL_radio"), btn_CL_off("btn_CL_off");
+Button       btn_CL_alarm("btn_CL_alarm", ButtonType::PushButton), btn_CL_radio("btn_CL_radio", ButtonType::PushButton), btn_CL_off("btn_CL_off", ButtonType::PushButton);
 slider       sdr_CL_volume("sdr_CL_volume");
 // ALARMCLOCK
-alarmClock   clk_AC_red("clk_AC_red");
-button1state btn_AC_left("btn_AC_left"), btn_AC_right("btn_AC_right"), btn_AC_up("btn_AC_up"), btn_AC_down("btn_AC_down");
-button1state btn_AC_ready("btn_AC_ready");
+alarmClock clk_AC_red("clk_AC_red");
+Button     btn_AC_left("btn_AC_left", ButtonType::PushButton), btn_AC_right("btn_AC_right", ButtonType::PushButton), btn_AC_up("btn_AC_up", ButtonType::PushButton);
+Button     btn_AC_down("btn_AC_down", ButtonType::PushButton), btn_AC_ready("btn_AC_ready", ButtonType::PushButton);
 // RINGING
 pictureBox      pic_RI_logo("pic_RI_logo");
 imgClock24small clk_RI_24small("clk_RI_24small");
 // SETTINGS
-pictureBox   pic_SE_logo("pic_SE_logo");
-button1state btn_SE_bright("btn_SE_bright"), btn_SE_equal("btn_SE_equal"), btn_SE_wifi("btn_SE_wifi"), btn_SE_radio("btn_SE_radio");
+pictureBox pic_SE_logo("pic_SE_logo");
+Button     btn_SE_bright("btn_SE_bright", ButtonType::PushButton), btn_SE_equal("btn_SE_equal", ButtonType::PushButton);
+Button     btn_SE_wifi("btn_SE_wifi", ButtonType::PushButton), btn_SE_radio("btn_SE_radio", ButtonType::PushButton);
 // BRIGHTNESS
-button1state btn_BR_ready("btn_BR_ready");
-pictureBox   pic_BR_logo("pic_BR_logo");
-slider       sdr_BR_value("sdr_BR_value");
-textbox      txt_BR_value("txt_BR_value");
+Button     btn_BR_ready("btn_BR_ready", ButtonType::PushButton);
+pictureBox pic_BR_logo("pic_BR_logo");
+slider     sdr_BR_value("sdr_BR_value");
+textbox    txt_BR_value("txt_BR_value");
 // SLEEPTIMER
-button1state btn_SL_up("btn_SL_up"), btn_SL_down("btn_SL_down"), btn_SL_ready("btn_SL_ready"), btn_SL_cancel("btn_SL_cancel");
-offTimerBox  otb_SL_stime("otb_SL_stime");
-pictureBox   pic_SL_logo("pic_SL_logo");
+Button      btn_SL_up("btn_SL_up", ButtonType::PushButton), btn_SL_down("btn_SL_down", ButtonType::PushButton), btn_SL_ready("btn_SL_ready", ButtonType::PushButton), btn_SL_cancel("btn_SL_cancel", ButtonType::PushButton);
+offTimerBox otb_SL_stime("otb_SL_stime");
+pictureBox  pic_SL_logo("pic_SL_logo");
 // EQUALIZER
 slider       sdr_EQ_lowPass("sdr_EQ_LP"), sdr_EQ_bandPass("sdr_EQ_BP"), sdr_EQ_highPass("sdr_EQ_HP"), sdr_EQ_balance("sdr_EQ_BAL");
 textbox      txt_EQ_lowPass("txt_EQ_LP"), txt_EQ_bandPass("txt_EQ_BP"), txt_EQ_highPass("txt_EQ_HP"), txt_EQ_balance("txt_EQ_BAL");
-button1state btn_EQ_lowPass("btn_EQ_LP");
-button1state btn_EQ_bandPass("btn_EQ_BP"), btn_EQ_highPass("btn_EQ_HP"), btn_EQ_balance("btn_EQ_BAL");
-button1state btn_EQ_Radio("btn_EQ_Radio"), btn_EQ_Player("btn_EQ_Player");
+Button       btn_EQ_lowPass("btn_EQ_LP", ButtonType::PushButton);
+Button       btn_EQ_bandPass("btn_EQ_BP", ButtonType::PushButton), btn_EQ_highPass("btn_EQ_HP", ButtonType::PushButton), btn_EQ_balance("btn_EQ_BAL", ButtonType::PushButton);
+Button       btn_EQ_Radio("btn_EQ_Radio", ButtonType::PushButton), btn_EQ_Player("btn_EQ_Player", ButtonType::PushButton);
 button2state btn_EQ_mute("btn_EQ_mute");
 // BLUETOOTH
 button2state btn_BT_pause("btn_BT_pause"), btn_BT_power("btn_BT_power");
-button1state btn_BT_volDown("btn_BT_volDown"), btn_BT_volUp("btn_BT_volUp"), btn_BT_radio("btn_BT_radio"), btn_BT_mode("btn_BT_mode");
+Button       btn_BT_volDown("btn_BT_volDown", ButtonType::PushButton), btn_BT_volUp("btn_BT_volUp", ButtonType::PushButton);
+Button       btn_BT_radio("btn_BT_radio", ButtonType::PushButton), btn_BT_mode("btn_BT_mode", ButtonType::PushButton);
 pictureBox   pic_BT_mode("pic_BT_mode");
 textbox      txt_BT_mode("txt_BT_mode");
 // IR_SETTINGS
-button1state btn_IR_radio("btn_IR_radio");
+Button btn_IR_radio("btn_IR_radio", ButtonType::PushButton);
 // WIFI_SETTINGS
 wifiSettings cls_wifiSettings("wifiSettings", 2);
 // ALL_STATE

@@ -170,12 +170,20 @@ inline void hide_objects_in_area(int16_t x, int16_t y, int16_t w, int16_t h) {
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // *** B A S I C   O B J E C T S
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class button1state : public RegisterTable { // click button
+
+enum class ButtonType { PushButton, ToggleButton };
+
+class Button : public RegisterTable {
+
+    enum State { OFF = 0, ON = 1 };
+    enum Image { IDLE = 0, CLICK, FOCUS, INACTIVE };
+
   private:
     bool             m_enabled = false;
     bool             m_focus = false;
     bool             m_clicked = false;
     bool             m_active = true;
+    bool             m_state = false;
     bool             m_first_call = true;
     uint8_t          m_h_align = TFT_ALIGN_CENTER;
     uint8_t          m_v_align = TFT_ALIGN_CENTER;
@@ -188,22 +196,19 @@ class button1state : public RegisterTable { // click button
     uint16_t         m_button_image_x = 0;
     uint16_t         m_button_image_y = 0;
     int32_t          m_bg_color = TFT_TRANSPARENT;
-    ps_ptr<char>     m_idlePicturePath;
-    ps_ptr<char>     m_clickPicturePath;
-    ps_ptr<char>     m_inactivePicturePath;
-    ps_ptr<char>     m_focusPicturePath; // e.g. IR select
+    ps_ptr<char>     m_picturePath[2][4];
     ps_ptr<char>     m_name;
     ps_ptr<uint16_t> m_cache_idle_pic = {};
     releasedArg      m_ra;
+    ButtonType       m_type;
 
   public:
-    button1state(ps_ptr<char> name) {
+    Button(ps_ptr<char> name, ButtonType type) : m_name(name), m_type(type) {
         register_object(this);
-        m_name = name;
         m_enabled = false;
         m_clicked = false;
     }
-    ~button1state() {}
+    ~Button() {}
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
         m_x = x; // x pos
         m_y = y; // y pos
@@ -220,23 +225,23 @@ class button1state : public RegisterTable { // click button
     bool         has_focus() { return m_focus; }
     void         set_bg_color(int32_t color) { m_bg_color = color; }
     bool         set_focus(bool focus) { return draw_focus(focus); }
+    bool         getValue() { return m_state; }
+    void         setOn() { m_state = true; }
+    void         setOff() { m_state = false; }
 
     void show() {
         if (m_first_call) m_first_call = false;
+        if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+        }
         m_clicked = false;
         if (!m_active) {
             setInactive();
             return;
         }
-        if (!m_cache_idle_pic.valid()) {
-            bool res = drawImage(m_idlePicturePath, m_button_image_x, m_button_image_y, m_button_image_w, m_button_image_h);
-            if (res) {
-                m_cache_idle_pic.alloc_array(m_w * m_h, m_name.c_get());
-                getTFT().copyFramebuffer(FB_VISIBLE, m_cache_idle_pic.get(), m_x, m_y, m_w, m_h);
-            }
-        } else {
-            getTFT().copyFramebuffer(m_cache_idle_pic.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
-        }
+        drawImage(pic(IDLE), m_x, m_y, m_w, m_h);
         m_enabled = true;
     }
 
@@ -250,6 +255,11 @@ class button1state : public RegisterTable { // click button
         m_enabled = false;
     }
 
+    void setValue(bool val) {
+        m_state = val;
+        if (m_enabled) { drawImage(pic(IDLE), m_x, m_y, m_w, m_h); }
+    }
+
     void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
         x = m_x;
         y = m_y;
@@ -258,18 +268,24 @@ class button1state : public RegisterTable { // click button
     }
 
     void setPicturePath(ps_ptr<char> path) {
-        if (path.strlen() > 0) {
-            m_idlePicturePath = path + "_idle.png";
-            m_clickPicturePath = path + "_click.png";
-            m_focusPicturePath = path + "_focus.png";
-            m_inactivePicturePath = path + "_inactive.png";
-        } else {
-            m_idlePicturePath = m_name + "_idle.png";
-            m_clickPicturePath = m_name + "_click.png";
-            m_focusPicturePath = m_name + "_focus.png";
-            m_inactivePicturePath = m_name + "_inactive.png";
+        if (m_type == ButtonType::PushButton) {
+            m_picturePath[OFF][IDLE] = path + "_idle.png";
+            m_picturePath[OFF][CLICK] = path + "_click.png";
+            m_picturePath[OFF][FOCUS] = path + "_focus.png";
+            m_picturePath[OFF][INACTIVE] = path + "_inactive.png";
         }
-        imgSize img = GetImageSize(m_idlePicturePath);
+        if (m_type == ButtonType::ToggleButton) {
+            m_picturePath[OFF][IDLE] = path + "_Off_idle.png";
+            m_picturePath[OFF][CLICK] = path + "_Off_click.png";
+            m_picturePath[OFF][FOCUS] = path + "_Off_focus.png";
+            m_picturePath[OFF][INACTIVE] = path + "_Off_inactive.png";
+            m_picturePath[ON][IDLE] = path + "_On_idle.png";
+            m_picturePath[ON][CLICK] = path + "_On_click.png";
+            m_picturePath[ON][FOCUS] = path + "_On_focus.png";
+            m_picturePath[ON][INACTIVE] = path + "_On_inactive.png";
+        }
+
+        imgSize img = GetImageSize(m_picturePath[OFF][IDLE]);
         m_button_image_w = img.w;
         m_button_image_h = img.h;
         if (m_button_image_w > m_w || m_button_image_h > m_h) {
@@ -280,11 +296,11 @@ class button1state : public RegisterTable { // click button
         m_button_image_y = m_y + (m_h - m_button_image_h) / 2;
     }
 
-    bool click() { // e.g. from IR
-        if (!m_enabled) { return false; }
-        MWR_LOG_DEBUG("m_button_image_x {}, m_button_image_y {}, m_button_image_w {}, m_button_image_h {}, m_x {}, m_y {}, m_w {}, m_h {}", m_button_image_x, m_button_image_y, m_button_image_w, m_button_image_h, m_x, m_y, m_w, m_h);
-        drawImage(m_clickPicturePath, m_button_image_x, m_button_image_y, m_button_image_w, m_button_image_h);
+    bool click() {
+        if (!m_enabled) return false;
+        drawImage(pic(CLICK), m_button_image_x, m_button_image_y, m_button_image_w, m_button_image_h);
         m_clicked = true;
+        if (m_type == ButtonType::ToggleButton) m_state = !m_state;
         if (graphicObjects_OnClick) graphicObjects_OnClick(m_name, m_enabled);
         return true;
     }
@@ -294,25 +310,22 @@ class button1state : public RegisterTable { // click button
         if (y < m_y) return false;
         if (x > m_x + m_w) return false;
         if (y > m_y + m_h) return false;
-        if (m_enabled) {
-            MWR_LOG_DEBUG("m_button_image_x {}, m_button_image_y {}, m_button_image_w {}, m_button_image_h {}, m_x {}, m_y {}, m_w {}, m_h {}", m_button_image_x, m_button_image_y, m_button_image_w, m_button_image_h, m_x, m_y, m_w, m_h);
-            drawImage(m_clickPicturePath, m_button_image_x, m_button_image_y, m_button_image_w, m_button_image_h);
-            m_clicked = true;
-        }
-        if (graphicObjects_OnClick) graphicObjects_OnClick(m_name, m_enabled);
-        //    if(!m_enabled) return false;
-        return true;
+        return click();
     }
+
     bool released() {
         if (!m_enabled) return false;
         if (!m_clicked) return false;
-        drawImage(m_idlePicturePath, m_button_image_x, m_button_image_y, m_button_image_w, m_button_image_h);
+        drawImage(pic(IDLE), m_button_image_x, m_button_image_y, m_button_image_w, m_button_image_h);
         m_clicked = false;
         if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
         return true;
     }
 
   private:
+    State         currentState() const { return (m_type == ButtonType::ToggleButton && m_state) ? ON : OFF; }
+    ps_ptr<char>& pic(Image img) { return m_picturePath[currentState()][img]; }
+
     bool draw_focus(bool focus) {
         if (!m_active) {
             m_focus = false;
@@ -324,17 +337,17 @@ class button1state : public RegisterTable { // click button
         }
         if (focus == m_focus) return m_focus;
         if (focus) {
-            drawImage(m_focusPicturePath, m_button_image_x, m_button_image_y, m_button_image_w, m_button_image_h);
+            drawImage(pic(FOCUS), m_button_image_x, m_button_image_y, m_button_image_w, m_button_image_h);
             m_focus = true;
         } else {
-            drawImage(m_idlePicturePath, m_button_image_x, m_button_image_y, m_button_image_w, m_button_image_h);
+            drawImage(pic(IDLE), m_button_image_x, m_button_image_y, m_button_image_w, m_button_image_h);
             m_focus = false;
         }
         return m_focus;
     }
 
     void setInactive() {
-        drawImage(m_inactivePicturePath, m_button_image_x, m_button_image_y, m_button_image_w, m_button_image_h);
+        drawImage(pic(INACTIVE), m_button_image_x, m_button_image_y, m_button_image_w, m_button_image_h);
         m_enabled = false;
         m_active = false;
     }
@@ -2034,7 +2047,7 @@ class spectrum : public RegisterTable {
         for (uint16_t row = 0; row < m_numSegments; row++) {
             for (uint16_t col = 0; col < m_numColums; col++) {
                 m_segmState[col][row] = OFF;
-                if(m_enabled) drawRect(row, col, 0);
+                if (m_enabled) drawRect(row, col, 0);
             }
         }
     }
