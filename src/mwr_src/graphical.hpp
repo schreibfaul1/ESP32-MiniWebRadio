@@ -712,7 +712,7 @@ class Slider : public RegisterTable {
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class progressbar : public RegisterTable {
+class Progressbar : public RegisterTable {
   private:
     int16_t      m_x = 0;
     int16_t      m_y = 0;
@@ -743,14 +743,14 @@ class progressbar : public RegisterTable {
     releasedArg  m_ra;
 
   public:
-    progressbar(ps_ptr<char> name) {
+    Progressbar(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
         m_frameColor = TFT_WHITE;
         m_railColorLeft = TFT_RED;
         m_railColorRight = TFT_GREEN;
     }
-    ~progressbar() { m_objectInit = false; }
+    ~Progressbar() { m_objectInit = false; }
 
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t padding_left, uint16_t padding_right, uint16_t padding_top, uint16_t padding_bottom, int16_t minVal, int16_t maxVal) {
         m_x = x; // x pos
@@ -1075,7 +1075,7 @@ class Textbox : public RegisterTable {
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class inputbox : public RegisterTable {
+class Inputbox : public RegisterTable {
   private:
     int16_t      m_x = 0;
     int16_t      m_y = 0;
@@ -1105,14 +1105,14 @@ class inputbox : public RegisterTable {
     releasedArg  m_ra;
 
   public:
-    inputbox(ps_ptr<char> name) {
+    Inputbox(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
         m_fgColor = TFT_LIGHTGREY;
         m_borderColor = TFT_BLACK;
         m_fontSize = 1;
     }
-    ~inputbox() {}
+    ~Inputbox() {}
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom) {
         m_x = x; // x pos
         m_y = y; // y pos
@@ -1245,7 +1245,7 @@ class inputbox : public RegisterTable {
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class textbutton : public RegisterTable {
+class Textbutton : public RegisterTable {
   private:
     int16_t      m_x = 0;
     int16_t      m_y = 0;
@@ -1278,7 +1278,7 @@ class textbutton : public RegisterTable {
     releasedArg  m_ra;
 
   public:
-    textbutton(ps_ptr<char> name) {
+    Textbutton(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
         m_fgColor = TFT_LIGHTGREY;
@@ -1478,7 +1478,7 @@ class textbutton : public RegisterTable {
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class vuMeter : public RegisterTable {
+class VU_Meter : public RegisterTable {
   private:
     uint16_t         m_x = 0;
     uint16_t         m_y = 0;
@@ -1512,11 +1512,11 @@ class vuMeter : public RegisterTable {
     std::vector<SegmentState> m_rightState;
 
   public:
-    vuMeter(ps_ptr<char> name) {
+    VU_Meter(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
     }
-    ~vuMeter() {}
+    ~VU_Meter() {}
 
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom) {
         m_x = x; // x pos
@@ -1929,8 +1929,8 @@ class Selectbox : public RegisterTable {
     bool                      m_noWrap = false;
     releasedArg               m_ra;
     Textbox*                  m_txt_select = new Textbox("select_txtbox_ssid");
-    textbutton*               m_txt_btn_down = new textbutton("select_txtbtn_down");
-    textbutton*               m_txt_btn_up = new textbutton("select_txtbtn_up");
+    Textbutton*               m_txt_btn_down = new Textbutton("select_txtbtn_down");
+    Textbutton*               m_txt_btn_up = new Textbutton("select_txtbtn_up");
     Textbox*                  m_txt_btn_idx = new Textbox("select_txtbox_idx");
     std::vector<ps_ptr<char>> m_selContent;
 
@@ -2153,7 +2153,7 @@ class Selectbox : public RegisterTable {
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class keyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
+class KeyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
   private:
     int16_t      m_x = 0;
     int16_t      m_y = 0;
@@ -2193,19 +2193,19 @@ class keyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     int32_t      m_bg_color = TFT_TRANSPARENT;
     int32_t      m_fgColor = 0;
     int32_t      m_clickColor = TFT_CYAN;
-    textbutton*  txt_btn_array = new textbutton[34]{textbutton("txt_btn0"),  textbutton("txt_btn1"),  textbutton("txt_btn2"),  textbutton("txt_btn3"),  textbutton("txt_btn4"),  textbutton("txt_btn5"),  textbutton("txt_btn6"),  textbutton("txt_btn7"),  textbutton("txt_btn8"),
-                                                    textbutton("txt_btn9"),  textbutton("txt_btn10"), textbutton("txt_btn11"), textbutton("txt_btn12"), textbutton("txt_btn13"), textbutton("txt_btn14"), textbutton("txt_btn15"), textbutton("txt_btn16"), textbutton("txt_btn17"),
-                                                    textbutton("txt_btn18"), textbutton("txt_btn19"), textbutton("txt_btn20"), textbutton("txt_btn21"), textbutton("txt_btn22"), textbutton("txt_btn23"), textbutton("txt_btn24"), textbutton("txt_btn25"), textbutton("txt_btn26"),
-                                                    textbutton("txt_btn27"), textbutton("txt_btn28"), textbutton("txt_btn29"), textbutton("txt_btn30"), textbutton("txt_btn31"), textbutton("txt_btn32"), textbutton("txt_btn33")};
+    Textbutton*  txt_btn_array = new Textbutton[34]{Textbutton("txt_btn0"),  Textbutton("txt_btn1"),  Textbutton("txt_btn2"),  Textbutton("txt_btn3"),  Textbutton("txt_btn4"),  Textbutton("txt_btn5"),  Textbutton("txt_btn6"),  Textbutton("txt_btn7"),  Textbutton("txt_btn8"),
+                                                    Textbutton("txt_btn9"),  Textbutton("txt_btn10"), Textbutton("txt_btn11"), Textbutton("txt_btn12"), Textbutton("txt_btn13"), Textbutton("txt_btn14"), Textbutton("txt_btn15"), Textbutton("txt_btn16"), Textbutton("txt_btn17"),
+                                                    Textbutton("txt_btn18"), Textbutton("txt_btn19"), Textbutton("txt_btn20"), Textbutton("txt_btn21"), Textbutton("txt_btn22"), Textbutton("txt_btn23"), Textbutton("txt_btn24"), Textbutton("txt_btn25"), Textbutton("txt_btn26"),
+                                                    Textbutton("txt_btn27"), Textbutton("txt_btn28"), Textbutton("txt_btn29"), Textbutton("txt_btn30"), Textbutton("txt_btn31"), Textbutton("txt_btn32"), Textbutton("txt_btn33")};
 
   public:
-    keyBoard(ps_ptr<char> name, uint8_t fontSize) {
+    KeyBoard(ps_ptr<char> name, uint8_t fontSize) {
         register_object(this);
         m_name = name;
         m_fgColor = TFT_LIGHTGREY;
         m_fontSize = fontSize;
     }
-    ~keyBoard() { delete[] txt_btn_array; }
+    ~KeyBoard() { delete[] txt_btn_array; }
 
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom) {
         m_x = x; // x pos
@@ -2391,7 +2391,7 @@ class keyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class wifiSettings : public RegisterTable {
+class WifiSettings : public RegisterTable {
     /*                —————————————————————————————————————————————————————————————————————————————
                      |                             selectbox (SSID)            |  ⏬  |  ⏫  |idx |
                       —————————————————————————————————————————————————————————————————————————————
@@ -2430,8 +2430,8 @@ class wifiSettings : public RegisterTable {
     bool         m_noWrap = false;
     releasedArg  m_ra;
     Selectbox*   m_sel_ssid = new Selectbox("wifiSettings_selectbox_ssid", 0);
-    inputbox*    m_in_password = new inputbox("wifiSettings_txtbox_pwd");
-    keyBoard*    m_keyboard = new keyBoard("wifiSettings_keyBoard", 0);
+    Inputbox*    m_in_password = new Inputbox("wifiSettings_txtbox_pwd");
+    KeyBoard*    m_keyboard = new KeyBoard("wifiSettings_keyBoard", 0);
 
     struct credentials {
         ps_ptr<char> ssid;
@@ -2472,7 +2472,7 @@ class wifiSettings : public RegisterTable {
     } m_winKeybrd;
 
   public:
-    wifiSettings(ps_ptr<char> name, uint8_t fontSize) {
+    WifiSettings(ps_ptr<char> name, uint8_t fontSize) {
         register_object(this);
         m_name = name;
         m_fgColor = TFT_LIGHTGREY;
@@ -2488,7 +2488,7 @@ class wifiSettings : public RegisterTable {
         m_sel_ssid->setBorderColor(m_borderColor);
         m_sel_ssid->setFontSize(0); // auto size
     }
-    ~wifiSettings() {
+    ~WifiSettings() {
         m_credentials.clear();
         delete m_sel_ssid;
         delete m_in_password;
@@ -2772,7 +2772,7 @@ class wifiSettings : public RegisterTable {
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
+class TimeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
   private:
     int16_t      m_x = 0;
     int16_t      m_y = 0;
@@ -2793,13 +2793,13 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     releasedArg  m_ra;
     Textbox*     txt_time = new Textbox[8]{Textbox("txt_timeH10"), Textbox("txt_timeH01"), Textbox("txt_timeC1"), Textbox("txt_timeM10"), Textbox("txt_timeM01"), Textbox("txt_timeC2"), Textbox("txt_timeS10"), Textbox("txt_timeS01")}; // time of the day
   public:
-    timeString(ps_ptr<char> name, uint8_t fontSize) {
+    TimeString(ps_ptr<char> name, uint8_t fontSize) {
         register_object(this);
         m_name = name;
         m_fgColor = TFT_LIGHTGREY;
         m_fontSize = fontSize;
     }
-    ~timeString() { delete[] txt_time; }
+    ~TimeString() { delete[] txt_time; }
 
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t pl, uint16_t pr, uint16_t pt, uint16_t pb) {
         m_x = x; // x pos
@@ -2928,7 +2928,7 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class numbersBox : public RegisterTable { // range 000...999
+class NumbersBox : public RegisterTable { // range 000...999
   private:
     uint16_t     m_segmWidth = 0;
     uint16_t     m_segmentHigh = 0;
@@ -2952,11 +2952,11 @@ class numbersBox : public RegisterTable { // range 000...999
     char         m_numbers[4] = "000";
 
   public:
-    numbersBox(ps_ptr<char> name) {
+    NumbersBox(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
     }
-    ~numbersBox() { ; }
+    ~NumbersBox() { ; }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
         m_x = x; // x pos
         m_y = y; // y pos
@@ -3058,7 +3058,7 @@ class numbersBox : public RegisterTable { // range 000...999
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class offTimerBox : public RegisterTable { // range 000...999
+class OffTimerBox : public RegisterTable { // range 000...999
   private:
     uint16_t     m_digitsWidth = 0;
     uint16_t     m_colonWidth = 0;
@@ -3086,11 +3086,11 @@ class offTimerBox : public RegisterTable { // range 000...999
     char         m_numbers[10] = "000";
 
   public:
-    offTimerBox(ps_ptr<char> name) {
+    OffTimerBox(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
     }
-    ~offTimerBox() { ; }
+    ~OffTimerBox() { ; }
 
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
         m_x = x; // x pos
@@ -3202,7 +3202,7 @@ class offTimerBox : public RegisterTable { // range 000...999
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class imgClock24 : public RegisterTable { // draw a clock in 24h format
+class ImgClock24 : public RegisterTable { // draw a clock in 24h format
   private:
     PictureBox* pic_clock24_digitsH10 = new PictureBox("clock24_digitsH10");     // digits hour   * 10
     PictureBox* pic_clock24_digitsH01 = new PictureBox("clock24_digitsH01");     // digits hour   * 01
@@ -3237,14 +3237,14 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
     releasedArg  m_ra;
 
   public:
-    imgClock24(ps_ptr<char> name) {
+    ImgClock24(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
         m_enabled = false;
         m_clicked = false;
         m_state = false;
     }
-    ~imgClock24() {
+    ~ImgClock24() {
         delete pic_clock24_digitsH10;
         delete pic_clock24_digitsH01;
         delete pic_clock24_digitsColon;
@@ -3450,7 +3450,7 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class imgClock24small : public RegisterTable { // draw a clock in 24h format
+class ImgClock24small : public RegisterTable { // draw a clock in 24h format
   private:
     PictureBox*  pic_clock24_digitsH10 = new PictureBox("clock24_digitsH10");     // digits hour   * 10
     PictureBox*  pic_clock24_digitsH01 = new PictureBox("clock24_digitsH01");     // digits hour   * 01
@@ -3485,14 +3485,14 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
     } m_h10, m_h01, m_c, m_m10, m_m01;
 
   public:
-    imgClock24small(ps_ptr<char> name) {
+    ImgClock24small(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
         m_enabled = false;
         m_clicked = false;
         m_state = false;
     }
-    ~imgClock24small() {
+    ~ImgClock24small() {
         delete pic_clock24_digitsH10;
         delete pic_clock24_digitsH01;
         delete pic_clock24_digitsColon;
@@ -4117,7 +4117,7 @@ class AlarmClock : public RegisterTable { // draw a clock in 12 or 24h format
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class uniList {
+class UniList {
 
   private:
     int16_t      m_x = 0;
@@ -4141,8 +4141,8 @@ class uniList {
     bool         m_focus = false;
 
   public:
-    uniList(ps_ptr<char> name) { m_name = name; }
-    ~uniList() {}
+    UniList(ps_ptr<char> name) { m_name = name; }
+    ~UniList() {}
 
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t fontSize) {
         m_x = x;               // x pos
@@ -4306,7 +4306,7 @@ class uniList {
         triangleDown(0, m_y + (9 * m_lineHight), m_lineHight / 3.5);
     }
 };
-extern uniList myList;
+extern UniList myList;
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 /*
   ———————————————————————————————————————————————————————
@@ -5346,7 +5346,7 @@ extern stationManagement staMgnt; /*
 | 003   0:00    128K              IP:192.168.178.24   |
 ———————————————————————————————————————————————————————
 */
-class stationsList : public RegisterTable {
+class StationsList : public RegisterTable {
   private:
     bool         m_enabled = false;
     bool         m_active = true;
@@ -5375,7 +5375,7 @@ class stationsList : public RegisterTable {
     uint16_t     m_staNrToDraw = 0;
 
   public:
-    stationsList(ps_ptr<char> name) {
+    StationsList(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
         m_enabled = false;
@@ -5386,7 +5386,7 @@ class stationsList : public RegisterTable {
         m_ra.val1 = 0;
         m_ra.val2 = 0;
     }
-    ~stationsList() {}
+    ~StationsList() {}
 
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, ps_ptr<char> tftSize, uint8_t fontSize) {
         m_x = x; // x pos
@@ -5616,7 +5616,7 @@ class DisplayHeader : public RegisterTable {
     PictureBox*  pic_Speaker = new PictureBox("header_Speaker");     // loudspeaker symbol
     Textbox*     txt_Volume = new Textbox("header_Volume");          // volume
     PictureBox*  pic_RSSID = new PictureBox("header_RSSID");         // RSSID symbol
-    timeString*  timeStringObject = new timeString("timeString", 0); // 10:34:09
+    TimeString*  timeStringObject = new TimeString("timeString", 0); // 10:34:09
     int16_t      m_x = 0;
     int16_t      m_y = 0;
     int16_t      m_w = 0;
@@ -6582,7 +6582,7 @@ class DisplayFooter : public RegisterTable {
     }
 }; // displayFooter
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class messageBox : public RegisterTable {
+class MessageBox : public RegisterTable {
   private:
     ps_ptr<char> m_name;
     ps_ptr<char> m_text;
@@ -6655,12 +6655,12 @@ class messageBox : public RegisterTable {
 #endif
 
   public:
-    messageBox(ps_ptr<char> name) {
+    MessageBox(ps_ptr<char> name) {
         m_name = name;
         m_x = m_win.w;
         m_y = m_win.y;
     }
-    ~messageBox() { delete txt_msgBox; }
+    ~MessageBox() { delete txt_msgBox; }
 
     // clang-format off
     void begin(int16_t x, int16_t y, int16_t w, int16_t h) {

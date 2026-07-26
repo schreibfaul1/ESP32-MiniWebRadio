@@ -472,8 +472,8 @@ inline const DisplayConfig displayConfig = makeDisplayConfig();
 
 DisplayHeader dispHeader("dispHeader", displayConfig.headerFontSize); // 0 -> autoSize
 DisplayFooter dispFooter("dispFooter", displayConfig.footerFontSize); // 0 -> autoSize
-numbersBox    volBox("volBox");
-uniList       myList("myList");
+NumbersBox    volBox("volBox");
+UniList       myList("myList");
 // RADIO
 Button     btn_RA_mute("btn_RA_mute", ButtonType::ToggleButton);         // subState 1
 Button     btn_RA_prevSta("btn_RA_prevSta", ButtonType::PushButton);     // subState 1
@@ -489,12 +489,12 @@ Button     btn_RA_bt("btn_RA_bt", ButtonType::PushButton);               // subS
 Button     btn_RA_off("btn_RA_off", ButtonType::PushButton);             // subState 2
 PictureBox pic_RA_logo("pic_RA_logo");
 Textbox    txt_RA_sTitle("txt_RA_sTitle"), txt_RA_staName("txt_RA_staName"), txt_RA_irNum("txt_RA_irNum");
-vuMeter    VUmeter_RA("VUmeter_RA");
+VU_Meter   VUmeter_RA("VUmeter_RA");
 Spectrum   spectrum_RA("spectrum_RA");
 Slider     sdr_RA_volume("sdr_RA_volume");
-numbersBox nbr_RA_staBox("nbr_RA_staBox");
+NumbersBox nbr_RA_staBox("nbr_RA_staBox");
 // STATIONSLIST
-stationsList lst_RADIO("lst_RADIO");
+StationsList lst_RADIO("lst_RADIO");
 // PLAYER
 Button      btn_PL_prevFile("btn_PL_prevFile", ButtonType::PushButton); // subState 0
 Button      btn_PL_nextFile("btn_PL_nextFile", ButtonType::PushButton); // subState 0
@@ -512,7 +512,7 @@ Button      btn_PL_playPrev("btn_PL_playPrev", ButtonType::PushButton); // subSt
 Textbox     txt_PL_fName("txt_PL_fName");
 Slider      sdr_PL_volume("sdr_PL_volume");
 PictureBox  pic_PL_logo("pic_PL_logo");
-progressbar pgb_PL_progress("pgb_PL_progress");
+Progressbar pgb_PL_progress("pgb_PL_progress");
 // AUDIOFILESLIST
 FileList lst_PLAYER("lst_PLAYER");
 // DLNA
@@ -524,7 +524,7 @@ Button      btn_DL_cancel("btn_DL_cancel", ButtonType::PushButton);
 Textbox     txt_DL_fName("txt_DL_fName");
 Slider      sdr_DL_volume("sdr_DL_volume");
 PictureBox  pic_DL_logo("pic_DL_logo");
-progressbar pgb_DL_progress("pgb_DL_progress");
+Progressbar pgb_DL_progress("pgb_DL_progress");
 // DLNAITEMSLIST
 DlnaList lst_DLNA("lst_DLNA");
 // CLOCK
@@ -532,7 +532,7 @@ Button     btn_CL_mute("btn_CL_mute", ButtonType::ToggleButton);
 Button     btn_CL_alarm("btn_CL_alarm", ButtonType::PushButton);
 Button     btn_CL_radio("btn_CL_radio", ButtonType::PushButton);
 Button     btn_CL_off("btn_CL_off", ButtonType::PushButton);
-imgClock24 clk_CL_24("clk_CL_24");
+ImgClock24 clk_CL_24("clk_CL_24");
 Slider     sdr_CL_volume("sdr_CL_volume");
 // ALARMCLOCK
 AlarmClock clk_AC_red("clk_AC_red");
@@ -543,7 +543,7 @@ Button     btn_AC_down("btn_AC_down", ButtonType::PushButton);
 Button     btn_AC_ready("btn_AC_ready", ButtonType::PushButton);
 // RINGING
 PictureBox      pic_RI_logo("pic_RI_logo");
-imgClock24small clk_RI_24small("clk_RI_24small");
+ImgClock24small clk_RI_24small("clk_RI_24small");
 // SETTINGS
 PictureBox pic_SE_logo("pic_SE_logo");
 Button     btn_SE_bright("btn_SE_bright", ButtonType::PushButton);
@@ -562,7 +562,7 @@ Button      btn_SL_up("btn_SL_up", ButtonType::PushButton);
 Button      btn_SL_down("btn_SL_down", ButtonType::PushButton);
 Button      btn_SL_ready("btn_SL_ready", ButtonType::PushButton);
 Button      btn_SL_cancel("btn_SL_cancel", ButtonType::PushButton);
-offTimerBox otb_SL_stime("otb_SL_stime");
+OffTimerBox otb_SL_stime("otb_SL_stime");
 PictureBox  pic_SL_logo("pic_SL_logo");
 // EQUALIZER
 Slider  sdr_EQ_lowPass("sdr_EQ_LP"), sdr_EQ_bandPass("sdr_EQ_BP");
@@ -591,9 +591,9 @@ Textbox    txt_BT_mode("txt_BT_mode");
 // IR_SETTINGS
 Button btn_IR_radio("btn_IR_radio", ButtonType::PushButton);
 // WIFI_SETTINGS
-wifiSettings cls_wifiSettings("wifiSettings", 2);
+WifiSettings cls_wifiSettings("wifiSettings", 2);
 // ALL_STATE
-messageBox msg_box("messagebox");
+MessageBox msg_box("messagebox");
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 void placingGraphicObjects() { // and initialize them
