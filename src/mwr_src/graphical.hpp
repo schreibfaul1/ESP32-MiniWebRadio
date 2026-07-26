@@ -353,198 +353,198 @@ class Button : public RegisterTable {
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class button2state : public RegisterTable { // on off switch
-  private:
-    int16_t      m_x = 0;
-    int16_t      m_y = 0;
-    int16_t      m_w = 0;
-    int16_t      m_h = 0;
-    int32_t      m_bg_color = TFT_TRANSPARENT;
-    ps_ptr<char> m_off_idlePicturePath;
-    ps_ptr<char> m_on_idlePicturePath;
-    ps_ptr<char> m_off_clickPicturePath;
-    ps_ptr<char> m_on_clickPicturePath;
-    ps_ptr<char> m_off_inactivePicturePath;
-    ps_ptr<char> m_on_inactivePicturePath;
-    ps_ptr<char> m_off_focusPicturePath;
-    ps_ptr<char> m_on_focusPicturePath;
-    bool         m_enabled = false;
-    bool         m_focus = false;
-    bool         m_active = true;
-    bool         m_clicked = false;
-    bool         m_state = false;
-    bool         m_content_has_changed = false;
-    bool         m_first_call = true;
-    ps_ptr<char> m_name;
-    releasedArg  m_ra;
+// class button2state : public RegisterTable { // on off switch
+//   private:
+//     int16_t      m_x = 0;
+//     int16_t      m_y = 0;
+//     int16_t      m_w = 0;
+//     int16_t      m_h = 0;
+//     int32_t      m_bg_color = TFT_TRANSPARENT;
+//     ps_ptr<char> m_off_idlePicturePath;
+//     ps_ptr<char> m_on_idlePicturePath;
+//     ps_ptr<char> m_off_clickPicturePath;
+//     ps_ptr<char> m_on_clickPicturePath;
+//     ps_ptr<char> m_off_inactivePicturePath;
+//     ps_ptr<char> m_on_inactivePicturePath;
+//     ps_ptr<char> m_off_focusPicturePath;
+//     ps_ptr<char> m_on_focusPicturePath;
+//     bool         m_enabled = false;
+//     bool         m_focus = false;
+//     bool         m_active = true;
+//     bool         m_clicked = false;
+//     bool         m_state = false;
+//     bool         m_content_has_changed = false;
+//     bool         m_first_call = true;
+//     ps_ptr<char> m_name;
+//     releasedArg  m_ra;
 
-  public:
-    button2state(ps_ptr<char> name) {
-        register_object(this);
-        m_name = name;
-        m_enabled = false;
-        m_clicked = false;
-        m_state = false;
-    }
-    ~button2state() {}
+//   public:
+//     button2state(ps_ptr<char> name) {
+//         register_object(this);
+//         m_name = name;
+//         m_enabled = false;
+//         m_clicked = false;
+//         m_state = false;
+//     }
+//     ~button2state() {}
 
-    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
-        m_x = x; // x pos
-        m_y = y; // y pos
-        m_w = w; // width
-        m_h = h; // high
-        m_enabled = false;
-        m_active = true;
-    }
+//     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
+//         m_x = x; // x pos
+//         m_y = y; // y pos
+//         m_w = w; // width
+//         m_h = h; // high
+//         m_enabled = false;
+//         m_active = true;
+//     }
 
-    ps_ptr<char> get_name() { return m_name; }
-    void         enable() { m_enabled = true; }
-    void         disable() { m_enabled = false; }
-    bool         is_enabled() { return m_enabled; }
-    bool         is_active() { return m_active; }
-    void         set_active(bool active) { m_active = active; }
-    bool         has_focus() { return m_focus; }
-    void         set_bg_color(int32_t color) { m_bg_color = color; }
-    bool         set_focus(bool focus) { return draw_focus(focus); }
+//     ps_ptr<char> get_name() { return m_name; }
+//     void         enable() { m_enabled = true; }
+//     void         disable() { m_enabled = false; }
+//     bool         is_enabled() { return m_enabled; }
+//     bool         is_active() { return m_active; }
+//     void         set_active(bool active) { m_active = active; }
+//     bool         has_focus() { return m_focus; }
+//     void         set_bg_color(int32_t color) { m_bg_color = color; }
+//     bool         set_focus(bool focus) { return draw_focus(focus); }
 
-    void show() {
-        if (m_first_call) m_first_call = false;
-        if (m_bg_color == TFT_TRANSPARENT) {
-            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
-        } else {
-            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
-        }
-        m_clicked = false;
-        if (!m_active) {
-            setInactive();
-            return;
-        }
-        if (m_state) {
-            drawImage(m_on_idlePicturePath, m_x, m_y, m_w, m_h);
-        } else {
-            drawImage(m_off_idlePicturePath, m_x, m_y, m_w, m_h);
-        }
-        m_enabled = true;
-    }
+//     void show() {
+//         if (m_first_call) m_first_call = false;
+//         if (m_bg_color == TFT_TRANSPARENT) {
+//             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+//         } else {
+//             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+//         }
+//         m_clicked = false;
+//         if (!m_active) {
+//             setInactive();
+//             return;
+//         }
+//         if (m_state) {
+//             drawImage(m_on_idlePicturePath, m_x, m_y, m_w, m_h);
+//         } else {
+//             drawImage(m_off_idlePicturePath, m_x, m_y, m_w, m_h);
+//         }
+//         m_enabled = true;
+//     }
 
-    void hide() {
-        if (m_first_call) return;
-        if (m_bg_color == TFT_TRANSPARENT) {
-            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
-        } else {
-            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
-        }
-        m_enabled = false;
-    }
+//     void hide() {
+//         if (m_first_call) return;
+//         if (m_bg_color == TFT_TRANSPARENT) {
+//             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+//         } else {
+//             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+//         }
+//         m_enabled = false;
+//     }
 
-    void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
-        x = m_x;
-        y = m_y;
-        w = m_w;
-        h = m_h;
-    }
+//     void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
+//         x = m_x;
+//         y = m_y;
+//         w = m_w;
+//         h = m_h;
+//     }
 
-    void setPicturePath(ps_ptr<char> path) {
-        m_off_idlePicturePath = path + "_Off_Idle.png";
-        m_on_idlePicturePath = path + "_On_Idle.png";
-        m_off_clickPicturePath = path + "_Off_Click.png";
-        m_on_clickPicturePath = path + "_On_Click.png";
-        m_off_inactivePicturePath = path + "_Off_Inactive.png";
-        m_on_inactivePicturePath = path + "_On_Inactive.png";
-        m_off_focusPicturePath = path + "_Off_Focus.png";
-        m_on_focusPicturePath = path + "_On_Focus.png";
-    }
+//     void setPicturePath(ps_ptr<char> path) {
+//         m_off_idlePicturePath = path + "_Off_Idle.png";
+//         m_on_idlePicturePath = path + "_On_Idle.png";
+//         m_off_clickPicturePath = path + "_Off_Click.png";
+//         m_on_clickPicturePath = path + "_On_Click.png";
+//         m_off_inactivePicturePath = path + "_Off_Inactive.png";
+//         m_on_inactivePicturePath = path + "_On_Inactive.png";
+//         m_off_focusPicturePath = path + "_Off_Focus.png";
+//         m_on_focusPicturePath = path + "_On_Focus.png";
+//     }
 
-    void setValue(bool val) {
-        m_state = val;
-        if (m_enabled) {
-            if (m_state)
-                drawImage(m_on_idlePicturePath, m_x, m_y, m_w, m_h);
-            else
-                drawImage(m_off_idlePicturePath, m_x, m_y, m_w, m_h);
-        }
-    }
-    bool getValue() { return m_state; }
-    void setOn() { m_state = true; }
-    void setOff() { m_state = false; }
-    void setActive(bool act) { m_active = act; }
-    bool getActive() { return m_active; }
+//     void setValue(bool val) {
+//         m_state = val;
+//         if (m_enabled) {
+//             if (m_state)
+//                 drawImage(m_on_idlePicturePath, m_x, m_y, m_w, m_h);
+//             else
+//                 drawImage(m_off_idlePicturePath, m_x, m_y, m_w, m_h);
+//         }
+//     }
+//     bool getValue() { return m_state; }
+//     void setOn() { m_state = true; }
+//     void setOff() { m_state = false; }
+//     void setActive(bool act) { m_active = act; }
+//     bool getActive() { return m_active; }
 
-    bool click() {
-        if (!m_enabled) return false;
-        if (m_state)
-            drawImage(m_on_clickPicturePath, m_x, m_y, m_w, m_h);
-        else
-            drawImage(m_off_clickPicturePath, m_x, m_y, m_w, m_h);
-        m_clicked = true;
-        m_state = !m_state;
+//     bool click() {
+//         if (!m_enabled) return false;
+//         if (m_state)
+//             drawImage(m_on_clickPicturePath, m_x, m_y, m_w, m_h);
+//         else
+//             drawImage(m_off_clickPicturePath, m_x, m_y, m_w, m_h);
+//         m_clicked = true;
+//         m_state = !m_state;
 
-        if (graphicObjects_OnClick) graphicObjects_OnClick(m_name, m_enabled);
-        return true;
-    }
+//         if (graphicObjects_OnClick) graphicObjects_OnClick(m_name, m_enabled);
+//         return true;
+//     }
 
-    bool positionXY(uint16_t x, uint16_t y) {
-        if (x < m_x) return false;
-        if (y < m_y) return false;
-        if (x > m_x + m_w) return false;
-        if (y > m_y + m_h) return false;
-        if (m_enabled) {
-            if (m_state)
-                drawImage(m_on_clickPicturePath, m_x, m_y, m_w, m_h);
-            else
-                drawImage(m_off_clickPicturePath, m_x, m_y, m_w, m_h);
-            m_clicked = true;
-            m_state = !m_state;
-        }
-        if (graphicObjects_OnClick) graphicObjects_OnClick(m_name, m_enabled);
-        //    if(!m_enabled) return false;
-        return true;
-    }
-    bool released() {
-        if (!m_enabled) return false;
-        if (!m_clicked) return false;
-        if (m_state)
-            drawImage(m_on_idlePicturePath, m_x, m_y, m_w, m_h);
-        else
-            drawImage(m_off_idlePicturePath, m_x, m_y, m_w, m_h);
-        m_clicked = false;
-        if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
-        return true;
-    }
+//     bool positionXY(uint16_t x, uint16_t y) {
+//         if (x < m_x) return false;
+//         if (y < m_y) return false;
+//         if (x > m_x + m_w) return false;
+//         if (y > m_y + m_h) return false;
+//         if (m_enabled) {
+//             if (m_state)
+//                 drawImage(m_on_clickPicturePath, m_x, m_y, m_w, m_h);
+//             else
+//                 drawImage(m_off_clickPicturePath, m_x, m_y, m_w, m_h);
+//             m_clicked = true;
+//             m_state = !m_state;
+//         }
+//         if (graphicObjects_OnClick) graphicObjects_OnClick(m_name, m_enabled);
+//         //    if(!m_enabled) return false;
+//         return true;
+//     }
+//     bool released() {
+//         if (!m_enabled) return false;
+//         if (!m_clicked) return false;
+//         if (m_state)
+//             drawImage(m_on_idlePicturePath, m_x, m_y, m_w, m_h);
+//         else
+//             drawImage(m_off_idlePicturePath, m_x, m_y, m_w, m_h);
+//         m_clicked = false;
+//         if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
+//         return true;
+//     }
 
-  private:
-    bool draw_focus(bool focus) {
-        if (!focus) m_focus = false;
-        if (!m_active) return false;
-        if (!m_enabled) return false;
-        if (m_state) {
-            if (focus) {
-                drawImage(m_on_focusPicturePath, m_x, m_y, m_w, m_h);
-                m_focus = true;
-            } else {
-                drawImage(m_on_idlePicturePath, m_x, m_y, m_w, m_h);
-            }
-        } else {
-            if (focus) {
-                drawImage(m_off_focusPicturePath, m_x, m_y, m_w, m_h);
-                m_focus = true;
-            } else {
-                drawImage(m_off_idlePicturePath, m_x, m_y, m_w, m_h);
-            }
-        }
-        return m_focus;
-    }
+//   private:
+//     bool draw_focus(bool focus) {
+//         if (!focus) m_focus = false;
+//         if (!m_active) return false;
+//         if (!m_enabled) return false;
+//         if (m_state) {
+//             if (focus) {
+//                 drawImage(m_on_focusPicturePath, m_x, m_y, m_w, m_h);
+//                 m_focus = true;
+//             } else {
+//                 drawImage(m_on_idlePicturePath, m_x, m_y, m_w, m_h);
+//             }
+//         } else {
+//             if (focus) {
+//                 drawImage(m_off_focusPicturePath, m_x, m_y, m_w, m_h);
+//                 m_focus = true;
+//             } else {
+//                 drawImage(m_off_idlePicturePath, m_x, m_y, m_w, m_h);
+//             }
+//         }
+//         return m_focus;
+//     }
 
-    void setInactive() {
-        if (m_state) {
-            drawImage(m_on_inactivePicturePath, m_x, m_y, m_w, m_h);
-        } else {
-            drawImage(m_off_inactivePicturePath, m_x, m_y, m_w, m_h);
-        }
-        m_enabled = false;
-        m_active = false;
-    }
-};
+//     void setInactive() {
+//         if (m_state) {
+//             drawImage(m_on_inactivePicturePath, m_x, m_y, m_w, m_h);
+//         } else {
+//             drawImage(m_off_inactivePicturePath, m_x, m_y, m_w, m_h);
+//         }
+//         m_enabled = false;
+//         m_active = false;
+//     }
+// };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class pictureBox : public RegisterTable {
   private:

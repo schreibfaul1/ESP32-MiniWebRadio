@@ -1058,13 +1058,10 @@ void setup() {
     esp_log_set_vprintf(log_redirect_handler);
     if (!get_esp_items(&s_resetReason, &s_f_FFatFound)) return;
 
-    btn_RA_bt.set_active(false);
-    btn_SE_bright.set_active(false);
     if (TFT_BL >= 0) {
         s_f_brightnessIsChangeable = true;
         setupBacklight(TFT_BL, 512);
         setTFTbrightness(200, 200);
-        btn_SE_bright.set_active(true);
     }
     if (IR_PIN >= 0) {
         pinMode(IR_PIN, INPUT_PULLUP); // if ir_pin is read only, have a external resistor (~10...40KOhm)
@@ -1911,8 +1908,8 @@ void changeState(int8_t state, int8_t subState) {
             txt_DL_fName.show();
             showFileLogo(DLNA, subState);
             webSrv.send("changeState=", "DLNA");
-            if (audio.isRunning()) btn_DL_pause.setActive(true);
-            else                   btn_DL_pause.setActive(false);
+            if (audio.isRunning()) btn_DL_pause.set_active(true);
+            else                   btn_DL_pause.set_active(false);
             sdr_DL_volume.show();
             btn_DL_pause.show(); btn_DL_mute.show(); btn_DL_cancel.show(); btn_DL_fileList.show(); btn_DL_radio.show();
             break;
@@ -2670,7 +2667,7 @@ void my_audio_info(Audio::msg_t m) {
             if (s_state == DLNA) {
                 txt_DL_fName.setText("");
                 txt_DL_fName.show();
-                btn_DL_pause.setActive(false);
+                btn_DL_pause.set_active(false);
                 btn_DL_pause.show();
             }
             if (s_state == RINGING) {
@@ -4060,7 +4057,7 @@ void graphicObjects_OnClick(ps_ptr<char> name, uint8_t val) { // val = 0 --> is 
         if (val && name.equals("btn_DL_pause"))    { goto exit; }
         if (val && name.equals("btn_DL_radio"))    { goto exit; }
         if (val && name.equals("btn_DL_fileList")) { goto exit; }
-        if (val && name.equals("btn_DL_cancel"))   { clearStationName(); btn_DL_pause.setActive(false); goto exit; }
+        if (val && name.equals("btn_DL_cancel"))   { clearStationName(); btn_DL_pause.set_active(false); goto exit; }
         if (val && name.equals("pgb_DL_progress")) { goto exit; }
     }
     if (s_state == DLNAITEMSLIST) {
@@ -4222,7 +4219,7 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
                                               txt_DL_fName.setText("");
                                               txt_DL_fName.show();
                                               pgb_DL_progress.reset();
-                                              btn_DL_pause.setActive(false);
+                                              btn_DL_pause.set_active(false);
                                               btn_DL_pause.show();
                                               if(s_ir_btn_select == 3) set_ir_pos_DL(0);
                                               goto exit; }
