@@ -503,7 +503,7 @@ class PictureBox : public RegisterTable {
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class slider : public RegisterTable {
+class Slider : public RegisterTable {
   private:
     bool             m_enabled = false;
     bool             m_clicked = false;
@@ -539,7 +539,7 @@ class slider : public RegisterTable {
     releasedArg      m_ra;
 
   public:
-    slider(ps_ptr<char> name) {
+    Slider(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
         m_railHigh = 6;
@@ -547,7 +547,7 @@ class slider : public RegisterTable {
         m_railColor = TFT_BEIGE;
         m_spotColor = TFT_RED;
     }
-    ~slider() { m_objectInit = false; }
+    ~Slider() { m_objectInit = false; }
 
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom) {
         m_x = x; // x pos
@@ -1681,7 +1681,7 @@ class vuMeter : public RegisterTable {
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class spectrum : public RegisterTable {
+class Spectrum : public RegisterTable {
   private:
     uint16_t         m_x = 0;
     uint16_t         m_y = 0;
@@ -1717,11 +1717,11 @@ class spectrum : public RegisterTable {
     std::vector<SegmentState> m_segmState[15];
 
   public:
-    spectrum(ps_ptr<char> name) {
+    Spectrum(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
     }
-    ~spectrum() {}
+    ~Spectrum() {}
 
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom) {
         m_x = x; // x pos
@@ -1898,7 +1898,7 @@ class spectrum : public RegisterTable {
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // *** C O M P O S E D   O B J E C T S
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class selectbox : public RegisterTable {
+class Selectbox : public RegisterTable {
 
     /*    —————————————————————————————————————————————————————————————————————————————
          |                   textbox                               |  ⏬  |  ⏫  |idx |
@@ -1935,14 +1935,14 @@ class selectbox : public RegisterTable {
     std::vector<ps_ptr<char>> m_selContent;
 
   public:
-    selectbox(ps_ptr<char> name, uint8_t fontSize) {
+    Selectbox(ps_ptr<char> name, uint8_t fontSize) {
         register_object(this);
         m_name = name;
         m_fgColor = TFT_LIGHTGREY;
         m_borderColor = TFT_BLACK;
         setFontSize(fontSize);
     }
-    ~selectbox() {
+    ~Selectbox() {
         delete m_txt_select;
         delete m_txt_btn_down;
         delete m_txt_btn_up;
@@ -2429,7 +2429,7 @@ class wifiSettings : public RegisterTable {
     bool         m_narrow = false;
     bool         m_noWrap = false;
     releasedArg  m_ra;
-    selectbox*   m_sel_ssid = new selectbox("wifiSettings_selectbox_ssid", 0);
+    Selectbox*   m_sel_ssid = new Selectbox("wifiSettings_selectbox_ssid", 0);
     inputbox*    m_in_password = new inputbox("wifiSettings_txtbox_pwd");
     keyBoard*    m_keyboard = new keyBoard("wifiSettings_keyBoard", 0);
 

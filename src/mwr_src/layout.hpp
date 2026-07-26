@@ -490,8 +490,8 @@ Button     btn_RA_off("btn_RA_off", ButtonType::PushButton);             // subS
 PictureBox pic_RA_logo("pic_RA_logo");
 Textbox    txt_RA_sTitle("txt_RA_sTitle"), txt_RA_staName("txt_RA_staName"), txt_RA_irNum("txt_RA_irNum");
 vuMeter    VUmeter_RA("VUmeter_RA");
-spectrum   spectrum_RA("spectrum_RA");
-slider     sdr_RA_volume("sdr_RA_volume");
+Spectrum   spectrum_RA("spectrum_RA");
+Slider     sdr_RA_volume("sdr_RA_volume");
 numbersBox nbr_RA_staBox("nbr_RA_staBox");
 // STATIONSLIST
 stationsList lst_RADIO("lst_RADIO");
@@ -510,7 +510,7 @@ Button      btn_PL_cancel("btn_PL_cancel", ButtonType::PushButton);     // subSt
 Button      btn_PL_playNext("btn_PL_playNext", ButtonType::PushButton); // subState 1
 Button      btn_PL_playPrev("btn_PL_playPrev", ButtonType::PushButton); // subState 1
 Textbox     txt_PL_fName("txt_PL_fName");
-slider      sdr_PL_volume("sdr_PL_volume");
+Slider      sdr_PL_volume("sdr_PL_volume");
 PictureBox  pic_PL_logo("pic_PL_logo");
 progressbar pgb_PL_progress("pgb_PL_progress");
 // AUDIOFILESLIST
@@ -522,7 +522,7 @@ Button      btn_DL_radio("btn_DL_radio", ButtonType::PushButton);
 Button      btn_DL_fileList("btn_DL_fileList", ButtonType::PushButton);
 Button      btn_DL_cancel("btn_DL_cancel", ButtonType::PushButton);
 Textbox     txt_DL_fName("txt_DL_fName");
-slider      sdr_DL_volume("sdr_DL_volume");
+Slider      sdr_DL_volume("sdr_DL_volume");
 PictureBox  pic_DL_logo("pic_DL_logo");
 progressbar pgb_DL_progress("pgb_DL_progress");
 // DLNAITEMSLIST
@@ -533,7 +533,7 @@ Button     btn_CL_alarm("btn_CL_alarm", ButtonType::PushButton);
 Button     btn_CL_radio("btn_CL_radio", ButtonType::PushButton);
 Button     btn_CL_off("btn_CL_off", ButtonType::PushButton);
 imgClock24 clk_CL_24("clk_CL_24");
-slider     sdr_CL_volume("sdr_CL_volume");
+Slider     sdr_CL_volume("sdr_CL_volume");
 // ALARMCLOCK
 alarmClock clk_AC_red("clk_AC_red");
 Button     btn_AC_left("btn_AC_left", ButtonType::PushButton);
@@ -555,7 +555,7 @@ Button     btn_SE_vu_meter("btn_SE_vu_meter", ButtonType::ToggleButton);
 // BRIGHTNESS
 Button     btn_BR_ready("btn_BR_ready", ButtonType::PushButton);
 PictureBox pic_BR_logo("pic_BR_logo");
-slider     sdr_BR_value("sdr_BR_value");
+Slider     sdr_BR_value("sdr_BR_value");
 Textbox    txt_BR_value("txt_BR_value");
 // SLEEPTIMER
 Button      btn_SL_up("btn_SL_up", ButtonType::PushButton);
@@ -565,9 +565,9 @@ Button      btn_SL_cancel("btn_SL_cancel", ButtonType::PushButton);
 offTimerBox otb_SL_stime("otb_SL_stime");
 PictureBox  pic_SL_logo("pic_SL_logo");
 // EQUALIZER
-slider  sdr_EQ_lowPass("sdr_EQ_LP"), sdr_EQ_bandPass("sdr_EQ_BP");
-slider  sdr_EQ_highPass("sdr_EQ_HP");
-slider  sdr_EQ_balance("sdr_EQ_BAL");
+Slider  sdr_EQ_lowPass("sdr_EQ_LP"), sdr_EQ_bandPass("sdr_EQ_BP");
+Slider  sdr_EQ_highPass("sdr_EQ_HP");
+Slider  sdr_EQ_balance("sdr_EQ_BAL");
 Textbox txt_EQ_lowPass("txt_EQ_LP");
 Textbox txt_EQ_bandPass("txt_EQ_BP");
 Textbox txt_EQ_highPass("txt_EQ_HP");
