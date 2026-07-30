@@ -1371,7 +1371,7 @@ bool init_SD_card() {
         clearAll(TFT_BLACK);
         getTFT().setFontSize(displayConfig.fonts[6]);
         getTFT().setTextColor(TFT_YELLOW);
-        getTFT().writeText("SD Card Mount Failed", 0, 50, displayConfig.dispWidth, displayConfig.dispHeight, TFT_ALIGN_CENTER, TFT_ALIGN_TOP, false, false);
+        getTFT().writeText("SD Card Mount Failed", 0, 50, displayConfig.dispWidth, displayConfig.dispHeight, HAlign::Center, VAlign::Middle, false, true);
         printfln(s_tag.sd_card, ANSI_ESC_RED "SD Card Mount Failed");
         return false;
     }
@@ -1941,7 +1941,7 @@ void changeState(int8_t state, int8_t subState) {
             if (newState) {
                 otb_SL_stime.show(s_sleeptime);
                 pic_SL_logo.setPicturePath("/common/Night_Gown.jpg");
-                pic_SL_logo.setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+                pic_SL_logo.setAlign(HAlign::Center, VAlign::Middle);
                 pic_SL_logo.show();
             }
             btn_SL_up.show(); btn_SL_up.show(); btn_SL_down.show(); btn_SL_ready.show(); btn_SL_cancel.show();
@@ -4310,7 +4310,7 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
     }
     if (s_state == WIFI_SETTINGS) {
         if (name.equals("wifiSettings"))    { setWiFiCredentials(ra.arg1.c_get(), ra.arg2.c_get());
-                                              msg_box.setText("ESP restart", false, false);
+                                              msg_box.setText("ESP restart", false);
                                               msg_box.show();
                                               vTaskDelay(2000);
                                               s_f_msg_box = true;

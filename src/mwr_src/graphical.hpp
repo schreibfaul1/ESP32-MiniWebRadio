@@ -185,8 +185,8 @@ class Button : public RegisterTable {
     bool             m_active = true;
     bool             m_state = false;
     bool             m_first_call = true;
-    uint8_t          m_h_align = TFT_ALIGN_CENTER;
-    uint8_t          m_v_align = TFT_ALIGN_CENTER;
+    HAlign           m_h_align = HAlign::Center;
+    VAlign           m_v_align = VAlign::Middle;
     int16_t          m_x = 0;
     int16_t          m_y = 0;
     int16_t          m_w = 0;
@@ -367,8 +367,8 @@ class PictureBox : public RegisterTable {
     uint8_t      m_padding_right = 0;  // right margin
     uint8_t      m_padding_top = 0;    // top margin
     uint8_t      m_padding_bottom = 0; // bottom margin
-    uint8_t      m_h_align = TFT_ALIGN_CENTER;
-    uint8_t      m_v_align = TFT_ALIGN_CENTER;
+    HAlign       m_h_align = HAlign::Center;
+    VAlign       m_v_align = VAlign::Middle;
     int32_t      m_bg_color = TFT_TRANSPARENT;
     ps_ptr<char> m_PicturePath;
     ps_ptr<char> m_name;
@@ -451,7 +451,7 @@ class PictureBox : public RegisterTable {
         align();
     }
 
-    void setAlign(uint8_t h_align, uint8_t v_align) {
+    void setAlign(HAlign h_align, VAlign v_align) {
         m_h_align = h_align;
         m_v_align = v_align;
         align();
@@ -475,12 +475,12 @@ class PictureBox : public RegisterTable {
             MWR_LOG_WARN("m_padding_top: {}, m_padding_bottom: {}, m_image_h: {} > m_h; {}, {}", m_padding_top, m_padding_bottom, m_image_h, m_h, m_PicturePath);
             return;
         }
-        if (m_h_align == TFT_ALIGN_LEFT) m_image_x = m_x + m_padding_left;
-        if (m_h_align == TFT_ALIGN_CENTER) m_image_x = m_x + (m_w - m_image_w) / 2;
-        if (m_h_align == TFT_ALIGN_RIGHT) m_image_x = m_x + (m_w - m_image_w) - m_padding_right;
-        if (m_v_align == TFT_ALIGN_TOP) m_image_y = m_y + m_padding_top;
-        if (m_v_align == TFT_ALIGN_CENTER) m_image_y = m_y + (m_h - m_image_h) / 2;
-        if (m_v_align == TFT_ALIGN_DOWN) m_image_y = m_y + (m_h - m_image_h) - m_padding_bottom;
+        if (m_h_align == HAlign::Left) m_image_x = m_x + m_padding_left;
+        if (m_h_align == HAlign::Center) m_image_x = m_x + (m_w - m_image_w) / 2;
+        if (m_h_align == HAlign::Right) m_image_x = m_x + (m_w - m_image_w) - m_padding_right;
+        if (m_v_align == VAlign::Top) m_image_y = m_y + m_padding_top;
+        if (m_v_align == VAlign::Middle) m_image_y = m_y + (m_h - m_image_h) / 2;
+        if (m_v_align == VAlign::Bottom) m_image_y = m_y + (m_h - m_image_h) - m_padding_bottom;
     }
 
   public:
@@ -884,7 +884,6 @@ class Textbox : public RegisterTable {
     bool             m_active = true;
     bool             m_clicked = false;
     bool             m_autoSize = false;
-    bool             m_narrow = false;
     bool             m_noWrap = false;
     bool             m_content_has_changed = false;
     bool             m_first_call = true;
@@ -894,8 +893,8 @@ class Textbox : public RegisterTable {
     int16_t          m_w = 0;
     int16_t          m_h = 0;
     uint8_t          m_fontSize = 0;
-    uint8_t          m_h_align = TFT_ALIGN_RIGHT;
-    uint8_t          m_v_align = TFT_ALIGN_TOP;
+    HAlign           m_h_align = HAlign::Center;
+    VAlign           m_v_align = VAlign::Middle;
     uint8_t          m_padding_left = 0;  // left margin
     uint8_t          m_paddig_right = 0;  // right margin
     uint8_t          m_paddig_top = 0;    // top margin
@@ -1045,11 +1044,11 @@ class Textbox : public RegisterTable {
         }
     }
 
-    void setNarrow(bool narrow) { m_narrow = narrow; }
+
 
     void setNoWrap(bool noWrap) { m_noWrap = noWrap; }
 
-    void setAlign(uint8_t h_align, uint8_t v_align) {
+    void setAlign(HAlign h_align, VAlign v_align) {
         m_h_align = h_align;
         m_v_align = v_align;
     }
@@ -1070,7 +1069,7 @@ class Textbox : public RegisterTable {
                 h -= 2;
                 getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
             }
-            getTFT().writeText(m_text.c_get(), x, y, w, h, m_h_align, m_v_align, m_narrow, m_noWrap, m_autoSize);
+            getTFT().writeText(m_text.c_get(), x, y, w, h, m_h_align, m_v_align, m_noWrap, m_autoSize);
         }
     }
 };
@@ -1082,8 +1081,8 @@ class Inputbox : public RegisterTable {
     int16_t      m_w = 0;
     int16_t      m_h = 0;
     uint8_t      m_fontSize = 0;
-    uint8_t      m_h_align = TFT_ALIGN_RIGHT;
-    uint8_t      m_v_align = TFT_ALIGN_TOP;
+    HAlign       m_h_align = HAlign::Right;
+    VAlign       m_v_align = VAlign::Top;
     uint8_t      m_padding_left = 0;  // left margin
     uint8_t      m_paddig_right = 0;  // right margin
     uint8_t      m_paddig_top = 0;    // top margin
@@ -1099,7 +1098,6 @@ class Inputbox : public RegisterTable {
     bool         m_active = true;
     bool         m_clicked = false;
     bool         m_autoSize = false;
-    bool         m_narrow = false;
     bool         m_noWrap = false;
     bool         m_first_call = true;
     releasedArg  m_ra;
@@ -1198,12 +1196,11 @@ class Inputbox : public RegisterTable {
         if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
         return true;
     }
-    void setText(ps_ptr<char> txt, bool narrow = false, bool noWrap = false) { // prepare a text, wait of show() to write it
+    void setText(ps_ptr<char> txt, bool noWrap = false) { // prepare a text, wait of show() to write it
         m_text = txt;
-        m_narrow = narrow;
         m_noWrap = noWrap;
     }
-    void setAlign(uint8_t h_align, uint8_t v_align) {
+    void setAlign(HAlign h_align, VAlign v_align) {
         m_h_align = h_align;
         m_v_align = v_align;
     }
@@ -1230,15 +1227,15 @@ class Inputbox : public RegisterTable {
             uint16_t lineLength = 0;
             uint16_t txtMaxWidth = w - 2 * h;
             uint16_t idx = 0;
-            lineLength = getTFT().getLineLength(m_text.c_get(), m_narrow);
+            lineLength = getTFT().getLineLength(m_text.c_get());
             while (lineLength > txtMaxWidth) {
-                lineLength = getTFT().getLineLength(m_text.get() + idx, m_narrow);
+                lineLength = getTFT().getLineLength(m_text.get() + idx);
                 if (lineLength > txtMaxWidth) {
                     idx++;
                     if (idx > m_text.strlen()) break;
                 }
             }
-            getTFT().writeText(m_text.get() + idx, x, y, w, h, m_h_align, m_v_align, m_narrow, m_noWrap, false);
+            getTFT().writeText(m_text.get() + idx, x, y, w, h, m_h_align, m_v_align, m_noWrap, false);
             getTFT().setTextColor(txtColor_tmp);
             getTFT().setBackGoundColor(bgColor_tmp);
         }
@@ -1253,8 +1250,8 @@ class Textbutton : public RegisterTable {
     int16_t      m_h = 0;
     int16_t      m_r = 0; // radius round rect
     uint8_t      m_fontSize = 0;
-    uint8_t      m_h_align = TFT_ALIGN_RIGHT;
-    uint8_t      m_v_align = TFT_ALIGN_TOP;
+    HAlign       m_h_align = HAlign::Right;
+    VAlign       m_v_align = VAlign::Top;
     uint8_t      m_padding_left = 0;  // left margin
     uint8_t      m_paddig_right = 0;  // right margin
     uint8_t      m_paddig_top = 0;    // top margin
@@ -1271,7 +1268,6 @@ class Textbutton : public RegisterTable {
     bool         m_active = true;
     bool         m_clicked = false;
     bool         m_autoSize = false;
-    bool         m_narrow = false;
     bool         m_noWrap = false;
     bool         m_content_has_changed = false;
     bool         m_first_call = true;
@@ -1421,14 +1417,13 @@ class Textbutton : public RegisterTable {
         if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
         return true;
     }
-    void setText(ps_ptr<char> txt, bool narrow = false, bool noWrap = false) { // prepare a text, wait of show() to write it
+    void setText(ps_ptr<char> txt, bool noWrap = false) { // prepare a text, wait of show() to write it
         if (!txt) { txt = strdup(""); }
         m_text = txt;
-        m_narrow = narrow;
         m_noWrap = noWrap;
     }
     ps_ptr<char> getText() { return m_text; }
-    void         setAlign(uint8_t h_align, uint8_t v_align) {
+    void         setAlign(HAlign h_align, VAlign v_align) {
         m_h_align = h_align;
         m_v_align = v_align;
     }
@@ -1471,7 +1466,7 @@ class Textbutton : public RegisterTable {
             } else if (m_text.equals("/d")) {
                 drawTriangeDown();
             } else
-                getTFT().writeText(m_text.c_get(), x, y, w, h, m_h_align, m_v_align, m_narrow, m_noWrap, m_autoSize);
+                getTFT().writeText(m_text.c_get(), x, y, w, h, m_h_align, m_v_align, m_noWrap, m_autoSize);
             getTFT().setTextColor(txtColor_tmp);
             getTFT().setBackGoundColor(bgColor_tmp);
         }
@@ -1925,7 +1920,6 @@ class Selectbox : public RegisterTable {
     bool                      m_focus = false;
     bool                      m_clicked = false;
     bool                      m_autoSize = false;
-    bool                      m_narrow = false;
     bool                      m_noWrap = false;
     releasedArg               m_ra;
     Textbox*                  m_txt_select = new Textbox("select_txtbox_ssid");
@@ -1966,21 +1960,19 @@ class Selectbox : public RegisterTable {
         m_paddig_top = paddig_top;
         m_paddig_bottom = paddig_bottom;
         m_txt_select->begin(m_x, m_y, m_w - (m_h * 3), m_h, m_padding_left, m_paddig_right, m_paddig_top, m_paddig_bottom);
-        m_txt_select->setNarrow(m_narrow);
         m_txt_select->setNoWrap(m_noWrap);
-        m_txt_select->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
+        m_txt_select->setAlign(HAlign::Left, VAlign::Middle);
         m_txt_btn_down->begin(m_x + m_w - (m_h * 3), m_y, m_h, m_h, m_h / 5, m_h / 5, m_h / 5, m_h / 5, 0);
         m_txt_btn_down->setClickColor(TFT_CYAN);
         m_txt_btn_down->setText("/d");
-        m_txt_btn_down->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+        m_txt_btn_down->setAlign(HAlign::Center, VAlign::Middle);
         m_txt_btn_up->begin(m_x + m_w - (m_h * 2), m_y, m_h, m_h, m_h / 5, m_h / 5, m_h / 5, m_h / 5, 0);
         m_txt_btn_up->setClickColor(TFT_CYAN);
         m_txt_btn_up->setText("/u");
-        m_txt_btn_up->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+        m_txt_btn_up->setAlign(HAlign::Center, VAlign::Middle);
         m_txt_btn_idx->begin(m_x + m_w - (m_h * 1), m_y, m_h, m_h, m_padding_left, m_paddig_right, m_paddig_top, m_paddig_bottom);
-        m_txt_btn_idx->setNarrow(m_narrow);
         m_txt_btn_idx->setNoWrap(m_noWrap);
-        m_txt_btn_idx->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+        m_txt_btn_idx->setAlign(HAlign::Center, VAlign::Middle);
     }
     ps_ptr<char> get_name() { return m_name; }
     void         enable() { enable_all(); }
@@ -2235,7 +2227,7 @@ class KeyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
             txt_btn_array[i].setBorderWidth(1);
             txt_btn_array[i].setFontSize(m_fontSize);
             txt_btn_array[i].setText(m_alpha1[i]);
-            txt_btn_array[i].setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+            txt_btn_array[i].setAlign(HAlign::Center, VAlign::Middle);
             posX += m_row1[i] * btnW + margin;
         }
         posY += btnH + margin;
@@ -2249,7 +2241,7 @@ class KeyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
             txt_btn_array[i + 12].setBorderWidth(1);
             txt_btn_array[i + 12].setFontSize(m_fontSize);
             txt_btn_array[i + 12].setText(m_alpha2[i]);
-            txt_btn_array[i + 12].setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+            txt_btn_array[i + 12].setAlign(HAlign::Center, VAlign::Middle);
             posX += m_row2[i] * btnW + margin;
         }
         posY += btnH + margin;
@@ -2263,7 +2255,7 @@ class KeyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
             txt_btn_array[i + 23].setBorderWidth(1);
             txt_btn_array[i + 23].setFontSize(m_fontSize);
             txt_btn_array[i + 23].setText(m_alpha3[i]);
-            txt_btn_array[i + 23].setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+            txt_btn_array[i + 23].setAlign(HAlign::Center, VAlign::Middle);
             posX += m_row3[i] * btnW + margin;
         }
     }
@@ -2426,7 +2418,6 @@ class WifiSettings : public RegisterTable {
     bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_autoSize = false;
-    bool         m_narrow = false;
     bool         m_noWrap = false;
     releasedArg  m_ra;
     Selectbox*   m_sel_ssid = new Selectbox("wifiSettings_selectbox_ssid", 0);
@@ -2478,7 +2469,7 @@ class WifiSettings : public RegisterTable {
         m_fgColor = TFT_LIGHTGREY;
         m_borderColor = TFT_LIGHTGREY;
         setFontSize(fontSize);
-        m_in_password->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
+        m_in_password->setAlign(HAlign::Left, VAlign::Middle);
         m_in_password->setTextColor(m_fgColor);
         m_in_password->set_bg_color(m_bg_color);
         m_in_password->setBorderColor(m_borderColor);
@@ -2624,7 +2615,7 @@ class WifiSettings : public RegisterTable {
     bool         set_focus(bool focus) { return false; }
 
     void show() {
-        m_in_password->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
+        m_in_password->setAlign(HAlign::Left, VAlign::Middle);
         m_sel_ssid->show();
         m_in_password->setText(m_credentials[0].password.c_get());
         m_in_password->show();
@@ -2779,8 +2770,8 @@ class TimeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     int16_t      m_w = 0;
     int16_t      m_h = 0;
     uint8_t      m_fontSize = 0;
-    uint8_t      m_h_align = TFT_ALIGN_CENTER;
-    uint8_t      m_v_align = TFT_ALIGN_CENTER;
+    HAlign       m_h_align = HAlign::Center;
+    VAlign       m_v_align = VAlign::Middle;
     int32_t      m_bg_color = TFT_TRANSPARENT;
     int32_t      m_fgColor = 0;
     int32_t      m_borderColor = 0;
@@ -2821,10 +2812,9 @@ class TimeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
         uint8_t width[8] = {w_digits, w_digits, w_colon, w_digits, w_digits, w_colon, w_digits, w_digits};
         for (uint8_t i = 0; i < 8; i++) {
             txt_time[i].begin(xPos[i], m_y + pt, width[i], h, 0, 0, 0, 0);
-            txt_time[i].setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+            txt_time[i].setAlign(HAlign::Center, VAlign::Middle);
             txt_time[i].setTextColor(m_fgColor);
             txt_time[i].setFontSize(m_fontSize);
-            txt_time[i].setNarrow(true);
         }
     }
 
@@ -3780,12 +3770,12 @@ class AlarmClock : public RegisterTable { // draw a clock in 12 or 24h format
 
         for (uint8_t i = 0; i < 7; i++) {
             txt_alarm_days[i].begin(m_alarmdaysXPos[i], m_alarmdaysYPos, m_alarmdaysW, m_alarmdaysH, 0, 0, 0, 0);
-            txt_alarm_days[i].setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+            txt_alarm_days[i].setAlign(HAlign::Center, VAlign::Middle);
             txt_alarm_days[i].setBorderColor(TFT_LIGHTGREY);
             txt_alarm_days[i].setFontSize(m_fontSize);
             txt_alarm_days[i].setText(m_WD[i]);
             txt_alarm_time[i].begin(m_alarmdaysXPos[i], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, 0, 0, 0, 0);
-            txt_alarm_time[i].setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+            txt_alarm_time[i].setAlign(HAlign::Center, VAlign::Middle);
             txt_alarm_time[i].setBorderColor(TFT_LIGHTGREY);
             txt_alarm_time[i].setFontSize(m_fontSize);
         }
@@ -4274,11 +4264,11 @@ class UniList {
             }
         }
         uint16_t indent = pos ? m_indentContent : m_indentDirectory;
-        getTFT().writeText(m_buff.c_get(), indent, m_y + pos * m_lineHight, m_w - indent, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+        getTFT().writeText(m_buff.c_get(), indent, m_y + pos * m_lineHight, m_w - indent, m_lineHight, HAlign::Left, VAlign::Middle, true, true);
     }
     void drawPosInfo(int16_t firstVal, int16_t secondVal, int16_t total, ps_ptr<char> color) { // e.g. 1-9/65
         m_buff.assignf("{}{}-{}-{}", color.c_get(), firstVal, secondVal, total);
-        getTFT().writeText(m_buff.c_get(), 0, m_y, m_w, m_lineHight, TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER, true, true, false);
+        getTFT().writeText(m_buff.c_get(), 0, m_y, m_w, m_lineHight, HAlign::Right, VAlign::Middle, true, true);
     }
     void colourLine(uint8_t pos, ps_ptr<char> color = ANSI_ESC_WHITE) {
         if (pos > 9) return;
@@ -4291,7 +4281,7 @@ class UniList {
                 m_buff.assignf("{}{}", color.c_get(), m_txt[pos].c_get()); // directory
         }
         uint16_t indent = pos ? m_indentContent : m_indentDirectory;
-        getTFT().writeText(m_buff.c_get(), indent, m_y + pos * m_lineHight, m_w - indent, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+        getTFT().writeText(m_buff.c_get(), indent, m_y + pos * m_lineHight, m_w - indent, m_lineHight, HAlign::Left, VAlign::Middle, true, true);
     }
     ps_ptr<char> getTxtByPos(uint8_t pos) { return m_txt[pos]; }
     int16_t      getNumberByPos(uint8_t pos) { return m_nr[pos]; }
@@ -4526,7 +4516,7 @@ class DlnaList : public RegisterTable {
         }
         m_buff.assignf("{}-{}/{}", m_viewPoint + 1, m_viewPoint + (pos - 1), m_dlnaMaxItems); // shows the current items pos e.g. "30-39/210"
         getTFT().setTextColor(TFT_ORANGE);
-        getTFT().writeText(m_buff.c_get(), 10, m_y, m_w - 10, m_lineHight, TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER, true, true);
+        getTFT().writeText(m_buff.c_get(), 10, m_y, m_w - 10, m_lineHight, HAlign::Right, VAlign::Middle, true, true);
         return;
     }
 
@@ -5645,14 +5635,14 @@ class DisplayHeader : public RegisterTable {
     //------------------------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
     struct w_i {
         uint16_t x = 0;
-        uint16_t w = 165;
+        uint16_t w = 160;
         uint8_t  pl = 2;
         uint8_t  pr = 0;
         uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_Item; // Radio, Player, Clock...
     struct w_l {
-        uint16_t x = 165;
+        uint16_t x = 160;
         uint16_t w = 30;
         uint8_t  pl = 2;
         uint8_t  pr = 0;
@@ -5660,7 +5650,7 @@ class DisplayHeader : public RegisterTable {
         uint8_t  pb = 0;
     } const s_Speaker; // loudspeaker symbol 25 x 20 px
     struct w_v {
-        uint16_t x = 195;
+        uint16_t x = 190;
         uint16_t w = 30;
         uint8_t  pl = 0;
         uint8_t  pr = 0;
@@ -5668,7 +5658,7 @@ class DisplayHeader : public RegisterTable {
         uint8_t  pb = 0;
     } const s_Volume; // volume
     struct w_r {
-        uint16_t x = 225;
+        uint16_t x = 220;
         uint16_t w = 35;
         uint8_t  pl = 2;
         uint8_t  pr = 0;
@@ -5676,8 +5666,8 @@ class DisplayHeader : public RegisterTable {
         uint8_t  pb = 0;
     } const s_RSSID; // RSSID symbol 27 x 20 px
     struct w_t {
-        uint16_t x = 260;
-        uint16_t w = 60;
+        uint16_t x = 255;
+        uint16_t w = 65;
         uint8_t  pl = 0;
         uint8_t  pr = 0;
         uint8_t  pt = 0;
@@ -5838,11 +5828,11 @@ class DisplayHeader : public RegisterTable {
         pic_RSSID->begin(s_RSSID.x, m_y, s_RSSID.w, m_h, s_RSSID.pl, s_RSSID.pr, s_RSSID.pt, s_RSSID.pb);
         timeStringObject->begin(s_time.x, m_y, s_time.w, m_h, s_time.pl, s_time.pr, s_time.pt, s_time.pb);
 
-        txt_Item->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
+        txt_Item->setAlign(HAlign::Left, VAlign::Middle);
         txt_Item->setTextColor(m_itemColor);
         txt_Item->setFontSize(m_fontSize); // 0 -> auto
         pic_Speaker->setPicturePath(m_speakerSymbol[0]);
-        txt_Volume->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
+        txt_Volume->setAlign(HAlign::Left, VAlign::Middle);
         txt_Volume->setFontSize(m_fontSize); // 0 -> auto
         pic_RSSID->setPicturePath(m_rssiSymbol[0]);
     }
@@ -6000,6 +5990,11 @@ class DisplayHeader : public RegisterTable {
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class DisplayFooter : public RegisterTable {
   private:
+    #define  br_x 47.0
+    #define  br_w 13.0
+    #define  ip_x 60.0
+    #define  ip_w 40.0
+
     PictureBox*  pic_Antenna = new PictureBox("footer_Antenna");     // antenna symbol
     Textbox*     txt_StaNr = new Textbox("footer_StaNr");            // station number
     PictureBox*  pic_Flag = new PictureBox("footer_Flag");           // flag symbol
@@ -6037,24 +6032,25 @@ class DisplayFooter : public RegisterTable {
     //-----------------------------------------------------------------------------------------------------------------------------------
 #ifdef TFT_LAYOUT_S // 320 x 240px
     //-----------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
+
     struct w_a {
         uint16_t x = 0;
-        uint16_t w = 25;
+        uint16_t w = 22;
         uint8_t  pl = 0;
         uint8_t  pr = 0;
         uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_Antenna; // Antenna.png: 19 x 20 px
     struct w_s {
-        uint16_t x = 25;
-        uint16_t w = 32;
+        uint16_t x = 22;
+        uint16_t w = 29;
         uint8_t  pl = 0;
         uint8_t  pr = 0;
         uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_StaNr;
     struct w_f {
-        uint16_t x = 57;
+        uint16_t x = 52;
         uint16_t w = 40;
         uint8_t  pl = 0;
         uint8_t  pr = 0;
@@ -6062,15 +6058,15 @@ class DisplayFooter : public RegisterTable {
         uint8_t  pb = 0;
     } const s_Flag; // Flags:  33...40 x 20 px
     struct w_fn {
-        uint16_t x = 25;
-        uint16_t w = 72; // s_StaNr.w + s_Flag.w
+        uint16_t x = 22;
+        uint16_t w = 70; // s_StaNr.w + s_Flag.w
         uint8_t  pl = 0;
         uint8_t  pr = 0;
         uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_FileNr; // FileNumber "030/432"
     struct w_h {
-        uint16_t x = 100;
+        uint16_t x = 93;
         uint16_t w = 20;
         uint8_t  pl = 0;
         uint8_t  pr = 0;
@@ -6078,24 +6074,26 @@ class DisplayFooter : public RegisterTable {
         uint8_t  pb = 0;
     } const s_Hourglass; // Hourglass:   16 x 20 px
     struct w_o {
-        uint16_t x = 122;
+        uint16_t x = 113;
         uint16_t w = 35;
         uint8_t  pl = 0;
         uint8_t  pr = 0;
         uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_OffTimer;
+
+
     struct w_b {
-        uint16_t x = 158;
-        uint16_t w = 42;
+        uint16_t x = round((br_x * 320) / 100.0f); // 47.0% -> x = 150
+        uint16_t w = round((br_w * 320) / 100.0f); // 13.0% -> w = 42
         uint8_t  pl = 0;
         uint8_t  pr = 0;
         uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_BitRate;
     struct w_i {
-        uint16_t x = 200;
-        uint16_t w = 120;
+        uint16_t x = round((ip_x * 320) / 100.0f); // 60% -> x = 192
+        uint16_t w = round((ip_w * 320) / 100.0f); // 40% -> w = 128
         uint8_t  pl = 0;
         uint8_t  pr = 0;
         uint8_t  pt = 0;
@@ -6153,16 +6151,16 @@ class DisplayFooter : public RegisterTable {
         uint8_t  pb = 0;
     } const s_OffTimer;
     struct w_b {
-        uint16_t x = 214;
-        uint16_t w = 66;
+        uint16_t x = round((br_x * 480) / 100.0f); // 47.0% -> x = 226
+        uint16_t w = round((br_w * 480) / 100.0f); // 13.0% -> w = 62
         uint8_t  pl = 0;
         uint8_t  pr = 0;
         uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_BitRate;
     struct w_i {
-        uint16_t x = 280;
-        uint16_t w = 200;
+        uint16_t x = round((ip_x * 480) / 100.0f); // 60% -> x = 288
+        uint16_t w = round((ip_w * 480) / 100.0f); // 40% -> w = 192
         uint8_t  pl = 0;
         uint8_t  pr = 0;
         uint8_t  pt = 0;
@@ -6287,16 +6285,16 @@ class DisplayFooter : public RegisterTable {
         uint8_t  pb = 0;
     } const s_OffTimer;
     struct w_b {
-        uint16_t x = 450;
-        uint16_t w = 110;
+        uint16_t x = round((br_x * 1024) / 100.0f); // 47.0% -> x = 481
+        uint16_t w = round((br_w * 1024) / 100.0f); // 13.0% -> w = 133
         uint8_t  pl = 0;
         uint8_t  pr = 0;
         uint8_t  pt = 0;
         uint8_t  pb = 2;
     } const s_BitRate;
     struct w_i {
-        uint16_t x = 700;
-        uint16_t w = 324;
+        uint16_t x = round((ip_x * 1024) / 100.0f); // 60% -> x = 614
+        uint16_t w = round((ip_w * 1024) / 100.0f); // 40% -> w = 410
         uint8_t  pl = 0;
         uint8_t  pr = 0;
         uint8_t  pt = 0;
@@ -6323,6 +6321,7 @@ class DisplayFooter : public RegisterTable {
     }
 
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
+MWR_LOG_ERROR("br_x: {}, br_w: {}, ip_x: {}, ip_y: {}", s_BitRate.x, s_BitRate.w, s_IPaddr.x, s_IPaddr.w);
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w;
@@ -6336,24 +6335,23 @@ class DisplayFooter : public RegisterTable {
         txt_IpAddr->begin(s_IPaddr.x, m_y, s_IPaddr.w, m_h, s_IPaddr.pl, s_IPaddr.pr, s_IPaddr.pt, s_IPaddr.pb);
         txt_FileNr->begin(s_FileNr.x, m_y, s_FileNr.w, m_h, s_FileNr.pl, s_FileNr.pr, s_FileNr.pt, s_FileNr.pb);
 
-        txt_StaNr->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
+        txt_StaNr->setAlign(HAlign::Left, VAlign::Middle);
         txt_StaNr->setTextColor(m_stationColor);
         txt_StaNr->setFontSize(m_fontSize); // 0 -> auto
-        txt_OffTimer->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
+        txt_OffTimer->setAlign(HAlign::Left, VAlign::Middle);
         txt_OffTimer->setFontSize(m_fontSize); // 0 -> auto
-        txt_BitRate->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+        txt_BitRate->setAlign(HAlign::Center, VAlign::Middle);
         txt_BitRate->setTextColor(m_bitRateColor);
         txt_BitRate->setBorderColor(m_bitRateColor);
         txt_BitRate->setFontSize(m_fontSize); // 0 -> auto
-        txt_IpAddr->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
-        txt_IpAddr->setNarrow(true);
+        txt_IpAddr->setAlign(HAlign::Center, VAlign::Middle);
         txt_IpAddr->setNoWrap(true);
         txt_IpAddr->setTextColor(m_ipAddrColor);
         txt_IpAddr->setFontSize(m_fontSize); // 0 -> auto
         pic_Antenna->setPicturePath(m_Antenna_red);
-        txt_IpAddr->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+        txt_IpAddr->setAlign(HAlign::Center, VAlign::Middle);
         txt_FileNr->setTextColor(TFT_ORANGE);
-        txt_FileNr->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+        txt_FileNr->setAlign(HAlign::Center, VAlign::Middle);
         txt_FileNr->setFontSize(m_fontSize); // 0 -> auto
     }
 
@@ -6589,7 +6587,6 @@ class MessageBox : public RegisterTable {
     bool         m_enabled = false;
     bool         m_focus = false;
     bool         m_clicked = false;
-    bool         m_narrow = false;
     bool         m_noWrap = false;
     bool         m_content_has_changed = false;
     bool         m_first_call = true;
@@ -6671,7 +6668,6 @@ class MessageBox : public RegisterTable {
         txt_msgBox->begin(m_x, m_y, m_w, m_h, m_pl, m_pr, m_pt, m_pb);
         txt_msgBox->setTextColor(m_textColor);
         txt_msgBox->set_bg_color(m_bg_color);
-        txt_msgBox->setNarrow(m_narrow);
         txt_msgBox->setNoWrap(m_noWrap);
     }
     // clang-format on
@@ -6708,11 +6704,10 @@ class MessageBox : public RegisterTable {
         h = m_h;
     }
 
-    void setText(ps_ptr<char> txt, bool narrow = false, bool noWrap = true) { // prepare a text, wait of show() to write it
+    void setText(ps_ptr<char> txt, bool noWrap = true) { // prepare a text, wait of show() to write it
         m_text = txt;
-        m_narrow = narrow;
         m_noWrap = noWrap;
-        txt_msgBox->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+        txt_msgBox->setAlign(HAlign::Center, VAlign::Middle);
         txt_msgBox->setFontSize(0); // auto
         txt_msgBox->setText(m_text);
     }
