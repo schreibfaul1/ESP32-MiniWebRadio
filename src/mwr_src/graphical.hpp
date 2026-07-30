@@ -1044,8 +1044,6 @@ class Textbox : public RegisterTable {
         }
     }
 
-
-
     void setNoWrap(bool noWrap) { m_noWrap = noWrap; }
 
     void setAlign(HAlign h_align, VAlign v_align) {
@@ -5990,10 +5988,10 @@ class DisplayHeader : public RegisterTable {
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class DisplayFooter : public RegisterTable {
   private:
-    #define  br_x 47.0
-    #define  br_w 13.0
-    #define  ip_x 60.0
-    #define  ip_w 40.0
+#define br_x 47.0
+#define br_w 13.0
+#define ip_x 60.0
+#define ip_w 40.0
 
     PictureBox*  pic_Antenna = new PictureBox("footer_Antenna");     // antenna symbol
     Textbox*     txt_StaNr = new Textbox("footer_StaNr");            // station number
@@ -6082,7 +6080,6 @@ class DisplayFooter : public RegisterTable {
         uint8_t  pb = 0;
     } const s_OffTimer;
 
-
     struct w_b {
         uint16_t x = round((br_x * 320) / 100.0f); // 47.0% -> x = 150
         uint16_t w = round((br_w * 320) / 100.0f); // 13.0% -> w = 42
@@ -6095,7 +6092,7 @@ class DisplayFooter : public RegisterTable {
         uint16_t x = round((ip_x * 320) / 100.0f); // 60% -> x = 192
         uint16_t w = round((ip_w * 320) / 100.0f); // 40% -> w = 128
         uint8_t  pl = 0;
-        uint8_t  pr = 0;
+        uint8_t  pr = w > 200 ? w / 50 : 0;
         uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_IPaddr;
@@ -6296,7 +6293,7 @@ class DisplayFooter : public RegisterTable {
         uint16_t x = round((ip_x * 1024) / 100.0f); // 60% -> x = 614
         uint16_t w = round((ip_w * 1024) / 100.0f); // 40% -> w = 410
         uint8_t  pl = 0;
-        uint8_t  pr = 0;
+        uint8_t  pr = w > 200 ? w / 50 : 0;
         uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_IPaddr;
@@ -6344,7 +6341,7 @@ class DisplayFooter : public RegisterTable {
         txt_BitRate->setTextColor(m_bitRateColor);
         txt_BitRate->setBorderColor(m_bitRateColor);
         txt_BitRate->setFontSize(m_fontSize); // 0 -> auto
-        txt_IpAddr->setAlign(HAlign::Center, VAlign::Middle);
+        txt_IpAddr->setAlign(HAlign::Right, VAlign::Middle);
         txt_IpAddr->setNoWrap(true);
         txt_IpAddr->setTextColor(m_ipAddrColor);
         txt_IpAddr->setFontSize(m_fontSize); // 0 -> auto

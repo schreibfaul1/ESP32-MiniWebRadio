@@ -3579,14 +3579,15 @@ void TFT_Base::txtToToken(const char* p) {
         if (cp >= m_current_font.range_length) {
             if (findEmoji(cp)) {
                 m_token.emplace_back(TokenType::Glyph, cp);
-                log_w("emoji cl len %i", ch.length);
+                MWR_LOG_DEBUG("emoji cl len {}", ch.length);
                 p += ch.length;
                 continue;
             }
-            log_w("character U+%04X outside font", cp);
+            MWR_LOG_WARN("character U+{:04X} outside font", cp);
             cp = 0x20;
         } else if (m_current_font.lookup_table[cp] == 0xFFFF) {
-            log_w("character U+%04X missing", cp);
+            MWR_LOG_WARN("character U+{:04X} missing", cp);
+
             cp = 0x20;
         }
         m_token.emplace_back(TokenType::Glyph, cp);
@@ -3739,15 +3740,12 @@ void TFT_Base::drawGlyph(const Glyph glyph, int16_t x, int16_t y) {
         uint8_t center_y = y + m_current_font.line_height / 2;
         float   emojiSize = m_current_font.line_height * 0.50f;
         int r = round(emojiSize / 2.0f);
-        log_e("emoji cp: %X, r: r%i", glyph.codepoint, r);
         switch (glyph.emojiShape) {
             case EmojiShape::Circle: {
-                log_e("emoji Circle cp: %X, r: r%i", glyph.codepoint, r);
                 fillCircle(x + r, center_y, r, glyph.color);
                 break;
             }
             case EmojiShape::Square: {
-                log_e("emoji Square cp: %X, r: r%i", glyph.codepoint, r);
                 fillRect(x, center_y - r, 2 * r, 2 * r, glyph.color);
                 break;
             }
@@ -3828,14 +3826,14 @@ bool TFT_Base::drawPngFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y,
     }
     png_file = fs.open(path, "r");
     if (!png_file) {
-        log_e("Failed to open file for reading");
+        log_e(ANSI_ESC_RED "[%s:%s] Failed to open file for reading" ANSI_ESC_RESET, __FILE__, __LINE__);
         return NULL;
     }
     int file_size = png_file.size(); /* get filesize */
     png_buffer = (char*)ps_malloc(file_size);
     png_size = file_size;
     if (!png_buffer) {
-        log_e("Failed to allocate memory for file");
+        log_e(ANSI_ESC_RED "[%s:%s] Failed to allocate %i bytes for file %s" ANSI_ESC_RESET, __FILE__, __LINE__, png_file.size(), png_file.name());
         png_file.close();
         return NULL;
     }

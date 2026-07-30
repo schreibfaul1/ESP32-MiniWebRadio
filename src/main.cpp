@@ -4013,6 +4013,8 @@ void graphicObjects_OnClick(ps_ptr<char> name, uint8_t val) { // val = 0 --> is 
         if (val && name.equals("VUmeter_RA"))      { goto exit; }
         if (val && name.equals("txt_RA_sTitle"))   { goto exit; }
         if (       name.equals("sdr_RA_volume"))   { goto exit; }
+        if (val && name.equals("pic_RA_logo"))     { goto exit; }
+        if (val && name.equals("spectrum_RA"))     { goto exit; }
     }
     if (s_state == STATIONSLIST) {
         if (val && name.equals("lst_RADIO"))       { setTimeCounter(LIST_TIMER); goto exit; }
