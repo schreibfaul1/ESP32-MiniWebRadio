@@ -6321,7 +6321,7 @@ class DisplayFooter : public RegisterTable {
     }
 
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
-MWR_LOG_ERROR("br_x: {}, br_w: {}, ip_x: {}, ip_y: {}", s_BitRate.x, s_BitRate.w, s_IPaddr.x, s_IPaddr.w);
+        MWR_LOG_DEBUG("br_x: {}, br_w: {}, ip_x: {}, ip_y: {}", s_BitRate.x, s_BitRate.w, s_IPaddr.x, s_IPaddr.w);
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w;
@@ -6349,7 +6349,6 @@ MWR_LOG_ERROR("br_x: {}, br_w: {}, ip_x: {}, ip_y: {}", s_BitRate.x, s_BitRate.w
         txt_IpAddr->setTextColor(m_ipAddrColor);
         txt_IpAddr->setFontSize(m_fontSize); // 0 -> auto
         pic_Antenna->setPicturePath(m_Antenna_red);
-        txt_IpAddr->setAlign(HAlign::Center, VAlign::Middle);
         txt_FileNr->setTextColor(TFT_ORANGE);
         txt_FileNr->setAlign(HAlign::Center, VAlign::Middle);
         txt_FileNr->setFontSize(m_fontSize); // 0 -> auto
