@@ -1222,18 +1222,8 @@ class Inputbox : public RegisterTable {
             if (m_borderWidth > 0) { getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor); }
             if (m_borderWidth > 1) { getTFT().drawRect(m_x + 1, m_y + 1, m_w - 2, m_h - 2, m_borderColor); }
 
-            uint16_t lineLength = 0;
-            uint16_t txtMaxWidth = w - 2 * h;
-            uint16_t idx = 0;
-//             lineLength = getTFT().getLineLength(m_text.c_get());
-//             while (lineLength > txtMaxWidth) {
-//                 lineLength = getTFT().getLineLength(m_text.get() + idx);
-//                 if (lineLength > txtMaxWidth) {
-//                     idx++;
-//                     if (idx > m_text.strlen()) break;
-//                 }
-//             }
-            getTFT().writeText(m_text.get() + idx, x, y, w, h, m_h_align, m_v_align, m_noWrap, false);
+
+            getTFT().writeText(m_text.get(), x, y, w, h, m_h_align, m_v_align, m_noWrap, false);
             getTFT().setTextColor(txtColor_tmp);
             getTFT().setBackGoundColor(bgColor_tmp);
         }
