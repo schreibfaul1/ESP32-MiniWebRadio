@@ -48,6 +48,7 @@ class TFT_Base {
     bool     drawGifFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint8_t repeat);
     bool     drawJpgFile(fs::FS& fs, const char* path, uint16_t x = 0, uint16_t y = 0, uint16_t maxWidth = 0, uint16_t maxHeight = 0);
     uint16_t getLineLength(const char* txt);
+    size_t   writeText(ps_ptr<char> txt, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, HAlign h_align, VAlign v_align, bool noWrap, bool autoSize);
 
   private:
     struct Utf8Char {
@@ -164,9 +165,6 @@ class TFT_Base {
     void     drawGlyph(Glyph glyph, int16_t x, int16_t y);
     void     drawWord(const Word* word, int16_t x, int16_t y);
 
-  public:
-    size_t writeText(ps_ptr<char> txt, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, HAlign h_align, VAlign v_align, bool noWrap, bool autoSize);
-
   private:
     std::vector<Token> m_token;
     std::vector<Word>  m_word;
@@ -188,31 +186,28 @@ class TFT_Base {
         uint8_t                            max_font_index;
     } fonts_t;
 
-    bool     renderRGB565(int16_t x, int16_t y, uint16_t w, uint16_t h, const uint16_t* rgb, const uint8_t* alpha);
-    void     mapRotation(uint8_t rot, int32_t srcX, int32_t srcY, int32_t& dstX, int32_t& dstY) const;
-    void     writeTheFramebuffer(const uint8_t* bmi, uint16_t posX, uint16_t posY, uint16_t width, uint16_t height);
-    uint16_t analyzeText(const char* str, uint16_t* chArr, uint16_t* colorArr, uint16_t startColor);
-    uint16_t fitinline(uint16_t* cpArr, uint16_t chLength, uint16_t begin, int16_t win_W, uint16_t* usedPxLength, bool noWrap);
-    uint8_t  fitInAddrWindow(uint16_t* cpArr, uint16_t chLength, int16_t win_W, int16_t win_H, bool noWrap);
-    int32_t  GIF_readGifItems();
-    bool     GIF_decodeGif(uint16_t x, uint16_t y);
-    bool     GIF_loop();
-    void     GIF_freeMemory();
-    void     GIF_DecoderReset();
-    void     GIF_readHeader();
-    void     GIF_readLogicalScreenDescriptor();
-    void     GIF_readImageDescriptor();
-    void     GIF_readLocalColorTable();
-    void     GIF_readGlobalColorTable();
-    void     GIF_readGraphicControlExtension();
-    uint8_t  GIF_readPlainTextExtension(char* buf);
-    uint8_t  GIF_readApplicationExtension(char* buf);
-    uint8_t  GIF_readCommentExtension(char* buf);
-    uint8_t  GIF_readDataSubBlock(char* buf);
-    bool     GIF_readExtension(char Label);
-    int32_t  GIF_GetCode(int32_t code_size, int32_t flag);
-    int32_t  GIF_LZWReadByte(bool init);
-    bool     GIF_ReadImage(uint16_t x, uint16_t y);
+    bool    renderRGB565(int16_t x, int16_t y, uint16_t w, uint16_t h, const uint16_t* rgb, const uint8_t* alpha);
+    void    mapRotation(uint8_t rot, int32_t srcX, int32_t srcY, int32_t& dstX, int32_t& dstY) const;
+    void    writeTheFramebuffer(const uint8_t* bmi, uint16_t posX, uint16_t posY, uint16_t width, uint16_t height);
+    int32_t GIF_readGifItems();
+    bool    GIF_decodeGif(uint16_t x, uint16_t y);
+    bool    GIF_loop();
+    void    GIF_freeMemory();
+    void    GIF_DecoderReset();
+    void    GIF_readHeader();
+    void    GIF_readLogicalScreenDescriptor();
+    void    GIF_readImageDescriptor();
+    void    GIF_readLocalColorTable();
+    void    GIF_readGlobalColorTable();
+    void    GIF_readGraphicControlExtension();
+    uint8_t GIF_readPlainTextExtension(char* buf);
+    uint8_t GIF_readApplicationExtension(char* buf);
+    uint8_t GIF_readCommentExtension(char* buf);
+    uint8_t GIF_readDataSubBlock(char* buf);
+    bool    GIF_readExtension(char Label);
+    int32_t GIF_GetCode(int32_t code_size, int32_t flag);
+    int32_t GIF_LZWReadByte(bool init);
+    bool    GIF_ReadImage(uint16_t x, uint16_t y);
 
     virtual bool panelDrawBitmap(int16_t x0, int16_t y0, int16_t x1, int16_t y1, const void* bitmap) = 0;
 
