@@ -5,6 +5,7 @@
 #include "FS.h"
 #include "fonts/fontsdef.h"
 #include "tft_common_defs.h"
+#include <deque>
 #include <vector>
 
 enum Framebuffer : uint8_t {
@@ -168,6 +169,7 @@ class TFT_Base {
   private:
     std::vector<Token> m_token;
     std::vector<Word>  m_word;
+    std::deque<Word>   m_wrappedWord;
     std::vector<Line>  m_line;
     uint16_t           m_spaceWidth;
 

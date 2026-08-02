@@ -3067,6 +3067,7 @@ bool TFT_Base::wordToLines(int16_t win_W, int16_t win_H, bool noWrap) {
     uint16_t maxLines = win_H / m_current_font.line_height;
     if (maxLines == 0) return false;
 
+    m_wrappedWord.clear();
     m_line.clear();
     m_line.emplace_back();
 
@@ -3081,6 +3082,62 @@ bool TFT_Base::wordToLines(int16_t win_W, int16_t win_H, bool noWrap) {
             continue;
         }
         if (word.glyphs.empty()) continue;
+        if (word.width > win_W) {
+            if (noWrap) return false;
+
+            size_t glyphPos = 0;
+            while (glyphPos < word.glyphs.size()) {
+                Line& line = m_line[currentLine];
+
+                uint16_t spacing = 0;
+                if (!line.words.empty()) {
+                    const Word* prevWord = line.words.back().word;
+                    spacing = prevWord->trailingSpaces * m_spaceWidth;
+                }
+
+                if (line.width + spacing >= win_W) {
+                    currentLine++;
+                    if (currentLine >= maxLines) return false;
+                    m_line.emplace_back();
+                    continue;
+                }
+
+                uint16_t availableWidth = win_W - line.width - spacing;
+                uint16_t pieceWidth = 0;
+                size_t   glyphEnd = glyphPos;
+                while (glyphEnd < word.glyphs.size() && pieceWidth + word.glyphs[glyphEnd].width <= availableWidth) {
+                    pieceWidth += word.glyphs[glyphEnd].width;
+                    glyphEnd++;
+                }
+
+                if (glyphEnd == glyphPos) {
+                    if (!line.words.empty()) {
+                        currentLine++;
+                        if (currentLine >= maxLines) return false;
+                        m_line.emplace_back();
+                        continue;
+                    }
+                    return false;
+                }
+
+                m_wrappedWord.emplace_back();
+                Word& piece = m_wrappedWord.back();
+                piece.glyphs.insert(piece.glyphs.end(), word.glyphs.begin() + glyphPos, word.glyphs.begin() + glyphEnd);
+                piece.width = pieceWidth;
+                piece.trailingSpaces = (glyphEnd == word.glyphs.size()) ? word.trailingSpaces : 0;
+
+                line.words.push_back({&piece, spacing});
+                line.width += spacing + pieceWidth;
+                glyphPos = glyphEnd;
+
+                if (glyphPos < word.glyphs.size()) {
+                    currentLine++;
+                    if (currentLine >= maxLines) return false;
+                    m_line.emplace_back();
+                }
+            }
+            continue;
+        }
         Line& line = m_line[currentLine];
         // Space before this word
         uint16_t spacing = 0;
@@ -3094,8 +3151,6 @@ bool TFT_Base::wordToLines(int16_t win_W, int16_t win_H, bool noWrap) {
             line.words.push_back({&word, spacing});
             line.width += requiredWidth;
         } else {
-            // The word is wider than the window
-            if (word.width > win_W && noWrap) return false;
             currentLine++;
             if (currentLine >= maxLines) return false;
             m_line.emplace_back();
@@ -3157,7 +3212,7 @@ void TFT_Base::drawGlyph(const Glyph glyph, int16_t x, int16_t y) {
 
         uint8_t center_y = y + m_current_font.line_height / 2;
         float   emojiSize = m_current_font.line_height * 0.50f;
-        int r = round(emojiSize / 2.0f);
+        int     r = round(emojiSize / 2.0f);
         switch (glyph.emojiShape) {
             case EmojiShape::Circle: {
                 fillCircle(x + r, center_y, r, glyph.color);
@@ -3205,16 +3260,26 @@ size_t TFT_Base::writeText(ps_ptr<char> txt, uint16_t win_X, uint16_t win_Y, int
         setFontByIndex(getMaxFontIndex());
         idx = getFontIndex();
         while (true) {
-            if (layoutText(win_W, win_H, noWrap)) break;
+            if (layoutText(win_W, win_H, noWrap)) {
+                // if (txt.strlen() > 40) { MWR_LOG_ERROR("idx: {}, max: {}, win_W: {}, win_H: {}, noWrap: {}\n {}", idx, getMaxFontIndex(), win_W, win_H, noWrap, txt); }
+                break;
+            }
             if (--idx < 0) {
-                log_e("txt does not fit in window");
-                return 0;
+                if (noWrap == true) {
+                    noWrap = false;
+                    setFontByIndex(getMaxFontIndex()); // next round with wrap, starts with biggest font
+                    idx = getFontIndex();
+                    MWR_LOG_DEBUG("next round, idx {}", idx);
+                } else {
+                    MWR_LOG_ERROR("txt does not fit in window");
+                    return 0;
+                }
             }
             setFontByIndex(idx);
         }
     } else {
         if (!layoutText(win_W, win_H, noWrap)) {
-            log_e("txt does not fit in window");
+            MWR_LOG_ERROR("txt does not fit in window");
             return 0;
         }
     }
