@@ -1270,13 +1270,13 @@ bool detect_i2_c_devices(TwoWire* twi, int8_t sda, int8_t scl, i2c_items_s* i2c_
             } else if (addr == 0x38) {
                 i2c_items->ft6x36u_found = true;
                 i2c_items->ft6x36u_addr = addr;
-                if (log) MWR_LOG_WARN("ft6x36u found at 0x{X}", addr);
+                if (log) MWR_LOG_WARN("ft6x36u found at 0x{:X}", addr);
             } else if (addr == 0x40) {
                 i2c_items->es7210_found = true;
                 i2c_items->es7210_addr = addr;
-                if (log) MWR_LOG_WARN("es7210 found at 0x{X}", addr);
+                if (log) MWR_LOG_WARN("es7210 found at 0x{:X}", addr);
             } else {
-                MWR_LOG_WARN("unknown i2c device at 0x{X} found", addr);
+                MWR_LOG_WARN("unknown i2c device at 0x{:X} found", addr);
             }
         }
     }
