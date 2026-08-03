@@ -3118,16 +3118,16 @@ int TFT_Base::findBestBreak(const Word& word, size_t glyphStart, size_t breakPos
 
         int score = 0;
 
-        if (left && !right) { // Vokal | Konsonant   (Kar-ten)
+        if (left && !right) { // Vowel | Consonant   (Kar-ten)
             score += 5;
-        } else if (!left && right) { // Konsonant | Vokal   (Maschi-ne)
+        } else if (!left && right) { // Consonant | Vowel   (Maschi-ne)
             score += 3;
-        } else if (left && right) { // Vokal | Vokal
+        } else if (left && right) { // Vowel | Vowel
             score -= 5;
-        } else { // Konsonant | Konsonant
+        } else { // Consonant | Consonant
             score += 1;
         }
-        // Je weiter rechts, desto besser
+        // The further to the right, the better
         score += static_cast<int>(i);
 
         if (score > bestScore) {
