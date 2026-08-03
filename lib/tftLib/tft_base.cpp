@@ -2971,6 +2971,7 @@ size_t TFT_Base::parseAnsi(const char*& p, uint32_t& color, Arg& arg) {
 }
 // ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_Base::txtToToken(const char* p) {
+
     m_token.clear();
     while (*p) {
         if (*p == '\n') {
@@ -3005,7 +3006,6 @@ void TFT_Base::txtToToken(const char* p) {
             cp = 0x20;
         } else if (m_current_font.lookup_table[cp] == 0xFFFF) {
             MWR_LOG_WARN("character U+{:04X} missing", cp);
-
             cp = 0x20;
         }
         m_token.emplace_back(TokenType::Glyph, cp);
@@ -3332,7 +3332,10 @@ void TFT_Base::drawGlyph(const Glyph glyph, int16_t x, int16_t y) {
     }
 }
 // ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-size_t TFT_Base::writeText(ps_ptr<char> txt, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, HAlign hAlign, VAlign vAlign, bool noWrap, bool autoSize) {
+size_t TFT_Base::writeText(ps_ptr<char> txt1, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, HAlign hAlign, VAlign vAlign, bool noWrap, bool autoSize) {
+
+    std::lock_guard<std::mutex> lock(m_textLayoutMutex);
+    ps_ptr<char>txt = txt1;
     /*
             writeText()
                 │
@@ -3364,7 +3367,7 @@ size_t TFT_Base::writeText(ps_ptr<char> txt, uint16_t win_X, uint16_t win_Y, int
                     idx = getFontIndex();
                     MWR_LOG_DEBUG("next round, idx {}", idx);
                 } else {
-                    MWR_LOG_ERROR("txt '{}' does not fit in window", txt);
+                    MWR_LOG_ERROR("txt '{}', win_X: {}, win_Y: {} does not fit in window", txt, win_X, win_Y);
                     return 0;
                 }
             }

@@ -2,7 +2,7 @@
  * RTC.h
  *
  *  Created on: 04.08.2017
- *  Updated on: 11.11.2024
+ *  Updated on: 03.08.2026
  *      Author: Wolle
  */
 
@@ -10,12 +10,12 @@
 #define RTIME_H_
 
 #include "Arduino.h"
+#include "Audio.h"
 #include "WiFi.h"
 #include "time.h"
 #include "esp_sntp.h"
 
 int32_t	 setenv(const char *__string, const char *__value, int32_t __overwrite);
-void tzset(void);
 
 extern __attribute__((weak)) void RTIME_info(const char*);
 
@@ -24,7 +24,7 @@ class RTIME{
 public:
 	RTIME();
 	~RTIME();
-	void begin(String TimeZone="CET-1CEST,M3.5.0,M10.5.0/3");
+	void begin(ps_ptr<char> TimeZone);
 	bool hasValidTime();
 	void stop();
 	const char* gettime();
@@ -39,7 +39,7 @@ protected:
 private:
 	char sbuf[256];
 	char tmBuff[9];
-	String RTIME_TZ="";
+	ps_ptr<char> RTIME_TZ;
 	struct tm timeinfo;
 	time_t now;
 	char strftime_buf[64];

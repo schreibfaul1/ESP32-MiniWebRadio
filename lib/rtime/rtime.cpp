@@ -1,10 +1,6 @@
 /*
  * rtime.cpp
  *
- *  Created on: 04.08.2017
- *      Author: Wolle
- *  Updated on: 11.11.2024
- *
  */
 
 #include "rtime.h"
@@ -242,37 +238,38 @@
 //    US/Michigan               EST5EDT,M3.2.0,M11.1.0
 //    US/Samoa                  SST11
 
-
-RTIME::RTIME(){
-	timeinfo = { 0,0,0,0,0,0,0,0,0 };
-	now=0;
+RTIME::RTIME() {
+    timeinfo = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+    now = 0;
 }
-RTIME::~RTIME(){
-	esp_sntp_stop();
+RTIME::~RTIME() {
+    esp_sntp_stop();
 }
-void RTIME::begin(String TimeZone){
-    stop(); // if sntp is already running after restart: assert failed: sntp_setoperatingmode
-    if(TimeZone.length() == 0) TimeZone = "CET-1CEST,M3.5.0,M10.5.0/3"; // default
-    RTIME_TZ=TimeZone;
+void RTIME::begin(ps_ptr<char> TimeZone) {
+    stop();                                                              // if sntp is already running after restart: assert failed: sntp_setoperatingmode
+    if (!TimeZone.valid()) TimeZone = "CET-1CEST,M3.5.0,M10.5.0/3"; // default
+    RTIME_TZ = TimeZone;
     if (RTIME_info) RTIME_info("Initializing SNTP");
     // in platformio.ini:
     // -D NTP_Pool_1='"europe.pool.ntp.org"'
     // -D NTP_Pool_2='"pool.ntp.org"'
     // -D NTP_Pool_3='"time-a-g.nist.gov"'
     esp_sntp_setoperatingmode(esp_sntp_operatingmode_t(SNTP_OPMODE_POLL));
-    configTzTime(RTIME_TZ.c_str(), NTP_Pool_1, NTP_Pool_2, NTP_Pool_3);
+    configTzTime(RTIME_TZ.c_get(), NTP_Pool_1, NTP_Pool_2, NTP_Pool_3);
 }
 
-void RTIME::stop(){
+void RTIME::stop() {
     esp_sntp_stop();
 }
 
-boolean RTIME::obtain_time(){
-    time_t now = 0;
-    int32_t retry = 0;
+boolean RTIME::obtain_time() {
+    time_t        now = 0;
+    int32_t       retry = 0;
     const int32_t retry_count = 10;
-    while(timeinfo.tm_year < (2016 - 1900) && ++retry < retry_count) {
-        IPAddress dns1(8, 8, 8, 8); IPAddress dns2(8, 8, 4, 4); WiFi.setDNS(dns1, dns2);
+    while (timeinfo.tm_year < (2016 - 1900) && ++retry < retry_count) {
+        IPAddress dns1(8, 8, 8, 8);
+        IPAddress dns2(8, 8, 4, 4);
+        WiFi.setDNS(dns1, dns2);
         sprintf(sbuf, "Waiting for system time to be set... (%ld/%ld)", (long int)retry, (long int)retry_count);
         if (RTIME_info) RTIME_info(sbuf);
         vTaskDelay(uint16_t(2000 / portTICK_PERIOD_MS));
@@ -283,78 +280,75 @@ boolean RTIME::obtain_time(){
     strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
     if (RTIME_info) RTIME_info(strftime_buf);
 
-    //log_i( "The current date/time in Berlin is: %s", strftime_buf);
-    if(retry < retry_count) return true;
-    else return false;
+    // log_i( "The current date/time in Berlin is: %s", strftime_buf);
+    if (retry < retry_count)
+        return true;
+    else
+        return false;
 }
 
-bool RTIME::hasValidTime(){
-    return (timeinfo.tm_year < (2016 - 1900))? false: true;
+bool RTIME::hasValidTime() {
+    return (timeinfo.tm_year < (2016 - 1900)) ? false : true;
 }
 
-const char* RTIME::gettime(){
-    setenv("TZ", RTIME_TZ.c_str(), 1);
+const char* RTIME::gettime() {
+    setenv("TZ", RTIME_TZ.c_get(), 1);
     tzset();
     localtime_r(&now, &timeinfo);
     strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
-    //log_i( "The current date/time in Berlin is: %s", strftime_buf);
+    // log_i( "The current date/time in Berlin is: %s", strftime_buf);
     return strftime_buf;
 }
 
-const char* RTIME::gettime_l(){  // Montag, 04. August 2017 13:12:44
-	time(&now);
-	localtime_r(&now, &timeinfo);
-//    strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
-//    log_i( "The current date/time in Beriln is: %s", strftime_buf);
-	sprintf(strftime_buf,"%s, %02d.%s %d %02d:%02d:%02d",   w_day_l[timeinfo.tm_wday].c_str(),
-                                                            timeinfo.tm_mday, month_l[timeinfo.tm_mon].c_str(),
-                                                            timeinfo.tm_year+1900,
-                                                            timeinfo.tm_hour,
-                                                            timeinfo.tm_min,
-                                                            timeinfo.tm_sec);
-	return strftime_buf;
+const char* RTIME::gettime_l() { // Montag, 04. August 2017 13:12:44
+    time(&now);
+    localtime_r(&now, &timeinfo);
+    //    strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
+    //    log_i( "The current date/time in Beriln is: %s", strftime_buf);
+    sprintf(strftime_buf, "%s, %02d.%s %d %02d:%02d:%02d", w_day_l[timeinfo.tm_wday].c_str(), timeinfo.tm_mday, month_l[timeinfo.tm_mon].c_str(), timeinfo.tm_year + 1900, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+    return strftime_buf;
 }
 
-const char* RTIME::gettime_s(){  // hh:mm:ss
-    time_t now;
-    struct tm timeinfo;
+const char* RTIME::gettime_s() {
+    static char tmBuffLocal[9];
+    time_t      now;
+    struct tm   timeinfo;
 
     if (time(&now) == -1) { // Get current time
         return "Error: time failed";
     }
-    if (localtime_r(&now, &timeinfo) == nullptr) {   // Convert Local Time
+    if (localtime_r(&now, &timeinfo) == nullptr) { // Convert Local Time
         return "Error: localtime_r failed";
     }
 
-    snprintf(tmBuff, sizeof(tmBuff), "%02d:%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+    snprintf(tmBuffLocal, sizeof(tmBuffLocal), "%02d:%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
 
-    return tmBuff;
+    return tmBuffLocal;
 }
 
-
-const char* RTIME::gettime_xs(){  // hh:mm
+const char* RTIME::gettime_xs() { // hh:mm
     time(&now);
     localtime_r(&now, &timeinfo);
-    sprintf(strftime_buf,"%02d:%02d",  timeinfo.tm_hour, timeinfo.tm_min);
+    sprintf(strftime_buf, "%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min);
     return strftime_buf;
 }
 
-const char* RTIME::gettime_xs_12h(){  // hh:mm
-    time_t rawtime;
-    struct tm * timeinfo;
-    time (&rawtime);
-    timeinfo = localtime (&rawtime);
-    strftime(strftime_buf, 64, "%I:%M %p",  timeinfo);
+const char* RTIME::gettime_xs_12h() { // hh:mm
+    time_t     rawtime;
+    struct tm* timeinfo;
+    time(&rawtime);
+    timeinfo = localtime(&rawtime);
+    strftime(strftime_buf, 64, "%I:%M %p", timeinfo);
     return strftime_buf;
 }
 
-uint8_t RTIME::getweekday(){ //So=0, Mo=1 ... Sa=6
+uint8_t RTIME::getweekday() { // So=0, Mo=1 ... Sa=6
     time(&now);
     localtime_r(&now, &timeinfo);
     return timeinfo.tm_wday;
 }
 
-uint16_t RTIME::getMinuteOfTheDay(){ // counts at 00:00, from 0...23*60+59
+uint16_t RTIME::getMinuteOfTheDay() { // counts at 00:00, from 0...23*60+59
     time(&now);
     localtime_r(&now, &timeinfo);
     return timeinfo.tm_hour * 60 + timeinfo.tm_min;

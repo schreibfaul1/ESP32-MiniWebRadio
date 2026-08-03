@@ -2797,6 +2797,7 @@ class TimeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
             static_cast<uint16_t>(m_x + pl + 4 * w_digits + 2 * w_colon), /* S10 */
             static_cast<uint16_t>(m_x + pl + 5 * w_digits + 2 * w_colon)  /* S01 */
         };
+
         uint8_t width[8] = {w_digits, w_digits, w_colon, w_digits, w_digits, w_colon, w_digits, w_digits};
         for (uint8_t i = 0; i < 8; i++) {
             txt_time[i].begin(xPos[i], m_y + pt, width[i], h, 0, 0, 0, 0);
@@ -2856,7 +2857,7 @@ class TimeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
         if (hl_time.strlen() != 8) return;
         if (!m_enabled) return;
         m_time = hl_time;               // hhmmss
-        static char oldtime[8] = {255}; // hhmmss
+        static char oldtime[8] = {255, 255, 255, 255, 255, 255, 255, 255}; // hhmmss
                                         //    getTFT().setFontSize(m_fontSize);
                                         //    getTFT().setTextColor(m_fgColor);
         if (complete == true) {

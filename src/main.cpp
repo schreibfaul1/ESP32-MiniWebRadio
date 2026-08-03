@@ -446,16 +446,10 @@ void timer100ms() {
     static uint16_t ms100 = 0;
     s_f_100ms = true;
     ms100++;
-    if (!(ms100 % 10)) {
-        s_f_1sec = true;
-        s_time_s = rtc.gettime_s();
-        if (s_time_s.ends_with("59:53")) s_f_timeSpeech = true;
-    }
+    if (!(ms100 % 10)) { s_f_1sec = true; }
     if (!(ms100 % 100)) s_f_10sec = true;
-    if (!(ms100 % 600)) {
-        s_f_1min = true;
-        ms100 = 0;
-    }
+    if (!(ms100 % 600)) { s_f_1min = true; }
+    if (ms100 == 60000) { ms100 = 0; }
 }
 
 /*****************************************************************************************************************************************************
@@ -2174,11 +2168,8 @@ void loop() {
 
     if (s_f_1sec) { // calls every second
         s_f_1sec = false;
+
         s_totalRuntime++;
-        // for(int i = 0; i< 3; i++){
-        //     uint8_t* sa = audio.getSpectrum();
-        //     MWR_LOG_INFO("{}, {}, {}", sa[0], sa[1], sa[2]);
-        // }
         uint16_t minuteOfTheDay = rtc.getMinuteOfTheDay();
         uint8_t  weekDay = rtc.getweekday();
         clk_CL_24.updateTime(minuteOfTheDay, weekDay);
@@ -2210,7 +2201,10 @@ void loop() {
         }
         //------------------------------------------UPDATE DISPLAY------------------------------------------------------------------------------------
         if (!s_f_sleeping || s_state == RINGING) {
-            dispHeader.updateTime(s_time_s.c_get(), false);
+            s_time_s = rtc.gettime_s();
+            if (s_time_s.ends_with("59:53")) s_f_timeSpeech = true;
+
+            dispHeader.updateTime(s_time_s, false);
             if (s_f_newBitRate) {
                 s_f_newBitRate = false;
                 dispFooter.updateBitRate(s_icyBitRate);
@@ -2239,7 +2233,7 @@ void loop() {
                 connecttoFS("SD_MMC", p.c_get());
                 return;
             } else {
-                printfln(s_tag.action, "Time announcement at " ANSI_ESC_BG_CYAN "{}" ANSI_ESC_RESET " o'clock is silent", hour);
+                printfln(s_tag.action, "Time announcement at " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET " o'clock is silent", hour);
             }
         }
         if (f_resume && s_f_eof) {
@@ -2393,14 +2387,6 @@ void loop() {
     //------------------------------------------------------------------------------------------------------------------------------------------------
     if (s_f_10sec == true) { // calls every 10 seconds
         s_f_10sec = false;
-        // if(s_state == RADIO && !s_icyBitRate && !s_f_sleeping) {
-        //     s_decoderBitRate = audio.getBitRate();
-        //     static uint32_t oldBr = 0;
-        //     if(s_decoderBitRate != oldBr){
-        //         oldBr = s_decoderBitRate;
-        //         dispFooter.updateBitRate(s_decoderBitRate);
-        //     }
-        // }
         updateSettings();
     }
 

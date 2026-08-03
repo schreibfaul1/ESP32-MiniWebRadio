@@ -13,6 +13,7 @@ enum Framebuffer : uint8_t {
     FB_BACKGROUND = 1,
 };
 class TFT_Base {
+    std::mutex m_textLayoutMutex;
   public:
     virtual ~TFT_Base() = default;
 
