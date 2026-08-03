@@ -1,5 +1,5 @@
 // first release on 09/2019
-// updated on Feb 02 2025
+// updated on Aug 03 2026
 
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 //         T O U C H P A N E L
@@ -33,11 +33,14 @@ class TP_XPT2046 {
     void loop();
     void setSize(uint8_t s);
     void setRotation(uint8_t m);
+    void setMirror(bool h, bool v);
 
   private:
     uint16_t    TP_Send(uint8_t set_val);
     inline void mapRotation(uint8_t rot, int32_t srcX, int32_t srcY, int32_t& dstX, int32_t& dstY) const;
     bool        read_TP(int16_t& x, int16_t& y);
+    bool        m_mirror_h = false;
+    bool        m_mirror_v = false;
     SPISettings TP_SPI;
     uint8_t     _TP_CS, _TP_IRQ;
     int16_t     x = 0, y = 0;
@@ -56,7 +59,7 @@ class TP_XPT2046 {
         int32_t yMin;
     };
 
-    const cal m_cal_28 = {.xMax = 1923, .xMin = 155, .yMax = 1890, .yMin = 140}; // 2.8 inch
+    const cal m_cal_28 = {.xMax = 1923, .xMin = 155, .yMax = 1890, .yMin = 140};    // 2.8 inch
     const cal m_cal_35_40 = {.xMax = 1959, .xMin = 140, .yMax = 1923, .yMin = 114}; // 3.5 or 4.0 inch
     // const cal m_cal_40 = {.xMax = 1946, .xMin = 110, .yMax = 1907, .yMin = 108}; // 4.0 inch
 
