@@ -3063,6 +3063,82 @@ void TFT_Base::tokenToWords() {
     if (!currentWord.glyphs.empty() || currentWord.newLine) { m_word.push_back(std::move(currentWord)); }
 }
 // ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+bool TFT_Base::isVowel(uint32_t cp) {
+    switch (cp) {
+        case 'a':
+        case 'e':
+        case 'i':
+        case 'o':
+        case 'u':
+        case 'A':
+        case 'E':
+        case 'I':
+        case 'O':
+        case 'U':
+        case 0xE4: // ä
+        case 0xF6: // ö
+        case 0xFC: // ü
+        case 0xC4: // Ä
+        case 0xD6: // Ö
+        case 0xDC: // Ü
+            return true;
+    }
+    return false;
+}
+// ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+int TFT_Base::findBestBreak(const Word& word, size_t glyphStart, size_t breakPos) {
+
+    /*       -----------Window----------------->|
+             ___________________________________|
+              Niedrigwasser bei der Donaudampfschiffahrt
+                                    ^           ^      ^
+                                    |           |      |
+                                    | glyphStart
+                                    |           breakPos
+                                    |<--lenL--->|<lenR>|
+                                    |word.glyphs.size()|
+    */
+    constexpr size_t MIN_LEFT = 4;
+    constexpr size_t MIN_RIGHT = 4;
+
+    if (breakPos <= glyphStart || breakPos >= word.glyphs.size()) return -1;
+
+    size_t lenL = breakPos - glyphStart;
+    size_t lenR = word.glyphs.size() - breakPos;
+
+    if (lenR <= MIN_RIGHT) return -1;
+    if (lenL <= MIN_LEFT) return -1;
+
+    int bestScore = -1000;
+    int bestPos = -1;
+
+    for (size_t i = breakPos; i > glyphStart + MIN_LEFT; --i) {
+        bool left = isVowel(word.glyphs[i - 1].codepoint);
+        bool right = isVowel(word.glyphs[i].codepoint);
+
+        int score = 0;
+
+        if (left && !right) { // Vokal | Konsonant   (Kar-ten)
+            score += 5;
+        } else if (!left && right) { // Konsonant | Vokal   (Maschi-ne)
+            score += 3;
+        } else if (left && right) { // Vokal | Vokal
+            score -= 5;
+        } else { // Konsonant | Konsonant
+            score += 1;
+        }
+        // Je weiter rechts, desto besser
+        score += static_cast<int>(i);
+
+        if (score > bestScore) {
+            bestScore = score;
+            bestPos = i;
+        }
+    }
+
+    return bestPos;
+}
+// ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool TFT_Base::wordToLines(int16_t win_W, int16_t win_H, bool noWrap) {
     uint16_t maxLines = win_H / m_current_font.line_height;
     if (maxLines == 0) return false;
@@ -3118,6 +3194,23 @@ bool TFT_Base::wordToLines(int16_t win_W, int16_t win_H, bool noWrap) {
                         continue;
                     }
                     return false;
+                }
+
+                if (glyphEnd < word.glyphs.size()) {
+                    int bestBreak = findBestBreak(word, glyphPos, glyphEnd);
+                    if (bestBreak < 0) {
+                        if (!line.words.empty()) {
+                            currentLine++;
+                            if (currentLine >= maxLines) return false;
+                            m_line.emplace_back();
+                            continue;
+                        }
+                        return false;
+                    }
+
+                    glyphEnd = static_cast<size_t>(bestBreak);
+                    pieceWidth = 0;
+                    for (size_t i = glyphPos; i < glyphEnd; ++i) { pieceWidth += word.glyphs[i].width; }
                 }
 
                 m_wrappedWord.emplace_back();
@@ -3271,7 +3364,7 @@ size_t TFT_Base::writeText(ps_ptr<char> txt, uint16_t win_X, uint16_t win_Y, int
                     idx = getFontIndex();
                     MWR_LOG_DEBUG("next round, idx {}", idx);
                 } else {
-                    MWR_LOG_ERROR("txt does not fit in window");
+                    MWR_LOG_ERROR("txt '{}' does not fit in window", txt);
                     return 0;
                 }
             }

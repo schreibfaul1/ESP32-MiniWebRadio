@@ -159,6 +159,8 @@ class TFT_Base {
     size_t   parseAnsi(const char*& p, uint32_t& color, Arg& arg);
     void     txtToToken(const char* p);
     void     tokenToWords();
+    bool     isVowel(uint32_t cp);
+    int      findBestBreak(const Word& word, size_t glyphStart, size_t breakPos);
     bool     wordToLines(int16_t win_w, int16_t win_H, bool noWrap);
     void     prepareFontLayout();
     bool     layoutText(int16_t win_W, int16_t win_H, bool noWrap);
