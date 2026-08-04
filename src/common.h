@@ -415,10 +415,8 @@ int log_redirect_handler(const char* format, va_list args) {
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 // prototypes (main.cpp)
-bool         SD_MMC_exists(const char* path);
 boolean      defaultsettings();
 void         updateSettings();
-void         urldecode(char* str);
 void         fall_asleep();
 void         wake_up(int8_t state, int8_t substate);
 void         setRTC(ps_ptr<char> TZString);
