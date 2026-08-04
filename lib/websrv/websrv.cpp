@@ -635,6 +635,7 @@ void WebSrv::begin(uint16_t http_port, uint16_t websocket_port, ps_ptr<char> nam
     cmdserver.begin(http_port);
     webSocketServer.stop();
     webSocketServer.begin(websocket_port);
+    m_httpRespHdrBuff.alloc(4096, "m_httpRespHdrBuff"); // enough space to store http response header
 }
 //--------------------------------------------------------------------------------------------------------------
 void WebSrv::stop() {
@@ -688,81 +689,210 @@ const char* WebSrv::getContentType(ps_ptr<char>& filename) {
         return "text/csv";
     return "text/plain";
 }
-//--------------------------------------------------------------------------------------------------------------
+
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+int32_t WebSrv::webFileRead() {
+    int res = cmdclient.read();
+    return res;
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+int32_t WebSrv::webFileRead(uint16_t timeout_ms) {
+    int32_t  res = -1;
+    uint32_t timeout = millis() + timeout_ms;
+
+    while (true) {
+        res = webFileRead();
+        if (res >= 0) break;
+        if (timeout < millis()) {
+            WS_LOG_ERROR("timeout");
+            return -1;
+        }
+        vTaskDelay(10);
+    }
+    return res;
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+int32_t WebSrv::webFileRead(uint8_t* buff, size_t len) {
+    if (buff && len == 0) return 0; // nothing to do
+    int32_t  readed_bytes = 0;
+    uint32_t offset = 0;
+    int      res = -1;
+
+    // read len
+    readed_bytes = cmdclient.read(buff + offset, len);
+    if (readed_bytes > 0) {
+        len -= readed_bytes;
+        offset += readed_bytes;
+        res = offset;
+    }
+    return res;
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+int32_t WebSrv::webFileRead(uint8_t* buff, size_t len, uint16_t timeout_ms) {
+
+    uint32_t timeout = millis() + timeout_ms;
+    int32_t  bytes_has_read = 0;
+    uint8_t  cnt = 0;
+    while (bytes_has_read < len) {
+        int32_t res = webFileRead(buff + bytes_has_read, len - bytes_has_read);
+        if (res <= 0) { vTaskDelay(10); }
+        if (res > 0) { bytes_has_read += res; }
+        if (timeout < millis()) {
+            WS_LOG_ERROR("timeout, len: {} != bytes_has_read: {}", len, bytes_has_read);
+            return -1;
+        }
+        WS_LOG_DEBUG("buffFillValue {}, res {}, bytes_has_read {}", len, res, bytes_has_read);
+    }
+    WS_LOG_DEBUG("len: {} != bytes_has_read: {}", len, bytes_has_read);
+    return bytes_has_read;
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+std::vector<ps_ptr<char>> WebSrv::readHeader() {
+
+    uint16_t                  pos = 0;
+    std::vector<ps_ptr<char>> hdr_lines;
+    m_httpRespHdrBuff.clear();
+
+    while (true) { // read the header first and store it in m_httpRespHdrBuff
+        int c = webFileRead(5000);
+        if (c < 0) {
+            WS_LOG_ERROR("timeout");
+            hdr_lines.clear();
+            return hdr_lines;
+        }
+
+        if (pos >= m_httpRespHdrBuff.size() - 1) {
+            WS_LOG_WARN("responseHeaderline overflow");
+            m_httpRespHdrBuff[pos] = '\0';
+            break;
+        }
+        m_httpRespHdrBuff[pos++] = c;
+        if (m_httpRespHdrBuff.ends_with("\r\n\r\n") || m_httpRespHdrBuff.ends_with("\n\n")) break;
+    }
+
+    pos = 0;
+
+    while (true) { // m_httpRespHdrBuff -> vec hdr_lines
+        int idx = m_httpRespHdrBuff.index_of('\n', pos);
+        if (idx < 0) break;
+        ps_ptr<char> line = m_httpRespHdrBuff.substr(pos, idx - pos);
+        line.remove_chars("\r");
+        if (line.valid()) hdr_lines.push_back(std::move(line));
+        pos = idx + 1;
+    }
+    return hdr_lines;
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool WebSrv::handlehttp() { // HTTPserver, message received
 
-    bool     method_GET = false;
-    bool     method_POST = false;
-    bool     method_DELETE = false;
-    int16_t  posColon = 0;
-    uint32_t ctime = millis();
-    uint32_t timeout = 4500; // ms
-    uint32_t contentLength = 0;
-    char     rhl[1024] = {0}; // requestHeaderline
+    bool         method_GET = false;
+    bool         method_POST = false;
+    bool         method_DELETE = false;
+    uint32_t     contentLength = 0;
     ps_ptr<char> http_cmd;
-    char     http_param[1024] = {0};
-    char     http_arg[1024] = {0};
-    char     contentType[50] = {0};
+    char         http_param[1024] = {0};
+    char         http_arg[1024] = {0};
+    ps_ptr<char> contentType;
 
-    static uint32_t stime;
-    static bool     f_time = false;
-    if (cmdclient.available() == 0) {
-        if (!f_time) {
-            stime = millis();
-            f_time = true;
-        }
-        if ((millis() - stime) > timeout) {
-            log_e("timeout");
-            f_time = false;
-            return false;
-        }
-    }
-    f_time = false;
+    int pos_http = -1, pos_question = -1, pos_ampersand = -1;
 
-    while (true) { // outer while
-        uint16_t pos = 0;
-        if ((millis() - ctime) > timeout) {
-            log_e("timeout");
-            goto exit;
-        }
-        if (!cmdclient.available()) goto exit;
+    auto header = readHeader();
+    if (header.empty()) goto exit;
 
-        while (cmdclient.available()) {
-            uint8_t b = cmdclient.read();
-            if (b == '\n') {
-                if (!pos) { // empty line received, is the last line of this responseHeader
-                    cmdClientAccept = false;
-                    goto lastToDo;
-                }
-                break;
+    for (auto& rhl : header) { // read the header line for line
+        rhl.println();
+
+        if (rhl.starts_with("GET /")) {
+            method_GET = true;
+            pos_http = rhl.index_of("HTTP/");
+            pos_question = rhl.index_of("?");  // questionmark
+            pos_ampersand = rhl.index_of("&"); // ampersand
+
+            if (pos_http == -1) {
+                log_w("GET without HTTP?");
+                goto exit;
             }
-            if (b == '\r') rhl[pos] = 0;
-            if (b < 0x20) continue;
-            rhl[pos] = b;
-            pos++;
-            if (pos == 1023) {
-                pos = 510;
-                continue;
-            }
-            if (pos == 1022) {
-                rhl[pos] = '\0';
-                cmdclient.stop();
-                log_i("requestHeaderline overflow");
-            }
-        } // inner while
 
-        if (!pos) {
-            vTaskDelay(1);
-            continue;
-        }
-        // log_w("rhl %s", rhl);
+            // cmd between "GET /" and "?" or "HTTP"
+            int start_part1 = 5; // after "GET /"
+            int end_part1 = (pos_question != -1) ? pos_question : (pos_ampersand != -1) ? pos_ampersand : pos_http;
+            http_cmd.copy_from(rhl.get() + start_part1, end_part1 - start_part1, true);
 
-        posColon = indexOf(rhl, ":", 0); // lowercase all letters up to the colon
-        if (posColon >= 0) {
-            for (int i = 0; i < posColon; i++) { rhl[i] = toLowerCase(rhl[i]); }
+            // param between "?" and "&" or HTTP, if "?" exists
+            if (pos_question != -1) {
+                int start_part2 = pos_question + 1;
+                int end_part2 = (pos_ampersand != -1) ? pos_ampersand : pos_http;
+                strncpy(http_param, rhl.get() + start_part2, end_part2 - start_part2);
+            }
+
+            // arg between "&" and "HTTP" if "&" exists
+            if (pos_ampersand != -1) {
+                int start_part3 = pos_ampersand + 1;
+                strncpy(http_arg, rhl.get() + start_part3, pos_http - start_part3);
+            }
         }
 
-        if (startsWith(rhl, "HTTP/")) { // HTTP status error code
+        if (rhl.starts_with("POST /")) {
+            method_POST = true;
+            pos_http = rhl.index_of("HTTP/");
+            pos_question = rhl.index_of("?");  // questionmark
+            pos_ampersand = rhl.index_of("&"); // ampersand
+
+            if (pos_http == -1) {
+                log_w("POST without HTTP?");
+                goto exit;
+            }
+
+            // cmd between "GET /" and "?" or "HTTP"
+            int start_part1 = 6; // after "GET /"
+            int end_part1 = (pos_question != -1) ? pos_question : pos_http;
+            http_cmd.copy_from(rhl.get() + start_part1, end_part1 - start_part1, true);
+
+            // param between "?" and "&" or HTTP, if "?" exists
+            if (pos_question != -1) {
+                int start_part2 = pos_question + 1;
+                int end_part2 = (pos_ampersand != -1) ? pos_ampersand : pos_http;
+                strncpy(http_param, rhl.get() + start_part2, end_part2 - start_part2);
+            }
+
+            // arg between "&" and "HTTP" if "&" exists
+            if (pos_ampersand != -1) {
+                int start_part3 = pos_ampersand + 1;
+                strncpy(http_arg, rhl.get() + start_part3, pos_http - start_part3);
+            }
+        }
+
+        if (rhl.starts_with("DELETE /")) {
+            method_DELETE = true;
+            pos_http = rhl.index_of("HTTP/");
+            pos_question = rhl.index_of("?");  // questionmark
+            pos_ampersand = rhl.index_of("&"); // ampersand
+
+            if (pos_http == -1) {
+                log_w("DELETE without HTTP?");
+                goto exit;
+            }
+
+            // cmd between "GET /" and "?" or "HTTP"
+            int start_part1 = 8; // after "GET /"
+            int end_part1 = (pos_question != -1) ? pos_question : pos_http;
+            http_cmd.copy_from(rhl.get() + start_part1, end_part1 - start_part1, true);
+
+            // param between "?" and "&" or HTTP, if "?" exists
+            if (pos_question != -1) {
+                int start_part2 = pos_question + 1;
+                int end_part2 = (pos_ampersand != -1) ? pos_ampersand : pos_http;
+                strncpy(http_param, rhl.get() + start_part2, end_part2 - start_part2);
+            }
+
+            // arg between "&" and "HTTP" if "&" exists
+            if (pos_ampersand != -1) {
+                int start_part3 = pos_ampersand + 1;
+                strncpy(http_arg, rhl.get() + start_part3, pos_http - start_part3);
+            }
+        }
+
+        if (rhl.starts_with("HTTP/")) { // HTTP status error code
             char statusCode[5];
             statusCode[0] = rhl[9];
             statusCode[1] = rhl[10];
@@ -773,103 +903,22 @@ bool WebSrv::handlehttp() { // HTTPserver, message received
                 log_e("%s", rhl);
                 goto exit;
             }
-        } else if (startsWith(rhl, "content-type:")) { // content-type: text/html; charset=UTF-8
-            // log_i("cT: %s", rhl);
-            int idx = indexOf(rhl + 13, ";");
-            if (idx > 0) rhl[13 + idx] = '\0';
-            strlcpy(contentType, rhl + 13, sizeof(contentType));
-            trim(contentType);
-        } else if (startsWith(rhl, "GET /")) {
-            method_GET = true;
-            int pos_http = indexOf(rhl, "HTTP/", 0);
-            int pos_question = indexOf(rhl, "?", 0);  // questionmark
-            int pos_ampersand = indexOf(rhl, "&", 0); // ampersand
-            if (pos_http == -1) {
-                log_w("GET without HTTP?");
-                goto exit;
-            }
+        }
 
-            // cmd between "GET /" and "?" or "HTTP"
-            int start_part1 = 5; // after "GET /"
-            int end_part1 = (pos_question != -1) ? pos_question : (pos_ampersand != -1) ? pos_ampersand : pos_http;
-            http_cmd.copy_from(rhl + start_part1, end_part1 - start_part1, true);
-
-            // param between "?" and "&" or HTTP, if "?" exists
-            if (pos_question != -1) {
-                int start_part2 = pos_question + 1;
-                int end_part2 = (pos_ampersand != -1) ? pos_ampersand : pos_http;
-                strncpy(http_param, rhl + start_part2, end_part2 - start_part2);
-            }
-
-            // arg between "&" and "HTTP" if "&" exists
-            if (pos_ampersand != -1) {
-                int start_part3 = pos_ampersand + 1;
-                strncpy(http_arg, rhl + start_part3, pos_http - start_part3);
-            }
-        } else if (startsWith(rhl, "POST /")) {
-            method_POST = true;
-            int pos_http = indexOf(rhl, "HTTP/", 0);
-            int pos_question = indexOf(rhl, "?", 0);  // questionmark
-            int pos_ampersand = indexOf(rhl, "&", 0); // ampersand
-            if (pos_http == -1) {
-                log_w("GET without HTTP?");
-                goto exit;
-            }
-
-            // cmd between "GET /" and "?" or "HTTP"
-            int start_part1 = 6; // after "GET /"
-            int end_part1 = (pos_question != -1) ? pos_question : pos_http;
-            http_cmd.copy_from(rhl + start_part1, end_part1 - start_part1, true);
-
-            // param between "?" and "&" or HTTP, if "?" exists
-            if (pos_question != -1) {
-                int start_part2 = pos_question + 1;
-                int end_part2 = (pos_ampersand != -1) ? pos_ampersand : pos_http;
-                strncpy(http_param, rhl + start_part2, end_part2 - start_part2);
-            }
-
-            // arg between "&" and "HTTP" if "&" exists
-            if (pos_ampersand != -1) {
-                int start_part3 = pos_ampersand + 1;
-                strncpy(http_arg, rhl + start_part3, pos_http - start_part3);
-            }
-        } else if (startsWith(rhl, "DELETE /")) {
-            method_DELETE = true;
-            int pos_http = indexOf(rhl, "HTTP/", 0);
-            int pos_question = indexOf(rhl, "?", 0);  // questionmark
-            int pos_ampersand = indexOf(rhl, "&", 0); // ampersand
-            if (pos_http == -1) {
-                log_w("GET without HTTP?");
-                goto exit;
-            }
-
-            // cmd between "GET /" and "?" or "HTTP"
-            int start_part1 = 8; // after "GET /"
-            int end_part1 = (pos_question != -1) ? pos_question : pos_http;
-            http_cmd.copy_from(rhl + start_part1, end_part1 - start_part1, true);
-
-            // param between "?" and "&" or HTTP, if "?" exists
-            if (pos_question != -1) {
-                int start_part2 = pos_question + 1;
-                int end_part2 = (pos_ampersand != -1) ? pos_ampersand : pos_http;
-                strncpy(http_param, rhl + start_part2, end_part2 - start_part2);
-            }
-
-            // arg between "&" and "HTTP" if "&" exists
-            if (pos_ampersand != -1) {
-                int start_part3 = pos_ampersand + 1;
-                strncpy(http_arg, rhl + start_part3, pos_http - start_part3);
-            }
-        } else if (startsWith(rhl, "content-length:")) {
+        if (rhl.starts_with_icase("content-type:")) {
+            ps_ptr<char> value = rhl.substr(13);
+            value.truncate_at(';'); // content-type: text/html; charset=UTF-8
+            contentType = value;
+            contentType.trim();
+        }
+        if (rhl.starts_with_icase("content-length:")) {
             const char* c_cl = (rhl + 15);
             contentLength = atoi(c_cl);
-
-        } else {
-            ;
         }
     }
 
 lastToDo:
+    http_cmd.println();
     http_cmd.urldecode();
     http_cmd.trim();
 
@@ -898,7 +947,7 @@ lastToDo:
         m_msg.e = evt_info;
         //    m_msg.arg = http_cmd;
         if (m_websrv_callback) m_websrv_callback(m_msg);
-        if (WEBSRV_onRequest) WEBSRV_onRequest(http_cmd.c_get(), http_param, http_arg, contentType, contentLength);
+        if (WEBSRV_onRequest) WEBSRV_onRequest(http_cmd.c_get(), http_param, http_arg, contentType.c_get(), contentLength);
     }
     if (method_DELETE) {
         url_decode_in_place(http_param);

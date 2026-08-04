@@ -58,11 +58,12 @@ class WebSrv {
     bool         ws_conn_request_flag = false; // websocket connection attempt
     bool         hasclient_WS = false;
     bool         cmdClientAccept = true;
-    String       http_cmd;    // Content of command
-    String       http_param;  // Content of parameter
-    String       http_arg;    // Content of argument
+    String       http_cmd;   // Content of command
+    String       http_param; // Content of parameter
+    String       http_arg;   // Content of argument
     ps_ptr<char> m_name;
     ps_ptr<char> m_version;
+    ps_ptr<char> m_httpRespHdrBuff; // store http response header
     String       contenttype;
     uint8_t      method;
     String       WS_sec_Key;
@@ -81,17 +82,22 @@ class WebSrv {
     upload_items m_upload_items;
 
   protected:
-    String      calculateWebSocketResponseKey(String sec_WS_key);
-    void        printWebSocketHeader(String wsRespKey);
-    const char* getContentType(ps_ptr<char>& filename);
-    boolean     handlehttp();
-    boolean     handleWS();
-    void        parseWsMessage(uint32_t len);
-    String      URLdecode(String str);
-    void        url_decode_in_place(char* url);
-    String      UTF8toASCII(String str);
-    String      responseCodeToString(int32_t code);
-    void        handle_upload_file();
+    String                    calculateWebSocketResponseKey(String sec_WS_key);
+    void                      printWebSocketHeader(String wsRespKey);
+    const char*               getContentType(ps_ptr<char>& filename);
+    int32_t                   webFileRead();
+    int32_t                   webFileRead(uint16_t timeout_ms);
+    int32_t                   webFileRead(uint8_t* buff, size_t len);
+    int32_t                   webFileRead(uint8_t* buff, size_t len, uint16_t timeout_ms);
+    std::vector<ps_ptr<char>> readHeader();
+    boolean                   handlehttp();
+    boolean                   handleWS();
+    void                      parseWsMessage(uint32_t len);
+    String                    URLdecode(String str);
+    void                      url_decode_in_place(char* url);
+    String                    UTF8toASCII(String str);
+    String                    responseCodeToString(int32_t code);
+    void                      handle_upload_file();
 
   public:
     enum { HTTP_NONE = 0, HTTP_GET = 1, HTTP_POST = 2, HTTP_PUT = 3 };
