@@ -995,14 +995,15 @@ void stopSong() {
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 void setup() {
+    ps_ptr<char>version = Version;
+    version.trim();
     //---- BEGIN ---------
     Serial.begin(MONITOR_SPEED);
     vTaskDelay(1500); // wait for Serial to be ready
     printf("\n\n");
-    trim(Version);
     printfln(s_tag.none, "");
     printfln(s_tag.none, "             " ANSI_ESC_YELLOW " ***************************************************** ");
-    printfln(s_tag.none, "             " ANSI_ESC_YELLOW " *     MiniWebRadio {:29}    * " ANSI_ESC_RESET "      ", Version);
+    printfln(s_tag.none, "             " ANSI_ESC_YELLOW " *     MiniWebRadio {:29}    * " ANSI_ESC_RESET "      ", version);
     printfln(s_tag.none, "             " ANSI_ESC_YELLOW " ***************************************************** ");
     printfln(s_tag.none, "");
 
@@ -1111,7 +1112,7 @@ void setup() {
         printfln(s_tag.setup, "On Board Amplifier pin is: " ANSI_ESC_CYAN "{}", AMP_ENABLED);
     }
 
-    if (s_f_isWiFiConnected) webSrv.begin(80, 81); // HTTP port, WebSocket port
+    if (s_f_isWiFiConnected) webSrv.begin(80, 81, "MiniWebRadio", version); // HTTP port, WebSocket port, Server, Last-Modified
 
     if (s_f_mute) { printfln(s_tag.setup, "volume is muted: (from " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET ")", s_volume.cur_volume); }
     setI2STone();

@@ -2,7 +2,7 @@
  * websrv.h
  *
  *  Created on: 09.07.2017
- *  updated on: 05.05.2025
+ *  updated on: 04.08.2026
  *      Author: Wolle
  */
 
@@ -21,7 +21,7 @@ extern __attribute__((weak)) void WEBSRV_onDelete(const char* cmd, const char* p
 
 class WebSrv {
   public:
-    WebSrv(String Name = "WebSrv library", String Version = "1.0");
+    WebSrv();
     ~WebSrv();
 
   protected:
@@ -53,23 +53,23 @@ class WebSrv {
     // -------------------------------------------------------------------
 
   private:
-    msg_s   m_msg;
-    bool    http_reponse_flag = false;    // Response required
-    bool    ws_conn_request_flag = false; // websocket connection attempt
-    bool    hasclient_WS = false;
-    bool    cmdClientAccept = true;
-    String  http_rqfile; // Requested file
-    String  http_cmd;    // Content of command
-    String  http_param;  // Content of parameter
-    String  http_arg;    // Content of argument
-    String  _Name;
-    String  _Version;
-    String  contenttype;
-    uint8_t method;
-    String  WS_sec_Key;
-    String  WS_resp_Key;
-    String  WS_sec_conKey = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
-    bool    m_handle_upload = false;
+    msg_s        m_msg;
+    bool         http_reponse_flag = false;    // Response required
+    bool         ws_conn_request_flag = false; // websocket connection attempt
+    bool         hasclient_WS = false;
+    bool         cmdClientAccept = true;
+    String       http_rqfile; // Requested file
+    String       http_cmd;    // Content of command
+    String       http_param;  // Content of parameter
+    String       http_arg;    // Content of argument
+    ps_ptr<char> m_name;
+    ps_ptr<char> m_version;
+    String       contenttype;
+    uint8_t      method;
+    String       WS_sec_Key;
+    String       WS_resp_Key;
+    String       WS_sec_conKey = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+    bool         m_handle_upload = false;
 
     struct upload_items {
         File         uploadfile{};
@@ -97,7 +97,7 @@ class WebSrv {
   public:
     enum { HTTP_NONE = 0, HTTP_GET = 1, HTTP_POST = 2, HTTP_PUT = 3 };
     enum { Continuation_Frame = 0x00, Text_Frame = 0x01, Binary_Frame = 0x02, Connection_Close_Frame = 0x08, Ping_Frame = 0x09, Pong_Frame = 0x0A };
-    void begin(uint16_t http_port = 80, uint16_t websocket_port = 81);
+    void begin(uint16_t http_port = 80, uint16_t websocket_port = 81, ps_ptr<char> name = "", ps_ptr<char> version = "");
     void stop();
     void loop();
     void show(const char* pagename, const char* MIMEType, int16_t len = -1);
@@ -122,7 +122,7 @@ class WebSrv {
   private:
     static std::string sanitize_utf8_replace(const char* input, size_t len);
 
-    int32_t      indexOf(const char* base, char ch, int32_t startIndex = 0) {
+    int32_t indexOf(const char* base, char ch, int32_t startIndex = 0) {
         // fb
         const char* p = base;
         for (; startIndex > 0; startIndex--)
