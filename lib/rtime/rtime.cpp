@@ -262,84 +262,25 @@ void RTIME::stop() {
     esp_sntp_stop();
 }
 
-boolean RTIME::obtain_time() {
-    time_t        now = 0;
-    int32_t       retry = 0;
-    const int32_t retry_count = 10;
-    while (timeinfo.tm_year < (2016 - 1900) && ++retry < retry_count) {
-        IPAddress dns1(8, 8, 8, 8);
-        IPAddress dns2(8, 8, 4, 4);
-        WiFi.setDNS(dns1, dns2);
-        sprintf(sbuf, "Waiting for system time to be set... (%ld/%ld)", (long int)retry, (long int)retry_count);
-        if (RTIME_info) RTIME_info(sbuf);
-        vTaskDelay(uint16_t(2000 / portTICK_PERIOD_MS));
-        time(&now);
-        localtime_r(&now, &timeinfo);
-    }
-    localtime_r(&now, &timeinfo);
-    strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
-    if (RTIME_info) RTIME_info(strftime_buf);
-
-    // log_i( "The current date/time in Berlin is: %s", strftime_buf);
-    if (retry < retry_count)
-        return true;
-    else
-        return false;
-}
-
 bool RTIME::hasValidTime() {
     return (timeinfo.tm_year < (2016 - 1900)) ? false : true;
 }
 
-const char* RTIME::gettime() {
-    setenv("TZ", RTIME_TZ.c_get(), 1);
-    tzset();
-    localtime_r(&now, &timeinfo);
-    strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
-    // log_i( "The current date/time in Berlin is: %s", strftime_buf);
-    return strftime_buf;
-}
 
-const char* RTIME::gettime_l() { // Montag, 04. August 2017 13:12:44
-    time(&now);
-    localtime_r(&now, &timeinfo);
-    //    strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
-    //    log_i( "The current date/time in Beriln is: %s", strftime_buf);
-    sprintf(strftime_buf, "%s, %02d.%s %d %02d:%02d:%02d", w_day_l[timeinfo.tm_wday].c_str(), timeinfo.tm_mday, month_l[timeinfo.tm_mon].c_str(), timeinfo.tm_year + 1900, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
-    return strftime_buf;
-}
-
-const char* RTIME::gettime_s() {
-    static char tmBuffLocal[9];
+ps_ptr<char> RTIME::gettime_s() {
     time_t      now;
     struct tm   timeinfo;
 
     if (time(&now) == -1) { // Get current time
-        return "Error: time failed";
+        time_s = "Error: time failed";
+        return time_s;
     }
     if (localtime_r(&now, &timeinfo) == nullptr) { // Convert Local Time
-        return "Error: localtime_r failed";
+        time_s = "Error: localtime_r failed";
+        return time_s;
     }
-
-    snprintf(tmBuffLocal, sizeof(tmBuffLocal), "%02d:%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
-
-    return tmBuffLocal;
-}
-
-const char* RTIME::gettime_xs() { // hh:mm
-    time(&now);
-    localtime_r(&now, &timeinfo);
-    sprintf(strftime_buf, "%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min);
-    return strftime_buf;
-}
-
-const char* RTIME::gettime_xs_12h() { // hh:mm
-    time_t     rawtime;
-    struct tm* timeinfo;
-    time(&rawtime);
-    timeinfo = localtime(&rawtime);
-    strftime(strftime_buf, 64, "%I:%M %p", timeinfo);
-    return strftime_buf;
+    time_s.assignf("{:02}:{:02}:{:02}", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+    return time_s;
 }
 
 uint8_t RTIME::getweekday() { // So=0, Mo=1 ... Sa=6

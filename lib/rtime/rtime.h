@@ -2,7 +2,7 @@
  * RTC.h
  *
  *  Created on: 04.08.2017
- *  Updated on: 03.08.2026
+ *  Updated on: 04.08.2026
  *      Author: Wolle
  */
 
@@ -27,26 +27,16 @@ public:
 	void begin(ps_ptr<char> TimeZone);
 	bool hasValidTime();
 	void stop();
-	const char* gettime();
-	const char* gettime_l();
-	const char* gettime_s();
-	const char* gettime_xs();
-	const char* gettime_xs_12h();
+	ps_ptr<char>  gettime_s();
 	uint8_t getweekday();
 	uint16_t getMinuteOfTheDay();
-protected:
-	boolean obtain_time();
 private:
 	char sbuf[256];
-	char tmBuff[9];
 	ps_ptr<char> RTIME_TZ;
+	ps_ptr<char> time_s;
 	struct tm timeinfo;
 	time_t now;
 	char strftime_buf[64];
-	String w_day_l[7]={"Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"};
-	String w_day_s[7]={"So","Mo","Di","Mi","Do","Fr","Sa"};
-	String month_l[12]={"Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"};
-	String month_s[12]={"Jan","Feb","März","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"};
 };
 
 #endif /* RTIME_H_ */
