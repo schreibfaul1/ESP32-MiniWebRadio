@@ -699,7 +699,7 @@ bool WebSrv::handlehttp() { // HTTPserver, message received
     uint32_t timeout = 4500; // ms
     uint32_t contentLength = 0;
     char     rhl[1024] = {0}; // requestHeaderline
-    char     http_cmd[1024] = {0};
+    ps_ptr<char> http_cmd;
     char     http_param[1024] = {0};
     char     http_arg[1024] = {0};
     char     contentType[50] = {0};
@@ -792,7 +792,7 @@ bool WebSrv::handlehttp() { // HTTPserver, message received
             // cmd between "GET /" and "?" or "HTTP"
             int start_part1 = 5; // after "GET /"
             int end_part1 = (pos_question != -1) ? pos_question : (pos_ampersand != -1) ? pos_ampersand : pos_http;
-            strncpy(http_cmd, rhl + start_part1, end_part1 - start_part1);
+            http_cmd.copy_from(rhl + start_part1, end_part1 - start_part1, true);
 
             // param between "?" and "&" or HTTP, if "?" exists
             if (pos_question != -1) {
@@ -819,7 +819,7 @@ bool WebSrv::handlehttp() { // HTTPserver, message received
             // cmd between "GET /" and "?" or "HTTP"
             int start_part1 = 6; // after "GET /"
             int end_part1 = (pos_question != -1) ? pos_question : pos_http;
-            strncpy(http_cmd, rhl + start_part1, end_part1 - start_part1);
+            http_cmd.copy_from(rhl + start_part1, end_part1 - start_part1, true);
 
             // param between "?" and "&" or HTTP, if "?" exists
             if (pos_question != -1) {
@@ -846,7 +846,7 @@ bool WebSrv::handlehttp() { // HTTPserver, message received
             // cmd between "GET /" and "?" or "HTTP"
             int start_part1 = 8; // after "GET /"
             int end_part1 = (pos_question != -1) ? pos_question : pos_http;
-            strncpy(http_cmd, rhl + start_part1, end_part1 - start_part1);
+            http_cmd.copy_from(rhl + start_part1, end_part1 - start_part1, true);
 
             // param between "?" and "&" or HTTP, if "?" exists
             if (pos_question != -1) {
@@ -870,28 +870,27 @@ bool WebSrv::handlehttp() { // HTTPserver, message received
     }
 
 lastToDo:
+    http_cmd.urldecode();
+    http_cmd.trim();
+
     if (method_GET) {
-        url_decode_in_place(http_cmd);
-        trim(http_cmd);
         url_decode_in_place(http_param);
         trim(http_param);
         url_decode_in_place(http_arg);
         trim(http_arg);
-        if (strlen(http_cmd) == 0) strcpy(http_cmd, "index.html");
-        if (startsWith(http_cmd, "SD/")) { // SD/logo/0N 90s.jpg ->  http_cmd = SD/    http_param = /logo/0N 90s.jpg
-            strcpy(http_param, http_cmd + 2);
+        if (!http_cmd.strlen()) http_cmd = "index.html";
+        if (http_cmd.starts_with("SD/")) { // SD/logo/0N 90s.jpg ->  http_cmd = SD/    http_param = /logo/0N 90s.jpg
+            strcpy(http_param, http_cmd.get() + 2);
             http_cmd[3] = '\0';
         }
         m_msg.e = evt_command;
-        m_msg.cmd.assignf("{}", http_cmd);
+        m_msg.cmd = http_cmd;
         m_msg.param1.assignf("{}", http_param);
         m_msg.arg1.assignf("{}", http_arg);
         if (m_websrv_callback) m_websrv_callback(m_msg);
-        if (WEBSRV_onCommand) WEBSRV_onCommand(http_cmd, http_param, http_arg);
+        if (WEBSRV_onCommand) WEBSRV_onCommand(http_cmd.c_get(), http_param, http_arg);
     }
     if (method_POST) {
-        url_decode_in_place(http_cmd);
-        trim(http_cmd);
         url_decode_in_place(http_param);
         trim(http_param);
         url_decode_in_place(http_arg);
@@ -899,11 +898,9 @@ lastToDo:
         m_msg.e = evt_info;
         //    m_msg.arg = http_cmd;
         if (m_websrv_callback) m_websrv_callback(m_msg);
-        if (WEBSRV_onRequest) WEBSRV_onRequest(http_cmd, http_param, http_arg, contentType, contentLength);
+        if (WEBSRV_onRequest) WEBSRV_onRequest(http_cmd.c_get(), http_param, http_arg, contentType, contentLength);
     }
     if (method_DELETE) {
-        url_decode_in_place(http_cmd);
-        trim(http_cmd);
         url_decode_in_place(http_param);
         trim(http_param);
         url_decode_in_place(http_arg);
@@ -911,7 +908,7 @@ lastToDo:
         m_msg.e = evt_info;
         //    m_msg.arg = http_cmd;
         if (m_websrv_callback) m_websrv_callback(m_msg);
-        if (WEBSRV_onDelete) WEBSRV_onDelete(http_cmd, http_param, http_arg);
+        if (WEBSRV_onDelete) WEBSRV_onDelete(http_cmd.c_get(), http_param, http_arg);
     }
 exit:
     cmdClientAccept = true;

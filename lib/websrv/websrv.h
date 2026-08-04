@@ -58,7 +58,6 @@ class WebSrv {
     bool         ws_conn_request_flag = false; // websocket connection attempt
     bool         hasclient_WS = false;
     bool         cmdClientAccept = true;
-    String       http_rqfile; // Requested file
     String       http_cmd;    // Content of command
     String       http_param;  // Content of parameter
     String       http_arg;    // Content of argument
