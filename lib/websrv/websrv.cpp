@@ -732,7 +732,6 @@ int32_t WebSrv::webFileRead(uint8_t* buff, size_t len, uint16_t timeout_ms) {
 
     uint32_t timeout = millis() + timeout_ms;
     int32_t  bytes_has_read = 0;
-    uint8_t  cnt = 0;
     while (bytes_has_read < len) {
         int32_t res = webFileRead(buff + bytes_has_read, len - bytes_has_read);
         if (res <= 0) { vTaskDelay(10); }
@@ -783,187 +782,140 @@ std::vector<ps_ptr<char>> WebSrv::readHeader() {
     return hdr_lines;
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+bool WebSrv::parseRequestLine(const ps_ptr<char>& line, HttpRequest& req) {
+    /*
+        GET /SD_GetFolder?%2Faudiofiles&version=0.4853 HTTP/1.1
+        ^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^
+        Verb                URI                      HTTP-Version
+    */
+
+    // GET /SD_GetFolder?%2Faudiofiles&version=0.48530939860954614 HTTP/1.1
+    // POST /upload_player2sd?/audiofiles/18KHz%200.8.mp3&version=0.9314935613984026 HTTP/1.1
+    // DELETE /SD/?%2Faudiofiles%2F18.5KHz%200.8.mp3&version=0.490788613908002 HTTP/1.1
+
+    const char* p = line.c_get();
+    int         prefixLen = 0;
+
+    if (line.starts_with("GET /")) {
+        req.method = HttpRequest::Method::GET;
+        prefixLen = 5;
+    } else if (line.starts_with("POST /")) {
+        req.method = HttpRequest::Method::POST;
+        prefixLen = 6;
+    } else if (line.starts_with("DELETE /")) {
+        req.method = HttpRequest::Method::DELETE_;
+        prefixLen = 8;
+    } else
+        return false;
+
+    int posHttp = line.index_of("HTTP/");
+    if (posHttp < 0) {
+        log_w("Request without HTTP?");
+        return false;
+    }
+
+    int posQuestion = line.index_of("?");
+    int posAmpersand = line.index_of("&");
+
+    int cmdEnd = posHttp;
+
+    if (posQuestion >= 0) {
+        cmdEnd = posQuestion;
+    } else if (posAmpersand >= 0) {
+        cmdEnd = posAmpersand;
+    }
+
+    req.cmd.copy_from(p + prefixLen, cmdEnd - prefixLen, true);
+
+    if (posQuestion >= 0) {
+        int end = (posAmpersand >= 0) ? posAmpersand : posHttp;
+        req.param.copy_from(p + posQuestion + 1, end - posQuestion - 1, true);
+    }
+
+    if (posAmpersand >= 0) { req.arg.copy_from(p + posAmpersand + 1, posHttp - posAmpersand - 1, true); }
+
+    return true;
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool WebSrv::handlehttp() { // HTTPserver, message received
 
-    bool         method_GET = false;
-    bool         method_POST = false;
-    bool         method_DELETE = false;
     uint32_t     contentLength = 0;
-    ps_ptr<char> http_cmd;
-    char         http_param[1024] = {0};
-    char         http_arg[1024] = {0};
     ps_ptr<char> contentType;
 
-    int pos_http = -1, pos_question = -1, pos_ampersand = -1;
-
-    auto header = readHeader();
+    HttpRequest req;
+    auto        header = readHeader();
     if (header.empty()) goto exit;
 
-    for (auto& rhl : header) { // read the header line for line
-        rhl.println();
+    for (auto& line : header) { // read the header line for line
+        // line.println();
 
-        if (rhl.starts_with("GET /")) {
-            method_GET = true;
-            pos_http = rhl.index_of("HTTP/");
-            pos_question = rhl.index_of("?");  // questionmark
-            pos_ampersand = rhl.index_of("&"); // ampersand
+        if (parseRequestLine(line, req)) continue;
 
-            if (pos_http == -1) {
-                log_w("GET without HTTP?");
-                goto exit;
-            }
-
-            // cmd between "GET /" and "?" or "HTTP"
-            int start_part1 = 5; // after "GET /"
-            int end_part1 = (pos_question != -1) ? pos_question : (pos_ampersand != -1) ? pos_ampersand : pos_http;
-            http_cmd.copy_from(rhl.get() + start_part1, end_part1 - start_part1, true);
-
-            // param between "?" and "&" or HTTP, if "?" exists
-            if (pos_question != -1) {
-                int start_part2 = pos_question + 1;
-                int end_part2 = (pos_ampersand != -1) ? pos_ampersand : pos_http;
-                strncpy(http_param, rhl.get() + start_part2, end_part2 - start_part2);
-            }
-
-            // arg between "&" and "HTTP" if "&" exists
-            if (pos_ampersand != -1) {
-                int start_part3 = pos_ampersand + 1;
-                strncpy(http_arg, rhl.get() + start_part3, pos_http - start_part3);
-            }
-        }
-
-        if (rhl.starts_with("POST /")) {
-            method_POST = true;
-            pos_http = rhl.index_of("HTTP/");
-            pos_question = rhl.index_of("?");  // questionmark
-            pos_ampersand = rhl.index_of("&"); // ampersand
-
-            if (pos_http == -1) {
-                log_w("POST without HTTP?");
-                goto exit;
-            }
-
-            // cmd between "GET /" and "?" or "HTTP"
-            int start_part1 = 6; // after "GET /"
-            int end_part1 = (pos_question != -1) ? pos_question : pos_http;
-            http_cmd.copy_from(rhl.get() + start_part1, end_part1 - start_part1, true);
-
-            // param between "?" and "&" or HTTP, if "?" exists
-            if (pos_question != -1) {
-                int start_part2 = pos_question + 1;
-                int end_part2 = (pos_ampersand != -1) ? pos_ampersand : pos_http;
-                strncpy(http_param, rhl.get() + start_part2, end_part2 - start_part2);
-            }
-
-            // arg between "&" and "HTTP" if "&" exists
-            if (pos_ampersand != -1) {
-                int start_part3 = pos_ampersand + 1;
-                strncpy(http_arg, rhl.get() + start_part3, pos_http - start_part3);
-            }
-        }
-
-        if (rhl.starts_with("DELETE /")) {
-            method_DELETE = true;
-            pos_http = rhl.index_of("HTTP/");
-            pos_question = rhl.index_of("?");  // questionmark
-            pos_ampersand = rhl.index_of("&"); // ampersand
-
-            if (pos_http == -1) {
-                log_w("DELETE without HTTP?");
-                goto exit;
-            }
-
-            // cmd between "GET /" and "?" or "HTTP"
-            int start_part1 = 8; // after "GET /"
-            int end_part1 = (pos_question != -1) ? pos_question : pos_http;
-            http_cmd.copy_from(rhl.get() + start_part1, end_part1 - start_part1, true);
-
-            // param between "?" and "&" or HTTP, if "?" exists
-            if (pos_question != -1) {
-                int start_part2 = pos_question + 1;
-                int end_part2 = (pos_ampersand != -1) ? pos_ampersand : pos_http;
-                strncpy(http_param, rhl.get() + start_part2, end_part2 - start_part2);
-            }
-
-            // arg between "&" and "HTTP" if "&" exists
-            if (pos_ampersand != -1) {
-                int start_part3 = pos_ampersand + 1;
-                strncpy(http_arg, rhl.get() + start_part3, pos_http - start_part3);
-            }
-        }
-
-        if (rhl.starts_with("HTTP/")) { // HTTP status error code
+         if (line.starts_with("HTTP/")) { // HTTP status error code
             char statusCode[5];
-            statusCode[0] = rhl[9];
-            statusCode[1] = rhl[10];
-            statusCode[2] = rhl[11];
+            statusCode[0] = line[9];
+            statusCode[1] = line[10];
+            statusCode[2] = line[11];
             statusCode[3] = '\0';
             int sc = atoi(statusCode);
             if (sc > 310) { // e.g. HTTP/1.1 301 Moved Permanently
-                log_e("%s", rhl);
+                log_e("%s", line);
                 goto exit;
             }
         }
 
-        if (rhl.starts_with_icase("content-type:")) {
-            ps_ptr<char> value = rhl.substr(13);
+        if (line.starts_with_icase("content-type:")) {
+            ps_ptr<char> value = line.substr(13);
             value.truncate_at(';'); // content-type: text/html; charset=UTF-8
             contentType = value;
             contentType.trim();
         }
-        if (rhl.starts_with_icase("content-length:")) {
-            const char* c_cl = (rhl + 15);
+        if (line.starts_with_icase("content-length:")) {
+            const char* c_cl = (line + 15);
             contentLength = atoi(c_cl);
         }
     }
 
-lastToDo:
-    http_cmd.println();
-    http_cmd.urldecode();
-    http_cmd.trim();
+// lastToDo:
+    WS_LOG_DEBUG("req.cmd: {}", req.cmd);
+    req.cmd.urldecode();
+    req.cmd.trim();
 
-    if (method_GET) {
-        url_decode_in_place(http_param);
-        trim(http_param);
-        url_decode_in_place(http_arg);
-        trim(http_arg);
-        if (!http_cmd.strlen()) http_cmd = "index.html";
-        if (http_cmd.starts_with("SD/")) { // SD/logo/0N 90s.jpg ->  http_cmd = SD/    http_param = /logo/0N 90s.jpg
-            strcpy(http_param, http_cmd.get() + 2);
-            http_cmd[3] = '\0';
+    req.param.urldecode();
+    req.param.trim();
+
+    req.arg.urldecode();
+    req.arg.trim();
+
+    if (req.method == HttpRequest::Method::GET) {
+        if (!req.cmd.strlen()) req.cmd = "index.html";
+        if (req.cmd.starts_with("SD/")){ // special case: SD/logo/0N 90s.jpg ->  req.cmd = SD/    req.param = /logo/0N 90s.jpg
+            req.param = req.cmd.substr(2);
+            req.cmd = "SD/";
         }
         m_msg.e = evt_command;
-        m_msg.cmd = http_cmd;
-        m_msg.param1.assignf("{}", http_param);
-        m_msg.arg1.assignf("{}", http_arg);
+        m_msg.cmd = req.cmd;
+        m_msg.param1.assignf("{}", req.param);
+        m_msg.arg1.assignf("{}", req.arg);
         if (m_websrv_callback) m_websrv_callback(m_msg);
-        if (WEBSRV_onCommand) WEBSRV_onCommand(http_cmd.c_get(), http_param, http_arg);
+        if (WEBSRV_onCommand) WEBSRV_onCommand(req.cmd.c_get(), req.param.c_get(), req.arg.c_get());
     }
-    if (method_POST) {
-        url_decode_in_place(http_param);
-        trim(http_param);
-        url_decode_in_place(http_arg);
-        trim(http_arg);
+    if(req.method == HttpRequest::Method::POST){
         m_msg.e = evt_info;
-        //    m_msg.arg = http_cmd;
         if (m_websrv_callback) m_websrv_callback(m_msg);
-        if (WEBSRV_onRequest) WEBSRV_onRequest(http_cmd.c_get(), http_param, http_arg, contentType.c_get(), contentLength);
+        if (WEBSRV_onRequest) WEBSRV_onRequest(req.cmd.c_get(), req.param.c_get(), req.arg.c_get(), contentType.c_get(), contentLength);
     }
-    if (method_DELETE) {
-        url_decode_in_place(http_param);
-        trim(http_param);
-        url_decode_in_place(http_arg);
-        trim(http_arg);
+    if(req.method == HttpRequest::Method::DELETE_){
         m_msg.e = evt_info;
-        //    m_msg.arg = http_cmd;
         if (m_websrv_callback) m_websrv_callback(m_msg);
-        if (WEBSRV_onDelete) WEBSRV_onDelete(http_cmd.c_get(), http_param, http_arg);
+        if (WEBSRV_onDelete) WEBSRV_onDelete(req.cmd.c_get(), req.param.c_get(), req.arg.c_get());
     }
+
 exit:
     cmdClientAccept = true;
     return true;
 }
-//--------------------------------------------------------------------------------------------------------------
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool WebSrv::handleWS() {    // Websocketserver, receive messages
     String currentLine = ""; // Build up to complete line
 

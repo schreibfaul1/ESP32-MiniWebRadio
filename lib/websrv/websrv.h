@@ -81,6 +81,15 @@ class WebSrv {
     };
     upload_items m_upload_items;
 
+    struct HttpRequest {
+        enum class Method { Unknown, GET, POST, DELETE_ };
+
+        Method       method = Method::Unknown;
+        ps_ptr<char> cmd;
+        ps_ptr<char> param;
+        ps_ptr<char> arg;
+    };
+
   protected:
     String                    calculateWebSocketResponseKey(String sec_WS_key);
     void                      printWebSocketHeader(String wsRespKey);
@@ -90,6 +99,7 @@ class WebSrv {
     int32_t                   webFileRead(uint8_t* buff, size_t len);
     int32_t                   webFileRead(uint8_t* buff, size_t len, uint16_t timeout_ms);
     std::vector<ps_ptr<char>> readHeader();
+    bool                      parseRequestLine(const ps_ptr<char>& line, HttpRequest& req);
     boolean                   handlehttp();
     boolean                   handleWS();
     void                      parseWsMessage(uint32_t len);
