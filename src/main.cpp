@@ -495,14 +495,16 @@ ps_ptr<char> getLogoPath() {
     return path;
 }
 
-const char* getFlagPath(uint16_t station) {
-    if (station == 0) return "/flags/unknown.jpg";
-    static char flagPath[40];
-    flagPath[0] = '\0';
-    strcpy(flagPath, "/flags/");
-    strcat(flagPath, staMgnt.getStationCountry(station));
-    for (int i = 0; i < strlen(flagPath); i++) flagPath[i] = tolower(flagPath[i]);
-    strcat(flagPath, ".jpg");
+ps_ptr<char> getFlagPath(uint16_t station) {
+    ps_ptr<char> flagPath;
+    if (station == 0){
+        flagPath = "/flags/unknown.jpg";
+        return flagPath;
+    }
+    flagPath.assign("/flags/");
+    flagPath.appendf(staMgnt.getStationCountry(station));
+    flagPath.toLowerCase();
+    flagPath.append(".jpg");
     return flagPath;
 }
 
@@ -552,8 +554,8 @@ void showFileLogo(int8_t state, int8_t subState) {
     }
 }
 
-void showPlayerFileName(const char* fname) {
-    if (!fname) return;
+void showPlayerFileName(ps_ptr<char> fname) {
+    if (!fname.valid()) return;
     txt_PL_fName.setTextColor(TFT_CYAN);
     txt_PL_fName.setText(fname);
     txt_PL_fName.show();
@@ -1527,24 +1529,24 @@ void SD_playFile(ps_ptr<char> path, uint32_t fileStartTime, bool showFN) {
 
     if (showFN) {
         clearLogo();
-        showPlayerFileName(path.get() + idx + 1);
+        showPlayerFileName(file_name);
     }
 
-    printfln(s_tag.file_name, ANSI_ESC_MAGENTA "{}", file_name.c_get());
-    connecttoFS("SD_MMC", (const char*)path.c_get(), fileStartTime);
+    printfln(s_tag.file_name, ANSI_ESC_MAGENTA "{}", file_name);
+    connecttoFS("SD_MMC", path.c_get(), fileStartTime);
     if (s_f_playlistEnabled) showPlsFileNumber();
     if (s_f_isFSConnected) { s_settings.lastconnectedfile = path; }
 }
 
-bool SD_rename(const char* src, const char* dest) {
+bool SD_rename(ps_ptr<char> src, ps_ptr<char> dest) {
     bool success = false;
-    if (SD_MMC.exists(src)) { success = SD_MMC.rename(src, dest); }
+    if (SD_MMC.exists(src.c_get())) { success = SD_MMC.rename(src.c_get(), dest.c_get()); }
     return success;
 }
 
-bool SD_newFolder(const char* folderPathName) {
+bool SD_newFolder(ps_ptr<char> folderPathName) {
     bool success = false;
-    success = SD_MMC.mkdir(folderPathName);
+    success = SD_MMC.mkdir(folderPathName.c_get());
     return success;
 }
 
@@ -3349,7 +3351,7 @@ void ir_short_key(int8_t key) {
 void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  // called via html
 
     if(CORE_DEBUG_LEVEL == ARDUHAL_LOG_LEVEL_DEBUG){
-        printfln(s_tag.webserver, "WS_onCmd: " ANSI_ESC_YELLOW "cmd=\"{}\", params=\"{}\", arg=\"{}\"", cmd.c_get(), param.c_get(), arg.c_get());
+        printfln(s_tag.webserver, "WS_onCmd: " ANSI_ESC_YELLOW "cmd=\"{}\", params=\"{}\", arg=\"{}\"", cmd, param, arg);
     }
     #define CMD_EQUALS(x) if(cmd.equals(x) == true)
 
@@ -3366,7 +3368,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
 
     CMD_EQUALS("test"){                 ps_ptr<char>p; p.assignf("free heap: {}, Inbuff filled: {}, Inbuff free: {}, PSRAM filled {}, PSRAM free {},",
                                         ESP.getFreeHeap(), audio.inBufferFilled(), audio.inBufferFree(), (ESP.getPsramSize() - ESP.getFreePsram()), ESP.getFreePsram());
-                                        webSrv.send("test=", p.c_get());
+                                        webSrv.send("test=", p);
                                         printfln(s_tag.webserver, "audiotask .. stackHighWaterMark: {} bytes", (long unsigned)audio.getHighWatermark() * 4);
                                         printfln(s_tag.webserver, "looptask ... stackHighWaterMark: {} bytes", (long unsigned)uxTaskGetStackHighWaterMark(NULL) * 4);
                                         printfln(s_tag.webserver, "maxAllocHeap {}, maxAllocPsram {} ", ESP.getMaxAllocHeap(), ESP.getMaxAllocPsram());
@@ -3401,9 +3403,9 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
     CMD_EQUALS("homepage"){             webSrv.send("homepage=", s_homepage.c_get()); return;}
 
     CMD_EQUALS("to_listen"){            webSrv_send_station_items(); return;}   // via websocket, return the name and number of the current station
-    CMD_EQUALS("get_tone"){             webSrv.send("settone=", getI2STone().c_get()); return;}
+    CMD_EQUALS("get_tone"){             webSrv.send("settone=", getI2STone()); return;}
 
-    CMD_EQUALS("get_streamtitle"){      webSrv.reply(s_streamTitle.c_get(), webSrv.TEXT); return;}
+    CMD_EQUALS("get_streamtitle"){      webSrv.reply(s_streamTitle, webSrv.TEXT); return;}
 
     CMD_EQUALS("LowPass"){              s_tone.LP = param.to_int32(); sdr_EQ_lowPass.setValue(s_tone.LP); // audioI2S tone
                                         setI2STone(); return;}
@@ -3424,8 +3426,8 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
 
     CMD_EQUALS("set_station"){          uint16_t staNr = param.to_uint32(); if(staNr != s_cur_station) setStationByNumber(staNr); return;}                                                                      // via websocket
 
-    CMD_EQUALS("stationURL"){           setStation(param.c_get(), arg.c_get());                                                                        // via websocket
-                                        printfln(s_tag.webserver, "StationName: " ANSI_ESC_MAGENTA "{}", param.c_get());
+    CMD_EQUALS("stationURL"){           setStation(param, arg);                                                                        // via websocket
+                                        printfln(s_tag.webserver, "StationName: " ANSI_ESC_MAGENTA "{}", param);
                                         return;}
 
     CMD_EQUALS("webFileURL"){           audio.connecttohost(param.c_get())? changeState(PLAYER, 1) : changeState(PLAYER, 0); return;}                        // via websocket
@@ -3436,8 +3438,8 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
 
     CMD_EQUALS("get_timeZones"){        webSrv.send("timezones=", timezones_json); return;}
 
-    CMD_EQUALS("set_timeZone"){         s_TZName = param;  s_TZString = arg.c_get();
-                                        printfln(s_tag.webserver, "Timezone: .. " ANSI_ESC_BLUE "{}, {}", param.c_get(), arg.c_get());
+    CMD_EQUALS("set_timeZone"){         s_TZName = param;  s_TZString = arg;
+                                        printfln(s_tag.webserver, "Timezone: .. " ANSI_ESC_BLUE "{}, {}", param, arg);
                                         setRTC(s_TZString);
                                         updateSettings(); // write new TZ items to settings.json
                                         return;}
@@ -3496,31 +3498,31 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
                                         return;}
 
     CMD_EQUALS("SD/"){                  param = scaleImage(param); if(!SD_MMC.exists(param.c_get())) param = scaleImage("/common/unknown.png");
-                                        if(!webSrv.streamfile(SD_MMC, param)){ printfln(s_tag.webserver, "The file could not be transferred " ANSI_ESC_RED "\"{}\"", param.get()); } // via XMLHttpRequest
+                                        if(!webSrv.streamfile(SD_MMC, param)){ printfln(s_tag.webserver, "The file could not be transferred " ANSI_ESC_RED "\"{}\"", param); } // via XMLHttpRequest
                                         return;}
 
-    CMD_EQUALS("SD_Download"){          webSrv.streamfile(SD_MMC, param.c_get());                                                                         // via XMLHttpRequest
-                                        printfln(s_tag.webserver, "Load from SD  " ANSI_ESC_YELLOW "\"{}\"", param.c_get());
+    CMD_EQUALS("SD_Download"){          webSrv.streamfile(SD_MMC, param);                                                                         // via XMLHttpRequest
+                                        printfln(s_tag.webserver, "Load from SD  " ANSI_ESC_YELLOW "\"{}\"", param);
                                         return;}
 
     CMD_EQUALS("SD_GetFolder"){         webSrv.reply(s_SD_content.stringifyDirContent(param), webSrv.JS);                                                           // via XMLHttpRequest
-                                        printfln(s_tag.webserver, "GetFolder " ANSI_ESC_YELLOW "\"{}\"", param.c_get());
+                                        printfln(s_tag.webserver, "GetFolder " ANSI_ESC_YELLOW "\"{}\"", param);
                                         return;}
 
-    CMD_EQUALS("SD_newFolder"){         bool res = SD_newFolder(param.c_get());                                                                           // via XMLHttpRequest
+    CMD_EQUALS("SD_newFolder"){         bool res = SD_newFolder(param);                                                                           // via XMLHttpRequest
                                         if(res) webSrv.sendStatus(200); else webSrv.sendStatus(400);
-                                        printfln(s_tag.webserver, "NewFolder " ANSI_ESC_YELLOW "\"{}\"", param.c_get());
+                                        printfln(s_tag.webserver, "NewFolder " ANSI_ESC_YELLOW "\"{}\"", param);
                                         return;}
 
     CMD_EQUALS("SD_playFile"){          stopSong();
                                         webSrv.reply("SD_playFile=" + param, webSrv.TEXT);                                                                // via XMLHttpRequest
-                                        printfln(s_tag.webserver, "Play " ANSI_ESC_YELLOW "\"{}\"", param.c_get());
+                                        printfln(s_tag.webserver, "Play " ANSI_ESC_YELLOW "\"{}\"", param);
                                         SD_playFile(param.c_get());
                                         return;}
 
     CMD_EQUALS("SD_playAllFiles"){      stopSong();
                                         webSrv.send("SD_playFolder=", param);                                                                                      // via websocket
-                                        printfln(s_tag.webserver, "Play Folder" ANSI_ESC_YELLOW "\"{}\"", param.c_get());
+                                        printfln(s_tag.webserver, "Play Folder" ANSI_ESC_YELLOW "\"{}\"", param);
                                         if(playlist.create_playlist_from_SD_folder(param)){
                                             s_f_playlistEnabled = true;
                                             s_subState_player = 1;
@@ -3528,9 +3530,8 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
                                         return;}
 
     CMD_EQUALS("SD_rename"){            ps_ptr<char> _arg = arg.substr(0, arg.index_of("&")); // only the first argument is used                              // via XMLHttpRequest
-                                        printfln(s_tag.webserver, "Rename " ANSI_ESC_YELLOW "old \"{}\" new \"%s\"",
-                                        param.c_get(), _arg.c_get());
-                                        bool res = SD_rename(param.c_get(), _arg.c_get());
+                                        printfln(s_tag.webserver, "Rename " ANSI_ESC_YELLOW "old \"{}\" new \"%s\"", param, _arg);
+                                        bool res = SD_rename(param, _arg);
                                         if(res) webSrv.reply("refresh", webSrv.TEXT);
                                         else webSrv.sendStatus(400);
                                         return;}
@@ -3542,7 +3543,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
                                         s_settings.irbuttons[btnNr].val = command;
                                         return;}
 
-    CMD_EQUALS("set_IRaddr"){           printfln(s_tag.webserver, "set_IR_addr: " ANSI_ESC_CYAN "{}", param.c_get());
+    CMD_EQUALS("set_IRaddr"){           printfln(s_tag.webserver, "set_IR_addr: " ANSI_ESC_CYAN "{}", param);
                                         int32_t address = (int32_t)strtol(param.c_get(), NULL, 16);
                                         ir.set_irAddress(address);
                                         s_settings.irbuttons[42].val = address;
@@ -3561,11 +3562,11 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
                                         else                              webSrv.send("KCX_BT_connected=",  "0");
                                         return;}
     CMD_EQUALS("KCX_BT_clearItems"){    bt_emitter.deleteVMlinks(); return;}
-    CMD_EQUALS("KCX_BT_addName"){       bt_emitter.addLinkName(param.c_get()); return;}
-    CMD_EQUALS("KCX_BT_addAddr"){       bt_emitter.addLinkAddr(param.c_get()); return;}
+    CMD_EQUALS("KCX_BT_addName"){       bt_emitter.addLinkName(param); return;}
+    CMD_EQUALS("KCX_BT_addAddr"){       bt_emitter.addLinkAddr(param); return;}
     CMD_EQUALS("KCX_BT_mem"){           bt_emitter.getVMlinks(); return;}
     CMD_EQUALS("KCX_BT_scanned"){       webSrv.send("KCX_BT_SCANNED=", bt_emitter.stringifyScannedItems()); return;}
-    CMD_EQUALS("KCX_BT_getMode"){       webSrv.send("KCX_BT_MODE=", bt_emitter.getMode().c_get()); return;}
+    CMD_EQUALS("KCX_BT_getMode"){       webSrv.send("KCX_BT_MODE=", bt_emitter.getMode()); return;}
     CMD_EQUALS("KCX_BT_changeMode"){    if(s_bt_emitter.mode.equals("RX")) s_bt_emitter.mode = "TX"; else  s_bt_emitter.mode = "RX"; return;}
     CMD_EQUALS("KCX_BT_pause"){         bt_emitter.pauseResume(); return;}
     CMD_EQUALS("KCX_BT_downvolume"){    bt_emitter.downvolume(); return;}
@@ -3575,7 +3576,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
 
     CMD_EQUALS("hardcopy"){             printfln(s_tag.webserver, "Webpage: " ANSI_ESC_YELLOW "create a display hardcopy"); make_hardcopy_on_sd(); webSrv.send("hardcopy=", "/hardcopy.bmp"); return;}
 
-    printfln(s_tag.webserver, ANSI_ESC_RED "unknown HTMLcommand {}, param={}", cmd, param.c_get());
+    printfln(s_tag.webserver, ANSI_ESC_RED "unknown HTMLcommand {}, param={}", cmd, param);
     webSrv.sendStatus(400);
 }
 // clang-format on
