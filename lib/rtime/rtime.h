@@ -15,8 +15,6 @@
 #include "time.h"
 #include "esp_sntp.h"
 
-int32_t	 setenv(const char *__string, const char *__value, int32_t __overwrite);
-
 extern __attribute__((weak)) void RTIME_info(const char*);
 
 class RTIME{
@@ -31,12 +29,10 @@ public:
 	uint8_t getweekday();
 	uint16_t getMinuteOfTheDay();
 private:
-	char sbuf[256];
 	ps_ptr<char> RTIME_TZ;
 	ps_ptr<char> time_s;
 	struct tm timeinfo;
 	time_t now;
-	char strftime_buf[64];
 };
 
 #endif /* RTIME_H_ */
