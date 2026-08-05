@@ -454,7 +454,7 @@ ps_ptr<char> getFlagPath(uint16_t station);
 void         nextStation();
 void         prevStation();
 void         setStationByNumber(uint16_t staNr);
-
+void         WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg);
 void         savefile(ps_ptr<char> fileName, uint32_t contentLength, ps_ptr<char> contenttype);
 void         setI2STone();
 ps_ptr<char> getI2STone();

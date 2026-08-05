@@ -497,7 +497,7 @@ ps_ptr<char> getLogoPath() {
 
 ps_ptr<char> getFlagPath(uint16_t station) {
     ps_ptr<char> flagPath;
-    if (station == 0){
+    if (station == 0) {
         flagPath = "/flags/unknown.jpg";
         return flagPath;
     }
@@ -995,7 +995,7 @@ void stopSong() {
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 void setup() {
-    ps_ptr<char>version = Version;
+    ps_ptr<char> version = Version;
     version.trim();
     //---- BEGIN ---------
     Serial.begin(MONITOR_SPEED);
@@ -3772,10 +3772,12 @@ void on_websrv(const WebSrv::msg_s& msg) {
     }
     if (msg.e == WebSrv::evt_error) { printfln(s_tag.webserver, ANSI_ESC_RED "{}", msg.arg); }
     if (msg.e == WebSrv::evt_warn) { printfln(s_tag.webserver, ANSI_ESC_YELLOW "{}", msg.arg); }
-    if (msg.e == WebSrv::evt_command) { WEBSRV_onCommand(msg.cmd, msg.param1, msg.arg1); }
+
+    if (msg.e == WebSrv::evt_command) {
+        MWR_LOG_DEBUG("cmd: {}, param1: {}, arg1: {}", msg.cmd, msg.param1, msg.arg1);
+        WEBSRV_onCommand(msg.cmd, msg.param1, msg.arg1);
+    }
     if (msg.e == WebSrv::evt_request) { WEBSRV_onRequest(msg.cmd, msg.param1, msg.arg1, msg.ct, msg.cl); }
-
-
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void kcx_bt_memItems(const char* jsonItems) { // Every time an item (name or address) was added, a JSON string is passed here

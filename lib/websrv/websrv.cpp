@@ -900,8 +900,8 @@ bool WebSrv::handlehttp() { // HTTPserver, message received
             m_msg.param1.assignf("{}", req.param);
             m_msg.arg1.assignf("{}", req.arg);
             if (m_websrv_callback) m_websrv_callback(m_msg);
-            if (WEBSRV_onCommand) WEBSRV_onCommand(req.cmd.c_get(), req.param.c_get(), req.arg.c_get());
             break;
+
         case HttpRequest::Method::POST:
             m_msg.e = evt_request;
             m_msg.cmd = req.cmd;
@@ -911,12 +911,15 @@ bool WebSrv::handlehttp() { // HTTPserver, message received
             m_msg.cl = contentLength;
             if (m_websrv_callback) m_websrv_callback(m_msg);
             break;
+
         case HttpRequest::Method::DELETE:
             m_msg.e = evt_info;
             if (m_websrv_callback) m_websrv_callback(m_msg);
             if (WEBSRV_onDelete) WEBSRV_onDelete(req.cmd.c_get(), req.param.c_get(), req.arg.c_get());
             break;
+
         case HttpRequest::Method::Unknown: break;
+
         default: break;
     }
 
@@ -1026,7 +1029,6 @@ void WebSrv::parseWsMessage(uint32_t len) {
         m_msg.param1 = "";
         m_msg.arg1 = "";
         if (m_websrv_callback) m_websrv_callback(m_msg);
-        if (WEBSRV_onCommand) WEBSRV_onCommand("ping received, send pong", "", "");
         m_msg.e = evt_info;
         m_msg.arg = "ping received, send pong";
         if (m_websrv_callback) m_websrv_callback(m_msg);
@@ -1039,7 +1041,6 @@ void WebSrv::parseWsMessage(uint32_t len) {
         m_msg.param1 = "";
         m_msg.arg1 = "";
         if (m_websrv_callback) m_websrv_callback(m_msg);
-        if (WEBSRV_onCommand) WEBSRV_onCommand("pong received", "", "");
         m_msg.e = evt_info;
         m_msg.arg = "pong received";
         if (m_websrv_callback) m_websrv_callback(m_msg);
@@ -1067,55 +1068,33 @@ void WebSrv::parseWsMessage(uint32_t len) {
         }
         msgBuff[pll] = '\0';
 
-        int pos1 = msgBuff.index_of('=');
-        int pos2 = msgBuff.index_of('&', pos1 + 1);
-        if (pos1 < 0) {
-            m_msg.cmd = msgBuff;
-            m_msg.param1.assign("");
-            m_msg.arg1.assign("");
-        } else if (pos2 < 0) {
-            m_msg.cmd = msgBuff.substr(0, pos1);
-            m_msg.param1 = msgBuff.substr(pos1 + 1);
-            m_msg.arg1.assign("");
-        } else {
-            m_msg.cmd = msgBuff.substr(0, pos1);
-            m_msg.param1 = msgBuff.substr(pos1 + 1, pos2 - pos1 - 1);
-            m_msg.arg1 = msgBuff.substr(pos2 + 1);
+        m_msg.cmd = msgBuff;
+        m_msg.param1.assign("");
+        m_msg.arg1.assign("");
+
+        int pos = m_msg.cmd.index_of('='); //  m_msg.cmd: "DLNA_getContent=4:cont1:20:0:0:&Musik  (6)"
+        if (pos != -1) {
+            m_msg.param1 = m_msg.cmd.substr(pos + 1); // m_msg.param1: "4:cont1:20:0:0:&Musik  (6)"
+            m_msg.cmd = m_msg.cmd.substr(0, pos);     // m_msg.cmd: "DLNA_getContent"
         }
+        pos = m_msg.param1.index_of('&'); // m_msg.param1: "4:cont1:20:0:0:&Musik  (6)"
+        if (pos != -1) {
+            m_msg.arg1 = m_msg.param1.substr(pos + 1);  // m_msg.arg1: "Musik  (6)"
+            m_msg.param1 = m_msg.param1.substr(0, pos); // m_msg.param1; "4:cont1:20:0:0:"
+        }
+
+        WS_LOG_DEBUG("{}\ncmd: {}, param1: {}, arg1: {}", msgBuff, m_msg.cmd, m_msg.param1, m_msg.arg1);
+
         m_msg.e = evt_command;
         if (m_websrv_callback) m_websrv_callback(m_msg);
 
         m_msg.e = evt_info;
         m_msg.arg = msgBuff;
         if (m_websrv_callback) m_websrv_callback(m_msg);
-        const char* cmd = msgBuff.get();
-        const char* param = NULL;
-        const char* arg = NULL;
-        int32_t     idx1 = msgBuff.index_of('=');
-        if (idx1 > 0) {
-            msgBuff[idx1] = '\0';
-            const char* cmd = msgBuff.get();
-            int32_t     offset = idx1 + 1;
-            int32_t     idx2 = lastIndexOf(msgBuff.get() + offset, '&');
-            if (idx2 > 0) {
-                *(msgBuff.get() + offset + idx2) = '\0';
-                param = msgBuff.get() + offset;
-                arg = msgBuff.get() + offset + idx2 + 1;
-                if (WEBSRV_onCommand) WEBSRV_onCommand(cmd, param, arg);
-                goto exit;
-            } else {
-                param = msgBuff.get() + offset;
-                if (WEBSRV_onCommand) WEBSRV_onCommand(cmd, param, "");
-                goto exit;
-            }
-        } else {
-            if (WEBSRV_onCommand) WEBSRV_onCommand(cmd, "", "");
-            goto exit;
-        }
-        if (WEBSRV_onCommand) WEBSRV_onCommand((const char*)msgBuff.c_get(), "", "");
     } else {
-        log_e("opcode != 0x01");
+        WS_LOG_ERROR("opcode != 0x01");
     }
+
 exit:
     return;
 }

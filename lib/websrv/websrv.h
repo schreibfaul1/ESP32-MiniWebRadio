@@ -13,8 +13,6 @@
 #include "mbedtls/base64.h"
 #include "mbedtls/sha1.h"
 
-extern __attribute__((weak)) void WEBSRV_onCommand(const char* cmd, const String param, const String arg);
-
 extern __attribute__((weak)) void WEBSRV_onDelete(const char* cmd, const char* param, const char* arg);
 
 #define ANSI_ESC_RED "\033[31m"
@@ -32,7 +30,7 @@ class WebSrv {
 
     // callbacks ---------------------------------------------------------
   public:
-    typedef enum { evt_info = 0, evt_error, evt_warn, evt_command, evt_request } event_t;
+    typedef enum { evt_info = 0, evt_error, evt_warn, evt_command, evt_request , evt_delete} event_t;
     struct msg_s {
         const char*  msg = nullptr;
         const char*  s = nullptr;
