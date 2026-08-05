@@ -1,6 +1,7 @@
 # ESP32-S3-MiniWebRadio V4
 
-![Display](docs/MiniWebRadio.jpg)
+<img width="480" height="320" alt="image" src="https://github.com/user-attachments/assets/cf53f9dd-a6df-4686-bdff-2adaca41a3b3" />
+
 
 MiniWebRadio Features:
 <ul>
