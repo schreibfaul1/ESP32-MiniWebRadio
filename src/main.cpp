@@ -3586,15 +3586,15 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
 // POST Events from websrv /*🟢🟡🔴*/
 // clang-format off
 
-void WEBSRV_onRequest(const char* cmd,  const char* param, const char* arg, const char* contentType, uint32_t contentLength){
-    MWR_LOG_DEBUG("cmd {}, param {}, arg {}, ct {}, cl {}", cmd, param, arg, contentType, contentLength);
-    if(strcmp(cmd, "SD_Upload") == 0) {savefile(param, contentLength, contentType); // PC --> SD
-                                       if(strcmp(param, "/stations.json") == 0) staMgnt.updateStationsList();
-                                       return;}
+void WEBSRV_onRequest(ps_ptr<char> cmd,  ps_ptr<char> param, ps_ptr<char> arg, ps_ptr<char> contentType, uint32_t contentLength){
+    MWR_LOG_WARN("cmd: {}, param: {}, arg: {}, ct: {}, cl: {}", cmd, param, arg, contentType, contentLength);
+    if(cmd == "SD_Upload") { savefile(param, contentLength, contentType); // PC --> SD
+                                    if(param == "/stations.json") staMgnt.updateStationsList();
+                                    return;}
 
-    if(strcmp(cmd, "upload_player2sd") == 0) {savefile(param, contentLength, contentType); return; }
-    if(strcmp(cmd, "upload_text_file") == 0) {savefile(param, contentLength, contentType); return; }
-    if(strcmp(cmd, "uploadfile") == 0){saveImage(param, contentLength); return;}
+    if(cmd == "upload_player2sd") { savefile(param, contentLength, contentType); return; }
+    if(cmd == "upload_text_file") { savefile(param, contentLength, contentType); return; }
+    if(cmd == "uploadfile")       { saveImage(param.c_get(), contentLength); return; }
     printfln(s_tag.webserver, ANSI_ESC_RED "unknown HTMLcommand {}, param={}", cmd, param);
     webSrv.sendStatus(400);
 }
@@ -3773,6 +3773,9 @@ void on_websrv(const WebSrv::msg_s& msg) {
     if (msg.e == WebSrv::evt_error) { printfln(s_tag.webserver, ANSI_ESC_RED "{}", msg.arg); }
     if (msg.e == WebSrv::evt_warn) { printfln(s_tag.webserver, ANSI_ESC_YELLOW "{}", msg.arg); }
     if (msg.e == WebSrv::evt_command) { WEBSRV_onCommand(msg.cmd, msg.param1, msg.arg1); }
+    if (msg.e == WebSrv::evt_request) { WEBSRV_onRequest(msg.cmd, msg.param1, msg.arg1, msg.ct, msg.cl); }
+
+
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void kcx_bt_memItems(const char* jsonItems) { // Every time an item (name or address) was added, a JSON string is passed here

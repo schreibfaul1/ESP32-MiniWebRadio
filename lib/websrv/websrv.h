@@ -14,7 +14,7 @@
 #include "mbedtls/sha1.h"
 
 extern __attribute__((weak)) void WEBSRV_onCommand(const char* cmd, const String param, const String arg);
-extern __attribute__((weak)) void WEBSRV_onRequest(const char* cmd, const char* param, const char* arg, const char* contentType, uint32_t contentLength);
+
 extern __attribute__((weak)) void WEBSRV_onDelete(const char* cmd, const char* param, const char* arg);
 
 #define ANSI_ESC_RED "\033[31m"
@@ -32,7 +32,7 @@ class WebSrv {
 
     // callbacks ---------------------------------------------------------
   public:
-    typedef enum { evt_info = 0, evt_error, evt_warn, evt_command } event_t;
+    typedef enum { evt_info = 0, evt_error, evt_warn, evt_command, evt_request } event_t;
     struct msg_s {
         const char*  msg = nullptr;
         const char*  s = nullptr;
@@ -42,6 +42,8 @@ class WebSrv {
         ps_ptr<char> param1;
         ps_ptr<char> cmd;
         ps_ptr<char> arg1;
+        ps_ptr<char> ct;             // contentType
+        uint32_t     cl = 0;         // contentLength
         event_t      e = (event_t)0; // event type
     };
 
@@ -82,7 +84,7 @@ class WebSrv {
     upload_items m_upload_items;
 
     struct HttpRequest {
-        enum class Method { Unknown, GET, POST, DELETE_ };
+        enum class Method { Unknown, GET, POST, DELETE };
 
         Method       method = Method::Unknown;
         ps_ptr<char> cmd;

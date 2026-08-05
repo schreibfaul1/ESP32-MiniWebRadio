@@ -794,25 +794,22 @@ bool WebSrv::parseRequestLine(const ps_ptr<char>& line, HttpRequest& req) {
     // DELETE /SD/?%2Faudiofiles%2F18.5KHz%200.8.mp3&version=0.490788613908002 HTTP/1.1
 
     const char* p = line.c_get();
-    int         prefixLen = 0;
 
     if (line.starts_with("GET /")) {
         req.method = HttpRequest::Method::GET;
-        prefixLen = 5;
     } else if (line.starts_with("POST /")) {
         req.method = HttpRequest::Method::POST;
-        prefixLen = 6;
     } else if (line.starts_with("DELETE /")) {
-        req.method = HttpRequest::Method::DELETE_;
-        prefixLen = 8;
+        req.method = HttpRequest::Method::DELETE;
     } else
         return false;
 
-    int posHttp = line.index_of("HTTP/");
+    int posHttp = line.index_of(" HTTP/");
     if (posHttp < 0) {
         log_w("Request without HTTP?");
         return false;
     }
+    int posURI = line.index_of(" ") + 2;
 
     int posQuestion = line.index_of("?");
     int posAmpersand = line.index_of("&");
@@ -825,7 +822,7 @@ bool WebSrv::parseRequestLine(const ps_ptr<char>& line, HttpRequest& req) {
         cmdEnd = posAmpersand;
     }
 
-    req.cmd.copy_from(p + prefixLen, cmdEnd - prefixLen, true);
+    req.cmd.copy_from(p + posURI, cmdEnd - posURI, true);
 
     if (posQuestion >= 0) {
         int end = (posAmpersand >= 0) ? posAmpersand : posHttp;
@@ -840,6 +837,7 @@ bool WebSrv::parseRequestLine(const ps_ptr<char>& line, HttpRequest& req) {
 bool WebSrv::handlehttp() { // HTTPserver, message received
 
     uint32_t     contentLength = 0;
+    bool         requestParsed = false;
     ps_ptr<char> contentType;
 
     HttpRequest req;
@@ -849,9 +847,12 @@ bool WebSrv::handlehttp() { // HTTPserver, message received
     for (auto& line : header) { // read the header line for line
         // line.println();
 
-        if (parseRequestLine(line, req)) continue;
+        if (!requestParsed && parseRequestLine(line, req)) {
+            requestParsed = true;
+            continue;
+        }
 
-         if (line.starts_with("HTTP/")) { // HTTP status error code
+        if (line.starts_with("HTTP/")) { // HTTP status error code
             char statusCode[5];
             statusCode[0] = line[9];
             statusCode[1] = line[10];
@@ -876,7 +877,7 @@ bool WebSrv::handlehttp() { // HTTPserver, message received
         }
     }
 
-// lastToDo:
+    // lastToDo:
     WS_LOG_DEBUG("req.cmd: {}", req.cmd);
     req.cmd.urldecode();
     req.cmd.trim();
@@ -887,28 +888,36 @@ bool WebSrv::handlehttp() { // HTTPserver, message received
     req.arg.urldecode();
     req.arg.trim();
 
-    if (req.method == HttpRequest::Method::GET) {
-        if (!req.cmd.strlen()) req.cmd = "index.html";
-        if (req.cmd.starts_with("SD/")){ // special case: SD/logo/0N 90s.jpg ->  req.cmd = SD/    req.param = /logo/0N 90s.jpg
-            req.param = req.cmd.substr(2);
-            req.cmd = "SD/";
-        }
-        m_msg.e = evt_command;
-        m_msg.cmd = req.cmd;
-        m_msg.param1.assignf("{}", req.param);
-        m_msg.arg1.assignf("{}", req.arg);
-        if (m_websrv_callback) m_websrv_callback(m_msg);
-        if (WEBSRV_onCommand) WEBSRV_onCommand(req.cmd.c_get(), req.param.c_get(), req.arg.c_get());
-    }
-    if(req.method == HttpRequest::Method::POST){
-        m_msg.e = evt_info;
-        if (m_websrv_callback) m_websrv_callback(m_msg);
-        if (WEBSRV_onRequest) WEBSRV_onRequest(req.cmd.c_get(), req.param.c_get(), req.arg.c_get(), contentType.c_get(), contentLength);
-    }
-    if(req.method == HttpRequest::Method::DELETE_){
-        m_msg.e = evt_info;
-        if (m_websrv_callback) m_websrv_callback(m_msg);
-        if (WEBSRV_onDelete) WEBSRV_onDelete(req.cmd.c_get(), req.param.c_get(), req.arg.c_get());
+    switch (req.method) {
+        case HttpRequest::Method::GET:
+            if (!req.cmd.strlen()) req.cmd = "index.html";
+            if (req.cmd.starts_with("SD/")) { // special case: SD/logo/0N 90s.jpg ->  req.cmd = SD/    req.param = /logo/0N 90s.jpg
+                req.param = req.cmd.substr(2);
+                req.cmd = "SD/";
+            }
+            m_msg.e = evt_command;
+            m_msg.cmd = req.cmd;
+            m_msg.param1.assignf("{}", req.param);
+            m_msg.arg1.assignf("{}", req.arg);
+            if (m_websrv_callback) m_websrv_callback(m_msg);
+            if (WEBSRV_onCommand) WEBSRV_onCommand(req.cmd.c_get(), req.param.c_get(), req.arg.c_get());
+            break;
+        case HttpRequest::Method::POST:
+            m_msg.e = evt_request;
+            m_msg.cmd = req.cmd;
+            m_msg.param1 = req.param;
+            m_msg.arg1 = req.arg;
+            m_msg.ct = contentType;
+            m_msg.cl = contentLength;
+            if (m_websrv_callback) m_websrv_callback(m_msg);
+            break;
+        case HttpRequest::Method::DELETE:
+            m_msg.e = evt_info;
+            if (m_websrv_callback) m_websrv_callback(m_msg);
+            if (WEBSRV_onDelete) WEBSRV_onDelete(req.cmd.c_get(), req.param.c_get(), req.arg.c_get());
+            break;
+        case HttpRequest::Method::Unknown: break;
+        default: break;
     }
 
 exit:
