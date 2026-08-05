@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.0k - Jul 06, 2026                                                                                                               ";
+    Version 4.2.0l - Aug 05, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -3770,10 +3770,10 @@ void on_websrv(const WebSrv::msg_s& msg) {
         if (msg.arg.starts_with("Length")) return;         // suppress all file length infos
         printfln(s_tag.webserver, ANSI_ESC_GREEN "{} ", msg.arg.c_get());
     }
-    if (msg.e == WebSrv::evt_error) { printfln(s_tag.webserver, ANSI_ESC_RED "{}", msg.arg); }
-    if (msg.e == WebSrv::evt_warn) { printfln(s_tag.webserver, ANSI_ESC_YELLOW "{}", msg.arg); }
 
     // MWR_LOG_WARN("cmd: {}, param: {}, arg: {}", msg.cmd, msg.param, msg.arg);
+    if (msg.e == WebSrv::evt_error) { printfln(s_tag.webserver, ANSI_ESC_RED "{}", msg.arg); }
+    if (msg.e == WebSrv::evt_warn) { printfln(s_tag.webserver, ANSI_ESC_YELLOW "{}", msg.arg); }
     if (msg.e == WebSrv::evt_command) { WEBSRV_onCommand(msg.cmd, msg.param, msg.arg); }
     if (msg.e == WebSrv::evt_request) { WEBSRV_onRequest(msg.cmd, msg.param, msg.arg, msg.ct, msg.cl); }
     if (msg.e == WebSrv::evt_delete) { WEBSRV_onDelete(msg.cmd, msg.param, msg.arg); }
