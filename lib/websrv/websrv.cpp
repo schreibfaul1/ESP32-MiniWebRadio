@@ -9,9 +9,8 @@
 #include "websrv.h"
 #include "esp_memory_utils.h"
 //--------------------------------------------------------------------------------------------------------------
-WebSrv::WebSrv(String Name, String Version) {
-    _Name = Name;
-    _Version = Version;
+WebSrv::WebSrv() {
+    ; //
 }
 //--------------------------------------------------------------------------------------------------------------
 WebSrv::~WebSrv() {
@@ -37,8 +36,7 @@ String WebSrv::calculateWebSocketResponseKey(String sec_WS_key) {
 }
 //--------------------------------------------------------------------------------------------------------------
 void WebSrv::printWebSocketHeader(String wsRespKey) {
-    String wsHeader = (String) "HTTP/1.1 101 Switching Protocols\r\n" + "Upgrade: websocket\r\n" + "Connection: Upgrade\r\n" + "Sec-WebSocket-Accept: " + wsRespKey + "\r\n" +
-                      "Access-Control-Allow-Origin: \r\n\r\n";
+    String wsHeader = (String) "HTTP/1.1 101 Switching Protocols\r\n" + "Upgrade: websocket\r\n" + "Connection: Upgrade\r\n" + "Sec-WebSocket-Accept: " + wsRespKey + "\r\n" + "Access-Control-Allow-Origin: \r\n\r\n";
     // "Sec-WebSocket-Protocol: chat\r\n\r\n";
     // log_i("wsheader %s", wsHeader.c_str());
     webSocketClient.print(wsHeader); // header sent
@@ -46,7 +44,7 @@ void WebSrv::printWebSocketHeader(String wsRespKey) {
 //--------------------------------------------------------------------------------------------------------------
 void WebSrv::show(const char* pagename, const char* MIMEType, int16_t len) {
     constexpr size_t TCP_CHUNK_SIZE = 4096; // optimal für WiFi/Ethernet
-    size_t pagelen = 0;
+    size_t           pagelen = 0;
 
     // --- Check whether source comes from PROGMEM ---
     bool isProgmem = !esp_ptr_in_dram(pagename);
@@ -57,33 +55,29 @@ void WebSrv::show(const char* pagename, const char* MIMEType, int16_t len) {
     else if (len > 0)
         pagelen = len;
 
-  // --- Skip leading newlines ---
+    // --- Skip leading newlines ---
     while (pagelen && (isProgmem ? pgm_read_byte(pagename) : *pagename) == '\n') {
         ++pagename;
         --pagelen;
     }
 
     // --- HTTP Header ---
-    String header;
+    ps_ptr<char> header;
     header.reserve(160);
-    header += F("HTTP/1.1 200 OK\r\n"
-                "Connection: close\r\n"
-                "Cache-Control: max-age=86400\r\n");
-    header += F("Content-Type: ");
-    header += MIMEType;
-    header += F("\r\nContent-Length: ");
-    header += String(pagelen);
-    header += F("\r\nServer: ");
-    header += _Name;
-    header += F("\r\nLast-Modified: ");
-    header += _Version;
-    header += F("\r\n\r\n");
+    header.assign("HTTP/1.1 200 OK\r\n");
+    header.append("Connection: close\r\n");
+    header.append("Cache-Control: max-age=86400\r\n");
+    header.appendf("Content-Type: {}\r\n", MIMEType);
+    header.appendf("Content-Length: {}\r\n", pagelen);
+    header.appendf("Server: {}\r\n", m_name);
+    header.appendf("Last-Modified: {}\r\n", m_version);
+    header.append("\r\n");
 
-    cmdclient.print(header);
+    cmdclient.print(header.c_get());
 
     if (m_websrv_callback) {
         m_msg.e = evt_info;
-        m_msg.arg.assignf("{} {} {}",  isProgmem ? "PROGMEM" : "RAM", ", page length:", pagelen);
+        m_msg.arg.assignf("{} {} {}", isProgmem ? "PROGMEM" : "RAM", ", page length:", pagelen);
         m_websrv_callback(m_msg);
     }
 
@@ -92,9 +86,7 @@ void WebSrv::show(const char* pagename, const char* MIMEType, int16_t len) {
     while (sent < pagelen) {
         size_t chunk = std::min(TCP_CHUNK_SIZE, pagelen - sent);
 
-        size_t res = isProgmem
-                     ? cmdclient.write_P(pagename + sent, chunk)
-                     : cmdclient.write((const uint8_t*)pagename + sent, chunk);
+        size_t res = isProgmem ? cmdclient.write_P(pagename + sent, chunk) : cmdclient.write((const uint8_t*)pagename + sent, chunk);
 
         if (res != chunk) {
             m_msg.e = evt_error;
@@ -123,7 +115,7 @@ bool WebSrv::streamfile(fs::FS& fs, ps_ptr<char> path) { // transfer file from S
         if (m_websrv_callback) m_websrv_callback(m_msg);
         return false;
     } // guard
-    for (int i = 0; path[i] != '\0'; ++i) {  // Validate path for illegal characters
+    for (int i = 0; path[i] != '\0'; ++i) { // Validate path for illegal characters
         if (path[i] < 32) {
             m_msg.e = evt_info;
             m_msg.arg.assignf(ANSI_ESC_RED "Illegal character in path");
@@ -215,7 +207,7 @@ bool WebSrv::send(ps_ptr<char> cmd, ps_ptr<char> msg, uint8_t opcode) { // sends
         std::string combined = std::string(cmd.c_get(), cmdLen) + std::string(msg.c_get(), msgLen);
         sanitized = sanitize_utf8_replace(combined.c_str(), combined.size());
         cmdLen = sanitized.size();
-        msgLen = 0;  // alles in sanitized
+        msgLen = 0; // alles in sanitized
     }
 
     if (cmdLen + msgLen > UINT16_MAX) {
@@ -457,14 +449,14 @@ exit:
 */
 bool WebSrv::uploadfile(fs::FS& fs, ps_ptr<char> path, uint32_t contentLength, ps_ptr<char> contentType) {
     ps_ptr<char> msg;
-    File file;
-    uint32_t av;
-    int32_t  bytesInTransBuf = 0;
-    int32_t  startBoundaryEndPos = 0;
-    int32_t  startBoundaryLength = 0;
+    File         file;
+    uint32_t     av;
+    int32_t      bytesInTransBuf = 0;
+    int32_t      startBoundaryEndPos = 0;
+    int32_t      startBoundaryLength = 0;
     ps_ptr<char> transBuf;
     ps_ptr<char> startBoundary;
-    uint32_t t = 0;
+    uint32_t     t = 0;
     // m_upload_items.reset();
 
     // check whether multipart/form-data
@@ -481,7 +473,7 @@ bool WebSrv::uploadfile(fs::FS& fs, ps_ptr<char> path, uint32_t contentLength, p
 
     if (!multipart) {
         // === simple Upload (no boundaries, e.g. json, text, binary) ===
-        uint8_t buffer[1024];
+        uint8_t  buffer[1024];
         uint32_t bytesRemaining = contentLength;
         uint32_t bytesRead = 0;
         uint32_t totalWritten = 0;
@@ -563,8 +555,7 @@ bool WebSrv::uploadfile(fs::FS& fs, ps_ptr<char> path, uint32_t contentLength, p
         m_upload_items.uploadfile = file;
         m_upload_items.bytes_left = contentLength - startBoundaryEndPos;
 
-        int written = file.write((uint8_t*)transBuf.get() + startBoundaryEndPos,
-                                 bytesInTransBuf - startBoundaryEndPos);
+        int written = file.write((uint8_t*)transBuf.get() + startBoundaryEndPos, bytesInTransBuf - startBoundaryEndPos);
         if (written > 0) m_upload_items.bytes_left -= written;
         m_handle_upload = true;
         break;
@@ -636,12 +627,15 @@ void WebSrv::handle_upload_file() {
 }
 
 //--------------------------------------------------------------------------------------------------------------
-void WebSrv::begin(uint16_t http_port, uint16_t websocket_port) {
+void WebSrv::begin(uint16_t http_port, uint16_t websocket_port, ps_ptr<char> name, ps_ptr<char> version) {
+    m_name = name;
+    m_version = version;
     method = HTTP_NONE;
     cmdserver.stop();
     cmdserver.begin(http_port);
     webSocketServer.stop();
     webSocketServer.begin(websocket_port);
+    m_httpRespHdrBuff.alloc(4096, "m_httpRespHdrBuff"); // enough space to store http response header
 }
 //--------------------------------------------------------------------------------------------------------------
 void WebSrv::stop() {
@@ -695,236 +689,247 @@ const char* WebSrv::getContentType(ps_ptr<char>& filename) {
         return "text/csv";
     return "text/plain";
 }
-//--------------------------------------------------------------------------------------------------------------
+
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+int32_t WebSrv::webFileRead() {
+    int res = cmdclient.read();
+    return res;
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+int32_t WebSrv::webFileRead(uint16_t timeout_ms) {
+    int32_t  res = -1;
+    uint32_t timeout = millis() + timeout_ms;
+
+    while (true) {
+        res = webFileRead();
+        if (res >= 0) break;
+        if (timeout < millis()) {
+            WS_LOG_ERROR("timeout");
+            return -1;
+        }
+        vTaskDelay(10);
+    }
+    return res;
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+int32_t WebSrv::webFileRead(uint8_t* buff, size_t len) {
+    if (buff && len == 0) return 0; // nothing to do
+    int32_t  readed_bytes = 0;
+    uint32_t offset = 0;
+    int      res = -1;
+
+    // read len
+    readed_bytes = cmdclient.read(buff + offset, len);
+    if (readed_bytes > 0) {
+        len -= readed_bytes;
+        offset += readed_bytes;
+        res = offset;
+    }
+    return res;
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+int32_t WebSrv::webFileRead(uint8_t* buff, size_t len, uint16_t timeout_ms) {
+
+    uint32_t timeout = millis() + timeout_ms;
+    int32_t  bytes_has_read = 0;
+    while (bytes_has_read < len) {
+        int32_t res = webFileRead(buff + bytes_has_read, len - bytes_has_read);
+        if (res <= 0) { vTaskDelay(10); }
+        if (res > 0) { bytes_has_read += res; }
+        if (timeout < millis()) {
+            WS_LOG_ERROR("timeout, len: {} != bytes_has_read: {}", len, bytes_has_read);
+            return -1;
+        }
+        WS_LOG_DEBUG("buffFillValue {}, res {}, bytes_has_read {}", len, res, bytes_has_read);
+    }
+    WS_LOG_DEBUG("len: {} != bytes_has_read: {}", len, bytes_has_read);
+    return bytes_has_read;
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+std::vector<ps_ptr<char>> WebSrv::readHeader() {
+
+    uint16_t                  pos = 0;
+    std::vector<ps_ptr<char>> hdr_lines;
+    m_httpRespHdrBuff.clear();
+
+    while (true) { // read the header first and store it in m_httpRespHdrBuff
+        int c = webFileRead(5000);
+        if (c < 0) {
+            WS_LOG_ERROR("timeout");
+            hdr_lines.clear();
+            return hdr_lines;
+        }
+
+        if (pos >= m_httpRespHdrBuff.size() - 1) {
+            WS_LOG_WARN("responseHeaderline overflow");
+            m_httpRespHdrBuff[pos] = '\0';
+            break;
+        }
+        m_httpRespHdrBuff[pos++] = c;
+        if (m_httpRespHdrBuff.ends_with("\r\n\r\n") || m_httpRespHdrBuff.ends_with("\n\n")) break;
+    }
+
+    pos = 0;
+
+    while (true) { // m_httpRespHdrBuff -> vec hdr_lines
+        int idx = m_httpRespHdrBuff.index_of('\n', pos);
+        if (idx < 0) break;
+        ps_ptr<char> line = m_httpRespHdrBuff.substr(pos, idx - pos);
+        line.remove_chars("\r");
+        if (line.valid()) hdr_lines.push_back(std::move(line));
+        pos = idx + 1;
+    }
+    return hdr_lines;
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+bool WebSrv::parseRequestLine(const ps_ptr<char>& line, HttpRequest& req) {
+    /*
+        GET /SD_GetFolder?%2Faudiofiles&version=0.4853 HTTP/1.1
+        ^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^
+        Verb                URI                      HTTP-Version
+    */
+
+    // GET /SD_GetFolder?%2Faudiofiles&version=0.48530939860954614 HTTP/1.1
+    // POST /upload_player2sd?/audiofiles/18KHz%200.8.mp3&version=0.9314935613984026 HTTP/1.1
+    // DELETE /SD/?%2Faudiofiles%2F18.5KHz%200.8.mp3&version=0.490788613908002 HTTP/1.1
+
+    const char* p = line.c_get();
+
+    if (line.starts_with("GET /")) {
+        req.method = HttpRequest::Method::GET;
+    } else if (line.starts_with("POST /")) {
+        req.method = HttpRequest::Method::POST;
+    } else if (line.starts_with("DELETE /")) {
+        req.method = HttpRequest::Method::DELETE;
+    } else
+        return false;
+
+    int posHttp = line.index_of(" HTTP/");
+    if (posHttp < 0) {
+        log_w("Request without HTTP?");
+        return false;
+    }
+    int posURI = line.index_of(" ") + 2;
+
+    int posQuestion = line.index_of("?");
+    int posAmpersand = line.index_of("&");
+
+    int cmdEnd = posHttp;
+
+    if (posQuestion >= 0) {
+        cmdEnd = posQuestion;
+    } else if (posAmpersand >= 0) {
+        cmdEnd = posAmpersand;
+    }
+
+    req.cmd.copy_from(p + posURI, cmdEnd - posURI, true);
+
+    if (posQuestion >= 0) {
+        int end = (posAmpersand >= 0) ? posAmpersand : posHttp;
+        req.param.copy_from(p + posQuestion + 1, end - posQuestion - 1, true);
+    }
+
+    if (posAmpersand >= 0) { req.arg.copy_from(p + posAmpersand + 1, posHttp - posAmpersand - 1, true); }
+
+    return true;
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool WebSrv::handlehttp() { // HTTPserver, message received
 
-    bool     method_GET = false;
-    bool     method_POST = false;
-    bool     method_DELETE = false;
-    int16_t  posColon = 0;
-    uint32_t ctime = millis();
-    uint32_t timeout = 4500; // ms
-    uint32_t contentLength = 0;
-    char     rhl[1024] = {0}; // requestHeaderline
-    char     http_cmd[1024] = {0};
-    char     http_param[1024] = {0};
-    char     http_arg[1024] = {0};
-    char     contentType[50] = {0};
+    uint32_t     contentLength = 0;
+    bool         requestParsed = false;
+    ps_ptr<char> contentType;
 
-    static uint32_t stime;
-    static bool     f_time = false;
-    if (cmdclient.available() == 0) {
-        if (!f_time) {
-            stime = millis();
-            f_time = true;
-        }
-        if ((millis() - stime) > timeout) {
-            log_e("timeout");
-            f_time = false;
-            return false;
-        }
-    }
-    f_time = false;
+    HttpRequest req;
+    auto        header = readHeader();
+    if (header.empty()) goto exit;
 
-    while (true) { // outer while
-        uint16_t pos = 0;
-        if ((millis() - ctime) > timeout) {
-            log_e("timeout");
-            goto exit;
-        }
-        if (!cmdclient.available()) goto exit;
+    for (auto& line : header) { // read the header line for line
+        // line.println();
 
-        while (cmdclient.available()) {
-            uint8_t b = cmdclient.read();
-            if (b == '\n') {
-                if (!pos) { // empty line received, is the last line of this responseHeader
-                    cmdClientAccept = false;
-                    goto lastToDo;
-                }
-                break;
-            }
-            if (b == '\r') rhl[pos] = 0;
-            if (b < 0x20) continue;
-            rhl[pos] = b;
-            pos++;
-            if (pos == 1023) {
-                pos = 510;
-                continue;
-            }
-            if (pos == 1022) {
-                rhl[pos] = '\0';
-                cmdclient.stop();
-                log_i("requestHeaderline overflow");
-            }
-        } // inner while
-
-        if (!pos) {
-            vTaskDelay(1);
+        if (!requestParsed && parseRequestLine(line, req)) {
+            requestParsed = true;
             continue;
         }
-        // log_w("rhl %s", rhl);
 
-        posColon = indexOf(rhl, ":", 0); // lowercase all letters up to the colon
-        if (posColon >= 0) {
-            for (int i = 0; i < posColon; i++) { rhl[i] = toLowerCase(rhl[i]); }
-        }
-
-        if (startsWith(rhl, "HTTP/")) { // HTTP status error code
+        if (line.starts_with("HTTP/")) { // HTTP status error code
             char statusCode[5];
-            statusCode[0] = rhl[9];
-            statusCode[1] = rhl[10];
-            statusCode[2] = rhl[11];
+            statusCode[0] = line[9];
+            statusCode[1] = line[10];
+            statusCode[2] = line[11];
             statusCode[3] = '\0';
             int sc = atoi(statusCode);
             if (sc > 310) { // e.g. HTTP/1.1 301 Moved Permanently
-                log_e("%s", rhl);
+                log_e("%s", line);
                 goto exit;
             }
-        } else if (startsWith(rhl, "content-type:")) { // content-type: text/html; charset=UTF-8
-            // log_i("cT: %s", rhl);
-            int idx = indexOf(rhl + 13, ";");
-            if (idx > 0) rhl[13 + idx] = '\0';
-            strlcpy(contentType, rhl + 13, sizeof(contentType));
-            trim(contentType);
-        } else if (startsWith(rhl, "GET /")) {
-            method_GET = true;
-            int pos_http = indexOf(rhl, "HTTP/", 0);
-            int pos_question = indexOf(rhl, "?", 0);  // questionmark
-            int pos_ampersand = indexOf(rhl, "&", 0); // ampersand
-            if (pos_http == -1) {
-                log_w("GET without HTTP?");
-                goto exit;
-            }
+        }
 
-            // cmd between "GET /" and "?" or "HTTP"
-            int start_part1 = 5; // after "GET /"
-            int end_part1 = (pos_question != -1) ? pos_question : (pos_ampersand != -1) ? pos_ampersand : pos_http;
-            strncpy(http_cmd, rhl + start_part1, end_part1 - start_part1);
-
-            // param between "?" and "&" or HTTP, if "?" exists
-            if (pos_question != -1) {
-                int start_part2 = pos_question + 1;
-                int end_part2 = (pos_ampersand != -1) ? pos_ampersand : pos_http;
-                strncpy(http_param, rhl + start_part2, end_part2 - start_part2);
-            }
-
-            // arg between "&" and "HTTP" if "&" exists
-            if (pos_ampersand != -1) {
-                int start_part3 = pos_ampersand + 1;
-                strncpy(http_arg, rhl + start_part3, pos_http - start_part3);
-            }
-        } else if (startsWith(rhl, "POST /")) {
-            method_POST = true;
-            int pos_http = indexOf(rhl, "HTTP/", 0);
-            int pos_question = indexOf(rhl, "?", 0);  // questionmark
-            int pos_ampersand = indexOf(rhl, "&", 0); // ampersand
-            if (pos_http == -1) {
-                log_w("GET without HTTP?");
-                goto exit;
-            }
-
-            // cmd between "GET /" and "?" or "HTTP"
-            int start_part1 = 6; // after "GET /"
-            int end_part1 = (pos_question != -1) ? pos_question : pos_http;
-            strncpy(http_cmd, rhl + start_part1, end_part1 - start_part1);
-
-            // param between "?" and "&" or HTTP, if "?" exists
-            if (pos_question != -1) {
-                int start_part2 = pos_question + 1;
-                int end_part2 = (pos_ampersand != -1) ? pos_ampersand : pos_http;
-                strncpy(http_param, rhl + start_part2, end_part2 - start_part2);
-            }
-
-            // arg between "&" and "HTTP" if "&" exists
-            if (pos_ampersand != -1) {
-                int start_part3 = pos_ampersand + 1;
-                strncpy(http_arg, rhl + start_part3, pos_http - start_part3);
-            }
-        } else if (startsWith(rhl, "DELETE /")) {
-            method_DELETE = true;
-            int pos_http = indexOf(rhl, "HTTP/", 0);
-            int pos_question = indexOf(rhl, "?", 0);  // questionmark
-            int pos_ampersand = indexOf(rhl, "&", 0); // ampersand
-            if (pos_http == -1) {
-                log_w("GET without HTTP?");
-                goto exit;
-            }
-
-            // cmd between "GET /" and "?" or "HTTP"
-            int start_part1 = 8; // after "GET /"
-            int end_part1 = (pos_question != -1) ? pos_question : pos_http;
-            strncpy(http_cmd, rhl + start_part1, end_part1 - start_part1);
-
-            // param between "?" and "&" or HTTP, if "?" exists
-            if (pos_question != -1) {
-                int start_part2 = pos_question + 1;
-                int end_part2 = (pos_ampersand != -1) ? pos_ampersand : pos_http;
-                strncpy(http_param, rhl + start_part2, end_part2 - start_part2);
-            }
-
-            // arg between "&" and "HTTP" if "&" exists
-            if (pos_ampersand != -1) {
-                int start_part3 = pos_ampersand + 1;
-                strncpy(http_arg, rhl + start_part3, pos_http - start_part3);
-            }
-        } else if (startsWith(rhl, "content-length:")) {
-            const char* c_cl = (rhl + 15);
+        if (line.starts_with_icase("content-type:")) {
+            ps_ptr<char> value = line.substr(13);
+            value.truncate_at(';'); // content-type: text/html; charset=UTF-8
+            contentType = value;
+            contentType.trim();
+        }
+        if (line.starts_with_icase("content-length:")) {
+            const char* c_cl = (line + 15);
             contentLength = atoi(c_cl);
-
-        } else {
-            ;
         }
     }
 
-lastToDo:
-    if (method_GET) {
-        url_decode_in_place(http_cmd);
-        trim(http_cmd);
-        url_decode_in_place(http_param);
-        trim(http_param);
-        url_decode_in_place(http_arg);
-        trim(http_arg);
-        if (strlen(http_cmd) == 0) strcpy(http_cmd, "index.html");
-        if (startsWith(http_cmd, "SD/")) { // SD/logo/0N 90s.jpg ->  http_cmd = SD/    http_param = /logo/0N 90s.jpg
-            strcpy(http_param, http_cmd + 2);
-            http_cmd[3] = '\0';
-        }
-        m_msg.e = evt_command;
-        m_msg.cmd.assignf("{}", http_cmd);
-        m_msg.param1.assignf("{}", http_param);
-        m_msg.arg1.assignf("{}", http_arg);
-        if (m_websrv_callback) m_websrv_callback(m_msg);
-        if (WEBSRV_onCommand) WEBSRV_onCommand(http_cmd, http_param, http_arg);
+    // lastToDo:
+    WS_LOG_DEBUG("req.cmd: {}", req.cmd);
+    req.cmd.urldecode();
+    req.cmd.trim();
+
+    req.param.urldecode();
+    req.param.trim();
+
+    req.arg.urldecode();
+    req.arg.trim();
+
+    switch (req.method) {
+        case HttpRequest::Method::GET:
+            if (!req.cmd.strlen()) req.cmd = "index.html";
+            if (req.cmd.starts_with("SD/")) { // special case: SD/logo/0N 90s.jpg ->  req.cmd = SD/    req.param = /logo/0N 90s.jpg
+                req.param = req.cmd.substr(2);
+                req.cmd = "SD/";
+            }
+            m_msg.e = evt_command;
+            m_msg.cmd = req.cmd;
+            m_msg.param.assignf("{}", req.param);
+            m_msg.arg.assignf("{}", req.arg);
+            if (m_websrv_callback) m_websrv_callback(m_msg);
+            break;
+
+        case HttpRequest::Method::POST:
+            m_msg.e = evt_request;
+            m_msg.cmd = req.cmd;
+            m_msg.param = req.param;
+            m_msg.arg = req.arg;
+            m_msg.ct = contentType;
+            m_msg.cl = contentLength;
+            if (m_websrv_callback) m_websrv_callback(m_msg);
+            break;
+
+        case HttpRequest::Method::DELETE:
+            m_msg.e = evt_delete;
+            m_msg.cmd = req.cmd;
+            m_msg.param = req.param;
+            m_msg.arg = req.arg;
+            if (m_websrv_callback) m_websrv_callback(m_msg);
+            break;
+
+        case HttpRequest::Method::Unknown: break;
+
+        default: break;
     }
-    if (method_POST) {
-        url_decode_in_place(http_cmd);
-        trim(http_cmd);
-        url_decode_in_place(http_param);
-        trim(http_param);
-        url_decode_in_place(http_arg);
-        trim(http_arg);
-        m_msg.e = evt_info;
-        //    m_msg.arg = http_cmd;
-        if (m_websrv_callback) m_websrv_callback(m_msg);
-        if (WEBSRV_onRequest) WEBSRV_onRequest(http_cmd, http_param, http_arg, contentType, contentLength);
-    }
-    if (method_DELETE) {
-        url_decode_in_place(http_cmd);
-        trim(http_cmd);
-        url_decode_in_place(http_param);
-        trim(http_param);
-        url_decode_in_place(http_arg);
-        trim(http_arg);
-        m_msg.e = evt_info;
-        //    m_msg.arg = http_cmd;
-        if (m_websrv_callback) m_websrv_callback(m_msg);
-        if (WEBSRV_onDelete) WEBSRV_onDelete(http_cmd, http_param, http_arg);
-    }
+
 exit:
     cmdClientAccept = true;
     return true;
 }
-//--------------------------------------------------------------------------------------------------------------
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool WebSrv::handleWS() {    // Websocketserver, receive messages
     String currentLine = ""; // Build up to complete line
 
@@ -1023,10 +1028,9 @@ void WebSrv::parseWsMessage(uint32_t len) {
     if (opcode == 0x09) { // denotes a ping
         m_msg.e = evt_command;
         m_msg.cmd = "ping received, send pong";
-        m_msg.param1 = "";
-        m_msg.arg1 = "";
+        m_msg.param = "";
+        m_msg.arg = "";
         if (m_websrv_callback) m_websrv_callback(m_msg);
-        if (WEBSRV_onCommand) WEBSRV_onCommand("ping received, send pong", "", "");
         m_msg.e = evt_info;
         m_msg.arg = "ping received, send pong";
         if (m_websrv_callback) m_websrv_callback(m_msg);
@@ -1036,10 +1040,9 @@ void WebSrv::parseWsMessage(uint32_t len) {
     if (opcode == 0x0A) { // denotes a pong
         m_msg.e = evt_command;
         m_msg.cmd = "pong received";
-        m_msg.param1 = "";
-        m_msg.arg1 = "";
+        m_msg.param = "";
+        m_msg.arg = "";
         if (m_websrv_callback) m_websrv_callback(m_msg);
-        if (WEBSRV_onCommand) WEBSRV_onCommand("pong received", "", "");
         m_msg.e = evt_info;
         m_msg.arg = "pong received";
         if (m_websrv_callback) m_websrv_callback(m_msg);
@@ -1067,55 +1070,33 @@ void WebSrv::parseWsMessage(uint32_t len) {
         }
         msgBuff[pll] = '\0';
 
-        int pos1 = msgBuff.index_of('=');
-        int pos2 = msgBuff.index_of('&', pos1 + 1);
-        if (pos1 < 0) {
-            m_msg.cmd = msgBuff;
-            m_msg.param1.assign("");
-            m_msg.arg1.assign("");
-        } else if (pos2 < 0) {
-            m_msg.cmd = msgBuff.substr(0, pos1);
-            m_msg.param1 = msgBuff.substr(pos1 + 1);
-            m_msg.arg1.assign("");
-        } else {
-            m_msg.cmd = msgBuff.substr(0, pos1);
-            m_msg.param1 = msgBuff.substr(pos1 + 1, pos2 - pos1 - 1);
-            m_msg.arg1 = msgBuff.substr(pos2 + 1);
+        m_msg.cmd = msgBuff;
+        m_msg.param.assign("");
+        m_msg.arg.assign("");
+
+        int pos = m_msg.cmd.index_of('='); //  m_msg.cmd: "DLNA_getContent=4:cont1:20:0:0:&Musik  (6)"
+        if (pos != -1) {
+            m_msg.param = m_msg.cmd.substr(pos + 1); // m_msg.param1: "4:cont1:20:0:0:&Musik  (6)"
+            m_msg.cmd = m_msg.cmd.substr(0, pos);     // m_msg.cmd: "DLNA_getContent"
         }
+        pos = m_msg.param.index_of('&'); // m_msg.param1: "4:cont1:20:0:0:&Musik  (6)"
+        if (pos != -1) {
+            m_msg.arg = m_msg.param.substr(pos + 1);  // m_msg.arg1: "Musik  (6)"
+            m_msg.param = m_msg.param.substr(0, pos); // m_msg.param1; "4:cont1:20:0:0:"
+        }
+
+        WS_LOG_DEBUG("{}\ncmd: {}, param1: {}, arg1: {}", msgBuff, m_msg.cmd, m_msg.param, m_msg.arg);
+
         m_msg.e = evt_command;
         if (m_websrv_callback) m_websrv_callback(m_msg);
 
         m_msg.e = evt_info;
         m_msg.arg = msgBuff;
         if (m_websrv_callback) m_websrv_callback(m_msg);
-        const char* cmd = msgBuff.get();
-        const char* param = NULL;
-        const char* arg = NULL;
-        int32_t     idx1 = msgBuff.index_of('=');
-        if (idx1 > 0) {
-            msgBuff[idx1] = '\0';
-            const char* cmd = msgBuff.get();
-            int32_t     offset = idx1 + 1;
-            int32_t     idx2 = lastIndexOf(msgBuff.get() + offset, '&');
-            if (idx2 > 0) {
-                *(msgBuff.get() + offset + idx2) = '\0';
-                param = msgBuff.get() + offset;
-                arg = msgBuff.get() + offset + idx2 + 1;
-                if (WEBSRV_onCommand) WEBSRV_onCommand(cmd, param, arg);
-                goto exit;
-            } else {
-                param = msgBuff.get() + offset;
-                if (WEBSRV_onCommand) WEBSRV_onCommand(cmd, param, "");
-                goto exit;
-            }
-        } else {
-            if (WEBSRV_onCommand) WEBSRV_onCommand(cmd, "", "");
-            goto exit;
-        }
-        if (WEBSRV_onCommand) WEBSRV_onCommand((const char*)msgBuff.c_get(), "", "");
     } else {
-        log_e("opcode != 0x01");
+        WS_LOG_ERROR("opcode != 0x01");
     }
+
 exit:
     return;
 }
@@ -1171,23 +1152,23 @@ void WebSrv::reply(ps_ptr<char> response, const char* MIMEType, bool header) {
 void WebSrv::sendStatus(uint16_t HTTPstatusCode) {
     int32_t l = 0; // respunse length
     // HTTP header
-    String httpheader = "";
-    httpheader += "HTTP/1.1 " + String(HTTPstatusCode, 10) + "\r\n";
-    httpheader += "Connection: close\r\n";
-    httpheader += "Content-type: text/html\r\n";
-    httpheader += "Content-Length: " + String(l, 10) + "\r\n";
-    httpheader += "Server: " + _Name + "\r\n";
-    httpheader += "Cache-Control: max-age=3600\r\n";
-    httpheader += "Last-Modified: " + _Version + "\r\n\r\n";
-    cmdclient.print(httpheader); // header sent
+    ps_ptr<char> httpheader;
+    httpheader.assignf("HTTP/1.1 {}\r\n", HTTPstatusCode);
+    httpheader.append("Connection: close\r\n");
+    httpheader.append("Content-type: text/html\r\n");
+    httpheader.appendf("Content-Length: {}\r\n", l);
+    httpheader.appendf("Server: {}\r\n", m_name);
+    httpheader.append("Cache-Control: max-age=3600\r\n");
+    httpheader.appendf("Last-Modified: {}\r\n", m_version);
+    httpheader.append("\r\n");
+    cmdclient.print(httpheader.c_get()); // header sent
 }
 //--------------------------------------------------------------------------------------------------------------
 String WebSrv::UTF8toASCII(String str) {
     uint16_t i = 0;
     String   res = "";
-    char     tab[96] = {96,  173, 155, 156, 32,  157, 32,  32,  32,  32,  166, 174, 170, 32,  32,  32,  248, 241, 253, 32,  32,  230, 32,  250, 32, 32,  167, 175, 172, 171, 32, 168,
-                        32,  32,  32,  32,  142, 143, 146, 128, 32,  144, 32,  32,  32,  32,  32,  32,  32,  165, 32,  32,  32,  32,  153, 32,  32, 32,  32,  32,  154, 32,  32, 225,
-                        133, 160, 131, 32,  132, 134, 145, 135, 138, 130, 136, 137, 141, 161, 140, 139, 32,  164, 149, 162, 147, 32,  148, 246, 32, 151, 163, 150, 129, 32,  32, 152};
+    char     tab[96] = {96, 173, 155, 156, 32, 157, 32,  32, 32, 32, 166, 174, 170, 32, 32, 32,  248, 241, 253, 32, 32,  230, 32,  250, 32,  32,  167, 175, 172, 171, 32,  168, 32, 32,  32,  32,  142, 143, 146, 128, 32, 144, 32,  32,  32,  32, 32, 32,
+                        32, 165, 32,  32,  32, 32,  153, 32, 32, 32, 32,  32,  154, 32, 32, 225, 133, 160, 131, 32, 132, 134, 145, 135, 138, 130, 136, 137, 141, 161, 140, 139, 32, 164, 149, 162, 147, 32,  148, 246, 32, 151, 163, 150, 129, 32, 32, 152};
     while (str[i] != 0) {
         if (str[i] == 0xC2) { // compute unicode from utf8
             i++;
@@ -1227,26 +1208,17 @@ std::string WebSrv::sanitize_utf8_replace(const char* input, size_t len) {
             s++;
         }
         // 2-Byte Sequenz
-        else if ((c >> 5) == 0x6 &&
-                 s + 1 < end &&
-                 (s[1] & 0xC0) == 0x80) {
+        else if ((c >> 5) == 0x6 && s + 1 < end && (s[1] & 0xC0) == 0x80) {
             output.append(reinterpret_cast<const char*>(s), 2);
             s += 2;
         }
         // 3-Byte Sequenz
-        else if ((c >> 4) == 0xE &&
-                 s + 2 < end &&
-                 (s[1] & 0xC0) == 0x80 &&
-                 (s[2] & 0xC0) == 0x80) {
+        else if ((c >> 4) == 0xE && s + 2 < end && (s[1] & 0xC0) == 0x80 && (s[2] & 0xC0) == 0x80) {
             output.append(reinterpret_cast<const char*>(s), 3);
             s += 3;
         }
         // 4-Byte Sequenz
-        else if ((c >> 3) == 0x1E &&
-                 s + 3 < end &&
-                 (s[1] & 0xC0) == 0x80 &&
-                 (s[2] & 0xC0) == 0x80 &&
-                 (s[3] & 0xC0) == 0x80) {
+        else if ((c >> 3) == 0x1E && s + 3 < end && (s[1] & 0xC0) == 0x80 && (s[2] & 0xC0) == 0x80 && (s[3] & 0xC0) == 0x80) {
             output.append(reinterpret_cast<const char*>(s), 4);
             s += 4;
         }

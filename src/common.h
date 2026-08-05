@@ -250,9 +250,8 @@ struct releasedArg {
     int16_t      val2 = 0;
 };
 struct timecounter_s {
-    uint8_t timer = 0;
-    uint8_t factor = 2;
-    uint8_t tmp = 0;
+    float timer = 0;
+    float factor = 0;
 };
 struct irButtons {
     int16_t val;
@@ -416,10 +415,8 @@ int log_redirect_handler(const char* format, va_list args) {
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 // prototypes (main.cpp)
-bool         SD_MMC_exists(const char* path);
 boolean      defaultsettings();
 void         updateSettings();
-void         urldecode(char* str);
 void         fall_asleep();
 void         wake_up(int8_t state, int8_t substate);
 void         setRTC(ps_ptr<char> TZString);
@@ -432,7 +429,7 @@ ps_ptr<char> getStationName();
 ps_ptr<char> getLogoPath();
 void         webSrv_send_station_items();
 void         showFileLogo(int8_t state, int8_t subState);
-void         showPlayerFileName(const char* fname);
+void         showPlayerFileName(ps_ptr<char> fname);
 void         show_DLNA_FileName(const char* fname);
 void         showPlsFileNumber();
 void         showAudioFileNumber();
@@ -453,18 +450,20 @@ uint8_t      downvolume();
 uint8_t      upvolume();
 void         setStation(ps_ptr<char> url, ps_ptr<char> extension = {});
 void         setStation(uint16_t sta);
-const char*  getFlagPath(uint16_t station);
+ps_ptr<char> getFlagPath(uint16_t station);
 void         nextStation();
 void         prevStation();
 void         setStationByNumber(uint16_t staNr);
-
+void         WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg);
+void         WEBSRV_onRequest(ps_ptr<char> cmd,  ps_ptr<char> param, ps_ptr<char> arg, ps_ptr<char> contentType, uint32_t contentLength);
+void         WEBSRV_onDelete(ps_ptr<char> cmd,  ps_ptr<char> param, ps_ptr<char> arg);
 void         savefile(ps_ptr<char> fileName, uint32_t contentLength, ps_ptr<char> contenttype);
 void         setI2STone();
 ps_ptr<char> getI2STone();
 void         SD_playFile(ps_ptr<char> pathWoFileName, const char* fileName);
 void         SD_playFile(ps_ptr<char> path, uint32_t resumeFilePos = 0, bool showFN = true);
-bool         SD_rename(const char* src, const char* dest);
-bool         SD_newFolder(const char* folderPathName);
+bool         SD_rename(ps_ptr<char> src, ps_ptr<char> dest);
+bool         SD_newFolder(ps_ptr<char> folderPathName);
 bool         SD_delete(const char* itemPath);
 void         processPlaylist();
 void         changeState(int8_t state, int8_t subState);
@@ -779,8 +778,9 @@ inline void setupBacklight(int pin, uint32_t freq_hz) {
 
 inline void setTFTbrightness(uint8_t brightness, uint8_t bh1750Value) {
     extern bool s_f_sleeping;
+    extern uint8_t s_sleepMode;
     uint8_t     duty = std::min(brightness, bh1750Value);
-    if (s_f_sleeping) { duty = 0; }
+    if (s_f_sleeping && s_sleepMode == 0) { duty = 0; }
     if (BRIGHTNESS_INVERSION) { duty = 255 - duty; }
 
     if (TFT_BL >= 0) {

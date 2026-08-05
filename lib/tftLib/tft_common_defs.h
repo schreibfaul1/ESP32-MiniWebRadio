@@ -108,8 +108,20 @@ extern __attribute__((weak)) void tft_info(const char*);
     #define TFT_GARAMOND
 #endif
 
-#define TFT_ALIGN_RIGHT  (1)
-#define TFT_ALIGN_LEFT   (2)
-#define TFT_ALIGN_CENTER (3)
-#define TFT_ALIGN_TOP    (4)
-#define TFT_ALIGN_DOWN   (5)
+// #define TFT_ALIGN_RIGHT  (1)
+// #define TFT_ALIGN_LEFT   (2)
+// #define TFT_ALIGN_CENTER (3)
+// #define TFT_ALIGN_TOP    (4)
+// #define TFT_ALIGN_DOWN   (5)
+
+enum class HAlign : uint8_t {
+    Left,
+    Center,
+    Right
+};
+
+enum class VAlign : uint8_t {
+    Top,
+    Middle,
+    Bottom
+};

@@ -3,14 +3,15 @@
 #include "tft_structures.h"
 
 // predifined displays
-// #define SPI_DISPlAY 0                  //                    SPI display  320x240, 2.8inch,        ILI9341             XPT2046, ESP32-S3 or ESP32-P4
-// #define SPI_DISPLAY 2                  //                    SPI display  480x320, 3.5" od 4"      ILI9488 or ST7796,  XPT2046, ESP32-S3 or ESP32-P4
+
+// #define SPI_DISPLAY 1                  //                    SPI display  320x240, 2.8inch,        ILI9341             XPT2046, ESP32-S3 or ESP32-P4
+#define SPI_DISPLAY 2                  //                    SPI display  480x320, 3.5" od 4"      ILI9488 or ST7796,  XPT2046, ESP32-S3 or ESP32-P4
 // #define SPI_DISPLAY 3                  //                    SPI display  480x320, 3.5" od 4"      ILI9488 or ST7796,  FT6x63,  ESP32-S3 or ESP32-P4
 // #define ESP32_8048S070                 // Sunton             RGB display  800x480, 7",                                 GT911,   ESP32-S3 N16R8
 // #define ESP32_WZ8048C050               // Elecrow            RGB display  800x480, 5",                                 GT911,   ESP32-S3 N4R8
 // #define ESP32_DIS08070H                // Elecrow            RGB display  800x480, 7",                                 GT911,   ESP32-S3 N4R8
 // #define ESP32_S3_Touch_LCD7            // Waveshare          RGB display  800x480, 7",                                 GT911,   ESP32-S3 N8R8
-#define ESP32_P4_WIFI6_TOUCH_LCD7_7B   // Waveshare          DSI display 1024x600, 7",             EK97007,            GT911,   ESP32-P4 N32R32
+// #define ESP32_P4_WIFI6_TOUCH_LCD7_7B   // Waveshare          DSI display 1024x600, 7",             EK97007,            GT911,   ESP32-P4 N32R32
 // #define JC1060P470                     // Guition            DSI display  024x600, 7",             JD9165,             GT911,   ESP32-P4 N32R32
 // #define JC4880P443                     // Guition            DSI display  800x480, 4.3",           ST7701,             GT911,   ESP32-P4 N16R32
 // #define USER_DEFINED_DISPLAY           // Self configurated ESP32-S3 or ESP32-P4 devBoard with SPI display
@@ -22,8 +23,8 @@
 #define BRIGHTNESS_INVERSION 0        // (0) off (1) on
 #define TP_CONTROLLER        1        // (0)XPT2046 2.8", (1)XPT2046 3.5" or 4.0", (7)GT911, (8)FT6x63
 #define TP_ROTATION          2        // (0) none, (1) 90°CW, (2) 180°CW, (3) 270°CW
-#define TP_H_MIRROR          0        // (0) default, (1) mirror up <-> down
-#define TP_V_MIRROR          0        // (0) default, (1) mirror left <-> right
+#define TP_H_MIRROR          0        // (0) default, (1) mirror left <-> right
+#define TP_V_MIRROR          0        // (0) default, (1) mirror up <-> down
 #define I2S_COMM_FMT         0        // (0) MAX98357A PCM5102A CS4344, (1) LSBJ (Least Significant Bit Justified format) PT8211
 #define SDMMC_FREQUENCY      80000000 // 80000000 or 40000000 Hz
 #define FTP_USERNAME         "esp32"  // user name in FTP Client
@@ -99,17 +100,18 @@
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // 📌📌📌  DISPLAY [320x240] OR [480x320] TOUCHPAD-CONTROLLER XPT2046 OR FT6x36   📌📌📌
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
 #ifdef SPI_DISPLAY
     #undef TFT_CONTROLLER
     #undef TFT_ROTATION
     #undef TP_CONTROLLER
     #undef TP_ROTATION
     #undef DISPLAY_INVERSION
-    #if (SPI_DISPLAY == 0)
+    #if (SPI_DISPLAY == 1)
         #define TFT_CONTROLLER    0
         #define TFT_ROTATION      0
         #define TP_CONTROLLER     1
-        #define TP_ROTATION       0
+        #define TP_ROTATION       2
         #define DISPLAY_INVERSION 0
     #endif
     #if (SPI_DISPLAY == 2)
@@ -184,7 +186,7 @@
     #endif // CONFIG_IDF_TARGET_ESP32P4
 #endif
 
-// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // 📌📌📌  DISPLAY [800x480] ESP32-S3 SUNTON   📌📌📌
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 #if (CONFIG_IDF_TARGET_ESP32S3 == 1)
@@ -437,11 +439,11 @@ const Timing DSI_TIMING = {.h_res = 1024, .v_res = 600, .pixel_clock_mhz = 52, .
         #define I2S_LRC  4
         #define I2S_MCLK -1
 
-    // I2S onboard DAC ES8311
-    // #define I2S_DOUT  9 // ES8311 DSDIN
-    // #define I2S_BCLK 12 // ES8311 SCLK
-    // #define I2S_LRC  10 // ES8311 LRCK
-    // #define I2S_MCLK 13 // ES8311 MCLK
+        // I2S onboard DAC ES8311
+        // #define I2S_DOUT  9 // ES8311 DSDIN
+        // #define I2S_BCLK 12 // ES8311 SCLK
+        // #define I2S_LRC  10 // ES8311 LRCK
+        // #define I2S_MCLK 13 // ES8311 MCLK
 
         #define IR_PIN             5 // IR Receiver (if available)
         #define BT_EMITTER_RX      -1

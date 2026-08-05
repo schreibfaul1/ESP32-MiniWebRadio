@@ -2101,6 +2101,21 @@ uint8_t TFT_Base::JPEG_jd_decomp(JDEC* jd, uint8_t scale) {
     return rc;
 }
 
+bool TFT_Base::setFontByIndex(uint16_t fontIndex) {
+    if (fontIndex > 12) return false;
+    const uint8_t fontSize[] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66, 81, 96};
+    setFontSize(fontSize[fontIndex]);
+    return true;
+}
+
+uint8_t TFT_Base::getFontIndex() {
+    return m_current_font.font_index;
+}
+
+uint8_t TFT_Base::getMaxFontIndex() {
+    return m_current_font.max_font_index;
+}
+
 void TFT_Base::setFontSize(uint16_t font) {
 #define SET_FONT_DATA(CMAP, BITMAP, DSC)                  \
     do {                                                  \
@@ -2115,109 +2130,110 @@ void TFT_Base::setFontSize(uint16_t font) {
         m_current_font.lookup_table = CMAP->lookup_table; \
     } while (0)
 
+    int8_t fontIndex = -1;
+    // clang-format off
 #ifdef TFT_TIMES_NEW_ROMAN
     switch (font) {
-        case 15: SET_FONT_DATA(cmaps_Times15, glyph_bitmap_Times15, glyph_dsc_Times15); break;
-        case 16: SET_FONT_DATA(cmaps_Times16, glyph_bitmap_Times16, glyph_dsc_Times16); break;
-        case 18: SET_FONT_DATA(cmaps_Times18, glyph_bitmap_Times18, glyph_dsc_Times18); break;
-        case 21: SET_FONT_DATA(cmaps_Times21, glyph_bitmap_Times21, glyph_dsc_Times21); break;
-        case 25:
-            SET_FONT_DATA(cmaps_Times25, glyph_bitmap_Times25, glyph_dsc_Times25);
-            m_current_font.lookup_table = cmaps_Times15->lookup_table;
-            break;
-        case 27: SET_FONT_DATA(cmaps_Times27, glyph_bitmap_Times27, glyph_dsc_Times27); break;
-        case 34: SET_FONT_DATA(cmaps_Times34, glyph_bitmap_Times34, glyph_dsc_Times34); break;
-        case 38: SET_FONT_DATA(cmaps_Times38, glyph_bitmap_Times38, glyph_dsc_Times38); break;
-        case 43: SET_FONT_DATA(cmaps_Times43, glyph_bitmap_Times43, glyph_dsc_Times43); break;
-        case 56: SET_FONT_DATA(cmaps_Times56, glyph_bitmap_Times56, glyph_dsc_Times56); break;
-        case 66: SET_FONT_DATA(cmaps_Times66, glyph_bitmap_Times66, glyph_dsc_Times66); break;
-        case 81: SET_FONT_DATA(cmaps_Times81, glyph_bitmap_Times81, glyph_dsc_Times81); break;
-        case 96: SET_FONT_DATA(cmaps_Times96, glyph_bitmap_Times96, glyph_dsc_Times96); break;
-        case 156: SET_FONT_DATA(cmaps_BigNumbers, glyph_bitmap_BiGNumbers, glyph_dsc_BigNumbers); break;
-        default: log_e("unknown font size for Times New Roman, size is %i", font); break;
+        case 15: SET_FONT_DATA(cmaps_Times15, glyph_bitmap_Times15, glyph_dsc_Times15); fontIndex = 0; break;
+        case 16: SET_FONT_DATA(cmaps_Times16, glyph_bitmap_Times16, glyph_dsc_Times16); fontIndex = 1; break;
+        case 18: SET_FONT_DATA(cmaps_Times18, glyph_bitmap_Times18, glyph_dsc_Times18); fontIndex = 2; break;
+        case 21: SET_FONT_DATA(cmaps_Times21, glyph_bitmap_Times21, glyph_dsc_Times21); fontIndex = 3; break;
+        case 25: SET_FONT_DATA(cmaps_Times25, glyph_bitmap_Times25, glyph_dsc_Times25); fontIndex = 4; break;
+        case 27: SET_FONT_DATA(cmaps_Times27, glyph_bitmap_Times27, glyph_dsc_Times27); fontIndex = 5; break;
+        case 34: SET_FONT_DATA(cmaps_Times34, glyph_bitmap_Times34, glyph_dsc_Times34); fontIndex = 6; break;
+        case 38: SET_FONT_DATA(cmaps_Times38, glyph_bitmap_Times38, glyph_dsc_Times38); fontIndex = 7; break;
+        case 43: SET_FONT_DATA(cmaps_Times43, glyph_bitmap_Times43, glyph_dsc_Times43); fontIndex = 8; break;
+        case 56: SET_FONT_DATA(cmaps_Times56, glyph_bitmap_Times56, glyph_dsc_Times56); fontIndex = 9; break;
+        case 66: SET_FONT_DATA(cmaps_Times66, glyph_bitmap_Times66, glyph_dsc_Times66); fontIndex = 10; break;
+        case 81: SET_FONT_DATA(cmaps_Times81, glyph_bitmap_Times81, glyph_dsc_Times81); fontIndex = 11; break;
+        case 96: SET_FONT_DATA(cmaps_Times96, glyph_bitmap_Times96, glyph_dsc_Times96); fontIndex = 12; break;
+        default: break;
     }
 #endif
 
 #ifdef TFT_GARAMOND
     switch (font) {
-        case 15: SET_FONT_DATA(cmaps_Garamond15, glyph_bitmap_Garamond15, glyph_dsc_Garamond15); break;
-        case 16: SET_FONT_DATA(cmaps_Garamond16, glyph_bitmap_Garamond16, glyph_dsc_Garamond16); break;
-        case 18: SET_FONT_DATA(cmaps_Garamond18, glyph_bitmap_Garamond18, glyph_dsc_Garamond18); break;
-        case 21: SET_FONT_DATA(cmaps_Garamond21, glyph_bitmap_Garamond21, glyph_dsc_Garamond21); break;
-        case 25: SET_FONT_DATA(cmaps_Garamond25, glyph_bitmap_Garamond25, glyph_dsc_Garamond25); break;
-        case 27: SET_FONT_DATA(cmaps_Garamond27, glyph_bitmap_Garamond27, glyph_dsc_Garamond27); break;
-        case 34: SET_FONT_DATA(cmaps_Garamond34, glyph_bitmap_Garamond34, glyph_dsc_Garamond34); break;
-        case 38: SET_FONT_DATA(cmaps_Garamond38, glyph_bitmap_Garamond38, glyph_dsc_Garamond38); break;
-        case 43: SET_FONT_DATA(cmaps_Garamond43, glyph_bitmap_Garamond43, glyph_dsc_Garamond43); break;
-        case 56: SET_FONT_DATA(cmaps_Garamond56, glyph_bitmap_Garamond56, glyph_dsc_Garamond56); break;
-        case 66: SET_FONT_DATA(cmaps_Garamond66, glyph_bitmap_Garamond66, glyph_dsc_Garamond66); break;
-        case 81: SET_FONT_DATA(cmaps_Garamond81, glyph_bitmap_Garamond81, glyph_dsc_Garamond81); break;
-        case 96: SET_FONT_DATA(cmaps_Garamond96, glyph_bitmap_Garamond96, glyph_dsc_Garamond96); break;
-        case 156: SET_FONT_DATA(cmaps_BigNumbers, glyph_bitmap_BiGNumbers, glyph_dsc_BigNumbers); break;
+        case 15: SET_FONT_DATA(cmaps_Garamond15, glyph_bitmap_Garamond15, glyph_dsc_Garamond15); fontIndex = 0; break;
+        case 16: SET_FONT_DATA(cmaps_Garamond16, glyph_bitmap_Garamond16, glyph_dsc_Garamond16); fontIndex = 1; break;
+        case 18: SET_FONT_DATA(cmaps_Garamond18, glyph_bitmap_Garamond18, glyph_dsc_Garamond18); fontIndex = 2; break;
+        case 21: SET_FONT_DATA(cmaps_Garamond21, glyph_bitmap_Garamond21, glyph_dsc_Garamond21); fontIndex = 3; break;
+        case 25: SET_FONT_DATA(cmaps_Garamond25, glyph_bitmap_Garamond25, glyph_dsc_Garamond25); fontIndex = 4; break;
+        case 27: SET_FONT_DATA(cmaps_Garamond27, glyph_bitmap_Garamond27, glyph_dsc_Garamond27); fontIndex = 5; break;
+        case 34: SET_FONT_DATA(cmaps_Garamond34, glyph_bitmap_Garamond34, glyph_dsc_Garamond34); fontIndex = 6; break;
+        case 38: SET_FONT_DATA(cmaps_Garamond38, glyph_bitmap_Garamond38, glyph_dsc_Garamond38); fontIndex = 7; break;
+        case 43: SET_FONT_DATA(cmaps_Garamond43, glyph_bitmap_Garamond43, glyph_dsc_Garamond43); fontIndex = 8; break;
+        case 56: SET_FONT_DATA(cmaps_Garamond56, glyph_bitmap_Garamond56, glyph_dsc_Garamond56); fontIndex = 9; break;
+        case 66: SET_FONT_DATA(cmaps_Garamond66, glyph_bitmap_Garamond66, glyph_dsc_Garamond66); fontIndex = 10; break;
+        case 81: SET_FONT_DATA(cmaps_Garamond81, glyph_bitmap_Garamond81, glyph_dsc_Garamond81); fontIndex = 11; break;
+        case 96: SET_FONT_DATA(cmaps_Garamond96, glyph_bitmap_Garamond96, glyph_dsc_Garamond96); fontIndex = 12; break;
         default: break;
     }
 #endif
 
 #ifdef TFT_FREE_SERIF_ITALIC
     switch (font) {
-        case 15: SET_FONT_DATA(cmaps_FreeSerifItalic15, glyph_bitmap_FreeSerifItalic15, glyph_dsc_FreeSerifItalic15); break;
-        case 16: SET_FONT_DATA(cmaps_FreeSerifItalic16, glyph_bitmap_FreeSerifItalic16, glyph_dsc_FreeSerifItalic16); break;
-        case 18: SET_FONT_DATA(cmaps_FreeSerifItalic18, glyph_bitmap_FreeSerifItalic18, glyph_dsc_FreeSerifItalic18); break;
-        case 21: SET_FONT_DATA(cmaps_FreeSerifItalic21, glyph_bitmap_FreeSerifItalic21, glyph_dsc_FreeSerifItalic21); break;
-        case 25: SET_FONT_DATA(cmaps_FreeSerifItalic25, glyph_bitmap_FreeSerifItalic25, glyph_dsc_FreeSerifItalic25); break;
-        case 27: SET_FONT_DATA(cmaps_FreeSerifItalic27, glyph_bitmap_FreeSerifItalic27, glyph_dsc_FreeSerifItalic27); break;
-        case 34: SET_FONT_DATA(cmaps_FreeSerifItalic34, glyph_bitmap_FreeSerifItalic34, glyph_dsc_FreeSerifItalic34); break;
-        case 38: SET_FONT_DATA(cmaps_FreeSerifItalic38, glyph_bitmap_FreeSerifItalic38, glyph_dsc_FreeSerifItalic38); break;
-        case 43: SET_FONT_DATA(cmaps_FreeSerifItalic43, glyph_bitmap_FreeSerifItalic43, glyph_dsc_FreeSerifItalic43); break;
-        case 56: SET_FONT_DATA(cmaps_FreeSerifItalic56, glyph_bitmap_FreeSerifItalic56, glyph_dsc_FreeSerifItalic56); break;
-        case 66: SET_FONT_DATA(cmaps_FreeSerifItalic66, glyph_bitmap_FreeSerifItalic66, glyph_dsc_FreeSerifItalic66); break;
-        case 81: SET_FONT_DATA(cmaps_FreeSerifItalic81, glyph_bitmap_FreeSerifItalic81, glyph_dsc_FreeSerifItalic81); break;
-        case 96: SET_FONT_DATA(cmaps_FreeSerifItalic96, glyph_bitmap_FreeSerifItalic96, glyph_dsc_FreeSerifItalic96); break;
-        case 156: SET_FONT_DATA(cmaps_BigNumbers, glyph_bitmap_BiGNumbers, glyph_dsc_BigNumbers); break;
+        case 15: SET_FONT_DATA(cmaps_FreeSerifItalic15, glyph_bitmap_FreeSerifItalic15, glyph_dsc_FreeSerifItalic15); fontIndex = 0; break;
+        case 16: SET_FONT_DATA(cmaps_FreeSerifItalic16, glyph_bitmap_FreeSerifItalic16, glyph_dsc_FreeSerifItalic16); fontIndex = 1; break;
+        case 18: SET_FONT_DATA(cmaps_FreeSerifItalic18, glyph_bitmap_FreeSerifItalic18, glyph_dsc_FreeSerifItalic18); fontIndex = 2; break;
+        case 21: SET_FONT_DATA(cmaps_FreeSerifItalic21, glyph_bitmap_FreeSerifItalic21, glyph_dsc_FreeSerifItalic21); fontIndex = 3; break;
+        case 25: SET_FONT_DATA(cmaps_FreeSerifItalic25, glyph_bitmap_FreeSerifItalic25, glyph_dsc_FreeSerifItalic25); fontIndex = 4; break;
+        case 27: SET_FONT_DATA(cmaps_FreeSerifItalic27, glyph_bitmap_FreeSerifItalic27, glyph_dsc_FreeSerifItalic27); fontIndex = 5; break;
+        case 34: SET_FONT_DATA(cmaps_FreeSerifItalic34, glyph_bitmap_FreeSerifItalic34, glyph_dsc_FreeSerifItalic34); fontIndex = 6; break;
+        case 38: SET_FONT_DATA(cmaps_FreeSerifItalic38, glyph_bitmap_FreeSerifItalic38, glyph_dsc_FreeSerifItalic38); fontIndex = 7; break;
+        case 43: SET_FONT_DATA(cmaps_FreeSerifItalic43, glyph_bitmap_FreeSerifItalic43, glyph_dsc_FreeSerifItalic43); fontIndex = 8; break;
+        case 56: SET_FONT_DATA(cmaps_FreeSerifItalic56, glyph_bitmap_FreeSerifItalic56, glyph_dsc_FreeSerifItalic56); fontIndex = 9; break;
+        case 66: SET_FONT_DATA(cmaps_FreeSerifItalic66, glyph_bitmap_FreeSerifItalic66, glyph_dsc_FreeSerifItalic66); fontIndex = 10; break;
+        case 81: SET_FONT_DATA(cmaps_FreeSerifItalic81, glyph_bitmap_FreeSerifItalic81, glyph_dsc_FreeSerifItalic81); fontIndex = 11; break;
+        case 96: SET_FONT_DATA(cmaps_FreeSerifItalic96, glyph_bitmap_FreeSerifItalic96, glyph_dsc_FreeSerifItalic96); fontIndex = 12; break;
         default: break;
     }
 #endif
 
 #ifdef TFT_ARIAL
     switch (font) {
-        case 15: SET_FONT_DATA(cmaps_Arial15, glyph_bitmap_Arial15, glyph_dsc_Arial15); break;
-        case 16: SET_FONT_DATA(cmaps_Arial16, glyph_bitmap_Arial16, glyph_dsc_Arial16); break;
-        case 18: SET_FONT_DATA(cmaps_Arial18, glyph_bitmap_Arial18, glyph_dsc_Arial18); break;
-        case 21: SET_FONT_DATA(cmaps_Arial21, glyph_bitmap_Arial21, glyph_dsc_Arial21); break;
-        case 25: SET_FONT_DATA(cmaps_Arial25, glyph_bitmap_Arial25, glyph_dsc_Arial25); break;
-        case 27: SET_FONT_DATA(cmaps_Arial27, glyph_bitmap_Arial27, glyph_dsc_Arial27); break;
-        case 34: SET_FONT_DATA(cmaps_Arial34, glyph_bitmap_Arial34, glyph_dsc_Arial34); break;
-        case 38: SET_FONT_DATA(cmaps_Arial38, glyph_bitmap_Arial38, glyph_dsc_Arial38); break;
-        case 43: SET_FONT_DATA(cmaps_Arial43, glyph_bitmap_Arial43, glyph_dsc_Arial43); break;
-        case 56: SET_FONT_DATA(cmaps_Arial56, glyph_bitmap_Arial56, glyph_dsc_Arial56); break;
-        case 66: SET_FONT_DATA(cmaps_Arial66, glyph_bitmap_Arial66, glyph_dsc_Arial66); break;
-        case 81: SET_FONT_DATA(cmaps_Arial81, glyph_bitmap_Arial81, glyph_dsc_Arial81); break;
-        case 96: SET_FONT_DATA(cmaps_Arial96, glyph_bitmap_Arial96, glyph_dsc_Arial96); break;
-        case 156: SET_FONT_DATA(cmaps_BigNumbers, glyph_bitmap_BiGNumbers, glyph_dsc_BigNumbers); break;
+        case 15: SET_FONT_DATA(cmaps_Arial15, glyph_bitmap_Arial15, glyph_dsc_Arial15); fontIndex = 0; break;
+        case 16: SET_FONT_DATA(cmaps_Arial16, glyph_bitmap_Arial16, glyph_dsc_Arial16); fontIndex = 1; break;
+        case 18: SET_FONT_DATA(cmaps_Arial18, glyph_bitmap_Arial18, glyph_dsc_Arial18); fontIndex = 2; break;
+        case 21: SET_FONT_DATA(cmaps_Arial21, glyph_bitmap_Arial21, glyph_dsc_Arial21); fontIndex = 3; break;
+        case 25: SET_FONT_DATA(cmaps_Arial25, glyph_bitmap_Arial25, glyph_dsc_Arial25); fontIndex = 4; break;
+        case 27: SET_FONT_DATA(cmaps_Arial27, glyph_bitmap_Arial27, glyph_dsc_Arial27); fontIndex = 5; break;
+        case 34: SET_FONT_DATA(cmaps_Arial34, glyph_bitmap_Arial34, glyph_dsc_Arial34); fontIndex = 6; break;
+        case 38: SET_FONT_DATA(cmaps_Arial38, glyph_bitmap_Arial38, glyph_dsc_Arial38); fontIndex = 7; break;
+        case 43: SET_FONT_DATA(cmaps_Arial43, glyph_bitmap_Arial43, glyph_dsc_Arial43); fontIndex = 8; break;
+        case 56: SET_FONT_DATA(cmaps_Arial56, glyph_bitmap_Arial56, glyph_dsc_Arial56); fontIndex = 9; break;
+        case 66: SET_FONT_DATA(cmaps_Arial66, glyph_bitmap_Arial66, glyph_dsc_Arial66); fontIndex = 10; break;
+        case 81: SET_FONT_DATA(cmaps_Arial81, glyph_bitmap_Arial81, glyph_dsc_Arial81); fontIndex = 11; break;
+        case 96: SET_FONT_DATA(cmaps_Arial96, glyph_bitmap_Arial96, glyph_dsc_Arial96); fontIndex = 12; break;
         default: break;
     }
 #endif
 
 #ifdef TFT_Z003
     switch (font) {
-        case 15: SET_FONT_DATA(cmaps_Z003_15, glyph_bitmap_Z003_15, glyph_dsc_Z003_15); break;
-        case 16: SET_FONT_DATA(cmaps_Z003_16, glyph_bitmap_Z003_16, glyph_dsc_Z003_16); break;
-        case 18: SET_FONT_DATA(cmaps_Z003_18, glyph_bitmap_Z003_18, glyph_dsc_Z003_18); break;
-        case 21: SET_FONT_DATA(cmaps_Z003_21, glyph_bitmap_Z003_21, glyph_dsc_Z003_21); break;
-        case 25: SET_FONT_DATA(cmaps_Z003_25, glyph_bitmap_Z003_25, glyph_dsc_Z003_25); break;
-        case 27: SET_FONT_DATA(cmaps_Z003_27, glyph_bitmap_Z003_27, glyph_dsc_Z003_27); break;
-        case 34: SET_FONT_DATA(cmaps_Z003_34, glyph_bitmap_Z003_34, glyph_dsc_Z003_34); break;
-        case 38: SET_FONT_DATA(cmaps_Z003_38, glyph_bitmap_Z003_38, glyph_dsc_Z003_38); break;
-        case 43: SET_FONT_DATA(cmaps_Z003_43, glyph_bitmap_Z003_43, glyph_dsc_Z003_43); break;
-        case 56: SET_FONT_DATA(cmaps_Z003_56, glyph_bitmap_Z003_56, glyph_dsc_Z003_56); break;
-        case 66: SET_FONT_DATA(cmaps_Z003_66, glyph_bitmap_Z003_66, glyph_dsc_Z003_66); break;
-        case 81: SET_FONT_DATA(cmaps_Z003_81, glyph_bitmap_Z003_81, glyph_dsc_Z003_81); break;
-        case 96: SET_FONT_DATA(cmaps_Z003_96, glyph_bitmap_Z003_96, glyph_dsc_Z003_96); break;
-        case 156: SET_FONT_DATA(cmaps_BigNumbers, glyph_bitmap_BiGNumbers, glyph_dsc_BigNumbers); break;
+        case 15: SET_FONT_DATA(cmaps_Z003_15, glyph_bitmap_Z003_15, glyph_dsc_Z003_15); fontIndex = 0; break;
+        case 16: SET_FONT_DATA(cmaps_Z003_16, glyph_bitmap_Z003_16, glyph_dsc_Z003_16); fontIndex = 1; break;
+        case 18: SET_FONT_DATA(cmaps_Z003_18, glyph_bitmap_Z003_18, glyph_dsc_Z003_18); fontIndex = 2; break;
+        case 21: SET_FONT_DATA(cmaps_Z003_21, glyph_bitmap_Z003_21, glyph_dsc_Z003_21); fontIndex = 3; break;
+        case 25: SET_FONT_DATA(cmaps_Z003_25, glyph_bitmap_Z003_25, glyph_dsc_Z003_25); fontIndex = 4; break;
+        case 27: SET_FONT_DATA(cmaps_Z003_27, glyph_bitmap_Z003_27, glyph_dsc_Z003_27); fontIndex = 5; break;
+        case 34: SET_FONT_DATA(cmaps_Z003_34, glyph_bitmap_Z003_34, glyph_dsc_Z003_34); fontIndex = 6; break;
+        case 38: SET_FONT_DATA(cmaps_Z003_38, glyph_bitmap_Z003_38, glyph_dsc_Z003_38); fontIndex = 7; break;
+        case 43: SET_FONT_DATA(cmaps_Z003_43, glyph_bitmap_Z003_43, glyph_dsc_Z003_43); fontIndex = 8; break;
+        case 56: SET_FONT_DATA(cmaps_Z003_56, glyph_bitmap_Z003_56, glyph_dsc_Z003_56); fontIndex = 9; break;
+        case 66: SET_FONT_DATA(cmaps_Z003_66, glyph_bitmap_Z003_66, glyph_dsc_Z003_66); fontIndex = 10; break;
+        case 81: SET_FONT_DATA(cmaps_Z003_81, glyph_bitmap_Z003_81, glyph_dsc_Z003_81); fontIndex = 11; break;
+        case 96: SET_FONT_DATA(cmaps_Z003_96, glyph_bitmap_Z003_96, glyph_dsc_Z003_96); fontIndex = 12; break;
         default: break;
     }
 #endif
-
+    // clang-format on
+    if (font == 156) {
+        SET_FONT_DATA(cmaps_BigNumbers, glyph_bitmap_BiGNumbers, glyph_dsc_BigNumbers);
+        fontIndex = 13;
+    }
+    if (fontIndex == -1) { log_e("unknown fontsize %i", font); }
+    m_current_font.font_index = fontIndex;
+    m_current_font.max_font_index = 12;
 #undef SET_FONT_DATA
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -2443,8 +2459,7 @@ bool TFT_Base::copyFramebuffer(uint8_t source, uint16_t srcX, uint16_t srcY, uin
     return true;
 }
 
-bool TFT_Base::copyFramebuffer(const uint16_t* buffer, uint16_t bufferWidth, uint16_t bufferHeight, uint16_t srcX, uint16_t srcY, uint8_t destination, uint16_t dstX, uint16_t dstY, uint16_t w, uint16_t h,
-                               bool updateDisplay) {
+bool TFT_Base::copyFramebuffer(const uint16_t* buffer, uint16_t bufferWidth, uint16_t bufferHeight, uint16_t srcX, uint16_t srcY, uint8_t destination, uint16_t dstX, uint16_t dstY, uint16_t w, uint16_t h, bool updateDisplay) {
 
     if (!buffer) return false;
     if (w == 0 || h == 0) return false;
@@ -2917,581 +2932,456 @@ void TFT_Base::writeTheFramebuffer(const uint8_t* bmi, uint16_t posX, uint16_t p
     free(rgbBuffer);
     free(alphaBuffer);
 }
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-uint16_t TFT_Base::analyzeText(const char* str, uint16_t* chArr, uint16_t* colorArr, uint16_t startColor) {
-    uint16_t chLen = 0;
-    uint16_t idx = 0;
-    int32_t  codePoint = -1;
-    colorArr[0] = startColor;
 
-    while ((uint8_t)str[idx] != 0) {
-        colorArr[chLen + 1] = colorArr[chLen];
-        switch ((uint8_t)str[idx]) {
-            case '\033':
-                if (strncmp(str + idx, "\033[30m", 5) == 0) {
-                    idx += 5;
-                    colorArr[chLen] = TFT_BLACK;
-                    break;
-                }
-                if (strncmp(str + idx, "\033[31m", 5) == 0) {
-                    idx += 5;
-                    colorArr[chLen] = TFT_RED;
-                    break;
-                }
-                if (strncmp(str + idx, "\033[32m", 5) == 0) {
-                    idx += 5;
-                    colorArr[chLen] = TFT_GREEN;
-                    break;
-                }
-                if (strncmp(str + idx, "\033[33m", 5) == 0) {
-                    idx += 5;
-                    colorArr[chLen] = TFT_YELLOW;
-                    break;
-                }
-                if (strncmp(str + idx, "\033[34m", 5) == 0) {
-                    idx += 5;
-                    colorArr[chLen] = TFT_BLUE;
-                    break;
-                }
-                if (strncmp(str + idx, "\033[35m", 5) == 0) {
-                    idx += 5;
-                    colorArr[chLen] = TFT_MAGENTA;
-                    break;
-                }
-                if (strncmp(str + idx, "\033[36m", 5) == 0) {
-                    idx += 5;
-                    colorArr[chLen] = TFT_CYAN;
-                    break;
-                }
-                if (strncmp(str + idx, "\033[37m", 5) == 0) {
-                    idx += 5;
-                    colorArr[chLen] = TFT_WHITE;
-                    break;
-                }
-                if (strncmp(str + idx, "\033[38;5;130m", 11) == 0) {
-                    idx += 11;
-                    colorArr[chLen] = TFT_BROWN;
-                    break;
-                }
-                if (strncmp(str + idx, "\033[38;5;214m", 11) == 0) {
-                    idx += 11;
-                    colorArr[chLen] = TFT_ORANGE;
-                    break;
-                }
-                if (strncmp(str + idx, "\033[90m", 5) == 0) {
-                    idx += 5;
-                    colorArr[chLen] = TFT_GREY;
-                    break;
-                }
-                if (strncmp(str + idx, "\033[91m", 5) == 0) {
-                    idx += 5;
-                    colorArr[chLen] = TFT_LIGHTRED;
-                    break;
-                }
-                if (strncmp(str + idx, "\033[92m", 5) == 0) {
-                    idx += 5;
-                    colorArr[chLen] = TFT_LIGHTGREEN;
-                    break;
-                }
-                if (strncmp(str + idx, "\033[93m", 5) == 0) {
-                    idx += 5;
-                    colorArr[chLen] = TFT_LIGHTYELLOW;
-                    break;
-                }
-                if (strncmp(str + idx, "\033[94m", 5) == 0) {
-                    idx += 5;
-                    colorArr[chLen] = TFT_LIGHTBLUE;
-                    break;
-                }
-                if (strncmp(str + idx, "\033[95m", 5) == 0) {
-                    idx += 5;
-                    colorArr[chLen] = TFT_LIGHTMAGENTA;
-                    break;
-                }
-                if (strncmp(str + idx, "\033[96m", 5) == 0) {
-                    idx += 5;
-                    colorArr[chLen] = TFT_LIGHTCYAN;
-                    break;
-                }
-                if (strncmp(str + idx, "\033[97m", 5) == 0) {
-                    idx += 5;
-                    colorArr[chLen] = TFT_LIGHTGREY;
-                    break;
-                }
-                if (strncmp(str + idx, "\033[38;5;52m", 10) == 0) {
-                    idx += 10;
-                    colorArr[chLen] = TFT_DARKRED;
-                    break;
-                }
-                if (strncmp(str + idx, "\033[38;5;22m", 10) == 0) {
-                    idx += 10;
-                    colorArr[chLen] = TFT_DARKGREEN;
-                    break;
-                }
-                if (strncmp(str + idx, "\033[38;5;136m", 11) == 0) {
-                    idx += 11;
-                    colorArr[chLen] = TFT_DARKYELLOW;
-                    break;
-                }
-                if (strncmp(str + idx, "\033[38;5;17m", 10) == 0) {
-                    idx += 10;
-                    colorArr[chLen] = TFT_DARKBLUE;
-                    break;
-                }
-                if (strncmp(str + idx, "\033[38;5;53m", 10) == 0) {
-                    idx += 10;
-                    colorArr[chLen] = TFT_DARKMAGENTA;
-                    break;
-                }
-                if (strncmp(str + idx, "\033[38;5;23m", 10) == 0) {
-                    idx += 10;
-                    colorArr[chLen] = TFT_DARKCYAN;
-                    break;
-                }
-                if (strncmp(str + idx, "\033[38;5;240m", 11) == 0) {
-                    idx += 11;
-                    colorArr[chLen] = TFT_DARKGREY;
-                    break;
-                }
-                if (strncmp(str + idx, "\033[38;5;166m", 11) == 0) {
-                    idx += 11;
-                    colorArr[chLen] = TFT_DARKORANGE;
-                    break;
-                }
-                if (strncmp(str + idx, "\033[38;5;215m", 11) == 0) {
-                    idx += 11;
-                    colorArr[chLen] = TFT_LIGHTORANGE;
-                    break;
-                }
-                if (strncmp(str + idx, "\033[38;5;129m", 11) == 0) {
-                    idx += 11;
-                    colorArr[chLen] = TFT_PURPLE;
-                    break;
-                }
-                if (strncmp(str + idx, "\033[38;5;213m", 11) == 0) {
-                    idx += 11;
-                    colorArr[chLen] = TFT_PINK;
-                    break;
-                }
-                if (strncmp(str + idx, "\033[38;5;190m", 11) == 0) {
-                    idx += 11;
-                    colorArr[chLen] = TFT_LIME;
-                    break;
-                }
-                if (strncmp(str + idx, "\033[38;5;25m", 10) == 0) {
-                    idx += 10;
-                    colorArr[chLen] = TFT_NAVY;
-                    break;
-                }
-                if (strncmp(str + idx, "\033[38;5;51m", 10) == 0) {
-                    idx += 10;
-                    colorArr[chLen] = TFT_AQUAMARINE;
-                    break;
-                }
-                if (strncmp(str + idx, "\033[38;5;189m", 11) == 0) {
-                    idx += 11;
-                    colorArr[chLen] = TFT_LAVENDER;
-                    break;
-                }
-                if (strncmp(str + idx, "\033[38;2;210;180;140m", 19) == 0) {
-                    idx += 19;
-                    colorArr[chLen] = TFT_LIGHTBROWN;
-                    break;
-                }
-                if (strncmp(str + idx, "\033[0m", 4) == 0) {
-                    idx += 4;
-                    break;
-                }
-                if (strncmp(str + idx, "\033[1m", 4) == 0) {
-                    idx += 4;
-                    break;
-                }
-                if (strncmp(str + idx, "\033[2m", 4) == 0) {
-                    idx += 4;
-                    break;
-                }
-                if (strncmp(str + idx, "\033[3m", 4) == 0) {
-                    idx += 4;
-                    break;
-                }
-                if (strncmp(str + idx, "\033[4m", 4) == 0) {
-                    idx += 4;
-                    break;
-                }
-                if (tft_info) tft_info("unknown ANSI ESC SEQUENCE");
-                idx += 4;
-                break;
+// ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫   writeText   ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
+// ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-            case 0x20 ... 0x7F:
-                chArr[chLen] = (uint8_t)str[idx];
-                idx += 1;
-                chLen += 1;
-                break;
-            case 0xC2 ... 0xD1:
-                codePoint = ((uint8_t)str[idx] - 0xC2) * 0x40 + (uint8_t)str[idx + 1];
-                if (m_current_font.lookup_table[codePoint] != 0) {
-                    chArr[chLen] = codePoint;
-                    chLen += 1;
-                } else {
-                    log_w("character 0x%02X%02X is not in table", str[idx], str[idx + 1]);
-                }
-                idx += 2;
-                break;
-            case 0xD2 ... 0xDF:
-                log_w("character 0x%02X%02X  is not in table", str[idx], str[idx + 1]);
-                idx += 2;
-                break;
-            case 0xE0:
-                if ((uint8_t)str[idx + 1] == 0x80 && (uint8_t)str[idx + 2] == 0x99) {
-                    codePoint = 0xA4;
-                    chArr[chLen] = codePoint;
-                    chLen += 1;
-                } else {
-                    log_w("character 0x%02X%02X  is not in table", str[idx], str[idx + 1]);
-                }
-                idx += 3;
-                break;
-            case 0xE1 ... 0xEF: idx += 3; break;
-            case 0xF0 ... 0xFF:
-                codePoint = -1;
-                if (!strncmp(str + idx, "🟢", 4)) { codePoint = 0xF9A2; }
-                if (!strncmp(str + idx, "🟡", 4)) { codePoint = 0xF9A1; }
-                if (!strncmp(str + idx, "🔴", 4)) { codePoint = 0xF9B4; }
-                if (!strncmp(str + idx, "🔵", 4)) { codePoint = 0xF9B5; }
-                if (!strncmp(str + idx, "🟠", 4)) { codePoint = 0xF9A0; }
-                if (!strncmp(str + idx, "🟣", 4)) { codePoint = 0xF9A3; }
-                if (!strncmp(str + idx, "🟤", 4)) { codePoint = 0xF9A4; }
-                if (!strncmp(str + idx, "🟩", 4)) { codePoint = 0xF9A9; }
-                if (!strncmp(str + idx, "🟨", 4)) { codePoint = 0xF9A8; }
-                if (!strncmp(str + idx, "🟥", 4)) { codePoint = 0xF9A5; }
-                if (!strncmp(str + idx, "🟦", 4)) { codePoint = 0xF9A6; }
-                if (!strncmp(str + idx, "🟧", 4)) { codePoint = 0xF9A7; }
-                if (!strncmp(str + idx, "🟪", 4)) { codePoint = 0xF9AA; }
-                if (!strncmp(str + idx, "🟫", 4)) { codePoint = 0xF9AB; }
-                if (codePoint != -1) {
-                    chArr[chLen] = codePoint;
-                    chLen += 1;
-                } else {
-                    log_w("character 0x%02X%02X%02X%02X  is not in table", str[idx], str[idx + 1], str[idx + 2], str[idx + 3]);
-                }
-                idx += 4;
-                break;
-            default: idx++; break;
+TFT_Base::Utf8Char TFT_Base::decodeUtf8(const char* s) {
+    Utf8Char       u8ch{};
+    const uint8_t* p = reinterpret_cast<const uint8_t*>(s);
+    if ((p[0] & 0x80) == 0x00) { // 1 byte
+        u8ch.codepoint = p[0];
+        u8ch.length = 1;
+    } else if ((p[0] & 0xE0) == 0xC0) { // 2 byte
+        u8ch.codepoint = ((p[0] & 0x1F) << 6) | (p[1] & 0x3F);
+        u8ch.length = 2;
+    } else if ((p[0] & 0xF0) == 0xE0) { // 3 byte
+        u8ch.codepoint = ((p[0] & 0x0F) << 12) | ((p[1] & 0x3F) << 6) | (p[2] & 0x3F);
+        u8ch.length = 3;
+    } else if ((p[0] & 0xF8) == 0xF0) { // 4 byte
+        u8ch.codepoint = ((p[0] & 0x07) << 18) | ((p[1] & 0x3F) << 12) | ((p[2] & 0x3F) << 6) | (p[3] & 0x3F);
+        u8ch.length = 4;
+    } else {
+        u8ch.codepoint = 0xFFFD;
+        u8ch.length = 1;
+    }
+    return u8ch;
+}
+// ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+size_t TFT_Base::parseAnsi(const char*& p, uint32_t& color, Arg& arg) {
+    for (auto& a : ansiTable) {
+        if (strncmp(p, a.seq, a.len) == 0) {
+            color = a.color;
+            arg = a.mode;
+            return a.len;
         }
     }
-    return chLen;
+    return 0;
 }
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-uint16_t TFT_Base::getLineLength(const char* txt, bool narrow) {
-    uint16_t pxLength = 0;
-    uint16_t idx = 0;
-    bool     isEmoji = false;
-    while ((uint8_t)txt[idx] != 0) {
-        isEmoji = false;
-        if (txt[idx] == 0xF0) {
-            if (!strncmp(txt + idx, "🟢", 4)) { isEmoji = true; }
-            if (!strncmp(txt + idx, "🟡", 4)) { isEmoji = true; }
-            if (!strncmp(txt + idx, "🔴", 4)) { isEmoji = true; }
-            if (!strncmp(txt + idx, "🔵", 4)) { isEmoji = true; }
-            if (!strncmp(txt + idx, "🟠", 4)) { isEmoji = true; }
-            if (!strncmp(txt + idx, "🟣", 4)) { isEmoji = true; }
-            if (!strncmp(txt + idx, "🟤", 4)) { isEmoji = true; }
-            if (!strncmp(txt + idx, "🟩", 4)) { isEmoji = true; }
-            if (!strncmp(txt + idx, "🟨", 4)) { isEmoji = true; }
-            if (!strncmp(txt + idx, "🟥", 4)) { isEmoji = true; }
-            if (!strncmp(txt + idx, "🟦", 4)) { isEmoji = true; }
-            if (!strncmp(txt + idx, "🟧", 4)) { isEmoji = true; }
-            if (!strncmp(txt + idx, "🟪", 4)) { isEmoji = true; }
-            if (!strncmp(txt + idx, "🟫", 4)) { isEmoji = true; }
-            if (isEmoji) {
-                uint16_t fh = m_current_font.font_height;
-                pxLength += fh - fh / 3;
-                idx += 4;
+// ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_Base::txtToToken(const char* p) {
+
+    m_token.clear();
+    while (*p) {
+        if (*p == '\n') {
+            m_token.emplace_back(TokenType::NewLine);
+            ++p;
+            continue;
+        }
+        if (*p == '\033') {
+            uint32_t value;
+            Arg      arg;
+            size_t   len = parseAnsi(p, value, arg);
+            if (len == 0) {
+                log_w("Unknown ANSI sequence");
+                ++p;
                 continue;
             }
+            m_token.emplace_back(TokenType::Color, value, arg);
+            p += len;
+            continue;
         }
-        uint16_t glyphPos = m_current_font.lookup_table[(uint8_t)txt[idx]];
-        pxLength += m_current_font.glyph_dsc[glyphPos].adv_w / 16;
-        int ofsX = m_current_font.glyph_dsc[glyphPos].ofs_x;
-        if (ofsX < 0) ofsX = 0;
-        if (!narrow) pxLength += ofsX;
-        idx++;
-    }
-    return pxLength;
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-uint16_t TFT_Base::fitinline(uint16_t* cpArr, uint16_t chLength, uint16_t begin, int16_t win_W, uint16_t* usedPxLength, bool narrow, bool noWrap) {
-    (void)chLength;
-    uint16_t idx = begin;
-    uint16_t pxLength = 0;
-    uint16_t lastSpacePos = 0;
-    uint16_t drawableChars = 0;
-    uint16_t lastUsedPxLength = 0;
-    uint16_t glyphPos = 0;
-    bool     isEmoji = false;
-    while (cpArr[idx] != 0) {
-        *usedPxLength = pxLength;
-        if (cpArr[idx] == 0x20 || cpArr[idx - 1] == '-') {
-            lastSpacePos = drawableChars;
-            lastUsedPxLength = pxLength;
-        }
-        isEmoji = false;
-        if ((cpArr[idx] & 0xFF00) == 0xF900) {
-            if (cpArr[idx] == 0xF9A2) { isEmoji = true; }
-            if (cpArr[idx] == 0xF9A1) { isEmoji = true; }
-            if (cpArr[idx] == 0xF9B4) { isEmoji = true; }
-            if (cpArr[idx] == 0xF9B5) { isEmoji = true; }
-            if (cpArr[idx] == 0xF9A0) { isEmoji = true; }
-            if (cpArr[idx] == 0xF9A3) { isEmoji = true; }
-            if (cpArr[idx] == 0xF9A4) { isEmoji = true; }
-            if (cpArr[idx] == 0xF9A9) { isEmoji = true; }
-            if (cpArr[idx] == 0xF9A8) { isEmoji = true; }
-            if (cpArr[idx] == 0xF9A5) { isEmoji = true; }
-            if (cpArr[idx] == 0xF9A6) { isEmoji = true; }
-            if (cpArr[idx] == 0xF9A7) { isEmoji = true; }
-            if (cpArr[idx] == 0xF9AA) { isEmoji = true; }
-            if (cpArr[idx] == 0xF9AB) { isEmoji = true; }
-            if (isEmoji) {
-                uint16_t fh = m_current_font.font_height;
-                pxLength += fh - fh / 3;
+        Utf8Char ch = decodeUtf8(p);
+        uint32_t cp = ch.codepoint;
+
+        if (cp >= m_current_font.range_length) {
+            if (findEmoji(cp)) {
+                m_token.emplace_back(TokenType::Glyph, cp);
+                MWR_LOG_DEBUG("emoji cl len {}", ch.length);
+                p += ch.length;
+                continue;
             }
+            MWR_LOG_WARN("character U+{:04X} outside font", cp);
+            cp = 0x20;
+        } else if (m_current_font.lookup_table[cp] == 0xFFFF) {
+            MWR_LOG_WARN("character U+{:04X} missing", cp);
+            cp = 0x20;
+        }
+        m_token.emplace_back(TokenType::Glyph, cp);
+        p += ch.length;
+    }
+}
+// ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_Base::tokenToWords() {
+    m_word.clear();
+    Word     currentWord;
+    uint16_t fgColor = TFT_LIGHTGREY;
+
+    for (const auto& token : m_token) {
+        switch (token.type) {
+            case TokenType::Color:
+                if (token.arg == Arg::foreground) fgColor = token.value;
+                break;
+            case TokenType::Glyph: {
+                if (token.value == ' ') {
+                    if (!currentWord.glyphs.empty()) {
+                        currentWord.trailingSpaces++;
+                        m_word.push_back(std::move(currentWord));
+                        currentWord = Word{};
+                    }
+                    break;
+                }
+                Glyph g;
+                if (const EmojiDef* emoji = findEmoji(token.value)) {
+                    log_w("emoji found");
+                    g.type = GlyphType::Emoji;
+                    g.emojiShape = emoji->shape;
+                    g.color = emoji->color;
+                    g.width = m_current_font.line_height * 0.6;
+                } else {
+                    g.type = GlyphType::Font;
+                    g.color = fgColor;
+                    g.codepoint = token.value;
+                    g.glyphPos = m_current_font.lookup_table[g.codepoint];
+                    g.width = m_current_font.glyph_dsc[g.glyphPos].adv_w / 16;
+                }
+                currentWord.width += g.width;
+                currentWord.glyphs.push_back(g);
+                break;
+            }
+
+            case TokenType::NewLine:
+                if (!currentWord.glyphs.empty()) {
+                    m_word.push_back(std::move(currentWord));
+                    currentWord = Word{};
+                }
+                currentWord.newLine = true;
+                break;
+        }
+    }
+    if (!currentWord.glyphs.empty() || currentWord.newLine) { m_word.push_back(std::move(currentWord)); }
+}
+// ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+bool TFT_Base::isVowel(uint32_t cp) {
+    switch (cp) {
+        case 'a':
+        case 'e':
+        case 'i':
+        case 'o':
+        case 'u':
+        case 'A':
+        case 'E':
+        case 'I':
+        case 'O':
+        case 'U':
+        case 0xE4: // ä
+        case 0xF6: // ö
+        case 0xFC: // ü
+        case 0xC4: // Ä
+        case 0xD6: // Ö
+        case 0xDC: // Ü
+            return true;
+    }
+    return false;
+}
+// ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+int TFT_Base::findBestBreak(const Word& word, size_t glyphStart, size_t breakPos) {
+
+    /*       -----------Window----------------->|
+             ___________________________________|
+              Niedrigwasser bei der Donaudampfschiffahrt
+                                    ^           ^      ^
+                                    |           |      |
+                                    | glyphStart
+                                    |           breakPos
+                                    |<--lenL--->|<lenR>|
+                                    |word.glyphs.size()|
+    */
+    constexpr size_t MIN_LEFT = 4;
+    constexpr size_t MIN_RIGHT = 4;
+
+    if (breakPos <= glyphStart || breakPos >= word.glyphs.size()) return -1;
+
+    size_t lenL = breakPos - glyphStart;
+    size_t lenR = word.glyphs.size() - breakPos;
+
+    if (lenR <= MIN_RIGHT) return -1;
+    if (lenL <= MIN_LEFT) return -1;
+
+    int bestScore = -1000;
+    int bestPos = -1;
+
+    for (size_t i = breakPos; i > glyphStart + MIN_LEFT; --i) {
+        bool left = isVowel(word.glyphs[i - 1].codepoint);
+        bool right = isVowel(word.glyphs[i].codepoint);
+
+        int score = 0;
+
+        if (left && !right) { // Vowel | Consonant   (Kar-ten)
+            score += 5;
+        } else if (!left && right) { // Consonant | Vowel   (Maschi-ne)
+            score += 3;
+        } else if (left && right) { // Vowel | Vowel
+            score -= 5;
+        } else { // Consonant | Consonant
+            score += 1;
+        }
+        // The further to the right, the better
+        score += static_cast<int>(i);
+
+        if (score > bestScore) {
+            bestScore = score;
+            bestPos = i;
+        }
+    }
+
+    return bestPos;
+}
+// ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+bool TFT_Base::wordToLines(int16_t win_W, int16_t win_H, bool noWrap) {
+    uint16_t maxLines = win_H / m_current_font.line_height;
+    if (maxLines == 0) return false;
+
+    m_wrappedWord.clear();
+    m_line.clear();
+    m_line.emplace_back();
+
+    uint16_t currentLine = 0;
+
+    for (const auto& word : m_word) {
+        // explicit line break
+        if (word.newLine) {
+            currentLine++;
+            if (currentLine >= maxLines) return false;
+            m_line.emplace_back();
+            continue;
+        }
+        if (word.glyphs.empty()) continue;
+        if (word.width > win_W) {
+            if (noWrap) return false;
+
+            size_t glyphPos = 0;
+            while (glyphPos < word.glyphs.size()) {
+                Line& line = m_line[currentLine];
+
+                uint16_t spacing = 0;
+                if (!line.words.empty()) {
+                    const Word* prevWord = line.words.back().word;
+                    spacing = prevWord->trailingSpaces * m_spaceWidth;
+                }
+
+                if (line.width + spacing >= win_W) {
+                    currentLine++;
+                    if (currentLine >= maxLines) return false;
+                    m_line.emplace_back();
+                    continue;
+                }
+
+                uint16_t availableWidth = win_W - line.width - spacing;
+                uint16_t pieceWidth = 0;
+                size_t   glyphEnd = glyphPos;
+                while (glyphEnd < word.glyphs.size() && pieceWidth + word.glyphs[glyphEnd].width <= availableWidth) {
+                    pieceWidth += word.glyphs[glyphEnd].width;
+                    glyphEnd++;
+                }
+
+                if (glyphEnd == glyphPos) {
+                    if (!line.words.empty()) {
+                        currentLine++;
+                        if (currentLine >= maxLines) return false;
+                        m_line.emplace_back();
+                        continue;
+                    }
+                    return false;
+                }
+
+                if (glyphEnd < word.glyphs.size()) {
+                    int bestBreak = findBestBreak(word, glyphPos, glyphEnd);
+                    if (bestBreak < 0) {
+                        if (!line.words.empty()) {
+                            currentLine++;
+                            if (currentLine >= maxLines) return false;
+                            m_line.emplace_back();
+                            continue;
+                        }
+                        return false;
+                    }
+
+                    glyphEnd = static_cast<size_t>(bestBreak);
+                    pieceWidth = 0;
+                    for (size_t i = glyphPos; i < glyphEnd; ++i) { pieceWidth += word.glyphs[i].width; }
+                }
+
+                m_wrappedWord.emplace_back();
+                Word& piece = m_wrappedWord.back();
+                piece.glyphs.insert(piece.glyphs.end(), word.glyphs.begin() + glyphPos, word.glyphs.begin() + glyphEnd);
+                piece.width = pieceWidth;
+                piece.trailingSpaces = (glyphEnd == word.glyphs.size()) ? word.trailingSpaces : 0;
+
+                line.words.push_back({&piece, spacing});
+                line.width += spacing + pieceWidth;
+                glyphPos = glyphEnd;
+
+                if (glyphPos < word.glyphs.size()) {
+                    currentLine++;
+                    if (currentLine >= maxLines) return false;
+                    m_line.emplace_back();
+                }
+            }
+            continue;
+        }
+        Line& line = m_line[currentLine];
+        // Space before this word
+        uint16_t spacing = 0;
+        if (!line.words.empty()) {
+            const Word* prevWord = line.words.back().word;
+            spacing = prevWord->trailingSpaces * m_spaceWidth;
+        }
+        uint16_t requiredWidth = spacing + word.width;
+        // Does it still fit on the current line?
+        if (line.width + requiredWidth <= win_W) {
+            line.words.push_back({&word, spacing});
+            line.width += requiredWidth;
         } else {
-            glyphPos = m_current_font.lookup_table[cpArr[idx]];
-            pxLength += m_current_font.glyph_dsc[glyphPos].adv_w / 16;
-            int ofsX = m_current_font.glyph_dsc[glyphPos].ofs_x;
-            if (ofsX < 0) ofsX = 0;
-            if (!narrow) pxLength += ofsX;
+            currentLine++;
+            if (currentLine >= maxLines) return false;
+            m_line.emplace_back();
+            Line& newLine = m_line[currentLine];
+            newLine.words.push_back({&word, 0});
+            newLine.width = word.width;
         }
-        if (pxLength > win_W || cpArr[idx] == '\n') {
-            if (noWrap) return drawableChars;
-            if (lastSpacePos) {
-                *usedPxLength = lastUsedPxLength;
-                return lastSpacePos;
+    }
+    return true;
+}
+// ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_Base::prepareFontLayout() {
+    m_spaceWidth = m_current_font.glyph_dsc[m_current_font.lookup_table[' ']].adv_w / 16; // The width of the spaces in the selected font
+    tokenToWords();                                                                       // From this point onwards, `m_word` contains the words and their widths, which were formed from the tokens
+}
+// ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+bool TFT_Base::layoutText(int16_t win_W, int16_t win_H, bool noWrap) {
+    prepareFontLayout();
+    return wordToLines(win_W, win_H, noWrap);
+}
+// ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_Base::drawLines(int16_t win_X, int16_t win_Y, int16_t win_W, int16_t win_H, HAlign hAlign, VAlign vAlign) {
+
+    uint16_t textHeight = static_cast<uint16_t>(m_line.size()) * m_current_font.line_height;
+
+    int16_t y = 0;
+    switch (vAlign) {
+        case VAlign::Top: y = win_Y; break;
+        case VAlign::Middle: y = win_Y + (win_H - textHeight) / 2; break;
+        case VAlign::Bottom: y = win_Y + win_H - textHeight; break;
+    }
+
+    for (const auto& line : m_line) {
+        int16_t x = 0;
+        switch (hAlign) {
+            case HAlign::Left: x = win_X; break;
+            case HAlign::Center: x = win_X + (win_W - line.width) / 2; break;
+            case HAlign::Right: x = win_X + win_W - line.width; break;
+        }
+        for (const auto& placedWord : line.words) {
+            x += placedWord.spacing;
+            drawWord(placedWord.word, x, y);
+            x += placedWord.word->width;
+        }
+        y += m_current_font.line_height;
+        // log_w(" win_X %i, win_W %i. line.width %i, textHeight %i", win_X, win_W, line.width, textHeight);
+    }
+}
+// ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_Base::drawWord(const Word* word, int16_t x, int16_t y) {
+    for (const auto& glyph : word->glyphs) {
+        drawGlyph(glyph, x, y);
+        x += glyph.width;
+    }
+}
+// ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_Base::drawGlyph(const Glyph glyph, int16_t x, int16_t y) {
+    if (glyph.type == GlyphType::Emoji) {
+
+        uint8_t center_y = y + m_current_font.line_height / 2;
+        float   emojiSize = m_current_font.line_height * 0.50f;
+        int     r = round(emojiSize / 2.0f);
+        switch (glyph.emojiShape) {
+            case EmojiShape::Circle: {
+                fillCircle(x + r, center_y, r, glyph.color);
+                break;
             }
-            return drawableChars;
+            case EmojiShape::Square: {
+                fillRect(x, center_y - r, 2 * r, 2 * r, glyph.color);
+                break;
+            }
         }
-        idx++;
-        drawableChars++;
-        *usedPxLength = pxLength;
+        return;
     }
-    return drawableChars;
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-uint8_t TFT_Base::fitInAddrWindow(uint16_t* cpArr, uint16_t chLength, int16_t win_W, int16_t win_H, bool narrow, bool noWrap) {
-    uint8_t  nrOfFonts = sizeof(fontSizes);
-    uint8_t  currentFontSize = 0;
-    uint16_t usedPxLength = 0;
-    uint16_t drawableCharsTotal = 0;
-    uint16_t drawableCharsinline = 0;
-    uint16_t startPos = 0;
-    uint8_t  nrOfLines = 0;
-    while (true) {
-        currentFontSize = fontSizes[nrOfFonts - 1];
-        if (currentFontSize == 0) break;
-        setFontSize(currentFontSize);
-        drawableCharsTotal = 0;
-        startPos = 0;
-        nrOfLines = 1;
-        int16_t win_H_remain = win_H;
-        while (true) {
-            if (win_H_remain < m_current_font.line_height) break;
-            drawableCharsinline = fitinline(cpArr, chLength, startPos, win_W, &usedPxLength, narrow, noWrap);
-            win_H_remain -= m_current_font.line_height;
-            drawableCharsTotal += drawableCharsinline;
-            startPos += drawableCharsinline;
-            if (drawableCharsinline == 0) break;
-            if (drawableCharsTotal == chLength) goto exit;
-            nrOfLines++;
-        }
-        if (drawableCharsTotal == chLength) goto exit;
-        if (nrOfFonts == 0) break;
-        nrOfFonts--;
-    }
-exit:
-    return nrOfLines;
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-size_t TFT_Base::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, uint8_t h_align, uint8_t v_align, bool narrow, bool noWrap, bool autoSize) {
-    if (str == NULL) return 0;
-    if (strlen(str) == 0) return 0;
-    uint16_t idx = 0;
-    uint16_t utfPosArr[strlen(str) + 1] = {0};
-    uint16_t colorArr[strlen(str) + 1] = {0};
-    uint16_t strChLength = 0;
-    uint8_t  nrOfLines = 1;
-    bool     isEmoji = false;
-
-    auto drawEmoji = [&](uint16_t idxLocal, uint16_t x, uint16_t y) {
-        uint8_t  emoji = (utfPosArr[idxLocal] & 0x00FF);
-        uint16_t color = 0;
-        char     shape = 'x';
-        switch (emoji) {
-            case 0xA2:
-                color = TFT_GREEN;
-                shape = 'c';
-                break;
-            case 0xA1:
-                color = TFT_YELLOW;
-                shape = 'c';
-                break;
-            case 0xB4:
-                color = TFT_RED;
-                shape = 'c';
-                break;
-            case 0xB5:
-                color = TFT_BLUE;
-                shape = 'c';
-                break;
-            case 0xA0:
-                color = TFT_ORANGE;
-                shape = 'c';
-                break;
-            case 0xA3:
-                color = TFT_VIOLET;
-                shape = 'c';
-                break;
-            case 0xA4:
-                color = TFT_BROWN;
-                shape = 'c';
-                break;
-            case 0xA9:
-                color = TFT_GREEN;
-                shape = 's';
-                break;
-            case 0xA8:
-                color = TFT_YELLOW;
-                shape = 's';
-                break;
-            case 0xA5:
-                color = TFT_RED;
-                shape = 's';
-                break;
-            case 0xA6:
-                color = TFT_BLUE;
-                shape = 's';
-                break;
-            case 0xA7:
-                color = TFT_ORANGE;
-                shape = 's';
-                break;
-            case 0xAA:
-                color = TFT_VIOLET;
-                shape = 's';
-                break;
-            case 0xAB:
-                color = TFT_BROWN;
-                shape = 's';
-                break;
-        }
-        if (shape == 'c') {
-            uint16_t fh = m_current_font.font_height;
-            uint16_t fw = fh - fh / 3;
-            uint16_t p = fh / 5;
-            uint16_t r = (fh - 2 * p) / 2;
-            uint16_t corr = fw / 10;
-            uint16_t cx = x + fw / 2;
-            uint16_t cy = y + fh / 2 + corr;
-            fillCircle(cx, cy, r, color);
-            return fw;
-        }
-        if (shape == 's') {
-            uint16_t fh = m_current_font.font_height;
-            uint16_t fw = fh - fh / 3;
-            uint16_t p = fh / 5;
-            uint16_t a = (fh - 2 * p);
-            uint16_t corr = fw / 10;
-            uint16_t sx = x + fw / 2;
-            uint16_t sy = y + fh / 2 + corr;
-            fillRect(sx - a / 2, sy - a / 2, a, a, color);
-            return fw;
-        }
-        log_w("unknown shape %c", shape);
-        return (uint16_t)0;
-    };
-
-    auto drawChar = [&](uint16_t idxLocal, uint16_t x, uint16_t y) {
-        uint16_t glyphPos = m_current_font.lookup_table[utfPosArr[idxLocal]];
-        uint16_t adv_w = m_current_font.glyph_dsc[glyphPos].adv_w / 16;
-        uint32_t bitmap_index = m_current_font.glyph_dsc[glyphPos].bitmap_index;
-        uint16_t box_w = m_current_font.glyph_dsc[glyphPos].box_w;
-        uint16_t box_h = m_current_font.glyph_dsc[glyphPos].box_h;
-        int16_t  ofs_x = m_current_font.glyph_dsc[glyphPos].ofs_x;
-        int16_t  ofs_y = m_current_font.glyph_dsc[glyphPos].ofs_y;
+    if (glyph.type == GlyphType::Font) {
+        setTextColor(glyph.color);
+        uint32_t bitmap_index = m_current_font.glyph_dsc[glyph.glyphPos].bitmap_index;
+        uint16_t box_w = m_current_font.glyph_dsc[glyph.glyphPos].box_w;
+        uint16_t box_h = m_current_font.glyph_dsc[glyph.glyphPos].box_h;
+        int16_t  ofs_x = m_current_font.glyph_dsc[glyph.glyphPos].ofs_x;
+        int16_t  ofs_y = m_current_font.glyph_dsc[glyph.glyphPos].ofs_y;
         if (ofs_x < 0) ofs_x = 0;
         x += ofs_x;
         y = y + (m_current_font.line_height - m_current_font.base_line - 1) - box_h - ofs_y;
         writeTheFramebuffer(m_current_font.glyph_bitmap + bitmap_index, x, y, box_w, box_h);
-        if (!narrow) adv_w += ofs_x;
-        return adv_w;
-    };
-
-    strChLength = analyzeText(str, utfPosArr, colorArr, m_textColor);
-    if (autoSize) nrOfLines = fitInAddrWindow(utfPosArr, strChLength, win_W, win_H, narrow, noWrap);
-    if (!strChLength) return 0;
-
-    if ((win_X + win_W) > logicalWidth()) win_W = logicalWidth() - win_X;
-    if ((win_Y + win_H) > logicalHeight()) win_H = logicalHeight() - win_Y;
-
-    uint16_t pX = win_X;
-    uint16_t pY = win_Y;
-    int16_t  pH = win_H;
-    int16_t  pW = win_W;
-
-    if (v_align == TFT_ALIGN_CENTER) {
-        int offset = (win_H - (nrOfLines * m_current_font.line_height)) / 2;
-        pY = pY + offset;
     }
-    if (v_align == TFT_ALIGN_DOWN) {
-        int offset = (win_H - (nrOfLines * m_current_font.line_height));
-        pY = pY + offset;
-    }
+}
+// ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+size_t TFT_Base::writeText(ps_ptr<char> txt1, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, HAlign hAlign, VAlign vAlign, bool noWrap, bool autoSize) {
 
-    uint16_t charsToDraw = 0;
-    uint16_t usedPxLength = 0;
-    uint16_t charsDrawn = 0;
-    while (true) {
-        if (noWrap && idx) goto exit;
-        if (pH < m_current_font.line_height) goto exit;
-        charsToDraw = fitinline(utfPosArr, strChLength, idx, pW, &usedPxLength, narrow, noWrap);
+    std::lock_guard<std::mutex> lock(m_textLayoutMutex);
+    ps_ptr<char>txt = txt1;
+    /*
+            writeText()
+                │
+                ├── txtToToken()
+                ├── layoutText()
+                └── drawLines()
+                         │
+                         ├── drawWord()
+                         │        │
+                         │        └── drawGlyph()
+                         │
+                         └── next line
+    */
+    txtToToken(txt.get());
+    int8_t idx = getFontIndex();
 
-        if (h_align == TFT_ALIGN_RIGHT) pX += win_W - usedPxLength - 2;
-        if (h_align == TFT_ALIGN_CENTER) pX += (win_W - usedPxLength) / 2;
-        uint16_t cnt = 0;
+    if (autoSize) {
+        setFontByIndex(getMaxFontIndex());
+        idx = getFontIndex();
         while (true) {
-            isEmoji = false;
-            setTextColor(colorArr[idx]);
-            if ((utfPosArr[idx] & 0xFF00) == 0xF900) {
-                if (utfPosArr[idx] == 0xF9A2) { isEmoji = true; }
-                if (utfPosArr[idx] == 0xF9A1) { isEmoji = true; }
-                if (utfPosArr[idx] == 0xF9B4) { isEmoji = true; }
-                if (utfPosArr[idx] == 0xF9B5) { isEmoji = true; }
-                if (utfPosArr[idx] == 0xF9A0) { isEmoji = true; }
-                if (utfPosArr[idx] == 0xF9A3) { isEmoji = true; }
-                if (utfPosArr[idx] == 0xF9A4) { isEmoji = true; }
-                if (utfPosArr[idx] == 0xF9A9) { isEmoji = true; }
-                if (utfPosArr[idx] == 0xF9A8) { isEmoji = true; }
-                if (utfPosArr[idx] == 0xF9A5) { isEmoji = true; }
-                if (utfPosArr[idx] == 0xF9A6) { isEmoji = true; }
-                if (utfPosArr[idx] == 0xF9A7) { isEmoji = true; }
-                if (utfPosArr[idx] == 0xF9AA) { isEmoji = true; }
-                if (utfPosArr[idx] == 0xF9AB) { isEmoji = true; }
+            if (layoutText(win_W, win_H, noWrap)) {
+                // if (txt.strlen() > 40) { MWR_LOG_ERROR("idx: {}, max: {}, win_W: {}, win_H: {}, noWrap: {}\n {}", idx, getMaxFontIndex(), win_W, win_H, noWrap, txt); }
+                break;
             }
-            uint16_t res = isEmoji ? drawEmoji(idx, pX, pY) : drawChar(idx, pX, pY);
-            pX += res;
-            pW -= res;
-            idx++;
-            cnt++;
-            charsDrawn++;
-            if (idx == strChLength) goto exit;
-            if (cnt == charsToDraw) break;
+            if (--idx < 0) {
+                if (noWrap == true) {
+                    noWrap = false;
+                    setFontByIndex(getMaxFontIndex()); // next round with wrap, starts with biggest font
+                    idx = getFontIndex();
+                    MWR_LOG_DEBUG("next round, idx {}", idx);
+                } else {
+                    MWR_LOG_ERROR("txt '{}', win_X: {}, win_Y: {} does not fit in window", txt, win_X, win_Y);
+                    return 0;
+                }
+            }
+            setFontByIndex(idx);
         }
-        pH -= m_current_font.line_height;
-        pY += m_current_font.line_height;
-        pX = win_X;
-        pW = win_W;
+    } else {
+        if (!layoutText(win_W, win_H, noWrap)) {
+            MWR_LOG_ERROR("txt does not fit in window");
+            return 0;
+        }
     }
-exit:
-    return charsDrawn;
+    drawLines(win_X, win_Y, win_W, win_H, hAlign, vAlign);
+
+    return txt.strlen();
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 //  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫   P N G   ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
@@ -3515,14 +3405,14 @@ bool TFT_Base::drawPngFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y,
     }
     png_file = fs.open(path, "r");
     if (!png_file) {
-        log_e("Failed to open file for reading");
+        log_e(ANSI_ESC_RED "[%s:%s] Failed to open file for reading" ANSI_ESC_RESET, __FILE__, __LINE__);
         return NULL;
     }
     int file_size = png_file.size(); /* get filesize */
     png_buffer = (char*)ps_malloc(file_size);
     png_size = file_size;
     if (!png_buffer) {
-        log_e("Failed to allocate memory for file");
+        log_e(ANSI_ESC_RED "[%s:%s] Failed to allocate %i bytes for file %s" ANSI_ESC_RESET, __FILE__, __LINE__, png_file.size(), png_file.name());
         png_file.close();
         return NULL;
     }

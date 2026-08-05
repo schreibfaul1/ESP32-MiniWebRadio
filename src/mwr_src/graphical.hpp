@@ -27,7 +27,7 @@ struct imgSize {
     uint16_t h = 0;
 };
 
-imgSize GetImageSize(ps_ptr<char> picturePath) {
+imgSize getImageSize(ps_ptr<char> picturePath) {
     if (picturePath.strlen() == 0) {
         MWR_LOG_DEBUG("picturePath is empty");
         return imgSize{0, 0};
@@ -170,34 +170,45 @@ inline void hide_objects_in_area(int16_t x, int16_t y, int16_t w, int16_t h) {
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // *** B A S I C   O B J E C T S
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class button1state : public RegisterTable { // click button
+
+enum class ButtonType { PushButton, ToggleButton };
+
+class Button : public RegisterTable {
+
+    enum State { OFF = 0, ON = 1 };
+    enum Image { IDLE = 0, CLICK, FOCUS, INACTIVE };
+
   private:
     bool             m_enabled = false;
     bool             m_focus = false;
     bool             m_clicked = false;
     bool             m_active = true;
+    bool             m_state = false;
     bool             m_first_call = true;
+    HAlign           m_h_align = HAlign::Center;
+    VAlign           m_v_align = VAlign::Middle;
     int16_t          m_x = 0;
     int16_t          m_y = 0;
     int16_t          m_w = 0;
     int16_t          m_h = 0;
+    uint16_t         m_button_image_w = 0;
+    uint16_t         m_button_image_h = 0;
+    uint16_t         m_button_image_x = 0;
+    uint16_t         m_button_image_y = 0;
     int32_t          m_bg_color = TFT_TRANSPARENT;
-    ps_ptr<char>     m_idlePicturePath;
-    ps_ptr<char>     m_clickPicturePath;
-    ps_ptr<char>     m_inactivePicturePath;
-    ps_ptr<char>     m_focusPicturePath; // e.g. IR select
+    ps_ptr<char>     m_picturePath[2][4];
     ps_ptr<char>     m_name;
     ps_ptr<uint16_t> m_cache_idle_pic = {};
     releasedArg      m_ra;
+    ButtonType       m_type;
 
   public:
-    button1state(ps_ptr<char> name) {
+    Button(ps_ptr<char> name, ButtonType type) : m_name(name), m_type(type) {
         register_object(this);
-        m_name = name;
         m_enabled = false;
         m_clicked = false;
     }
-    ~button1state() {}
+    ~Button() {}
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
         m_x = x; // x pos
         m_y = y; // y pos
@@ -214,23 +225,23 @@ class button1state : public RegisterTable { // click button
     bool         has_focus() { return m_focus; }
     void         set_bg_color(int32_t color) { m_bg_color = color; }
     bool         set_focus(bool focus) { return draw_focus(focus); }
+    bool         getValue() { return m_state; }
+    void         setOn() { m_state = true; }
+    void         setOff() { m_state = false; }
 
     void show() {
         if (m_first_call) m_first_call = false;
+        if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+        }
         m_clicked = false;
         if (!m_active) {
             setInactive();
             return;
         }
-        if (!m_cache_idle_pic.valid()) {
-            bool res = drawImage(m_idlePicturePath, m_x, m_y, m_w, m_h);
-            if (res) {
-                m_cache_idle_pic.alloc_array(m_w * m_h, m_name.c_get());
-                getTFT().copyFramebuffer(FB_VISIBLE, m_cache_idle_pic.get(), m_x, m_y, m_w, m_h);
-            }
-        } else {
-            getTFT().copyFramebuffer(m_cache_idle_pic.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
-        }
+        drawImage(pic(IDLE), m_x, m_y, m_w, m_h);
         m_enabled = true;
     }
 
@@ -244,6 +255,11 @@ class button1state : public RegisterTable { // click button
         m_enabled = false;
     }
 
+    void setValue(bool val) {
+        m_state = val;
+        if (m_enabled) { drawImage(pic(IDLE), m_x, m_y, m_w, m_h); }
+    }
+
     void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
         x = m_x;
         y = m_y;
@@ -252,23 +268,39 @@ class button1state : public RegisterTable { // click button
     }
 
     void setPicturePath(ps_ptr<char> path) {
-        if (path.strlen() > 0) {
-            m_idlePicturePath = path + "_idle.png";
-            m_clickPicturePath = path + "_click.png";
-            m_focusPicturePath = path + "_focus.png";
-            m_inactivePicturePath = path + "_inactive.png";
-        } else {
-            m_idlePicturePath = m_name + "_idle.png";
-            m_clickPicturePath = m_name + "_click.png";
-            m_focusPicturePath = m_name + "_focus.png";
-            m_inactivePicturePath = m_name + "_inactive.png";
+        if (m_type == ButtonType::PushButton) {
+            m_picturePath[OFF][IDLE] = path + "_idle.png";
+            m_picturePath[OFF][CLICK] = path + "_click.png";
+            m_picturePath[OFF][FOCUS] = path + "_focus.png";
+            m_picturePath[OFF][INACTIVE] = path + "_inactive.png";
         }
+        if (m_type == ButtonType::ToggleButton) {
+            m_picturePath[OFF][IDLE] = path + "_Off_idle.png";
+            m_picturePath[OFF][CLICK] = path + "_Off_click.png";
+            m_picturePath[OFF][FOCUS] = path + "_Off_focus.png";
+            m_picturePath[OFF][INACTIVE] = path + "_Off_inactive.png";
+            m_picturePath[ON][IDLE] = path + "_On_idle.png";
+            m_picturePath[ON][CLICK] = path + "_On_click.png";
+            m_picturePath[ON][FOCUS] = path + "_On_focus.png";
+            m_picturePath[ON][INACTIVE] = path + "_On_inactive.png";
+        }
+
+        imgSize img = getImageSize(m_picturePath[OFF][IDLE]);
+        m_button_image_w = img.w;
+        m_button_image_h = img.h;
+        if (m_button_image_w > m_w || m_button_image_h > m_h) {
+            MWR_LOG_ERROR("m_button_image_w: {} > m_w or m_button_image_h {} > m_h", m_button_image_w, m_w, m_button_image_h, m_h);
+            return;
+        }
+        m_button_image_x = m_x + (m_w - m_button_image_w) / 2;
+        m_button_image_y = m_y + (m_h - m_button_image_h) / 2;
     }
 
-    bool click() { // e.g. from IR
-        if (!m_enabled) { return false; }
-        drawImage(m_clickPicturePath, m_x, m_y, m_w, m_h);
+    bool click() {
+        if (!m_enabled) return false;
+        drawImage(pic(CLICK), m_button_image_x, m_button_image_y, m_button_image_w, m_button_image_h);
         m_clicked = true;
+        if (m_type == ButtonType::ToggleButton) m_state = !m_state;
         if (graphicObjects_OnClick) graphicObjects_OnClick(m_name, m_enabled);
         return true;
     }
@@ -278,24 +310,22 @@ class button1state : public RegisterTable { // click button
         if (y < m_y) return false;
         if (x > m_x + m_w) return false;
         if (y > m_y + m_h) return false;
-        if (m_enabled) {
-            drawImage(m_clickPicturePath, m_x, m_y, m_w, m_h);
-            m_clicked = true;
-        }
-        if (graphicObjects_OnClick) graphicObjects_OnClick(m_name, m_enabled);
-        //    if(!m_enabled) return false;
-        return true;
+        return click();
     }
+
     bool released() {
         if (!m_enabled) return false;
         if (!m_clicked) return false;
-        drawImage(m_idlePicturePath, m_x, m_y, m_w, m_h);
+        drawImage(pic(IDLE), m_button_image_x, m_button_image_y, m_button_image_w, m_button_image_h);
         m_clicked = false;
         if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
         return true;
     }
 
   private:
+    State         currentState() const { return (m_type == ButtonType::ToggleButton && m_state) ? ON : OFF; }
+    ps_ptr<char>& pic(Image img) { return m_picturePath[currentState()][img]; }
+
     bool draw_focus(bool focus) {
         if (!m_active) {
             m_focus = false;
@@ -307,216 +337,23 @@ class button1state : public RegisterTable { // click button
         }
         if (focus == m_focus) return m_focus;
         if (focus) {
-            drawImage(m_focusPicturePath, m_x, m_y, m_w, m_h);
+            drawImage(pic(FOCUS), m_button_image_x, m_button_image_y, m_button_image_w, m_button_image_h);
             m_focus = true;
         } else {
-            drawImage(m_idlePicturePath, m_x, m_y, m_w, m_h);
+            drawImage(pic(IDLE), m_button_image_x, m_button_image_y, m_button_image_w, m_button_image_h);
             m_focus = false;
         }
         return m_focus;
     }
 
     void setInactive() {
-        drawImage(m_inactivePicturePath, m_x, m_y, m_w, m_h);
+        drawImage(pic(INACTIVE), m_button_image_x, m_button_image_y, m_button_image_w, m_button_image_h);
         m_enabled = false;
         m_active = false;
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class button2state : public RegisterTable { // on off switch
-  private:
-    int16_t      m_x = 0;
-    int16_t      m_y = 0;
-    int16_t      m_w = 0;
-    int16_t      m_h = 0;
-    int32_t      m_bg_color = TFT_TRANSPARENT;
-    ps_ptr<char> m_off_idlePicturePath;
-    ps_ptr<char> m_on_idlePicturePath;
-    ps_ptr<char> m_off_clickPicturePath;
-    ps_ptr<char> m_on_clickPicturePath;
-    ps_ptr<char> m_off_inactivePicturePath;
-    ps_ptr<char> m_on_inactivePicturePath;
-    ps_ptr<char> m_off_focusPicturePath;
-    ps_ptr<char> m_on_focusPicturePath;
-    bool         m_enabled = false;
-    bool         m_focus = false;
-    bool         m_active = true;
-    bool         m_clicked = false;
-    bool         m_state = false;
-    bool         m_content_has_changed = false;
-    bool         m_first_call = true;
-    ps_ptr<char> m_name;
-    releasedArg  m_ra;
-
-  public:
-    button2state(ps_ptr<char> name) {
-        register_object(this);
-        m_name = name;
-        m_enabled = false;
-        m_clicked = false;
-        m_state = false;
-    }
-    ~button2state() {}
-
-    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
-        m_x = x; // x pos
-        m_y = y; // y pos
-        m_w = w; // width
-        m_h = h; // high
-        m_enabled = false;
-        m_active = true;
-    }
-
-    ps_ptr<char> get_name() { return m_name; }
-    void         enable() { m_enabled = true; }
-    void         disable() { m_enabled = false; }
-    bool         is_enabled() { return m_enabled; }
-    bool         is_active() { return m_active; }
-    void         set_active(bool active) { m_active = active; }
-    bool         has_focus() { return m_focus; }
-    void         set_bg_color(int32_t color) { m_bg_color = color; }
-    bool         set_focus(bool focus) { return draw_focus(focus); }
-
-    void show() {
-        if (m_first_call) m_first_call = false;
-        if (m_bg_color == TFT_TRANSPARENT) {
-            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
-        } else {
-            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
-        }
-        m_clicked = false;
-        if (!m_active) {
-            setInactive();
-            return;
-        }
-        if (m_state) {
-            drawImage(m_on_idlePicturePath, m_x, m_y, m_w, m_h);
-        } else {
-            drawImage(m_off_idlePicturePath, m_x, m_y, m_w, m_h);
-        }
-        m_enabled = true;
-    }
-
-    void hide() {
-        if (m_first_call) return;
-        if (m_bg_color == TFT_TRANSPARENT) {
-            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
-        } else {
-            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
-        }
-        m_enabled = false;
-    }
-
-    void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
-        x = m_x;
-        y = m_y;
-        w = m_w;
-        h = m_h;
-    }
-
-    void setPicturePath(ps_ptr<char> path) {
-        m_off_idlePicturePath = path + "_Off_Idle.png";
-        m_on_idlePicturePath = path + "_On_Idle.png";
-        m_off_clickPicturePath = path + "_Off_Click.png";
-        m_on_clickPicturePath = path + "_On_Click.png";
-        m_off_inactivePicturePath = path + "_Off_Inactive.png";
-        m_on_inactivePicturePath = path + "_On_Inactive.png";
-        m_off_focusPicturePath = path + "_Off_Focus.png";
-        m_on_focusPicturePath = path + "_On_Focus.png";
-    }
-
-    void setValue(bool val) {
-        m_state = val;
-        if (m_enabled) {
-            if (m_state)
-                drawImage(m_on_idlePicturePath, m_x, m_y, m_w, m_h);
-            else
-                drawImage(m_off_idlePicturePath, m_x, m_y, m_w, m_h);
-        }
-    }
-    bool getValue() { return m_state; }
-    void setOn() { m_state = true; }
-    void setOff() { m_state = false; }
-    void setActive(bool act) { m_active = act; }
-    bool getActive() { return m_active; }
-
-    bool click() {
-        if (!m_enabled) return false;
-        if (m_state)
-            drawImage(m_on_clickPicturePath, m_x, m_y, m_w, m_h);
-        else
-            drawImage(m_off_clickPicturePath, m_x, m_y, m_w, m_h);
-        m_clicked = true;
-        m_state = !m_state;
-
-        if (graphicObjects_OnClick) graphicObjects_OnClick(m_name, m_enabled);
-        return true;
-    }
-
-    bool positionXY(uint16_t x, uint16_t y) {
-        if (x < m_x) return false;
-        if (y < m_y) return false;
-        if (x > m_x + m_w) return false;
-        if (y > m_y + m_h) return false;
-        if (m_enabled) {
-            if (m_state)
-                drawImage(m_on_clickPicturePath, m_x, m_y, m_w, m_h);
-            else
-                drawImage(m_off_clickPicturePath, m_x, m_y, m_w, m_h);
-            m_clicked = true;
-            m_state = !m_state;
-        }
-        if (graphicObjects_OnClick) graphicObjects_OnClick(m_name, m_enabled);
-        //    if(!m_enabled) return false;
-        return true;
-    }
-    bool released() {
-        if (!m_enabled) return false;
-        if (!m_clicked) return false;
-        if (m_state)
-            drawImage(m_on_idlePicturePath, m_x, m_y, m_w, m_h);
-        else
-            drawImage(m_off_idlePicturePath, m_x, m_y, m_w, m_h);
-        m_clicked = false;
-        if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
-        return true;
-    }
-
-  private:
-    bool draw_focus(bool focus) {
-        if (!focus) m_focus = false;
-        if (!m_active) return false;
-        if (!m_enabled) return false;
-        if (m_state) {
-            if (focus) {
-                drawImage(m_on_focusPicturePath, m_x, m_y, m_w, m_h);
-                m_focus = true;
-            } else {
-                drawImage(m_on_idlePicturePath, m_x, m_y, m_w, m_h);
-            }
-        } else {
-            if (focus) {
-                drawImage(m_off_focusPicturePath, m_x, m_y, m_w, m_h);
-                m_focus = true;
-            } else {
-                drawImage(m_off_idlePicturePath, m_x, m_y, m_w, m_h);
-            }
-        }
-        return m_focus;
-    }
-
-    void setInactive() {
-        if (m_state) {
-            drawImage(m_on_inactivePicturePath, m_x, m_y, m_w, m_h);
-        } else {
-            drawImage(m_off_inactivePicturePath, m_x, m_y, m_w, m_h);
-        }
-        m_enabled = false;
-        m_active = false;
-    }
-};
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class pictureBox : public RegisterTable {
+class PictureBox : public RegisterTable {
   private:
     int16_t      m_x = 0;
     int16_t      m_y = 0;
@@ -530,9 +367,10 @@ class pictureBox : public RegisterTable {
     uint8_t      m_padding_right = 0;  // right margin
     uint8_t      m_padding_top = 0;    // top margin
     uint8_t      m_padding_bottom = 0; // bottom margin
+    HAlign       m_h_align = HAlign::Center;
+    VAlign       m_v_align = VAlign::Middle;
     int32_t      m_bg_color = TFT_TRANSPARENT;
     ps_ptr<char> m_PicturePath;
-    ps_ptr<char> m_altPicturePath;
     ps_ptr<char> m_name;
     bool         m_enabled = false;
     bool         m_focus = false;
@@ -543,15 +381,14 @@ class pictureBox : public RegisterTable {
     releasedArg  m_ra;
 
   public:
-    pictureBox(ps_ptr<char> name) {
+    PictureBox(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
         setPicturePath("");
-        setAlternativPicturePath("");
     }
-    ~pictureBox() {}
+    ~PictureBox() {}
 
-    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t padding_left, uint8_t padding_right, uint8_t padding_top, uint8_t padding_bottom) {
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t padding_left = 0, uint8_t padding_right = 0, uint8_t padding_top = 0, uint8_t padding_bottom = 0) {
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w; // width
@@ -583,15 +420,8 @@ class pictureBox : public RegisterTable {
             }
             m_content_has_changed = false;
         }
-        int x = m_x + m_padding_left + m_image_x;
-        int y = m_y + m_padding_top + m_image_y;
-        int w = m_w - (m_padding_right + m_padding_left);
-        int h = m_h - (m_padding_bottom + m_padding_top);
-        if (m_image_w == 0 || m_image_h == 0) {
-            m_enabled = drawImage(m_altPicturePath, x, y, w, h);
-        } else {
-            m_enabled = drawImage(m_PicturePath, x, y, w, h);
-        }
+        if (m_image_w > m_w || m_image_h > m_h) { MWR_LOG_WARN("image {}, w: {}, h: {} > {}x{}", m_PicturePath, m_image_w, m_image_h, m_w, m_h); }
+        m_enabled = drawImage(m_PicturePath, m_image_x, m_image_y, m_image_w, m_image_h);
         return m_enabled;
     }
 
@@ -615,27 +445,45 @@ class pictureBox : public RegisterTable {
     void setPicturePath(ps_ptr<char> path) {
         if (m_PicturePath != path) m_content_has_changed = true;
         m_PicturePath = path;
-        imgSize img = GetImageSize(path);
+        imgSize img = getImageSize(path);
         m_image_w = img.w;
         m_image_h = img.h;
-    }
-    void setAlternativPicturePath(ps_ptr<char> path) { m_altPicturePath = path; }
-
-    void align(bool h, bool v) {
-        if (h) {
-            m_padding_left = 0;
-            m_padding_right = 0;
-            m_image_x = (m_w - m_image_w) / 2;
-        } else
-            m_image_x = 0;
-        if (v) {
-            m_padding_top = 0;
-            m_padding_bottom = 0;
-            m_image_y = (m_h - m_image_h) / 2;
-        } else
-            m_image_y = 0;
+        align();
     }
 
+    void setAlign(HAlign h_align, VAlign v_align) {
+        m_h_align = h_align;
+        m_v_align = v_align;
+        align();
+    }
+
+  private:
+    void align() {
+        if (m_image_w > m_w) {
+            MWR_LOG_ERROR("m_image_w: {} > m_w: {}, {}", m_image_w, m_w, m_PicturePath);
+            return;
+        }
+        if (m_image_h > m_h) {
+            MWR_LOG_ERROR("m_image_h: {} > m_h: {}, {}", m_image_h, m_h, m_PicturePath);
+            return;
+        }
+        if (m_padding_left + m_padding_right + m_image_w > m_w) {
+            MWR_LOG_WARN("m_padding_left: {}, m_padding_right: {}, m_image_w: {} > m_w; {}, {}", m_padding_left, m_padding_right, m_image_w, m_w, m_PicturePath);
+            return;
+        }
+        if (m_padding_top + m_padding_bottom + m_image_h > m_h) {
+            MWR_LOG_WARN("m_padding_top: {}, m_padding_bottom: {}, m_image_h: {} > m_h; {}, {}", m_padding_top, m_padding_bottom, m_image_h, m_h, m_PicturePath);
+            return;
+        }
+        if (m_h_align == HAlign::Left) m_image_x = m_x + m_padding_left;
+        if (m_h_align == HAlign::Center) m_image_x = m_x + (m_w - m_image_w) / 2;
+        if (m_h_align == HAlign::Right) m_image_x = m_x + (m_w - m_image_w) - m_padding_right;
+        if (m_v_align == VAlign::Top) m_image_y = m_y + m_padding_top;
+        if (m_v_align == VAlign::Middle) m_image_y = m_y + (m_h - m_image_h) / 2;
+        if (m_v_align == VAlign::Bottom) m_image_y = m_y + (m_h - m_image_h) - m_padding_bottom;
+    }
+
+  public:
     bool positionXY(uint16_t x, uint16_t y) {
         if (x < m_x) return false;
         if (y < m_y) return false;
@@ -655,7 +503,7 @@ class pictureBox : public RegisterTable {
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class slider : public RegisterTable {
+class Slider : public RegisterTable {
   private:
     bool             m_enabled = false;
     bool             m_clicked = false;
@@ -691,7 +539,7 @@ class slider : public RegisterTable {
     releasedArg      m_ra;
 
   public:
-    slider(ps_ptr<char> name) {
+    Slider(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
         m_railHigh = 6;
@@ -699,7 +547,7 @@ class slider : public RegisterTable {
         m_railColor = TFT_BEIGE;
         m_spotColor = TFT_RED;
     }
-    ~slider() { m_objectInit = false; }
+    ~Slider() { m_objectInit = false; }
 
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom) {
         m_x = x; // x pos
@@ -864,7 +712,7 @@ class slider : public RegisterTable {
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class progressbar : public RegisterTable {
+class Progressbar : public RegisterTable {
   private:
     int16_t      m_x = 0;
     int16_t      m_y = 0;
@@ -895,14 +743,14 @@ class progressbar : public RegisterTable {
     releasedArg  m_ra;
 
   public:
-    progressbar(ps_ptr<char> name) {
+    Progressbar(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
         m_frameColor = TFT_WHITE;
         m_railColorLeft = TFT_RED;
         m_railColorRight = TFT_GREEN;
     }
-    ~progressbar() { m_objectInit = false; }
+    ~Progressbar() { m_objectInit = false; }
 
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t padding_left, uint16_t padding_right, uint16_t padding_top, uint16_t padding_bottom, int16_t minVal, int16_t maxVal) {
         m_x = x; // x pos
@@ -1029,14 +877,13 @@ class progressbar : public RegisterTable {
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class textbox : public RegisterTable {
+class Textbox : public RegisterTable {
   private:
     bool             m_enabled = false;
     bool             m_focus = false;
     bool             m_active = true;
     bool             m_clicked = false;
     bool             m_autoSize = false;
-    bool             m_narrow = false;
     bool             m_noWrap = false;
     bool             m_content_has_changed = false;
     bool             m_first_call = true;
@@ -1046,8 +893,8 @@ class textbox : public RegisterTable {
     int16_t          m_w = 0;
     int16_t          m_h = 0;
     uint8_t          m_fontSize = 0;
-    uint8_t          m_h_align = TFT_ALIGN_RIGHT;
-    uint8_t          m_v_align = TFT_ALIGN_TOP;
+    HAlign           m_h_align = HAlign::Center;
+    VAlign           m_v_align = VAlign::Middle;
     uint8_t          m_padding_left = 0;  // left margin
     uint8_t          m_paddig_right = 0;  // right margin
     uint8_t          m_paddig_top = 0;    // top margin
@@ -1061,14 +908,14 @@ class textbox : public RegisterTable {
     releasedArg      m_ra;
 
   public:
-    textbox(ps_ptr<char> name) {
+    Textbox(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
         m_textColor = TFT_LIGHTGREY;
         m_borderColor = TFT_TRANSPARENT;
         m_fontSize = 1;
     }
-    ~textbox() {}
+    ~Textbox() {}
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom) {
         m_x = x; // x pos
         m_y = y; // y pos
@@ -1124,6 +971,33 @@ class textbox : public RegisterTable {
         m_enabled = false;
     }
 
+    void setBounds(int16_t x, int16_t y, int16_t w, int16_t h) {
+        bool new_bounds = false;
+        if (m_x != x) {
+            m_x = x;
+            new_bounds = true;
+        }
+        if (m_y != y) {
+            m_y = y;
+            new_bounds = true;
+        }
+        if (m_w != w) {
+            m_w = w;
+            new_bounds = true;
+        }
+        if (m_h != h) {
+            m_h = h;
+            new_bounds = true;
+        }
+        if (new_bounds) {
+            m_first_call = true;
+            if (m_enabled) {
+                hide();
+                show();
+            }
+        }
+    }
+
     void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
         x = m_x;
         y = m_y;
@@ -1170,11 +1044,9 @@ class textbox : public RegisterTable {
         }
     }
 
-    void setNarrow(bool narrow) { m_narrow = narrow; }
-
     void setNoWrap(bool noWrap) { m_noWrap = noWrap; }
 
-    void setAlign(uint8_t h_align, uint8_t v_align) {
+    void setAlign(HAlign h_align, VAlign v_align) {
         m_h_align = h_align;
         m_v_align = v_align;
     }
@@ -1195,20 +1067,20 @@ class textbox : public RegisterTable {
                 h -= 2;
                 getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
             }
-            getTFT().writeText(m_text.c_get(), x, y, w, h, m_h_align, m_v_align, m_narrow, m_noWrap, m_autoSize);
+            getTFT().writeText(m_text.c_get(), x, y, w, h, m_h_align, m_v_align, m_noWrap, m_autoSize);
         }
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class inputbox : public RegisterTable {
+class Inputbox : public RegisterTable {
   private:
     int16_t      m_x = 0;
     int16_t      m_y = 0;
     int16_t      m_w = 0;
     int16_t      m_h = 0;
     uint8_t      m_fontSize = 0;
-    uint8_t      m_h_align = TFT_ALIGN_RIGHT;
-    uint8_t      m_v_align = TFT_ALIGN_TOP;
+    HAlign       m_h_align = HAlign::Right;
+    VAlign       m_v_align = VAlign::Top;
     uint8_t      m_padding_left = 0;  // left margin
     uint8_t      m_paddig_right = 0;  // right margin
     uint8_t      m_paddig_top = 0;    // top margin
@@ -1224,20 +1096,19 @@ class inputbox : public RegisterTable {
     bool         m_active = true;
     bool         m_clicked = false;
     bool         m_autoSize = false;
-    bool         m_narrow = false;
     bool         m_noWrap = false;
     bool         m_first_call = true;
     releasedArg  m_ra;
 
   public:
-    inputbox(ps_ptr<char> name) {
+    Inputbox(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
         m_fgColor = TFT_LIGHTGREY;
         m_borderColor = TFT_BLACK;
         m_fontSize = 1;
     }
-    ~inputbox() {}
+    ~Inputbox() {}
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom) {
         m_x = x; // x pos
         m_y = y; // y pos
@@ -1323,12 +1194,11 @@ class inputbox : public RegisterTable {
         if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
         return true;
     }
-    void setText(ps_ptr<char> txt, bool narrow = false, bool noWrap = false) { // prepare a text, wait of show() to write it
+    void setText(ps_ptr<char> txt, bool noWrap = false) { // prepare a text, wait of show() to write it
         m_text = txt;
-        m_narrow = narrow;
         m_noWrap = noWrap;
     }
-    void setAlign(uint8_t h_align, uint8_t v_align) {
+    void setAlign(HAlign h_align, VAlign v_align) {
         m_h_align = h_align;
         m_v_align = v_align;
     }
@@ -1352,25 +1222,15 @@ class inputbox : public RegisterTable {
             if (m_borderWidth > 0) { getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor); }
             if (m_borderWidth > 1) { getTFT().drawRect(m_x + 1, m_y + 1, m_w - 2, m_h - 2, m_borderColor); }
 
-            uint16_t lineLength = 0;
-            uint16_t txtMaxWidth = w - 2 * h;
-            uint16_t idx = 0;
-            lineLength = getTFT().getLineLength(m_text.c_get(), m_narrow);
-            while (lineLength > txtMaxWidth) {
-                lineLength = getTFT().getLineLength(m_text.get() + idx, m_narrow);
-                if (lineLength > txtMaxWidth) {
-                    idx++;
-                    if (idx > m_text.strlen()) break;
-                }
-            }
-            getTFT().writeText(m_text.get() + idx, x, y, w, h, m_h_align, m_v_align, m_narrow, m_noWrap, false);
+
+            getTFT().writeText(m_text.get(), x, y, w, h, m_h_align, m_v_align, m_noWrap, false);
             getTFT().setTextColor(txtColor_tmp);
             getTFT().setBackGoundColor(bgColor_tmp);
         }
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class textbutton : public RegisterTable {
+class Textbutton : public RegisterTable {
   private:
     int16_t      m_x = 0;
     int16_t      m_y = 0;
@@ -1378,8 +1238,8 @@ class textbutton : public RegisterTable {
     int16_t      m_h = 0;
     int16_t      m_r = 0; // radius round rect
     uint8_t      m_fontSize = 0;
-    uint8_t      m_h_align = TFT_ALIGN_RIGHT;
-    uint8_t      m_v_align = TFT_ALIGN_TOP;
+    HAlign       m_h_align = HAlign::Right;
+    VAlign       m_v_align = VAlign::Top;
     uint8_t      m_padding_left = 0;  // left margin
     uint8_t      m_paddig_right = 0;  // right margin
     uint8_t      m_paddig_top = 0;    // top margin
@@ -1396,14 +1256,13 @@ class textbutton : public RegisterTable {
     bool         m_active = true;
     bool         m_clicked = false;
     bool         m_autoSize = false;
-    bool         m_narrow = false;
     bool         m_noWrap = false;
     bool         m_content_has_changed = false;
     bool         m_first_call = true;
     releasedArg  m_ra;
 
   public:
-    textbutton(ps_ptr<char> name) {
+    Textbutton(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
         m_fgColor = TFT_LIGHTGREY;
@@ -1546,14 +1405,13 @@ class textbutton : public RegisterTable {
         if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
         return true;
     }
-    void setText(ps_ptr<char> txt, bool narrow = false, bool noWrap = false) { // prepare a text, wait of show() to write it
+    void setText(ps_ptr<char> txt, bool noWrap = false) { // prepare a text, wait of show() to write it
         if (!txt) { txt = strdup(""); }
         m_text = txt;
-        m_narrow = narrow;
         m_noWrap = noWrap;
     }
     ps_ptr<char> getText() { return m_text; }
-    void         setAlign(uint8_t h_align, uint8_t v_align) {
+    void         setAlign(HAlign h_align, VAlign v_align) {
         m_h_align = h_align;
         m_v_align = v_align;
     }
@@ -1596,45 +1454,52 @@ class textbutton : public RegisterTable {
             } else if (m_text.equals("/d")) {
                 drawTriangeDown();
             } else
-                getTFT().writeText(m_text.c_get(), x, y, w, h, m_h_align, m_v_align, m_narrow, m_noWrap, m_autoSize);
+                getTFT().writeText(m_text.c_get(), x, y, w, h, m_h_align, m_v_align, m_noWrap, m_autoSize);
             getTFT().setTextColor(txtColor_tmp);
             getTFT().setBackGoundColor(bgColor_tmp);
         }
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class vuMeter : public RegisterTable {
+class VU_Meter : public RegisterTable {
   private:
-    uint16_t     m_x = 0;
-    uint16_t     m_y = 0;
-    uint16_t     m_w = 0;
-    uint16_t     m_h = 0;
-    int32_t      m_bg_color = TFT_TRANSPARENT;
-    uint32_t     m_frameColor = TFT_DARKGREY;
-    ps_ptr<char> m_name;
-    bool         m_enabled = false;
-    bool         m_focus = false;
-    bool         m_active = true;
-    bool         m_clicked = false;
-    bool         m_content_has_changed = false;
-    bool         m_first_call = true;
-    uint8_t      m_VUleftCh = 0;  // VU meter left channel
-    uint8_t      m_VUrightCh = 0; // VU meter right channel
-    releasedArg  m_ra;
-    uint8_t      m_segm_w = 0;
-    uint8_t      m_segm_h = 0;
-    uint8_t      m_frameSize = 1;
-    uint16_t     m_frame_x = 0;
-    uint16_t     m_frame_y = 0;
-    uint16_t     m_frame_w = 0;
-    uint16_t     m_frame_h = 0;
+    uint16_t         m_x = 0;
+    uint16_t         m_y = 0;
+    uint16_t         m_w = 0;
+    uint16_t         m_h = 0;
+    int32_t          m_bg_color = TFT_TRANSPARENT;
+    uint32_t         m_frameColor = TFT_DARKGREY;
+    ps_ptr<char>     m_name;
+    ps_ptr<uint16_t> m_cache_bg = {};
+    bool             m_enabled = false;
+    bool             m_focus = false;
+    bool             m_active = true;
+    bool             m_clicked = false;
+    bool             m_content_has_changed = false;
+    bool             m_first_call = true;
+    bool             m_transparency = false;
+    uint64_t         m_barLeft;  // Bit = Bars
+    uint64_t         m_peakLeft; // Bit = Peak
+    releasedArg      m_ra;
+    uint8_t          m_segm_w = 0;
+    uint8_t          m_segm_h = 0;
+    uint8_t          m_frameSize = 1;
+    uint16_t         m_frame_x = 0;
+    uint16_t         m_frame_y = 0;
+    uint16_t         m_frame_w = 0;
+    uint16_t         m_frame_h = 0;
+
+    enum SegmentState : uint8_t { OFF, BAR, PEAK };
+    uint16_t                  m_numSegments = 26;
+    std::vector<SegmentState> m_leftState;
+    std::vector<SegmentState> m_rightState;
 
   public:
-    vuMeter(ps_ptr<char> name) {
+    VU_Meter(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
     }
-    ~vuMeter() {}
+    ~VU_Meter() {}
 
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom) {
         m_x = x; // x pos
@@ -1645,10 +1510,14 @@ class vuMeter : public RegisterTable {
         m_frame_y = y + paddig_top;
         uint16_t frame_w = m_w - paddig_left - paddig_right;
         uint16_t frame_h = m_h - paddig_top - paddig_bottom;
-        m_segm_w = ((frame_w - 3 * m_frameSize) / 2) - m_frameSize;  // 2 columns + 3 frameSizes
-        m_segm_h = ((frame_h - 2 * m_frameSize) / 12) - m_frameSize; // 12 rows + 2 frameSizes
+        m_numSegments = frame_h / 3;
+        if (m_numSegments == 0) m_numSegments = 1;
+        m_leftState.resize(m_numSegments, OFF);
+        m_rightState.resize(m_numSegments, OFF);
+        m_segm_w = ((frame_w - 3 * m_frameSize) / 2) - m_frameSize; // 2 columns + 3 frameSizes
+        m_segm_h = (frame_h / m_numSegments) - m_frameSize;
         m_frame_w = 2 * m_segm_w + 3 * m_frameSize;
-        m_frame_h = 12 * m_segm_h + 13 * m_frameSize;
+        m_frame_h = m_numSegments * (m_segm_h + m_frameSize) + m_frameSize;
     }
 
     ps_ptr<char> get_name() { return m_name; }
@@ -1660,28 +1529,38 @@ class vuMeter : public RegisterTable {
     bool         has_focus() { return m_focus; }
     void         set_bg_color(int32_t color) { m_bg_color = color; }
     bool         set_focus(bool focus) { return false; }
+    void         set_transparency(bool transparency) { m_transparency = transparency; }
 
     void show() {
-        if (m_first_call) { m_first_call = false; }
-        m_enabled = true;
-        m_clicked = false;
-        if (m_bg_color == TFT_TRANSPARENT) {
+        if (m_first_call) {
+            m_cache_bg.alloc_array(m_w * m_h, m_name.c_get());
+            getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
+        }
+        if (m_transparency) {
+            getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else if (m_bg_color == TFT_TRANSPARENT) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+            getTFT().drawRect(m_frame_x, m_frame_y, m_frame_w, m_frame_h, m_frameColor);
         }
-        getTFT().drawRect(m_frame_x, m_frame_y, m_frame_w, m_frame_h, m_frameColor);
-        for (uint8_t i = 0; i < 12; i++) {
+
+        for (uint16_t i = 0; i < m_numSegments; i++) {
+            m_leftState[i] = OFF;
+            m_rightState[i] = OFF;
             drawRect(i, 0, 0);
             drawRect(i, 1, 0);
         }
-        m_VUleftCh = 0;
-        m_VUrightCh = 0;
+        m_first_call = false;
+        m_enabled = true;
+        m_clicked = false;
     }
 
     void hide() {
         if (m_first_call) return;
-        if (m_bg_color == TFT_TRANSPARENT) {
+        if (m_transparency) {
+            getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else if (m_bg_color == TFT_TRANSPARENT) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -1696,27 +1575,36 @@ class vuMeter : public RegisterTable {
         h = m_h;
     }
 
-    void update(uint16_t vum) {
+    void buildState(uint16_t bars, uint16_t peak, bool hasSignal, std::vector<SegmentState>& state, bool channel) {
+        for (uint16_t i = 0; i < m_numSegments; i++) {
+            SegmentState newState = OFF;
+            if (i < bars) newState = BAR;
+            if (hasSignal && i == peak) newState = PEAK;
+            if (newState == state[i]) continue;
+            switch (newState) {
+                case OFF: drawRect(i, channel, 0); break;
+                case BAR: drawRect(i, channel, 1); break;
+                case PEAK:
+                    drawRect(i, channel, 1); // später drawPeak()
+                    break;
+            }
+            state[i] = newState;
+        }
+    }
+
+    void update(uint8_t l, uint8_t r, uint8_t peak_l, uint8_t peak_r) {
         if (!m_enabled) return;
-        uint8_t left = map_l(vum >> 8, 0, 255, 0, 12);
-        uint8_t right = map_l(vum & 0x00FF, 0, 255, 0, 12);
+
+        uint16_t bars_left = map_l(l, 0, 255, 0, m_numSegments - 1);
+        uint16_t bars_right = map_l(r, 0, 255, 0, m_numSegments - 1);
+        uint16_t peak_left = map_l(peak_l, 0, 255, 0, m_numSegments - 1);
+        uint16_t peak_right = map_l(peak_r, 0, 255, 0, m_numSegments - 1);
 
         xSemaphoreTake(mutex_display, portMAX_DELAY);
-        if (left > m_VUleftCh) {
-            for (int32_t i = m_VUleftCh; i < left; i++) { drawRect(i, 1, 1); }
-        }
-        if (left < m_VUleftCh) {
-            for (int32_t i = left; i < m_VUleftCh; i++) { drawRect(i, 1, 0); }
-        }
-        m_VUleftCh = left;
 
-        if (right > m_VUrightCh) {
-            for (int32_t i = m_VUrightCh; i < right; i++) { drawRect(i, 0, 1); }
-        }
-        if (right < m_VUrightCh) {
-            for (int32_t i = right; i < m_VUrightCh; i++) { drawRect(i, 0, 0); }
-        }
-        m_VUrightCh = right;
+        buildState(bars_left, peak_left, l > 0, m_leftState, true);
+        buildState(bars_right, peak_right, r > 0, m_rightState, false);
+
         xSemaphoreGive(mutex_display);
     }
 
@@ -1739,30 +1627,261 @@ class vuMeter : public RegisterTable {
     }
 
   private:
-    void drawRect(uint8_t row, uint8_t col, bool br) {
-        uint16_t color = 0;
+    void drawRect(uint16_t row, uint8_t col, bool br) {
+        if (row >= m_numSegments || col > 1) return;
+
         uint16_t y_end = m_frame_y + m_frame_h - m_frameSize - m_segm_h;
         uint16_t xPos = m_frame_x + m_frameSize + col * (m_segm_w + m_frameSize);
         uint16_t yPos = y_end - row * (m_frameSize + m_segm_h);
-        if (row > 12) return;
-        switch (row) {
-            case 0 ... 6: // green
-                br ? color = TFT_GREEN : color = TFT_DARKGREEN;
-                break;
-            case 7 ... 9: // yellow
-                br ? color = TFT_YELLOW : color = TFT_DARKYELLOW;
-                break;
-            case 10 ... 11: // red
-                br ? color = TFT_RED : color = TFT_DARKRED;
-                break;
+
+        float    s = (float)m_numSegments / 100.0;
+        uint16_t greenLimit = 58.0 * s;
+        uint16_t yellowLimit = 85.0 * s;
+
+        int32_t activeColor;
+        int32_t inactiveColor;
+
+        if (row < greenLimit) {
+            activeColor = TFT_GREEN;
+            inactiveColor = m_transparency ? TFT_TRANSPARENT : TFT_DARKGREEN;
+        } else if (row < yellowLimit) {
+            activeColor = TFT_YELLOW;
+            inactiveColor = m_transparency ? TFT_TRANSPARENT : TFT_DARKYELLOW;
+        } else {
+            activeColor = TFT_LIGHTRED;
+            inactiveColor = m_transparency ? TFT_TRANSPARENT : TFT_DARKRED;
         }
-        getTFT().fillRect(xPos, yPos, m_segm_w, m_segm_h, color);
-    };
+
+        int32_t color = br ? activeColor : inactiveColor;
+
+        if (color == TFT_TRANSPARENT) {
+            uint16_t srcX = xPos - m_x;
+            uint16_t srcY = yPos - m_y;
+            getTFT().copyFramebuffer(m_cache_bg.get(), m_w, m_h, srcX, srcY, FB_VISIBLE, xPos, yPos, m_segm_w, m_segm_h);
+        } else {
+            getTFT().fillRect(xPos, yPos, m_segm_w, m_segm_h, color);
+        }
+    }
+};
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class Spectrum : public RegisterTable {
+  private:
+    uint16_t         m_x = 0;
+    uint16_t         m_y = 0;
+    uint16_t         m_w = 0;
+    uint16_t         m_h = 0;
+    int32_t          m_bg_color = TFT_TRANSPARENT;
+    ps_ptr<char>     m_name;
+    ps_ptr<uint16_t> m_colums_pos_x;
+    ps_ptr<uint16_t> m_bars_pos_y;
+    ps_ptr<uint16_t> m_cache_bg = {};
+    bool             m_enabled = false;
+    bool             m_focus = false;
+    bool             m_active = true;
+    bool             m_clicked = false;
+    // bool             m_content_has_changed = false;
+    bool m_first_call = true;
+    bool m_transparency = false;
+    // uint64_t         m_barLeft;  // Bit = Bars
+    // uint64_t         m_peakLeft; // Bit = Peak
+    releasedArg m_ra;
+    uint8_t     m_space_between_cols = 1;
+    uint8_t     m_space_between_bars = 1;
+    uint8_t     m_bar_w = 0;
+    uint8_t     m_bar_h = 0;
+    uint16_t    m_window_x = 0;
+    uint16_t    m_window_y = 0;
+    uint16_t    m_window_w = 0;
+    uint16_t    m_window_h = 0;
+
+    enum SegmentState : uint8_t { OFF, BAR, PEAK };
+    uint16_t                  m_numSegments = 26;
+    const uint16_t            m_numColums = 15;
+    std::vector<SegmentState> m_segmState[15];
+
+  public:
+    Spectrum(ps_ptr<char> name) {
+        register_object(this);
+        m_name = name;
+    }
+    ~Spectrum() {}
+
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom) {
+        m_x = x; // x pos
+        m_y = y; // y pos
+        m_w = w;
+        m_h = h;
+        m_window_x = x + paddig_left;
+        m_window_y = y + paddig_top;
+        m_window_w = m_w - paddig_left - paddig_right;
+        m_window_h = m_h - paddig_top - paddig_bottom;
+        m_numSegments = m_window_h / 3;
+        if (m_numSegments == 0) m_numSegments = 1;
+        m_bar_h = (m_window_h / m_numSegments) - m_space_between_bars;
+        m_bar_w = (m_window_w / m_numColums) - m_space_between_cols;
+        uint8_t center_x = (m_window_w - (m_bar_w + m_space_between_cols) * m_numColums - m_space_between_cols) / 2;
+        uint8_t center_y = (m_window_h - (m_bar_h + m_space_between_bars) * m_numSegments - m_space_between_bars) / 2;
+        MWR_LOG_DEBUG("x {} , y {}, w {}, h {}, win_x {}, win_y {}, win_w {}, win_h {}, numCol {}, numSegm {}, bar_w {}, bar_h {}, center_x {}, center_y {}", m_x, m_y, m_w, m_h, m_window_x, m_window_y, m_window_w, m_window_h, m_numColums, m_numSegments, m_bar_w, m_bar_h, center_x, center_y);
+        m_window_x += center_x;
+        m_window_y += center_y;
+        m_colums_pos_x.alloc_array(m_numColums);
+        for (int i = 0; i < m_numColums; i++) {
+            m_colums_pos_x[i] = m_window_x + i * (m_bar_w + m_space_between_bars);
+            m_segmState[i].resize(m_numSegments);
+        }
+        m_bars_pos_y.alloc_array(m_numSegments);
+        for (int i = 0; i < m_numSegments; i++) { m_bars_pos_y[i] = (m_window_y + m_window_h) - i * (m_bar_h + m_space_between_bars) - (m_bar_h + m_space_between_bars); }
+        for (int i = 0; i < m_numColums; i++) MWR_LOG_DEBUG("col_x  i{}: {}", i, m_colums_pos_x[i]);
+        for (int i = 0; i < m_numSegments; i++) MWR_LOG_DEBUG("bars_y i{}: {}", i, m_bars_pos_y[i]);
+    }
+
+    ps_ptr<char> get_name() { return m_name; }
+    void         enable() { m_enabled = true; }
+    void         disable() { m_enabled = false; }
+    bool         is_enabled() { return m_enabled; }
+    bool         is_active() { return m_active; }
+    void         set_active(bool active) { m_active = active; }
+    bool         has_focus() { return m_focus; }
+    void         set_bg_color(int32_t color) { m_bg_color = color; }
+    bool         set_focus(bool focus) { return false; }
+    void         set_transparency(bool transparency) { m_transparency = transparency; }
+
+    void show() {
+        if (m_first_call) {
+            m_cache_bg.alloc_array(m_w * m_h, m_name.c_get());
+            getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
+        }
+        if (m_transparency) {
+            getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+        }
+        m_first_call = false;
+        m_enabled = true;
+        m_clicked = false;
+        clear();
+    }
+
+    void hide() {
+        if (m_first_call) return;
+        if (m_transparency) {
+            getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+        }
+        m_enabled = false;
+    }
+
+    void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
+        x = m_x;
+        y = m_y;
+        w = m_w;
+        h = m_h;
+    }
+
+    void buildState(uint16_t bars, uint16_t peak, bool hasSignal, uint16_t col, std::vector<SegmentState>& state) {
+        for (uint16_t row = 0; row < m_numSegments; row++) {
+            SegmentState newState = OFF;
+
+            if (row < bars) newState = BAR;
+            if (hasSignal && row == peak) newState = PEAK;
+            if (newState == state[row]) continue;
+
+            switch (newState) {
+                case OFF: drawRect(row, col, 0); break;
+                case BAR: drawRect(row, col, 1); break;
+                case PEAK: drawRect(row, col, 1); break;
+            }
+
+            state[row] = newState;
+        }
+    }
+
+    void update(const std::vector<uint32_t>& v, const std::vector<uint32_t>& p) {
+        if (!m_enabled) return;
+        if (v.size() < m_numColums) return; // measured
+        if (p.size() < m_numColums) return; // peak
+
+        xSemaphoreTake(mutex_display, portMAX_DELAY);
+        for (uint16_t col = 0; col < m_numColums; col++) {
+            uint16_t bars = map_l(v[col], 0, 255, 0, m_numSegments - 1);
+            uint16_t peak = map_l(p[col], 0, 255, 0, m_numSegments - 1);
+            buildState(bars, peak, v[col] > 0, col, m_segmState[col]);
+        }
+        xSemaphoreGive(mutex_display);
+    }
+
+    bool positionXY(uint16_t x, uint16_t y) {
+        if (x < m_x) return false;
+        if (y < m_y) return false;
+        if (x > m_x + m_w) return false;
+        if (y > m_y + m_h) return false;
+        if (m_enabled) m_clicked = true;
+        if (graphicObjects_OnClick) graphicObjects_OnClick(m_name, m_enabled);
+        if (!m_enabled) return false;
+        return true;
+    }
+    bool released() {
+        if (!m_enabled) return false;
+        if (!m_clicked) return false;
+        m_clicked = false;
+        if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
+        return true;
+    }
+
+    void clear() {
+        for (uint16_t row = 0; row < m_numSegments; row++) {
+            for (uint16_t col = 0; col < m_numColums; col++) {
+                m_segmState[col][row] = OFF;
+                if (m_enabled) drawRect(row, col, 0);
+            }
+        }
+    }
+
+  private:
+    void drawRect(uint16_t row, uint8_t col, bool br) {
+        if (row >= m_numSegments || col >= m_numColums) return;
+
+        uint16_t xPos = m_colums_pos_x[col];
+        uint16_t yPos = m_bars_pos_y[row];
+
+        float    s = (float)m_numSegments / 100.0;
+        uint16_t greenLimit = 58.0 * s;
+        uint16_t yellowLimit = 85.0 * s;
+
+        int32_t activeColor;
+        int32_t inactiveColor;
+
+        if (row < greenLimit) {
+            activeColor = TFT_GREEN;
+            inactiveColor = m_transparency ? TFT_TRANSPARENT : TFT_DARKGREEN;
+        } else if (row < yellowLimit) {
+            activeColor = TFT_YELLOW;
+            inactiveColor = m_transparency ? TFT_TRANSPARENT : TFT_DARKYELLOW;
+        } else {
+            activeColor = TFT_LIGHTRED;
+            inactiveColor = m_transparency ? TFT_TRANSPARENT : TFT_DARKRED;
+        }
+
+        int32_t color = br ? activeColor : inactiveColor;
+
+        if (color == TFT_TRANSPARENT) {
+            uint16_t srcX = xPos - m_x;
+            uint16_t srcY = yPos - m_y;
+            getTFT().copyFramebuffer(m_cache_bg.get(), m_w, m_h, srcX, srcY, FB_VISIBLE, xPos, yPos, m_bar_w, m_bar_h);
+        } else {
+            getTFT().fillRect(m_colums_pos_x[col], m_bars_pos_y[row], m_bar_w, m_bar_h, color);
+        }
+    }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // *** C O M P O S E D   O B J E C T S
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class selectbox : public RegisterTable {
+class Selectbox : public RegisterTable {
 
     /*    —————————————————————————————————————————————————————————————————————————————
          |                   textbox                               |  ⏬  |  ⏫  |idx |
@@ -1789,24 +1908,23 @@ class selectbox : public RegisterTable {
     bool                      m_focus = false;
     bool                      m_clicked = false;
     bool                      m_autoSize = false;
-    bool                      m_narrow = false;
     bool                      m_noWrap = false;
     releasedArg               m_ra;
-    textbox*                  m_txt_select = new textbox("select_txtbox_ssid");
-    textbutton*               m_txt_btn_down = new textbutton("select_txtbtn_down");
-    textbutton*               m_txt_btn_up = new textbutton("select_txtbtn_up");
-    textbox*                  m_txt_btn_idx = new textbox("select_txtbox_idx");
+    Textbox*                  m_txt_select = new Textbox("select_txtbox_ssid");
+    Textbutton*               m_txt_btn_down = new Textbutton("select_txtbtn_down");
+    Textbutton*               m_txt_btn_up = new Textbutton("select_txtbtn_up");
+    Textbox*                  m_txt_btn_idx = new Textbox("select_txtbox_idx");
     std::vector<ps_ptr<char>> m_selContent;
 
   public:
-    selectbox(ps_ptr<char> name, uint8_t fontSize) {
+    Selectbox(ps_ptr<char> name, uint8_t fontSize) {
         register_object(this);
         m_name = name;
         m_fgColor = TFT_LIGHTGREY;
         m_borderColor = TFT_BLACK;
         setFontSize(fontSize);
     }
-    ~selectbox() {
+    ~Selectbox() {
         delete m_txt_select;
         delete m_txt_btn_down;
         delete m_txt_btn_up;
@@ -1830,21 +1948,19 @@ class selectbox : public RegisterTable {
         m_paddig_top = paddig_top;
         m_paddig_bottom = paddig_bottom;
         m_txt_select->begin(m_x, m_y, m_w - (m_h * 3), m_h, m_padding_left, m_paddig_right, m_paddig_top, m_paddig_bottom);
-        m_txt_select->setNarrow(m_narrow);
         m_txt_select->setNoWrap(m_noWrap);
-        m_txt_select->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
+        m_txt_select->setAlign(HAlign::Left, VAlign::Middle);
         m_txt_btn_down->begin(m_x + m_w - (m_h * 3), m_y, m_h, m_h, m_h / 5, m_h / 5, m_h / 5, m_h / 5, 0);
         m_txt_btn_down->setClickColor(TFT_CYAN);
         m_txt_btn_down->setText("/d");
-        m_txt_btn_down->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+        m_txt_btn_down->setAlign(HAlign::Center, VAlign::Middle);
         m_txt_btn_up->begin(m_x + m_w - (m_h * 2), m_y, m_h, m_h, m_h / 5, m_h / 5, m_h / 5, m_h / 5, 0);
         m_txt_btn_up->setClickColor(TFT_CYAN);
         m_txt_btn_up->setText("/u");
-        m_txt_btn_up->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+        m_txt_btn_up->setAlign(HAlign::Center, VAlign::Middle);
         m_txt_btn_idx->begin(m_x + m_w - (m_h * 1), m_y, m_h, m_h, m_padding_left, m_paddig_right, m_paddig_top, m_paddig_bottom);
-        m_txt_btn_idx->setNarrow(m_narrow);
         m_txt_btn_idx->setNoWrap(m_noWrap);
-        m_txt_btn_idx->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+        m_txt_btn_idx->setAlign(HAlign::Center, VAlign::Middle);
     }
     ps_ptr<char> get_name() { return m_name; }
     void         enable() { enable_all(); }
@@ -2017,7 +2133,7 @@ class selectbox : public RegisterTable {
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class keyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
+class KeyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
   private:
     int16_t      m_x = 0;
     int16_t      m_y = 0;
@@ -2057,19 +2173,19 @@ class keyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     int32_t      m_bg_color = TFT_TRANSPARENT;
     int32_t      m_fgColor = 0;
     int32_t      m_clickColor = TFT_CYAN;
-    textbutton*  txt_btn_array = new textbutton[34]{textbutton("txt_btn0"),  textbutton("txt_btn1"),  textbutton("txt_btn2"),  textbutton("txt_btn3"),  textbutton("txt_btn4"),  textbutton("txt_btn5"),  textbutton("txt_btn6"),  textbutton("txt_btn7"),  textbutton("txt_btn8"),
-                                                    textbutton("txt_btn9"),  textbutton("txt_btn10"), textbutton("txt_btn11"), textbutton("txt_btn12"), textbutton("txt_btn13"), textbutton("txt_btn14"), textbutton("txt_btn15"), textbutton("txt_btn16"), textbutton("txt_btn17"),
-                                                    textbutton("txt_btn18"), textbutton("txt_btn19"), textbutton("txt_btn20"), textbutton("txt_btn21"), textbutton("txt_btn22"), textbutton("txt_btn23"), textbutton("txt_btn24"), textbutton("txt_btn25"), textbutton("txt_btn26"),
-                                                    textbutton("txt_btn27"), textbutton("txt_btn28"), textbutton("txt_btn29"), textbutton("txt_btn30"), textbutton("txt_btn31"), textbutton("txt_btn32"), textbutton("txt_btn33")};
+    Textbutton*  txt_btn_array = new Textbutton[34]{Textbutton("txt_btn0"),  Textbutton("txt_btn1"),  Textbutton("txt_btn2"),  Textbutton("txt_btn3"),  Textbutton("txt_btn4"),  Textbutton("txt_btn5"),  Textbutton("txt_btn6"),  Textbutton("txt_btn7"),  Textbutton("txt_btn8"),
+                                                    Textbutton("txt_btn9"),  Textbutton("txt_btn10"), Textbutton("txt_btn11"), Textbutton("txt_btn12"), Textbutton("txt_btn13"), Textbutton("txt_btn14"), Textbutton("txt_btn15"), Textbutton("txt_btn16"), Textbutton("txt_btn17"),
+                                                    Textbutton("txt_btn18"), Textbutton("txt_btn19"), Textbutton("txt_btn20"), Textbutton("txt_btn21"), Textbutton("txt_btn22"), Textbutton("txt_btn23"), Textbutton("txt_btn24"), Textbutton("txt_btn25"), Textbutton("txt_btn26"),
+                                                    Textbutton("txt_btn27"), Textbutton("txt_btn28"), Textbutton("txt_btn29"), Textbutton("txt_btn30"), Textbutton("txt_btn31"), Textbutton("txt_btn32"), Textbutton("txt_btn33")};
 
   public:
-    keyBoard(ps_ptr<char> name, uint8_t fontSize) {
+    KeyBoard(ps_ptr<char> name, uint8_t fontSize) {
         register_object(this);
         m_name = name;
         m_fgColor = TFT_LIGHTGREY;
         m_fontSize = fontSize;
     }
-    ~keyBoard() { delete[] txt_btn_array; }
+    ~KeyBoard() { delete[] txt_btn_array; }
 
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom) {
         m_x = x; // x pos
@@ -2099,7 +2215,7 @@ class keyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
             txt_btn_array[i].setBorderWidth(1);
             txt_btn_array[i].setFontSize(m_fontSize);
             txt_btn_array[i].setText(m_alpha1[i]);
-            txt_btn_array[i].setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+            txt_btn_array[i].setAlign(HAlign::Center, VAlign::Middle);
             posX += m_row1[i] * btnW + margin;
         }
         posY += btnH + margin;
@@ -2113,7 +2229,7 @@ class keyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
             txt_btn_array[i + 12].setBorderWidth(1);
             txt_btn_array[i + 12].setFontSize(m_fontSize);
             txt_btn_array[i + 12].setText(m_alpha2[i]);
-            txt_btn_array[i + 12].setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+            txt_btn_array[i + 12].setAlign(HAlign::Center, VAlign::Middle);
             posX += m_row2[i] * btnW + margin;
         }
         posY += btnH + margin;
@@ -2127,7 +2243,7 @@ class keyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
             txt_btn_array[i + 23].setBorderWidth(1);
             txt_btn_array[i + 23].setFontSize(m_fontSize);
             txt_btn_array[i + 23].setText(m_alpha3[i]);
-            txt_btn_array[i + 23].setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+            txt_btn_array[i + 23].setAlign(HAlign::Center, VAlign::Middle);
             posX += m_row3[i] * btnW + margin;
         }
     }
@@ -2255,7 +2371,7 @@ class keyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class wifiSettings : public RegisterTable {
+class WifiSettings : public RegisterTable {
     /*                —————————————————————————————————————————————————————————————————————————————
                      |                             selectbox (SSID)            |  ⏬  |  ⏫  |idx |
                       —————————————————————————————————————————————————————————————————————————————
@@ -2290,12 +2406,11 @@ class wifiSettings : public RegisterTable {
     bool         m_focus = false;
     bool         m_clicked = false;
     bool         m_autoSize = false;
-    bool         m_narrow = false;
     bool         m_noWrap = false;
     releasedArg  m_ra;
-    selectbox*   m_sel_ssid = new selectbox("wifiSettings_selectbox_ssid", 0);
-    inputbox*    m_in_password = new inputbox("wifiSettings_txtbox_pwd");
-    keyBoard*    m_keyboard = new keyBoard("wifiSettings_keyBoard", 0);
+    Selectbox*   m_sel_ssid = new Selectbox("wifiSettings_selectbox_ssid", 0);
+    Inputbox*    m_in_password = new Inputbox("wifiSettings_txtbox_pwd");
+    KeyBoard*    m_keyboard = new KeyBoard("wifiSettings_keyBoard", 0);
 
     struct credentials {
         ps_ptr<char> ssid;
@@ -2336,13 +2451,13 @@ class wifiSettings : public RegisterTable {
     } m_winKeybrd;
 
   public:
-    wifiSettings(ps_ptr<char> name, uint8_t fontSize) {
+    WifiSettings(ps_ptr<char> name, uint8_t fontSize) {
         register_object(this);
         m_name = name;
         m_fgColor = TFT_LIGHTGREY;
         m_borderColor = TFT_LIGHTGREY;
         setFontSize(fontSize);
-        m_in_password->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
+        m_in_password->setAlign(HAlign::Left, VAlign::Middle);
         m_in_password->setTextColor(m_fgColor);
         m_in_password->set_bg_color(m_bg_color);
         m_in_password->setBorderColor(m_borderColor);
@@ -2352,7 +2467,7 @@ class wifiSettings : public RegisterTable {
         m_sel_ssid->setBorderColor(m_borderColor);
         m_sel_ssid->setFontSize(0); // auto size
     }
-    ~wifiSettings() {
+    ~WifiSettings() {
         m_credentials.clear();
         delete m_sel_ssid;
         delete m_in_password;
@@ -2488,7 +2603,7 @@ class wifiSettings : public RegisterTable {
     bool         set_focus(bool focus) { return false; }
 
     void show() {
-        m_in_password->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
+        m_in_password->setAlign(HAlign::Left, VAlign::Middle);
         m_sel_ssid->show();
         m_in_password->setText(m_credentials[0].password.c_get());
         m_in_password->show();
@@ -2636,15 +2751,15 @@ class wifiSettings : public RegisterTable {
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
+class TimeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
   private:
     int16_t      m_x = 0;
     int16_t      m_y = 0;
     int16_t      m_w = 0;
     int16_t      m_h = 0;
     uint8_t      m_fontSize = 0;
-    uint8_t      m_h_align = TFT_ALIGN_CENTER;
-    uint8_t      m_v_align = TFT_ALIGN_CENTER;
+    HAlign       m_h_align = HAlign::Center;
+    VAlign       m_v_align = VAlign::Middle;
     int32_t      m_bg_color = TFT_TRANSPARENT;
     int32_t      m_fgColor = 0;
     int32_t      m_borderColor = 0;
@@ -2655,15 +2770,15 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     bool         m_focus = false;
     bool         m_clicked = false;
     releasedArg  m_ra;
-    textbox*     txt_time = new textbox[8]{textbox("txt_timeH10"), textbox("txt_timeH01"), textbox("txt_timeC1"), textbox("txt_timeM10"), textbox("txt_timeM01"), textbox("txt_timeC2"), textbox("txt_timeS10"), textbox("txt_timeS01")}; // time of the day
+    Textbox*     txt_time = new Textbox[8]{Textbox("txt_timeH10"), Textbox("txt_timeH01"), Textbox("txt_timeC1"), Textbox("txt_timeM10"), Textbox("txt_timeM01"), Textbox("txt_timeC2"), Textbox("txt_timeS10"), Textbox("txt_timeS01")}; // time of the day
   public:
-    timeString(ps_ptr<char> name, uint8_t fontSize) {
+    TimeString(ps_ptr<char> name, uint8_t fontSize) {
         register_object(this);
         m_name = name;
         m_fgColor = TFT_LIGHTGREY;
         m_fontSize = fontSize;
     }
-    ~timeString() { delete[] txt_time; }
+    ~TimeString() { delete[] txt_time; }
 
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t pl, uint16_t pr, uint16_t pt, uint16_t pb) {
         m_x = x; // x pos
@@ -2682,13 +2797,13 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
             static_cast<uint16_t>(m_x + pl + 4 * w_digits + 2 * w_colon), /* S10 */
             static_cast<uint16_t>(m_x + pl + 5 * w_digits + 2 * w_colon)  /* S01 */
         };
+
         uint8_t width[8] = {w_digits, w_digits, w_colon, w_digits, w_digits, w_colon, w_digits, w_digits};
         for (uint8_t i = 0; i < 8; i++) {
             txt_time[i].begin(xPos[i], m_y + pt, width[i], h, 0, 0, 0, 0);
-            txt_time[i].setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+            txt_time[i].setAlign(HAlign::Center, VAlign::Middle);
             txt_time[i].setTextColor(m_fgColor);
             txt_time[i].setFontSize(m_fontSize);
-            txt_time[i].setNarrow(true);
         }
     }
 
@@ -2742,7 +2857,7 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
         if (hl_time.strlen() != 8) return;
         if (!m_enabled) return;
         m_time = hl_time;               // hhmmss
-        static char oldtime[8] = {255}; // hhmmss
+        static char oldtime[8] = {255, 255, 255, 255, 255, 255, 255, 255}; // hhmmss
                                         //    getTFT().setFontSize(m_fontSize);
                                         //    getTFT().setTextColor(m_fgColor);
         if (complete == true) {
@@ -2792,7 +2907,7 @@ class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class numbersBox : public RegisterTable { // range 000...999
+class NumbersBox : public RegisterTable { // range 000...999
   private:
     uint16_t     m_segmWidth = 0;
     uint16_t     m_segmentHigh = 0;
@@ -2816,11 +2931,11 @@ class numbersBox : public RegisterTable { // range 000...999
     char         m_numbers[4] = "000";
 
   public:
-    numbersBox(ps_ptr<char> name) {
+    NumbersBox(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
     }
-    ~numbersBox() { ; }
+    ~NumbersBox() { ; }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
         m_x = x; // x pos
         m_y = y; // y pos
@@ -2906,7 +3021,7 @@ class numbersBox : public RegisterTable { // range 000...999
     }
 
     void placingDigits(uint16_t w, uint16_t h) {
-        imgSize img = GetImageSize("/digits/s/0green.jpg"); // get size of digit '0'
+        imgSize img = getImageSize("/digits/s/0green.jpg"); // get size of digit '0'
         if (img.w == 0 || img.h == 0) {
             MWR_LOG_ERROR("cannot get digit size");
             return;
@@ -2922,7 +3037,7 @@ class numbersBox : public RegisterTable { // range 000...999
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class offTimerBox : public RegisterTable { // range 000...999
+class OffTimerBox : public RegisterTable { // range 000...999
   private:
     uint16_t     m_digitsWidth = 0;
     uint16_t     m_colonWidth = 0;
@@ -2950,11 +3065,11 @@ class offTimerBox : public RegisterTable { // range 000...999
     char         m_numbers[10] = "000";
 
   public:
-    offTimerBox(ps_ptr<char> name) {
+    OffTimerBox(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
     }
-    ~offTimerBox() { ; }
+    ~OffTimerBox() { ; }
 
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
         m_x = x; // x pos
@@ -3037,7 +3152,7 @@ class offTimerBox : public RegisterTable { // range 000...999
     }
 
     void placingDigits(uint16_t w, uint16_t h) {
-        imgSize img = GetImageSize("/digits/s/0green.jpg"); // get size of digit '0'
+        imgSize img = getImageSize("/digits/s/0green.jpg"); // get size of digit '0'
         if (img.w == 0 || img.h == 0) {
             MWR_LOG_ERROR("cannot get digit size");
             return;
@@ -3046,7 +3161,7 @@ class offTimerBox : public RegisterTable { // range 000...999
         m_digitsWidth = img.w;
         m_digitsHigh = img.h;
 
-        img = GetImageSize("/digits/s/cgreen.jpg"); // get size of colon
+        img = getImageSize("/digits/s/cgreen.jpg"); // get size of colon
         if (img.w == 0 || img.h == 0) {
             MWR_LOG_ERROR("cannot get colon size");
             return;
@@ -3066,13 +3181,13 @@ class offTimerBox : public RegisterTable { // range 000...999
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class imgClock24 : public RegisterTable { // draw a clock in 24h format
+class ImgClock24 : public RegisterTable { // draw a clock in 24h format
   private:
-    pictureBox* pic_clock24_digitsH10 = new pictureBox("clock24_digitsH10");     // digits hour   * 10
-    pictureBox* pic_clock24_digitsH01 = new pictureBox("clock24_digitsH01");     // digits hour   * 01
-    pictureBox* pic_clock24_digitsM10 = new pictureBox("clock24_digitsM10");     // digits minute * 10
-    pictureBox* pic_clock24_digitsM01 = new pictureBox("clock24_digitsM01");     // digits minute * 01
-    pictureBox* pic_clock24_digitsColon = new pictureBox("clock24_digitsColon"); // digits colon
+    PictureBox* pic_clock24_digitsH10 = new PictureBox("clock24_digitsH10");     // digits hour   * 10
+    PictureBox* pic_clock24_digitsH01 = new PictureBox("clock24_digitsH01");     // digits hour   * 01
+    PictureBox* pic_clock24_digitsM10 = new PictureBox("clock24_digitsM10");     // digits minute * 10
+    PictureBox* pic_clock24_digitsM01 = new PictureBox("clock24_digitsM01");     // digits minute * 01
+    PictureBox* pic_clock24_digitsColon = new PictureBox("clock24_digitsColon"); // digits colon
     int16_t     m_x = 0;
     int16_t     m_y = 0;
     int16_t     m_w = 0;
@@ -3101,14 +3216,14 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
     releasedArg  m_ra;
 
   public:
-    imgClock24(ps_ptr<char> name) {
+    ImgClock24(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
         m_enabled = false;
         m_clicked = false;
         m_state = false;
     }
-    ~imgClock24() {
+    ~ImgClock24() {
         delete pic_clock24_digitsH10;
         delete pic_clock24_digitsH01;
         delete pic_clock24_digitsColon;
@@ -3261,7 +3376,7 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
     void placingDigits(uint16_t w, uint16_t h) {
         uint16_t digits_y = 0, digits_w = 0, colon_w = 0, digits_h = 0, paddig_l = 0;
 
-        imgSize img = GetImageSize("/digits/l/0green.jpg"); // get size of digit '0'
+        imgSize img = getImageSize("/digits/l/0green.jpg"); // get size of digit '0'
         if (img.w == 0 || img.h == 0) {
             MWR_LOG_ERROR("cannot get digit size");
             return;
@@ -3270,7 +3385,7 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
         digits_w = img.w;
         digits_h = img.h;
 
-        img = GetImageSize("/digits/l/cgreen.jpg"); // get size of colon
+        img = getImageSize("/digits/l/cgreen.jpg"); // get size of colon
         if (img.w == 0 || img.h == 0) {
             MWR_LOG_ERROR("cannot get colon size");
             return;
@@ -3314,13 +3429,13 @@ class imgClock24 : public RegisterTable { // draw a clock in 24h format
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class imgClock24small : public RegisterTable { // draw a clock in 24h format
+class ImgClock24small : public RegisterTable { // draw a clock in 24h format
   private:
-    pictureBox*  pic_clock24_digitsH10 = new pictureBox("clock24_digitsH10");     // digits hour   * 10
-    pictureBox*  pic_clock24_digitsH01 = new pictureBox("clock24_digitsH01");     // digits hour   * 01
-    pictureBox*  pic_clock24_digitsM10 = new pictureBox("clock24_digitsM10");     // digits minute * 10
-    pictureBox*  pic_clock24_digitsM01 = new pictureBox("clock24_digitsM01");     // digits minute * 01
-    pictureBox*  pic_clock24_digitsColon = new pictureBox("clock24_digitsColon"); // digits colon
+    PictureBox*  pic_clock24_digitsH10 = new PictureBox("clock24_digitsH10");     // digits hour   * 10
+    PictureBox*  pic_clock24_digitsH01 = new PictureBox("clock24_digitsH01");     // digits hour   * 01
+    PictureBox*  pic_clock24_digitsM10 = new PictureBox("clock24_digitsM10");     // digits minute * 10
+    PictureBox*  pic_clock24_digitsM01 = new PictureBox("clock24_digitsM01");     // digits minute * 01
+    PictureBox*  pic_clock24_digitsColon = new PictureBox("clock24_digitsColon"); // digits colon
     int16_t      m_x = 0;
     int16_t      m_y = 0;
     int16_t      m_w = 0;
@@ -3349,14 +3464,14 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
     } m_h10, m_h01, m_c, m_m10, m_m01;
 
   public:
-    imgClock24small(ps_ptr<char> name) {
+    ImgClock24small(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
         m_enabled = false;
         m_clicked = false;
         m_state = false;
     }
-    ~imgClock24small() {
+    ~ImgClock24small() {
         delete pic_clock24_digitsH10;
         delete pic_clock24_digitsH01;
         delete pic_clock24_digitsColon;
@@ -3516,7 +3631,7 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
     void placingDigits(uint16_t w, uint16_t h) {
         uint16_t digits_y = 0, digits_w = 0, colon_w = 0, digits_h = 0, paddig_l = 0;
 
-        imgSize img = GetImageSize("/digits/s/0green.jpg"); // get size of digit '0'
+        imgSize img = getImageSize("/digits/s/0green.jpg"); // get size of digit '0'
         if (img.w == 0 || img.h == 0) {
             MWR_LOG_ERROR("cannot get digit size");
             return;
@@ -3525,7 +3640,7 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
         digits_w = img.w;
         digits_h = img.h;
 
-        img = GetImageSize("/digits/s/cgreen.jpg"); // get size of colon
+        img = getImageSize("/digits/s/cgreen.jpg"); // get size of colon
         if (img.w == 0 || img.h == 0) {
             MWR_LOG_ERROR("cannot get colon size");
             return;
@@ -3557,25 +3672,25 @@ class imgClock24small : public RegisterTable { // draw a clock in 24h format
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
+class AlarmClock : public RegisterTable { // draw a clock in 12 or 24h format
   private:
-    pictureBox* pic_alarm_digitsH10 = new pictureBox("alarm_digitsH10");                                                                                                                                                                             // digits hour   * 10
-    pictureBox* pic_alarm_digitsH01 = new pictureBox("alarm_digitsH01");                                                                                                                                                                             // digits hour   * 01
-    pictureBox* pic_alarm_digitsM10 = new pictureBox("alarm_digitsM10");                                                                                                                                                                             // digits minute * 10
-    pictureBox* pic_alarm_digitsM01 = new pictureBox("alarm_digitsM01");                                                                                                                                                                             // digits minute * 01
-    pictureBox* pic_alarm_digitsColon = new pictureBox("alarm_digitsColon");                                                                                                                                                                         // digits colon
-    textbox*    txt_alarm_days = new textbox[7]{textbox("txt_alarm_days0"), textbox("txt_alarm_days1"), textbox("txt_alarm_days2"), textbox("txt_alarm_days3"), textbox("txt_alarm_days4"), textbox("txt_alarm_days5"), textbox("txt_alarm_days6")}; // days of the week
-    textbox*    txt_alarm_time = new textbox[7]{textbox("txt_alarm_time0"), textbox("txt_alarm_time1"), textbox("txt_alarm_time2"), textbox("txt_alarm_time3"), textbox("txt_alarm_time4"), textbox("txt_alarm_time5"), textbox("txt_alarm_time6")}; // time of the day
+    PictureBox* pic_alarm_digitsH10 = new PictureBox("alarm_digitsH10");                                                                                                                                                                             // digits hour   * 10
+    PictureBox* pic_alarm_digitsH01 = new PictureBox("alarm_digitsH01");                                                                                                                                                                             // digits hour   * 01
+    PictureBox* pic_alarm_digitsM10 = new PictureBox("alarm_digitsM10");                                                                                                                                                                             // digits minute * 10
+    PictureBox* pic_alarm_digitsM01 = new PictureBox("alarm_digitsM01");                                                                                                                                                                             // digits minute * 01
+    PictureBox* pic_alarm_digitsColon = new PictureBox("alarm_digitsColon");                                                                                                                                                                         // digits colon
+    Textbox*    txt_alarm_days = new Textbox[7]{Textbox("txt_alarm_days0"), Textbox("txt_alarm_days1"), Textbox("txt_alarm_days2"), Textbox("txt_alarm_days3"), Textbox("txt_alarm_days4"), Textbox("txt_alarm_days5"), Textbox("txt_alarm_days6")}; // days of the week
+    Textbox*    txt_alarm_time = new Textbox[7]{Textbox("txt_alarm_time0"), Textbox("txt_alarm_time1"), Textbox("txt_alarm_time2"), Textbox("txt_alarm_time3"), Textbox("txt_alarm_time4"), Textbox("txt_alarm_time5"), Textbox("txt_alarm_time6")}; // time of the day
 
     int16_t m_x = 0;
     int16_t m_y = 0;
     int16_t m_w = 0;
     int16_t m_h = 0;
     struct pos {
-        uint16_t x;
-        uint16_t y;
-        uint16_t w;
-        uint16_t h;
+        uint16_t x = 0;
+        uint16_t y = 0;
+        uint16_t w = 0;
+        uint16_t h = 0;
         uint8_t  pl = 0;
         uint8_t  pr = 0;
         uint8_t  pt = 0;
@@ -3610,14 +3725,14 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
     releasedArg  m_ra;
 
   public:
-    alarmClock(ps_ptr<char> name) {
+    AlarmClock(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
         m_enabled = false;
         m_clicked = false;
         m_state = false;
     }
-    ~alarmClock() {
+    ~AlarmClock() {
         delete pic_alarm_digitsH10;
         delete pic_alarm_digitsH01;
         delete pic_alarm_digitsColon;
@@ -3644,12 +3759,12 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
 
         for (uint8_t i = 0; i < 7; i++) {
             txt_alarm_days[i].begin(m_alarmdaysXPos[i], m_alarmdaysYPos, m_alarmdaysW, m_alarmdaysH, 0, 0, 0, 0);
-            txt_alarm_days[i].setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+            txt_alarm_days[i].setAlign(HAlign::Center, VAlign::Middle);
             txt_alarm_days[i].setBorderColor(TFT_LIGHTGREY);
             txt_alarm_days[i].setFontSize(m_fontSize);
             txt_alarm_days[i].setText(m_WD[i]);
             txt_alarm_time[i].begin(m_alarmdaysXPos[i], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, 0, 0, 0, 0);
-            txt_alarm_time[i].setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+            txt_alarm_time[i].setAlign(HAlign::Center, VAlign::Middle);
             txt_alarm_time[i].setBorderColor(TFT_LIGHTGREY);
             txt_alarm_time[i].setFontSize(m_fontSize);
         }
@@ -3933,9 +4048,9 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
     }
     void placingDigits(uint16_t w, uint16_t h) {
         uint16_t digits_y = 0, digits_w = 0, colon_w = 0, digits_h = 0, digits_paddig_l = 0, alarmdays_padding_l = 0;
-        uint16_t h4 = h / 4; // [1/4 days, time + 3/4 digits]
+        uint16_t h4 = h / 4 + 2; // [1/4 days + 2px, time + 3/4 digits - 2px]  (2px for disp size s)
 
-        imgSize img = GetImageSize("/digits/m/0green.jpg"); // get size of digit '0'
+        imgSize img = getImageSize("/digits/m/0green.jpg"); // get size of digit '0'
         if (img.w == 0 || img.h == 0) {
             MWR_LOG_ERROR("cannot get digit size");
             return;
@@ -3943,7 +4058,7 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
         MWR_LOG_DEBUG("digits w = {}, h = {}", img.w, img.h);
         digits_w = img.w;
         digits_h = img.h;
-        img = GetImageSize("/digits/m/cred.jpg"); // get size of colon
+        img = getImageSize("/digits/m/cred.jpg"); // get size of colon
         if (img.w == 0 || img.h == 0) {
             MWR_LOG_ERROR("cannot get colon size");
             return;
@@ -3967,7 +4082,7 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
         s_h01.h = digits_h;
         s_c.x = s_h01.x + digits_w;
         s_c.y = digits_y;
-        s_c.w = digits_w;
+        s_c.w = colon_w;
         s_c.h = digits_h;
         s_m10.x = s_c.x + colon_w;
         s_m10.y = digits_y;
@@ -3977,10 +4092,11 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
         s_m01.y = digits_y;
         s_m01.w = digits_w;
         s_m01.h = digits_h;
+        MWR_LOG_DEBUG("s_h10.x: {}, s_h01.x: {}, s_c.x: {}, s_m10.x: {}, s_m01.x: {} ", s_h10.x, s_h01.x, s_c.x, s_m10.x, s_m01.x);
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class uniList {
+class UniList {
 
   private:
     int16_t      m_x = 0;
@@ -4004,8 +4120,8 @@ class uniList {
     bool         m_focus = false;
 
   public:
-    uniList(ps_ptr<char> name) { m_name = name; }
-    ~uniList() {}
+    UniList(ps_ptr<char> name) { m_name = name; }
+    ~UniList() {}
 
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t fontSize) {
         m_x = x;               // x pos
@@ -4137,11 +4253,11 @@ class uniList {
             }
         }
         uint16_t indent = pos ? m_indentContent : m_indentDirectory;
-        getTFT().writeText(m_buff.c_get(), indent, m_y + pos * m_lineHight, m_w - indent, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+        getTFT().writeText(m_buff.c_get(), indent, m_y + pos * m_lineHight, m_w - indent, m_lineHight, HAlign::Left, VAlign::Middle, true, true);
     }
     void drawPosInfo(int16_t firstVal, int16_t secondVal, int16_t total, ps_ptr<char> color) { // e.g. 1-9/65
         m_buff.assignf("{}{}-{}-{}", color.c_get(), firstVal, secondVal, total);
-        getTFT().writeText(m_buff.c_get(), 0, m_y, m_w, m_lineHight, TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER, true, true, false);
+        getTFT().writeText(m_buff.c_get(), 0, m_y, m_w, m_lineHight, HAlign::Right, VAlign::Middle, true, true);
     }
     void colourLine(uint8_t pos, ps_ptr<char> color = ANSI_ESC_WHITE) {
         if (pos > 9) return;
@@ -4154,7 +4270,7 @@ class uniList {
                 m_buff.assignf("{}{}", color.c_get(), m_txt[pos].c_get()); // directory
         }
         uint16_t indent = pos ? m_indentContent : m_indentDirectory;
-        getTFT().writeText(m_buff.c_get(), indent, m_y + pos * m_lineHight, m_w - indent, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+        getTFT().writeText(m_buff.c_get(), indent, m_y + pos * m_lineHight, m_w - indent, m_lineHight, HAlign::Left, VAlign::Middle, true, true);
     }
     ps_ptr<char> getTxtByPos(uint8_t pos) { return m_txt[pos]; }
     int16_t      getNumberByPos(uint8_t pos) { return m_nr[pos]; }
@@ -4169,7 +4285,7 @@ class uniList {
         triangleDown(0, m_y + (9 * m_lineHight), m_lineHight / 3.5);
     }
 };
-extern uniList myList;
+extern UniList myList;
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 /*
   ———————————————————————————————————————————————————————
@@ -4188,7 +4304,7 @@ extern uniList myList;
   ———————————————————————————————————————————————————————
 */
 
-class dlnaList : public RegisterTable {
+class DlnaList : public RegisterTable {
 
   private:
     int16_t                                    m_x = 0;
@@ -4229,7 +4345,7 @@ class dlnaList : public RegisterTable {
     enum DLNA_Action { DLNA_NONE = 0, DLNA_FILE = 1, DLNA_SERVERLIST = 2, DLNA_PREV_LEVEL = 3, DLNA_NEXT_LEVEL = 4, DLNA_WIPE = 5 };
 
   public:
-    dlnaList(ps_ptr<char> name) {
+    DlnaList(ps_ptr<char> name) {
         register_object(this);
         if (name != "") {
             m_name = name;
@@ -4244,7 +4360,7 @@ class dlnaList : public RegisterTable {
         m_ra.val1 = 0;
         m_ra.val2 = 0;
     }
-    ~dlnaList() {}
+    ~DlnaList() {}
 
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, ps_ptr<char> tftSize, uint8_t fontSize) {
         m_x = x; // x pos
@@ -4389,7 +4505,7 @@ class dlnaList : public RegisterTable {
         }
         m_buff.assignf("{}-{}/{}", m_viewPoint + 1, m_viewPoint + (pos - 1), m_dlnaMaxItems); // shows the current items pos e.g. "30-39/210"
         getTFT().setTextColor(TFT_ORANGE);
-        getTFT().writeText(m_buff.c_get(), 10, m_y, m_w - 10, m_lineHight, TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER, true, true);
+        getTFT().writeText(m_buff.c_get(), 10, m_y, m_w - 10, m_lineHight, HAlign::Right, VAlign::Middle, true, true);
         return;
     }
 
@@ -4798,7 +4914,7 @@ class dlnaList : public RegisterTable {
   ———————————————————————————————————————————————————————
 */
 
-class fileList : public RegisterTable {
+class FileList : public RegisterTable {
   private:
     int16_t      m_x = 0;
     int16_t      m_y = 0;
@@ -4832,7 +4948,7 @@ class fileList : public RegisterTable {
     releasedArg  m_ra;
 
   public:
-    fileList(ps_ptr<char> name) {
+    FileList(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
         m_curAudioFolder = "";
@@ -4846,7 +4962,7 @@ class fileList : public RegisterTable {
         m_ra.val1 = 0;
         m_ra.val2 = 0;
     }
-    ~fileList() {}
+    ~FileList() {}
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, ps_ptr<char> tftSize, uint8_t fontSize) {
         m_x = x; // x pos
         m_y = y; // y pos
@@ -5209,7 +5325,7 @@ extern stationManagement staMgnt; /*
 | 003   0:00    128K              IP:192.168.178.24   |
 ———————————————————————————————————————————————————————
 */
-class stationsList : public RegisterTable {
+class StationsList : public RegisterTable {
   private:
     bool         m_enabled = false;
     bool         m_active = true;
@@ -5238,7 +5354,7 @@ class stationsList : public RegisterTable {
     uint16_t     m_staNrToDraw = 0;
 
   public:
-    stationsList(ps_ptr<char> name) {
+    StationsList(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
         m_enabled = false;
@@ -5249,7 +5365,7 @@ class stationsList : public RegisterTable {
         m_ra.val1 = 0;
         m_ra.val2 = 0;
     }
-    ~stationsList() {}
+    ~StationsList() {}
 
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, ps_ptr<char> tftSize, uint8_t fontSize) {
         m_x = x; // x pos
@@ -5473,13 +5589,13 @@ class stationsList : public RegisterTable {
     }
 };
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class displayHeader : public RegisterTable {
+class DisplayHeader : public RegisterTable {
   private:
-    textbox*     txt_Item = new textbox("header_Item");              // Radio, Player, Clock....
-    pictureBox*  pic_Speaker = new pictureBox("header_Speaker");     // loudspeaker symbol
-    textbox*     txt_Volume = new textbox("header_Volume");          // volume
-    pictureBox*  pic_RSSID = new pictureBox("header_RSSID");         // RSSID symbol
-    timeString*  timeStringObject = new timeString("timeString", 0); // 10:34:09
+    Textbox*     txt_Item = new Textbox("header_Item");              // Radio, Player, Clock....
+    PictureBox*  pic_Speaker = new PictureBox("header_Speaker");     // loudspeaker symbol
+    Textbox*     txt_Volume = new Textbox("header_Volume");          // volume
+    PictureBox*  pic_RSSID = new PictureBox("header_RSSID");         // RSSID symbol
+    TimeString*  timeStringObject = new TimeString("timeString", 0); // 10:34:09
     int16_t      m_x = 0;
     int16_t      m_y = 0;
     int16_t      m_w = 0;
@@ -5508,14 +5624,14 @@ class displayHeader : public RegisterTable {
     //------------------------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
     struct w_i {
         uint16_t x = 0;
-        uint16_t w = 165;
+        uint16_t w = 160;
         uint8_t  pl = 2;
         uint8_t  pr = 0;
         uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_Item; // Radio, Player, Clock...
     struct w_l {
-        uint16_t x = 165;
+        uint16_t x = 160;
         uint16_t w = 30;
         uint8_t  pl = 2;
         uint8_t  pr = 0;
@@ -5523,7 +5639,7 @@ class displayHeader : public RegisterTable {
         uint8_t  pb = 0;
     } const s_Speaker; // loudspeaker symbol 25 x 20 px
     struct w_v {
-        uint16_t x = 195;
+        uint16_t x = 190;
         uint16_t w = 30;
         uint8_t  pl = 0;
         uint8_t  pr = 0;
@@ -5531,7 +5647,7 @@ class displayHeader : public RegisterTable {
         uint8_t  pb = 0;
     } const s_Volume; // volume
     struct w_r {
-        uint16_t x = 225;
+        uint16_t x = 220;
         uint16_t w = 35;
         uint8_t  pl = 2;
         uint8_t  pr = 0;
@@ -5539,8 +5655,8 @@ class displayHeader : public RegisterTable {
         uint8_t  pb = 0;
     } const s_RSSID; // RSSID symbol 27 x 20 px
     struct w_t {
-        uint16_t x = 260;
-        uint16_t w = 60;
+        uint16_t x = 255;
+        uint16_t w = 65;
         uint8_t  pl = 0;
         uint8_t  pr = 0;
         uint8_t  pt = 0;
@@ -5677,13 +5793,13 @@ class displayHeader : public RegisterTable {
     } const s_time; // time object
 #endif
   public:
-    displayHeader(ps_ptr<char> name, uint8_t fontSize) {
+    DisplayHeader(ps_ptr<char> name, uint8_t fontSize) {
         register_object(this);
         m_name = name;
         m_fontSize = fontSize;
         timeStringObject->setFontSize(m_fontSize);
     }
-    ~displayHeader() {
+    ~DisplayHeader() {
         delete txt_Item;
         delete pic_Speaker;
         delete txt_Volume;
@@ -5701,11 +5817,11 @@ class displayHeader : public RegisterTable {
         pic_RSSID->begin(s_RSSID.x, m_y, s_RSSID.w, m_h, s_RSSID.pl, s_RSSID.pr, s_RSSID.pt, s_RSSID.pb);
         timeStringObject->begin(s_time.x, m_y, s_time.w, m_h, s_time.pl, s_time.pr, s_time.pt, s_time.pb);
 
-        txt_Item->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
+        txt_Item->setAlign(HAlign::Left, VAlign::Middle);
         txt_Item->setTextColor(m_itemColor);
         txt_Item->setFontSize(m_fontSize); // 0 -> auto
         pic_Speaker->setPicturePath(m_speakerSymbol[0]);
-        txt_Volume->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
+        txt_Volume->setAlign(HAlign::Left, VAlign::Middle);
         txt_Volume->setFontSize(m_fontSize); // 0 -> auto
         pic_RSSID->setPicturePath(m_rssiSymbol[0]);
     }
@@ -5861,22 +5977,27 @@ class displayHeader : public RegisterTable {
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class displayFooter : public RegisterTable {
+class DisplayFooter : public RegisterTable {
   private:
-    pictureBox*  pic_Antenna = new pictureBox("footer_Antenna");     // antenna symbol
-    textbox*     txt_StaNr = new textbox("footer_StaNr");            // station number
-    pictureBox*  pic_Flag = new pictureBox("footer_Flag");           // flag symbol
-    pictureBox*  pic_Hourglass = new pictureBox("footer_Hourglass"); // hourglass symbol
-    textbox*     txt_OffTimer = new textbox("footer_OffTimer");      // off timer
-    textbox*     txt_BitRate = new textbox("footer_BitRate");        // bit rate
-    textbox*     txt_IpAddr = new textbox("footer_IPaddr");          // ip address
-    textbox*     txt_FileNr = new textbox("footer_FileNr");          // fileNr
+#define br_x 47.0
+#define br_w 13.0
+#define ip_x 60.0
+#define ip_w 40.0
+
+    PictureBox*  pic_Antenna = new PictureBox("footer_Antenna");     // antenna symbol
+    Textbox*     txt_StaNr = new Textbox("footer_StaNr");            // station number
+    PictureBox*  pic_Flag = new PictureBox("footer_Flag");           // flag symbol
+    PictureBox*  pic_Hourglass = new PictureBox("footer_Hourglass"); // hourglass symbol
+    Textbox*     txt_OffTimer = new Textbox("footer_OffTimer");      // off timer
+    Textbox*     txt_BitRate = new Textbox("footer_BitRate");        // bit rate
+    Textbox*     txt_IpAddr = new Textbox("footer_IPaddr");          // ip address
+    Textbox*     txt_FileNr = new Textbox("footer_FileNr");          // fileNr
     int16_t      m_x = 0;
     int16_t      m_y = 0;
     int16_t      m_w = 0;
     int16_t      m_h = 0;
     uint8_t      m_fontSize = 0;
-    int8_t       m_timeCounter = 0;
+    float        m_timeCounter = 0;
     uint8_t      m_volume = 0;
     uint16_t     m_staNr = 0;
     uint16_t     m_offTime = 0;
@@ -5900,24 +6021,25 @@ class displayFooter : public RegisterTable {
     //-----------------------------------------------------------------------------------------------------------------------------------
 #ifdef TFT_LAYOUT_S // 320 x 240px
     //-----------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
+
     struct w_a {
         uint16_t x = 0;
-        uint16_t w = 25;
-        uint8_t  pl = 2;
+        uint16_t w = 22;
+        uint8_t  pl = 0;
         uint8_t  pr = 0;
         uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_Antenna; // Antenna.png: 19 x 20 px
     struct w_s {
-        uint16_t x = 25;
-        uint16_t w = 32;
+        uint16_t x = 22;
+        uint16_t w = 29;
         uint8_t  pl = 0;
         uint8_t  pr = 0;
         uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_StaNr;
     struct w_f {
-        uint16_t x = 57;
+        uint16_t x = 52;
         uint16_t w = 40;
         uint8_t  pl = 0;
         uint8_t  pr = 0;
@@ -5925,42 +6047,43 @@ class displayFooter : public RegisterTable {
         uint8_t  pb = 0;
     } const s_Flag; // Flags:  33...40 x 20 px
     struct w_fn {
-        uint16_t x = 25;
-        uint16_t w = 72; // s_StaNr.w + s_Flag.w
+        uint16_t x = 22;
+        uint16_t w = 70; // s_StaNr.w + s_Flag.w
         uint8_t  pl = 0;
         uint8_t  pr = 0;
         uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_FileNr; // FileNumber "030/432"
     struct w_h {
-        uint16_t x = 100;
+        uint16_t x = 93;
         uint16_t w = 20;
-        uint8_t  pl = 2;
+        uint8_t  pl = 0;
         uint8_t  pr = 0;
         uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_Hourglass; // Hourglass:   16 x 20 px
     struct w_o {
-        uint16_t x = 122;
+        uint16_t x = 113;
         uint16_t w = 35;
         uint8_t  pl = 0;
         uint8_t  pr = 0;
         uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_OffTimer;
+
     struct w_b {
-        uint16_t x = 158;
-        uint16_t w = 42;
+        uint16_t x = round((br_x * 320) / 100.0f); // 47.0% -> x = 150
+        uint16_t w = round((br_w * 320) / 100.0f); // 13.0% -> w = 42
         uint8_t  pl = 0;
         uint8_t  pr = 0;
         uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_BitRate;
     struct w_i {
-        uint16_t x = 200;
-        uint16_t w = 120;
+        uint16_t x = round((ip_x * 320) / 100.0f); // 60% -> x = 192
+        uint16_t w = round((ip_w * 320) / 100.0f); // 40% -> w = 128
         uint8_t  pl = 0;
-        uint8_t  pr = 0;
+        uint8_t  pr = w > 200 ? w / 50 : 0;
         uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_IPaddr;
@@ -5988,7 +6111,7 @@ class displayFooter : public RegisterTable {
         uint16_t w = 48;
         uint8_t  pl = 0;
         uint8_t  pr = 0;
-        uint8_t  pt = 3;
+        uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_Flag; // Flags:  40...48 x 24 px
     struct w_fn {
@@ -6016,16 +6139,16 @@ class displayFooter : public RegisterTable {
         uint8_t  pb = 0;
     } const s_OffTimer;
     struct w_b {
-        uint16_t x = 214;
-        uint16_t w = 66;
+        uint16_t x = round((br_x * 480) / 100.0f); // 47.0% -> x = 226
+        uint16_t w = round((br_w * 480) / 100.0f); // 13.0% -> w = 62
         uint8_t  pl = 0;
         uint8_t  pr = 0;
         uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_BitRate;
     struct w_i {
-        uint16_t x = 280;
-        uint16_t w = 200;
+        uint16_t x = round((ip_x * 480) / 100.0f); // 60% -> x = 288
+        uint16_t w = round((ip_w * 480) / 100.0f); // 40% -> w = 192
         uint8_t  pl = 0;
         uint8_t  pr = 0;
         uint8_t  pt = 0;
@@ -6037,9 +6160,9 @@ class displayFooter : public RegisterTable {
     struct w_a {
         uint16_t x = 0;
         uint16_t w = 51;
-        uint8_t  pl = 2;
+        uint8_t  pl = 0;
         uint8_t  pr = 0;
-        uint8_t  pt = 1;
+        uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_Antenna; // Antenna.png: 47 x 48 px
     struct w_s {
@@ -6055,7 +6178,7 @@ class displayFooter : public RegisterTable {
         uint16_t w = 80;
         uint8_t  pl = 0;
         uint8_t  pr = 0;
-        uint8_t  pt = 5;
+        uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_Flag; // Flags:  60...80 x 40 px
     struct w_fn {
@@ -6069,9 +6192,9 @@ class displayFooter : public RegisterTable {
     struct w_h {
         uint16_t x = 225;
         uint16_t w = 40;
-        uint8_t  pl = 2;
+        uint8_t  pl = 0;
         uint8_t  pr = 0;
-        uint8_t  pt = 3;
+        uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_Hourglass; // Hourglass:   35 x 44 px
     struct w_o {
@@ -6104,9 +6227,9 @@ class displayFooter : public RegisterTable {
     struct w_a { // antenna
         uint16_t x = 0;
         uint16_t w = 60;
-        uint8_t  pl = 15;
+        uint8_t  pl = 0;
         uint8_t  pr = 0;
-        uint8_t  pt = 1;
+        uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_Antenna; // Antenna.png: 55 x 56 px
     struct w_s {       // station number
@@ -6122,7 +6245,7 @@ class displayFooter : public RegisterTable {
         uint16_t w = 110;
         uint8_t  pl = 0;
         uint8_t  pr = 0;
-        uint8_t  pt = 5;
+        uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_Flag; // Flags:  max 100 x 50 px
     struct w_fn {
@@ -6135,10 +6258,10 @@ class displayFooter : public RegisterTable {
     } const s_FileNr; // FileNumber "030/432"
     struct w_h {
         uint16_t x = 300;
-        uint16_t w = 40;
-        uint8_t  pl = 2;
+        uint16_t w = 60;
+        uint8_t  pl = 0;
         uint8_t  pr = 0;
-        uint8_t  pt = 3;
+        uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_Hourglass; // Hourglass:   45 x 56 px
     struct w_o {
@@ -6150,31 +6273,31 @@ class displayFooter : public RegisterTable {
         uint8_t  pb = 0;
     } const s_OffTimer;
     struct w_b {
-        uint16_t x = 450;
-        uint16_t w = 110;
+        uint16_t x = round((br_x * 1024) / 100.0f); // 47.0% -> x = 481
+        uint16_t w = round((br_w * 1024) / 100.0f); // 13.0% -> w = 133
         uint8_t  pl = 0;
         uint8_t  pr = 0;
         uint8_t  pt = 0;
         uint8_t  pb = 2;
     } const s_BitRate;
     struct w_i {
-        uint16_t x = 700;
-        uint16_t w = 324;
+        uint16_t x = round((ip_x * 1024) / 100.0f); // 60% -> x = 614
+        uint16_t w = round((ip_w * 1024) / 100.0f); // 40% -> w = 410
         uint8_t  pl = 0;
-        uint8_t  pr = 0;
+        uint8_t  pr = w > 200 ? w / 50 : 0;
         uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_IPaddr;
     //-----------------------------------------------------------------------------------------------------------------------------------
 #endif
   public:
-    displayFooter(ps_ptr<char> name, uint8_t fontSize) {
+    DisplayFooter(ps_ptr<char> name, uint8_t fontSize) {
         register_object(this);
         m_name = name;
         m_fontSize = fontSize;
         m_fileNr = "000/000";
     }
-    ~displayFooter() {
+    ~DisplayFooter() {
         delete pic_Antenna;
         delete txt_StaNr;
         delete pic_Flag;
@@ -6186,6 +6309,7 @@ class displayFooter : public RegisterTable {
     }
 
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
+        MWR_LOG_DEBUG("br_x: {}, br_w: {}, ip_x: {}, ip_y: {}", s_BitRate.x, s_BitRate.w, s_IPaddr.x, s_IPaddr.w);
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w;
@@ -6199,24 +6323,22 @@ class displayFooter : public RegisterTable {
         txt_IpAddr->begin(s_IPaddr.x, m_y, s_IPaddr.w, m_h, s_IPaddr.pl, s_IPaddr.pr, s_IPaddr.pt, s_IPaddr.pb);
         txt_FileNr->begin(s_FileNr.x, m_y, s_FileNr.w, m_h, s_FileNr.pl, s_FileNr.pr, s_FileNr.pt, s_FileNr.pb);
 
-        txt_StaNr->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
+        txt_StaNr->setAlign(HAlign::Left, VAlign::Middle);
         txt_StaNr->setTextColor(m_stationColor);
         txt_StaNr->setFontSize(m_fontSize); // 0 -> auto
-        txt_OffTimer->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
+        txt_OffTimer->setAlign(HAlign::Left, VAlign::Middle);
         txt_OffTimer->setFontSize(m_fontSize); // 0 -> auto
-        txt_BitRate->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+        txt_BitRate->setAlign(HAlign::Center, VAlign::Middle);
         txt_BitRate->setTextColor(m_bitRateColor);
         txt_BitRate->setBorderColor(m_bitRateColor);
         txt_BitRate->setFontSize(m_fontSize); // 0 -> auto
-        txt_IpAddr->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
-        txt_IpAddr->setNarrow(true);
+        txt_IpAddr->setAlign(HAlign::Right, VAlign::Middle);
         txt_IpAddr->setNoWrap(true);
         txt_IpAddr->setTextColor(m_ipAddrColor);
         txt_IpAddr->setFontSize(m_fontSize); // 0 -> auto
         pic_Antenna->setPicturePath(m_Antenna_red);
-        txt_IpAddr->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
         txt_FileNr->setTextColor(TFT_ORANGE);
-        txt_FileNr->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+        txt_FileNr->setAlign(HAlign::Center, VAlign::Middle);
         txt_FileNr->setFontSize(m_fontSize); // 0 -> auto
     }
 
@@ -6299,7 +6421,7 @@ class displayFooter : public RegisterTable {
     void updateFlag(ps_ptr<char> flag) {
         if (flag.strlen() > 0) {
             pic_Flag->hide(); // Don't draw over it, the new flag could be smaller
-            pic_Flag->setAlternativPicturePath("/flags/unknown.jpg");
+            if (!SD_MMC.exists(scaleImage(flag).c_get())) flag = "/flags/unknown.jpg";
             pic_Flag->setPicturePath(flag);
             pic_Flag->show();
         } else {
@@ -6326,25 +6448,32 @@ class displayFooter : public RegisterTable {
         }
     }
 
-    void updateTC(uint8_t timeCounter) {
-        if (m_timeCounter == timeCounter) return;
-        m_timeCounter = timeCounter;
+    void updateTC(float timeCounter) { // between 1.0 ... 0.0
         if (!m_enabled) return;
+        m_timeCounter = timeCounter;
+        uint16_t x = s_BitRate.x;
+        uint16_t y = m_y;
+        uint16_t w = s_BitRate.w;
+        uint16_t h = m_h - 5;
 
-        uint16_t x0 = s_BitRate.x;
-        uint16_t x1x2 = round(s_BitRate.x + ((float)((s_BitRate.w) / 10) * timeCounter)) - 1;
-        uint16_t y0y1 = m_y + m_h - 5;
-        uint16_t y2 = round((m_y + m_h - 5) - ((float)(m_h - 6) / 10) * timeCounter);
+        uint16_t triangle_x0 = x;             // left corner
+        uint16_t triangle_y0y1 = y + m_h - 5; // baseline
+
+        uint16_t triangle_x1x2 = x + w * m_timeCounter - 1;
+        uint16_t triangle_y2 = triangle_y0y1 - h * m_timeCounter;
+
         if (m_bg_color == TFT_TRANSPARENT) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, s_BitRate.x, m_y, s_BitRate.w, m_h);
         } else {
             getTFT().fillRect(s_BitRate.x, m_y, s_BitRate.w, m_h, m_bg_color);
         }
-        getTFT().fillTriangle(x0, y0y1, x1x2, y0y1, x1x2, y2, TFT_RED);
-        if (!m_timeCounter) { txt_BitRate->show(); }
+        getTFT().fillTriangle(triangle_x0, triangle_y0y1, triangle_x1x2, triangle_y0y1, triangle_x1x2, triangle_y2, TFT_RED);
+        if (m_timeCounter == 0.0f) { txt_BitRate->show(); }
     }
 
     void updateBitRate(uint32_t bitRate) {
+        if (m_timeCounter > 0.0f) return;
+
         m_bitRate = bitRate / 1000; // KBit/s
         if (!m_enabled) return;
         char sbr[10];
@@ -6438,14 +6567,13 @@ class displayFooter : public RegisterTable {
     }
 }; // displayFooter
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class messageBox : public RegisterTable {
+class MessageBox : public RegisterTable {
   private:
     ps_ptr<char> m_name;
     ps_ptr<char> m_text;
     bool         m_enabled = false;
     bool         m_focus = false;
     bool         m_clicked = false;
-    bool         m_narrow = false;
     bool         m_noWrap = false;
     bool         m_content_has_changed = false;
     bool         m_first_call = true;
@@ -6460,7 +6588,7 @@ class messageBox : public RegisterTable {
     releasedArg  m_ra;
     int32_t      m_bg_color = TFT_YELLOW;
     int32_t      m_textColor = TFT_DARKRED;
-    textbox*     txt_msgBox = new textbox("msgBox txt");
+    Textbox*     txt_msgBox = new Textbox("msgBox txt");
 
 #ifdef TFT_LAYOUT_S // 320 x 240px
 
@@ -6511,12 +6639,12 @@ class messageBox : public RegisterTable {
 #endif
 
   public:
-    messageBox(ps_ptr<char> name) {
+    MessageBox(ps_ptr<char> name) {
         m_name = name;
         m_x = m_win.w;
         m_y = m_win.y;
     }
-    ~messageBox() { delete txt_msgBox; }
+    ~MessageBox() { delete txt_msgBox; }
 
     // clang-format off
     void begin(int16_t x, int16_t y, int16_t w, int16_t h) {
@@ -6527,7 +6655,6 @@ class messageBox : public RegisterTable {
         txt_msgBox->begin(m_x, m_y, m_w, m_h, m_pl, m_pr, m_pt, m_pb);
         txt_msgBox->setTextColor(m_textColor);
         txt_msgBox->set_bg_color(m_bg_color);
-        txt_msgBox->setNarrow(m_narrow);
         txt_msgBox->setNoWrap(m_noWrap);
     }
     // clang-format on
@@ -6564,11 +6691,10 @@ class messageBox : public RegisterTable {
         h = m_h;
     }
 
-    void setText(ps_ptr<char> txt, bool narrow = false, bool noWrap = true) { // prepare a text, wait of show() to write it
+    void setText(ps_ptr<char> txt, bool noWrap = true) { // prepare a text, wait of show() to write it
         m_text = txt;
-        m_narrow = narrow;
         m_noWrap = noWrap;
-        txt_msgBox->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+        txt_msgBox->setAlign(HAlign::Center, VAlign::Middle);
         txt_msgBox->setFontSize(0); // auto
         txt_msgBox->setText(m_text);
     }

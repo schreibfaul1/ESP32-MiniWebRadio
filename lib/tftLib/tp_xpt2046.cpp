@@ -1,6 +1,3 @@
-// first release on 09/2019
-// updated on Feb 02 2025
-
 #include "tp_xpt2046.h"
 
 __attribute__((weak)) void tp_moved(uint16_t x, uint16_t y) {
@@ -112,6 +109,11 @@ void TP_XPT2046::setRotation(uint8_t m) {
     m_rotation = m;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TP_XPT2046::setMirror(bool h, bool v) {
+    m_mirror_h = h;
+    m_mirror_v = v;
+}
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TP_XPT2046::setSize(uint8_t s) {
     switch (s) {
         case 0: m_cal = m_cal_28; break; // 2.8 inch
@@ -168,6 +170,9 @@ bool TP_XPT2046::read_TP(int16_t& x, int16_t& y) {
     int32_t dst_x = 0;
     int32_t dst_y = 0;
     mapRotation(m_rotation, src_x, src_y, dst_x, dst_y);
+
+    if (m_mirror_h) dst_x = m_h_res - 1 - dst_x;
+    if (m_mirror_v) dst_y = m_v_res - 1 - dst_y;
 
     x = dst_x;
     y = dst_y;

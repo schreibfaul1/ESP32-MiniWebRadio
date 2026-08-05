@@ -8,13 +8,9 @@
 
 #include "kcx_bt_emitter.h"
 
-__attribute__((weak)) void kcx_bt_memItems(const char*) {
-    // Default: do nothing. User can provide their own implementation to process audio data.
-}
+__attribute__((weak)) void kcx_bt_memItems(const char*) {}
 
-__attribute__((weak)) void kcx_bt_scanItems(const char*) {
-    // Default: do nothing. User can provide their own implementation to process audio data.
-}
+__attribute__((weak)) void kcx_bt_scanItems(const char*) {}
 
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 KCX_BT_Emitter::KCX_BT_Emitter(int8_t RX_pin, int8_t TX_pin, int8_t connect_pin, int8_t mode_pin) {

@@ -1,9 +1,11 @@
 #pragma once
 
 #include "Arduino.h"
+#include "Audio.h"
 #include "FS.h"
 #include "fonts/fontsdef.h"
 #include "tft_common_defs.h"
+#include <deque>
 #include <vector>
 
 enum Framebuffer : uint8_t {
@@ -11,6 +13,7 @@ enum Framebuffer : uint8_t {
     FB_BACKGROUND = 1,
 };
 class TFT_Base {
+    std::mutex m_textLayoutMutex;
   public:
     virtual ~TFT_Base() = default;
 
@@ -18,12 +21,11 @@ class TFT_Base {
     uint16_t logicalHeight() const;
 
     void drawRectLogicalFromFB(uint8_t fb, int16_t x, int16_t y, uint16_t w, uint16_t h);
-    bool copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool updateDisplay = true);                                                               // framebuffer to framebuffer
-    bool copyFramebuffer(uint8_t source, uint16_t* buffer, uint16_t x, uint16_t y, uint16_t w, uint16_t h);                                                                                             // framebuffer to buffer
-    bool copyFramebuffer(const uint16_t* buffer, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool updateDisplay = true);                                                       // buffer to framebuffer
-    bool copyFramebuffer(uint8_t source, uint16_t srcX, uint16_t srcY, uint16_t* buffer, uint16_t bufferWidth, uint16_t bufferHeight, uint16_t dstX, uint16_t dstY, uint16_t w, uint16_t h);            // framebuffer to buffer with window
-    bool copyFramebuffer(const uint16_t* buffer, uint16_t bufferWidth, uint16_t bufferHeight, uint16_t srcX, uint16_t srcY, uint8_t destination, uint16_t dstX, uint16_t dstY, uint16_t w, uint16_t h,
-                         bool updateDisplay = true); // buffer to framebuffer with window
+    bool copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool updateDisplay = true);                                                    // framebuffer to framebuffer
+    bool copyFramebuffer(uint8_t source, uint16_t* buffer, uint16_t x, uint16_t y, uint16_t w, uint16_t h);                                                                                  // framebuffer to buffer
+    bool copyFramebuffer(const uint16_t* buffer, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool updateDisplay = true);                                            // buffer to framebuffer
+    bool copyFramebuffer(uint8_t source, uint16_t srcX, uint16_t srcY, uint16_t* buffer, uint16_t bufferWidth, uint16_t bufferHeight, uint16_t dstX, uint16_t dstY, uint16_t w, uint16_t h); // framebuffer to buffer with window
+    bool copyFramebuffer(const uint16_t* buff, uint16_t buff_W, uint16_t buff_H, uint16_t srcX, uint16_t srcY, uint8_t dest, uint16_t dstX, uint16_t dstY, uint16_t w, uint16_t h, bool updateDisplay = true);
 
     void     fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
     void     fillScreen(uint16_t color);
@@ -39,13 +41,140 @@ class TFT_Base {
     uint16_t getBackGroundColor() { return m_backGroundColor; }
     void     setTextColor(uint16_t FGcolor) { m_textColor = FGcolor; }
     uint16_t getTextColor() { return m_textColor; }
+    bool     setFontByIndex(uint16_t fontIndex);
+    uint8_t  getFontIndex();
+    uint8_t  getMaxFontIndex();
     void     setFontSize(uint16_t font);
     void     setTextOrientation(uint16_t orientation = 0) { m_textorientation = orientation; }
     bool     drawBmpFile(fs::FS& fs, const char* path, uint16_t x = 0, uint16_t y = 0, uint16_t maxWidth = 0, uint16_t maxHeight = 0, float scale = 1.0f);
     bool     drawGifFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint8_t repeat);
     bool     drawJpgFile(fs::FS& fs, const char* path, uint16_t x = 0, uint16_t y = 0, uint16_t maxWidth = 0, uint16_t maxHeight = 0);
-    size_t   writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, uint8_t h_align = TFT_ALIGN_LEFT, uint8_t v_align = TFT_ALIGN_CENTER, bool narrow = false, bool noWrap = false, bool autoSize = false);
-    uint16_t getLineLength(const char* txt, bool narrow);
+    uint16_t getLineLength(const char* txt);
+    size_t   writeText(ps_ptr<char> txt, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, HAlign h_align, VAlign v_align, bool noWrap, bool autoSize);
+
+  private:
+    struct Utf8Char {
+        uint32_t codepoint;
+        uint8_t  length;
+    };
+
+    enum class TokenType {
+        Glyph,
+        Color,
+        NewLine,
+    };
+
+    enum Arg {
+        reset,
+        background,
+        foreground,
+    };
+
+    enum class GlyphType : uint8_t {
+        Font,
+        Emoji,
+    };
+
+    enum class EmojiShape : uint8_t {
+        Circle,
+        Square,
+    };
+
+    struct Token {
+        TokenType type;
+        uint32_t  value = 0;
+        Arg       arg = Arg::foreground;
+        Token(TokenType t, uint32_t v = 0, Arg a = Arg::foreground) : type(t), value(v), arg(a) {}
+    };
+
+    struct AnsiEntry {
+        const char* seq;
+        uint8_t     len;
+        uint16_t    color;
+        Arg         mode;
+    };
+
+    struct EmojiDef {
+        uint32_t   codepoint;
+        EmojiShape shape;
+        uint16_t   color;
+    };
+
+    static constexpr EmojiDef emojiTable[] = {
+        {0x1F7E2, EmojiShape::Circle, TFT_GREEN},  // 🟢
+        {0x1F534, EmojiShape::Circle, TFT_RED},    // 🔴
+        {0x1F7E1, EmojiShape::Circle, TFT_YELLOW}, // 🟡
+        {0x1F535, EmojiShape::Circle, TFT_BLUE},   // 🔵
+        {0x1F7E3, EmojiShape::Circle, TFT_PURPLE}, // 🟣
+        {0x1F7E0, EmojiShape::Circle, TFT_ORANGE}, // 🟠
+
+        {0x2B1B, EmojiShape::Square, TFT_BLACK},   // ⬛
+        {0x2B1C, EmojiShape::Square, TFT_WHITE},   // ⬜
+        {0x1F7E5, EmojiShape::Square, TFT_RED},    // 🟥
+        {0x1F7E9, EmojiShape::Square, TFT_GREEN},  // 🟩
+        {0x1F7E6, EmojiShape::Square, TFT_BLUE},   // 🟦
+        {0x1F7EA, EmojiShape::Square, TFT_PURPLE}, // 🟪
+    };
+
+    const EmojiDef* findEmoji(uint32_t cp) {
+        for (const auto& e : emojiTable)
+            if (e.codepoint == cp) return &e;
+        return nullptr;
+    }
+
+    struct Glyph {
+        GlyphType  type = GlyphType::Font;
+        uint32_t   codepoint;
+        uint16_t   glyphPos = 0;
+        uint16_t   color;
+        uint16_t   width;
+        EmojiShape emojiShape;
+    };
+
+    struct Word {
+        std::vector<Glyph> glyphs;
+        uint16_t           width = 0; // Breite des Wortes
+        uint8_t            trailingSpaces = 0;
+        bool               newLine = false;
+    };
+
+    struct PlacedWord {
+        const Word* word;
+        uint16_t    spacing; // Abstand vor diesem Wort
+    };
+
+    struct Line {
+        std::vector<PlacedWord> words;
+        uint16_t                width = 0;
+    };
+
+    static constexpr AnsiEntry ansiTable[25] = {
+        {"\033[0m", 4, TFT_LIGHTGREY, Arg::reset},         {"\033[30m", 5, TFT_BLACK, Arg::foreground},     {"\033[31m", 5, TFT_RED, Arg::foreground},          {"\033[32m", 5, TFT_GREEN, Arg::foreground},     {"\033[33m", 5, TFT_YELLOW, Arg::foreground},
+        {"\033[34m", 5, TFT_BLUE, Arg::foreground},        {"\033[35m", 5, TFT_MAGENTA, Arg::foreground},   {"\033[36m", 5, TFT_CYAN, Arg::foreground},         {"\033[37m", 5, TFT_WHITE, Arg::foreground},     {"\033[40m", 5, TFT_BLACK, Arg::background},
+        {"\033[41m", 5, TFT_RED, Arg::background},         {"\033[42m", 5, TFT_GREEN, Arg::background},     {"\033[43m", 5, TFT_YELLOW, Arg::background},       {"\033[44m", 5, TFT_BLUE, Arg::background},      {"\033[45m", 5, TFT_MAGENTA, Arg::background},
+        {"\033[46m", 5, TFT_CYAN, Arg::background},        {"\033[47m", 5, TFT_WHITE, Arg::background},     {"\033[90m", 5, TFT_GREY, Arg::foreground},         {"\033[91m", 5, TFT_LIGHTRED, Arg::foreground},  {"\033[92m", 5, TFT_LIGHTGREEN, Arg::foreground},
+        {"\033[93m", 5, TFT_LIGHTYELLOW, Arg::foreground}, {"\033[94m", 5, TFT_LIGHTBLUE, Arg::foreground}, {"\033[95m", 5, TFT_LIGHTMAGENTA, Arg::foreground}, {"\033[96m", 5, TFT_LIGHTCYAN, Arg::foreground}, {"\033[97m", 5, TFT_LIGHTGREY, Arg::foreground},
+    };
+
+    Utf8Char decodeUtf8(const char* s);
+    size_t   parseAnsi(const char*& p, uint32_t& color, Arg& arg);
+    void     txtToToken(const char* p);
+    void     tokenToWords();
+    bool     isVowel(uint32_t cp);
+    int      findBestBreak(const Word& word, size_t glyphStart, size_t breakPos);
+    bool     wordToLines(int16_t win_w, int16_t win_H, bool noWrap);
+    void     prepareFontLayout();
+    bool     layoutText(int16_t win_W, int16_t win_H, bool noWrap);
+    void     drawLines(int16_t win_X, int16_t win_Y, int16_t win_W, int16_t win_H, HAlign hAlign, VAlign vAlign);
+    void     drawGlyph(Glyph glyph, int16_t x, int16_t y);
+    void     drawWord(const Word* word, int16_t x, int16_t y);
+
+  private:
+    std::vector<Token> m_token;
+    std::vector<Word>  m_word;
+    std::deque<Word>   m_wrappedWord;
+    std::vector<Line>  m_line;
+    uint16_t           m_spaceWidth;
 
   protected:
     typedef struct {
@@ -58,33 +187,32 @@ class TFT_Base {
         uint16_t                           font_height;
         uint16_t                           base_line;
         uint16_t*                          lookup_table;
+        int8_t                             font_index;
+        uint8_t                            max_font_index;
     } fonts_t;
 
-    bool     renderRGB565(int16_t x, int16_t y, uint16_t w, uint16_t h, const uint16_t* rgb, const uint8_t* alpha);
-    void     mapRotation(uint8_t rot, int32_t srcX, int32_t srcY, int32_t& dstX, int32_t& dstY) const;
-    void     writeTheFramebuffer(const uint8_t* bmi, uint16_t posX, uint16_t posY, uint16_t width, uint16_t height);
-    uint16_t analyzeText(const char* str, uint16_t* chArr, uint16_t* colorArr, uint16_t startColor);
-    uint16_t fitinline(uint16_t* cpArr, uint16_t chLength, uint16_t begin, int16_t win_W, uint16_t* usedPxLength, bool narrow, bool noWrap);
-    uint8_t  fitInAddrWindow(uint16_t* cpArr, uint16_t chLength, int16_t win_W, int16_t win_H, bool narrow, bool noWrap);
-    int32_t  GIF_readGifItems();
-    bool     GIF_decodeGif(uint16_t x, uint16_t y);
-    bool     GIF_loop();
-    void     GIF_freeMemory();
-    void     GIF_DecoderReset();
-    void     GIF_readHeader();
-    void     GIF_readLogicalScreenDescriptor();
-    void     GIF_readImageDescriptor();
-    void     GIF_readLocalColorTable();
-    void     GIF_readGlobalColorTable();
-    void     GIF_readGraphicControlExtension();
-    uint8_t  GIF_readPlainTextExtension(char* buf);
-    uint8_t  GIF_readApplicationExtension(char* buf);
-    uint8_t  GIF_readCommentExtension(char* buf);
-    uint8_t  GIF_readDataSubBlock(char* buf);
-    bool     GIF_readExtension(char Label);
-    int32_t  GIF_GetCode(int32_t code_size, int32_t flag);
-    int32_t  GIF_LZWReadByte(bool init);
-    bool     GIF_ReadImage(uint16_t x, uint16_t y);
+    bool    renderRGB565(int16_t x, int16_t y, uint16_t w, uint16_t h, const uint16_t* rgb, const uint8_t* alpha);
+    void    mapRotation(uint8_t rot, int32_t srcX, int32_t srcY, int32_t& dstX, int32_t& dstY) const;
+    void    writeTheFramebuffer(const uint8_t* bmi, uint16_t posX, uint16_t posY, uint16_t width, uint16_t height);
+    int32_t GIF_readGifItems();
+    bool    GIF_decodeGif(uint16_t x, uint16_t y);
+    bool    GIF_loop();
+    void    GIF_freeMemory();
+    void    GIF_DecoderReset();
+    void    GIF_readHeader();
+    void    GIF_readLogicalScreenDescriptor();
+    void    GIF_readImageDescriptor();
+    void    GIF_readLocalColorTable();
+    void    GIF_readGlobalColorTable();
+    void    GIF_readGraphicControlExtension();
+    uint8_t GIF_readPlainTextExtension(char* buf);
+    uint8_t GIF_readApplicationExtension(char* buf);
+    uint8_t GIF_readCommentExtension(char* buf);
+    uint8_t GIF_readDataSubBlock(char* buf);
+    bool    GIF_readExtension(char Label);
+    int32_t GIF_GetCode(int32_t code_size, int32_t flag);
+    int32_t GIF_LZWReadByte(bool init);
+    bool    GIF_ReadImage(uint16_t x, uint16_t y);
 
     virtual bool panelDrawBitmap(int16_t x0, int16_t y0, int16_t x1, int16_t y1, const void* bitmap) = 0;
 
@@ -486,3 +614,11 @@ class TFT_Base {
     const uint16_t m_rowBufferSize = 4096;
     uint8_t*       m_rowBuffer = nullptr;
 };
+
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// Macro for comfortable calls
+#define MWR_LOG_ERROR(fmt, ...)   Audio::AUDIO_LOG_IMPL(1, __FILE__, __LINE__, __func__, fmt, ##__VA_ARGS__)
+#define MWR_LOG_WARN(fmt, ...)    Audio::AUDIO_LOG_IMPL(2, __FILE__, __LINE__, __func__, fmt, ##__VA_ARGS__)
+#define MWR_LOG_INFO(fmt, ...)    Audio::AUDIO_LOG_IMPL(3, __FILE__, __LINE__, __func__, fmt, ##__VA_ARGS__)
+#define MWR_LOG_DEBUG(fmt, ...)   Audio::AUDIO_LOG_IMPL(4, __FILE__, __LINE__, __func__, fmt, ##__VA_ARGS__)
+#define MWR_LOG_VERBOSE(fmt, ...) Audio::AUDIO_LOG_IMPL(5, __FILE__, __LINE__, __func__, fmt, ##__VA_ARGS__)
