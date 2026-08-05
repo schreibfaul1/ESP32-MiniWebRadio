@@ -897,25 +897,27 @@ bool WebSrv::handlehttp() { // HTTPserver, message received
             }
             m_msg.e = evt_command;
             m_msg.cmd = req.cmd;
-            m_msg.param1.assignf("{}", req.param);
-            m_msg.arg1.assignf("{}", req.arg);
+            m_msg.param.assignf("{}", req.param);
+            m_msg.arg.assignf("{}", req.arg);
             if (m_websrv_callback) m_websrv_callback(m_msg);
             break;
 
         case HttpRequest::Method::POST:
             m_msg.e = evt_request;
             m_msg.cmd = req.cmd;
-            m_msg.param1 = req.param;
-            m_msg.arg1 = req.arg;
+            m_msg.param = req.param;
+            m_msg.arg = req.arg;
             m_msg.ct = contentType;
             m_msg.cl = contentLength;
             if (m_websrv_callback) m_websrv_callback(m_msg);
             break;
 
         case HttpRequest::Method::DELETE:
-            m_msg.e = evt_info;
+            m_msg.e = evt_delete;
+            m_msg.cmd = req.cmd;
+            m_msg.param = req.param;
+            m_msg.arg = req.arg;
             if (m_websrv_callback) m_websrv_callback(m_msg);
-            if (WEBSRV_onDelete) WEBSRV_onDelete(req.cmd.c_get(), req.param.c_get(), req.arg.c_get());
             break;
 
         case HttpRequest::Method::Unknown: break;
@@ -1026,8 +1028,8 @@ void WebSrv::parseWsMessage(uint32_t len) {
     if (opcode == 0x09) { // denotes a ping
         m_msg.e = evt_command;
         m_msg.cmd = "ping received, send pong";
-        m_msg.param1 = "";
-        m_msg.arg1 = "";
+        m_msg.param = "";
+        m_msg.arg = "";
         if (m_websrv_callback) m_websrv_callback(m_msg);
         m_msg.e = evt_info;
         m_msg.arg = "ping received, send pong";
@@ -1038,8 +1040,8 @@ void WebSrv::parseWsMessage(uint32_t len) {
     if (opcode == 0x0A) { // denotes a pong
         m_msg.e = evt_command;
         m_msg.cmd = "pong received";
-        m_msg.param1 = "";
-        m_msg.arg1 = "";
+        m_msg.param = "";
+        m_msg.arg = "";
         if (m_websrv_callback) m_websrv_callback(m_msg);
         m_msg.e = evt_info;
         m_msg.arg = "pong received";
@@ -1069,21 +1071,21 @@ void WebSrv::parseWsMessage(uint32_t len) {
         msgBuff[pll] = '\0';
 
         m_msg.cmd = msgBuff;
-        m_msg.param1.assign("");
-        m_msg.arg1.assign("");
+        m_msg.param.assign("");
+        m_msg.arg.assign("");
 
         int pos = m_msg.cmd.index_of('='); //  m_msg.cmd: "DLNA_getContent=4:cont1:20:0:0:&Musik  (6)"
         if (pos != -1) {
-            m_msg.param1 = m_msg.cmd.substr(pos + 1); // m_msg.param1: "4:cont1:20:0:0:&Musik  (6)"
+            m_msg.param = m_msg.cmd.substr(pos + 1); // m_msg.param1: "4:cont1:20:0:0:&Musik  (6)"
             m_msg.cmd = m_msg.cmd.substr(0, pos);     // m_msg.cmd: "DLNA_getContent"
         }
-        pos = m_msg.param1.index_of('&'); // m_msg.param1: "4:cont1:20:0:0:&Musik  (6)"
+        pos = m_msg.param.index_of('&'); // m_msg.param1: "4:cont1:20:0:0:&Musik  (6)"
         if (pos != -1) {
-            m_msg.arg1 = m_msg.param1.substr(pos + 1);  // m_msg.arg1: "Musik  (6)"
-            m_msg.param1 = m_msg.param1.substr(0, pos); // m_msg.param1; "4:cont1:20:0:0:"
+            m_msg.arg = m_msg.param.substr(pos + 1);  // m_msg.arg1: "Musik  (6)"
+            m_msg.param = m_msg.param.substr(0, pos); // m_msg.param1; "4:cont1:20:0:0:"
         }
 
-        WS_LOG_DEBUG("{}\ncmd: {}, param1: {}, arg1: {}", msgBuff, m_msg.cmd, m_msg.param1, m_msg.arg1);
+        WS_LOG_DEBUG("{}\ncmd: {}, param1: {}, arg1: {}", msgBuff, m_msg.cmd, m_msg.param, m_msg.arg);
 
         m_msg.e = evt_command;
         if (m_websrv_callback) m_websrv_callback(m_msg);

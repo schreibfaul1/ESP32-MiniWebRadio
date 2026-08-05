@@ -2,7 +2,7 @@
  * websrv.h
  *
  *  Created on: 09.07.2017
- *  updated on: 04.08.2026
+ *  updated on: 05.08.2026
  *      Author: Wolle
  */
 
@@ -12,8 +12,6 @@
 #include "base64.h"
 #include "mbedtls/base64.h"
 #include "mbedtls/sha1.h"
-
-extern __attribute__((weak)) void WEBSRV_onDelete(const char* cmd, const char* param, const char* arg);
 
 #define ANSI_ESC_RED "\033[31m"
 
@@ -34,12 +32,9 @@ class WebSrv {
     struct msg_s {
         const char*  msg = nullptr;
         const char*  s = nullptr;
-        const char*  param;
-        const char*  command;
-        ps_ptr<char> arg;
-        ps_ptr<char> param1;
+        ps_ptr<char> param;
         ps_ptr<char> cmd;
-        ps_ptr<char> arg1;
+        ps_ptr<char> arg;
         ps_ptr<char> ct;             // contentType
         uint32_t     cl = 0;         // contentLength
         event_t      e = (event_t)0; // event type

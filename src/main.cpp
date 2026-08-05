@@ -3599,8 +3599,8 @@ void WEBSRV_onRequest(ps_ptr<char> cmd,  ps_ptr<char> param, ps_ptr<char> arg, p
     webSrv.sendStatus(400);
 }
 
-void WEBSRV_onDelete(const char* cmd,  const char* param, const char* arg){  // via XMLHttpRequest
-    if(startsWith(cmd, "SD")){      bool res = SD_delete(param);
+void WEBSRV_onDelete(ps_ptr<char> cmd,  ps_ptr<char> param, ps_ptr<char> arg){  // via XMLHttpRequest
+    if(cmd.starts_with("SD")){      bool res = SD_delete(param.c_get());
                                     if(res) webSrv.sendStatus(200); else webSrv.sendStatus(400);
                                     printfln(s_tag.webserver, "Delete " ANSI_ESC_ORANGE "\"{}\"", param);
                                     return;}
@@ -3773,11 +3773,10 @@ void on_websrv(const WebSrv::msg_s& msg) {
     if (msg.e == WebSrv::evt_error) { printfln(s_tag.webserver, ANSI_ESC_RED "{}", msg.arg); }
     if (msg.e == WebSrv::evt_warn) { printfln(s_tag.webserver, ANSI_ESC_YELLOW "{}", msg.arg); }
 
-    if (msg.e == WebSrv::evt_command) {
-        MWR_LOG_DEBUG("cmd: {}, param1: {}, arg1: {}", msg.cmd, msg.param1, msg.arg1);
-        WEBSRV_onCommand(msg.cmd, msg.param1, msg.arg1);
-    }
-    if (msg.e == WebSrv::evt_request) { WEBSRV_onRequest(msg.cmd, msg.param1, msg.arg1, msg.ct, msg.cl); }
+    // MWR_LOG_WARN("cmd: {}, param: {}, arg: {}", msg.cmd, msg.param, msg.arg);
+    if (msg.e == WebSrv::evt_command) { WEBSRV_onCommand(msg.cmd, msg.param, msg.arg); }
+    if (msg.e == WebSrv::evt_request) { WEBSRV_onRequest(msg.cmd, msg.param, msg.arg, msg.ct, msg.cl); }
+    if (msg.e == WebSrv::evt_delete) { WEBSRV_onDelete(msg.cmd, msg.param, msg.arg); }
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void kcx_bt_memItems(const char* jsonItems) { // Every time an item (name or address) was added, a JSON string is passed here
