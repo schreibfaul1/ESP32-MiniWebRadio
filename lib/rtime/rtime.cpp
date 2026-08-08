@@ -36,6 +36,7 @@ bool RTIME::hasValidTime() {
 }
 
 ps_ptr<char> RTIME::gettime_s() {
+    std::lock_guard<std::mutex> lock(mutex_rtc);
     time_t    now;
     struct tm timeinfo;
 

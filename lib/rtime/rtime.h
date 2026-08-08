@@ -29,6 +29,7 @@ public:
 	uint8_t getweekday();
 	uint16_t getMinuteOfTheDay();
 private:
+    std::mutex mutex_rtc;
 	ps_ptr<char> RTIME_TZ;
 	ps_ptr<char> time_s;
 	struct tm timeinfo;

@@ -228,7 +228,7 @@ inline ps_ptr<char> getStatusName(int8_t status) {
     }
     return name;
 }
-
+std::mutex mutex_print;
 enum ir_shift { IR_RIGHT = +100, IR_LEFT = -100, IR_UP = +101, IR_DOWN = -101, IR_RESET = -127 };
 
 extern SemaphoreHandle_t        mutex_rtc;
@@ -331,6 +331,7 @@ struct tag_s {
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 template <typename... Args> void printfln(ps_ptr<char> tag, const char* fmt, Args&&... args) {
+    std::lock_guard<std::mutex> lock(mutex_print);
     if (s_logBuffer.size() == 1024) s_logBuffer.pop_back();
 
     ps_ptr<char> myLog;
@@ -348,8 +349,8 @@ template <typename... Args> void printfln(ps_ptr<char> tag, const char* fmt, Arg
 }
 
 template <typename... Args> void printfcr(ps_ptr<char> tag, const char* fmt, Args&&... args) {
+    std::lock_guard<std::mutex> lock(mutex_print);
     if (s_logBuffer.size() == 1024) s_logBuffer.pop_back();
-
     ps_ptr<char> myLog;
     myLog.reserve(200);
     rtc.hasValidTime() ? myLog.append(rtc.gettime_s()) : myLog.append("00:00:00");
