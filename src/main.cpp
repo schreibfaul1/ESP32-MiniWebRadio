@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.0n - Aug 09, 2026                                                                                                               ";
+    Version 4.2.0o - Aug 14, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -2222,9 +2222,11 @@ void loop() {
                     pgb_DL_progress.setValue(s_audioCurrentTime);
                 }
                 if (s_audioFileDuration) {
-                    printfcr(s_tag.action, ANSI_ESC_GREEN "AudioCurrentTime " ANSI_ESC_GREEN "{}:{:02}s, " ANSI_ESC_GREEN "AudioFileDuration " ANSI_ESC_GREEN "{}:{:02}s      ", (long int)s_audioCurrentTime / 60, (long int)s_audioCurrentTime % 60, (long int)s_audioFileDuration / 60,
-                             (long int)s_audioFileDuration % 60);
-                }
+                    ps_ptr<char> act;
+                    act.set_name("act");
+                    act.assignf(ANSI_ESC_GREEN "AudioCurrentTime {}:{:02}s, ", s_audioCurrentTime / 60, s_audioCurrentTime % 60);
+                    act.appendf("AudioFileDuration {}:{:02}s", s_audioFileDuration / 60, s_audioFileDuration % 60);
+                    printfln(s_tag.action, act.c_get()); }
             }
         }
         //------------------------------------------NEW STREAMTITLE-----------------------------------------------------------------------------------
