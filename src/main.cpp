@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.0p - Aug 19, 2026                                                                                                               ";
+    Version 4.2.0q - Aug 19, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -259,15 +259,16 @@ boolean defaultsettings() {
     ps_ptr<char> tmp;
     tmp.calloc(1024);
     file2.readBytes(jO.get(), 2048);
-    s_settingsHash = simpleHash(jO.get());
+    s_settingsHash = simpleHash(jO);
     file2.close();
 
     auto parseJson = [&](const char* s) { // lambda, inner function
+        ps_ptr<char> res = "0";
         int16_t pos1 = 0, pos2 = 0, pos3 = 0;
         pos1 = jO.index_of(s, 0);
         if (pos1 < 0) {
             MWR_LOG_ERROR("index {} not found", s);
-            return "0";
+            return res;
         }
         pos2 = jO.index_of(":", pos1) + 1;
         if (jO[pos2] == '\"')
@@ -279,28 +280,32 @@ boolean defaultsettings() {
             pos2++;
             pos3--;
         } // remove \" embraced strings
-        tmp = jO.substr(pos2, pos3 - pos2);
-        tmp[pos3 - pos2] = '\0';
-        return (const char*)tmp.c_get();
+        res = jO.substr(pos2, pos3 - pos2);
+        res[pos3 - pos2] = '\0';
+        return res;
     };
 
-    auto computeMinuteOfTheDay = [&](const char* s) {
-        if (!s) return 0;
-        int h = atoi(s);
-        int m = atoi(s + 3);
+    auto computeMinuteOfTheDay = [&](ps_ptr<char> s) {
+        if (s.strlen() != 5) {
+            MWR_LOG_ERROR("invalid time string {}", s);
+            return 0;
+        }
+        uint8_t h = s.substr(0, 2).to_uint8();
+        uint8_t m = s.substr(3, 2).to_uint8();
+        MWR_LOG_DEBUG("s {}, h {}, m {}", s, h, m);
         return h * 60 + m;
     };
 
     s_settings.lastconnectedhost.reset();
     s_settings.lastconnectedfile.reset();
 
-    s_volume.cur_volume = atoi(parseJson("\"volume\":"));
-    s_volume.volumeSteps = atoi(parseJson("\"volumeSteps\":"));
-    s_volume.ringVolume = atoi(parseJson("\"ringVolume\":"));
-    s_volume.volumeAfterAlarm = atoi(parseJson("\"volumeAfterAlarm\":"));
-    s_bt_emitter.volume = atoi(parseJson("\"BTvolume\":"));
-    s_bt_emitter.enabled  = (strcmp(parseJson("\"BTpower\":"), "true") == 0) ? 1 : 0;
-    s_bt_emitter.mode = ((strcmp(parseJson("\"BTmode\":"), "TX") == 0) ? "TX" : "RX");
+    s_volume.cur_volume = parseJson("\"volume\":").to_uint8();
+    s_volume.volumeSteps = parseJson("\"volumeSteps\":").to_uint8();
+    s_volume.ringVolume = parseJson("\"ringVolume\":").to_uint8();
+    s_volume.volumeAfterAlarm = parseJson("\"volumeAfterAlarm\":").to_uint8();
+    s_bt_emitter.volume = parseJson("\"BTvolume\":").to_uint8();
+    s_bt_emitter.enabled  = parseJson("\"BTpower\":").equals("true") ? true : false;
+    s_bt_emitter.mode = parseJson("\"BTmode\":").equals("TX") ? "TX" : "RX";
     s_alarmtime[0] = computeMinuteOfTheDay(parseJson("\"alarmtime_sun\":"));
     s_alarmtime[1] = computeMinuteOfTheDay(parseJson("\"alarmtime_mon\":"));
     s_alarmtime[2] = computeMinuteOfTheDay(parseJson("\"alarmtime_tue\":"));
@@ -308,32 +313,32 @@ boolean defaultsettings() {
     s_alarmtime[4] = computeMinuteOfTheDay(parseJson("\"alarmtime_thu\":"));
     s_alarmtime[5] = computeMinuteOfTheDay(parseJson("\"alarmtime_fri\":"));
     s_alarmtime[6] = computeMinuteOfTheDay(parseJson("\"alarmtime_sat\":"));
-    s_alarmdays = atoi(parseJson("\"alarm_weekdays\":"));
-    s_f_timeAnnouncement = (strcmp(parseJson("\"timeAnnouncing\":"), "true") == 0) ? 1 : 0;
+    s_alarmdays = parseJson("\"alarm_weekdays\":").to_uint8();
+    s_f_timeAnnouncement = parseJson("\"timeAnnouncing\":").equals("true") ? true : false;
     s_timeSpeechLang = parseJson("\"timeSpeechLang\":");
-    s_f_mute = (strcmp(parseJson("\"mute\":"), "true") == 0) ? 1 : 0;
-    s_f_vu_meter_enabled = (strcmp(parseJson("\"vu_meter_enabled\":"), "true") == 0) ? 1 : 0;
-    s_f_spectrum_enabled = (strcmp(parseJson("\"spectrum_enabled\":"), "true") == 0) ? 1 : 0;
-    s_brightness = max(5, atoi(parseJson("\"brightness\":")));
-    s_sleeptime = atoi(parseJson("\"sleeptime\":"));
-    s_cur_station = atoi(parseJson("\"station\":"));
-    s_tone.LP = atoi(parseJson("\"toneLP\":"));
-    s_tone.BP = atoi(parseJson("\"toneBP\":"));
-    s_tone.HP = atoi(parseJson("\"toneHP\":"));
-    s_tone.BAL = atoi(parseJson("\"balance\":"));
+    s_f_mute = parseJson("\"mute\":").equals("true") ? true : false;
+    s_f_vu_meter_enabled = parseJson("\"vu_meter_enabled\":").equals("true") ? true : false;
+    s_f_spectrum_enabled = parseJson("\"spectrum_enabled\":").equals("true") ? true : false;
+    s_brightness = max((uint8_t)5, parseJson("\"brightness\":").to_uint8());
+    s_sleeptime = parseJson("\"sleeptime\":").to_uint16();
+    s_cur_station = parseJson("\"station\":").to_uint16();
+    s_tone.LP = parseJson("\"toneLP\":").to_int16();
+    s_tone.BP = parseJson("\"toneBP\":").to_int16();
+    s_tone.HP = parseJson("\"toneHP\":").to_int16();
+    s_tone.BAL = parseJson("\"balance\":").to_int16();
     s_TZName = parseJson("\"Timezone_Name\":");
     s_TZString = parseJson("\"Timezone_String\":");
-    s_settings.lastconnectedhost.copy_from(parseJson("\"lastconnectedhost\":"));
-    s_settings.lastconnectedfile.copy_from(parseJson("\"lastconnectedfile\":"));
-    s_sleepMode = atoi(parseJson("\"sleepMode\":"));
-    s_state = atoi(parseJson("\"state\":"));
+    s_settings.lastconnectedhost = parseJson("\"lastconnectedhost\":");
+    s_settings.lastconnectedfile = parseJson("\"lastconnectedfile\":");
+    s_sleepMode = parseJson("\"sleepMode\":").to_uint8();
+    s_state = parseJson("\"state\":").to_int8();
 
     // set some items ---------------------------------------------------------------------------------------------
     if (!s_settings.lastconnectedfile.starts_with("/")) { s_settings.lastconnectedfile.assign("/audiofiles/"); } // guard
-    s_SD_content.setLastConnectedFile(s_settings.lastconnectedfile.get());
+    s_SD_content.setLastConnectedFile(s_settings.lastconnectedfile);
     s_cur_AudioFolder = s_SD_content.getLastConnectedFolder();
     s_cur_AudioFileName = s_SD_content.getLastConnectedFileName();
-    s_cur_AudioFileNr = s_SD_content.getPosByFileName(s_cur_AudioFileName.c_get());
+    s_cur_AudioFileNr = s_SD_content.getPosByFileName(s_cur_AudioFileName);
     if (s_cur_AudioFileNr == -1) s_cur_AudioFileNr = 0; // not found
     // ------------------------------------------------------------------------------------------------------------
 
@@ -360,7 +365,7 @@ void updateSettings() {
     jO.appendf(",\n  \"volumeAfterAlarm\":{}", s_volume.volumeAfterAlarm);
     jO.appendf(",\n  \"BTvolume\":{}", s_bt_emitter.volume);
     jO.appendf(",\n  \"BTpower\":\"{}\"", s_bt_emitter.enabled);
-    jO.appendf(",\n  \"BTmode\":\"{}\"", bt_emitter.getMode().c_get());
+    jO.appendf(",\n  \"BTmode\":\"{}\"", bt_emitter.getMode());
     jO.appendf(",\n  \"alarmtime_sun\":\"{:02}:{:02}\"", s_alarmtime[0] / 60, s_alarmtime[0] % 60);
     jO.appendf(",\n  \"alarmtime_mon\":\"{:02}:{:02}\"", s_alarmtime[1] / 60, s_alarmtime[1] % 60);
     jO.appendf(",\n  \"alarmtime_tue\":\"{:02}:{:02}\"", s_alarmtime[2] / 60, s_alarmtime[2] % 60);
@@ -370,17 +375,17 @@ void updateSettings() {
     jO.appendf(",\n  \"alarmtime_sat\":\"{:02}:{:02}\"", s_alarmtime[6] / 60, s_alarmtime[6] % 60);
     jO.appendf(",\n  \"alarm_weekdays\":{}", s_alarmdays);
     jO.appendf(",\n  \"timeAnnouncing\":\"{}\"", s_f_timeAnnouncement);
-    jO.appendf(",\n  \"timeSpeechLang\":\"{}\"", s_timeSpeechLang.c_get());
+    jO.appendf(",\n  \"timeSpeechLang\":\"{}\"", s_timeSpeechLang);
     jO.appendf(",\n  \"mute\":\"{}\"", s_f_mute);
     jO.appendf(",\n  \"vu_meter_enabled\":\"{}\"", s_f_vu_meter_enabled);
     jO.appendf(",\n  \"spectrum_enabled\":\"{}\"", s_f_spectrum_enabled);
     jO.appendf(",\n  \"brightness\":{}", s_brightness);
     jO.appendf(",\n  \"sleeptime\":{}", s_sleeptime);
-    jO.appendf(",\n  \"lastconnectedhost\":\"{}\"", s_settings.lastconnectedhost.c_get());
-    jO.appendf(",\n  \"lastconnectedfile\":\"{}\"", s_settings.lastconnectedfile.c_get());
+    jO.appendf(",\n  \"lastconnectedhost\":\"{}\"", s_settings.lastconnectedhost);
+    jO.appendf(",\n  \"lastconnectedfile\":\"{}\"", s_settings.lastconnectedfile);
     jO.appendf(",\n  \"station\":{}", s_cur_station);
-    jO.appendf(",\n  \"Timezone_Name\":\"{}\"", s_TZName.c_get());
-    jO.appendf(",\n  \"Timezone_String\":\"{}\"", s_TZString.c_get());
+    jO.appendf(",\n  \"Timezone_Name\":\"{}\"", s_TZName);
+    jO.appendf(",\n  \"Timezone_String\":\"{}\"", s_TZString);
     jO.appendf(",\n  \"toneLP\":{}", s_tone.LP);
     jO.appendf(",\n  \"toneBP\":{}", s_tone.BP);
     jO.appendf(",\n  \"toneHP\":{}", s_tone.HP);
@@ -388,16 +393,16 @@ void updateSettings() {
     jO.appendf(",\n  \"state\":{}", s_state);
     jO.appendf(",\n  \"sleepMode\":{}\n}", s_sleepMode);
 
-    if (s_settingsHash != simpleHash(jO.get())) {
+    if (s_settingsHash != simpleHash(jO)) {
         File file = SD_MMC.open("/settings.json", "w", false);
         if (!file) {
             MWR_LOG_ERROR("file \"settings.json\" not found");
             return;
         }
         file.print(jO.get());
-        s_settingsHash = simpleHash(jO.c_get());
+        s_settingsHash = simpleHash(jO);
 
-        MWR_LOG_DEBUG("{}", jO.c_get());
+        MWR_LOG_DEBUG("{}", jO);
     }
 }
 /*****************************************************************************************************************************************************
@@ -461,7 +466,7 @@ void showStreamTitle(ps_ptr<char> streamtitle) {
     // replacestr(st, "|", "\n");
 
     txt_RA_sTitle.setTextColor(TFT_CORNSILK);
-    txt_RA_sTitle.setText(streamtitle.c_get());
+    txt_RA_sTitle.setText(streamtitle);
     txt_RA_sTitle.show();
 }
 
@@ -604,7 +609,7 @@ boolean drawImage(ps_ptr<char> path, uint16_t posX, uint16_t posY, uint16_t maxW
     auto scImg = scaleImage(path);
     if (!SD_MMC.exists(scImg.c_get())) {
         if (scImg.index_of("/.", 0) > 0) return false; // empty filename
-        printfln(s_tag.sd_card, ANSI_ESC_RED "file \"{}\" not found", scImg.c_get());
+        printfln(s_tag.sd_card, ANSI_ESC_RED "file \"{}\" not found", scImg);
         return false;
     }
     if (scImg.ends_with("bmp")) { return getTFT().drawBmpFile(SD_MMC, scImg.c_get(), posX, posY, maxWidth, maxHeigth, 1.0); }
@@ -952,7 +957,7 @@ void connecttohost(ps_ptr<char> host) {
         s_settings.lastconnectedhost.assign("");
     }
 }
-void connecttoFS(const char* FS, const char* filename, uint32_t fileStartTime) {
+void connecttoFS(const char* FS, ps_ptr<char> filename, uint32_t fileStartTime) {
     if (!filename) return;
     dispFooter.updateBitRate(0);
     spectrum_RA.clear();
@@ -960,11 +965,11 @@ void connecttoFS(const char* FS, const char* filename, uint32_t fileStartTime) {
     s_decoderBitRate = 0;
     s_cur_Codec = 0;
     s_f_webFailed = false;
-    s_f_isFSConnected = audio.connecttoFS(SD_MMC, filename, fileStartTime);
+    s_f_isFSConnected = audio.connecttoFS(SD_MMC, filename.c_get(), fileStartTime);
     s_f_isWebConnected = false;
-    if (!startsWith(filename, "/audiofiles/")) { return; }
-    if (s_f_isFSConnected && isAudio(filename)) {
-        s_settings.lastconnectedfile.copy_from(filename);
+    if (!filename.starts_with("/audiofiles/")) { return; }
+    if (s_f_isFSConnected && isAudio(filename.c_get())) {
+        s_settings.lastconnectedfile = filename;
         s_SD_content.setLastConnectedFile(filename);
         s_cur_AudioFolder = s_SD_content.getLastConnectedFolder();
         s_cur_AudioFileName = s_SD_content.getLastConnectedFileName();

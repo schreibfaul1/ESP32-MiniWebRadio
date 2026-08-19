@@ -220,8 +220,9 @@ bool DLNA_Client::readHttpHeader() {
         DLNA_LOG_DEBUG("{}", rhl.get());
         if (rhl.starts_with_icase("content-length:")) {
             rhl.remove_before(':', false);
+            rhl.trim();
             m_contentlength = rhl.to_uint32();
-            DLNA_LOG_DEBUG("content-length: {}", (long unsigned int)m_contentlength);
+            DLNA_LOG_DEBUG("content-length: {}", m_contentlength);
         } else if (rhl.starts_with_icase("content-type:")) { // content-type: text/html; charset=UTF-8
             int idx = indexOf(rhl.get() + 13, ";", 0);
             if (idx > 0) rhl[13 + idx] = '\0';
