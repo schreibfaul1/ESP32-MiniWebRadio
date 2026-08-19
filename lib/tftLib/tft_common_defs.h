@@ -30,16 +30,16 @@ extern __attribute__((weak)) void tft_info(const char*);
 #define ANSI_ESC_DARKCYAN    "\033[38;5;23m"
 #define ANSI_ESC_DARKGREY    "\033[38;5;240m"
 
-#define ANSI_ESC_BROWN       "\033[38;5;130m"
-#define ANSI_ESC_ORANGE      "\033[38;5;214m"
-#define ANSI_ESC_DARKORANGE  "\033[38;5;166m"
+ #define ANSI_ESC_BROWN       "\033[38;5;130m"
+ #define ANSI_ESC_ORANGE      "\033[38;5;214m"
+ #define ANSI_ESC_DARKORANGE  "\033[38;5;166m"
 #define ANSI_ESC_LIGHTORANGE "\033[38;5;215m"
-#define ANSI_ESC_PURPLE      "\033[38;5;129m"
-#define ANSI_ESC_PINK        "\033[38;5;213m"
-#define ANSI_ESC_LIME        "\033[38;5;190m"
-#define ANSI_ESC_NAVY        "\033[38;5;25m"
-#define ANSI_ESC_AQUAMARINE  "\033[38;5;51m"
-#define ANSI_ESC_LAVENDER    "\033[38;5;189m"
+ #define ANSI_ESC_PURPLE      "\033[38;5;129m"
+ #define ANSI_ESC_PINK        "\033[38;5;213m"
+ #define ANSI_ESC_LIME        "\033[38;5;190m"
+ #define ANSI_ESC_NAVY        "\033[38;5;25m"
+ #define ANSI_ESC_AQUAMARINE  "\033[38;5;51m"
+ #define ANSI_ESC_LAVENDER    "\033[38;5;189m"
 
 // RGB565 Color definitions            R    G    B
 #define TFT_RED             0xF800 // 255,   0,   0

@@ -681,17 +681,17 @@ start:
     if (f_isFile) { connecttoFS("SD_MMC", path.c_get()); } // is file
 
     if (s_f_isFSConnected || s_f_isWebConnected) {
-        printfln(s_tag.playlist, ANSI_ESC_YELLOW, path.c_get());
+        printfln(s_tag.playlist, ANSI_ESC_YELLOW "{}", path);
         webSrv.send("SD_playFile=", path);
-        if (s_state == PLAYER) dispFooter.updateFileNr(playlist.get_coloured_index().c_get());
-        txt_PL_fName.setText(playlist.get_items().c_get());
+        if (s_state == PLAYER) dispFooter.updateFileNr(playlist.get_coloured_index());
+        txt_PL_fName.setText(playlist.get_items());
         txt_PL_fName.show();
     } else {
-        printfln(s_tag.playlist, ANSI_ESC_YELLOW "can't connect to {}", path.c_get());
+        printfln(s_tag.playlist, ANSI_ESC_YELLOW "can't connect to {}", path);
         goto start;
     }
 
-    MWR_LOG_WARN("path {}, items {}", playlist.get_file().c_get(), playlist.get_items().c_get());
+    MWR_LOG_DEBUG("path {}, items {}", playlist.get_file(), playlist.get_items());
 
     return;
 }
@@ -1821,6 +1821,7 @@ void changeState(int8_t state, int8_t subState) {
             if (newState) {
                 stopSong();
                 webSrv.send("changeState=", "PLAYER");
+                disableAllObjects();
             }
             pic_PL_logo.enable();
             if (subState == 0){
@@ -2226,7 +2227,7 @@ void loop() {
                     act.set_name("act");
                     act.assignf(ANSI_ESC_GREEN "AudioCurrentTime {}:{:02}s, ", s_audioCurrentTime / 60, s_audioCurrentTime % 60);
                     act.appendf("AudioFileDuration {}:{:02}s", s_audioFileDuration / 60, s_audioFileDuration % 60);
-                    printfln(s_tag.action, act.c_get()); }
+                    printfcr(s_tag.action, act.c_get()); }
             }
         }
         //------------------------------------------NEW STREAMTITLE-----------------------------------------------------------------------------------
@@ -2677,11 +2678,17 @@ void my_audio_info(Audio::msg_t m) {
         case Audio::evt_genre: printfln(s_tag.audio_info, "genre: " ANSI_ESC_YELLOW "{}", m.msg); break;
 
         case Audio::evt_vu: {
-            if (s_state == RADIO && s_subState_radio == 0) VUmeter_RA.update(m.vec1[0], m.vec1[1], m.vec1[2], m.vec1[3]);
+            if (s_state == RADIO && s_subState_radio == 0) {
+            //    PROFILE_SCOPE_N(1000);
+                VUmeter_RA.update(m.vec1[0], m.vec1[1], m.vec1[2], m.vec1[3]);
+            }
         } break;
 
         case Audio::evt_spectrum:
-            if (s_state == RADIO && s_subState_radio == 0) spectrum_RA.update(m.vec1, m.vec2);
+            if (s_state == RADIO && s_subState_radio == 0) {
+            //    PROFILE_SCOPE_N(1000);
+                spectrum_RA.update(m.vec1, m.vec2);
+            }
             break;
 
         case Audio::evt_log: printfln(m.s, "{}", m.msg); break;
@@ -4103,6 +4110,7 @@ void graphicObjects_OnClick(ps_ptr<char> name, uint8_t val) { // val = 0 --> is 
         if (val && name.equals("select_txtbtn_up"))            { goto exit; }
         if (val && name.equals("select_txtbtn_down"))          { goto exit; }
     }
+    if(val == 0) goto exit;
     MWR_LOG_WARN("unused event: graphicObject {} was clicked", name.c_get());
 exit:
     return;
@@ -4143,10 +4151,10 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
         if (name.equals("btn_PL_ready"))    { SD_playFile(s_cur_AudioFolder.c_get(), s_SD_content.getColouredSStringByIndex(s_cur_AudioFileNr));
                                               changeState(PLAYER, 1); if(s_f_ok_from_ir) { s_ir_btn_select = 0; set_ir_pos_PL(0); } showAudioFileNumber(); goto exit; }
         if (name.equals("btn_PL_playAll"))  { if(playlist.create_playlist_from_SD_folder(s_cur_AudioFolder)){
-                                                  playlist.sort_alphabetical(); s_subState_player = 1; s_f_playlistEnabled = true; }
+                                                  playlist.sort_alphabetical(); changeState(PLAYER, 1); s_f_playlistEnabled = true; }
                                               goto exit; }
         if (name.equals("btn_PL_shuffle"))  { if(playlist.create_playlist_from_SD_folder(s_cur_AudioFolder)){
-                                                  playlist.sort_random(); s_subState_player = 1; s_f_playlistEnabled = true; }
+                                                  playlist.sort_random(); changeState(PLAYER, 1);s_f_playlistEnabled = true; }
                                               goto exit; }
         if (name.equals("btn_PL_fileList")) { s_SD_content.listFilesInDir(s_cur_AudioFolder.c_get(), true, false); changeState(AUDIOFILESLIST, 0); goto exit; }
         if (name.equals("btn_PL_radio"))    { stopSong(); changeState(RADIO, 0); goto exit; }

@@ -353,13 +353,13 @@ template <typename... Args> void printfcr(ps_ptr<char> tag, const char* fmt, Arg
     if (s_logBuffer.size() == 1024) s_logBuffer.pop_back();
     ps_ptr<char> myLog;
     myLog.reserve(200);
-    rtc.hasValidTime() ? myLog.append(rtc.gettime_s()) : myLog.append("00:00:00");
+    rtc.hasValidTime() ? myLog.assignf("{}", rtc.gettime_s()) : myLog.assign("00:00:00");
     myLog.appendf(" {} ", tag);
     while (myLog.strlen() < 25) { myLog.append("."); }
     myLog.append(" ");
     myLog.append(" \033[0m");
     myLog.appendf(fmt, std::forward<Args>(args)...);
-    myLog.append("\033[0m\r");
+    myLog.append("\033[0m                                                                                                                                                               \r");
     printf("%s", myLog.c_get());
     s_logBuffer.insert(s_logBuffer.begin(), std::move(myLog));
     myLog.reset();
