@@ -14,6 +14,7 @@ enum Framebuffer : uint8_t {
 };
 class TFT_Base {
     std::mutex m_textLayoutMutex;
+
   public:
     virtual ~TFT_Base() = default;
 
@@ -148,7 +149,7 @@ class TFT_Base {
         uint16_t                width = 0;
     };
 
-    static constexpr AnsiEntry ansiTable[42] = {
+    static constexpr AnsiEntry ansiTable[43] = {
         {"\033[0m", 4, TFT_LIGHTGREY, Arg::reset},
         {"\033[30m", 5, TFT_BLACK, Arg::foreground},
         {"\033[31m", 5, TFT_RED, Arg::foreground},
@@ -191,6 +192,7 @@ class TFT_Base {
         {"\033[38;5;213m", 11, TFT_PINK, Arg::foreground},
         {"\033[38;5;214m", 11, TFT_ORANGE, Arg::foreground},
         {"\033[38;5;215m", 11, TFT_LIGHTORANGE, Arg::foreground},
+        {"\033[38;2;210;180;140m", 19, TFT_LIGHTBROWN, Arg::foreground},
     };
 
     Utf8Char decodeUtf8(const char* s);
