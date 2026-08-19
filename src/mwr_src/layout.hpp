@@ -496,19 +496,19 @@ NumbersBox nbr_RA_staBox("nbr_RA_staBox");
 // STATIONSLIST
 StationsList lst_RADIO("lst_RADIO");
 // PLAYER
-Button      btn_PL_prevFile("btn_PL_prevFile", ButtonType::PushButton); // subState 0
-Button      btn_PL_nextFile("btn_PL_nextFile", ButtonType::PushButton); // subState 0
-Button      btn_PL_ready("btn_PL_ready", ButtonType::PushButton);       // subState 0
-Button      btn_PL_playAll("btn_PL_playAll", ButtonType::PushButton);   // subState 0
-Button      btn_PL_shuffle("btn_PL_shuffle", ButtonType::PushButton);   // subState 0
-Button      btn_PL_fileList("btn_PL_fileList", ButtonType::PushButton); // subState 0
-Button      btn_PL_radio("btn_PL_radio", ButtonType::PushButton);       // subState 0
-Button      btn_PL_off("btn_PL_off", ButtonType::PushButton);           // subState 0
-Button      btn_PL_mute("btn_PL_mute", ButtonType::ToggleButton);       // subState 1
-Button      btn_PL_pause("btn_PL_pause", ButtonType::ToggleButton);     // subState 1
-Button      btn_PL_cancel("btn_PL_cancel", ButtonType::PushButton);     // subState 1
-Button      btn_PL_playNext("btn_PL_playNext", ButtonType::PushButton); // subState 1
-Button      btn_PL_playPrev("btn_PL_playPrev", ButtonType::PushButton); // subState 1
+Button      btn_PL_showPrevFile("btn_PL_showPrevFile", ButtonType::PushButton); // subState 0
+Button      btn_PL_showNextFile("btn_PL_showNextFile", ButtonType::PushButton); // subState 0
+Button      btn_PL_ready("btn_PL_ready", ButtonType::PushButton);               // subState 0
+Button      btn_PL_playAll("btn_PL_playAll", ButtonType::PushButton);           // subState 0
+Button      btn_PL_shuffle("btn_PL_shuffle", ButtonType::PushButton);           // subState 0
+Button      btn_PL_fileList("btn_PL_fileList", ButtonType::PushButton);         // subState 0
+Button      btn_PL_radio("btn_PL_radio", ButtonType::PushButton);               // subState 0
+Button      btn_PL_off("btn_PL_off", ButtonType::PushButton);                   // subState 0
+Button      btn_PL_mute("btn_PL_mute", ButtonType::ToggleButton);               // subState 1
+Button      btn_PL_pause("btn_PL_pause", ButtonType::ToggleButton);             // subState 1
+Button      btn_PL_cancel("btn_PL_cancel", ButtonType::PushButton);             // subState 1
+Button      btn_PL_playNext("btn_PL_playNext", ButtonType::PushButton);         // subState 1
+Button      btn_PL_playPrev("btn_PL_playPrev", ButtonType::PushButton);         // subState 1
 Textbox     txt_PL_fName("txt_PL_fName");
 Slider      sdr_PL_volume("sdr_PL_volume");
 PictureBox  pic_PL_logo("pic_PL_logo");
@@ -657,10 +657,10 @@ void placingGraphicObjects() { // and initialize them
     btn_PL_cancel.begin(2 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_PL_cancel.setPicturePath("/btn/Button_Cancel");
     sdr_PL_volume.begin(5 * layout.winButton.w + 10, layout.winButton.y, displayConfig.dispWidth - (5 * layout.winButton.w + 20), layout.winButton.h, layout.winButton.pl, layout.winButton.pr, layout.winButton.pt, layout.winButton.pb);
-    btn_PL_prevFile.begin(0 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_PL_prevFile.setPicturePath("/btn/Button_Left");
-    btn_PL_nextFile.begin(1 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_PL_nextFile.setPicturePath("/btn/Button_Right");
+    btn_PL_showPrevFile.begin(0 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
+    btn_PL_showPrevFile.setPicturePath("/btn/Button_Left");
+    btn_PL_showNextFile.begin(1 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
+    btn_PL_showNextFile.setPicturePath("/btn/Button_Right");
     btn_PL_ready.begin(2 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_PL_ready.setPicturePath("/btn/Button_Ready");
     btn_PL_playAll.begin(3 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
@@ -896,8 +896,8 @@ void set_ir_pos_PL(int lr) { // PLAYER   -100 left, +100 right, -127 reset
         if (lr == IR_RESET) return;
         bool res = true;
         switch (s_ir_btn_select) {
-            case 0: res = btn_PL_prevFile.set_focus(true); break;
-            case 1: res = btn_PL_nextFile.set_focus(true); break;
+            case 0: res = btn_PL_showPrevFile.set_focus(true); break;
+            case 1: res = btn_PL_showNextFile.set_focus(true); break;
             case 2: res = btn_PL_ready.set_focus(true); break;
             case 3: res = btn_PL_playAll.set_focus(true); break;
             case 4: res = btn_PL_shuffle.set_focus(true); break;

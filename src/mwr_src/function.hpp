@@ -13,16 +13,14 @@ TFT_RGB& getTFT();
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void make_hardcopy_on_sd() {
     const uint8_t bmp320x240[70] = {
-        0x42, 0x4D, 0x46, 0x58, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46, 0x00, 0x00, 0x00, 0x38, 0x00, 0x00, 0x00, 0x40, 0x01, 0x00, 0x00, 0xF0, 0x00,
-        0x00, 0x00, 0x01, 0x00, 0x10, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x58, 0x02, 0x00, 0x23, 0x2E, 0x00, 0x00, 0x23, 0x2E, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF8, 0x00, 0x00, 0xE0, 0x07, 0x00, 0x00, 0x1F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x42, 0x4D, 0x46, 0x58, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46, 0x00, 0x00, 0x00, 0x38, 0x00, 0x00, 0x00, 0x40, 0x01, 0x00, 0x00, 0xF0, 0x00, 0x00, 0x00, 0x01, 0x00, 0x10, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00,
+        0x58, 0x02, 0x00, 0x23, 0x2E, 0x00, 0x00, 0x23, 0x2E, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF8, 0x00, 0x00, 0xE0, 0x07, 0x00, 0x00, 0x1F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     };
     (void)bmp320x240;
 
     const uint8_t bmp480x320[70] = {
-        0x42, 0x4D, 0x46, 0xB0, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46, 0x00, 0x00, 0x00, 0x38, 0x00, 0x00, 0x00, 0xE0, 0x01, 0x00, 0x00, 0x40, 0x01,
-        0x00, 0x00, 0x01, 0x00, 0x10, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0xB0, 0x04, 0x00, 0x23, 0x2E, 0x00, 0x00, 0x23, 0x2E, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF8, 0x00, 0x00, 0xE0, 0x07, 0x00, 0x00, 0x1F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x42, 0x4D, 0x46, 0xB0, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46, 0x00, 0x00, 0x00, 0x38, 0x00, 0x00, 0x00, 0xE0, 0x01, 0x00, 0x00, 0x40, 0x01, 0x00, 0x00, 0x01, 0x00, 0x10, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00,
+        0xB0, 0x04, 0x00, 0x23, 0x2E, 0x00, 0x00, 0x23, 0x2E, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF8, 0x00, 0x00, 0xE0, 0x07, 0x00, 0x00, 0x1F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     };
     (void)bmp480x320;
 
@@ -792,22 +790,14 @@ const char timezones_json[] = "[[\"Africa/Accra\",\"GMT0\"],"
 
 const char aesKey[] = "mysecretkey12345";
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-const char voice_time_de[24][50] = {"Beim dritten Ton ist es genau Mitternacht",        "Beim dritten Ton ist es genau ein Uhr",
-                                    "Beim dritten Ton ist es genau zwei Uhr",           "Beim dritten Ton ist es genau drei Uhr",
-                                    "Beim dritten Ton ist es genau vier Uhr",           "Beim dritten Ton ist es genau fünf Uhr",
-                                    "Beim dritten Ton ist es genau sechs Uhr",          "Beim dritten Ton ist es genau sieben Uhr",
-                                    "Beim dritten Ton ist es genau acht Uhr",           "Beim dritten Ton ist es genau neun Uhr",
-                                    "Beim dritten Ton ist es genau zehn Uhr",           "Beim dritten Ton ist es genau elf Uhr",
-                                    "Beim dritten Ton ist es genau zwölf Uhr",          "Beim dritten Ton ist es genau dreizehn Uhr",
-                                    "Beim dritten Ton ist es genau vierzehn Uhr",       "Beim dritten Ton ist es genau fünfzehn Uhr",
-                                    "Beim dritten Ton ist es genau sechszehn Uhr",      "Beim dritten Ton ist es genau siebzehn Uhr",
-                                    "Beim dritten Ton ist es genau achtzehn Uhr",       "Beim dritten Ton ist es genau neunzehn Uhr",
-                                    "Beim dritten Ton ist es genau zwanzig Uhr",        "Beim dritten Ton ist es genau einundzwanzig Uhr",
-                                    "Beim dritten Ton ist es genau zweiundzwanzig Uhr", "Beim dritten Ton ist es genau dreiundzwanzig Uhr"};
+const char voice_time_de[24][50] = {"Beim dritten Ton ist es genau Mitternacht",  "Beim dritten Ton ist es genau ein Uhr",           "Beim dritten Ton ist es genau zwei Uhr",           "Beim dritten Ton ist es genau drei Uhr",          "Beim dritten Ton ist es genau vier Uhr",
+                                    "Beim dritten Ton ist es genau fünf Uhr",     "Beim dritten Ton ist es genau sechs Uhr",         "Beim dritten Ton ist es genau sieben Uhr",         "Beim dritten Ton ist es genau acht Uhr",          "Beim dritten Ton ist es genau neun Uhr",
+                                    "Beim dritten Ton ist es genau zehn Uhr",     "Beim dritten Ton ist es genau elf Uhr",           "Beim dritten Ton ist es genau zwölf Uhr",          "Beim dritten Ton ist es genau dreizehn Uhr",      "Beim dritten Ton ist es genau vierzehn Uhr",
+                                    "Beim dritten Ton ist es genau fünfzehn Uhr", "Beim dritten Ton ist es genau sechszehn Uhr",     "Beim dritten Ton ist es genau siebzehn Uhr",       "Beim dritten Ton ist es genau achtzehn Uhr",      "Beim dritten Ton ist es genau neunzehn Uhr",
+                                    "Beim dritten Ton ist es genau zwanzig Uhr",  "Beim dritten Ton ist es genau einundzwanzig Uhr", "Beim dritten Ton ist es genau zweiundzwanzig Uhr", "Beim dritten Ton ist es genau dreiundzwanzig Uhr"};
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-const char ir_symbols[34][15] = {"ZERO",        "ONE",        "TWO",        "THREE",     "FOUR",    "FIFE",    "SIX",  "SEVEN",        "EIGHT",    "NINE",    "MUTE",
-                                 "ARROW_RIGHT", "ARROW_LEFT", "ARROW_DOWN", "ARROW_UP",  "MODE",    "OKAY",    "N/A",  "PAUSE/RESUME", "STOP",     "ON/OFF",  "RADIO",
-                                 "PLAYER",      "DLNA",       "CLOCK",      "OFF_TIMER", "VOLUME+", "VOLUME-", "-30s", "+30s",         "CHANNEL+", "CHANNEL-"};
+const char ir_symbols[34][15] = {"ZERO", "ONE", "TWO",          "THREE", "FOUR",   "FIFE",  "SIX",    "SEVEN", "EIGHT", "NINE",      "MUTE",    "ARROW_RIGHT", "ARROW_LEFT", "ARROW_DOWN", "ARROW_UP", "MODE",
+                                 "OKAY", "N/A", "PAUSE/RESUME", "STOP",  "ON/OFF", "RADIO", "PLAYER", "DLNA",  "CLOCK", "OFF_TIMER", "VOLUME+", "VOLUME-",     "-30s",       "+30s",       "CHANNEL+", "CHANNEL-"};
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -1037,14 +1027,14 @@ class SD_content {
         m_lastConnectedFolder.reset();
         m_lastConnectedFileName.reset();
     }
-    bool listFilesInDir(const char* path, boolean audioFilesOnly, boolean withoutDirs) {
+    bool listFilesInDir(ps_ptr<char> path, boolean audioFilesOnly, boolean withoutDirs) {
         m_files.clear();
         if (m_masterFile) m_masterFile.close();
-        if (!SD_MMC.exists(path)) {
+        if (!SD_MMC.exists(path.c_get())) {
             printfln(s_tag.sd_card, ANSI_ESC_RED "SD_MMC/{} not exist", path);
             return false;
         }
-        m_masterFile = SD_MMC.open(path);
+        m_masterFile = SD_MMC.open(path.c_get());
         if (!m_masterFile.isDirectory()) {
             printfln(s_tag.sd_card, ANSI_ESC_RED "SD_MMC/{} is not a directory", path);
             m_masterFile.close();
@@ -1061,8 +1051,8 @@ class SD_content {
                 }
             } else {
                 if (audioFilesOnly) {
-                    if (endsWith(m_slaveFile.name(), ".mp3") || endsWith(m_slaveFile.name(), ".aac") || endsWith(m_slaveFile.name(), ".m4a") || endsWith(m_slaveFile.name(), ".wav") ||
-                        endsWith(m_slaveFile.name(), ".flac") || endsWith(m_slaveFile.name(), ".m3u") || endsWith(m_slaveFile.name(), ".opus") || endsWith(m_slaveFile.name(), ".ogg")) {
+                    if (endsWith(m_slaveFile.name(), ".mp3") || endsWith(m_slaveFile.name(), ".aac") || endsWith(m_slaveFile.name(), ".m4a") || endsWith(m_slaveFile.name(), ".wav") || endsWith(m_slaveFile.name(), ".flac") || endsWith(m_slaveFile.name(), ".m3u") ||
+                        endsWith(m_slaveFile.name(), ".opus") || endsWith(m_slaveFile.name(), ".ogg")) {
                         m_files.emplace_back(m_slaveFile.size(), m_slaveFile.name(), m_slaveFile.path());
                     }
                 } else {
@@ -1083,8 +1073,10 @@ class SD_content {
         if (m_files[idx].fileSize == -1) return true;
         return false;
     }
-    size_t      getSize() { return m_files.size(); }
-    const char* getColouredSStringByIndex(uint16_t idx) {
+
+    size_t getSize() { return m_files.size(); }
+
+    ps_ptr<char> getColouredSStringByIndex(uint16_t idx) {
         if (m_files.size() == 0) {
             MWR_LOG_WARN("m_files.size() is 0");
             return "";
@@ -1094,9 +1086,10 @@ class SD_content {
             return "";
         }
         if (isDir(idx)) return m_files[idx].fileName.get();
-        m_buff.assignf("{}" ANSI_ESC_YELLOW " {}", m_files[idx].fileName.c_get(), m_files[idx].fileSize);
-        return m_buff.get();
+        m_buff.assignf("{}" ANSI_ESC_YELLOW " {}", m_files[idx].fileName, m_files[idx].fileSize);
+        return m_buff;
     }
+
     const char* getFileNameByIndex(uint16_t idx) {
         if (m_files.size() == 0) {
             MWR_LOG_WARN("m_files.size() is 0");
@@ -1121,7 +1114,7 @@ class SD_content {
         return m_files[idx].fileSize;
     }
 
-    const char* getFilePathByIndex(uint16_t idx) {
+    ps_ptr<char> getFilePathByIndex(uint16_t idx) {
         if (m_files.size() == 0) {
             MWR_LOG_WARN("m_files.size() is 0");
             return "";
@@ -1142,7 +1135,7 @@ class SD_content {
             getFilePathByIndex(3) returns "/dir_a/dir_b/file_b"
             getFilePathByIndex(5) returns "/dir_a/file_d"
         */
-        return m_files[idx].filePath.c_get();
+        return m_files[idx].filePath;
     }
 
     const char* getFileFolderByIndex(uint16_t idx) {
@@ -1219,7 +1212,7 @@ class SD_content {
         return newIdx;
     }
 
-    void setLastConnectedFile(const char* lastconnectedItem) {
+    void setLastConnectedFile(ps_ptr<char> lastconnectedItem) {
         /*  lastconnectedItem                       m_lastConnectedFolder       m_lastConnectedFileName     m_lastConnectedFile
             "/audiofiles/wavfiles/chicken.wav"      "/audiofiles/wavfiles/"     "chicken.wav"               "/audiofiles/wavfiles/chicken.wav"
             "xyz/chicken.wav"                       "/audiofiles/"              ""                          "/audiofiles/"                      // does not start with "/"
@@ -1231,13 +1224,13 @@ class SD_content {
         m_lastConnectedFileName.assign("");
         m_lastConnectedFolder.assign("");
         int posFirst = 0, posLast = 0, posDot = 0;
-        if (!lastconnectedItem) { // guard, lastconnectedItem == NULL
+        if (!lastconnectedItem.valid()) { // guard, lastconnectedItem == NULL
             m_lastConnectedFileName.assign("");
             m_lastConnectedFolder.assign("/audiofiles/");
             goto exit;
         }
-        posFirst = indexOf(lastconnectedItem, "/", 0);
-        posLast = lastIndexOf(lastconnectedItem, '/');
+        posFirst = lastconnectedItem.index_of("/", 0);
+        posLast = lastconnectedItem.last_index_of('/');
         if (posFirst != 0) { // guard, does not start with /
             m_lastConnectedFileName.assign("");
             m_lastConnectedFolder.assign("/audiofiles/");
@@ -1247,17 +1240,16 @@ class SD_content {
             m_lastConnectedFolder.assign("/");
         } // we have no folder name
         else {
-            m_lastConnectedFolder.copy_from(lastconnectedItem, posLast + 1);
+            m_lastConnectedFolder = lastconnectedItem.substr(0, posLast + 1);
         }
 
-        if (posLast == strlen(lastconnectedItem) - 1) {
+        if (posLast == lastconnectedItem.strlen() - 1) {
             m_lastConnectedFileName.assign("");
         } // we have no file name
         else {
-            m_lastConnectedFileName.copy_from(lastconnectedItem + posLast + 1);
+            m_lastConnectedFileName = lastconnectedItem.substr(posLast + 1);
         }
 
-        // MWR_LOG_WARN("posFirst {}, posLast {}, m_lastConnectedFileName {}, m_lastConnectedFolder {}", posFirst, posLast, m_lastConnectedFileName, m_lastConnectedFolder);
         posDot = m_lastConnectedFileName.index_of('.', 0);
         if (posDot == -1) { // no extension
             m_lastConnectedFileName.assign("");
@@ -1265,46 +1257,48 @@ class SD_content {
 
     exit:
         m_lastConnectedFile.clone_from(m_lastConnectedFolder);
-        m_lastConnectedFile.append(m_lastConnectedFileName.c_get());
+        m_lastConnectedFile.append(m_lastConnectedFileName);
         MWR_LOG_DEBUG("lastconnectedItem {}", lastconnectedItem);
-        MWR_LOG_DEBUG("lastConnectedFile {}", m_lastConnectedFile.c_get());
-        MWR_LOG_DEBUG("m_lastConnectedFileName {}", m_lastConnectedFileName.c_get());
-        MWR_LOG_DEBUG("m_lastConnectedFolder {}", m_lastConnectedFolder.c_get());
-        listFilesInDir(m_lastConnectedFolder.c_get(), true, false);
+        MWR_LOG_DEBUG("lastConnectedFile {}", m_lastConnectedFile);
+        MWR_LOG_DEBUG("m_lastConnectedFileName {}", m_lastConnectedFileName);
+        MWR_LOG_DEBUG("m_lastConnectedFolder {}", m_lastConnectedFolder);
+        listFilesInDir(m_lastConnectedFolder, true, false);
         sort();
     }
-    const char* getLastConnectedFolder() { return m_lastConnectedFolder.c_get(); }
 
-    const char* getLastConnectedFileName() { return m_lastConnectedFileName.c_get(); }
-    int         getPosByFileName(const char* fileName) {
+    ps_ptr<char> getLastConnectedFolder() { return m_lastConnectedFolder; }
+    ps_ptr<char> getLastConnectedFileName() { return m_lastConnectedFileName; }
+
+    int16_t getPosByFileName(ps_ptr<char> fileName) {
         for (int i = 0; i < m_files.size(); i++) {
-            if (m_files[i].fileName.equals(fileName)) return i; // fileName e.g. "file.mp3"
+            if (m_files[i].fileName == fileName) return i; // fileName e.g. "file.mp3"
         }
         return -1;
     }
 
-    const char* stringifyDirContent(ps_ptr<char> path) {
+    ps_ptr<char> stringifyDirContent(ps_ptr<char> path) {
         ps_ptr<char> fileName;
         ps_ptr<char> fileSize;
         uint8_t      isDir = 0;
-        if (!listFilesInDir(path.c_get(), false, false)) return "[]"; // if success: result will be in SD_content
-        if (!getSize()) return "[]";                                  // empty?
+        if (!listFilesInDir(path, false, false)) return "[]"; // if success: result will be in SD_content
+        if (!getSize()) return "[]";                          // empty?
         m_JSONstr.assign("[");
 
         for (int i = 0; i < getSize(); i++) { // build a JSON string in PSRAM, e.g. [{"name":"m","dir":true},{"name":"s","dir":true}]
-            const char* fn = getColouredSStringByIndex(i);
-            if (startsWith(fn, ".")) continue;    // ignore hidden folders
-            int16_t idx = indexOf(fn, "\033", 1); // idx > 0 we have size (after ANSI ESC SEQUENCE)
-            if (idx > 0) {
+            if(getColouredSStringByIndex(i).starts_with(".")) continue;  // ignore hidden folders
+            ps_ptr<char> fn = getColouredSStringByIndex(i);
+            int16_t idx1 = fn.index_of("\033[", 1); // idx > 0 we have size (after ANSI ESC SEQUENCE)
+            int16_t idx2 = fn.index_of("m", idx1);
+            if(idx1 > 0 && idx2 > idx1){
                 isDir = 0; // {"name":"test.mp3","dir":false,"size":"3421"}
-                fileName.copy_from(fn, idx);
-                fileSize.copy_from(fn + idx + 6); // "all after 033[33m"
+                fileName = fn.substr(0, idx1);
+                fileSize = fn.substr(idx2 + 1); // "all after 033[xxxm"
             } else {
                 isDir = 1;
-                fileName.copy_from(fn);
+                fileName = fn;
             }
             m_JSONstr.append("{\"name\":");
-            m_JSONstr.appendf("\"{}\"", fileName.c_get());
+            m_JSONstr.appendf("\"{}\"", fileName);
             m_JSONstr.append(",\"dir\":");
             if (isDir) {
                 m_JSONstr.append("true");
@@ -1312,15 +1306,15 @@ class SD_content {
             } else {
                 m_JSONstr.append("false");
                 m_JSONstr.append(",\"size\":");
-                m_JSONstr.appendf("{}", fileSize.c_get());
+                m_JSONstr.appendf("{}", fileSize);
             }
             m_JSONstr.append("},");
             MWR_LOG_DEBUG("{}", fn);
         }
         int lastComma = m_JSONstr.last_index_of(',');
         m_JSONstr[lastComma] = ']'; // replace comma by square bracket close
-        MWR_LOG_DEBUG("{}", m_JSONstr.c_get());
-        return m_JSONstr.c_get();
+        MWR_LOG_DEBUG("{}", m_JSONstr);
+        return m_JSONstr;
     }
 
   private:
@@ -1528,17 +1522,12 @@ class Playlist {
     }
 
     boolean isAudio(File file) {
-        if (endsWith(file.name(), ".mp3") || endsWith(file.name(), ".aac") || endsWith(file.name(), ".m4a") || endsWith(file.name(), ".wav") || endsWith(file.name(), ".flac") ||
-            endsWith(file.name(), ".opus") || endsWith(file.name(), ".ogg")) {
-            return true;
-        }
+        if (endsWith(file.name(), ".mp3") || endsWith(file.name(), ".aac") || endsWith(file.name(), ".m4a") || endsWith(file.name(), ".wav") || endsWith(file.name(), ".flac") || endsWith(file.name(), ".opus") || endsWith(file.name(), ".ogg")) { return true; }
         return false;
     }
 
     boolean isAudio(ps_ptr<char> file) {
-        if (file.ends_with(".mp3") || file.ends_with(".aac") || file.ends_with(".m4a") || file.ends_with(".wav") || file.ends_with(".flac") || file.ends_with(".opus") || file.ends_with(".ogg")) {
-            return true;
-        }
+        if (file.ends_with(".mp3") || file.ends_with(".aac") || file.ends_with(".m4a") || file.ends_with(".wav") || file.ends_with(".flac") || file.ends_with(".opus") || file.ends_with(".ogg")) { return true; }
         return false;
     }
 
@@ -1690,8 +1679,7 @@ class Playlist {
         for (int i = 0; i < foldercontent->size(); i++) {
             // MWR_LOG_WARN( "{} : ({}) {} {} -- {}",i, foldercontent.isAudio[i], foldercontent.itemURL[i], foldercontent.title[i], foldercontent.duration[i]);
             if (!foldercontent->at(i).isAudio) continue;
-            uint16_t len =
-                strlen((const char*)foldercontent->at(i).itemURL.c_get()) + strlen((const char*)foldercontent->at(i).title.c_get()) + strlen((const char*)foldercontent->at(i).duration.c_get()) + 3;
+            uint16_t     len = strlen((const char*)foldercontent->at(i).itemURL.c_get()) + strlen((const char*)foldercontent->at(i).title.c_get()) + strlen((const char*)foldercontent->at(i).duration.c_get()) + 3;
             ps_ptr<char> itstr(len);
             itstr = foldercontent->at(i).itemURL;
             itstr += "\n";
