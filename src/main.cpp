@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.0q - Aug 19, 2026                                                                                                               ";
+    Version 4.2.0r - Aug 20, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -2402,6 +2402,12 @@ void loop() {
             GetRunTimeStats(timeStatsBuffer);
             { printfln(s_tag.terminal, ANSI_ESC_YELLOW "task statistics\n\n{}", timeStatsBuffer); }
             x_ps_free(&timeStatsBuffer);
+        }
+        if (r.startsWith("lf")) { // local file
+            const char* path = "/audiofiles/raw.mp3";
+            uint16_t fileStart = r.substring(2).toInt();
+            printfln(s_tag.terminal, ANSI_ESC_YELLOW "path: {}, fileStart {}s",path, fileStart);
+            connecttoFS("SD_MMC", path, fileStart);
         }
         if (r.startsWith("cts")) { // connect to speech
             audio.connecttospeech("Hallo, wie geht es dir? Morgen scheint die Sonne und übermorgen regnet es.Aber wir nehmen den Regenschirm mit. Und auch den Rucksack. Dann lesen wir aus dem Buch "

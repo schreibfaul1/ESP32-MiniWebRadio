@@ -5960,6 +5960,7 @@ class DisplayHeader : public RegisterTable {
         txt_Volume->enable();
         pic_RSSID->enable();
         timeStringObject->enable();
+        m_enabled = true;
     }
     void disable_all() {
         m_enabled = false;
@@ -5968,6 +5969,7 @@ class DisplayHeader : public RegisterTable {
         txt_Volume->disable();
         pic_RSSID->disable();
         timeStringObject->disable();
+        m_enabled = false;
     }
     void set_bg_color_all(int32_t color) {
         m_bg_color = color;
@@ -6541,6 +6543,7 @@ class DisplayFooter : public RegisterTable {
         txt_BitRate->enable();
         txt_OffTimer->enable();
         txt_IpAddr->enable();
+        m_enabled = true;
     }
     void disable_all() {
         pic_Antenna->disable();
@@ -6552,6 +6555,7 @@ class DisplayFooter : public RegisterTable {
         txt_BitRate->disable();
         txt_OffTimer->disable();
         txt_IpAddr->disable();
+        m_enabled = false;
     }
     void set_bg_color_all(int32_t color) {
         m_bg_color = color;
