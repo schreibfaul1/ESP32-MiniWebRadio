@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.0r - Aug 20, 2026                                                                                                               ";
+    Version 4.2.0s - Aug 21, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -625,12 +625,17 @@ boolean drawImage(ps_ptr<char> path, uint16_t posX, uint16_t posY, uint16_t maxW
  *****************************************************************************************************************************************************/
 
 boolean isAudio(File file) {
-    if (endsWith(file.name(), ".mp3") || endsWith(file.name(), ".aac") || endsWith(file.name(), ".m4a") || endsWith(file.name(), ".wav") || endsWith(file.name(), ".flac") || endsWith(file.name(), ".opus") || endsWith(file.name(), ".ogg")) { return true; }
+    if (endsWith(file.name(), ".mp3") || endsWith(file.name(), ".aac") || endsWith(file.name(), ".m4a") || endsWith(file.name(), ".wav") || endsWith(file.name(), ".flac") ||
+        endsWith(file.name(), ".opus") || endsWith(file.name(), ".ogg")) {
+        return true;
+    }
     return false;
 }
 
 boolean isAudio(const char* path) {
-    if (endsWith(path, ".mp3") || endsWith(path, ".aac") || endsWith(path, ".m4a") || endsWith(path, ".wav") || endsWith(path, ".flac") || endsWith(path, ".opus") || endsWith(path, ".ogg")) { return true; }
+    if (endsWith(path, ".mp3") || endsWith(path, ".aac") || endsWith(path, ".m4a") || endsWith(path, ".wav") || endsWith(path, ".flac") || endsWith(path, ".opus") || endsWith(path, ".ogg")) {
+        return true;
+    }
     return false;
 }
 
@@ -793,7 +798,9 @@ bool connectToWiFi() {
     if (WIFI_TX_POWER >= 2 && WIFI_TX_POWER <= 21) WiFi.setTxPower((wifi_power_t)(WIFI_TX_POWER * 4));
     s_myIP = WiFi.localIP().toString().c_str();
 
-    printfln(s_tag.wifi_info, "connected to " ANSI_ESC_YELLOW "{}" ANSI_ESC_RESET ", IP address is " ANSI_ESC_ORANGE "{}" ANSI_ESC_RESET ", Received Signal Strength " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET " dB", WiFi.SSID().c_str(), s_myIP.c_get(), WiFi.RSSI());
+    printfln(s_tag.wifi_info,
+             "connected to " ANSI_ESC_YELLOW "{}" ANSI_ESC_RESET ", IP address is " ANSI_ESC_ORANGE "{}" ANSI_ESC_RESET ", Received Signal Strength " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET " dB",
+             WiFi.SSID().c_str(), s_myIP.c_get(), WiFi.RSSI());
 
     return true; // can't connect to any network
 }
@@ -948,7 +955,8 @@ void connecttohost(ps_ptr<char> host) {
             url = host.substr(idx1); // extract url
             user = host.substr(idx1 + 1, idx2 - idx1 - 1);
             pwd = host.substr(idx2 + 1);
-            printfln(s_tag.new_host, ANSI_ESC_YELLOW "\"{}\"" ANSI_ESC_RESET ", user: " ANSI_ESC_YELLOW "\"{}\"" ANSI_ESC_RESET ", pwd: " ANSI_ESC_YELLOW "\"{}\"", url.c_get(), user.c_get(), pwd.c_get());
+            printfln(s_tag.new_host, ANSI_ESC_YELLOW "\"{}\"" ANSI_ESC_RESET ", user: " ANSI_ESC_YELLOW "\"{}\"" ANSI_ESC_RESET ", pwd: " ANSI_ESC_YELLOW "\"{}\"", url.c_get(), user.c_get(),
+                     pwd.c_get());
             s_f_isWebConnected = audio.connecttohost(url.c_get(), user.c_get(), pwd.c_get());
         }
     }
@@ -2405,8 +2413,8 @@ void loop() {
         }
         if (r.startsWith("lf")) { // local file
             const char* path = "/audiofiles/raw.mp3";
-            uint16_t fileStart = r.substring(2).toInt();
-            printfln(s_tag.terminal, ANSI_ESC_YELLOW "path: {}, fileStart {}s",path, fileStart);
+            uint16_t    fileStart = r.substring(2).toInt();
+            printfln(s_tag.terminal, ANSI_ESC_YELLOW "path: {}, fileStart {}s", path, fileStart);
             connecttoFS("SD_MMC", path, fileStart);
         }
         if (r.startsWith("cts")) { // connect to speech
@@ -2691,7 +2699,6 @@ void my_audio_info(Audio::msg_t m) {
 
         case Audio::evt_vu: {
             if (s_state == RADIO && s_subState_radio == 0) {
-                //    PROFILE_SCOPE_N(1000);
                 VUmeter_RA.update(m.vec1[0], m.vec1[1], m.vec1[2], m.vec1[3]);
             }
         } break;
@@ -3130,7 +3137,7 @@ void ir_short_key(int8_t key) {
             }
             if (s_state == AUDIOFILESLIST) {
                 ps_ptr<char> r = lst_PLAYER.getSelectedFile();
-                if (r != "") {
+                if (r.valid()) {
                     stopSong();
                     SD_playFile(lst_PLAYER.getSelectedFilePath(), 0, true);
                     s_cur_AudioFileNr = lst_PLAYER.getSelectedFileNr();
@@ -3148,7 +3155,7 @@ void ir_short_key(int8_t key) {
             }
             if(s_state == DLNAITEMSLIST) {
                 ps_ptr<char> r = lst_DLNA.getSelectedURL();
-                if(r) { txt_DL_fName.setTextColor(TFT_CYAN); txt_DL_fName.setText(lst_DLNA.getSelectedTitle()); changeState(DLNA, 0); connecttohost(r); }
+                if (r.valid()) { txt_DL_fName.setTextColor(TFT_CYAN); txt_DL_fName.setText(lst_DLNA.getSelectedTitle()); changeState(DLNA, 0); connecttohost(r); }
                 else setTimeCounter(2);
                 break;
             }

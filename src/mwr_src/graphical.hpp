@@ -125,7 +125,8 @@ inline void get_registered_names() {
     rn.set_name("rn");
     int16_t x = 0, y = 0, w = 0, h = 0;
     for (auto obj : registertable_objects) {
-        rn.assignf(ANSI_ESC_RESET "    registered object:" ANSI_ESC_YELLOW " {:27}" ANSI_ESC_RESET " is enabled: {}" ANSI_ESC_RESET ",", obj->get_name().c_get(), obj->is_enabled() ? ANSI_ESC_RED "yes" : ANSI_ESC_BLUE " no");
+        rn.assignf(ANSI_ESC_RESET "    registered object:" ANSI_ESC_YELLOW " {:27}" ANSI_ESC_RESET " is enabled: {}" ANSI_ESC_RESET ",", obj->get_name().c_get(),
+                   obj->is_enabled() ? ANSI_ESC_RED "yes" : ANSI_ESC_BLUE " no");
         obj->getBounds(x, y, w, h);
         rn.appendf(" x: {:4}, y: {:4}, w: {:4}, h: {:4}", x, y, w, h);
         rn.println();
@@ -1222,7 +1223,6 @@ class Inputbox : public RegisterTable {
             if (m_borderWidth > 0) { getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor); }
             if (m_borderWidth > 1) { getTFT().drawRect(m_x + 1, m_y + 1, m_w - 2, m_h - 2, m_borderColor); }
 
-
             getTFT().writeText(m_text.get(), x, y, w, h, m_h_align, m_v_align, m_noWrap, false);
             getTFT().setTextColor(txtColor_tmp);
             getTFT().setBackGoundColor(bgColor_tmp);
@@ -1581,31 +1581,37 @@ class VU_Meter : public RegisterTable {
             if (i < bars) newState = BAR;
             if (hasSignal && i == peak) newState = PEAK;
             if (newState == state[i]) continue;
-            switch (newState) {
-                case OFF: drawRect(i, channel, 0); break;
-                case BAR: drawRect(i, channel, 1); break;
-                case PEAK:
-                    drawRect(i, channel, 1); // später drawPeak()
-                    break;
+
+            if (m_enabled) {
+                xSemaphoreTake(mutex_display, portMAX_DELAY);
+                switch (newState) {
+                    case OFF: drawRect(i, channel, 0); break;
+                    case BAR: drawRect(i, channel, 1); break;
+                    case PEAK:
+                        drawRect(i, channel, 1); // später drawPeak()
+                        break;
+                }
+                xSemaphoreGive(mutex_display);
             }
             state[i] = newState;
         }
     }
 
-    void update(uint8_t l, uint8_t r, uint8_t peak_l, uint8_t peak_r) {
-        if (!m_enabled) return;
+    void reset() {
+        for (uint16_t i = 0; i < m_numSegments; i++) {
+            m_leftState[i] = OFF;
+            m_rightState[i] = OFF;
+        }
+    }
 
+    void update(uint8_t l, uint8_t r, uint8_t peak_l, uint8_t peak_r) {
         uint16_t bars_left = map_l(l, 0, 255, 0, m_numSegments - 1);
         uint16_t bars_right = map_l(r, 0, 255, 0, m_numSegments - 1);
         uint16_t peak_left = map_l(peak_l, 0, 255, 0, m_numSegments - 1);
         uint16_t peak_right = map_l(peak_r, 0, 255, 0, m_numSegments - 1);
 
-        xSemaphoreTake(mutex_display, portMAX_DELAY);
-
         buildState(bars_left, peak_left, l > 0, m_leftState, true);
         buildState(bars_right, peak_right, r > 0, m_rightState, false);
-
-        xSemaphoreGive(mutex_display);
     }
 
     bool positionXY(uint16_t x, uint16_t y) {
@@ -1721,7 +1727,8 @@ class Spectrum : public RegisterTable {
         m_bar_w = (m_window_w / m_numColums) - m_space_between_cols;
         uint8_t center_x = (m_window_w - (m_bar_w + m_space_between_cols) * m_numColums - m_space_between_cols) / 2;
         uint8_t center_y = (m_window_h - (m_bar_h + m_space_between_bars) * m_numSegments - m_space_between_bars) / 2;
-        MWR_LOG_DEBUG("x {} , y {}, w {}, h {}, win_x {}, win_y {}, win_w {}, win_h {}, numCol {}, numSegm {}, bar_w {}, bar_h {}, center_x {}, center_y {}", m_x, m_y, m_w, m_h, m_window_x, m_window_y, m_window_w, m_window_h, m_numColums, m_numSegments, m_bar_w, m_bar_h, center_x, center_y);
+        MWR_LOG_DEBUG("x {} , y {}, w {}, h {}, win_x {}, win_y {}, win_w {}, win_h {}, numCol {}, numSegm {}, bar_w {}, bar_h {}, center_x {}, center_y {}", m_x, m_y, m_w, m_h, m_window_x,
+                      m_window_y, m_window_w, m_window_h, m_numColums, m_numSegments, m_bar_w, m_bar_h, center_x, center_y);
         m_window_x += center_x;
         m_window_y += center_y;
         m_colums_pos_x.alloc_array(m_numColums);
@@ -2167,16 +2174,19 @@ class KeyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     const char   m_Special1[12][4] = {"1..", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "BS"};
     const char   m_Special2[11][4] = {"a..", ";", "<", "=", ">", "?", "@", "[", "\\", "]", "RET"};
     const char   m_Special3[11][6] = {"#..", "^", "_", "`", "{", "|", "}", "~", "#", "$", "   "};
-    int32_t      m_color1[12] = {TFT_YELLOW, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_YELLOW};
+    int32_t      m_color1[12] = {TFT_YELLOW,    TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY,
+                                 TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_YELLOW};
     int32_t      m_color2[11] = {TFT_YELLOW, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_RED};
     int32_t      m_color3[11] = {TFT_YELLOW, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY};
     int32_t      m_bg_color = TFT_TRANSPARENT;
     int32_t      m_fgColor = 0;
     int32_t      m_clickColor = TFT_CYAN;
-    Textbutton*  txt_btn_array = new Textbutton[34]{Textbutton("txt_btn0"),  Textbutton("txt_btn1"),  Textbutton("txt_btn2"),  Textbutton("txt_btn3"),  Textbutton("txt_btn4"),  Textbutton("txt_btn5"),  Textbutton("txt_btn6"),  Textbutton("txt_btn7"),  Textbutton("txt_btn8"),
-                                                    Textbutton("txt_btn9"),  Textbutton("txt_btn10"), Textbutton("txt_btn11"), Textbutton("txt_btn12"), Textbutton("txt_btn13"), Textbutton("txt_btn14"), Textbutton("txt_btn15"), Textbutton("txt_btn16"), Textbutton("txt_btn17"),
-                                                    Textbutton("txt_btn18"), Textbutton("txt_btn19"), Textbutton("txt_btn20"), Textbutton("txt_btn21"), Textbutton("txt_btn22"), Textbutton("txt_btn23"), Textbutton("txt_btn24"), Textbutton("txt_btn25"), Textbutton("txt_btn26"),
-                                                    Textbutton("txt_btn27"), Textbutton("txt_btn28"), Textbutton("txt_btn29"), Textbutton("txt_btn30"), Textbutton("txt_btn31"), Textbutton("txt_btn32"), Textbutton("txt_btn33")};
+    Textbutton* txt_btn_array = new Textbutton[34]{Textbutton("txt_btn0"),  Textbutton("txt_btn1"),  Textbutton("txt_btn2"),  Textbutton("txt_btn3"),  Textbutton("txt_btn4"),  Textbutton("txt_btn5"),
+                                                   Textbutton("txt_btn6"),  Textbutton("txt_btn7"),  Textbutton("txt_btn8"),  Textbutton("txt_btn9"),  Textbutton("txt_btn10"), Textbutton("txt_btn11"),
+                                                   Textbutton("txt_btn12"), Textbutton("txt_btn13"), Textbutton("txt_btn14"), Textbutton("txt_btn15"), Textbutton("txt_btn16"), Textbutton("txt_btn17"),
+                                                   Textbutton("txt_btn18"), Textbutton("txt_btn19"), Textbutton("txt_btn20"), Textbutton("txt_btn21"), Textbutton("txt_btn22"), Textbutton("txt_btn23"),
+                                                   Textbutton("txt_btn24"), Textbutton("txt_btn25"), Textbutton("txt_btn26"), Textbutton("txt_btn27"), Textbutton("txt_btn28"), Textbutton("txt_btn29"),
+                                                   Textbutton("txt_btn30"), Textbutton("txt_btn31"), Textbutton("txt_btn32"), Textbutton("txt_btn33")};
 
   public:
     KeyBoard(ps_ptr<char> name, uint8_t fontSize) {
@@ -2770,7 +2780,8 @@ class TimeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     bool         m_focus = false;
     bool         m_clicked = false;
     releasedArg  m_ra;
-    Textbox*     txt_time = new Textbox[8]{Textbox("txt_timeH10"), Textbox("txt_timeH01"), Textbox("txt_timeC1"), Textbox("txt_timeM10"), Textbox("txt_timeM01"), Textbox("txt_timeC2"), Textbox("txt_timeS10"), Textbox("txt_timeS01")}; // time of the day
+    Textbox*     txt_time = new Textbox[8]{Textbox("txt_timeH10"), Textbox("txt_timeH01"), Textbox("txt_timeC1"),  Textbox("txt_timeM10"),
+                                           Textbox("txt_timeM01"), Textbox("txt_timeC2"),  Textbox("txt_timeS10"), Textbox("txt_timeS01")}; // time of the day
   public:
     TimeString(ps_ptr<char> name, uint8_t fontSize) {
         register_object(this);
@@ -2856,10 +2867,10 @@ class TimeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     void updateTime(ps_ptr<char> hl_time, bool complete = true) {
         if (hl_time.strlen() != 8) return;
         if (!m_enabled) return;
-        m_time = hl_time;               // hhmmss
+        m_time = hl_time;                                                  // hhmmss
         static char oldtime[8] = {255, 255, 255, 255, 255, 255, 255, 255}; // hhmmss
-                                        //    getTFT().setFontSize(m_fontSize);
-                                        //    getTFT().setTextColor(m_fgColor);
+                                                                           //    getTFT().setFontSize(m_fontSize);
+                                                                           //    getTFT().setTextColor(m_fgColor);
         if (complete == true) {
             for (uint8_t i = 0; i < 8; i++) { oldtime[i] = 255; }
         }
@@ -3674,13 +3685,15 @@ class ImgClock24small : public RegisterTable { // draw a clock in 24h format
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class AlarmClock : public RegisterTable { // draw a clock in 12 or 24h format
   private:
-    PictureBox* pic_alarm_digitsH10 = new PictureBox("alarm_digitsH10");                                                                                                                                                                             // digits hour   * 10
-    PictureBox* pic_alarm_digitsH01 = new PictureBox("alarm_digitsH01");                                                                                                                                                                             // digits hour   * 01
-    PictureBox* pic_alarm_digitsM10 = new PictureBox("alarm_digitsM10");                                                                                                                                                                             // digits minute * 10
-    PictureBox* pic_alarm_digitsM01 = new PictureBox("alarm_digitsM01");                                                                                                                                                                             // digits minute * 01
-    PictureBox* pic_alarm_digitsColon = new PictureBox("alarm_digitsColon");                                                                                                                                                                         // digits colon
-    Textbox*    txt_alarm_days = new Textbox[7]{Textbox("txt_alarm_days0"), Textbox("txt_alarm_days1"), Textbox("txt_alarm_days2"), Textbox("txt_alarm_days3"), Textbox("txt_alarm_days4"), Textbox("txt_alarm_days5"), Textbox("txt_alarm_days6")}; // days of the week
-    Textbox*    txt_alarm_time = new Textbox[7]{Textbox("txt_alarm_time0"), Textbox("txt_alarm_time1"), Textbox("txt_alarm_time2"), Textbox("txt_alarm_time3"), Textbox("txt_alarm_time4"), Textbox("txt_alarm_time5"), Textbox("txt_alarm_time6")}; // time of the day
+    PictureBox* pic_alarm_digitsH10 = new PictureBox("alarm_digitsH10");     // digits hour   * 10
+    PictureBox* pic_alarm_digitsH01 = new PictureBox("alarm_digitsH01");     // digits hour   * 01
+    PictureBox* pic_alarm_digitsM10 = new PictureBox("alarm_digitsM10");     // digits minute * 10
+    PictureBox* pic_alarm_digitsM01 = new PictureBox("alarm_digitsM01");     // digits minute * 01
+    PictureBox* pic_alarm_digitsColon = new PictureBox("alarm_digitsColon"); // digits colon
+    Textbox*    txt_alarm_days = new Textbox[7]{Textbox("txt_alarm_days0"), Textbox("txt_alarm_days1"), Textbox("txt_alarm_days2"), Textbox("txt_alarm_days3"),
+                                                Textbox("txt_alarm_days4"), Textbox("txt_alarm_days5"), Textbox("txt_alarm_days6")}; // days of the week
+    Textbox*    txt_alarm_time = new Textbox[7]{Textbox("txt_alarm_time0"), Textbox("txt_alarm_time1"), Textbox("txt_alarm_time2"), Textbox("txt_alarm_time3"),
+                                                Textbox("txt_alarm_time4"), Textbox("txt_alarm_time5"), Textbox("txt_alarm_time6")}; // time of the day
 
     int16_t m_x = 0;
     int16_t m_y = 0;
@@ -4824,7 +4837,7 @@ class DlnaList : public RegisterTable {
             if (m_dlnaServer->at(m_currItemNr[0]).friendlyName == "") {
                 MWR_LOG_ERROR("invalid pointer in dlna history");
                 m_dlnaHistory[*m_dlnaLevel].name = "dummy";
-                return "";
+                return {};
             }
             m_dlnaHistory[*m_dlnaLevel].name = m_dlnaServer->at(m_currItemNr[0]).friendlyName;
             m_dlna->browseServer(m_currDLNAsrvNr, "0", 0, 9);
@@ -4838,7 +4851,7 @@ class DlnaList : public RegisterTable {
             m_dlnaHistory[*m_dlnaLevel].maxItems = m_dlnaMaxItems; // level 1
             // MWR_LOG_WARN("m_dlnaMaxItems {}, level {}", m_dlnaMaxItems, (*m_dlnaLevel));
             dlnaItemsList();
-            return "";
+            return {};
         }
         if (m_currItemNr[*m_dlnaLevel] + 1 == m_viewPoint) { // DLNA history, parent item ---------------------------------------------- back to parent
             // MWR_LOG_WARN("{}", m_dlnaHistory[*m_dlnaLevel].name);
@@ -4859,7 +4872,7 @@ class DlnaList : public RegisterTable {
             } // wait of browse rady
             m_srvContent = &m_dlna->getBrowseResult();
             dlnaItemsList();
-            return "";
+            return {};
         }
         if (strcmp(m_srvContent->at(m_currItemNr[*m_dlnaLevel] - m_viewPoint).itemURL.c_get(), "?") == 0) { // --------------------------------------- choose folder
             drawItem(m_currItemNr[*m_dlnaLevel] - m_viewPoint + 1, true);                                   // make cyan
@@ -4885,14 +4898,14 @@ class DlnaList : public RegisterTable {
                 m_currItemNr[*m_dlnaLevel]--;
                 drawItem(m_currItemNr[*m_dlnaLevel] + 0 - m_viewPoint + 1); // make magenta
             }
-            return "";
+            return {};
         }
         if (startsWith(m_srvContent->at(m_currItemNr[*m_dlnaLevel] - m_viewPoint).itemURL.c_get(), "http") != 0) { // ---------------------------------- choose file
             drawItem(m_currItemNr[*m_dlnaLevel] - m_viewPoint + 1, true);                                          // make cyan
             vTaskDelay(300);
             return m_srvContent->at(m_currItemNr[*m_dlnaLevel] - m_viewPoint).itemURL;
         }
-        return "";
+        return {};
     }
     ps_ptr<char> getSelectedTitle() { return m_srvContent->at(m_currItemNr[*m_dlnaLevel] - m_viewPoint).title; }
 };
@@ -5189,14 +5202,14 @@ class FileList : public RegisterTable {
             m_viewPos = 0;
             s_SD_content.listFilesInDir(m_curAudioFolder.c_get(), true, false);
             show(m_curAudioFolder.c_get(), 0);
-            return "";
+            return {};
         }
         if (s_SD_content.isDir(m_curAudioFileNr)) { // is child folder
             myList.colourLine(m_y, m_selectColor);
             vTaskDelay(300 / portTICK_PERIOD_MS);
             m_curAudioPath = s_SD_content.getFilePathByIndex(m_curAudioFileNr);
             show(m_curAudioPath, 0);
-            return "";
+            return {};
         }
         myList.colourLine(m_y, m_selectColor);
         vTaskDelay(300 / portTICK_PERIOD_MS);
