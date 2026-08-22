@@ -339,7 +339,7 @@ bool DLNA_Client::readContent() {
     m_timeStamp = millis();
     uint8_t  b = 0;
     uint16_t pos = 0;
-    uint8_t  cnt = 0;
+    uint16_t  cnt = 0;
 
     while (pos < m_contentlength) { // outer while
 
@@ -352,7 +352,7 @@ bool DLNA_Client::readContent() {
             vTaskDelay(10);
             if (pos == m_contentlength) break;
             cnt++;
-            if (cnt == 100) {
+            if (cnt == 300) {
                 // buff.hex_dump(m_contentlength));
                 DLNA_LOG_ERROR("timeout in readContent");
                 goto error;
