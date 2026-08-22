@@ -107,7 +107,7 @@ class KCX_BT_Emitter {
     void         power_on(ps_ptr<char> mode);
     void         userCommand(ps_ptr<char> cmd);
     const char*  stringifyScannedItems();
-    const char*  list_protokol();
+    void         list_protokol();
 
   private:
     msg_s                    m_msg;

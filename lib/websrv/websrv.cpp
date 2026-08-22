@@ -26,20 +26,18 @@ void WebSrv::show_not_found() {
     return;
 }
 //--------------------------------------------------------------------------------------------------------------
-String WebSrv::calculateWebSocketResponseKey(String sec_WS_key) {
-    // input  Sec-WebSocket-Key from client
-    // output Sec-WebSocket-Accept-Key (used in response message to client)
-    uint8_t sha1_result[20];
-    String  concat = sec_WS_key + WS_sec_conKey;
-    mbedtls_sha1((unsigned char*)concat.c_str(), concat.length(), (unsigned char*)sha1_result);
-    return base64::encode(sha1_result, 20);
-}
-//--------------------------------------------------------------------------------------------------------------
-void WebSrv::printWebSocketHeader(String wsRespKey) {
-    String wsHeader = (String) "HTTP/1.1 101 Switching Protocols\r\n" + "Upgrade: websocket\r\n" + "Connection: Upgrade\r\n" + "Sec-WebSocket-Accept: " + wsRespKey + "\r\n" + "Access-Control-Allow-Origin: \r\n\r\n";
-    // "Sec-WebSocket-Protocol: chat\r\n\r\n";
-    // log_i("wsheader %s", wsHeader.c_str());
-    webSocketClient.print(wsHeader); // header sent
+void WebSrv::printWebSocketHeader(ps_ptr<char> wsRespKey) {
+
+    ps_ptr<char> wsHeader;
+    wsHeader.set_name("wsHeader");
+    wsHeader.assign("HTTP/1.1 101 Switching Protocols\r\n");
+    wsHeader.append("Upgrade: websocket\r\n");
+    wsHeader.append("Connection: Upgrade\r\n");
+    wsHeader.appendf("Sec-WebSocket-Accept: {}\r\n", wsRespKey);
+    wsHeader.append("Access-Control-Allow-Origin: \r\n");
+    wsHeader.append("\r\n");
+
+    webSocketClient.print(wsHeader.c_get()); // header sent
 }
 //--------------------------------------------------------------------------------------------------------------
 void WebSrv::show(const char* pagename, const char* MIMEType, int16_t len) {
@@ -542,7 +540,7 @@ bool WebSrv::uploadfile(fs::FS& fs, ps_ptr<char> path, uint32_t contentLength, p
             goto exit;
         }
 
-        startBoundaryEndPos = indexOf(transBuf.get(), "\r\n\r\n") + 4;
+        startBoundaryEndPos = transBuf.index_of("\r\n\r\n") + 4;
         if (startBoundaryEndPos < 0) {
             msg.assignf("startBoundaryEndPos not found");
             goto exit;
@@ -951,11 +949,15 @@ bool WebSrv::handleWS() {    // Websocketserver, receive messages
                 }
                 break;
             }
-
             if (currentLine.startsWith("Sec-WebSocket-Key:")) { // Websocket connection request
-                WS_sec_Key = currentLine.substring(18);
+                auto WS_sec_Key = currentLine.substring(18);
                 WS_sec_Key.trim();
-                WS_resp_Key = calculateWebSocketResponseKey(WS_sec_Key);
+
+                String key = WS_sec_Key;
+                ps_ptr<char>tmp, res;
+                tmp.copy_from(WS_sec_Key.c_str());
+
+                WS_resp_Key = createWebSocketAccept(WS_sec_Key.c_str());
                 ws_conn_request_flag = true;
             }
         }
@@ -1077,7 +1079,7 @@ void WebSrv::parseWsMessage(uint32_t len) {
         int pos = m_msg.cmd.index_of('='); //  m_msg.cmd: "DLNA_getContent=4:cont1:20:0:0:&Musik  (6)"
         if (pos != -1) {
             m_msg.param = m_msg.cmd.substr(pos + 1); // m_msg.param1: "4:cont1:20:0:0:&Musik  (6)"
-            m_msg.cmd = m_msg.cmd.substr(0, pos);     // m_msg.cmd: "DLNA_getContent"
+            m_msg.cmd = m_msg.cmd.substr(0, pos);    // m_msg.cmd: "DLNA_getContent"
         }
         pos = m_msg.param.index_of('&'); // m_msg.param1: "4:cont1:20:0:0:&Musik  (6)"
         if (pos != -1) {
@@ -1164,31 +1166,6 @@ void WebSrv::sendStatus(uint16_t HTTPstatusCode) {
     cmdclient.print(httpheader.c_get()); // header sent
 }
 //--------------------------------------------------------------------------------------------------------------
-String WebSrv::UTF8toASCII(String str) {
-    uint16_t i = 0;
-    String   res = "";
-    char     tab[96] = {96, 173, 155, 156, 32, 157, 32,  32, 32, 32, 166, 174, 170, 32, 32, 32,  248, 241, 253, 32, 32,  230, 32,  250, 32,  32,  167, 175, 172, 171, 32,  168, 32, 32,  32,  32,  142, 143, 146, 128, 32, 144, 32,  32,  32,  32, 32, 32,
-                        32, 165, 32,  32,  32, 32,  153, 32, 32, 32, 32,  32,  154, 32, 32, 225, 133, 160, 131, 32, 132, 134, 145, 135, 138, 130, 136, 137, 141, 161, 140, 139, 32, 164, 149, 162, 147, 32,  148, 246, 32, 151, 163, 150, 129, 32, 32, 152};
-    while (str[i] != 0) {
-        if (str[i] == 0xC2) { // compute unicode from utf8
-            i++;
-            if ((str[i] > 159) && (str[i] < 192))
-                res += char(tab[str[i] - 160]);
-            else
-                res += char(32);
-        } else if (str[i] == 0xC3) {
-            i++;
-            if ((str[i] > 127) && (str[i] < 192))
-                res += char(tab[str[i] - 96]);
-            else
-                res += char(32);
-        } else
-            res += str[i];
-        i++;
-    }
-    return res;
-}
-//--------------------------------------------------------------------------------------------------------------
 // replaces invalid UTF-8 sequences (only allows valid characters)
 std::string WebSrv::sanitize_utf8_replace(const char* input, size_t len) {
     std::string output;
@@ -1197,7 +1174,7 @@ std::string WebSrv::sanitize_utf8_replace(const char* input, size_t len) {
     const unsigned char* s = reinterpret_cast<const unsigned char*>(input);
     const unsigned char* end = s + len;
 
-    const char replacement[] = "\xEF\xBF\xBD"; // UTF-8 für U+FFFD → „�“
+    const char replacement[] = "\xEF\xBF\xBD"; // UTF-8 for U+FFFD → „�“
 
     while (s < end) {
         unsigned char c = *s;
@@ -1207,22 +1184,22 @@ std::string WebSrv::sanitize_utf8_replace(const char* input, size_t len) {
             output.push_back(c);
             s++;
         }
-        // 2-Byte Sequenz
+        // 2-Byte sequence
         else if ((c >> 5) == 0x6 && s + 1 < end && (s[1] & 0xC0) == 0x80) {
             output.append(reinterpret_cast<const char*>(s), 2);
             s += 2;
         }
-        // 3-Byte Sequenz
+        // 3-Byte sequence
         else if ((c >> 4) == 0xE && s + 2 < end && (s[1] & 0xC0) == 0x80 && (s[2] & 0xC0) == 0x80) {
             output.append(reinterpret_cast<const char*>(s), 3);
             s += 3;
         }
-        // 4-Byte Sequenz
+        // 4-Byte sequence
         else if ((c >> 3) == 0x1E && s + 3 < end && (s[1] & 0xC0) == 0x80 && (s[2] & 0xC0) == 0x80 && (s[3] & 0xC0) == 0x80) {
             output.append(reinterpret_cast<const char*>(s), 4);
             s += 4;
         }
-        // Ungültig → Ersatzzeichen einfügen
+        // Invalid → Insert placeholder
         else {
             output.append(replacement, 3);
             s++;
@@ -1232,91 +1209,24 @@ std::string WebSrv::sanitize_utf8_replace(const char* input, size_t len) {
     return output;
 }
 //--------------------------------------------------------------------------------------------------------------
-String WebSrv::URLdecode(String str) {
-    String   hex = "0123456789ABCDEF";
-    String   res = "";
-    uint16_t i = 0;
-    while (str[i] != 0) {
-        if ((str[i] == '%') && isHexadecimalDigit(str[i + 1]) && isHexadecimalDigit(str[i + 2])) {
-            res += char((hex.indexOf(str[i + 1]) << 4) + hex.indexOf(str[i + 2]));
-            i += 3;
-        } else {
-            res += str[i];
-            i++;
-        }
-    }
-    return res;
+ps_ptr<char> WebSrv::createWebSocketAccept(const ps_ptr<char>& wsSecKey) {
+    constexpr char WS_GUID[] = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+
+    uint8_t hash[20];
+
+    mbedtls_sha1_context ctx;
+    mbedtls_sha1_init(&ctx);
+    mbedtls_sha1_starts(&ctx);
+    mbedtls_sha1_update(&ctx, reinterpret_cast<const unsigned char*>(wsSecKey.get()), wsSecKey.strlen());
+    mbedtls_sha1_update(&ctx, reinterpret_cast<const unsigned char*>(WS_GUID), sizeof(WS_GUID) - 1);
+    mbedtls_sha1_finish(&ctx, hash);
+    mbedtls_sha1_free(&ctx);
+
+    ps_ptr<char> responseKey;
+    responseKey.alloc(29);
+
+    size_t outLen = 0;
+    mbedtls_base64_encode(reinterpret_cast<unsigned char*>(responseKey.get()), 29, &outLen, hash, sizeof(hash));
+    responseKey[outLen] = '\0';
+    return responseKey;
 }
-
-void WebSrv::url_decode_in_place(char* url) {
-    int length = strlen(url);
-    int write_pos = 0; // Die Position, an die das dekodierte Zeichen geschrieben wird
-
-    auto from_hex = [](char ch) { return isdigit(ch) ? ch - '0' : tolower(ch) - 'a' + 10; };
-
-    for (int i = 0; i < length; ++i) {
-        if (url[i] == '%') {
-            if (i + 2 < length) {
-                // Dekodiere die beiden folgenden Hex-Zeichen
-                int hex_value = from_hex(url[i + 1]) * 16 + from_hex(url[i + 2]);
-                url[write_pos++] = static_cast<char>(hex_value); // Schreibe dekodiertes Zeichen
-                i += 2;                                          // Überspringe die beiden Hex-Zeichen
-            }
-        } else if (url[i] == '+') {
-            // do nothing
-            url[write_pos++] = '+';
-        } else {
-            // Normales Zeichen einfach kopieren
-            url[write_pos++] = url[i];
-        }
-    }
-    url[write_pos] = '\0'; // Add a null termination character to mark the end of the string
-}
-
-//--------------------------------------------------------------------------------------------------------------
-String WebSrv::responseCodeToString(int32_t code) {
-    switch (code) {
-        case 100: return F("Continue");
-        case 101: return F("Switching Protocols");
-        case 200: return F("OK");
-        case 201: return F("Created");
-        case 202: return F("Accepted");
-        case 203: return F("Non-Authoritative Information");
-        case 204: return F("No Content");
-        case 205: return F("Reset Content");
-        case 206: return F("Partial Content");
-        case 300: return F("Multiple Choices");
-        case 301: return F("Moved Permanently");
-        case 302: return F("Found");
-        case 303: return F("See Other");
-        case 304: return F("Not Modified");
-        case 305: return F("Use Proxy");
-        case 307: return F("Temporary Redirect");
-        case 400: return F("Bad Request");
-        case 401: return F("Unauthorized");
-        case 402: return F("Payment Required");
-        case 403: return F("Forbidden");
-        case 404: return F("Not Found");
-        case 405: return F("Method Not Allowed");
-        case 406: return F("Not Acceptable");
-        case 407: return F("Proxy Authentication Required");
-        case 408: return F("Request Time-out");
-        case 409: return F("Conflict");
-        case 410: return F("Gone");
-        case 411: return F("Length Required");
-        case 412: return F("Precondition Failed");
-        case 413: return F("Request Entity Too Large");
-        case 414: return F("Request-URI Too Large");
-        case 415: return F("Unsupported Media Type");
-        case 416: return F("Requested range not satisfiable");
-        case 417: return F("Expectation Failed");
-        case 500: return F("Internal Server Error");
-        case 501: return F("Not Implemented");
-        case 502: return F("Bad Gateway");
-        case 503: return F("Service Unavailable");
-        case 504: return F("Gateway Time-out");
-        case 505: return F("HTTP Version not supported");
-        default: return "";
-    }
-}
-//--------------------------------------------------------------------------------------------------------------

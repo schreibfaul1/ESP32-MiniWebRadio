@@ -222,8 +222,8 @@ void KCX_BT_Emitter::writeCommand(ps_ptr<char> cmd) {
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void KCX_BT_Emitter::parseATcmds() {
-    ps_ptr<char> item;
-    item = get_rx_queue_item();
+    auto item = get_rx_queue_item();
+    if(!item.valid()) return;
     KCX_LOG_DEBUG("{}", item.c_get());
     compare_request(item);
 
@@ -428,7 +428,7 @@ void KCX_BT_Emitter::add_rx_queue_item(ps_ptr<char> item) {
 
 ps_ptr<char> KCX_BT_Emitter::get_rx_queue_item() {
     ps_ptr<char> queue_item;
-    if (m_RX_queue.size() == 0) return "";
+    if (m_RX_queue.size() == 0) return {};
     queue_item = m_RX_queue[0];
     KCX_LOG_DEBUG("{}", queue_item.c_get());
     m_RX_queue.pop_front();
@@ -566,9 +566,8 @@ void KCX_BT_Emitter::userCommand(ps_ptr<char> cmd) {
     if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;
     add_tx_queue_item(cmd);
 }
-const char* KCX_BT_Emitter::list_protokol() {
-    for (auto& item : m_RX_TX_protocol) { KCX_LOG_INFO("RX_TX_protocol {}", item.c_get()); }
-    return "";
+void KCX_BT_Emitter::list_protokol() {
+    for (auto& item : m_RX_TX_protocol) { KCX_LOG_INFO("RX_TX_protocol {}", item); }
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void KCX_BT_Emitter::stringifyMemItems() {

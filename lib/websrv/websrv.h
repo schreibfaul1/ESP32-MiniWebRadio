@@ -2,7 +2,7 @@
  * websrv.h
  *
  *  Created on: 09.07.2017
- *  updated on: 05.08.2026
+ *  updated on: 22.08.2026
  *      Author: Wolle
  */
 
@@ -62,8 +62,7 @@ class WebSrv {
     String       contenttype;
     uint8_t      method;
     String       WS_sec_Key;
-    String       WS_resp_Key;
-    String       WS_sec_conKey = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+    ps_ptr<char> WS_resp_Key;
     bool         m_handle_upload = false;
 
     struct upload_items {
@@ -86,8 +85,8 @@ class WebSrv {
     };
 
   protected:
-    String                    calculateWebSocketResponseKey(String sec_WS_key);
-    void                      printWebSocketHeader(String wsRespKey);
+    ps_ptr<char>              createWebSocketAccept(const ps_ptr<char>& wsSecKey);
+    void                      printWebSocketHeader(ps_ptr<char> wsRespKey);
     const char*               getContentType(ps_ptr<char>& filename);
     int32_t                   webFileRead();
     int32_t                   webFileRead(uint16_t timeout_ms);
@@ -98,10 +97,6 @@ class WebSrv {
     boolean                   handlehttp();
     boolean                   handleWS();
     void                      parseWsMessage(uint32_t len);
-    String                    URLdecode(String str);
-    void                      url_decode_in_place(char* url);
-    String                    UTF8toASCII(String str);
-    String                    responseCodeToString(int32_t code);
     void                      handle_upload_file();
 
   public:
@@ -131,68 +126,6 @@ class WebSrv {
 
   private:
     static std::string sanitize_utf8_replace(const char* input, size_t len);
-
-    int32_t indexOf(const char* base, char ch, int32_t startIndex = 0) {
-        // fb
-        const char* p = base;
-        for (; startIndex > 0; startIndex--)
-            if (*p++ == '\0') return -1;
-        char* pos = strchr(p, ch);
-        if (pos == nullptr) return -1;
-        return pos - base;
-    }
-
-    int indexOf(const char* base, const char* str, int startIndex = 0) {
-        // fb
-        const char* p = base;
-        for (; startIndex > 0; startIndex--)
-            if (*p++ == '\0') return -1;
-        char* pos = strstr(p, str);
-        if (pos == nullptr) return -1;
-        return pos - base;
-    }
-
-    bool startsWith(const char* base, const char* str) {
-        // fb
-        char c;
-        while ((c = *str++) != '\0')
-            if (c != *base++) return false;
-        return true;
-    }
-
-    int32_t lastIndexOf(const char* haystack, const char needle) {
-        // fb
-        const char* p = strrchr(haystack, needle);
-        return (p ? p - haystack : -1);
-    }
-
-    char* x_ps_malloc(uint16_t len) {
-        char* ps_str = NULL;
-        if (psramFound()) {
-            ps_str = (char*)ps_malloc(len);
-        } else {
-            ps_str = (char*)malloc(len);
-        }
-        return ps_str;
-    }
-    void trim(char* str) {
-        char* start = str; // keep the original pointer
-        char* end;
-        while (isspace((unsigned char)*start)) start++; // find the first non-space character
-
-        if (*start == 0) { // all characters were spaces
-            str[0] = '\0'; // return a empty string
-            return;
-        }
-
-        end = start + strlen(start) - 1; // find the end of the string
-
-        while (end > start && isspace((unsigned char)*end)) end--;
-        end[1] = '\0'; // Null-terminate the string after the last non-space character
-
-        // Move the trimmed string to the beginning of the memory area
-        memmove(str, start, strlen(start) + 1); // +1 for '\0'
-    }
 
     int32_t min3(int32_t a, int32_t b, int32_t c) {
         uint32_t min_val = a;
