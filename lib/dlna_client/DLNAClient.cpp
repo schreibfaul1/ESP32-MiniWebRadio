@@ -338,8 +338,8 @@ bool DLNA_Client::readContent() {
     buff.calloc(m_contentlength + 4);
     m_timeStamp = millis();
     uint8_t  b = 0;
-    uint16_t pos = 0;
-    uint16_t  cnt = 0;
+    uint32_t pos = 0;
+    uint32_t  cnt = 0;
 
     while (pos < m_contentlength) { // outer while
 
