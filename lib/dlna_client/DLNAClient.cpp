@@ -1,7 +1,7 @@
 #include "DLNAClient.h"
 
 // Created on: 30.11.2023
-// Updated on: 02.10.2025
+// Updated on: 22.08.2026
 
 DLNA_Client::DLNA_Client() {
     m_state = IDLE;
@@ -518,6 +518,7 @@ bool DLNA_Client::browseResult() {
                 if (parentStr.valid()) m_srv_items[cNr].parentId.clone_from(parentStr); // Parent-ID als String
                 if (childCountS.valid()) {
                     childCountS.replace(";", "");
+                    childCountS.trim();
                     m_srv_items[cNr].childCount = childCountS.to_uint32();
                 }
             }
@@ -560,6 +561,7 @@ bool DLNA_Client::browseResult() {
                 auto        duration = extractAttr(res, "duration"); // "0:00:00.287"
                 if (itemSize.valid()) {
                     itemSize.replace(";", "");
+                    itemSize.trim();
                     m_srv_items[cNr].itemSize = itemSize.to_uint32();
                 } // size as int
                 if (duration.valid()) {
