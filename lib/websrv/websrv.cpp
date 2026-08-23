@@ -929,7 +929,7 @@ exit:
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool WebSrv::handleWS() {    // Websocketserver, receive messages
-    String currentLine = ""; // Build up to complete line
+    ps_ptr<char> currentLine; // Build up to complete line
 
     if (!webSocketClient.connected()) {
         log_e("webSocketClient should be connected but is not!");
@@ -939,9 +939,9 @@ bool WebSrv::handleWS() {    // Websocketserver, receive messages
 
     if (!hasclient_WS) {
         while (true) {
-            currentLine = webSocketClient.readStringUntil('\n');
+            currentLine = webSocketClient.readStringUntil('\n').c_str();
 
-            if (currentLine.length() == 1) { // contains '\n' only
+            if (currentLine.strlen() == 1) { // contains '\n' only
                 if (ws_conn_request_flag) {
                     ws_conn_request_flag = false;
                     printWebSocketHeader(WS_resp_Key);
@@ -949,15 +949,10 @@ bool WebSrv::handleWS() {    // Websocketserver, receive messages
                 }
                 break;
             }
-            if (currentLine.startsWith("Sec-WebSocket-Key:")) { // Websocket connection request
-                auto WS_sec_Key = currentLine.substring(18);
+            if (currentLine.starts_with("Sec-WebSocket-Key:")) { // Websocket connection request
+                auto WS_sec_Key = currentLine.substr(18);
                 WS_sec_Key.trim();
-
-                String key = WS_sec_Key;
-                ps_ptr<char>tmp, res;
-                tmp.copy_from(WS_sec_Key.c_str());
-
-                WS_resp_Key = createWebSocketAccept(WS_sec_Key.c_str());
+                WS_resp_Key = createWebSocketAccept(WS_sec_Key);
                 ws_conn_request_flag = true;
             }
         }

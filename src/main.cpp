@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.0s2 - Aug 22, 2026                                                                                                               ";
+    Version 4.2.0s3 - Aug 22, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -2390,10 +2390,10 @@ void loop() {
     //-------------------------------------------------DEBUG / WIFI_SETTINGS ----------------------------------------------------------------------------------
     if (Serial.available()) { // input: serial terminal
 
-        String r = Serial.readString();
+        ps_ptr<char> r = Serial.readString().c_str();
         r.replace("\n", "");
-        printfln(s_tag.terminal, ANSI_ESC_YELLOW "{}", r.c_str());
-        if (r.startsWith("pr")) {
+        printfln(s_tag.terminal, ANSI_ESC_YELLOW "{}", r);
+        if (r.starts_with("pr")) {
             s_f_pauseResume = audio.pauseResume();
             if (s_f_pauseResume) {
                 printfln(s_tag.terminal, ANSI_ESC_YELLOW "Pause-Resume");
@@ -2401,34 +2401,34 @@ void loop() {
                 printfln(s_tag.terminal, ANSI_ESC_YELLOW "Pause-Resume not possible");
             }
         }
-        if (r.startsWith("hc")) { // A make_hardcopy_on_sd of the display is created and written to the SD card
+        if (r.starts_with("hc")) { // A make_hardcopy_on_sd of the display is created and written to the SD card
             { printfln(s_tag.terminal, ANSI_ESC_YELLOW "create hardcopy"); }
             make_hardcopy_on_sd();
         }
-        if (r.startsWith("rts")) { // run time stats
+        if (r.starts_with("rts")) { // run time stats
             char* timeStatsBuffer = x_ps_calloc(2000, sizeof(char));
             GetRunTimeStats(timeStatsBuffer);
             { printfln(s_tag.terminal, ANSI_ESC_YELLOW "task statistics\n\n{}", timeStatsBuffer); }
             x_ps_free(&timeStatsBuffer);
         }
-        if (r.startsWith("lf")) { // local file
+        if (r.starts_with("lf")) { // local file
             const char* path = "/audiofiles/raw.mp3";
-            uint16_t    fileStart = r.substring(2).toInt();
+            uint16_t    fileStart = r.substr(2).to_uint16();
             printfln(s_tag.terminal, ANSI_ESC_YELLOW "path: {}, fileStart {}s", path, fileStart);
             connecttoFS("SD_MMC", path, fileStart);
         }
-        if (r.startsWith("cts")) { // connect to speech
+        if (r.starts_with("cts")) { // connect to speech
             audio.connecttospeech("Hallo, wie geht es dir? Morgen scheint die Sonne und übermorgen regnet es.Aber wir nehmen den Regenschirm mit. Und auch den Rucksack. Dann lesen wir aus dem Buch "
                                   "Hier gibt es nur gutes Wetter.",
                                   "de");
             //    audio.connecttospeech("Hallo", "de");
         }
 
-        if (r.startsWith("bfi")) { // buffer filled
+        if (r.starts_with("bfi")) { // buffer filled
             printfln(s_tag.terminal, "inBuffer filled {} bytes", (long unsigned)audio.inBufferFilled());
             printfln(s_tag.terminal, "inBuffer free   {} bytes", (long unsigned)audio.inBufferFree());
         }
-        if (r.startsWith("st")) { // testtext for streamtitle
+        if (r.starts_with("st")) { // testtext for streamtitle
             if (r[2] == '0') s_streamTitle = "A Ё Ю";
             if (r[2] == '1') s_streamTitle = "A B C D E F G";
             if (r[2] == '2') s_streamTitle = "A B C D E F G H I";
@@ -2447,40 +2447,40 @@ void loop() {
             printfln(s_tag.terminal, "st: {}", s_streamTitle.c_get());
             s_f_newStreamTitle = true;
         }
-        if (r.startsWith("ais")) { // openAIspeech
+        if (r.starts_with("ais")) { // openAIspeech
             printfln(s_tag.terminal, "openAI speech");
             //    audio.openai_speech("openAI-key", "tts-1", "Today is a wonderful day to build something people love!", "", "shimer", "mp3", "1");
         }
-        if (r.startsWith("ctfs")) { // connecttoFS
+        if (r.starts_with("ctfs")) { // connecttoFS
                                     //     MWR_LOG_INFO("SPIFFS");
             connecttoFS("SD", "/Collide.ogg");
         }
-        if (r.startsWith("stoff")) { // setTimeOffset
-            int32_t t = r.substring(3, r.length() - 1).toInt();
+        if (r.starts_with("stoff")) { // setTimeOffset
+            int32_t t = r.substr(5).to_int32();
             printfln(s_tag.terminal, "setTimeOffset {}", t);
             audio.setTimeOffset(t);
         }
 
-        if (r.startsWith("sapt")) { // setAudioPlayTime
-            uint32_t t = r.substring(4, r.length()).toInt();
+        if (r.starts_with("sapt")) { // setAudioPlayTime
+            uint32_t t = r.substr(4).to_uint32();
             printfln(s_tag.terminal, "setAudioPlayTime {}", t);
             audio.setAudioPlayTime(t);
         }
 
-        if (r.startsWith("gafp")) { // getAudioFilePosition
+        if (r.starts_with("gafp")) { // getAudioFilePosition
             printfln(s_tag.terminal, "getAudioFilePosition {}", audio.getAudioFilePosition());
         }
 
-        if (r.startsWith("safp")) { // setAudioFilePosition
-            uint32_t t = r.substring(4, r.length()).toInt();
+        if (r.starts_with("safp")) { // setAudioFilePosition
+            uint32_t t = r.substr(4).to_uint32();
             printfln(s_tag.terminal, "setAudioFilePosition {}", t);
             audio.setAudioFilePosition(t);
         }
 
-        if (r.startsWith("grn")) { // list of all self registered objects
+        if (r.starts_with("grn")) { // list of all self registered objects
             get_registered_names();
         }
-        if (r.startsWith("fm")) { // force mono
+        if (r.starts_with("fm")) { // force mono
             static bool f_mono = false;
             f_mono = !f_mono;
             audio.forceMono(f_mono);
@@ -2489,7 +2489,7 @@ void loop() {
             else
                 printfln(s_tag.terminal, "stereo");
         }
-        if (r.startsWith("sm")) { // force mono
+        if (r.starts_with("sm")) { // force mono
             static bool f_mute = false;
             f_mute = !f_mute;
             audio.setMute(f_mute);
@@ -2498,7 +2498,7 @@ void loop() {
             else
                 printfln(s_tag.terminal, "mute off");
         }
-        if (r.startsWith("o48")) { // output48KHz
+        if (r.starts_with("o48")) { // output48KHz
             static bool f_o48 = false;
             f_o48 = !f_o48;
             if (f_o48) {
@@ -2509,7 +2509,7 @@ void loop() {
                 printfln(s_tag.terminal, "normal output {} Hz", audio.getSampleRate());
             }
         }
-        if (r.startsWith("o44")) { // output48KHz
+        if (r.starts_with("o44")) { // output48KHz
             static bool f_o44 = false;
             f_o44 = !f_o44;
             if (f_o44) {
@@ -2520,44 +2520,40 @@ void loop() {
                 printfln(s_tag.terminal, "normal output {} Hz", audio.getSampleRate());
             }
         }
-        if (r.startsWith("btp")) { // bluetooth RX/TX protocol
+        if (r.starts_with("btp")) { // bluetooth RX/TX protocol
             bt_emitter.list_protokol();
         }
-        if (r.startsWith("btstr")) { // bluetooth string, send to bt emitter e.g. btstr:AT+
-            bt_emitter.userCommand(r.substring(6, r.length() - 1).c_str());
-            printfln(s_tag.terminal, "btstr: {}", r.substring(6, r.length() - 1).c_str());
+        if (r.starts_with("btstr")) { // bluetooth string, send to bt emitter e.g. btstr:AT+
+            bt_emitter.userCommand(r.substr(6));
+            printfln(s_tag.terminal, "btstr: {}", r.substr(6));
         }
-        if (r.startsWith("tsp")) { s_f_timeSpeech = true; }
-        if (r.startsWith("pwd")) { // set password for WiFi
+        if (r.starts_with("tsp")) { s_f_timeSpeech = true; }
+        if (r.starts_with("pwd")) { // set password for WiFi
             changeState(WIFI_SETTINGS, 0);
         }
-        if (r.startsWith("gif")) { // draw gif image
-            printfln(s_tag.terminal, "gif");
-            drawImage("/common/Tom_Jerry.gif", 100, 100);
-        }
         static uint32_t time = 0;
-        if (r.startsWith("stops")) { // stop song
+        if (r.starts_with("stops")) { // stop song
             time = audio.stopSong();
             printfln(s_tag.terminal, "file {} stopped at time {}", s_cur_AudioFileName.c_get(), time);
         }
-        if (r.startsWith("starts")) { // start song
+        if (r.starts_with("starts")) { // start song
             ps_ptr<char> path = "/audiofiles/" + s_cur_AudioFileName;
             bool         ret = audio.connecttoFS(SD_MMC, path.c_get(), time);
             printfln(s_tag.terminal, "file {} started at time {}, ret {}", s_cur_AudioFileName.c_get(), time, ret);
         }
 
-        if (r.startsWith("gbr")) { // get bitrate
+        if (r.starts_with("gbr")) { // get bitrate
             uint32_t br = audio.getBitRate();
             printfln(s_tag.terminal, "bitrate: {}", br);
         }
-        if (r.startsWith("ibs")) { // inbuff status
+        if (r.starts_with("ibs")) { // inbuff status
             audio.inBufferStatus();
         }
-        if (r.startsWith("ir")) { // is running?
+        if (r.starts_with("ir")) { // is running?
             printfln(s_tag.terminal, "is running: {}", audio.isRunning());
         }
-        if (r.startsWith("vfs")) { // volume fading speed
-            float t = r.substring(3, r.length() - 1).toFloat();
+        if (r.starts_with("vfs")) { // volume fading speed
+            float t = r.substr(3).to_float();
             printfln(s_tag.terminal, "set volume fading speed {}, current: {}", t, audio.settings.VOL_FADING_SPEED);
             audio.settings.VOL_FADING_SPEED = t;
         }
