@@ -3334,6 +3334,7 @@ void TFT_Base::drawGlyph(const Glyph glyph, int16_t x, int16_t y) {
 // ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 size_t TFT_Base::writeText(ps_ptr<char> txt1, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, HAlign hAlign, VAlign vAlign, bool noWrap, bool autoSize) {
 
+    if(!txt1.valid()) {MWR_LOG_WARN("text is not given"); return 0;}
     std::lock_guard<std::mutex> lock(m_textLayoutMutex);
     ps_ptr<char>txt = txt1;
     /*
@@ -3349,6 +3350,7 @@ size_t TFT_Base::writeText(ps_ptr<char> txt1, uint16_t win_X, uint16_t win_Y, in
                          │
                          └── next line
     */
+
     txtToToken(txt.get());
     int8_t idx = getFontIndex();
 

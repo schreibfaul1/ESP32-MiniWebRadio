@@ -1550,12 +1550,12 @@ class Playlist {
         if (!path.valid()) return false;
 
         if (!path.ends_with(".m3u")) {
-            MWR_LOG_ERROR("wrong playlist path {}", path.c_get());
+            MWR_LOG_ERROR("wrong playlist path {}", path);
             return false;
         }
 
         if (!SD_MMC.exists(path.get())) {
-            MWR_LOG_ERROR("Playlistfile {} not found", path.c_get());
+            MWR_LOG_ERROR("Playlistfile {} not found", path);
             return false;
         }
 
