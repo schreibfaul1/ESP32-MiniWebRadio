@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.0s4 - Aug 23, 2026                                                                                                               ";
+    Version 4.2.0s5 - Aug 23, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -649,63 +649,61 @@ boolean isPlaylist(File file) {
  *****************************************************************************************************************************************************/
 
 void processPlaylist() {
-    bool f_isURL, f_isFile;
-start:
-    f_isURL = false;
-    f_isFile = false;
-    if (playlist.get_size() == 0) { // guard
+    if (playlist.get_size() == 0) {
         MWR_LOG_ERROR("playlist is empty");
         s_f_playlistEnabled = false;
         return;
     }
 
-    int idx = playlist.next_index();
-    if (idx == -1) {
-        printfln(s_tag.playlist, ANSI_ESC_YELLOW "end of playlist");
-        webSrv.send("SD_playFile=", "end of playlist");
-        s_f_playlistEnabled = false;
-        changeState(PLAYER, 0);
-        return;
-    }
+    while (true) {
+        int idx = playlist.next_index();
 
-    if (idx == 0) { // first
-        changeState(PLAYER, 1);
-        txt_PL_fName.setText("");
-        txt_PL_fName.show();
-    }
+        if (idx == -1) {
+            printfln(s_tag.playlist, ANSI_ESC_YELLOW "end of playlist");
+            webSrv.send("SD_playFile=", "end of playlist");
+            s_f_playlistEnabled = false;
+            changeState(PLAYER, 0);
+            return;
+        }
 
-    printfln(s_tag.playlist, ANSI_ESC_YELLOW "next playlist file");
-    s_f_playlistEnabled = true;
+        if (idx == 0) {
+            changeState(PLAYER, 1);
+            txt_PL_fName.setText("");
+            txt_PL_fName.show();
+        }
 
-    ps_ptr<char> path = playlist.get_file(); // path or url
+        printfln(s_tag.playlist, ANSI_ESC_YELLOW "next playlist file");
+        s_f_playlistEnabled = true;
+        ps_ptr<char> path = playlist.get_file();
 
-    if (path.starts_with_icase("http;//") or path.starts_with_icase("https://")) {
-        f_isURL = true; // is web file
-    }
+        // Web-URL
+        if (path.starts_with_icase("http://") || path.starts_with_icase("https://")) {
+            connecttohost(path);
+            // Datei auf SD
+        } else if (path.starts_with("/") && SD_MMC.exists(path.c_get())) {
+            connecttoFS("SD_MMC", path.c_get());
 
-    if (path.starts_with("/") && SD_MMC.exists(path.c_get())) { f_isFile = true; }
+            // Invalid entry
+        } else {
+            printfln(s_tag.playlist, ANSI_ESC_YELLOW "invalid playlist entry: {}", path);
+            continue;
+        }
 
-    if (f_isFile == false && f_isURL == false) goto start;
+        // Connection failed -> try the next entry
+        if (!s_f_isFSConnected && !s_f_isWebConnected) {
+            printfln(s_tag.playlist, ANSI_ESC_YELLOW "can't connect to {}", path);
+            continue;
+        }
 
-    if (f_isURL) { connecttohost(path); }                  // is web file
-    if (f_isFile) { connecttoFS("SD_MMC", path.c_get()); } // is file
-
-    if (s_f_isFSConnected || s_f_isWebConnected) {
         printfln(s_tag.playlist, ANSI_ESC_YELLOW "{}", path);
         webSrv.send("SD_playFile=", path);
         if (s_state == PLAYER) dispFooter.updateFileNr(playlist.get_coloured_index());
         txt_PL_fName.setText(playlist.get_items());
         txt_PL_fName.show();
-    } else {
-        printfln(s_tag.playlist, ANSI_ESC_YELLOW "can't connect to {}", path);
-        goto start;
+        MWR_LOG_DEBUG("path {}, items {}", playlist.get_file(), playlist.get_items());
+        return;
     }
-
-    MWR_LOG_DEBUG("path {}, items {}", playlist.get_file(), playlist.get_items());
-
-    return;
 }
-
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // 📌📌📌  C O N N E C T   TO   W I F I   📌📌📌
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -2452,7 +2450,7 @@ void loop() {
             //    audio.openai_speech("openAI-key", "tts-1", "Today is a wonderful day to build something people love!", "", "shimer", "mp3", "1");
         }
         if (r.starts_with("ctfs")) { // connecttoFS
-                                    //     MWR_LOG_INFO("SPIFFS");
+                                     //     MWR_LOG_INFO("SPIFFS");
             connecttoFS("SD", "/Collide.ogg");
         }
         if (r.starts_with("stoff")) { // setTimeOffset
@@ -2694,9 +2692,7 @@ void my_audio_info(Audio::msg_t m) {
         case Audio::evt_genre: printfln(s_tag.audio_info, "genre: " ANSI_ESC_YELLOW "{}", m.msg); break;
 
         case Audio::evt_vu: {
-            if (s_state == RADIO && s_subState_radio == 0) {
-                VUmeter_RA.update(m.vec1[0], m.vec1[1], m.vec1[2], m.vec1[3]);
-            }
+            if (s_state == RADIO && s_subState_radio == 0) { VUmeter_RA.update(m.vec1[0], m.vec1[1], m.vec1[2], m.vec1[3]); }
         } break;
 
         case Audio::evt_spectrum:

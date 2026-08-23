@@ -13,14 +13,16 @@ TFT_RGB& getTFT();
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void make_hardcopy_on_sd() {
     const uint8_t bmp320x240[70] = {
-        0x42, 0x4D, 0x46, 0x58, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46, 0x00, 0x00, 0x00, 0x38, 0x00, 0x00, 0x00, 0x40, 0x01, 0x00, 0x00, 0xF0, 0x00, 0x00, 0x00, 0x01, 0x00, 0x10, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00,
-        0x58, 0x02, 0x00, 0x23, 0x2E, 0x00, 0x00, 0x23, 0x2E, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF8, 0x00, 0x00, 0xE0, 0x07, 0x00, 0x00, 0x1F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x42, 0x4D, 0x46, 0x58, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46, 0x00, 0x00, 0x00, 0x38, 0x00, 0x00, 0x00, 0x40, 0x01, 0x00, 0x00, 0xF0, 0x00,
+        0x00, 0x00, 0x01, 0x00, 0x10, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x58, 0x02, 0x00, 0x23, 0x2E, 0x00, 0x00, 0x23, 0x2E, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF8, 0x00, 0x00, 0xE0, 0x07, 0x00, 0x00, 0x1F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     };
     (void)bmp320x240;
 
     const uint8_t bmp480x320[70] = {
-        0x42, 0x4D, 0x46, 0xB0, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46, 0x00, 0x00, 0x00, 0x38, 0x00, 0x00, 0x00, 0xE0, 0x01, 0x00, 0x00, 0x40, 0x01, 0x00, 0x00, 0x01, 0x00, 0x10, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00,
-        0xB0, 0x04, 0x00, 0x23, 0x2E, 0x00, 0x00, 0x23, 0x2E, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF8, 0x00, 0x00, 0xE0, 0x07, 0x00, 0x00, 0x1F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x42, 0x4D, 0x46, 0xB0, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46, 0x00, 0x00, 0x00, 0x38, 0x00, 0x00, 0x00, 0xE0, 0x01, 0x00, 0x00, 0x40, 0x01,
+        0x00, 0x00, 0x01, 0x00, 0x10, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0xB0, 0x04, 0x00, 0x23, 0x2E, 0x00, 0x00, 0x23, 0x2E, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF8, 0x00, 0x00, 0xE0, 0x07, 0x00, 0x00, 0x1F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     };
     (void)bmp480x320;
 
@@ -790,14 +792,22 @@ const char timezones_json[] = "[[\"Africa/Accra\",\"GMT0\"],"
 
 const char aesKey[] = "mysecretkey12345";
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-const char voice_time_de[24][50] = {"Beim dritten Ton ist es genau Mitternacht",  "Beim dritten Ton ist es genau ein Uhr",           "Beim dritten Ton ist es genau zwei Uhr",           "Beim dritten Ton ist es genau drei Uhr",          "Beim dritten Ton ist es genau vier Uhr",
-                                    "Beim dritten Ton ist es genau fünf Uhr",     "Beim dritten Ton ist es genau sechs Uhr",         "Beim dritten Ton ist es genau sieben Uhr",         "Beim dritten Ton ist es genau acht Uhr",          "Beim dritten Ton ist es genau neun Uhr",
-                                    "Beim dritten Ton ist es genau zehn Uhr",     "Beim dritten Ton ist es genau elf Uhr",           "Beim dritten Ton ist es genau zwölf Uhr",          "Beim dritten Ton ist es genau dreizehn Uhr",      "Beim dritten Ton ist es genau vierzehn Uhr",
-                                    "Beim dritten Ton ist es genau fünfzehn Uhr", "Beim dritten Ton ist es genau sechszehn Uhr",     "Beim dritten Ton ist es genau siebzehn Uhr",       "Beim dritten Ton ist es genau achtzehn Uhr",      "Beim dritten Ton ist es genau neunzehn Uhr",
-                                    "Beim dritten Ton ist es genau zwanzig Uhr",  "Beim dritten Ton ist es genau einundzwanzig Uhr", "Beim dritten Ton ist es genau zweiundzwanzig Uhr", "Beim dritten Ton ist es genau dreiundzwanzig Uhr"};
+const char voice_time_de[24][50] = {"Beim dritten Ton ist es genau Mitternacht",        "Beim dritten Ton ist es genau ein Uhr",
+                                    "Beim dritten Ton ist es genau zwei Uhr",           "Beim dritten Ton ist es genau drei Uhr",
+                                    "Beim dritten Ton ist es genau vier Uhr",           "Beim dritten Ton ist es genau fünf Uhr",
+                                    "Beim dritten Ton ist es genau sechs Uhr",          "Beim dritten Ton ist es genau sieben Uhr",
+                                    "Beim dritten Ton ist es genau acht Uhr",           "Beim dritten Ton ist es genau neun Uhr",
+                                    "Beim dritten Ton ist es genau zehn Uhr",           "Beim dritten Ton ist es genau elf Uhr",
+                                    "Beim dritten Ton ist es genau zwölf Uhr",          "Beim dritten Ton ist es genau dreizehn Uhr",
+                                    "Beim dritten Ton ist es genau vierzehn Uhr",       "Beim dritten Ton ist es genau fünfzehn Uhr",
+                                    "Beim dritten Ton ist es genau sechszehn Uhr",      "Beim dritten Ton ist es genau siebzehn Uhr",
+                                    "Beim dritten Ton ist es genau achtzehn Uhr",       "Beim dritten Ton ist es genau neunzehn Uhr",
+                                    "Beim dritten Ton ist es genau zwanzig Uhr",        "Beim dritten Ton ist es genau einundzwanzig Uhr",
+                                    "Beim dritten Ton ist es genau zweiundzwanzig Uhr", "Beim dritten Ton ist es genau dreiundzwanzig Uhr"};
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-const char ir_symbols[34][15] = {"ZERO", "ONE", "TWO",          "THREE", "FOUR",   "FIFE",  "SIX",    "SEVEN", "EIGHT", "NINE",      "MUTE",    "ARROW_RIGHT", "ARROW_LEFT", "ARROW_DOWN", "ARROW_UP", "MODE",
-                                 "OKAY", "N/A", "PAUSE/RESUME", "STOP",  "ON/OFF", "RADIO", "PLAYER", "DLNA",  "CLOCK", "OFF_TIMER", "VOLUME+", "VOLUME-",     "-30s",       "+30s",       "CHANNEL+", "CHANNEL-"};
+const char ir_symbols[34][15] = {"ZERO",        "ONE",        "TWO",        "THREE",     "FOUR",    "FIFE",    "SIX",  "SEVEN",        "EIGHT",    "NINE",    "MUTE",
+                                 "ARROW_RIGHT", "ARROW_LEFT", "ARROW_DOWN", "ARROW_UP",  "MODE",    "OKAY",    "N/A",  "PAUSE/RESUME", "STOP",     "ON/OFF",  "RADIO",
+                                 "PLAYER",      "DLNA",       "CLOCK",      "OFF_TIMER", "VOLUME+", "VOLUME-", "-30s", "+30s",         "CHANNEL+", "CHANNEL-"};
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -1051,8 +1061,8 @@ class SD_content {
                 }
             } else {
                 if (audioFilesOnly) {
-                    if (endsWith(m_slaveFile.name(), ".mp3") || endsWith(m_slaveFile.name(), ".aac") || endsWith(m_slaveFile.name(), ".m4a") || endsWith(m_slaveFile.name(), ".wav") || endsWith(m_slaveFile.name(), ".flac") || endsWith(m_slaveFile.name(), ".m3u") ||
-                        endsWith(m_slaveFile.name(), ".opus") || endsWith(m_slaveFile.name(), ".ogg")) {
+                    if (endsWith(m_slaveFile.name(), ".mp3") || endsWith(m_slaveFile.name(), ".aac") || endsWith(m_slaveFile.name(), ".m4a") || endsWith(m_slaveFile.name(), ".wav") ||
+                        endsWith(m_slaveFile.name(), ".flac") || endsWith(m_slaveFile.name(), ".m3u") || endsWith(m_slaveFile.name(), ".opus") || endsWith(m_slaveFile.name(), ".ogg")) {
                         m_files.emplace_back(m_slaveFile.size(), m_slaveFile.name(), m_slaveFile.path());
                     }
                 } else {
@@ -1284,12 +1294,12 @@ class SD_content {
         if (!getSize()) return "[]";                          // empty?
         m_JSONstr.assign("[");
 
-        for (int i = 0; i < getSize(); i++) { // build a JSON string in PSRAM, e.g. [{"name":"m","dir":true},{"name":"s","dir":true}]
-            if(getColouredSStringByIndex(i).starts_with(".")) continue;  // ignore hidden folders
+        for (int i = 0; i < getSize(); i++) {                            // build a JSON string in PSRAM, e.g. [{"name":"m","dir":true},{"name":"s","dir":true}]
+            if (getColouredSStringByIndex(i).starts_with(".")) continue; // ignore hidden folders
             ps_ptr<char> fn = getColouredSStringByIndex(i);
-            int16_t idx1 = fn.index_of("\033[", 1); // idx > 0 we have size (after ANSI ESC SEQUENCE)
-            int16_t idx2 = fn.index_of("m", idx1);
-            if(idx1 > 0 && idx2 > idx1){
+            int16_t      idx1 = fn.index_of("\033[", 1); // idx > 0 we have size (after ANSI ESC SEQUENCE)
+            int16_t      idx2 = fn.index_of("m", idx1);
+            if (idx1 > 0 && idx2 > idx1) {
                 isDir = 0; // {"name":"test.mp3","dir":false,"size":"3421"}
                 fileName = fn.substr(0, idx1);
                 fileSize = fn.substr(idx2 + 1); // "all after 033[xxxm"
@@ -1522,118 +1532,129 @@ class Playlist {
     }
 
     boolean isAudio(File file) {
-        if (endsWith(file.name(), ".mp3") || endsWith(file.name(), ".aac") || endsWith(file.name(), ".m4a") || endsWith(file.name(), ".wav") || endsWith(file.name(), ".flac") || endsWith(file.name(), ".opus") || endsWith(file.name(), ".ogg")) { return true; }
+        if (endsWith(file.name(), ".mp3") || endsWith(file.name(), ".aac") || endsWith(file.name(), ".m4a") || endsWith(file.name(), ".wav") || endsWith(file.name(), ".flac") ||
+            endsWith(file.name(), ".opus") || endsWith(file.name(), ".ogg")) {
+            return true;
+        }
         return false;
     }
 
     boolean isAudio(ps_ptr<char> file) {
-        if (file.ends_with(".mp3") || file.ends_with(".aac") || file.ends_with(".m4a") || file.ends_with(".wav") || file.ends_with(".flac") || file.ends_with(".opus") || file.ends_with(".ogg")) { return true; }
+        if (file.ends_with(".mp3") || file.ends_with(".aac") || file.ends_with(".m4a") || file.ends_with(".wav") || file.ends_with(".flac") || file.ends_with(".opus") || file.ends_with(".ogg")) {
+            return true;
+        }
         return false;
     }
 
   public:
     bool create_playlist_from_file(ps_ptr<char> path) {
         reset();
+
         if (!path.valid()) return false;
+
         if (!path.ends_with(".m3u")) {
             MWR_LOG_ERROR("wrong playlist path {}", path.c_get());
             return false;
         }
+
         if (!SD_MMC.exists(path.get())) {
             MWR_LOG_ERROR("Playlistfile {} not found", path.c_get());
-            reset();
             return false;
         }
+
         m_playlist_file = SD_MMC.open(path.get());
+
         if (m_playlist_file.size() > 1048576) {
             MWR_LOG_ERROR("Playlist too big, size is {}", m_playlist_file.size());
             reset();
             return false;
         }
+
         int idx = path.last_index_of('/');
-        if (idx != 0)
+        if (idx != 0) {
             m_playlist_path = path.substr(0, idx + 1);
-        else
+        } else {
             m_playlist_path = path;
-
+        }
         ps_ptr<char> readBuff;
-        ps_ptr<char> itemsBuff;
-        ps_ptr<char> pathBuff;
-        size_t       bytesRead = 0;
-        bool         f_items_seen = false;
-        bool         f_path_seen = false;
+        ps_ptr<char> itemName;
+        ps_ptr<char> itemPath;
+
         readBuff.alloc(2024);
-        itemsBuff.alloc(2024);
-        pathBuff.alloc(2024);
+        itemName.alloc(2024);
+        itemPath.alloc(2024);
 
-        while (m_playlist_file.available() > 0) {
+        bool hasExtInfo = false;
 
-            bytesRead = m_playlist_file.readBytesUntil('\n', readBuff.get(), readBuff.size());
-            if (bytesRead < 5) continue;
+        while (m_playlist_file.available()) {
+
+            size_t bytesRead = m_playlist_file.readBytesUntil('\n', readBuff.get(), readBuff.size());
+
+            if (bytesRead < 1) continue;
 
             readBuff[bytesRead] = '\0';
             trim(readBuff.get());
 
-            if (readBuff.starts_with("#EXTM3U")) continue;
+            if (readBuff.empty()) continue;                // blank line
+            if (readBuff.starts_with("#EXTM3U")) continue; // #EXTM3U
+
+            // #EXTINF
             if (readBuff.starts_with("#EXTINF:")) {
-                itemsBuff = readBuff.substr(8);
-                f_items_seen = true;
-                f_path_seen = false;
-            }
-
-            if (readBuff.starts_with("#")) continue;
-            f_path_seen = true;
-            if (readBuff.starts_with("file://")) {
-                pathBuff = readBuff.substr(7);
-                pathBuff.urldecode();
-            } else if (readBuff.starts_with_icase("http://") || readBuff.starts_with_icase("https://")) {
-                pathBuff = readBuff;
-            } else {
-                if (!readBuff.starts_with("/"))
-                    pathBuff = m_playlist_path + readBuff;
-                else
-                    pathBuff = readBuff;
-                pathBuff.urldecode();
-            }
-            if (isAudio(pathBuff.c_get())) {
-                if (f_path_seen) {
-                    if (f_items_seen) {
-                        int idx = itemsBuff.index_of(',');
-                        if (idx != 0) {
-                            ps_ptr<char> t = "";
-                            t = itemsBuff.substr(0, idx);
-                            int d = t.to_uint32();
-                            if (d > 0) { // has duration
-                                MWR_LOG_WARN("duration {}s", d);
-                                itemsBuff = itemsBuff.substr(idx + 1);
-                            }
-                            itemsBuff.appendf(" " ANSI_ESC_YELLOW " {}" ANSI_ESC_RESET, t.c_get());
-                        }
-
-                        m_content_items.push_back(itemsBuff);
-                    } else {
-                        int idx = pathBuff.last_index_of('/');
-                        if (idx != -1)
-                            itemsBuff = pathBuff.substr(idx + 1);
-                        else
-                            itemsBuff = pathBuff;
-                        m_content_items.push_back(itemsBuff);
-                    }
-                    m_content_file.push_back(pathBuff);
+                itemName = readBuff.substr(8);
+                int comma = itemName.index_of(',');
+                if (comma >= 0) {
+                    auto duration = itemName.substr(0, comma);
+                    int  d = duration.to_int32();
+                    itemName = itemName.substr(comma + 1);                                                       // title after the comma
+                    if (d > 0) { itemName.appendf(" " ANSI_ESC_YELLOW "{}s" ANSI_ESC_RESET, duration.c_get()); } // Optionally append duration
                 }
-                f_items_seen = false;
-                f_path_seen = false;
-                itemsBuff.clear();
-                pathBuff.clear();
-                readBuff.clear();
+                hasExtInfo = true;
+                continue;
             }
+
+            // Ignore other comments
+            if (readBuff.starts_with("#")) continue;
+
+            // -----------------------------------------
+            // Here’s a proper playlist entry
+            // -----------------------------------------
+
+            if (readBuff.starts_with("file://")) {
+                itemPath = readBuff.substr(7);
+                itemPath.urldecode();
+            } else if (readBuff.starts_with_icase("http://") || readBuff.starts_with_icase("https://")) {
+                itemPath = readBuff;
+            } else {
+                if (!readBuff.starts_with("/")) {
+                    itemPath = m_playlist_path + readBuff;
+                } else {
+                    itemPath = readBuff;
+                }
+                itemPath.urldecode();
+            }
+
+            // Import audio files only
+            if (!isAudio(itemPath.c_get())) continue;
+
+            // No EXTINF available:
+            // Use the file name as the title
+            if (!hasExtInfo) {
+                int slash = itemPath.last_index_of('/');
+                if (slash >= 0) {
+                    itemName = itemPath.substr(slash + 1);
+                } else {
+                    itemName = itemPath;
+                }
+            }
+            m_content_items.push_back(itemName);
+            m_content_file.push_back(itemPath);
+
+            // EXTINF applies only to the next entry exactly
+            hasExtInfo = false;
+            itemName.clear();
+            itemPath.clear();
         }
         m_playlist_file.close();
-
-        // for (int i = 0; i < m_content_file.size(); i++) {
-        //     MWR_LOG_WARN("{}, {}", i, m_content_file[i].c_get());
-        //     MWR_LOG_INFO("{}, {}", i, m_content_items[i].c_get());
-        // }
         return true;
     }
 
@@ -1679,7 +1700,8 @@ class Playlist {
         for (int i = 0; i < foldercontent->size(); i++) {
             // MWR_LOG_WARN( "{} : ({}) {} {} -- {}",i, foldercontent.isAudio[i], foldercontent.itemURL[i], foldercontent.title[i], foldercontent.duration[i]);
             if (!foldercontent->at(i).isAudio) continue;
-            uint16_t     len = strlen((const char*)foldercontent->at(i).itemURL.c_get()) + strlen((const char*)foldercontent->at(i).title.c_get()) + strlen((const char*)foldercontent->at(i).duration.c_get()) + 3;
+            uint16_t len =
+                strlen((const char*)foldercontent->at(i).itemURL.c_get()) + strlen((const char*)foldercontent->at(i).title.c_get()) + strlen((const char*)foldercontent->at(i).duration.c_get()) + 3;
             ps_ptr<char> itstr(len);
             itstr = foldercontent->at(i).itemURL;
             itstr += "\n";
