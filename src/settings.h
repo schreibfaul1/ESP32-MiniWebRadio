@@ -203,7 +203,7 @@
 const Pins RGB_PINS = { // SUNTON 7"
     .b0 = 15, .b1 = 7, .b2 = 6, .b3 = 5, .b4 = 4, .g0 = 9, .g1 = 46, .g2 = 3, .g3 = 8, .g4 = 16, .g5 = 1, .r0 = 14, .r1 = 21, .r2 = 47, .r3 = 48, .r4 = 45, .hsync = 39, .vsync = 40, .de = 41, .pclk = 42, .bl = -1};
 
-const Timing RGB_TIMING = {.h_res = 800, .v_res = 480, .pixel_clock_hz = 10000000, .hsync_pulse_width = 30, .hsync_back_porch = 16, .hsync_front_porch = 210, .vsync_pulse_width = 13, .vsync_back_porch = 10, .vsync_front_porch = 22};
+const Timing RGB_TIMING = {.h_res = 800, .v_res = 480, .pixel_clock_hz = 8600000, .hsync_pulse_width = 40, .hsync_back_porch = 16, .hsync_front_porch = 10, .vsync_pulse_width = 20, .vsync_back_porch = 10, .vsync_front_porch = 22};
 
         #define TP_IRQ             -1
         #define SD_MMC_CMD         11
