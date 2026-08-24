@@ -406,9 +406,9 @@ int log_redirect_handler(const char* format, va_list args) {
             if (c == 'I') log_buffer.insert(ANSI_ESC_GREEN, 0);
             if (c == 'D') log_buffer.insert(ANSI_ESC_CYAN, 0);
             if (c == 'V') log_buffer.insert(ANSI_ESC_GREY, 0);
-            printfln(s_tag.arduino, "{}", log_buffer.c_get());
+            printfln(s_tag.arduino, "{}", log_buffer);
         } else {
-            printfln(s_tag.none, "{}", log_buffer.c_get());
+            printfln(s_tag.none, "{}", log_buffer);
         }
     }
     return 0;

@@ -107,20 +107,20 @@ bool WebSrv::streamfile(fs::FS& fs, ps_ptr<char> path) { // transfer file from S
     } // guard
 
     ps_ptr<char> c_path;
-    c_path.copy_from(path.c_get());
+    c_path = path;
     c_path.truncate_at('?'); // Remove query string
 
     File file = fs.open(path.c_get(), "r");
     if (!file) {
         m_msg.e = evt_info;
-        m_msg.arg.assignf("Failed to open file for reading: {}", c_path.c_get());
+        m_msg.arg.assignf("Failed to open file for reading: {}", c_path);
         if (m_websrv_callback) m_websrv_callback(m_msg);
         show_not_found();
         return false;
     }
 
     m_msg.e = evt_info;
-    m_msg.arg.assignf("Length of file {} is {}", c_path.c_get(), file.size());
+    m_msg.arg.assignf("Length of file {} is {}", c_path, file.size());
     if (m_websrv_callback) m_websrv_callback(m_msg);
 
     // HTTP header
@@ -134,7 +134,6 @@ bool WebSrv::streamfile(fs::FS& fs, ps_ptr<char> path) { // transfer file from S
     httpheader.append("Cache-Control: public, max-age=86400\r\n\r\n");
 
     cmdclient.print(httpheader.c_get()); // header sent
-    // log_i("%s", httpheader.c_get());
 
     size_t          bytesTransmitted = 0, bytesInBuff = 0, bytesToSend = file.size();
     ps_ptr<uint8_t> transBuff;
@@ -482,7 +481,7 @@ bool WebSrv::uploadfile(fs::FS& fs, ps_ptr<char> path, uint32_t contentLength, p
 
         file.close();
         m_msg.e = evt_info;
-        m_msg.arg.assignf("upload of {} successful ({} bytes)", path.c_get(), totalWritten);
+        m_msg.arg.assignf("upload of {} successful ({} bytes)", path, totalWritten);
         if (m_websrv_callback) m_websrv_callback(m_msg);
         return true;
     }
@@ -506,7 +505,7 @@ bool WebSrv::uploadfile(fs::FS& fs, ps_ptr<char> path, uint32_t contentLength, p
 
         bytesInTransBuf = cmdclient.readBytes(transBuf.get(), 256);
         if (bytesInTransBuf != av) {
-            msg.assignf("read error in {}, available {} bytes, read {} bytes\n", path.c_get(), av, bytesInTransBuf);
+            msg.assignf("read error in {}, available {} bytes, read {} bytes\n", path, av, bytesInTransBuf);
             goto exit;
         }
 
