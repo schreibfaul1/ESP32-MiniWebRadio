@@ -4267,7 +4267,7 @@ class UniList {
             }
         }
         uint16_t indent = pos ? m_indentContent : m_indentDirectory;
-        getTFT().writeText(m_buff, indent, m_y + pos * m_lineHight, m_w - indent, m_lineHight, HAlign::Left, VAlign::Middle, true, true);
+        getTFT().writeText(m_buff, indent, m_y + pos * m_lineHight, m_w - indent, m_lineHight, HAlign::Left, VAlign::Middle, true, false);
     }
     void drawPosInfo(int16_t firstVal, int16_t secondVal, int16_t total, ps_ptr<char> color) { // e.g. 1-9/65
         m_buff.assignf("{}{}-{}-{}", color, firstVal, secondVal, total);

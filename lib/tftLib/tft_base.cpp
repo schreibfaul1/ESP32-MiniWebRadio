@@ -3139,13 +3139,57 @@ int TFT_Base::findBestBreak(const Word& word, size_t glyphStart, size_t breakPos
     return bestPos;
 }
 // ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-bool TFT_Base::wordToLines(int16_t win_W, int16_t win_H, bool noWrap) {
+bool TFT_Base::wordToLines(int16_t win_W, int16_t win_H, bool noWrap, bool clipNoWrap) {
     uint16_t maxLines = win_H / m_current_font.line_height;
     if (maxLines == 0) return false;
 
     m_wrappedWord.clear();
     m_line.clear();
     m_line.emplace_back();
+
+    if (noWrap && clipNoWrap) {
+        Line& line = m_line[0];
+
+        for (const auto& word : m_word) {
+            if (word.newLine) return true;
+            if (word.glyphs.empty()) continue;
+
+            uint16_t spacing = 0;
+            if (!line.words.empty()) {
+                const Word* prevWord = line.words.back().word;
+                spacing = prevWord->trailingSpaces * m_spaceWidth;
+            }
+
+            if (line.width + spacing >= win_W) return true;
+
+            uint16_t availableWidth = win_W - line.width - spacing;
+            if (word.width <= availableWidth) {
+                line.words.push_back({&word, spacing});
+                line.width += spacing + word.width;
+                continue;
+            }
+
+            uint16_t pieceWidth = 0;
+            size_t   glyphEnd = 0;
+            while (glyphEnd < word.glyphs.size() && pieceWidth + word.glyphs[glyphEnd].width <= availableWidth) {
+                pieceWidth += word.glyphs[glyphEnd].width;
+                glyphEnd++;
+            }
+
+            if (glyphEnd == 0) return true;
+
+            m_wrappedWord.emplace_back();
+            Word& piece = m_wrappedWord.back();
+            piece.glyphs.insert(piece.glyphs.end(), word.glyphs.begin(), word.glyphs.begin() + glyphEnd);
+            piece.width = pieceWidth;
+            piece.trailingSpaces = 0;
+
+            line.words.push_back({&piece, spacing});
+            line.width += spacing + pieceWidth;
+            return true;
+        }
+        return true;
+    }
 
     uint16_t currentLine = 0;
 
@@ -3260,9 +3304,9 @@ void TFT_Base::prepareFontLayout() {
     tokenToWords();                                                                       // From this point onwards, `m_word` contains the words and their widths, which were formed from the tokens
 }
 // ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-bool TFT_Base::layoutText(int16_t win_W, int16_t win_H, bool noWrap) {
+bool TFT_Base::layoutText(int16_t win_W, int16_t win_H, bool noWrap, bool clipNoWrap) {
     prepareFontLayout();
-    return wordToLines(win_W, win_H, noWrap);
+    return wordToLines(win_W, win_H, noWrap, clipNoWrap);
 }
 // ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_Base::drawLines(int16_t win_X, int16_t win_Y, int16_t win_W, int16_t win_H, HAlign hAlign, VAlign vAlign) {
@@ -3376,7 +3420,7 @@ size_t TFT_Base::writeText(ps_ptr<char> txt1, uint16_t win_X, uint16_t win_Y, in
             setFontByIndex(idx);
         }
     } else {
-        if (!layoutText(win_W, win_H, noWrap)) {
+        if (!layoutText(win_W, win_H, noWrap, noWrap)) {
             MWR_LOG_ERROR("txt does not fit in window");
             return 0;
         }
