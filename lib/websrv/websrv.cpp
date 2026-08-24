@@ -2,7 +2,7 @@
  * websrv.cpp
  *
  *  Created on: 09.07.2017
- *  updated on: 10.12.2025
+ *  updated on: 24.08.2026
  *      Author: Wolle
  */
 
@@ -40,24 +40,9 @@ void WebSrv::printWebSocketHeader(ps_ptr<char> wsRespKey) {
     webSocketClient.print(wsHeader.c_get()); // header sent
 }
 //--------------------------------------------------------------------------------------------------------------
-void WebSrv::show(const char* pagename, const char* MIMEType, int16_t len) {
-    constexpr size_t TCP_CHUNK_SIZE = 4096; // optimal für WiFi/Ethernet
-    size_t           pagelen = 0;
+void WebSrv::show(ps_ptr<char> pagename, ps_ptr<char> MIMEType, int16_t len) {
 
-    // --- Check whether source comes from PROGMEM ---
-    bool isProgmem = !esp_ptr_in_dram(pagename);
-
-    // --- Seitengröße bestimmen ---
-    if (len < 0)
-        pagelen = isProgmem ? strlen_P(pagename) : strlen(pagename);
-    else if (len > 0)
-        pagelen = len;
-
-    // --- Skip leading newlines ---
-    while (pagelen && (isProgmem ? pgm_read_byte(pagename) : *pagename) == '\n') {
-        ++pagename;
-        --pagelen;
-    }
+    size_t pagelen = pagename.strlen();
 
     // --- HTTP Header ---
     ps_ptr<char> header;
@@ -75,28 +60,23 @@ void WebSrv::show(const char* pagename, const char* MIMEType, int16_t len) {
 
     if (m_websrv_callback) {
         m_msg.e = evt_info;
-        m_msg.arg.assignf("{} {} {}", isProgmem ? "PROGMEM" : "RAM", ", page length:", pagelen);
+        m_msg.arg.assignf("page length: {}, MIMEType: {}", pagelen, MIMEType);
         m_websrv_callback(m_msg);
     }
 
     // --- Main transmission ---
-    size_t sent = 0;
+    uint32_t t = millis() + 3000;
+    size_t   sent = 0;
     while (sent < pagelen) {
-        size_t chunk = std::min(TCP_CHUNK_SIZE, pagelen - sent);
 
-        size_t res = isProgmem ? cmdclient.write_P(pagename + sent, chunk) : cmdclient.write((const uint8_t*)pagename + sent, chunk);
-
-        if (res != chunk) {
-            m_msg.e = evt_error;
-            m_msg.arg = "write error in webpage";
-            if (m_websrv_callback) m_websrv_callback(m_msg);
-            cmdclient.clearWriteError();
-            return;
+        sent += cmdclient.write(pagename.get() + sent);
+        WS_LOG_DEBUG("sent {}, pl {}", sent, pagelen);
+        if (millis() > t) {
+            WS_LOG_ERROR("timeout, sent: {}", sent);
+            cmdclient.clear();
+            break;
         }
-        sent += chunk;
     }
-
-    cmdclient.clear();
 }
 //--------------------------------------------------------------------------------------------------------------
 bool WebSrv::streamfile(fs::FS& fs, ps_ptr<char> path) { // transfer file from SD to webbrowser
@@ -183,11 +163,6 @@ error:
     return false;
 }
 //--------------------------------------------------------------------------------------------------------------
-bool WebSrv::send(const char* cmd, int msg, uint8_t opcode) { // sends text messages via websocket
-    char nr_txt[10];
-    itoa(msg, nr_txt, 10);
-    return send(cmd, nr_txt, opcode);
-}
 bool WebSrv::send(ps_ptr<char> cmd, ps_ptr<char> msg, uint8_t opcode) { // sends text messages via websocket
     uint8_t headerLen = 2;
 
@@ -277,7 +252,7 @@ void WebSrv::sendPong() { // heartbeat, keep alive via websockets
 //
 //       endBoundary          ------WebKitFormBoundaryi52Pv7aBYloXIuZB--
 //
-bool WebSrv::uploadB64image(fs::FS& fs, const char* path, uint32_t contentLength) {
+bool WebSrv::uploadB64image(fs::FS& fs, ps_ptr<char> path, uint32_t contentLength) {
     File           file;
     uint32_t       t = millis();
     const uint32_t TIMEOUT = 2000;
@@ -371,8 +346,8 @@ bool WebSrv::uploadB64image(fs::FS& fs, const char* path, uint32_t contentLength
         goto exit;
     }
 
-    if (fs.exists(path)) fs.remove(path);
-    file = fs.open(path, FILE_WRITE);
+    if (fs.exists(path.c_get())) fs.remove(path.c_get());
+    file = fs.open(path.c_get(), FILE_WRITE);
     if (!file) {
         msg = "Cannot open file for writing";
         goto exit;
@@ -640,52 +615,56 @@ void WebSrv::stop() {
     webSocketClient.stop();
 }
 //--------------------------------------------------------------------------------------------------------------
-const char* WebSrv::getContentType(ps_ptr<char>& filename) {
+ps_ptr<char> WebSrv::getContentType(ps_ptr<char>& filename) {
+    ps_ptr<char> ct;
     if (filename.ends_with(".html"))
-        return "text/html";
+        ct = "text/html";
     else if (filename.ends_with(".htm"))
-        return "text/html";
+        ct = "text/html";
     else if (filename.ends_with(".css"))
-        return "text/css";
+        ct = "text/css";
     else if (filename.ends_with(".txt"))
-        return "text/plain";
+        ct = "text/plain";
     else if (filename.ends_with(".js"))
-        return "application/javascript";
+        ct = "application/javascript";
     else if (filename.ends_with(".json"))
-        return "application/json";
+        ct = "application/json";
     else if (filename.ends_with(".svg"))
-        return "image/svg+xml";
+        ct = "image/svg+xml";
     else if (filename.ends_with(".ttf"))
-        return "application/x-font-ttf";
+        ct = "application/x-font-ttf";
     else if (filename.ends_with(".otf"))
-        return "application/x-font-opentype";
+        ct = "application/x-font-opentype";
     else if (filename.ends_with(".xml"))
-        return "text/xml";
+        ct = "text/xml";
     else if (filename.ends_with(".pdf"))
-        return "application/pdf";
+        ct = "application/pdf";
     else if (filename.ends_with(".png"))
-        return "image/png";
+        ct = "image/png";
     else if (filename.ends_with(".bmp"))
-        return "image/bmp";
+        ct = "image/bmp";
     else if (filename.ends_with(".gif"))
-        return "image/gif";
+        ct = "image/gif";
     else if (filename.ends_with(".jpg"))
-        return "image/jpeg";
+        ct = "image/jpeg";
     else if (filename.ends_with(".ico"))
-        return "image/x-icon";
+        ct = "image/x-icon";
     else if (filename.ends_with(".css"))
-        return "text/css";
+        ct = "text/css";
     else if (filename.ends_with(".zip"))
-        return "application/x-zip";
+        ct = "application/x-zip";
     else if (filename.ends_with(".gz"))
-        return "application/x-gzip";
+        ct = "application/x-gzip";
     else if (filename.ends_with(".xls"))
-        return "application/msexcel";
+        ct = "application/msexcel";
     else if (filename.ends_with(".mp3"))
-        return "audio/mpeg";
+        ct = "audio/mpeg";
     else if (filename.ends_with(".csv"))
-        return "text/csv";
-    return "text/plain";
+        ct = "text/csv";
+    else
+        ct = "text/plain";
+
+    return ct;
 }
 
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -928,7 +907,7 @@ exit:
     return true;
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-bool WebSrv::handleWS() {    // Websocketserver, receive messages
+bool WebSrv::handleWS() {     // Websocketserver, receive messages
     ps_ptr<char> currentLine; // Build up to complete line
 
     if (!webSocketClient.connected()) {

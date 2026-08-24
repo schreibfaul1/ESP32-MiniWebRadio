@@ -624,15 +624,26 @@ boolean drawImage(ps_ptr<char> path, uint16_t posX, uint16_t posY, uint16_t maxW
  *****************************************************************************************************************************************************/
 
 boolean isAudio(File file) {
-    if (endsWith(file.name(), ".mp3") || endsWith(file.name(), ".aac") || endsWith(file.name(), ".m4a") || endsWith(file.name(), ".wav") || endsWith(file.name(), ".flac") ||
-        endsWith(file.name(), ".opus") || endsWith(file.name(), ".ogg")) {
+    if (endsWith(file.name(), ".mp3") ||  //
+        endsWith(file.name(), ".aac") ||  //
+        endsWith(file.name(), ".m4a") ||  //
+        endsWith(file.name(), ".wav") ||  //
+        endsWith(file.name(), ".flac") || //
+        endsWith(file.name(), ".opus") || //
+        endsWith(file.name(), ".ogg")) {
         return true;
     }
     return false;
 }
 
-boolean isAudio(const char* path) {
-    if (endsWith(path, ".mp3") || endsWith(path, ".aac") || endsWith(path, ".m4a") || endsWith(path, ".wav") || endsWith(path, ".flac") || endsWith(path, ".opus") || endsWith(path, ".ogg")) {
+boolean isAudio(ps_ptr<char> path) {
+    if (path.ends_with(".mp3") ||  //
+        path.ends_with(".aac") ||  //
+        path.ends_with(".m4a") ||  //
+        path.ends_with(".wav") ||  //
+        path.ends_with(".flac") || //
+        path.ends_with(".opus") || //
+        path.ends_with(".ogg")) {
         return true;
     }
     return false;
@@ -903,10 +914,10 @@ void setWiFiCredentials(ps_ptr<char> ssid, ps_ptr<char> password) {
     state = 3;
 
 exit:
-    if (state == 0) { printfln(s_tag.wifi_info, ANSI_ESC_RED "SSID: {} password can't changed, it is hard coded", ssid.c_get()); }
-    if (state == 1) { printfln(s_tag.wifi_info, ANSI_ESC_GREEN "The passord \"{}\" for the SSID: {} has been changed", password.c_get(), ssid.c_get()); }
-    if (state == 2) { printfln(s_tag.wifi_info, ANSI_ESC_GREEN "The SSID: {} has been added", ssid.c_get()); }
-    if (state == 3) { printfln(s_tag.wifi_info, ANSI_ESC_RED "No more memory to save the credentials for: {}", ssid.c_get()); }
+    if (state == 0) { printfln(s_tag.wifi_info, ANSI_ESC_RED "SSID: {} password can't changed, it is hard coded", ssid); }
+    if (state == 1) { printfln(s_tag.wifi_info, ANSI_ESC_GREEN "The passord \"{}\" for the SSID: {} has been changed", password, ssid); }
+    if (state == 2) { printfln(s_tag.wifi_info, ANSI_ESC_GREEN "The SSID: {} has been added", ssid); }
+    if (state == 3) { printfln(s_tag.wifi_info, ANSI_ESC_RED "No more memory to save the credentials for: {}", ssid); }
     return;
 }
 
@@ -952,8 +963,7 @@ void connecttohost(ps_ptr<char> host) {
             url = host.substr(idx1); // extract url
             user = host.substr(idx1 + 1, idx2 - idx1 - 1);
             pwd = host.substr(idx2 + 1);
-            printfln(s_tag.new_host, ANSI_ESC_YELLOW "\"{}\"" ANSI_ESC_RESET ", user: " ANSI_ESC_YELLOW "\"{}\"" ANSI_ESC_RESET ", pwd: " ANSI_ESC_YELLOW "\"{}\"", url.c_get(), user.c_get(),
-                     pwd.c_get());
+            printfln(s_tag.new_host, ANSI_ESC_YELLOW "\"{}\"" ANSI_ESC_RESET ", user: " ANSI_ESC_YELLOW "\"{}\"" ANSI_ESC_RESET ", pwd: " ANSI_ESC_YELLOW "\"{}\"", url, user, pwd);
             s_f_isWebConnected = audio.connecttohost(url.c_get(), user.c_get(), pwd.c_get());
         }
     }
@@ -973,7 +983,7 @@ void connecttoFS(const char* FS, ps_ptr<char> filename, uint32_t fileStartTime) 
     s_f_isFSConnected = audio.connecttoFS(SD_MMC, filename.c_get(), fileStartTime);
     s_f_isWebConnected = false;
     if (!filename.starts_with("/audiofiles/")) { return; }
-    if (s_f_isFSConnected && isAudio(filename.c_get())) {
+    if (s_f_isFSConnected && isAudio(filename)) {
         s_settings.lastconnectedfile = filename;
         s_SD_content.setLastConnectedFile(filename);
         s_cur_AudioFolder = s_SD_content.getLastConnectedFolder();
@@ -1360,15 +1370,15 @@ ps_ptr<char> scaleImage(ps_ptr<char> path) {
     if (path.ends_with("gif")) ok = true;
     if (path.ends_with("png")) ok = true;
     if (path.starts_with("/png")) ok = false; // is web button
-    MWR_LOG_DEBUG("path {}", path.c_get());
+    MWR_LOG_DEBUG("path {}", path);
     if (!ok) return path;
 
     int idx = path.index_of('/', 1);
     if (idx < 0) return path; // invalid path
     ps_ptr<char> tfts = displayConfig.tftSize;
     tfts += "/";
-    path.insert(tfts.c_get(), idx + 1); // "/logo/0N 90s.jpg" --> "/logo/s/0N 90s.jpg"
-    MWR_LOG_DEBUG("path {}", path.c_get());
+    path.insert(tfts, idx + 1); // "/logo/0N 90s.jpg" --> "/logo/s/0N 90s.jpg"
+    MWR_LOG_DEBUG("path {}", path);
     return path;
 }
 
@@ -1447,7 +1457,8 @@ void setStation(uint16_t sta) {
     printfln(s_tag.country, "Country of origin " ANSI_ESC_YELLOW "{}", staMgnt.getStationCountry(s_cur_station));
     s_homepage.reset();
     s_streamTitle.reset();
-    s_icyDescription.reset();;
+    s_icyDescription.reset();
+    ;
     clearArea2();
     s_f_newStreamTitle = true;
     s_f_newIcyDescription = true;
@@ -1474,10 +1485,10 @@ void savefile(ps_ptr<char> fileName, uint32_t contentLength, ps_ptr<char> conten
 
     if (!fileName.starts_with("/")) { fileName = "/" + fileName; }
     if (webSrv.uploadfile(SD_MMC, fileName, contentLength, contentType)) {
-        printfln(s_tag.sd_card, "save file " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET " in progress", fileName.c_get());
+        printfln(s_tag.sd_card, "save file " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET " in progress", fileName);
         webSrv.sendStatus(200);
     } else {
-        printfln(s_tag.sd_card, "save file " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET " to SD failed", fileName.c_get());
+        printfln(s_tag.sd_card, "save file " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET " to SD failed", fileName);
         webSrv.sendStatus(400);
     }
 }
@@ -1490,8 +1501,8 @@ void saveImage(const char* fileName, uint32_t contentLength) { // save the jpg i
         fn.append(displayConfig.tftSize);
         if (!startsWith(fileName, "/")) fn.append("/");
         fn.append(fileName);
-        if (webSrv.uploadB64image(SD_MMC, fn.c_get(), contentLength)) {
-            printfln(s_tag.sd_card, "save image (jpg) " ANSI_ESC_YELLOW "{}" ANSI_ESC_RESET " to SD card was successfully", fn.c_get());
+        if (webSrv.uploadB64image(SD_MMC, fn, contentLength)) {
+            printfln(s_tag.sd_card, "save image (jpg) " ANSI_ESC_YELLOW "{}" ANSI_ESC_RESET " to SD card was successfully", fn);
             webSrv.sendStatus(200);
         } else
             webSrv.sendStatus(400);
@@ -1543,7 +1554,7 @@ void SD_playFile(ps_ptr<char> path, uint32_t fileStartTime, bool showFN) {
     }
 
     printfln(s_tag.file_name, ANSI_ESC_MAGENTA "{}", file_name);
-    connecttoFS("SD_MMC", path.c_get(), fileStartTime);
+    connecttoFS("SD_MMC", path, fileStartTime);
     if (s_f_playlistEnabled) showPlsFileNumber();
     if (s_f_isFSConnected) { s_settings.lastconnectedfile = path; }
 }
@@ -1607,7 +1618,7 @@ void wake_up(int8_t state, int8_t subState) {
 
 void setRTC(ps_ptr<char> TZString) {
     rtc.stop();
-    rtc.begin(TZString.c_get());
+    rtc.begin(TZString);
 }
 
 boolean isAlarm(uint8_t weekDay, uint8_t alarmDays, uint16_t minuteOfTheDay, int16_t* alarmTime) {
@@ -1834,7 +1845,7 @@ void changeState(int8_t state, int8_t subState) {
             if(newSubState){ disableAllObjects(); }
             pic_PL_logo.enable();
             if (subState == 0){
-                s_SD_content.listFilesInDir(s_cur_AudioFolder.c_get(), true, false);
+                s_SD_content.listFilesInDir(s_cur_AudioFolder, true, false);
                 s_cur_Codec = 0;
                 showFileLogo(PLAYER, subState);
                 showPlayerFileName(s_SD_content.getColouredSStringByIndex(s_cur_AudioFileNr));
@@ -2063,7 +2074,7 @@ void loop() {
     while (s_logBuffer.size() > 0) {
         size_t i = s_logBuffer.size();
         if (s_logBuffer[i - 1].strlen() > 0 && s_logBuffer[i - 1].strlen() < 1024) {
-            webSrv.send("serTerminal=", s_logBuffer[i - 1].c_get());
+            webSrv.send("serTerminal=", s_logBuffer[i - 1]);
         } else
             log_w("%s %i: strlen %i", __FILE__, __LINE__, s_logBuffer[i - 1].strlen());
         s_logBuffer.pop_back();
@@ -2072,7 +2083,7 @@ void loop() {
 
     if (s_f_dlnaBrowseServer) {
         s_f_dlnaBrowseServer = false;
-        dlna.browseServer(s_currDLNAsrvNr, s_dlnaHistory[s_dlnaLevel].objId.c_get(), s_totalNumberReturned);
+        dlna.browseServer(s_currDLNAsrvNr, s_dlnaHistory[s_dlnaLevel].objId, s_totalNumberReturned);
     }
     if (s_f_clearLogo) {
         s_f_clearLogo = false;
@@ -2205,8 +2216,8 @@ void loop() {
                 f_resume = true;
                 s_f_eof = false;
                 ps_ptr<char> p;
-                p.assignf("/voice_time/{}/{}_00.mp3", s_timeSpeechLang.c_get(), hour);
-                connecttoFS("SD_MMC", p.c_get());
+                p.assignf("/voice_time/{}/{}_00.mp3", s_timeSpeechLang, hour);
+                connecttoFS("SD_MMC", p);
                 return;
             } else {
                 printfln(s_tag.action, "Time announcement at " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET " o'clock is silent", hour);
@@ -2349,7 +2360,7 @@ void loop() {
             btn_RA_bt.set_active(true);
             if (s_bt_emitter.enabled) {
                 if (!s_f_sleeping) {
-                    if (!bt_emitter.get_power_state()) bt_emitter.power_on(s_bt_emitter.mode.c_get());
+                    if (!bt_emitter.get_power_state()) bt_emitter.power_on(s_bt_emitter.mode);
                 } else {
                     if (bt_emitter.get_power_state()) bt_emitter.power_off();
                 }
@@ -3402,7 +3413,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
     CMD_EQUALS("set_volumeSteps"){      s_volume.cur_volume = map_l(s_volume.cur_volume, 0, s_volume.volumeSteps, 0, param.to_uint32());
                                         s_volume.ringVolume = map_l(s_volume.ringVolume, 0, s_volume.volumeSteps, 0, param.to_uint32()); webSrv.send("ringVolume=", int2str(s_volume.ringVolume));
                                         s_volume.volumeAfterAlarm = map_l(s_volume.volumeAfterAlarm, 0, s_volume.volumeSteps, 0, param.to_uint32()); webSrv.send("volAfterAlarm=", int2str(s_volume.volumeAfterAlarm));
-                                        s_volume.volumeSteps = param.to_uint32(); webSrv.send("volumeSteps=", param.c_get()); audio.setVolumeSteps(s_volume.volumeSteps);
+                                        s_volume.volumeSteps = param.to_uint32(); webSrv.send("volumeSteps=", param); audio.setVolumeSteps(s_volume.volumeSteps);
                                         MWR_LOG_DEBUG("s_volumeSteps  {}", s_volume.volumeSteps);
                                         sdr_CL_volume.setMinMaxVal(0, s_volume.volumeSteps);
                                         sdr_DL_volume.setMinMaxVal(0, s_volume.volumeSteps);
@@ -3465,11 +3476,11 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
 
     CMD_EQUALS("get_timeZoneName"){     webSrv.reply(s_TZName, webSrv.TEXT); return;}
 
-    CMD_EQUALS("change_state"){         if     (!strcmp(param.c_get(), "RADIO")       && s_state != RADIO)       { changeState(RADIO, 0); return; }
-                                        else if(!strcmp(param.c_get(), "PLAYER")      && s_state != PLAYER)      { stopSong(); changeState(PLAYER, 0); return; }
-                                        else if(!strcmp(param.c_get(), "DLNA")        && s_state != DLNA)        { stopSong(); changeState(DLNA, 0);   return; }
-                                        else if(!strcmp(param.c_get(), "BLUETOOTH")   && s_state != BLUETOOTH)   { changeState(BLUETOOTH, 0); return; }
-                                        else if(!strcmp(param.c_get(), "IR_SETTINGS") && s_state != IR_SETTINGS) { changeState(IR_SETTINGS, 0); return; }
+    CMD_EQUALS("change_state"){         if     (param == "RADIO"       && s_state != RADIO)       { changeState(RADIO, 0); return; }
+                                        else if(param == "PLAYER"      && s_state != PLAYER)      { stopSong(); changeState(PLAYER, 0); return; }
+                                        else if(param == "DLNA"        && s_state != DLNA)        { stopSong(); changeState(DLNA, 0);   return; }
+                                        else if(param == "BLUETOOTH"   && s_state != BLUETOOTH)   { changeState(BLUETOOTH, 0); return; }
+                                        else if(param == "IR_SETTINGS" && s_state != IR_SETTINGS) { changeState(IR_SETTINGS, 0); return; }
                                         else return; }
 
     CMD_EQUALS("stopfile"){             if(!s_f_isFSConnected && !s_f_isWebConnected) {webSrv.send("resumefile=", "There is no audio file active"); return;}
@@ -3482,7 +3493,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
                                         else {                webSrv.send("resumefile=", "audiofile paused");  btn_PL_pause.setOn(); btn_PL_pause.show();}
                                         return;}
 
-    CMD_EQUALS("get_alarmdays"){        webSrv.send("alarmdays=", s_alarmdays); return;}
+    CMD_EQUALS("get_alarmdays"){        ps_ptr<char> ad; ad.assignf("{}", s_alarmdays); webSrv.send("alarmdays=", ad); return;}
 
     CMD_EQUALS("set_alarmdays"){        s_alarmdays = param.to_uint32(); updateSettings(); return;}
 
@@ -3501,9 +3512,9 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
 
     CMD_EQUALS("get_timeSpeechLang"){   webSrv.send("get_timeSpeechLang=", s_timeSpeechLang); printfln(s_tag.webserver, "Timespeech language is " ANSI_ESC_YELLOW "{}", s_timeSpeechLang.c_get()); return;}
 
-    CMD_EQUALS("set_timeSpeechLang"){   if(param.strlen() > 2){MWR_LOG_ERROR("set_timeSpeechLang too long {}", param.c_get()); return;}
+    CMD_EQUALS("set_timeSpeechLang"){   if(param.strlen() > 2){MWR_LOG_ERROR("set_timeSpeechLang too long {}", param); return;}
                                         s_timeSpeechLang = param;
-                                        printfln(s_tag.webserver, "Timespeech, set language " ANSI_ESC_YELLOW "{}", param.c_get());
+                                        printfln(s_tag.webserver, "Timespeech, set language " ANSI_ESC_YELLOW "{}", param);
                                         return;}
 
     CMD_EQUALS("DLNA_getServer")  {     webSrv.send("DLNA_Names=", dlna.stringifyServer()); s_currDLNAsrvNr = -1; return;}
@@ -3512,14 +3523,14 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
 
     CMD_EQUALS("DLNA_getRoot")    {     s_currDLNAsrvNr = param.to_uint32(); dlna.browseServer(s_currDLNAsrvNr, "0"); return;}
 
-    CMD_EQUALS("DLNA_playFile") {       connecttohost(param.c_get()); showPlayerFileName(arg.c_get());
+    CMD_EQUALS("DLNA_playFile") {       connecttohost(param); showPlayerFileName(arg);
                                         if (audio.isRunning()) btn_DL_pause.set_active(true);
                                         else btn_DL_pause.set_active(false);
                                         btn_DL_pause.show(); return; }
 
     CMD_EQUALS("DLNA_getContent") {     s_dlnaHistory[s_dlnaLevel].objId = param;
                                         s_totalNumberReturned = 0;
-                                        dlna.browseServer(s_currDLNAsrvNr, s_dlnaHistory[s_dlnaLevel].objId.c_get());
+                                        dlna.browseServer(s_currDLNAsrvNr, s_dlnaHistory[s_dlnaLevel].objId);
                                         return;}
 
     CMD_EQUALS("SD/"){                  param = scaleImage(param); if(!SD_MMC.exists(param.c_get())) param = scaleImage("/common/unknown.png");
@@ -3542,7 +3553,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
     CMD_EQUALS("SD_playFile"){          stopSong();
                                         webSrv.reply("SD_playFile=" + param, webSrv.TEXT);                                                                // via XMLHttpRequest
                                         printfln(s_tag.webserver, "Play " ANSI_ESC_YELLOW "\"{}\"", param);
-                                        SD_playFile(param.c_get());
+                                        SD_playFile(param);
                                         return;}
 
     CMD_EQUALS("SD_playAllFiles"){      stopSong();
@@ -3569,12 +3580,12 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
                                         return;}
 
     CMD_EQUALS("set_IRaddr"){           printfln(s_tag.webserver, "set_IR_addr: " ANSI_ESC_CYAN "{}", param);
-                                        int32_t address = (int32_t)strtol(param.c_get(), NULL, 16);
+                                        int32_t address = param.to_int32(16);
                                         ir.set_irAddress(address);
                                         s_settings.irbuttons[42].val = address;
                                         return;}
 
-    CMD_EQUALS("get_sleepMode"){        webSrv.send("sleepMode=", s_sleepMode); return;}
+    CMD_EQUALS("get_sleepMode"){        ps_ptr<char> sm; sm.assignf("{}", s_sleepMode); webSrv.send("sleepMode=", sm); return;}
 
     CMD_EQUALS("set_sleepMode"){        s_sleepMode = param.to_uint32();
                                         if(s_sleepMode == 0) printfln(s_tag.webserver, "SleepMode: " ANSI_ESC_YELLOW "Display off");
@@ -3600,7 +3611,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
 
     CMD_EQUALS("hardcopy"){             printfln(s_tag.webserver, "Webpage: " ANSI_ESC_YELLOW "create a display hardcopy"); make_hardcopy_on_sd(); webSrv.send("hardcopy=", "/hardcopy.bmp"); return;}
 
-    printfln(s_tag.webserver, ANSI_ESC_RED "unknown HTMLcommand {}, param={}", cmd, param);
+    printfln(s_tag.webserver, ANSI_ESC_RED "unknown HTMLcommand(onCommand): {}, param={}", cmd, param);
     webSrv.sendStatus(400);
 }
 // clang-format on
@@ -3618,7 +3629,7 @@ void WEBSRV_onRequest(ps_ptr<char> cmd,  ps_ptr<char> param, ps_ptr<char> arg, p
     if(cmd == "upload_player2sd") { savefile(param, contentLength, contentType); return; }
     if(cmd == "upload_text_file") { savefile(param, contentLength, contentType); return; }
     if(cmd == "uploadfile")       { saveImage(param.c_get(), contentLength); return; }
-    printfln(s_tag.webserver, ANSI_ESC_RED "unknown HTMLcommand {}, param={}", cmd, param);
+    printfln(s_tag.webserver, ANSI_ESC_RED "unknown HTMLcommand(onRequest): {}, param={}", cmd, param);
     webSrv.sendStatus(400);
 }
 
@@ -3627,7 +3638,7 @@ void WEBSRV_onDelete(ps_ptr<char> cmd,  ps_ptr<char> param, ps_ptr<char> arg){  
                                     if(res) webSrv.sendStatus(200); else webSrv.sendStatus(400);
                                     printfln(s_tag.webserver, "Delete " ANSI_ESC_ORANGE "\"{}\"", param);
                                     return;}
-    printfln(s_tag.webserver, ANSI_ESC_RED "unknown HTMLcommand {}, param={}", cmd, param);
+    printfln(s_tag.webserver, ANSI_ESC_RED "unknown HTMLcommand(onDelete): {}, param={}", cmd, param);
     webSrv.sendStatus(400);
 }
 // clang-format on
