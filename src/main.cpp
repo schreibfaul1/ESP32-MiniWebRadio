@@ -3510,10 +3510,16 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
 
     CMD_EQUALS("DLNA_getServer")  {     webSrv.send("DLNA_Names=", dlna.stringifyServer()); s_currDLNAsrvNr = -1; return;}
 
+    CMD_EQUALS("DLNA_GetFolder"){       webSrv.sendStatus(306); return;}
+
     CMD_EQUALS("DLNA_getRoot")    {     s_currDLNAsrvNr = param.to_uint32(); dlna.browseServer(s_currDLNAsrvNr, "0"); return;}
 
-    CMD_EQUALS("DLNA_getContent") {     if(param.starts_with("http")) {connecttohost(param.c_get()); showPlayerFileName(arg.c_get()); return;}
-                                        s_dlnaHistory[s_dlnaLevel].objId = param;
+    CMD_EQUALS("DLNA_playFile") {       connecttohost(param.c_get()); showPlayerFileName(arg.c_get());
+                                        if (audio.isRunning()) btn_DL_pause.set_active(true);
+                                        else btn_DL_pause.set_active(false);
+                                        btn_DL_pause.show(); return; }
+
+    CMD_EQUALS("DLNA_getContent") {     s_dlnaHistory[s_dlnaLevel].objId = param;
                                         s_totalNumberReturned = 0;
                                         dlna.browseServer(s_currDLNAsrvNr, s_dlnaHistory[s_dlnaLevel].objId.c_get());
                                         return;}
@@ -3577,7 +3583,6 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
                                         if(s_sleepMode == 1) printfln(s_tag.webserver, "SleepMode: " ANSI_ESC_YELLOW "Show the time");
                                         return;}
 
-    CMD_EQUALS("DLNA_GetFolder"){       webSrv.sendStatus(306); return;}  // todo
     CMD_EQUALS("KCX_BT_connected") {    if(!bt_emitter.get_power_state()) webSrv.send("KCX_BT_connected=", "-1");
                                         else if(bt_emitter.isConnected()) webSrv.send("KCX_BT_connected=",  "1");
                                         else                              webSrv.send("KCX_BT_connected=",  "0");
