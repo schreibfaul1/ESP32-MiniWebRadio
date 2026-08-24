@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.0t - Aug 23, 2026                                                                                                               ";
+    Version 4.2.0t1 - Aug 24, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -69,16 +69,15 @@ KCX_BT_Emitter bt_emitter(BT_EMITTER_RX, BT_EMITTER_TX, BT_EMITTER_CONNECT, BT_E
 hp_BH1750      BH1750; // create the sensor
 ES8311         es8311;
 
-ps_ptr<char> s_time_s = "";
-ps_ptr<char> s_myIP;
-ps_ptr<char> s_icyDescription = "";
-ps_ptr<char> s_streamTitle = "";
+ps_ptr<char> s_time_s = "00:00:00";
+ps_ptr<char> s_myIP = "000.000.000.000";
 ps_ptr<char> s_cur_AudioFolder = "/audiofiles/";
-ps_ptr<char> s_cur_AudioFileName = NULL;
+ps_ptr<char> s_icyDescription;
+ps_ptr<char> s_streamTitle;
+ps_ptr<char> s_cur_AudioFileName;
 ps_ptr<char> s_stationURL;
-ps_ptr<char> s_playlistPath;
 ps_ptr<char> s_stationName_air;
-ps_ptr<char> s_homepage = "";
+ps_ptr<char> s_homepage;
 ps_ptr<char> s_TZName = "Europe/Berlin";
 ps_ptr<char> s_TZString = "CET-1CEST,M3.5.0,M10.5.0/3";
 ps_ptr<char> s_timeSpeechLang = "en";
@@ -566,8 +565,8 @@ void showPlayerFileName(ps_ptr<char> fname) {
     txt_PL_fName.show();
 }
 
-void show_DLNA_FileName(const char* fname) {
-    if (!fname) return;
+void show_DLNA_FileName(ps_ptr<char> fname) {
+    if (!fname.valid()) return;
     txt_DL_fName.setTextColor(TFT_CYAN);
     txt_DL_fName.setText(fname);
     txt_DL_fName.show();
@@ -612,10 +611,10 @@ boolean drawImage(ps_ptr<char> path, uint16_t posX, uint16_t posY, uint16_t maxW
         printfln(s_tag.sd_card, ANSI_ESC_RED "file \"{}\" not found", scImg);
         return false;
     }
-    if (scImg.ends_with("bmp")) { return getTFT().drawBmpFile(SD_MMC, scImg.c_get(), posX, posY, maxWidth, maxHeigth, 1.0); }
-    if (scImg.ends_with("jpg")) { return getTFT().drawJpgFile(SD_MMC, scImg.c_get(), posX, posY, maxWidth, maxHeigth); }
-    if (scImg.ends_with("gif")) { return getTFT().drawGifFile(SD_MMC, scImg.c_get(), posX, posY, 0); }
-    if (scImg.ends_with("png")) { return getTFT().drawPngFile(SD_MMC, scImg.c_get(), posX, posY); }
+    if (scImg.ends_with("bmp")) { return getTFT().drawBmpFile(SD_MMC, scImg, posX, posY, maxWidth, maxHeigth, 1.0); }
+    if (scImg.ends_with("jpg")) { return getTFT().drawJpgFile(SD_MMC, scImg, posX, posY, maxWidth, maxHeigth); }
+    if (scImg.ends_with("gif")) { return getTFT().drawGifFile(SD_MMC, scImg, posX, posY, 0); }
+    if (scImg.ends_with("png")) { return getTFT().drawPngFile(SD_MMC, scImg, posX, posY); }
 
     printfln(s_tag.action, ANSI_ESC_RED "the file \"{}\" contains neither a bmp, a gif, a png nor a jpg graphic", scImg);
     return false; // neither jpg nor bmp
@@ -681,7 +680,7 @@ void processPlaylist() {
             connecttohost(path);
             // Datei auf SD
         } else if (path.starts_with("/") && SD_MMC.exists(path.c_get())) {
-            connecttoFS("SD_MMC", path.c_get());
+            connecttoFS("SD_MMC", path);
 
             // Invalid entry
         } else {
@@ -798,7 +797,7 @@ bool connectToWiFi() {
 
     printfln(s_tag.wifi_info,
              "connected to " ANSI_ESC_YELLOW "{}" ANSI_ESC_RESET ", IP address is " ANSI_ESC_ORANGE "{}" ANSI_ESC_RESET ", Received Signal Strength " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET " dB",
-             WiFi.SSID().c_str(), s_myIP.c_get(), WiFi.RSSI());
+             WiFi.SSID().c_str(), s_myIP, WiFi.RSSI());
 
     return true; // can't connect to any network
 }
@@ -806,7 +805,7 @@ bool connectToWiFi() {
 void setWiFiCredentials(ps_ptr<char> ssid, ps_ptr<char> password) {
     if (ssid.strlen() < 5) return; // min length
 
-    MWR_LOG_ERROR("ssid {} pw {}", ssid.c_get(), password.c_get());
+    MWR_LOG_ERROR("ssid {} pw {}", ssid, password);
 
     ps_ptr<char> line = "";
     ps_ptr<char> credentials;
@@ -821,7 +820,7 @@ void setWiFiCredentials(ps_ptr<char> ssid, ps_ptr<char> password) {
             case 4: line = pref.getString("wifiStr4").c_str(); break;
             case 5: line = pref.getString("wifiStr5").c_str(); break;
         }
-        if (line.starts_with(ssid.c_get()) && line[ssid.strlen()] == '\t') { // ssid found
+        if (line.starts_with(ssid) && line[ssid.strlen()] == '\t') { // ssid found
             if (password.strlen() == 0) {
                 credentials = "\t"; // delete ssid and password
             } else {                // update password
@@ -979,7 +978,7 @@ void connecttoFS(const char* FS, ps_ptr<char> filename, uint32_t fileStartTime) 
         s_SD_content.setLastConnectedFile(filename);
         s_cur_AudioFolder = s_SD_content.getLastConnectedFolder();
         s_cur_AudioFileName = s_SD_content.getLastConnectedFileName();
-        s_cur_AudioFileNr = s_SD_content.getPosByFileName(s_cur_AudioFileName.c_get());
+        s_cur_AudioFileNr = s_SD_content.getPosByFileName(s_cur_AudioFileName);
         if (s_cur_AudioFileNr == -1) s_cur_AudioFileNr = 0;
     }
     MWR_LOG_DEBUG("Filesize {}", audio.getFileSize());
@@ -998,7 +997,6 @@ void stopSong() {
     }
     s_f_pauseResume = false;
     s_f_playlistNextFile = false;
-    s_playlistPath.reset();
 }
 
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -1170,7 +1168,7 @@ void setup() {
     dispHeader.speakerOnOff(!s_f_mute);
     dispHeader.updateTime("00:00:00", true);
 
-    dispFooter.setIpAddr(WiFi.localIP().toString().c_str());
+    dispFooter.setIpAddr(s_myIP);
     dispFooter.updateStation(s_cur_station);
     dispFooter.updateOffTime(s_sleeptime);
 
@@ -1447,9 +1445,9 @@ void setStation(uint16_t sta) {
     }
     printfln(s_tag.action, "switch to station " ANSI_ESC_CYAN "{}", sta);
     printfln(s_tag.country, "Country of origin " ANSI_ESC_YELLOW "{}", staMgnt.getStationCountry(s_cur_station));
-    s_homepage = "";
-    s_streamTitle = "";
-    s_icyDescription = "";
+    s_homepage.reset();
+    s_streamTitle.reset();
+    s_icyDescription.reset();;
     clearArea2();
     s_f_newStreamTitle = true;
     s_f_newIcyDescription = true;
@@ -2246,31 +2244,31 @@ void loop() {
         if (s_f_newStreamTitle && s_timeCounter.timer == 0) {
             s_f_newStreamTitle = false;
             if (s_state == RADIO) {
-                if (s_streamTitle.strlen())
+                if (s_streamTitle.valid())
                     showStreamTitle(s_streamTitle);
-                else if (s_icyDescription.strlen()) {
+                else if (s_icyDescription.valid()) {
                     showStreamTitle(s_icyDescription);
                     s_f_newIcyDescription = false;
-                    webSrv.send("icy_description=", s_icyDescription.c_get());
+                    webSrv.send("icy_description=", s_icyDescription);
                 } else {
                     txt_RA_sTitle.setText("");
                     txt_RA_sTitle.show();
                 }
             }
-            webSrv.send("streamtitle=", s_streamTitle.c_get());
+            webSrv.send("streamtitle=", s_streamTitle);
         }
         if (s_f_newLyrics) {
             s_f_newLyrics = false;
             if (s_state == RADIO) showStreamTitle(s_lyrics);
-            if (s_state == PLAYER) showPlayerFileName(s_lyrics.c_get());
-            if (s_state == DLNA) show_DLNA_FileName(s_lyrics.c_get());
+            if (s_state == PLAYER) showPlayerFileName(s_lyrics);
+            if (s_state == DLNA) show_DLNA_FileName(s_lyrics);
         }
         //------------------------------------------NEW ICY-DESCRIPTION-------------------------------------------------------------------------------
         if (s_f_newIcyDescription && s_timeCounter.timer == 0) {
             if (s_state == RADIO) {
-                if (!s_streamTitle.strlen()) showStreamTitle(s_icyDescription);
+                if (!s_streamTitle.valid()) showStreamTitle(s_icyDescription);
             }
-            webSrv.send("icy_description=", s_icyDescription.c_get());
+            webSrv.send("icy_description=", s_icyDescription);
             s_f_newIcyDescription = false;
         }
         //------------------------------------------DETERMINE AUDIOCODEC------------------------------------------------------------------------------
@@ -2442,7 +2440,7 @@ void loop() {
                                 "T U V W K J Q p O P Q R S T U V W K J Q";
             if (r[2] == '8') s_streamTitle = "A B C D E F G H I K L J M p O P Q R S T U V W A B C D E F G H I K L J M p O P Q R S T U V W K J Q p O P Q R S T U V W K J Q";
             if (r[2] == '9') s_streamTitle = "A B C D E F G H I K L J M p O P Q R S T U V W K J Q p O P Q R S T U V W K J Q";
-            printfln(s_tag.terminal, "st: {}", s_streamTitle.c_get());
+            printfln(s_tag.terminal, "st: {}", s_streamTitle);
             s_f_newStreamTitle = true;
         }
         if (r.starts_with("ais")) { // openAIspeech
@@ -2532,12 +2530,12 @@ void loop() {
         static uint32_t time = 0;
         if (r.starts_with("stops")) { // stop song
             time = audio.stopSong();
-            printfln(s_tag.terminal, "file {} stopped at time {}", s_cur_AudioFileName.c_get(), time);
+            printfln(s_tag.terminal, "file {} stopped at time {}", s_cur_AudioFileName, time);
         }
         if (r.starts_with("starts")) { // start song
             ps_ptr<char> path = "/audiofiles/" + s_cur_AudioFileName;
             bool         ret = audio.connecttoFS(SD_MMC, path.c_get(), time);
-            printfln(s_tag.terminal, "file {} started at time {}, ret {}", s_cur_AudioFileName.c_get(), time, ret);
+            printfln(s_tag.terminal, "file {} started at time {}, ret {}", s_cur_AudioFileName, time, ret);
         }
 
         if (r.starts_with("gbr")) { // get bitrate
@@ -3421,7 +3419,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
     CMD_EQUALS("get_volAfterAlarm"){    webSrv.send("volAfterAlarm=", int2str(s_volume.volumeAfterAlarm)); return;}
     CMD_EQUALS("set_volAfterAlarm"){    s_volume.volumeAfterAlarm = param.to_int32(); webSrv.send("volAfterAlarm=", int2str(s_volume.volumeAfterAlarm));
                                         printfln(s_tag.webserver, "new volume after alarm: " ANSI_ESC_CYAN "{}", s_volume.volumeAfterAlarm); return;}
-    CMD_EQUALS("homepage"){             webSrv.send("homepage=", s_homepage.c_get()); return;}
+    CMD_EQUALS("homepage"){             webSrv.send("homepage=", s_homepage); return;}
 
     CMD_EQUALS("to_listen"){            webSrv_send_station_items(); return;}   // via websocket, return the name and number of the current station
     CMD_EQUALS("get_tone"){             webSrv.send("settone=", getI2STone()); return;}
