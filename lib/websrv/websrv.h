@@ -53,13 +53,9 @@ class WebSrv {
     bool         ws_conn_request_flag = false; // websocket connection attempt
     bool         hasclient_WS = false;
     bool         cmdClientAccept = true;
-    String       http_cmd;   // Content of command
-    String       http_param; // Content of parameter
-    String       http_arg;   // Content of argument
     ps_ptr<char> m_name;
     ps_ptr<char> m_version;
     ps_ptr<char> m_httpRespHdrBuff; // store http response header
-    String       contenttype;
     uint8_t      method;
     String       WS_sec_Key;
     ps_ptr<char> WS_resp_Key;
@@ -87,7 +83,7 @@ class WebSrv {
   protected:
     ps_ptr<char>              createWebSocketAccept(const ps_ptr<char>& wsSecKey);
     void                      printWebSocketHeader(ps_ptr<char> wsRespKey);
-    const char*               getContentType(ps_ptr<char>& filename);
+    ps_ptr<char>              getContentType(ps_ptr<char>& filename);
     int32_t                   webFileRead();
     int32_t                   webFileRead(uint16_t timeout_ms);
     int32_t                   webFileRead(uint8_t* buff, size_t len);
@@ -105,15 +101,14 @@ class WebSrv {
     void begin(uint16_t http_port = 80, uint16_t websocket_port = 81, ps_ptr<char> name = "", ps_ptr<char> version = "");
     void stop();
     void loop();
-    void show(const char* pagename, const char* MIMEType, int16_t len = -1);
+    void show(ps_ptr<char> pagename, ps_ptr<char> MIMEType, int16_t len = -1);
     void show_not_found();
     bool streamfile(fs::FS& fs, ps_ptr<char> path);
-    bool send(const char* cmd, int msg, uint8_t opcode = Text_Frame);
     bool send(ps_ptr<char> cmd, ps_ptr<char> msg = "", uint8_t opcode = Text_Frame);
     void sendPing();
     void sendPong();
     bool uploadfile(fs::FS& fs, ps_ptr<char> path, uint32_t contentLength, ps_ptr<char> contentType);
-    bool uploadB64image(fs::FS& fs, const char* path, uint32_t contentLength);
+    bool uploadB64image(fs::FS& fs, ps_ptr<char> path, uint32_t contentLength);
     void reply(ps_ptr<char> response, const char* MIMEType, bool header = true);
     void sendStatus(uint16_t HTTPstatusCode);
 

@@ -737,7 +737,7 @@ function connect() {
             case "IR_address":          if(state === 'IR' && IR_addr != val){
                                             IR_addr = val
                                             ir_command_A.value=val
-                                            socket.send("set:IRaddr=" + val)
+                                            socket.send("set_IRaddr=" + val)
                                         }
                                         break
             case "IR_command":          ir_command_C.value=val

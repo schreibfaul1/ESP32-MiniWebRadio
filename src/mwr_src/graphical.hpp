@@ -1054,7 +1054,7 @@ class Textbox : public RegisterTable {
 
   private:
     void writeText(ps_ptr<char> txt) {
-        if(!txt.valid()) return;
+        if (!txt.valid()) return;
         if (m_enabled) {
             if (m_fontSize != 0) { getTFT().setFontSize(m_fontSize); }
             getTFT().setTextColor(m_textColor);
@@ -4128,8 +4128,6 @@ class UniList {
     ps_ptr<char> m_name;
     ps_ptr<char> m_buff;
     ps_ptr<char> m_txt[10];
-    ps_ptr<char> m_ext1[10];
-    ps_ptr<char> m_ext2[10];
     bool         m_enabled = false;
     bool         m_focus = false;
 
@@ -4220,18 +4218,16 @@ class UniList {
     void clearList() {
         getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
         m_txt->clear();
-        m_ext1->clear();
-        m_ext2->clear();
         for (int i = 0; i < 10; i++) { m_nr[i] = -1; }
     }
-    void drawLine(uint8_t pos, ps_ptr<char> txt, ps_ptr<char> ext1 = "", ps_ptr<char> ext2 = "", ps_ptr<char> color = ANSI_ESC_WHITE, int32_t nr = -1) {
+    void drawLine(uint8_t pos, ps_ptr<char> txt, ps_ptr<char> ext1, ps_ptr<char> color = ANSI_ESC_WHITE, int32_t nr = -1) {
+        if (!txt.valid()) txt = "";
+        if (!ext1.valid()) ext1 = "";
         if (pos > 9) return;
         getTFT().setFontSize(m_fontSize);
         if (m_mode == RADIO) {
             m_buff.assignf(ANSI_ESC_YELLOW "{:03} {}{}", nr, color, txt);
             if (txt != "") { m_txt[pos] = txt; }
-            if (ext1 != "") { m_ext1[pos] = ext1; }
-            if (ext2 != "") { m_ext2[pos] = ext2; }
             m_nr[pos] = nr;
         }
         if (m_mode == DLNA) {
@@ -4244,13 +4240,11 @@ class UniList {
             else if (ext1[0] == '\0')
                 m_buff.assignf("{}{}", color, txt);
             else
-                m_buff.assignf("{}{} " ANSI_ESC_CYAN "({})", color, txt, ext1);
+                m_buff.assignf("{}{} " ANSI_ESC_CYAN "({})", color, txt, ext1); // childcount od duration
             if (txt != "") {
                 m_txt[pos] = txt;
                 m_nr[pos] = 1;
             }
-            if (ext1 != "") { m_ext1[pos] = ext1; }
-            if (ext2 != "") { m_ext2[pos] = ext2; }
         }
         if (m_mode == PLAYER) {
             if (txt == "") {
@@ -4536,14 +4530,13 @@ class DlnaList : public RegisterTable {
             return false;
         } // guard
 
-        char        extension[15] = {0};
-        char        dummy[] = "";
-        bool        isAudio = false;
-        bool        isURL = false;
-        bool        isServer = false;
-        bool        res = false;
-        const char *item = dummy, *itemURL = dummy;
-        (void)itemURL;
+        char         extension[15] = {0};
+        bool         isAudio = false;
+        bool         isURL = false;
+        bool         isServer = false;
+        bool         res = false;
+        ps_ptr<char> itemURL;
+        ps_ptr<char> item;
         ps_ptr<char> color = ANSI_ESC_WHITE;
         ps_ptr<char> duration = "?";
         int32_t      itemSize = 0;
@@ -4559,26 +4552,26 @@ class DlnaList : public RegisterTable {
                 color = ANSI_ESC_CYAN;
                 res = true;
             }
-            myList.drawLine(pos, m_dlnaHistory[*m_dlnaLevel].name, "", "", color, 1);
+            myList.drawLine(pos, m_dlnaHistory[*m_dlnaLevel].name, "", color, 1);
             if (color == ANSI_ESC_MAGENTA) m_itemListPos_last = pos;
             return res;
         }
         if (*m_dlnaLevel == 0) { // is list of server
             if (m_dlnaServer->at(pos - 1).friendlyName) {
-                item = m_dlnaServer->at(pos - 1).friendlyName.c_get();
+                item = m_dlnaServer->at(pos - 1).friendlyName;
                 isServer = true;
             }
         } else { // is list of folder or file
-            if (m_srvContent->at(pos - 1).title.c_get()) {
-                item = m_srvContent->at(pos - 1).title.c_get();
+            if (m_srvContent->at(pos - 1).title.valid()) {
+                item = m_srvContent->at(pos - 1).title;
                 itemSize = m_srvContent->at(pos - 1).itemSize;
                 childCount = m_srvContent->at(pos - 1).childCount;
                 duration = m_srvContent->at(pos - 1).duration;
             }
-            if (startsWith(m_srvContent->at(pos - 1).itemURL.c_get(), "http")) {
+            if (m_srvContent->at(pos - 1).itemURL.starts_with("http")) {
                 isAudio = m_srvContent->at(pos - 1).isAudio;
                 isURL = true;
-                itemURL = m_srvContent->at(pos - 1).itemURL.c_get();
+                itemURL = m_srvContent->at(pos - 1).itemURL;
             }
         }
 
@@ -4607,7 +4600,7 @@ class DlnaList : public RegisterTable {
         if (itemSize) { sprintf(extension, "%li", itemSize); }                     // only files have itemsize
         if (!duration.equals("?")) { sprintf(extension, "%s", duration.c_get()); } // must be a audiofile
         if (color == ANSI_ESC_MAGENTA) { m_itemListPos_last = pos; }
-        myList.drawLine(pos, item, extension, itemURL, color, 1);
+        myList.drawLine(pos, item, extension, color, 1);
         return res;
     }
 
@@ -5073,7 +5066,7 @@ class FileList : public RegisterTable {
         }
         if (m_browseOnRelease == 3) {                               // MWR_LOG_WARN("m_curAudioFolder = {}", m_curAudioFolder);                                         // previous folder
             if (m_curAudioFolder.equals("/audiofiles/")) goto exit; // is already the root
-            myList.drawLine(pos, m_curAudioFolder.c_get(), "", "", ANSI_ESC_CYAN, -1);
+            myList.drawLine(pos, m_curAudioFolder.c_get(), "", ANSI_ESC_CYAN, -1);
             int lastSlash = m_curAudioFolder.last_index_of('/');
             if (lastSlash != -1) { // Look for the penultimate '/' before the position of the last
                 int secondLastSlash = m_curAudioFolder.last_index_of('/', lastSlash - 1);
@@ -5090,7 +5083,7 @@ class FileList : public RegisterTable {
         if (m_browseOnRelease == 4) {
             m_viewPos += m_fileListPos; // next folder
             int16_t idx = m_viewPos - 1;
-            myList.drawLine(pos, s_SD_content.getColouredSStringByIndex(idx), "", "", ANSI_ESC_CYAN, -1);
+            myList.drawLine(pos, s_SD_content.getColouredSStringByIndex(idx), "", ANSI_ESC_CYAN, -1);
             m_curAudioFolder = s_SD_content.getFilePathByIndex(idx);
             m_curAudioFileNr = 0;
             m_viewPos = 0;
@@ -5103,7 +5096,7 @@ class FileList : public RegisterTable {
         }
         if (m_browseOnRelease == 5) {
             m_viewPos += m_fileListPos; // play file
-            myList.drawLine(pos, m_curAudioName.c_get(), "", "", ANSI_ESC_CYAN, -1);
+            myList.drawLine(pos, m_curAudioName.c_get(), "", ANSI_ESC_CYAN, -1);
             vTaskDelay(300 / portTICK_PERIOD_MS);
             m_ra.arg1 = m_curAudioFolder; // fileFolder
             m_ra.arg2 = m_curAudioName;   // fileName
@@ -5243,7 +5236,7 @@ class FileList : public RegisterTable {
 
         color = m_folderColor;
         if (m_curAudioFolder.equals("/audiofiles/")) color = m_rootColor; // is root
-        myList.drawLine(0, m_curAudioFolder.c_get(), "", "", color, 0);
+        myList.drawLine(0, m_curAudioFolder.c_get(), "", color, 0);
         color = m_fileColor;
         for (uint8_t pos = 1; pos < 10; pos++) {
             int idx = pos + viewPos - 1;
@@ -5266,9 +5259,9 @@ class FileList : public RegisterTable {
                 } // is file
             }
             if (s_SD_content.isDir(idx))
-                myList.drawLine(pos, s_SD_content.getFileNameByIndex(idx), "", "", color, 0);
+                myList.drawLine(pos, s_SD_content.getFileNameByIndex(idx), "", color, 0);
             else
-                myList.drawLine(pos, s_SD_content.getFileNameByIndex(idx), "", "", color, s_SD_content.getFileSizeByIndex(idx));
+                myList.drawLine(pos, s_SD_content.getFileNameByIndex(idx), "", color, s_SD_content.getFileSizeByIndex(idx));
         }
         uint16_t firstVal = viewPos + 1;
         uint16_t secondVal = firstVal + 8;
@@ -5495,7 +5488,7 @@ class StationsList : public RegisterTable {
 
             m_staNameToDraw = staMgnt.getStationName(pos + m_firstStationsLineNr + 1); // the station name
             m_staNrToDraw = pos + m_firstStationsLineNr + 1;                           // the station number
-            myList.drawLine(pos, m_staNameToDraw, "", "", m_colorToDraw, m_staNrToDraw);
+            myList.drawLine(pos, m_staNameToDraw, "", m_colorToDraw, m_staNrToDraw);
             if (pos == 1 && m_firstStationsLineNr > 0 && staMgnt.getSumStations()) { myList.drawTriangeUp(); }
             if (pos == 9 && m_firstStationsLineNr + 10 < staMgnt.getSumStations()) { myList.drawTriangeDown(); }
         }

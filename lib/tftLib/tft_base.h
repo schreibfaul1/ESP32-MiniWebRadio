@@ -47,9 +47,10 @@ class TFT_Base {
     uint8_t  getMaxFontIndex();
     void     setFontSize(uint16_t font);
     void     setTextOrientation(uint16_t orientation = 0) { m_textorientation = orientation; }
-    bool     drawBmpFile(fs::FS& fs, const char* path, uint16_t x = 0, uint16_t y = 0, uint16_t maxWidth = 0, uint16_t maxHeight = 0, float scale = 1.0f);
-    bool     drawGifFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint8_t repeat);
-    bool     drawJpgFile(fs::FS& fs, const char* path, uint16_t x = 0, uint16_t y = 0, uint16_t maxWidth = 0, uint16_t maxHeight = 0);
+    bool     drawBmpFile(fs::FS& fs, ps_ptr<char> path, uint16_t x, uint16_t y, uint16_t maxWidth = 0, uint16_t maxHeight = 0, float scale = 1.0f);
+    bool     drawGifFile(fs::FS& fs, ps_ptr<char> path, uint16_t x, uint16_t y, uint8_t repeat);
+    bool     drawJpgFile(fs::FS& fs, ps_ptr<char> path, uint16_t x, uint16_t y, uint16_t maxWidth = 0, uint16_t maxHeight = 0);
+    bool     drawPngFile(fs::FS& fs, ps_ptr<char> path, uint16_t x, uint16_t y, uint16_t maxWidth = 0, uint16_t maxHeight = 0);
     uint16_t getLineLength(const char* txt);
     size_t   writeText(ps_ptr<char> txt, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, HAlign h_align, VAlign v_align, bool noWrap, bool autoSize);
 
@@ -602,7 +603,6 @@ class TFT_Base {
     } huffman_tree;
 
   public:
-    bool         drawPngFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint16_t maxWidth = 0, uint16_t maxHeight = 0);
     int8_t       png_get_error();
     uint16_t     png_get_width();
     uint16_t     png_get_height();

@@ -20,7 +20,7 @@ uint16_t TFT_Base::logicalHeight() const {
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 //    ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  B I T M A P  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫              *
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-bool TFT_Base::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight, float scale) {
+bool TFT_Base::drawBmpFile(fs::FS& fs, ps_ptr<char> path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight, float scale) {
     auto bmpRead32 = [](const uint8_t* data, size_t offset) -> uint32_t { return data[offset] | (uint16_t)(data[offset + 1]) << 8 | (uint32_t)(data[offset + 2]) << 16 | (uint32_t)(data[offset + 3]) << 24; };
     auto bmpRead16 = [](const uint8_t* data, size_t offset) -> uint16_t { return data[offset] | (uint16_t)(data[offset + 1]) << 8; };
     auto bmpColor16 = [](const uint8_t* pixel) -> uint16_t { return ((uint8_t*)pixel)[0] | ((uint16_t)((uint8_t*)pixel)[1]) << 8; };
@@ -28,9 +28,9 @@ bool TFT_Base::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y,
     auto bmpColor32 = [](const uint8_t* pixel) -> uint16_t { return ((uint16_t)(((uint8_t*)pixel)[3] & 0xF8) << 8) | ((uint16_t)(((uint8_t*)pixel)[2] & 0xFC) << 3) | ((((uint8_t*)pixel)[1] & 0xF8) >> 3); };
 
     if (scale <= 0.0f) return false;
-    if (!fs.exists(path)) return false;
+    if (!fs.exists(path.c_get())) return false;
 
-    File bmp = fs.open(path);
+    File bmp = fs.open(path.c_get());
     if (!bmp) return false;
 
     constexpr size_t headerLen = 54;
@@ -102,13 +102,13 @@ bool TFT_Base::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y,
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 //    ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  G I F  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-bool TFT_Base::drawGifFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint8_t repeat) {
+bool TFT_Base::drawGifFile(fs::FS& fs, ps_ptr<char> path, uint16_t x, uint16_t y, uint8_t repeat) {
 
     gif.Iterations = repeat;
 
     GIF_DecoderReset();
 
-    gif_file = fs.open(path);
+    gif_file = fs.open(path.c_get());
     if (!gif_file) {
         if (tft_info) tft_info("Failed to open file for reading");
         return false;
@@ -1005,8 +1005,8 @@ void TFT_Base::GIF_DecoderReset() {
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 //    ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ J P E G ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-bool TFT_Base::drawJpgFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight) {
-    if (!fs.exists(path)) {
+bool TFT_Base::drawJpgFile(fs::FS& fs, ps_ptr<char> path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight) {
+    if (!fs.exists(path.c_get())) {
         log_e("file %s not exists", path);
         return false;
     }
@@ -1019,7 +1019,7 @@ bool TFT_Base::drawJpgFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y,
     else
         m_jpgHeightMax = logicalHeight();
 
-    m_jpgSdFile = fs.open(path, FILE_READ);
+    m_jpgSdFile = fs.open(path.c_get(), FILE_READ);
     if (!m_jpgSdFile) {
         log_e("Failed to open file for reading");
         JPEG_setJpgScale(1);
@@ -3432,7 +3432,7 @@ size_t TFT_Base::writeText(ps_ptr<char> txt1, uint16_t win_X, uint16_t win_Y, in
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 //  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫   P N G   ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-bool TFT_Base::drawPngFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight) {
+bool TFT_Base::drawPngFile(fs::FS& fs, ps_ptr<char> path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight) {
 
     png_state = PNG_NEW;
     png_error = PNG_EOK;
@@ -3445,11 +3445,11 @@ bool TFT_Base::drawPngFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y,
     png_max_width = maxWidth;
     png_max_height = maxHeight;
 
-    if (!fs.exists(path)) {
+    if (!fs.exists(path.c_get())) {
         log_e("File not found: %s", path);
         return NULL;
     }
-    png_file = fs.open(path, "r");
+    png_file = fs.open(path.c_get(), "r");
     if (!png_file) {
         log_e(ANSI_ESC_RED "[%s:%s] Failed to open file for reading" ANSI_ESC_RESET, __FILE__, __LINE__);
         return NULL;
