@@ -35,12 +35,12 @@ imgSize getImageSize(ps_ptr<char> picturePath) {
     imgSize img = {0};
     auto    scaledPicPath = scaleImage(picturePath);
     if (!SD_MMC.exists(scaledPicPath.c_get())) { /* MWR_LOG_WARN("file {} not exists, objName: {}", scaledPicPath, m_name)*/
-        MWR_LOG_ERROR("cannot open file '{}'", scaledPicPath.c_get());
+        MWR_LOG_ERROR("cannot open file '{}'", scaledPicPath);
         return img;
     }
     File file = SD_MMC.open(scaledPicPath.c_get(), "r", false);
     if (file.size() < 24) {
-        MWR_LOG_WARN("file '{}' is too small", scaledPicPath.c_get());
+        MWR_LOG_WARN("file '{}' is too small", scaledPicPath);
         file.close();
         return img;
     }
@@ -51,7 +51,7 @@ imgSize getImageSize(ps_ptr<char> picturePath) {
         while (true) {
             c1 = file.read();
             if (c1 == -1) {
-                MWR_LOG_WARN("sof marker in {} not found", scaledPicPath.c_get());
+                MWR_LOG_WARN("sof marker in {} not found", scaledPicPath);
                 file.close();
                 return img;
             } // end of file reached
@@ -100,7 +100,7 @@ imgSize getImageSize(ps_ptr<char> picturePath) {
         img.h += file.read();                                     // pos 23
         return img;
     }
-    MWR_LOG_ERROR("unknown picture format {}", picturePath.c_get());
+    MWR_LOG_ERROR("unknown picture format {}", picturePath);
     return img;
 }
 
@@ -125,7 +125,7 @@ inline void get_registered_names() {
     rn.set_name("rn");
     int16_t x = 0, y = 0, w = 0, h = 0;
     for (auto obj : registertable_objects) {
-        rn.assignf(ANSI_ESC_RESET "    registered object:" ANSI_ESC_YELLOW " {:27}" ANSI_ESC_RESET " is enabled: {}" ANSI_ESC_RESET ",", obj->get_name().c_get(),
+        rn.assignf(ANSI_ESC_RESET "    registered object:" ANSI_ESC_YELLOW " {:27}" ANSI_ESC_RESET " is enabled: {}" ANSI_ESC_RESET ",", obj->get_name(),
                    obj->is_enabled() ? ANSI_ESC_RED "yes" : ANSI_ESC_BLUE " no");
         obj->getBounds(x, y, w, h);
         rn.appendf(" x: {:4}, y: {:4}, w: {:4}, h: {:4}", x, y, w, h);
@@ -162,7 +162,7 @@ inline void hide_objects_in_area(int16_t x, int16_t y, int16_t w, int16_t h) {
             uint16_t right = std::min<uint32_t>(x + w, obj_x + obj_w);
             uint16_t bottom = std::min<uint32_t>(y + h, obj_y + obj_h);
             if ((left < right) && (top < bottom)) {
-                MWR_LOG_DEBUG("Obj {}", obj->get_name().c_get());
+                MWR_LOG_DEBUG("Obj {}", obj->get_name());
                 obj->hide();
             }
         }
@@ -676,7 +676,7 @@ class Slider : public RegisterTable {
     int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max) {
         const int32_t run = in_max - in_min;
         if (run == 0) {
-            MWR_LOG_ERROR("map(): Invalid input range, {} == {} (min == max) in {}", in_min, in_max, m_name.c_get());
+            MWR_LOG_ERROR("map(): Invalid input range, {} == {} (min == max) in {}", in_min, in_max, m_name);
             return -1;
         }
         const int32_t rise = out_max - out_min;
@@ -851,7 +851,7 @@ class Progressbar : public RegisterTable {
     int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max) {
         const int32_t run = in_max - in_min;
         if (run == 0) {
-            MWR_LOG_WARN("map(): Invalid input range, {} == {} (min == max) in {}", in_min, in_max, m_name.c_get());
+            MWR_LOG_WARN("map(): Invalid input range, {} == {} (min == max) in {}", in_min, in_max, m_name);
             return -1;
         }
         const int32_t rise = out_max - out_min;
@@ -957,7 +957,7 @@ class Textbox : public RegisterTable {
         }
         m_enabled = true;
         m_clicked = false;
-        writeText(m_text.c_get());
+        writeText(m_text);
     }
 
     void hide() {
@@ -1054,6 +1054,7 @@ class Textbox : public RegisterTable {
 
   private:
     void writeText(ps_ptr<char> txt) {
+        if(!txt.valid()) return;
         if (m_enabled) {
             if (m_fontSize != 0) { getTFT().setFontSize(m_fontSize); }
             getTFT().setTextColor(m_textColor);
@@ -1068,7 +1069,7 @@ class Textbox : public RegisterTable {
                 h -= 2;
                 getTFT().drawRect(m_x, m_y, m_w, m_h, m_borderColor);
             }
-            getTFT().writeText(m_text.c_get(), x, y, w, h, m_h_align, m_v_align, m_noWrap, m_autoSize);
+            getTFT().writeText(txt, x, y, w, h, m_h_align, m_v_align, m_noWrap, m_autoSize);
         }
     }
 };
@@ -1344,7 +1345,7 @@ class Textbutton : public RegisterTable {
         }
         m_enabled = true;
         m_clicked = false;
-        writeText(m_text.c_get());
+        writeText(m_text);
     }
 
     void hide() {
@@ -1391,7 +1392,7 @@ class Textbutton : public RegisterTable {
         if (x > m_x + m_w) return false;
         if (y > m_y + m_h) return false;
         if (m_enabled) m_clicked = true;
-        writeText(m_text.c_get());
+        writeText(m_text);
         if (graphicObjects_OnClick) graphicObjects_OnClick(m_name, m_enabled);
         if (!m_enabled) return false;
 
@@ -1401,7 +1402,7 @@ class Textbutton : public RegisterTable {
         if (!m_enabled) return false;
         if (!m_clicked) return false;
         m_clicked = false;
-        writeText(m_text.c_get());
+        writeText(m_text);
         if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
         return true;
     }
@@ -1454,7 +1455,7 @@ class Textbutton : public RegisterTable {
             } else if (m_text.equals("/d")) {
                 drawTriangeDown();
             } else
-                getTFT().writeText(m_text.c_get(), x, y, w, h, m_h_align, m_v_align, m_noWrap, m_autoSize);
+                getTFT().writeText(m_text, x, y, w, h, m_h_align, m_v_align, m_noWrap, m_autoSize);
             getTFT().setTextColor(txtColor_tmp);
             getTFT().setBackGoundColor(bgColor_tmp);
         }
@@ -2114,7 +2115,7 @@ class Selectbox : public RegisterTable {
         } else
             txt = m_selContent[idx];
         if (m_enabled) {
-            MWR_LOG_DEBUG("writeText: {}", txt.c_get());
+            MWR_LOG_DEBUG("writeText: {}", txt);
             m_txt_select->setText(txt);
             m_txt_select->set_bg_color(TFT_BLACK);
             m_txt_select->show();
@@ -2615,7 +2616,7 @@ class WifiSettings : public RegisterTable {
     void show() {
         m_in_password->setAlign(HAlign::Left, VAlign::Middle);
         m_sel_ssid->show();
-        m_in_password->setText(m_credentials[0].password.c_get());
+        m_in_password->setText(m_credentials[0].password);
         m_in_password->show();
         m_keyboard->show();
         m_enabled = true;
@@ -2675,7 +2676,7 @@ class WifiSettings : public RegisterTable {
         if (m_keyboard->positionXY(x, y)) {
             MWR_LOG_INFO("key pressed {}", m_keyboard->getVal());
             changePassword(m_keyboard->getVal(), m_credentials_idx);
-            m_in_password->setText(m_credentials[m_credentials_idx].password.c_get());
+            m_in_password->setText(m_credentials[m_credentials_idx].password);
             m_in_password->show();
         }
         if (!m_enabled) return false;
@@ -2715,8 +2716,8 @@ class WifiSettings : public RegisterTable {
     }
     void add_WiFi_Items(ps_ptr<char> ssid, ps_ptr<char> pw) {
         if (ssid.strlen() == 0) { ssid = ""; }
-        m_credentials.emplace_back(ssid.c_get(), pw.c_get());
-        m_sel_ssid->addText(ssid.c_get());
+        m_credentials.emplace_back(ssid, pw);
+        m_sel_ssid->addText(ssid);
     }
     void clearText() {
         m_sel_ssid->clearText();
@@ -2980,8 +2981,8 @@ class NumbersBox : public RegisterTable { // range 000...999
             m_color = "orange";
         ps_ptr<char> path;
         for (uint8_t i = 0; i < 3; i++) {
-            path.assignf("{}{}{}.jpg", m_root, m_numbers[i], m_color.c_get());
-            if (!drawImage(path.c_get(), m_x + m_box_x + i * m_segmWidth, m_y + m_box_y)) return false;
+            path.assignf("{}{}{}.jpg", m_root, m_numbers[i], m_color);
+            if (!drawImage(path, m_x + m_box_x + i * m_segmWidth, m_y + m_box_y)) return false;
         }
         m_enabled = true;
         return true;
@@ -3108,16 +3109,16 @@ class OffTimerBox : public RegisterTable { // range 000...999
             m_color = "green";
         ps_ptr<char> numbers;
         numbers.assignf("{}c{:02}", time / 60, time % 60);
-        m_path.assignf("/digits/s/x{}.jpg", m_color.c_get());
+        m_path.assignf("/digits/s/x{}.jpg", m_color);
 
         m_path[10] = numbers[0];
-        drawImage(m_path.c_get(), m_x + m_digitsXpos[0], m_y + m_box_y);
+        drawImage(m_path, m_x + m_digitsXpos[0], m_y + m_box_y);
         m_path[10] = numbers[1];
-        drawImage(m_path.c_get(), m_x + m_digitsXpos[1], m_y + m_box_y);
+        drawImage(m_path, m_x + m_digitsXpos[1], m_y + m_box_y);
         m_path[10] = numbers[2];
-        drawImage(m_path.c_get(), m_x + m_digitsXpos[2], m_y + m_box_y);
+        drawImage(m_path, m_x + m_digitsXpos[2], m_y + m_box_y);
         m_path[10] = numbers[3];
-        drawImage(m_path.c_get(), m_x + m_digitsXpos[3], m_y + m_box_y);
+        drawImage(m_path, m_x + m_digitsXpos[3], m_y + m_box_y);
         m_enabled = true;
         return true;
     }
@@ -3985,19 +3986,19 @@ class AlarmClock : public RegisterTable { // draw a clock in 12 or 24h format
                 }
 
                 if (i == 0) {
-                    pic_alarm_digitsH10->setPicturePath(m_pathBuff.c_get());
+                    pic_alarm_digitsH10->setPicturePath(m_pathBuff);
                     pic_alarm_digitsH10->show();
                 }
                 if (i == 1) {
-                    pic_alarm_digitsH01->setPicturePath(m_pathBuff.c_get());
+                    pic_alarm_digitsH01->setPicturePath(m_pathBuff);
                     pic_alarm_digitsH01->show();
                 }
                 if (i == 2) {
-                    pic_alarm_digitsM10->setPicturePath(m_pathBuff.c_get());
+                    pic_alarm_digitsM10->setPicturePath(m_pathBuff);
                     pic_alarm_digitsM10->show();
                 }
                 if (i == 3) {
-                    pic_alarm_digitsM01->setPicturePath(m_pathBuff.c_get());
+                    pic_alarm_digitsM01->setPicturePath(m_pathBuff);
                     pic_alarm_digitsM01->show();
                 }
             }
@@ -4227,7 +4228,7 @@ class UniList {
         if (pos > 9) return;
         getTFT().setFontSize(m_fontSize);
         if (m_mode == RADIO) {
-            m_buff.assignf(ANSI_ESC_YELLOW "{:03} {}{}", nr, color.c_get(), txt.c_get());
+            m_buff.assignf(ANSI_ESC_YELLOW "{:03} {}{}", nr, color, txt);
             if (txt != "") { m_txt[pos] = txt; }
             if (ext1 != "") { m_ext1[pos] = ext1; }
             if (ext2 != "") { m_ext2[pos] = ext2; }
@@ -4239,11 +4240,11 @@ class UniList {
                 return;
             }
             if (ext1 == "")
-                m_buff.assignf("{}{}", color.c_get(), txt.c_get());
+                m_buff.assignf("{}{}", color, txt);
             else if (ext1[0] == '\0')
-                m_buff.assignf("{}{}", color.c_get(), txt.c_get());
+                m_buff.assignf("{}{}", color, txt);
             else
-                m_buff.assignf("{}{} " ANSI_ESC_CYAN "({})", color.c_get(), txt.c_get(), ext1.c_get());
+                m_buff.assignf("{}{} " ANSI_ESC_CYAN "({})", color, txt, ext1);
             if (txt != "") {
                 m_txt[pos] = txt;
                 m_nr[pos] = 1;
@@ -4257,33 +4258,33 @@ class UniList {
                 return;
             }
             if (nr <= 0)
-                m_buff.assignf("{}{}", color.c_get(), txt.c_get());
+                m_buff.assignf("{}{}", color, txt);
             else
-                m_buff.assignf("{}{}" ANSI_ESC_YELLOW " {}", color.c_get(), txt.c_get(), nr);
+                m_buff.assignf("{}{}" ANSI_ESC_YELLOW " {}", color, txt, nr);
             if (txt) {
                 m_txt[pos] = txt;
                 m_nr[pos] = nr;
             }
         }
         uint16_t indent = pos ? m_indentContent : m_indentDirectory;
-        getTFT().writeText(m_buff.c_get(), indent, m_y + pos * m_lineHight, m_w - indent, m_lineHight, HAlign::Left, VAlign::Middle, true, true);
+        getTFT().writeText(m_buff, indent, m_y + pos * m_lineHight, m_w - indent, m_lineHight, HAlign::Left, VAlign::Middle, true, false);
     }
     void drawPosInfo(int16_t firstVal, int16_t secondVal, int16_t total, ps_ptr<char> color) { // e.g. 1-9/65
-        m_buff.assignf("{}{}-{}-{}", color.c_get(), firstVal, secondVal, total);
-        getTFT().writeText(m_buff.c_get(), 0, m_y, m_w, m_lineHight, HAlign::Right, VAlign::Middle, true, true);
+        m_buff.assignf("{}{}-{}-{}", color, firstVal, secondVal, total);
+        getTFT().writeText(m_buff, 0, m_y, m_w, m_lineHight, HAlign::Right, VAlign::Middle, true, true);
     }
     void colourLine(uint8_t pos, ps_ptr<char> color = ANSI_ESC_WHITE) {
         if (pos > 9) return;
         getTFT().setFontSize(m_fontSize);
-        if (m_mode == RADIO) { m_buff.assignf(ANSI_ESC_YELLOW "{:03} {}{}", m_nr[pos], color.c_get(), m_txt[pos].c_get()); }
+        if (m_mode == RADIO) { m_buff.assignf(ANSI_ESC_YELLOW "{:03} {}{}", m_nr[pos], color, m_txt[pos]); }
         if (m_mode == PLAYER) {
             if (m_nr[pos])
-                m_buff.assignf("{}{}" ANSI_ESC_YELLOW " {}", color.c_get(), m_txt[pos].c_get(), m_nr[pos]); // file
+                m_buff.assignf("{}{}" ANSI_ESC_YELLOW " {}", color, m_txt[pos], m_nr[pos]); // file
             else
-                m_buff.assignf("{}{}", color.c_get(), m_txt[pos].c_get()); // directory
+                m_buff.assignf("{}{}", color, m_txt[pos]); // directory
         }
         uint16_t indent = pos ? m_indentContent : m_indentDirectory;
-        getTFT().writeText(m_buff.c_get(), indent, m_y + pos * m_lineHight, m_w - indent, m_lineHight, HAlign::Left, VAlign::Middle, true, true);
+        getTFT().writeText(m_buff, indent, m_y + pos * m_lineHight, m_w - indent, m_lineHight, HAlign::Left, VAlign::Middle, true, true);
     }
     ps_ptr<char> getTxtByPos(uint8_t pos) { return m_txt[pos]; }
     int16_t      getNumberByPos(uint8_t pos) { return m_nr[pos]; }
@@ -4475,14 +4476,14 @@ class DlnaList : public RegisterTable {
         }
         if (m_browseOnRelease == DLNA_PREV_LEVEL) { // previous level
             (*m_dlnaLevel)--;
-            m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId.c_get(), 0, 9);
+            m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, 0, 9);
         }
         if (m_browseOnRelease == DLNA_NEXT_LEVEL) { // folder, next level
             (*m_dlnaLevel)++;
             if (m_dlnaHistory[*m_dlnaLevel].childCount == 0) return false;
-            m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId.c_get(), 0, 9);
+            m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, 0, 9);
         }
-        if (m_browseOnRelease == DLNA_WIPE) { m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId.c_get(), m_viewPoint, 9); } // scroll up / down
+        if (m_browseOnRelease == DLNA_WIPE) { m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_viewPoint, 9); } // scroll up / down
 
         m_browseOnRelease = DLNA_NONE;
         m_oldX = 0;
@@ -4518,7 +4519,7 @@ class DlnaList : public RegisterTable {
         }
         m_buff.assignf("{}-{}/{}", m_viewPoint + 1, m_viewPoint + (pos - 1), m_dlnaMaxItems); // shows the current items pos e.g. "30-39/210"
         getTFT().setTextColor(TFT_ORANGE);
-        getTFT().writeText(m_buff.c_get(), 10, m_y, m_w - 10, m_lineHight, HAlign::Right, VAlign::Middle, true, true);
+        getTFT().writeText(m_buff, 10, m_y, m_w - 10, m_lineHight, HAlign::Right, VAlign::Middle, true, true);
         return;
     }
 
@@ -4558,12 +4559,12 @@ class DlnaList : public RegisterTable {
                 color = ANSI_ESC_CYAN;
                 res = true;
             }
-            myList.drawLine(pos, m_dlnaHistory[*m_dlnaLevel].name.c_get(), "", "", color.c_get(), 1);
+            myList.drawLine(pos, m_dlnaHistory[*m_dlnaLevel].name, "", "", color, 1);
             if (color == ANSI_ESC_MAGENTA) m_itemListPos_last = pos;
             return res;
         }
         if (*m_dlnaLevel == 0) { // is list of server
-            if (m_dlnaServer->at(pos - 1).friendlyName.c_get()) {
+            if (m_dlnaServer->at(pos - 1).friendlyName) {
                 item = m_dlnaServer->at(pos - 1).friendlyName.c_get();
                 isServer = true;
             }
@@ -4606,7 +4607,7 @@ class DlnaList : public RegisterTable {
         if (itemSize) { sprintf(extension, "%li", itemSize); }                     // only files have itemsize
         if (!duration.equals("?")) { sprintf(extension, "%s", duration.c_get()); } // must be a audiofile
         if (color == ANSI_ESC_MAGENTA) { m_itemListPos_last = pos; }
-        myList.drawLine(pos, item, extension, itemURL, color.c_get(), 1);
+        myList.drawLine(pos, item, extension, itemURL, color, 1);
         return res;
     }
 
@@ -4741,7 +4742,7 @@ class DlnaList : public RegisterTable {
             m_currItemNr[*m_dlnaLevel] = 0;
         }
         m_chptr = "";
-        m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId.c_get(), m_viewPoint, 9);
+        m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_viewPoint, 9);
         m_dlna->loop();
         while (m_dlna->getState() != m_dlna->IDLE) {
             m_dlna->loop();
@@ -4765,7 +4766,7 @@ class DlnaList : public RegisterTable {
             m_currItemNr[*m_dlnaLevel] = m_dlnaMaxItems - 1;
         }
         m_chptr = "";
-        m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId.c_get(), m_viewPoint, 9);
+        m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_viewPoint, 9);
         m_dlna->loop();
         while (m_dlna->getState() != m_dlna->IDLE) {
             m_dlna->loop();
@@ -4811,7 +4812,7 @@ class DlnaList : public RegisterTable {
         if (m_currItemNr[*m_dlnaLevel] >= m_viewPoint + 9) {
             m_viewPoint += 9;
             m_chptr = "";
-            m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId.c_get(), m_viewPoint, 9);
+            m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_viewPoint, 9);
             m_dlna->loop();
             while (m_dlna->getState() != m_dlna->IDLE) {
                 m_dlna->loop();
@@ -4828,7 +4829,7 @@ class DlnaList : public RegisterTable {
     ps_ptr<char> getSelectedURL() { // ok from IR
         if (*m_dlnaLevel == 0) {    //------------------------------------------------------------------------------------------------------- choose server
             // MWR_LOG_WARN("server {}", m_dlnaServer.friendlyName[m_currItemNr[0]]);
-            m_chptr = m_dlnaServer->at(m_currItemNr[0]).friendlyName.c_get();
+            m_chptr = m_dlnaServer->at(m_currItemNr[0]).friendlyName;
             m_currDLNAsrvNr = m_currItemNr[0];
             m_currItemNr[*m_dlnaLevel] = m_currItemNr[0];
             drawItem(m_currItemNr[*m_dlnaLevel] + m_viewPoint + 1, true); // make cyan
@@ -4864,7 +4865,7 @@ class DlnaList : public RegisterTable {
             if (*m_dlnaLevel == 0)
                 m_dlna->browseServer(m_currDLNAsrvNr, "0", 0, 9);
             else
-                m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId.c_get(), m_viewPoint, 9);
+                m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_viewPoint, 9);
             m_dlna->loop();
             while (m_dlna->getState() != m_dlna->IDLE) {
                 m_dlna->loop();
@@ -4874,8 +4875,8 @@ class DlnaList : public RegisterTable {
             dlnaItemsList();
             return {};
         }
-        if (strcmp(m_srvContent->at(m_currItemNr[*m_dlnaLevel] - m_viewPoint).itemURL.c_get(), "?") == 0) { // --------------------------------------- choose folder
-            drawItem(m_currItemNr[*m_dlnaLevel] - m_viewPoint + 1, true);                                   // make cyan
+        if (m_srvContent->at(m_currItemNr[*m_dlnaLevel] - m_viewPoint).itemURL == "?") { // --------------------------------------- choose folder
+            drawItem(m_currItemNr[*m_dlnaLevel] - m_viewPoint + 1, true);                // make cyan
             vTaskDelay(300);
             (*m_dlnaLevel)++;
             m_currItemNr[*m_dlnaLevel] = 0;
@@ -4883,7 +4884,7 @@ class DlnaList : public RegisterTable {
             m_dlnaHistory[*m_dlnaLevel].name = m_srvContent->at(m_currItemNr[(*m_dlnaLevel) - 1] - m_viewPoint).title;
             m_dlnaHistory[*m_dlnaLevel].childCount = m_srvContent->at(m_currItemNr[(*m_dlnaLevel) - 1] - m_viewPoint).childCount;
             m_viewPoint = 0;
-            m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId.c_get(), 0, 9);
+            m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, 0, 9);
             m_dlna->loop();
             while (m_dlna->getState() != m_dlna->IDLE) {
                 m_dlna->loop();
@@ -4900,8 +4901,8 @@ class DlnaList : public RegisterTable {
             }
             return {};
         }
-        if (startsWith(m_srvContent->at(m_currItemNr[*m_dlnaLevel] - m_viewPoint).itemURL.c_get(), "http") != 0) { // ---------------------------------- choose file
-            drawItem(m_currItemNr[*m_dlnaLevel] - m_viewPoint + 1, true);                                          // make cyan
+        if (m_srvContent->at(m_currItemNr[*m_dlnaLevel] - m_viewPoint).itemURL.starts_with("http")) { // ---------------------------------- choose file
+            drawItem(m_currItemNr[*m_dlnaLevel] - m_viewPoint + 1, true);                             // make cyan
             vTaskDelay(300);
             return m_srvContent->at(m_currItemNr[*m_dlnaLevel] - m_viewPoint).itemURL;
         }
@@ -5494,7 +5495,7 @@ class StationsList : public RegisterTable {
 
             m_staNameToDraw = staMgnt.getStationName(pos + m_firstStationsLineNr + 1); // the station name
             m_staNrToDraw = pos + m_firstStationsLineNr + 1;                           // the station number
-            myList.drawLine(pos, m_staNameToDraw, "", "", m_colorToDraw.c_get(), m_staNrToDraw);
+            myList.drawLine(pos, m_staNameToDraw, "", "", m_colorToDraw, m_staNrToDraw);
             if (pos == 1 && m_firstStationsLineNr > 0 && staMgnt.getSumStations()) { myList.drawTriangeUp(); }
             if (pos == 9 && m_firstStationsLineNr + 10 < staMgnt.getSumStations()) { myList.drawTriangeDown(); }
         }
@@ -5888,7 +5889,7 @@ class DisplayHeader : public RegisterTable {
     void updateItem(ps_ptr<char> hl_item) { // radio, clock, audioplayer...
         if (!m_enabled) return;
         m_item = hl_item;
-        txt_Item->setText(hl_item.c_get());
+        txt_Item->setText(hl_item);
         txt_Item->show();
     }
     void setItemColor(uint16_t itemColor) {

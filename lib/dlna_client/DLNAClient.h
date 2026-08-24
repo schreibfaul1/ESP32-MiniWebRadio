@@ -55,8 +55,8 @@ class DLNA_Client {
         std::deque<dlnaServer>* server = nullptr;
         int16_t                 numberReturned = 0;
         int16_t                 totalMatches = 0;
-        const char*             IP_addr = "";
-        const char*             friendlyName = "";
+        const char*             IP_addr = nullptr;
+        const char*             friendlyName = nullptr;
     };
     using BrowseCallback = std::function<void(const msg_s&)>;
     void dlna_client_callbak(BrowseCallback cb) { m_dlna_callback = std::move(cb); }

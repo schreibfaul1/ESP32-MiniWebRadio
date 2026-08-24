@@ -201,9 +201,9 @@ class TFT_Base {
     void     tokenToWords();
     bool     isVowel(uint32_t cp);
     int      findBestBreak(const Word& word, size_t glyphStart, size_t breakPos);
-    bool     wordToLines(int16_t win_w, int16_t win_H, bool noWrap);
+    bool     wordToLines(int16_t win_w, int16_t win_H, bool noWrap, bool clipNoWrap = false);
     void     prepareFontLayout();
-    bool     layoutText(int16_t win_W, int16_t win_H, bool noWrap);
+    bool     layoutText(int16_t win_W, int16_t win_H, bool noWrap, bool clipNoWrap = false);
     void     drawLines(int16_t win_X, int16_t win_Y, int16_t win_W, int16_t win_H, HAlign hAlign, VAlign vAlign);
     void     drawGlyph(Glyph glyph, int16_t x, int16_t y);
     void     drawWord(const Word* word, int16_t x, int16_t y);
