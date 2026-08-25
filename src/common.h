@@ -55,6 +55,7 @@
 #include "driver/ledc.h"
 #include "es8311.h"
 #include "esp_log.h"
+#include "esp_psram.h"
 #include "kcx_bt_emitter.h"
 #include "mbedtls/sha1.h"
 #include "rtime.h"
@@ -198,9 +199,36 @@ enum status {
     IR_SETTINGS = 14,
     RINGING = 15,
     WIFI_SETTINGS = 16,
+    SLEEP = 17,
     UNDEFINED = -1
 };
 
+inline ps_ptr<char> getStatusName(int8_t status) {
+    ps_ptr<char> name;
+    switch (status) {
+        case 0: name = "NONE"; break;
+        case 1: name = "RADIO"; break;
+        case 2: name = "PLAYER"; break;
+        case 3: name = "DLNA"; break;
+        case 4: name = "CLOCK"; break;
+        case 5: name = "BRIGHTNESS"; break;
+        case 6: name = "ALARMCLOCK"; break;
+        case 7: name = "SLEEPTIMER"; break;
+        case 8: name = "STATIONSLIST"; break;
+        case 9: name = "AUDIOFILESLIST"; break;
+        case 10: name = "DLNAITEMSLIST"; break;
+        case 11: name = "BLUETOOTH"; break;
+        case 12: name = "EQUALIZER"; break;
+        case 13: name = "SETTINGS"; break;
+        case 14: name = "IR_SETTINGS"; break;
+        case 15: name = "RINGING"; break;
+        case 16: name = "WIFI_SETTINGS"; break;
+        case 17: name = "SLEEP"; break;
+        default: name = "UNDEFINED"; break;
+    }
+    return name;
+}
+std::mutex mutex_print;
 enum ir_shift { IR_RIGHT = +100, IR_LEFT = -100, IR_UP = +101, IR_DOWN = -101, IR_RESET = -127 };
 
 extern SemaphoreHandle_t        mutex_rtc;
@@ -208,12 +236,110 @@ extern RTIME                    rtc;
 extern WebSrv                   webSrv;
 extern std::deque<ps_ptr<char>> s_logBuffer;
 
-template <typename... Args> void SerialPrintfln(const char* fmt, Args&&... args) {
+struct dlnaHistory_s {
+    ps_ptr<char> objId;
+    ps_ptr<char> name;
+    int16_t      maxItems = -1;
+    int16_t      childCount = -1;
+};
+struct releasedArg {
+    ps_ptr<char> arg1;
+    ps_ptr<char> arg2;
+    ps_ptr<char> arg3;
+    int16_t      val1 = 0;
+    int16_t      val2 = 0;
+};
+struct timecounter_s {
+    float timer = 0;
+    float factor = 0;
+};
+struct irButtons {
+    int16_t val;
+    char*   label;
+};
+struct settings_s {
+    irButtons    irbuttons[45];
+    uint8_t      numOfIrButtons = 0;
+    ps_ptr<char> lastconnectedhost = {};
+    ps_ptr<char> lastconnectedfile = {};
+} s_settings;
+
+struct volume_s {
+    uint8_t cur_volume = 21;
+    uint8_t ringVolume = 21;
+    uint8_t volumeAfterAlarm = 12;
+    uint8_t volumeSteps = 21;
+} s_volume;
+
+struct bt_emitter_s {
+    bool         found = false;
+    bool         connect = false;
+    bool         enabled = false;
+    bool         play = true; // play: true, pause: false
+    uint8_t      volume = 0;
+    ps_ptr<char> mode = {};
+    ps_ptr<char> version = {};
+} s_bt_emitter;
+
+struct tone_s {
+    int16_t LP = 0;  // -40 ... +6 (dB)        audioI2S
+    int16_t BP = 0;  // -40 ... +6 (dB)        audioI2S
+    int16_t HP = 0;  // -40 ... +6 (dB)        audioI2S
+    int16_t BAL = 0; // -16...0....+16         audioI2S
+} s_tone;
+
+struct i2c_items_s {
+    bool es8311_found = false;
+    int  es8311_addr = -1;
+    bool es7210_found = false;
+    int  es7210_addr = -1;
+    bool gt911_found = false;
+    int  gt911_addr = -1;
+    bool ft6x36u_found = false;
+    int  ft6x36u_addr = -1;
+    bool bh1750_found = false;
+    int  bh1750_addr = -1;
+} s_i2c_items;
+
+struct tag_s {
+    ps_ptr<char> none = "";
+    ps_ptr<char> arduino = "Arduino:";
+    ps_ptr<char> audio_info = "Audio_Info:";
+    ps_ptr<char> wifi_info = "WiFi_Info:";
+    ps_ptr<char> setup = "Setup:";
+    ps_ptr<char> new_host = "New_Host:";
+    ps_ptr<char> playlist = "Playlist:";
+    ps_ptr<char> sd_card = "SD_Card:";
+    ps_ptr<char> file_name = "File_Name:";
+    ps_ptr<char> action = "Action:";
+    ps_ptr<char> country = "Country:";
+    ps_ptr<char> alarm_time = "Alarm_Time:";
+    ps_ptr<char> audio_codec = "Audio_Codec:";
+    ps_ptr<char> terminal = "Terminal:";
+    ps_ptr<char> ftp_server = "FTP_Server:";
+    ps_ptr<char> rtime_info = "RTIME_Info:";
+    ps_ptr<char> tft_info = "TFT_Info:";
+    ps_ptr<char> tp_info = "TP_Info:";
+    ps_ptr<char> ir_info = "IR_Info:";
+    ps_ptr<char> webserver = "Web_Server:";
+    ps_ptr<char> dlna_server = "DLNA_Server:";
+    ps_ptr<char> bt_emitter = "BT_Emitter:";
+    ps_ptr<char> sys_info = "System_Info:";
+    ps_ptr<char> recorder = "Recorder:";
+} s_tag;
+
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
+template <typename... Args> void printfln(ps_ptr<char> tag, const char* fmt, Args&&... args) {
+    std::lock_guard<std::mutex> lock(mutex_print);
     if (s_logBuffer.size() == 1024) s_logBuffer.pop_back();
 
     ps_ptr<char> myLog;
-
+    myLog.reserve(200);
     rtc.hasValidTime() ? myLog.append(rtc.gettime_s()) : myLog.append("00:00:00");
+    myLog.appendf(" {} ", tag);
+    while (myLog.strlen() < 25) { myLog.append("."); }
+    myLog.append(" ");
     myLog.append(" \033[0m");
     myLog.appendf(fmt, std::forward<Args>(args)...);
     myLog.append("\033[0m\r\n");
@@ -222,18 +348,31 @@ template <typename... Args> void SerialPrintfln(const char* fmt, Args&&... args)
     myLog.reset();
 }
 
-template <typename... Args> void SerialPrintfcr(const char* fmt, Args&&... args) {
+template <typename... Args> void printfcr(ps_ptr<char> tag, const char* fmt, Args&&... args) {
+    std::lock_guard<std::mutex> lock(mutex_print);
     if (s_logBuffer.size() == 1024) s_logBuffer.pop_back();
-
     ps_ptr<char> myLog;
-
-    rtc.hasValidTime() ? myLog.append(rtc.gettime_s()) : myLog.append("00:00:00");
+    myLog.reserve(200);
+    rtc.hasValidTime() ? myLog.assignf("{}", rtc.gettime_s()) : myLog.assign("00:00:00");
+    myLog.appendf(" {} ", tag);
+    while (myLog.strlen() < 25) { myLog.append("."); }
     myLog.append(" ");
+    myLog.append(" \033[0m");
     myLog.appendf(fmt, std::forward<Args>(args)...);
-    myLog.append("\033[0m\r");
+    myLog.append("\033[0m                                                                                                                                                               \r");
     printf("%s", myLog.c_get());
     s_logBuffer.insert(s_logBuffer.begin(), std::move(myLog));
     myLog.reset();
+}
+
+inline void printflnCut(ps_ptr<char> tag, ps_ptr<char> item, const char* color, ps_ptr<char> str) {
+    uint8_t maxLength = 100;
+    if (str.strlen() > maxLength) {
+        ps_ptr<char> tmp1 = str.substr(0, 70);
+        ps_ptr<char> tmp2 = str.substr(str.strlen() - 20);
+        str.assignf("{}...{}", tmp1, tmp2);
+    }
+    printfln(tag, "{}{}{}", item, color, str);
 }
 
 int log_redirect_handler(const char* format, va_list args) {
@@ -254,101 +393,33 @@ int log_redirect_handler(const char* format, va_list args) {
     vsnprintf(log_dst, len, format, args_msg);
     va_end(args_msg);
     if (len > 0) {
-        int idx = log_buffer.index_of("ARDUINO:");
+        // 0x1B 0x5B 0x30 0x3B 0x33 0x32 0x6D 0x49 0x20 0x28    0x31 0x35 0x33 0x37 0x29 0x20 0x41 0x52 0x44 0x55    0x49 0x4E 0x4F 0x3A 0x20
+        //  ESC  [    0    ;    3    2    m    I         (       1    5    3    7    )         A    R    D    U       I    N    O    :
+        int  idx = log_buffer.index_of("ARDUINO:");
+        char c = log_buffer[7]; // 0...7 is ANSI_ESC_CODE
         if (idx > 0) {
-            // log_buffer.println();
-            char c = log_buffer[0];
+            idx += 9; // after "ARDUINO: "
             log_buffer.remove_before(idx, true);
-            log_buffer.insert(" .. ", 8);
-            if (c == 'E') log_buffer.insert(ANSI_ESC_RED, 11);
-            if (c == 'W') log_buffer.insert(ANSI_ESC_YELLOW, 11);
-            if (c == 'I') log_buffer.insert(ANSI_ESC_GREEN, 11);
-            if (c == 'D') log_buffer.insert(ANSI_ESC_CYAN, 11);
-            if (c == 'V') log_buffer.insert(ANSI_ESC_GREY, 11);
             log_buffer.truncate_at(log_buffer.strlen() - 1); // remove '\n'
-            SerialPrintfln("{}", log_buffer.c_get());
+            if (c == 'E') log_buffer.insert(ANSI_ESC_RED, 0);
+            if (c == 'W') log_buffer.insert(ANSI_ESC_YELLOW, 0);
+            if (c == 'I') log_buffer.insert(ANSI_ESC_GREEN, 0);
+            if (c == 'D') log_buffer.insert(ANSI_ESC_CYAN, 0);
+            if (c == 'V') log_buffer.insert(ANSI_ESC_GREY, 0);
+            printfln(s_tag.arduino, "{}", log_buffer);
         } else {
-            SerialPrintfln("{}", log_buffer.c_get());
+            printfln(s_tag.none, "{}", log_buffer);
         }
     }
     return 0;
 }
-
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-struct dlnaHistory_s {
-    ps_ptr<char> objId;
-    ps_ptr<char> name;
-    int16_t      maxItems = -1;
-    int16_t      childCount = -1;
-};
-struct releasedArg {
-    ps_ptr<char> arg1;
-    ps_ptr<char> arg2;
-    ps_ptr<char> arg3;
-    int16_t      val1 = 0;
-    int16_t      val2 = 0;
-};
-struct timecounter_s {
-    uint8_t timer = 0;
-    uint8_t factor = 2;
-};
-struct irButtons {
-    int16_t val;
-    char*   label;
-};
-struct settings_s {
-    irButtons    irbuttons[45];
-    uint8_t      numOfIrButtons = 0;
-    ps_ptr<char> lastconnectedhost = {};
-    ps_ptr<char> lastconnectedfile = {};
-};
-
-struct volume_s {
-    uint8_t cur_volume = 21;
-    uint8_t ringVolume = 21;
-    uint8_t volumeAfterAlarm = 12;
-    uint8_t volumeSteps = 21;
-};
-
-struct bt_emitter_s {
-    bool         found = false;
-    bool         connect = false;
-    bool         enabled = false;
-    bool         play = true; // play: true, pause: false
-    uint8_t      volume = 0;
-    ps_ptr<char> mode = {};
-    ps_ptr<char> version = {};
-};
-
-struct tone_s {
-    int16_t LP = 0;  // -40 ... +6 (dB)        audioI2S
-    int16_t BP = 0;  // -40 ... +6 (dB)        audioI2S
-    int16_t HP = 0;  // -40 ... +6 (dB)        audioI2S
-    int16_t BAL = 0; // -16...0....+16         audioI2S
-};
-
-struct i2c_items_s {
-    bool es8311_found = false;
-    int  es8311_addr = -1;
-    bool es7210_found = false;
-    int  es7210_addr = -1;
-    bool gt911_found = false;
-    int  gt911_addr = -1;
-    bool ft6x36u_found = false;
-    int  ft6x36u_addr = -1;
-    bool bh1750_found = false;
-    int  bh1750_addr = -1;
-};
-
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 // prototypes (main.cpp)
-bool         SD_MMC_exists(const char* path);
 boolean      defaultsettings();
 void         updateSettings();
-void         urldecode(char* str);
 void         fall_asleep();
-void         wake_up();
+void         wake_up(int8_t state, int8_t substate);
 void         setRTC(ps_ptr<char> TZString);
 boolean      isAlarm(uint8_t weekDay, uint8_t alarmDays, uint16_t minuteOfTheDay, int16_t* alarmTime);
 boolean      copySDtoFFat(const char* path);
@@ -359,7 +430,8 @@ ps_ptr<char> getStationName();
 ps_ptr<char> getLogoPath();
 void         webSrv_send_station_items();
 void         showFileLogo(int8_t state, int8_t subState);
-void         showFileName(const char* fname);
+void         showPlayerFileName(ps_ptr<char> fname);
+void         show_DLNA_FileName(const char* fname);
 void         showPlsFileNumber();
 void         showAudioFileNumber();
 void         display_sleeptime(int8_t ud = 0);
@@ -371,30 +443,33 @@ bool         connectToWiFi();
 void         setWiFiCredentials(ps_ptr<char> ssid, ps_ptr<char> password);
 ps_ptr<char> scaleImage(ps_ptr<char> path);
 bool         detect_i2_c_devices(TwoWire* twi, int8_t sda, int8_t scl, i2c_items_s* i2c_items);
-void         set_display_items();
+void         set_tft_items();
+void         set_tp_items();
 bool         init_SD_card();
 void         setVolume(uint8_t vol);
 uint8_t      downvolume();
 uint8_t      upvolume();
 void         setStation(ps_ptr<char> url, ps_ptr<char> extension = {});
 void         setStation(uint16_t sta);
-const char*  getFlagPath(uint16_t station);
+ps_ptr<char> getFlagPath(uint16_t station);
 void         nextStation();
 void         prevStation();
 void         setStationByNumber(uint16_t staNr);
-
+void         WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg);
+void         WEBSRV_onRequest(ps_ptr<char> cmd,  ps_ptr<char> param, ps_ptr<char> arg, ps_ptr<char> contentType, uint32_t contentLength);
+void         WEBSRV_onDelete(ps_ptr<char> cmd,  ps_ptr<char> param, ps_ptr<char> arg);
 void         savefile(ps_ptr<char> fileName, uint32_t contentLength, ps_ptr<char> contenttype);
 void         setI2STone();
 ps_ptr<char> getI2STone();
 void         SD_playFile(ps_ptr<char> pathWoFileName, const char* fileName);
 void         SD_playFile(ps_ptr<char> path, uint32_t resumeFilePos = 0, bool showFN = true);
-bool         SD_rename(const char* src, const char* dest);
-bool         SD_newFolder(const char* folderPathName);
+bool         SD_rename(ps_ptr<char> src, ps_ptr<char> dest);
+bool         SD_newFolder(ps_ptr<char> folderPathName);
 bool         SD_delete(const char* itemPath);
 void         processPlaylist();
 void         changeState(int8_t state, int8_t subState);
 void         connecttohost(ps_ptr<char> host);
-void         connecttoFS(const char* FS, const char* filename, uint32_t fileStartTime = 0);
+void         connecttoFS(const char* FS, ps_ptr<char> filename, uint32_t fileStartTime = 0);
 void         stopSong();
 void         placingGraphicObjects();
 void         muteChanged(bool m);
@@ -421,10 +496,10 @@ inline const char* byte_to_binary(int8_t x) { // e.g. alarmdays
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-inline uint32_t simpleHash(const char* str) {
+inline uint32_t simpleHash(ps_ptr<char> str) {
     if (str == NULL) return 0;
     uint32_t hash = 0;
-    for (int32_t i = 0; i < strlen(str); i++) {
+    for (int32_t i = 0; i < str.strlen(); i++) {
         if (str[i] < 32) continue; // ignore control sign
         hash += (str[i] - 31) * i * 32;
     }
@@ -441,7 +516,7 @@ inline int32_t str2int(const char* str) {
                 return 0;
             }
         }
-        return stoi(str);
+        return std::stoi(str);
     }
     return 0;
 }
@@ -681,8 +756,7 @@ inline int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min,
 
 inline void setupBacklight(int pin, uint32_t freq_hz) {
 
-    ledc_channel_config_t ch =
-        {.gpio_num = (gpio_num_t)pin, .speed_mode = LEDC_LOW_SPEED_MODE, .channel = LEDC_CHANNEL_1, .intr_type = LEDC_INTR_DISABLE, .timer_sel = LEDC_TIMER_3, .duty = 0, .hpoint = 0};
+    ledc_channel_config_t ch = {.gpio_num = (gpio_num_t)pin, .speed_mode = LEDC_LOW_SPEED_MODE, .channel = LEDC_CHANNEL_1, .intr_type = LEDC_INTR_DISABLE, .timer_sel = LEDC_TIMER_3, .duty = 0, .hpoint = 0};
 
     ledc_timer_config_t tmr = {
         .speed_mode = LEDC_LOW_SPEED_MODE,
@@ -703,7 +777,13 @@ inline void setupBacklight(int pin, uint32_t freq_hz) {
     ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1);
 }
 
-inline void setTFTbrightness(uint8_t duty) {
+inline void setTFTbrightness(uint8_t brightness, uint8_t bh1750Value) {
+    extern bool s_f_sleeping;
+    extern uint8_t s_sleepMode;
+    uint8_t     duty = std::min(brightness, bh1750Value);
+    if (s_f_sleeping && s_sleepMode == 0) { duty = 0; }
+    if (BRIGHTNESS_INVERSION) { duty = 255 - duty; }
+
     if (TFT_BL >= 0) {
         ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1, duty);
         ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1);
@@ -712,15 +792,6 @@ inline void setTFTbrightness(uint8_t duty) {
 
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-inline void SerialPrintflnCut(const char* item, const char* color, const char* str) {
-    uint8_t maxLength = 100;
-    if (strlen(str) > maxLength) {
-        String f = str;
-        SerialPrintfln("{}{}{} ... {}", item, color, f.substring(0, maxLength - 25).c_str(), f.substring(f.length() - 20, f.length()).c_str());
-    } else {
-        SerialPrintfln("{}{}{}", item, color, str);
-    }
-}
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 #ifdef TFT_MODE_SPI // ⏹⏹⏹⏹
 extern TFT_SPI tft;

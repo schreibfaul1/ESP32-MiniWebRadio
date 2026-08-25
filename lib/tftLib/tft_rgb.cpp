@@ -1,5 +1,5 @@
 // first release on 01/2025
-// updated on Mar 17 2026
+// updated on Jul 05 2026
 
 #include "Arduino.h"
 #ifdef CONFIG_IDF_TARGET_ESP32S3
@@ -14,7 +14,6 @@ TFT_RGB::TFT_RGB() { // Constructor
     m_v_res = 0;
     m_framebuffer[0] = NULL;
     m_framebuffer[1] = NULL;
-    m_framebuffer[2] = NULL;
     m_vsync_semaphore = xSemaphoreCreateBinary();
     m_vsyncCounter = 0;
     xSemaphoreGive(m_vsync_semaphore);
@@ -72,7 +71,7 @@ void TFT_RGB::begin(const Pins& newPins, const Timing& newTiming) {
 
     panel_config.data_width = 16; // RGB565
     panel_config.bits_per_pixel = 16;
-    panel_config.num_fbs = 3;
+    panel_config.num_fbs = 2;
     panel_config.bounce_buffer_size_px = 0;
     panel_config.dma_burst_size = 64;
     panel_config.hsync_gpio_num = m_pins.hsync;
@@ -111,18 +110,15 @@ void TFT_RGB::begin(const Pins& newPins, const Timing& newTiming) {
     m_h_res = m_timing.h_res;
     m_v_res = m_timing.v_res;
 
-    void *fb0, *fb1, *fb2;
-    esp_lcd_rgb_panel_get_frame_buffer(m_panel, 3, &fb0, &fb1, &fb2);
+    void *fb0, *fb1;
+    esp_lcd_rgb_panel_get_frame_buffer(m_panel, 2, &fb0, &fb1);
     m_framebuffer[0] = (uint16_t*)fb0;
     m_framebuffer[1] = (uint16_t*)fb1;
-    m_framebuffer[2] = (uint16_t*)fb2;
 
     // log_w("m_h_res: %d, m_v_res: %d, m_framebuffer[0] %i", m_h_res, m_v_res, m_framebuffer[0]);
     memset(m_framebuffer[0], 0xFF, m_h_res * m_v_res * 2);
     // log_w("m_h_res: %d, m_v_res: %d, m_framebuffer[1] %i", m_h_res, m_v_res, m_framebuffer[1]);
     memset(m_framebuffer[1], 0xFF, m_h_res * m_v_res * 2);
-    // log_w("m_h_res: %d, m_v_res: %d, m_framebuffer[2] %i", m_h_res, m_v_res, m_framebuffer[2]);
-    memset(m_framebuffer[2], 0xFF, m_h_res * m_v_res * 2);
 
     esp_lcd_rgb_panel_event_callbacks_t cbs = { // if not used, set to nullptr
         .on_color_trans_done = nullptr,

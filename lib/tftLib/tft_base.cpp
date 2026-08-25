@@ -1,14 +1,12 @@
-#include "../../src/settings.h"
 #include "tft_base.h"
-
-#include <utility>
-
+#include "../../src/settings.h"
 #include "fonts/Arial.h"
 #include "fonts/BigNumbers.h"
 #include "fonts/FreeSerifItalic.h"
 #include "fonts/Garamond.h"
 #include "fonts/TimesNewRoman.h"
 #include "fonts/Z003.h"
+#include <utility>
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 uint16_t TFT_Base::logicalWidth() const {
     if (m_rotation & 1) return m_v_res;
@@ -22,27 +20,17 @@ uint16_t TFT_Base::logicalHeight() const {
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 //    ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  B I T M A P  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫              *
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-bool TFT_Base::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight, float scale) {
-    auto bmpRead32 = [](const uint8_t* data, size_t offset) -> uint32_t {
-        return data[offset] | (uint16_t)(data[offset + 1]) << 8 | (uint32_t)(data[offset + 2]) << 16 | (uint32_t)(data[offset + 3]) << 24;
-    };
-    auto bmpRead16 = [](const uint8_t* data, size_t offset) -> uint16_t {
-        return data[offset] | (uint16_t)(data[offset + 1]) << 8;
-    };
-    auto bmpColor16 = [](const uint8_t* pixel) -> uint16_t {
-        return ((uint8_t*)pixel)[0] | ((uint16_t)((uint8_t*)pixel)[1]) << 8;
-    };
-    auto bmpColor24 = [](const uint8_t* pixel) -> uint16_t {
-        return ((uint16_t)(((uint8_t*)pixel)[2] & 0xF8) << 8) | ((uint16_t)(((uint8_t*)pixel)[1] & 0xFC) << 3) | ((((uint8_t*)pixel)[0] & 0xF8) >> 3);
-    };
-    auto bmpColor32 = [](const uint8_t* pixel) -> uint16_t {
-        return ((uint16_t)(((uint8_t*)pixel)[3] & 0xF8) << 8) | ((uint16_t)(((uint8_t*)pixel)[2] & 0xFC) << 3) | ((((uint8_t*)pixel)[1] & 0xF8) >> 3);
-    };
+bool TFT_Base::drawBmpFile(fs::FS& fs, ps_ptr<char> path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight, float scale) {
+    auto bmpRead32 = [](const uint8_t* data, size_t offset) -> uint32_t { return data[offset] | (uint16_t)(data[offset + 1]) << 8 | (uint32_t)(data[offset + 2]) << 16 | (uint32_t)(data[offset + 3]) << 24; };
+    auto bmpRead16 = [](const uint8_t* data, size_t offset) -> uint16_t { return data[offset] | (uint16_t)(data[offset + 1]) << 8; };
+    auto bmpColor16 = [](const uint8_t* pixel) -> uint16_t { return ((uint8_t*)pixel)[0] | ((uint16_t)((uint8_t*)pixel)[1]) << 8; };
+    auto bmpColor24 = [](const uint8_t* pixel) -> uint16_t { return ((uint16_t)(((uint8_t*)pixel)[2] & 0xF8) << 8) | ((uint16_t)(((uint8_t*)pixel)[1] & 0xFC) << 3) | ((((uint8_t*)pixel)[0] & 0xF8) >> 3); };
+    auto bmpColor32 = [](const uint8_t* pixel) -> uint16_t { return ((uint16_t)(((uint8_t*)pixel)[3] & 0xF8) << 8) | ((uint16_t)(((uint8_t*)pixel)[2] & 0xFC) << 3) | ((((uint8_t*)pixel)[1] & 0xF8) >> 3); };
 
     if (scale <= 0.0f) return false;
-    if (!fs.exists(path)) return false;
+    if (!fs.exists(path.c_get())) return false;
 
-    File bmp = fs.open(path);
+    File bmp = fs.open(path.c_get());
     if (!bmp) return false;
 
     constexpr size_t headerLen = 54;
@@ -60,7 +48,7 @@ bool TFT_Base::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y,
     if (compression != 0) return false;
     if (!(bpp == 16 || bpp == 24 || bpp == 32)) return false;
 
-    const bool bottomUp = (bmpHeightI > 0);
+    const bool   bottomUp = (bmpHeightI > 0);
     const size_t bmpWidth = abs(bmpWidthI);
     const size_t bmpHeight = abs(bmpHeightI);
     const size_t scaledWidth = bmpWidth * scale;
@@ -92,7 +80,7 @@ bool TFT_Base::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y,
         bmp.read(m_rowBuffer, rowSize);
 
         for (size_t dx = 0; dx < drawWidth; ++dx) {
-            const size_t srcXScaled = (dx * bmpWidth) / scaledWidth;
+            const size_t   srcXScaled = (dx * bmpWidth) / scaledWidth;
             const uint8_t* pixelPtr = m_rowBuffer + srcXScaled * (bpp / 8);
 
             uint16_t color = 0;
@@ -114,13 +102,13 @@ bool TFT_Base::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y,
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 //    ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  G I F  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-bool TFT_Base::drawGifFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint8_t repeat) {
+bool TFT_Base::drawGifFile(fs::FS& fs, ps_ptr<char> path, uint16_t x, uint16_t y, uint8_t repeat) {
 
     gif.Iterations = repeat;
 
     GIF_DecoderReset();
 
-    gif_file = fs.open(path);
+    gif_file = fs.open(path.c_get());
     if (!gif_file) {
         if (tft_info) tft_info("Failed to open file for reading");
         return false;
@@ -854,9 +842,7 @@ bool TFT_Base::GIF_ReadImage(uint16_t x, uint16_t y) {
                 uint16_t x_buf = gif_LastImageLeftPosition + col;
                 uint16_t y_buf = gif_LastImageTopPosition + row;
 
-                if (x_buf < gif.LogicalScreenWidth && y_buf < gif.LogicalScreenHeight) {
-                    gif_ImageBuffer[y_buf * gif.LogicalScreenWidth + x_buf] = gif_RestoreBuffer[y_buf * gif.LogicalScreenWidth + x_buf];
-                }
+                if (x_buf < gif.LogicalScreenWidth && y_buf < gif.LogicalScreenHeight) { gif_ImageBuffer[y_buf * gif.LogicalScreenWidth + x_buf] = gif_RestoreBuffer[y_buf * gif.LogicalScreenWidth + x_buf]; }
             }
         }
     }
@@ -873,9 +859,7 @@ bool TFT_Base::GIF_ReadImage(uint16_t x, uint16_t y) {
                 uint16_t x_buf = gif.ImageLeftPosition + col;
                 uint16_t y_buf = gif.ImageTopPosition + row;
 
-                if (x_buf < gif.LogicalScreenWidth && y_buf < gif.LogicalScreenHeight) {
-                    gif_RestoreBuffer[y_buf * gif.LogicalScreenWidth + x_buf] = gif_ImageBuffer[y_buf * gif.LogicalScreenWidth + x_buf];
-                }
+                if (x_buf < gif.LogicalScreenWidth && y_buf < gif.LogicalScreenHeight) { gif_RestoreBuffer[y_buf * gif.LogicalScreenWidth + x_buf] = gif_ImageBuffer[y_buf * gif.LogicalScreenWidth + x_buf]; }
             }
         }
     }
@@ -1021,8 +1005,8 @@ void TFT_Base::GIF_DecoderReset() {
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 //    ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ J P E G ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-bool TFT_Base::drawJpgFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight) {
-    if (!fs.exists(path)) {
+bool TFT_Base::drawJpgFile(fs::FS& fs, ps_ptr<char> path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight) {
+    if (!fs.exists(path.c_get())) {
         log_e("file %s not exists", path);
         return false;
     }
@@ -1035,7 +1019,7 @@ bool TFT_Base::drawJpgFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y,
     else
         m_jpgHeightMax = logicalHeight();
 
-    m_jpgSdFile = fs.open(path, FILE_READ);
+    m_jpgSdFile = fs.open(path.c_get(), FILE_READ);
     if (!m_jpgSdFile) {
         log_e("Failed to open file for reading");
         JPEG_setJpgScale(1);
@@ -1149,64 +1133,51 @@ uint8_t TFT_Base::JPEG_getSdJpgSize(uint16_t* w, uint16_t* h) {
     m_jpgSdFile.seek(0);
     return r;
 }
-    // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-    #if JD_FASTDECODE == 2
-        #define HUFF_BIT  10 /* Bit length to apply fast huffman decode */
-        #define HUFF_LEN  (1 << HUFF_BIT)
-        #define HUFF_MASK (HUFF_LEN - 1)
-    #endif
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+#if JD_FASTDECODE == 2
+    #define HUFF_BIT  10 /* Bit length to apply fast huffman decode */
+    #define HUFF_LEN  (1 << HUFF_BIT)
+    #define HUFF_MASK (HUFF_LEN - 1)
+#endif
 
 const uint8_t Zig[64] = {/* Zigzag-order to raster-order conversion table */
-                         0,  1,  8,  16, 9,  2,  3,  10, 17, 24, 32, 25, 18, 11, 4,  5,  12, 19, 26, 33, 40, 48, 41, 34, 27, 20, 13, 6,  7,  14, 21, 28,
-                         35, 42, 49, 56, 57, 50, 43, 36, 29, 22, 15, 23, 30, 37, 44, 51, 58, 59, 52, 45, 38, 31, 39, 46, 53, 60, 61, 54, 47, 55, 62, 63};
+                         0, 1, 8, 16, 9, 2, 3, 10, 17, 24, 32, 25, 18, 11, 4, 5, 12, 19, 26, 33, 40, 48, 41, 34, 27, 20, 13, 6, 7, 14, 21, 28, 35, 42, 49, 56, 57, 50, 43, 36, 29, 22, 15, 23, 30, 37, 44, 51, 58, 59, 52, 45, 38, 31, 39, 46, 53, 60, 61, 54, 47, 55, 62, 63};
 
 const uint16_t Ipsf[64] = {/* See also aa_idct.png */
-                           (uint16_t)(1.00000 * 8192), (uint16_t)(1.38704 * 8192), (uint16_t)(1.30656 * 8192), (uint16_t)(1.17588 * 8192), (uint16_t)(1.00000 * 8192), (uint16_t)(0.78570 * 8192),
-                           (uint16_t)(0.54120 * 8192), (uint16_t)(0.27590 * 8192), (uint16_t)(1.38704 * 8192), (uint16_t)(1.92388 * 8192), (uint16_t)(1.81226 * 8192), (uint16_t)(1.63099 * 8192),
-                           (uint16_t)(1.38704 * 8192), (uint16_t)(1.08979 * 8192), (uint16_t)(0.75066 * 8192), (uint16_t)(0.38268 * 8192), (uint16_t)(1.30656 * 8192), (uint16_t)(1.81226 * 8192),
-                           (uint16_t)(1.70711 * 8192), (uint16_t)(1.53636 * 8192), (uint16_t)(1.30656 * 8192), (uint16_t)(1.02656 * 8192), (uint16_t)(0.70711 * 8192), (uint16_t)(0.36048 * 8192),
-                           (uint16_t)(1.17588 * 8192), (uint16_t)(1.63099 * 8192), (uint16_t)(1.53636 * 8192), (uint16_t)(1.38268 * 8192), (uint16_t)(1.17588 * 8192), (uint16_t)(0.92388 * 8192),
-                           (uint16_t)(0.63638 * 8192), (uint16_t)(0.32442 * 8192), (uint16_t)(1.00000 * 8192), (uint16_t)(1.38704 * 8192), (uint16_t)(1.30656 * 8192), (uint16_t)(1.17588 * 8192),
-                           (uint16_t)(1.00000 * 8192), (uint16_t)(0.78570 * 8192), (uint16_t)(0.54120 * 8192), (uint16_t)(0.27590 * 8192), (uint16_t)(0.78570 * 8192), (uint16_t)(1.08979 * 8192),
-                           (uint16_t)(1.02656 * 8192), (uint16_t)(0.92388 * 8192), (uint16_t)(0.78570 * 8192), (uint16_t)(0.61732 * 8192), (uint16_t)(0.42522 * 8192), (uint16_t)(0.21677 * 8192),
-                           (uint16_t)(0.54120 * 8192), (uint16_t)(0.75066 * 8192), (uint16_t)(0.70711 * 8192), (uint16_t)(0.63638 * 8192), (uint16_t)(0.54120 * 8192), (uint16_t)(0.42522 * 8192),
-                           (uint16_t)(0.29290 * 8192), (uint16_t)(0.14932 * 8192), (uint16_t)(0.27590 * 8192), (uint16_t)(0.38268 * 8192), (uint16_t)(0.36048 * 8192), (uint16_t)(0.32442 * 8192),
-                           (uint16_t)(0.27590 * 8192), (uint16_t)(0.21678 * 8192), (uint16_t)(0.14932 * 8192), (uint16_t)(0.07612 * 8192)};
+                           (uint16_t)(1.00000 * 8192), (uint16_t)(1.38704 * 8192), (uint16_t)(1.30656 * 8192), (uint16_t)(1.17588 * 8192), (uint16_t)(1.00000 * 8192), (uint16_t)(0.78570 * 8192), (uint16_t)(0.54120 * 8192), (uint16_t)(0.27590 * 8192),
+                           (uint16_t)(1.38704 * 8192), (uint16_t)(1.92388 * 8192), (uint16_t)(1.81226 * 8192), (uint16_t)(1.63099 * 8192), (uint16_t)(1.38704 * 8192), (uint16_t)(1.08979 * 8192), (uint16_t)(0.75066 * 8192), (uint16_t)(0.38268 * 8192),
+                           (uint16_t)(1.30656 * 8192), (uint16_t)(1.81226 * 8192), (uint16_t)(1.70711 * 8192), (uint16_t)(1.53636 * 8192), (uint16_t)(1.30656 * 8192), (uint16_t)(1.02656 * 8192), (uint16_t)(0.70711 * 8192), (uint16_t)(0.36048 * 8192),
+                           (uint16_t)(1.17588 * 8192), (uint16_t)(1.63099 * 8192), (uint16_t)(1.53636 * 8192), (uint16_t)(1.38268 * 8192), (uint16_t)(1.17588 * 8192), (uint16_t)(0.92388 * 8192), (uint16_t)(0.63638 * 8192), (uint16_t)(0.32442 * 8192),
+                           (uint16_t)(1.00000 * 8192), (uint16_t)(1.38704 * 8192), (uint16_t)(1.30656 * 8192), (uint16_t)(1.17588 * 8192), (uint16_t)(1.00000 * 8192), (uint16_t)(0.78570 * 8192), (uint16_t)(0.54120 * 8192), (uint16_t)(0.27590 * 8192),
+                           (uint16_t)(0.78570 * 8192), (uint16_t)(1.08979 * 8192), (uint16_t)(1.02656 * 8192), (uint16_t)(0.92388 * 8192), (uint16_t)(0.78570 * 8192), (uint16_t)(0.61732 * 8192), (uint16_t)(0.42522 * 8192), (uint16_t)(0.21677 * 8192),
+                           (uint16_t)(0.54120 * 8192), (uint16_t)(0.75066 * 8192), (uint16_t)(0.70711 * 8192), (uint16_t)(0.63638 * 8192), (uint16_t)(0.54120 * 8192), (uint16_t)(0.42522 * 8192), (uint16_t)(0.29290 * 8192), (uint16_t)(0.14932 * 8192),
+                           (uint16_t)(0.27590 * 8192), (uint16_t)(0.38268 * 8192), (uint16_t)(0.36048 * 8192), (uint16_t)(0.32442 * 8192), (uint16_t)(0.27590 * 8192), (uint16_t)(0.21678 * 8192), (uint16_t)(0.14932 * 8192), (uint16_t)(0.07612 * 8192)};
 
-    #if JD_TBLCLIP
-        #define BYTECLIP(v) Clip8[(unsigned int)(v) & 0x3FF]
+#if JD_TBLCLIP
+    #define BYTECLIP(v) Clip8[(unsigned int)(v) & 0x3FF]
 const uint8_t Clip8[1024] = {/* 0..255 */
-                             0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44,
-                             45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87,
-                             88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123,
-                             124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157,
-                             158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191,
-                             192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225,
-                             226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255,
+                             0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69,
+                             70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129,
+                             130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183,
+                             184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237,
+                             238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255,
                              /* 256..511 */
-                             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-                             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-                             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-                             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-                             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-                             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-                             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-                             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+                             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+                             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+                             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+                             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+                             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
                              /* -512..-257 */
-                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                              /* -256..-1 */
-                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    #endif
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+#endif
 
-    #if JD_TBLCLIP == 0 /* JD_TBLCLIP */
+#if JD_TBLCLIP == 0 /* JD_TBLCLIP */
 uint8_t TFT_Base::JPEG_BYTECLIP(int val) {
     if (val < 0)
         return 0;
@@ -1214,7 +1185,7 @@ uint8_t TFT_Base::JPEG_BYTECLIP(int val) {
         return 255;
     return (uint8_t)val;
 }
-    #endif
+#endif
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void* TFT_Base::JPEG_alloc_pool(JDEC* jd, size_t ndata) {
     char* rp = 0;
@@ -1291,7 +1262,7 @@ uint8_t TFT_Base::JPEG_create_huffman_tbl(JDEC* jd, const uint8_t* data, size_t 
             if (!cls && d > 11) return JDR_FMT1;
             pd[i] = d;
         }
-    #if JD_FASTDECODE == 2
+#if JD_FASTDECODE == 2
         { /* Create fast huffman decode table */
             unsigned int span, td, ti;
             uint16_t*    tbl_ac = 0;
@@ -1322,7 +1293,7 @@ uint8_t TFT_Base::JPEG_create_huffman_tbl(JDEC* jd, const uint8_t* data, size_t 
             }
             jd->longofs[num][cls] = i; /* Code table offset for long code */
         }
-    #endif
+#endif
     }
 
     return JDR_OK;
@@ -1333,7 +1304,7 @@ int TFT_Base::JPEG_huffext(JDEC* jd, unsigned int id, unsigned int cls) {
     uint8_t*     dp = jd->dptr;
     unsigned int d, flg = 0;
 
-    #if JD_FASTDECODE == 0
+#if JD_FASTDECODE == 0
     uint8_t         bm, nd, bl;
     const uint8_t*  hb = jd->huffbits[id][cls]; /* Bit distribution table */
     const uint16_t* hc = jd->huffcode[id][cls]; /* Code word table */
@@ -1380,7 +1351,7 @@ int TFT_Base::JPEG_huffext(JDEC* jd, unsigned int id, unsigned int cls) {
         bl--;
     } while (bl);
 
-    #else
+#else
     const uint8_t * hb, *hd;
     const uint16_t* hc;
     unsigned int    nc, bl, wbit = jd->dbit % 32;
@@ -1415,7 +1386,7 @@ int TFT_Base::JPEG_huffext(JDEC* jd, unsigned int id, unsigned int cls) {
     jd->dptr = dp;
     jd->wreg = w;
 
-        #if JD_FASTDECODE == 2
+    #if JD_FASTDECODE == 2
     /* Table serch for the short codes */
     d = (unsigned int)(w >> (wbit - HUFF_BIT)); /* Short code as table index */
     if (cls) {                                  /* AC element */
@@ -1437,13 +1408,13 @@ int TFT_Base::JPEG_huffext(JDEC* jd, unsigned int id, unsigned int cls) {
     hc = jd->huffcode[id][cls] + jd->longofs[id][cls]; /* Code word table */
     hd = jd->huffdata[id][cls] + jd->longofs[id][cls]; /* Data table */
     bl = HUFF_BIT + 1;
-        #else
+    #else
     /* Incremental serch for all codes */
     hb = jd->huffbits[id][cls]; /* Bit distribution table */
     hc = jd->huffcode[id][cls]; /* Code word table */
     hd = jd->huffdata[id][cls]; /* Data table */
     bl = 1;
-        #endif
+    #endif
     for (; bl <= 16; bl++) { /* Incremental search */
         nc = *hb++;
         if (nc) {
@@ -1457,7 +1428,7 @@ int TFT_Base::JPEG_huffext(JDEC* jd, unsigned int id, unsigned int cls) {
             } while (--nc);
         }
     }
-    #endif
+#endif
     return 0 - (int)JDR_FMT1; /* Err: code not found (may be collapted data) */
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -1466,7 +1437,7 @@ int TFT_Base::JPEG_bitext(JDEC* jd, unsigned int nbit) {
     uint8_t*     dp = jd->dptr;
     unsigned int d, flg = 0;
 
-    #if JD_FASTDECODE == 0
+#if JD_FASTDECODE == 0
     uint8_t mbit = jd->dbit;
     d = 0;
     do {
@@ -1502,7 +1473,7 @@ int TFT_Base::JPEG_bitext(JDEC* jd, unsigned int nbit) {
     jd->dptr = dp;
     return (int)d;
 
-    #else
+#else
     unsigned int wbit = jd->dbit % 32;
     uint32_t     w = jd->wreg & ((1UL << wbit) - 1);
 
@@ -1537,7 +1508,7 @@ int TFT_Base::JPEG_bitext(JDEC* jd, unsigned int nbit) {
     jd->dptr = dp;
 
     return (int)(w >> ((wbit - nbit) % 32));
-    #endif
+#endif
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 uint8_t TFT_Base::JPEG_restart(JDEC* jd, uint16_t rstn) {
@@ -1545,7 +1516,7 @@ uint8_t TFT_Base::JPEG_restart(JDEC* jd, uint16_t rstn) {
     uint8_t*     dp = jd->dptr;
     size_t       dc = jd->dctr;
 
-    #if JD_FASTDECODE == 0
+#if JD_FASTDECODE == 0
     uint16_t d = 0;
 
     /* Get two bytes from the input stream */
@@ -1567,7 +1538,7 @@ uint8_t TFT_Base::JPEG_restart(JDEC* jd, uint16_t rstn) {
     /* Check the marker */
     if ((d & 0xFFD8) != 0xFFD0 || (d & 7) != (rstn & 7)) { return JDR_FMT1; /* Err: expected RSTn marker is not detected (may be collapted data) */ }
 
-    #else
+#else
     uint16_t marker;
 
     if (jd->marker) { /* Generate a maker if it has been detected */
@@ -1592,7 +1563,7 @@ uint8_t TFT_Base::JPEG_restart(JDEC* jd, uint16_t rstn) {
     if ((marker & 0xFFD8) != 0xFFD0 || (marker & 7) != (rstn & 7)) { return JDR_FMT1; /* Err: expected RSTn marker was not detected (may be collapted data) */ }
 
     jd->dbit = 0; /* Discard stuff bits */
-    #endif
+#endif
 
     jd->dcv[2] = jd->dcv[1] = jd->dcv[0] = 0; /* Reset DC offset */
     return JDR_OK;
@@ -1686,7 +1657,7 @@ void TFT_Base::JPEG_block_idct(int32_t* src, jd_yuv_t* dst) {
         v4 -= v5;
 
         /* Descale the transformed values 8 bits and output a row */
-    #if JD_FASTDECODE >= 1
+#if JD_FASTDECODE >= 1
         dst[0] = (int16_t)((v0 + v7) >> 8);
         dst[7] = (int16_t)((v0 - v7) >> 8);
         dst[1] = (int16_t)((v1 + v6) >> 8);
@@ -1695,7 +1666,7 @@ void TFT_Base::JPEG_block_idct(int32_t* src, jd_yuv_t* dst) {
         dst[5] = (int16_t)((v2 - v5) >> 8);
         dst[3] = (int16_t)((v3 + v4) >> 8);
         dst[4] = (int16_t)((v3 - v4) >> 8);
-    #else
+#else
         dst[0] = BYTECLIP((v0 + v7) >> 8);
         dst[7] = BYTECLIP((v0 - v7) >> 8);
         dst[1] = BYTECLIP((v1 + v6) >> 8);
@@ -1704,7 +1675,7 @@ void TFT_Base::JPEG_block_idct(int32_t* src, jd_yuv_t* dst) {
         dst[5] = BYTECLIP((v2 - v5) >> 8);
         dst[3] = BYTECLIP((v3 + v4) >> 8);
         dst[4] = BYTECLIP((v3 - v4) >> 8);
-    #endif
+#endif
 
         dst += 8;
         src += 8; /* Next row */
@@ -2130,124 +2101,140 @@ uint8_t TFT_Base::JPEG_jd_decomp(JDEC* jd, uint8_t scale) {
     return rc;
 }
 
-void TFT_Base::setFont(uint16_t font) {
-    #define SET_FONT_DATA(CMAP, BITMAP, DSC)    \
-        do {                                    \
-            m_current_font.cmaps = CMAP;        \
-            m_current_font.glyph_bitmap = BITMAP; \
-            m_current_font.glyph_dsc = DSC;     \
-            m_current_font.range_start = CMAP->range_start; \
-            m_current_font.range_length = CMAP->range_length; \
-            m_current_font.line_height = CMAP->line_height; \
-            m_current_font.font_height = CMAP->font_height; \
-            m_current_font.base_line = CMAP->base_line; \
-            m_current_font.lookup_table = CMAP->lookup_table; \
-        } while (0)
+bool TFT_Base::setFontByIndex(uint16_t fontIndex) {
+    if (fontIndex > 12) return false;
+    const uint8_t fontSize[] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66, 81, 96};
+    setFontSize(fontSize[fontIndex]);
+    return true;
+}
 
-    #ifdef TFT_TIMES_NEW_ROMAN
-        switch (font) {
-            case 15: SET_FONT_DATA(cmaps_Times15, glyph_bitmap_Times15, glyph_dsc_Times15); break;
-            case 16: SET_FONT_DATA(cmaps_Times16, glyph_bitmap_Times16, glyph_dsc_Times16); break;
-            case 18: SET_FONT_DATA(cmaps_Times18, glyph_bitmap_Times18, glyph_dsc_Times18); break;
-            case 21: SET_FONT_DATA(cmaps_Times21, glyph_bitmap_Times21, glyph_dsc_Times21); break;
-            case 25:
-                SET_FONT_DATA(cmaps_Times25, glyph_bitmap_Times25, glyph_dsc_Times25);
-                m_current_font.lookup_table = cmaps_Times15->lookup_table;
-                break;
-            case 27: SET_FONT_DATA(cmaps_Times27, glyph_bitmap_Times27, glyph_dsc_Times27); break;
-            case 34: SET_FONT_DATA(cmaps_Times34, glyph_bitmap_Times34, glyph_dsc_Times34); break;
-            case 38: SET_FONT_DATA(cmaps_Times38, glyph_bitmap_Times38, glyph_dsc_Times38); break;
-            case 43: SET_FONT_DATA(cmaps_Times43, glyph_bitmap_Times43, glyph_dsc_Times43); break;
-            case 56: SET_FONT_DATA(cmaps_Times56, glyph_bitmap_Times56, glyph_dsc_Times56); break;
-            case 66: SET_FONT_DATA(cmaps_Times66, glyph_bitmap_Times66, glyph_dsc_Times66); break;
-            case 81: SET_FONT_DATA(cmaps_Times81, glyph_bitmap_Times81, glyph_dsc_Times81); break;
-            case 96: SET_FONT_DATA(cmaps_Times96, glyph_bitmap_Times96, glyph_dsc_Times96); break;
-            case 156: SET_FONT_DATA(cmaps_BigNumbers, glyph_bitmap_BiGNumbers, glyph_dsc_BigNumbers); break;
-            default: log_e("unknown font size for Times New Roman, size is %i", font); break;
-        }
-    #endif
+uint8_t TFT_Base::getFontIndex() {
+    return m_current_font.font_index;
+}
 
-    #ifdef TFT_GARAMOND
-        switch (font) {
-            case 15: SET_FONT_DATA(cmaps_Garamond15, glyph_bitmap_Garamond15, glyph_dsc_Garamond15); break;
-            case 16: SET_FONT_DATA(cmaps_Garamond16, glyph_bitmap_Garamond16, glyph_dsc_Garamond16); break;
-            case 18: SET_FONT_DATA(cmaps_Garamond18, glyph_bitmap_Garamond18, glyph_dsc_Garamond18); break;
-            case 21: SET_FONT_DATA(cmaps_Garamond21, glyph_bitmap_Garamond21, glyph_dsc_Garamond21); break;
-            case 25: SET_FONT_DATA(cmaps_Garamond25, glyph_bitmap_Garamond25, glyph_dsc_Garamond25); break;
-            case 27: SET_FONT_DATA(cmaps_Garamond27, glyph_bitmap_Garamond27, glyph_dsc_Garamond27); break;
-            case 34: SET_FONT_DATA(cmaps_Garamond34, glyph_bitmap_Garamond34, glyph_dsc_Garamond34); break;
-            case 38: SET_FONT_DATA(cmaps_Garamond38, glyph_bitmap_Garamond38, glyph_dsc_Garamond38); break;
-            case 43: SET_FONT_DATA(cmaps_Garamond43, glyph_bitmap_Garamond43, glyph_dsc_Garamond43); break;
-            case 56: SET_FONT_DATA(cmaps_Garamond56, glyph_bitmap_Garamond56, glyph_dsc_Garamond56); break;
-            case 66: SET_FONT_DATA(cmaps_Garamond66, glyph_bitmap_Garamond66, glyph_dsc_Garamond66); break;
-            case 81: SET_FONT_DATA(cmaps_Garamond81, glyph_bitmap_Garamond81, glyph_dsc_Garamond81); break;
-            case 96: SET_FONT_DATA(cmaps_Garamond96, glyph_bitmap_Garamond96, glyph_dsc_Garamond96); break;
-            case 156: SET_FONT_DATA(cmaps_BigNumbers, glyph_bitmap_BiGNumbers, glyph_dsc_BigNumbers); break;
-            default: break;
-        }
-    #endif
+uint8_t TFT_Base::getMaxFontIndex() {
+    return m_current_font.max_font_index;
+}
 
-    #ifdef TFT_FREE_SERIF_ITALIC
-        switch (font) {
-            case 15: SET_FONT_DATA(cmaps_FreeSerifItalic15, glyph_bitmap_FreeSerifItalic15, glyph_dsc_FreeSerifItalic15); break;
-            case 16: SET_FONT_DATA(cmaps_FreeSerifItalic16, glyph_bitmap_FreeSerifItalic16, glyph_dsc_FreeSerifItalic16); break;
-            case 18: SET_FONT_DATA(cmaps_FreeSerifItalic18, glyph_bitmap_FreeSerifItalic18, glyph_dsc_FreeSerifItalic18); break;
-            case 21: SET_FONT_DATA(cmaps_FreeSerifItalic21, glyph_bitmap_FreeSerifItalic21, glyph_dsc_FreeSerifItalic21); break;
-            case 25: SET_FONT_DATA(cmaps_FreeSerifItalic25, glyph_bitmap_FreeSerifItalic25, glyph_dsc_FreeSerifItalic25); break;
-            case 27: SET_FONT_DATA(cmaps_FreeSerifItalic27, glyph_bitmap_FreeSerifItalic27, glyph_dsc_FreeSerifItalic27); break;
-            case 34: SET_FONT_DATA(cmaps_FreeSerifItalic34, glyph_bitmap_FreeSerifItalic34, glyph_dsc_FreeSerifItalic34); break;
-            case 38: SET_FONT_DATA(cmaps_FreeSerifItalic38, glyph_bitmap_FreeSerifItalic38, glyph_dsc_FreeSerifItalic38); break;
-            case 43: SET_FONT_DATA(cmaps_FreeSerifItalic43, glyph_bitmap_FreeSerifItalic43, glyph_dsc_FreeSerifItalic43); break;
-            case 56: SET_FONT_DATA(cmaps_FreeSerifItalic56, glyph_bitmap_FreeSerifItalic56, glyph_dsc_FreeSerifItalic56); break;
-            case 66: SET_FONT_DATA(cmaps_FreeSerifItalic66, glyph_bitmap_FreeSerifItalic66, glyph_dsc_FreeSerifItalic66); break;
-            case 81: SET_FONT_DATA(cmaps_FreeSerifItalic81, glyph_bitmap_FreeSerifItalic81, glyph_dsc_FreeSerifItalic81); break;
-            case 96: SET_FONT_DATA(cmaps_FreeSerifItalic96, glyph_bitmap_FreeSerifItalic96, glyph_dsc_FreeSerifItalic96); break;
-            case 156: SET_FONT_DATA(cmaps_BigNumbers, glyph_bitmap_BiGNumbers, glyph_dsc_BigNumbers); break;
-            default: break;
-        }
-    #endif
+void TFT_Base::setFontSize(uint16_t font) {
+#define SET_FONT_DATA(CMAP, BITMAP, DSC)                  \
+    do {                                                  \
+        m_current_font.cmaps = CMAP;                      \
+        m_current_font.glyph_bitmap = BITMAP;             \
+        m_current_font.glyph_dsc = DSC;                   \
+        m_current_font.range_start = CMAP->range_start;   \
+        m_current_font.range_length = CMAP->range_length; \
+        m_current_font.line_height = CMAP->line_height;   \
+        m_current_font.font_height = CMAP->font_height;   \
+        m_current_font.base_line = CMAP->base_line;       \
+        m_current_font.lookup_table = CMAP->lookup_table; \
+    } while (0)
 
-    #ifdef TFT_ARIAL
-        switch (font) {
-            case 15: SET_FONT_DATA(cmaps_Arial15, glyph_bitmap_Arial15, glyph_dsc_Arial15); break;
-            case 16: SET_FONT_DATA(cmaps_Arial16, glyph_bitmap_Arial16, glyph_dsc_Arial16); break;
-            case 18: SET_FONT_DATA(cmaps_Arial18, glyph_bitmap_Arial18, glyph_dsc_Arial18); break;
-            case 21: SET_FONT_DATA(cmaps_Arial21, glyph_bitmap_Arial21, glyph_dsc_Arial21); break;
-            case 25: SET_FONT_DATA(cmaps_Arial25, glyph_bitmap_Arial25, glyph_dsc_Arial25); break;
-            case 27: SET_FONT_DATA(cmaps_Arial27, glyph_bitmap_Arial27, glyph_dsc_Arial27); break;
-            case 34: SET_FONT_DATA(cmaps_Arial34, glyph_bitmap_Arial34, glyph_dsc_Arial34); break;
-            case 38: SET_FONT_DATA(cmaps_Arial38, glyph_bitmap_Arial38, glyph_dsc_Arial38); break;
-            case 43: SET_FONT_DATA(cmaps_Arial43, glyph_bitmap_Arial43, glyph_dsc_Arial43); break;
-            case 56: SET_FONT_DATA(cmaps_Arial56, glyph_bitmap_Arial56, glyph_dsc_Arial56); break;
-            case 66: SET_FONT_DATA(cmaps_Arial66, glyph_bitmap_Arial66, glyph_dsc_Arial66); break;
-            case 81: SET_FONT_DATA(cmaps_Arial81, glyph_bitmap_Arial81, glyph_dsc_Arial81); break;
-            case 96: SET_FONT_DATA(cmaps_Arial96, glyph_bitmap_Arial96, glyph_dsc_Arial96); break;
-            case 156: SET_FONT_DATA(cmaps_BigNumbers, glyph_bitmap_BiGNumbers, glyph_dsc_BigNumbers); break;
-            default: break;
-        }
-    #endif
+    int8_t fontIndex = -1;
+    // clang-format off
+#ifdef TFT_TIMES_NEW_ROMAN
+    switch (font) {
+        case 15: SET_FONT_DATA(cmaps_Times15, glyph_bitmap_Times15, glyph_dsc_Times15); fontIndex = 0; break;
+        case 16: SET_FONT_DATA(cmaps_Times16, glyph_bitmap_Times16, glyph_dsc_Times16); fontIndex = 1; break;
+        case 18: SET_FONT_DATA(cmaps_Times18, glyph_bitmap_Times18, glyph_dsc_Times18); fontIndex = 2; break;
+        case 21: SET_FONT_DATA(cmaps_Times21, glyph_bitmap_Times21, glyph_dsc_Times21); fontIndex = 3; break;
+        case 25: SET_FONT_DATA(cmaps_Times25, glyph_bitmap_Times25, glyph_dsc_Times25); fontIndex = 4; break;
+        case 27: SET_FONT_DATA(cmaps_Times27, glyph_bitmap_Times27, glyph_dsc_Times27); fontIndex = 5; break;
+        case 34: SET_FONT_DATA(cmaps_Times34, glyph_bitmap_Times34, glyph_dsc_Times34); fontIndex = 6; break;
+        case 38: SET_FONT_DATA(cmaps_Times38, glyph_bitmap_Times38, glyph_dsc_Times38); fontIndex = 7; break;
+        case 43: SET_FONT_DATA(cmaps_Times43, glyph_bitmap_Times43, glyph_dsc_Times43); fontIndex = 8; break;
+        case 56: SET_FONT_DATA(cmaps_Times56, glyph_bitmap_Times56, glyph_dsc_Times56); fontIndex = 9; break;
+        case 66: SET_FONT_DATA(cmaps_Times66, glyph_bitmap_Times66, glyph_dsc_Times66); fontIndex = 10; break;
+        case 81: SET_FONT_DATA(cmaps_Times81, glyph_bitmap_Times81, glyph_dsc_Times81); fontIndex = 11; break;
+        case 96: SET_FONT_DATA(cmaps_Times96, glyph_bitmap_Times96, glyph_dsc_Times96); fontIndex = 12; break;
+        default: break;
+    }
+#endif
 
-    #ifdef TFT_Z003
-        switch (font) {
-            case 15: SET_FONT_DATA(cmaps_Z003_15, glyph_bitmap_Z003_15, glyph_dsc_Z003_15); break;
-            case 16: SET_FONT_DATA(cmaps_Z003_16, glyph_bitmap_Z003_16, glyph_dsc_Z003_16); break;
-            case 18: SET_FONT_DATA(cmaps_Z003_18, glyph_bitmap_Z003_18, glyph_dsc_Z003_18); break;
-            case 21: SET_FONT_DATA(cmaps_Z003_21, glyph_bitmap_Z003_21, glyph_dsc_Z003_21); break;
-            case 25: SET_FONT_DATA(cmaps_Z003_25, glyph_bitmap_Z003_25, glyph_dsc_Z003_25); break;
-            case 27: SET_FONT_DATA(cmaps_Z003_27, glyph_bitmap_Z003_27, glyph_dsc_Z003_27); break;
-            case 34: SET_FONT_DATA(cmaps_Z003_34, glyph_bitmap_Z003_34, glyph_dsc_Z003_34); break;
-            case 38: SET_FONT_DATA(cmaps_Z003_38, glyph_bitmap_Z003_38, glyph_dsc_Z003_38); break;
-            case 43: SET_FONT_DATA(cmaps_Z003_43, glyph_bitmap_Z003_43, glyph_dsc_Z003_43); break;
-            case 56: SET_FONT_DATA(cmaps_Z003_56, glyph_bitmap_Z003_56, glyph_dsc_Z003_56); break;
-            case 66: SET_FONT_DATA(cmaps_Z003_66, glyph_bitmap_Z003_66, glyph_dsc_Z003_66); break;
-            case 81: SET_FONT_DATA(cmaps_Z003_81, glyph_bitmap_Z003_81, glyph_dsc_Z003_81); break;
-            case 96: SET_FONT_DATA(cmaps_Z003_96, glyph_bitmap_Z003_96, glyph_dsc_Z003_96); break;
-            case 156: SET_FONT_DATA(cmaps_BigNumbers, glyph_bitmap_BiGNumbers, glyph_dsc_BigNumbers); break;
-            default: break;
-        }
-    #endif
+#ifdef TFT_GARAMOND
+    switch (font) {
+        case 15: SET_FONT_DATA(cmaps_Garamond15, glyph_bitmap_Garamond15, glyph_dsc_Garamond15); fontIndex = 0; break;
+        case 16: SET_FONT_DATA(cmaps_Garamond16, glyph_bitmap_Garamond16, glyph_dsc_Garamond16); fontIndex = 1; break;
+        case 18: SET_FONT_DATA(cmaps_Garamond18, glyph_bitmap_Garamond18, glyph_dsc_Garamond18); fontIndex = 2; break;
+        case 21: SET_FONT_DATA(cmaps_Garamond21, glyph_bitmap_Garamond21, glyph_dsc_Garamond21); fontIndex = 3; break;
+        case 25: SET_FONT_DATA(cmaps_Garamond25, glyph_bitmap_Garamond25, glyph_dsc_Garamond25); fontIndex = 4; break;
+        case 27: SET_FONT_DATA(cmaps_Garamond27, glyph_bitmap_Garamond27, glyph_dsc_Garamond27); fontIndex = 5; break;
+        case 34: SET_FONT_DATA(cmaps_Garamond34, glyph_bitmap_Garamond34, glyph_dsc_Garamond34); fontIndex = 6; break;
+        case 38: SET_FONT_DATA(cmaps_Garamond38, glyph_bitmap_Garamond38, glyph_dsc_Garamond38); fontIndex = 7; break;
+        case 43: SET_FONT_DATA(cmaps_Garamond43, glyph_bitmap_Garamond43, glyph_dsc_Garamond43); fontIndex = 8; break;
+        case 56: SET_FONT_DATA(cmaps_Garamond56, glyph_bitmap_Garamond56, glyph_dsc_Garamond56); fontIndex = 9; break;
+        case 66: SET_FONT_DATA(cmaps_Garamond66, glyph_bitmap_Garamond66, glyph_dsc_Garamond66); fontIndex = 10; break;
+        case 81: SET_FONT_DATA(cmaps_Garamond81, glyph_bitmap_Garamond81, glyph_dsc_Garamond81); fontIndex = 11; break;
+        case 96: SET_FONT_DATA(cmaps_Garamond96, glyph_bitmap_Garamond96, glyph_dsc_Garamond96); fontIndex = 12; break;
+        default: break;
+    }
+#endif
 
-    #undef SET_FONT_DATA
+#ifdef TFT_FREE_SERIF_ITALIC
+    switch (font) {
+        case 15: SET_FONT_DATA(cmaps_FreeSerifItalic15, glyph_bitmap_FreeSerifItalic15, glyph_dsc_FreeSerifItalic15); fontIndex = 0; break;
+        case 16: SET_FONT_DATA(cmaps_FreeSerifItalic16, glyph_bitmap_FreeSerifItalic16, glyph_dsc_FreeSerifItalic16); fontIndex = 1; break;
+        case 18: SET_FONT_DATA(cmaps_FreeSerifItalic18, glyph_bitmap_FreeSerifItalic18, glyph_dsc_FreeSerifItalic18); fontIndex = 2; break;
+        case 21: SET_FONT_DATA(cmaps_FreeSerifItalic21, glyph_bitmap_FreeSerifItalic21, glyph_dsc_FreeSerifItalic21); fontIndex = 3; break;
+        case 25: SET_FONT_DATA(cmaps_FreeSerifItalic25, glyph_bitmap_FreeSerifItalic25, glyph_dsc_FreeSerifItalic25); fontIndex = 4; break;
+        case 27: SET_FONT_DATA(cmaps_FreeSerifItalic27, glyph_bitmap_FreeSerifItalic27, glyph_dsc_FreeSerifItalic27); fontIndex = 5; break;
+        case 34: SET_FONT_DATA(cmaps_FreeSerifItalic34, glyph_bitmap_FreeSerifItalic34, glyph_dsc_FreeSerifItalic34); fontIndex = 6; break;
+        case 38: SET_FONT_DATA(cmaps_FreeSerifItalic38, glyph_bitmap_FreeSerifItalic38, glyph_dsc_FreeSerifItalic38); fontIndex = 7; break;
+        case 43: SET_FONT_DATA(cmaps_FreeSerifItalic43, glyph_bitmap_FreeSerifItalic43, glyph_dsc_FreeSerifItalic43); fontIndex = 8; break;
+        case 56: SET_FONT_DATA(cmaps_FreeSerifItalic56, glyph_bitmap_FreeSerifItalic56, glyph_dsc_FreeSerifItalic56); fontIndex = 9; break;
+        case 66: SET_FONT_DATA(cmaps_FreeSerifItalic66, glyph_bitmap_FreeSerifItalic66, glyph_dsc_FreeSerifItalic66); fontIndex = 10; break;
+        case 81: SET_FONT_DATA(cmaps_FreeSerifItalic81, glyph_bitmap_FreeSerifItalic81, glyph_dsc_FreeSerifItalic81); fontIndex = 11; break;
+        case 96: SET_FONT_DATA(cmaps_FreeSerifItalic96, glyph_bitmap_FreeSerifItalic96, glyph_dsc_FreeSerifItalic96); fontIndex = 12; break;
+        default: break;
+    }
+#endif
+
+#ifdef TFT_ARIAL
+    switch (font) {
+        case 15: SET_FONT_DATA(cmaps_Arial15, glyph_bitmap_Arial15, glyph_dsc_Arial15); fontIndex = 0; break;
+        case 16: SET_FONT_DATA(cmaps_Arial16, glyph_bitmap_Arial16, glyph_dsc_Arial16); fontIndex = 1; break;
+        case 18: SET_FONT_DATA(cmaps_Arial18, glyph_bitmap_Arial18, glyph_dsc_Arial18); fontIndex = 2; break;
+        case 21: SET_FONT_DATA(cmaps_Arial21, glyph_bitmap_Arial21, glyph_dsc_Arial21); fontIndex = 3; break;
+        case 25: SET_FONT_DATA(cmaps_Arial25, glyph_bitmap_Arial25, glyph_dsc_Arial25); fontIndex = 4; break;
+        case 27: SET_FONT_DATA(cmaps_Arial27, glyph_bitmap_Arial27, glyph_dsc_Arial27); fontIndex = 5; break;
+        case 34: SET_FONT_DATA(cmaps_Arial34, glyph_bitmap_Arial34, glyph_dsc_Arial34); fontIndex = 6; break;
+        case 38: SET_FONT_DATA(cmaps_Arial38, glyph_bitmap_Arial38, glyph_dsc_Arial38); fontIndex = 7; break;
+        case 43: SET_FONT_DATA(cmaps_Arial43, glyph_bitmap_Arial43, glyph_dsc_Arial43); fontIndex = 8; break;
+        case 56: SET_FONT_DATA(cmaps_Arial56, glyph_bitmap_Arial56, glyph_dsc_Arial56); fontIndex = 9; break;
+        case 66: SET_FONT_DATA(cmaps_Arial66, glyph_bitmap_Arial66, glyph_dsc_Arial66); fontIndex = 10; break;
+        case 81: SET_FONT_DATA(cmaps_Arial81, glyph_bitmap_Arial81, glyph_dsc_Arial81); fontIndex = 11; break;
+        case 96: SET_FONT_DATA(cmaps_Arial96, glyph_bitmap_Arial96, glyph_dsc_Arial96); fontIndex = 12; break;
+        default: break;
+    }
+#endif
+
+#ifdef TFT_Z003
+    switch (font) {
+        case 15: SET_FONT_DATA(cmaps_Z003_15, glyph_bitmap_Z003_15, glyph_dsc_Z003_15); fontIndex = 0; break;
+        case 16: SET_FONT_DATA(cmaps_Z003_16, glyph_bitmap_Z003_16, glyph_dsc_Z003_16); fontIndex = 1; break;
+        case 18: SET_FONT_DATA(cmaps_Z003_18, glyph_bitmap_Z003_18, glyph_dsc_Z003_18); fontIndex = 2; break;
+        case 21: SET_FONT_DATA(cmaps_Z003_21, glyph_bitmap_Z003_21, glyph_dsc_Z003_21); fontIndex = 3; break;
+        case 25: SET_FONT_DATA(cmaps_Z003_25, glyph_bitmap_Z003_25, glyph_dsc_Z003_25); fontIndex = 4; break;
+        case 27: SET_FONT_DATA(cmaps_Z003_27, glyph_bitmap_Z003_27, glyph_dsc_Z003_27); fontIndex = 5; break;
+        case 34: SET_FONT_DATA(cmaps_Z003_34, glyph_bitmap_Z003_34, glyph_dsc_Z003_34); fontIndex = 6; break;
+        case 38: SET_FONT_DATA(cmaps_Z003_38, glyph_bitmap_Z003_38, glyph_dsc_Z003_38); fontIndex = 7; break;
+        case 43: SET_FONT_DATA(cmaps_Z003_43, glyph_bitmap_Z003_43, glyph_dsc_Z003_43); fontIndex = 8; break;
+        case 56: SET_FONT_DATA(cmaps_Z003_56, glyph_bitmap_Z003_56, glyph_dsc_Z003_56); fontIndex = 9; break;
+        case 66: SET_FONT_DATA(cmaps_Z003_66, glyph_bitmap_Z003_66, glyph_dsc_Z003_66); fontIndex = 10; break;
+        case 81: SET_FONT_DATA(cmaps_Z003_81, glyph_bitmap_Z003_81, glyph_dsc_Z003_81); fontIndex = 11; break;
+        case 96: SET_FONT_DATA(cmaps_Z003_96, glyph_bitmap_Z003_96, glyph_dsc_Z003_96); fontIndex = 12; break;
+        default: break;
+    }
+#endif
+    // clang-format on
+    if (font == 156) {
+        SET_FONT_DATA(cmaps_BigNumbers, glyph_bitmap_BiGNumbers, glyph_dsc_BigNumbers);
+        fontIndex = 13;
+    }
+    if (fontIndex == -1) { log_e("unknown fontsize %i", font); }
+    m_current_font.font_index = fontIndex;
+    m_current_font.max_font_index = 12;
+#undef SET_FONT_DATA
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool TFT_Base::renderRGB565(int16_t x, int16_t y, uint16_t w, uint16_t h, const uint16_t* rgb, const uint8_t* alpha) {
@@ -2308,9 +2295,7 @@ bool TFT_Base::renderRGB565(int16_t x, int16_t y, uint16_t w, uint16_t h, const 
         }
     }
 
-    if (maxX >= minX && maxY >= minY) {
-        panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
-    }
+    if (maxX >= minX && maxY >= minY) { panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]); }
 
     return true;
 }
@@ -2361,7 +2346,7 @@ void TFT_Base::drawRectLogicalFromFB(uint8_t fb, int16_t x, int16_t y, uint16_t 
     panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[fb]);
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-bool TFT_Base::copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
+bool TFT_Base::copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool updateDisplay) {
     if (w == 0 || h == 0) return false;
 
     uint16_t lw = logicalWidth();
@@ -2382,10 +2367,133 @@ bool TFT_Base::copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, 
         }
     }
 
-    if (destination == 0) drawRectLogicalFromFB(0, x, y, w, h);
+    if (updateDisplay && destination == 0) drawRectLogicalFromFB(0, x, y, w, h);
 
     return true;
 }
+
+bool TFT_Base::copyFramebuffer(uint8_t source, uint16_t* buffer, uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
+    if (!buffer) return false;
+    if (w == 0 || h == 0) return false;
+
+    uint16_t lw = logicalWidth();
+    uint16_t lh = logicalHeight();
+
+    if (x >= lw || y >= lh) return false;
+    if (x + w > lw) w = lw - x;
+    if (y + h > lh) h = lh - y;
+
+    for (uint16_t row = 0; row < h; row++) {
+        for (uint16_t col = 0; col < w; col++) {
+
+            int32_t physX, physY;
+            mapRotation(m_rotation, x + col, y + row, physX, physY);
+
+            if (physX < 0 || physY < 0 || physX >= m_h_res || physY >= m_v_res) continue;
+
+            buffer[row * w + col] = m_framebuffer[source][physY * m_h_res + physX];
+        }
+    }
+
+    return true;
+}
+
+bool TFT_Base::copyFramebuffer(const uint16_t* buffer, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool updateDisplay) {
+    if (!buffer) return false;
+    if (w == 0 || h == 0) return false;
+
+    uint16_t lw = logicalWidth();
+    uint16_t lh = logicalHeight();
+
+    if (x >= lw || y >= lh) return false;
+    if (x + w > lw) w = lw - x;
+    if (y + h > lh) h = lh - y;
+
+    for (uint16_t row = 0; row < h; row++) {
+        for (uint16_t col = 0; col < w; col++) {
+
+            int32_t physX, physY;
+            mapRotation(m_rotation, x + col, y + row, physX, physY);
+
+            if (physX < 0 || physY < 0 || physX >= m_h_res || physY >= m_v_res) continue;
+
+            m_framebuffer[destination][physY * m_h_res + physX] = buffer[row * w + col];
+        }
+    }
+
+    if (updateDisplay && destination == 0) drawRectLogicalFromFB(0, x, y, w, h);
+
+    return true;
+}
+
+bool TFT_Base::copyFramebuffer(uint8_t source, uint16_t srcX, uint16_t srcY, uint16_t* buffer, uint16_t bufferWidth, uint16_t bufferHeight, uint16_t dstX, uint16_t dstY, uint16_t w, uint16_t h) {
+
+    if (!buffer) return false;
+    if (w == 0 || h == 0) return false;
+
+    uint16_t lw = logicalWidth();
+    uint16_t lh = logicalHeight();
+
+    // Quellbereich im Framebuffer beschneiden
+    if (srcX >= lw || srcY >= lh) return false;
+    if (srcX + w > lw) w = lw - srcX;
+    if (srcY + h > lh) h = lh - srcY;
+
+    // Zielbereich im Buffer beschneiden
+    if (dstX >= bufferWidth || dstY >= bufferHeight) return false;
+    if (dstX + w > bufferWidth) w = bufferWidth - dstX;
+    if (dstY + h > bufferHeight) h = bufferHeight - dstY;
+
+    for (uint16_t row = 0; row < h; row++) {
+        for (uint16_t col = 0; col < w; col++) {
+
+            int32_t physX, physY;
+            mapRotation(m_rotation, srcX + col, srcY + row, physX, physY);
+
+            if (physX < 0 || physY < 0 || physX >= m_h_res || physY >= m_v_res) continue;
+
+            buffer[(dstY + row) * bufferWidth + (dstX + col)] = m_framebuffer[source][physY * m_h_res + physX];
+        }
+    }
+
+    return true;
+}
+
+bool TFT_Base::copyFramebuffer(const uint16_t* buffer, uint16_t bufferWidth, uint16_t bufferHeight, uint16_t srcX, uint16_t srcY, uint8_t destination, uint16_t dstX, uint16_t dstY, uint16_t w, uint16_t h, bool updateDisplay) {
+
+    if (!buffer) return false;
+    if (w == 0 || h == 0) return false;
+
+    uint16_t lw = logicalWidth();
+    uint16_t lh = logicalHeight();
+
+    // Quellbereich im Buffer beschneiden
+    if (srcX >= bufferWidth || srcY >= bufferHeight) return false;
+    if (srcX + w > bufferWidth) w = bufferWidth - srcX;
+    if (srcY + h > bufferHeight) h = bufferHeight - srcY;
+
+    // Zielbereich im Framebuffer beschneiden
+    if (dstX >= lw || dstY >= lh) return false;
+    if (dstX + w > lw) w = lw - dstX;
+    if (dstY + h > lh) h = lh - dstY;
+
+    for (uint16_t row = 0; row < h; row++) {
+        for (uint16_t col = 0; col < w; col++) {
+
+            int32_t physX, physY;
+            mapRotation(m_rotation, dstX + col, dstY + row, physX, physY);
+
+            if (physX < 0 || physY < 0 || physX >= m_h_res || physY >= m_v_res) continue;
+
+            m_framebuffer[destination][physY * m_h_res + physX] = buffer[(srcY + row) * bufferWidth + (srcX + col)];
+        }
+    }
+
+    if (updateDisplay && destination == 0) drawRectLogicalFromFB(0, dstX, dstY, w, h);
+
+    return true;
+}
+
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_Base::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
     if (w <= 0 || h <= 0) return;
@@ -2395,9 +2503,7 @@ void TFT_Base::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t col
     uint16_t lineBuffer[w];
     for (int16_t i = 0; i < w; ++i) lineBuffer[i] = color;
 
-    for (int16_t row = 0; row < h; ++row) {
-        renderRGB565(x, y + row, w, 1, lineBuffer, nullptr);
-    }
+    for (int16_t row = 0; row < h; ++row) { renderRGB565(x, y + row, w, 1, lineBuffer, nullptr); }
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_Base::fillScreen(uint16_t color) {
@@ -2442,9 +2548,7 @@ void TFT_Base::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t
         }
     }
 
-    if (maxX >= minX && maxY >= minY) {
-        panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
-    }
+    if (maxX >= minX && maxY >= minY) { panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]); }
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_Base::drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color) {
@@ -2492,33 +2596,39 @@ void TFT_Base::fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int1
 
     if (y1 == y2) {
         for (int16_t y = y0; y <= y1; ++y) {
-            int16_t xa = x0 + (x1 - x0) * (y - y0) / (y1 - y0);
-            int16_t xb = x0 + (x2 - x0) * (y - y0) / (y2 - y0);
-            drawSpan(xa, xb, y);
+            if ((y1 - y0 > 0) && (y2 - y0 > 0)) {
+                int16_t xa = x0 + (x1 - x0) * (y - y0) / (y1 - y0);
+                int16_t xb = x0 + (x2 - x0) * (y - y0) / (y2 - y0);
+                drawSpan(xa, xb, y);
+            }
         }
     } else if (y0 == y1) {
         for (int16_t y = y0; y <= y2; ++y) {
-            int16_t xa = x0 + (x2 - x0) * (y - y0) / (y2 - y0);
-            int16_t xb = x1 + (x2 - x1) * (y - y1) / (y2 - y1);
-            drawSpan(xa, xb, y);
+            if ((y2 - y0 > 0) && (y2 - y1 > 0)) {
+                int16_t xa = x0 + (x2 - x0) * (y - y0) / (y2 - y0);
+                int16_t xb = x1 + (x2 - x1) * (y - y1) / (y2 - y1);
+                drawSpan(xa, xb, y);
+            }
         }
     } else {
         for (int16_t y = y0; y <= y1; ++y) {
-            int16_t xa = x0 + (x1 - x0) * (y - y0) / (y1 - y0);
-            int16_t xb = x0 + (x2 - x0) * (y - y0) / (y2 - y0);
-            drawSpan(xa, xb, y);
+            if ((y1 - y0 > 0) && (y2 - y0 > 0)) {
+                int16_t xa = x0 + (x1 - x0) * (y - y0) / (y1 - y0);
+                int16_t xb = x0 + (x2 - x0) * (y - y0) / (y2 - y0);
+                drawSpan(xa, xb, y);
+            }
         }
 
         for (int16_t y = y1; y <= y2; ++y) {
-            int16_t xa = x1 + (x2 - x1) * (y - y1) / (y2 - y1);
-            int16_t xb = x0 + (x2 - x0) * (y - y0) / (y2 - y0);
-            drawSpan(xa, xb, y);
+            if ((y2 - y1 > 0) && (y2 - y0 > 0)) {
+                int16_t xa = x1 + (x2 - x1) * (y - y1) / (y2 - y1);
+                int16_t xb = x0 + (x2 - x0) * (y - y0) / (y2 - y0);
+                drawSpan(xa, xb, y);
+            }
         }
     }
 
-    if (maxX >= minX && maxY >= minY) {
-        panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
-    }
+    if (maxX >= minX && maxY >= minY) { panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]); }
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_Base::drawRect(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t color) {
@@ -2552,9 +2662,7 @@ void TFT_Base::drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t
             int32_t rotX, rotY;
             mapRotation(m_rotation, px, py, rotX, rotY);
 
-            if (rotX >= 0 && rotX < m_h_res && rotY >= 0 && rotY < m_v_res) {
-                m_framebuffer[0][rotY * m_h_res + rotX] = color;
-            }
+            if (rotX >= 0 && rotX < m_h_res && rotY >= 0 && rotY < m_v_res) { m_framebuffer[0][rotY * m_h_res + rotX] = color; }
         };
 
         plot(x + w - r - 1 + cx, y + r - cy);
@@ -2597,9 +2705,7 @@ void TFT_Base::drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t
     includeCorner(x, y + h - 1);
     includeCorner(x + w - 1, y + h - 1);
 
-    if (maxX >= minX && maxY >= minY) {
-        panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
-    }
+    if (maxX >= minX && maxY >= minY) { panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]); }
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_Base::fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color) {
@@ -2657,9 +2763,7 @@ void TFT_Base::fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t
         f += ddF_x;
     }
 
-    if (maxX >= minX && maxY >= minY) {
-        panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
-    }
+    if (maxX >= minX && maxY >= minY) { panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]); }
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_Base::drawCircle(int16_t cx, int16_t cy, int16_t r, uint16_t color) {
@@ -2716,12 +2820,10 @@ void TFT_Base::drawCircle(int16_t cx, int16_t cy, int16_t r, uint16_t color) {
         plot(cx - y, cy - x);
     }
 
-    if (maxX >= minX && maxY >= minY) {
-        panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
-    }
+    if (maxX >= minX && maxY >= minY) { panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]); }
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_Base::fillCircle(int16_t cx, int16_t cy, uint16_t r, uint16_t color) {
+void TFT_Base::fillCircle(int16_t cx, int16_t cy, uint16_t r, uint16_t color, bool updateDisplay) {
     if (r == 0) return;
 
     int16_t f = 1 - r;
@@ -2774,9 +2876,7 @@ void TFT_Base::fillCircle(int16_t cx, int16_t cy, uint16_t r, uint16_t color) {
         f += ddF_x;
     }
 
-    if (maxX >= minX && maxY >= minY) {
-        panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]);
-    }
+    if (updateDisplay && maxX >= minX && maxY >= minY) { panelDrawBitmap(minX, minY, maxX + 1, maxY + 1, m_framebuffer[0]); }
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_Base::writeTheFramebuffer(const uint8_t* bmi, uint16_t posX, uint16_t posY, uint16_t width, uint16_t height) {
@@ -2808,20 +2908,19 @@ void TFT_Base::writeTheFramebuffer(const uint8_t* bmi, uint16_t posX, uint16_t p
     bitreader(bmi);
 
     uint16_t* rgbBuffer = (uint16_t*)ps_malloc(width * height * sizeof(uint16_t));
-    uint8_t* alphaBuffer = (uint8_t*)ps_malloc(width * height);
+    uint8_t*  alphaBuffer = (uint8_t*)ps_malloc(width * height);
 
     if (!rgbBuffer || !alphaBuffer) return;
 
     for (uint16_t row = 0; row < height; row++) {
         for (uint16_t col = 0; col < width; col++) {
             int32_t color = bitreader(nullptr);
-            size_t idx = row * width + col;
+            size_t  idx = row * width + col;
 
             if (color == -1) {
                 rgbBuffer[idx] = 0;
                 alphaBuffer[idx] = 0;
-            }
-            else {
+            } else {
                 rgbBuffer[idx] = (uint16_t)color;
                 alphaBuffer[idx] = 255;
             }
@@ -2833,399 +2932,507 @@ void TFT_Base::writeTheFramebuffer(const uint8_t* bmi, uint16_t posX, uint16_t p
     free(rgbBuffer);
     free(alphaBuffer);
 }
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-uint16_t TFT_Base::analyzeText(const char* str, uint16_t* chArr, uint16_t* colorArr, uint16_t startColor) {
-    uint16_t chLen = 0;
-    uint16_t idx = 0;
-    int32_t  codePoint = -1;
-    colorArr[0] = startColor;
 
-    while ((uint8_t)str[idx] != 0) {
-        colorArr[chLen + 1] = colorArr[chLen];
-        switch ((uint8_t)str[idx]) {
-            case '\033':
-                if (strncmp(str + idx, "\033[30m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_BLACK; break; }
-                if (strncmp(str + idx, "\033[31m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_RED; break; }
-                if (strncmp(str + idx, "\033[32m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_GREEN; break; }
-                if (strncmp(str + idx, "\033[33m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_YELLOW; break; }
-                if (strncmp(str + idx, "\033[34m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_BLUE; break; }
-                if (strncmp(str + idx, "\033[35m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_MAGENTA; break; }
-                if (strncmp(str + idx, "\033[36m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_CYAN; break; }
-                if (strncmp(str + idx, "\033[37m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_WHITE; break; }
-                if (strncmp(str + idx, "\033[38;5;130m", 11) == 0) { idx += 11; colorArr[chLen] = TFT_BROWN; break; }
-                if (strncmp(str + idx, "\033[38;5;214m", 11) == 0) { idx += 11; colorArr[chLen] = TFT_ORANGE; break; }
-                if (strncmp(str + idx, "\033[90m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_GREY; break; }
-                if (strncmp(str + idx, "\033[91m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_LIGHTRED; break; }
-                if (strncmp(str + idx, "\033[92m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_LIGHTGREEN; break; }
-                if (strncmp(str + idx, "\033[93m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_LIGHTYELLOW; break; }
-                if (strncmp(str + idx, "\033[94m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_LIGHTBLUE; break; }
-                if (strncmp(str + idx, "\033[95m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_LIGHTMAGENTA; break; }
-                if (strncmp(str + idx, "\033[96m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_LIGHTCYAN; break; }
-                if (strncmp(str + idx, "\033[97m", 5) == 0) { idx += 5; colorArr[chLen] = TFT_LIGHTGREY; break; }
-                if (strncmp(str + idx, "\033[38;5;52m", 10) == 0) { idx += 10; colorArr[chLen] = TFT_DARKRED; break; }
-                if (strncmp(str + idx, "\033[38;5;22m", 10) == 0) { idx += 10; colorArr[chLen] = TFT_DARKGREEN; break; }
-                if (strncmp(str + idx, "\033[38;5;136m", 11) == 0) { idx += 11; colorArr[chLen] = TFT_DARKYELLOW; break; }
-                if (strncmp(str + idx, "\033[38;5;17m", 10) == 0) { idx += 10; colorArr[chLen] = TFT_DARKBLUE; break; }
-                if (strncmp(str + idx, "\033[38;5;53m", 10) == 0) { idx += 10; colorArr[chLen] = TFT_DARKMAGENTA; break; }
-                if (strncmp(str + idx, "\033[38;5;23m", 10) == 0) { idx += 10; colorArr[chLen] = TFT_DARKCYAN; break; }
-                if (strncmp(str + idx, "\033[38;5;240m", 11) == 0) { idx += 11; colorArr[chLen] = TFT_DARKGREY; break; }
-                if (strncmp(str + idx, "\033[38;5;166m", 11) == 0) { idx += 11; colorArr[chLen] = TFT_DARKORANGE; break; }
-                if (strncmp(str + idx, "\033[38;5;215m", 11) == 0) { idx += 11; colorArr[chLen] = TFT_LIGHTORANGE; break; }
-                if (strncmp(str + idx, "\033[38;5;129m", 11) == 0) { idx += 11; colorArr[chLen] = TFT_PURPLE; break; }
-                if (strncmp(str + idx, "\033[38;5;213m", 11) == 0) { idx += 11; colorArr[chLen] = TFT_PINK; break; }
-                if (strncmp(str + idx, "\033[38;5;190m", 11) == 0) { idx += 11; colorArr[chLen] = TFT_LIME; break; }
-                if (strncmp(str + idx, "\033[38;5;25m", 10) == 0) { idx += 10; colorArr[chLen] = TFT_NAVY; break; }
-                if (strncmp(str + idx, "\033[38;5;51m", 10) == 0) { idx += 10; colorArr[chLen] = TFT_AQUAMARINE; break; }
-                if (strncmp(str + idx, "\033[38;5;189m", 11) == 0) { idx += 11; colorArr[chLen] = TFT_LAVENDER; break; }
-                if (strncmp(str + idx, "\033[38;2;210;180;140m", 19) == 0) { idx += 19; colorArr[chLen] = TFT_LIGHTBROWN; break; }
-                if (strncmp(str + idx, "\033[0m", 4) == 0) { idx += 4; break; }
-                if (strncmp(str + idx, "\033[1m", 4) == 0) { idx += 4; break; }
-                if (strncmp(str + idx, "\033[2m", 4) == 0) { idx += 4; break; }
-                if (strncmp(str + idx, "\033[3m", 4) == 0) { idx += 4; break; }
-                if (strncmp(str + idx, "\033[4m", 4) == 0) { idx += 4; break; }
-                if (tft_info) tft_info("unknown ANSI ESC SEQUENCE");
-                idx += 4;
-                break;
+// ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫   writeText   ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
+// ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-            case 0x20 ... 0x7F:
-                chArr[chLen] = (uint8_t)str[idx];
-                idx += 1;
-                chLen += 1;
-                break;
-            case 0xC2 ... 0xD1:
-                codePoint = ((uint8_t)str[idx] - 0xC2) * 0x40 + (uint8_t)str[idx + 1];
-                if (m_current_font.lookup_table[codePoint] != 0) {
-                    chArr[chLen] = codePoint;
-                    chLen += 1;
-                }
-                else {
-                    log_w("character 0x%02X%02X is not in table", str[idx], str[idx + 1]);
-                }
-                idx += 2;
-                break;
-            case 0xD2 ... 0xDF:
-                log_w("character 0x%02X%02X  is not in table", str[idx], str[idx + 1]);
-                idx += 2;
-                break;
-            case 0xE0:
-                if ((uint8_t)str[idx + 1] == 0x80 && (uint8_t)str[idx + 2] == 0x99) {
-                    codePoint = 0xA4;
-                    chArr[chLen] = codePoint;
-                    chLen += 1;
-                }
-                else {
-                    log_w("character 0x%02X%02X  is not in table", str[idx], str[idx + 1]);
-                }
-                idx += 3;
-                break;
-            case 0xE1 ... 0xEF:
-                idx += 3;
-                break;
-            case 0xF0 ... 0xFF:
-                codePoint = -1;
-                if (!strncmp(str + idx, "🟢", 4)) { codePoint = 0xF9A2; }
-                if (!strncmp(str + idx, "🟡", 4)) { codePoint = 0xF9A1; }
-                if (!strncmp(str + idx, "🔴", 4)) { codePoint = 0xF9B4; }
-                if (!strncmp(str + idx, "🔵", 4)) { codePoint = 0xF9B5; }
-                if (!strncmp(str + idx, "🟠", 4)) { codePoint = 0xF9A0; }
-                if (!strncmp(str + idx, "🟣", 4)) { codePoint = 0xF9A3; }
-                if (!strncmp(str + idx, "🟤", 4)) { codePoint = 0xF9A4; }
-                if (!strncmp(str + idx, "🟩", 4)) { codePoint = 0xF9A9; }
-                if (!strncmp(str + idx, "🟨", 4)) { codePoint = 0xF9A8; }
-                if (!strncmp(str + idx, "🟥", 4)) { codePoint = 0xF9A5; }
-                if (!strncmp(str + idx, "🟦", 4)) { codePoint = 0xF9A6; }
-                if (!strncmp(str + idx, "🟧", 4)) { codePoint = 0xF9A7; }
-                if (!strncmp(str + idx, "🟪", 4)) { codePoint = 0xF9AA; }
-                if (!strncmp(str + idx, "🟫", 4)) { codePoint = 0xF9AB; }
-                if (codePoint != -1) {
-                    chArr[chLen] = codePoint;
-                    chLen += 1;
-                }
-                else {
-                    log_w("character 0x%02X%02X%02X%02X  is not in table", str[idx], str[idx + 1], str[idx + 2], str[idx + 3]);
-                }
-                idx += 4;
-                break;
-            default:
-                idx++;
-                break;
+TFT_Base::Utf8Char TFT_Base::decodeUtf8(const char* s) {
+    Utf8Char       u8ch{};
+    const uint8_t* p = reinterpret_cast<const uint8_t*>(s);
+    if ((p[0] & 0x80) == 0x00) { // 1 byte
+        u8ch.codepoint = p[0];
+        u8ch.length = 1;
+    } else if ((p[0] & 0xE0) == 0xC0) { // 2 byte
+        u8ch.codepoint = ((p[0] & 0x1F) << 6) | (p[1] & 0x3F);
+        u8ch.length = 2;
+    } else if ((p[0] & 0xF0) == 0xE0) { // 3 byte
+        u8ch.codepoint = ((p[0] & 0x0F) << 12) | ((p[1] & 0x3F) << 6) | (p[2] & 0x3F);
+        u8ch.length = 3;
+    } else if ((p[0] & 0xF8) == 0xF0) { // 4 byte
+        u8ch.codepoint = ((p[0] & 0x07) << 18) | ((p[1] & 0x3F) << 12) | ((p[2] & 0x3F) << 6) | (p[3] & 0x3F);
+        u8ch.length = 4;
+    } else {
+        u8ch.codepoint = 0xFFFD;
+        u8ch.length = 1;
+    }
+    return u8ch;
+}
+// ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+size_t TFT_Base::parseAnsi(const char*& p, uint32_t& color, Arg& arg) {
+    for (auto& a : ansiTable) {
+        if (strncmp(p, a.seq, a.len) == 0) {
+            color = a.color;
+            arg = a.mode;
+            return a.len;
         }
     }
-    return chLen;
+    return 0;
 }
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-uint16_t TFT_Base::getLineLength(const char* txt, bool narrow) {
-    uint16_t pxLength = 0;
-    uint16_t idx = 0;
-    bool     isEmoji = false;
-    while ((uint8_t)txt[idx] != 0) {
-        isEmoji = false;
-        if (txt[idx] == 0xF0) {
-            if (!strncmp(txt + idx, "🟢", 4)) { isEmoji = true; }
-            if (!strncmp(txt + idx, "🟡", 4)) { isEmoji = true; }
-            if (!strncmp(txt + idx, "🔴", 4)) { isEmoji = true; }
-            if (!strncmp(txt + idx, "🔵", 4)) { isEmoji = true; }
-            if (!strncmp(txt + idx, "🟠", 4)) { isEmoji = true; }
-            if (!strncmp(txt + idx, "🟣", 4)) { isEmoji = true; }
-            if (!strncmp(txt + idx, "🟤", 4)) { isEmoji = true; }
-            if (!strncmp(txt + idx, "🟩", 4)) { isEmoji = true; }
-            if (!strncmp(txt + idx, "🟨", 4)) { isEmoji = true; }
-            if (!strncmp(txt + idx, "🟥", 4)) { isEmoji = true; }
-            if (!strncmp(txt + idx, "🟦", 4)) { isEmoji = true; }
-            if (!strncmp(txt + idx, "🟧", 4)) { isEmoji = true; }
-            if (!strncmp(txt + idx, "🟪", 4)) { isEmoji = true; }
-            if (!strncmp(txt + idx, "🟫", 4)) { isEmoji = true; }
-            if (isEmoji) {
-                uint16_t fh = m_current_font.font_height;
-                pxLength += fh - fh / 3;
-                idx += 4;
+// ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_Base::txtToToken(const char* p) {
+
+    m_token.clear();
+    while (*p) {
+        if (*p == '\n') {
+            m_token.emplace_back(TokenType::NewLine);
+            ++p;
+            continue;
+        }
+        if (*p == '\033') {
+            uint32_t value;
+            Arg      arg;
+            size_t   len = parseAnsi(p, value, arg);
+            if (len == 0) {
+                log_w("Unknown ANSI sequence");
+                ++p;
                 continue;
             }
+            m_token.emplace_back(TokenType::Color, value, arg);
+            p += len;
+            continue;
         }
-        uint16_t glyphPos = m_current_font.lookup_table[(uint8_t)txt[idx]];
-        pxLength += m_current_font.glyph_dsc[glyphPos].adv_w / 16;
-        int ofsX = m_current_font.glyph_dsc[glyphPos].ofs_x;
-        if (ofsX < 0) ofsX = 0;
-        if (!narrow) pxLength += ofsX;
-        idx++;
+        Utf8Char ch = decodeUtf8(p);
+        uint32_t cp = ch.codepoint;
+
+        if (cp >= m_current_font.range_length) {
+            if (findEmoji(cp)) {
+                m_token.emplace_back(TokenType::Glyph, cp);
+                MWR_LOG_DEBUG("emoji cl len {}", ch.length);
+                p += ch.length;
+                continue;
+            }
+            MWR_LOG_WARN("character U+{:04X} outside font", cp);
+            cp = 0x20;
+        } else if (m_current_font.lookup_table[cp] == 0xFFFF) {
+            MWR_LOG_WARN("character U+{:04X} missing", cp);
+            cp = 0x20;
+        }
+        m_token.emplace_back(TokenType::Glyph, cp);
+        p += ch.length;
     }
-    return pxLength;
 }
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-uint16_t TFT_Base::fitinline(uint16_t* cpArr, uint16_t chLength, uint16_t begin, int16_t win_W, uint16_t* usedPxLength, bool narrow, bool noWrap) {
-    (void)chLength;
-    uint16_t idx = begin;
-    uint16_t pxLength = 0;
-    uint16_t lastSpacePos = 0;
-    uint16_t drawableChars = 0;
-    uint16_t lastUsedPxLength = 0;
-    uint16_t glyphPos = 0;
-    bool     isEmoji = false;
-    while (cpArr[idx] != 0) {
-        *usedPxLength = pxLength;
-        if (cpArr[idx] == 0x20 || cpArr[idx - 1] == '-') {
-            lastSpacePos = drawableChars;
-            lastUsedPxLength = pxLength;
+// ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_Base::tokenToWords() {
+    m_word.clear();
+    Word     currentWord;
+    uint16_t fgColor = TFT_LIGHTGREY;
+
+    for (const auto& token : m_token) {
+        switch (token.type) {
+            case TokenType::Color:
+                if (token.arg == Arg::foreground) fgColor = token.value;
+                break;
+            case TokenType::Glyph: {
+                if (token.value == ' ') {
+                    if (!currentWord.glyphs.empty()) {
+                        currentWord.trailingSpaces++;
+                        m_word.push_back(std::move(currentWord));
+                        currentWord = Word{};
+                    }
+                    break;
+                }
+                Glyph g;
+                if (const EmojiDef* emoji = findEmoji(token.value)) {
+                    log_w("emoji found");
+                    g.type = GlyphType::Emoji;
+                    g.emojiShape = emoji->shape;
+                    g.color = emoji->color;
+                    g.width = m_current_font.line_height * 0.6;
+                } else {
+                    g.type = GlyphType::Font;
+                    g.color = fgColor;
+                    g.codepoint = token.value;
+                    g.glyphPos = m_current_font.lookup_table[g.codepoint];
+                    g.width = m_current_font.glyph_dsc[g.glyphPos].adv_w / 16;
+                }
+                currentWord.width += g.width;
+                currentWord.glyphs.push_back(g);
+                break;
+            }
+
+            case TokenType::NewLine:
+                if (!currentWord.glyphs.empty()) {
+                    m_word.push_back(std::move(currentWord));
+                    currentWord = Word{};
+                }
+                currentWord.newLine = true;
+                break;
         }
-        isEmoji = false;
-        if ((cpArr[idx] & 0xFF00) == 0xF900) {
-            if (cpArr[idx] == 0xF9A2) { isEmoji = true; }
-            if (cpArr[idx] == 0xF9A1) { isEmoji = true; }
-            if (cpArr[idx] == 0xF9B4) { isEmoji = true; }
-            if (cpArr[idx] == 0xF9B5) { isEmoji = true; }
-            if (cpArr[idx] == 0xF9A0) { isEmoji = true; }
-            if (cpArr[idx] == 0xF9A3) { isEmoji = true; }
-            if (cpArr[idx] == 0xF9A4) { isEmoji = true; }
-            if (cpArr[idx] == 0xF9A9) { isEmoji = true; }
-            if (cpArr[idx] == 0xF9A8) { isEmoji = true; }
-            if (cpArr[idx] == 0xF9A5) { isEmoji = true; }
-            if (cpArr[idx] == 0xF9A6) { isEmoji = true; }
-            if (cpArr[idx] == 0xF9A7) { isEmoji = true; }
-            if (cpArr[idx] == 0xF9AA) { isEmoji = true; }
-            if (cpArr[idx] == 0xF9AB) { isEmoji = true; }
-            if (isEmoji) {
-                uint16_t fh = m_current_font.font_height;
-                pxLength += fh - fh / 3;
+    }
+    if (!currentWord.glyphs.empty() || currentWord.newLine) { m_word.push_back(std::move(currentWord)); }
+}
+// ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+bool TFT_Base::isVowel(uint32_t cp) {
+    switch (cp) {
+        case 'a':
+        case 'e':
+        case 'i':
+        case 'o':
+        case 'u':
+        case 'A':
+        case 'E':
+        case 'I':
+        case 'O':
+        case 'U':
+        case 0xE4: // ä
+        case 0xF6: // ö
+        case 0xFC: // ü
+        case 0xC4: // Ä
+        case 0xD6: // Ö
+        case 0xDC: // Ü
+            return true;
+    }
+    return false;
+}
+// ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+int TFT_Base::findBestBreak(const Word& word, size_t glyphStart, size_t breakPos) {
+
+    /*       -----------Window----------------->|
+             ___________________________________|
+              Niedrigwasser bei der Donaudampfschiffahrt
+                                    ^           ^      ^
+                                    |           |      |
+                                    | glyphStart
+                                    |           breakPos
+                                    |<--lenL--->|<lenR>|
+                                    |word.glyphs.size()|
+    */
+    constexpr size_t MIN_LEFT = 4;
+    constexpr size_t MIN_RIGHT = 4;
+
+    if (breakPos <= glyphStart || breakPos >= word.glyphs.size()) return -1;
+
+    size_t lenL = breakPos - glyphStart;
+    size_t lenR = word.glyphs.size() - breakPos;
+
+    if (lenR <= MIN_RIGHT) return -1;
+    if (lenL <= MIN_LEFT) return -1;
+
+    int bestScore = -1000;
+    int bestPos = -1;
+
+    for (size_t i = breakPos; i > glyphStart + MIN_LEFT; --i) {
+        bool left = isVowel(word.glyphs[i - 1].codepoint);
+        bool right = isVowel(word.glyphs[i].codepoint);
+
+        int score = 0;
+
+        if (left && !right) { // Vowel | Consonant   (Kar-ten)
+            score += 5;
+        } else if (!left && right) { // Consonant | Vowel   (Maschi-ne)
+            score += 3;
+        } else if (left && right) { // Vowel | Vowel
+            score -= 5;
+        } else { // Consonant | Consonant
+            score += 1;
+        }
+        // The further to the right, the better
+        score += static_cast<int>(i);
+
+        if (score > bestScore) {
+            bestScore = score;
+            bestPos = i;
+        }
+    }
+
+    return bestPos;
+}
+// ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+bool TFT_Base::wordToLines(int16_t win_W, int16_t win_H, bool noWrap, bool clipNoWrap) {
+    uint16_t maxLines = win_H / m_current_font.line_height;
+    if (maxLines == 0) return false;
+
+    m_wrappedWord.clear();
+    m_line.clear();
+    m_line.emplace_back();
+
+    if (noWrap && clipNoWrap) {
+        Line& line = m_line[0];
+
+        for (const auto& word : m_word) {
+            if (word.newLine) return true;
+            if (word.glyphs.empty()) continue;
+
+            uint16_t spacing = 0;
+            if (!line.words.empty()) {
+                const Word* prevWord = line.words.back().word;
+                spacing = prevWord->trailingSpaces * m_spaceWidth;
+            }
+
+            if (line.width + spacing >= win_W) return true;
+
+            uint16_t availableWidth = win_W - line.width - spacing;
+            if (word.width <= availableWidth) {
+                line.words.push_back({&word, spacing});
+                line.width += spacing + word.width;
+                continue;
+            }
+
+            uint16_t pieceWidth = 0;
+            size_t   glyphEnd = 0;
+            while (glyphEnd < word.glyphs.size() && pieceWidth + word.glyphs[glyphEnd].width <= availableWidth) {
+                pieceWidth += word.glyphs[glyphEnd].width;
+                glyphEnd++;
+            }
+
+            if (glyphEnd == 0) return true;
+
+            m_wrappedWord.emplace_back();
+            Word& piece = m_wrappedWord.back();
+            piece.glyphs.insert(piece.glyphs.end(), word.glyphs.begin(), word.glyphs.begin() + glyphEnd);
+            piece.width = pieceWidth;
+            piece.trailingSpaces = 0;
+
+            line.words.push_back({&piece, spacing});
+            line.width += spacing + pieceWidth;
+            return true;
+        }
+        return true;
+    }
+
+    uint16_t currentLine = 0;
+
+    for (const auto& word : m_word) {
+        // explicit line break
+        if (word.newLine) {
+            currentLine++;
+            if (currentLine >= maxLines) return false;
+            m_line.emplace_back();
+            continue;
+        }
+        if (word.glyphs.empty()) continue;
+        if (word.width > win_W) {
+            if (noWrap) return false;
+
+            size_t glyphPos = 0;
+            while (glyphPos < word.glyphs.size()) {
+                Line& line = m_line[currentLine];
+
+                uint16_t spacing = 0;
+                if (!line.words.empty()) {
+                    const Word* prevWord = line.words.back().word;
+                    spacing = prevWord->trailingSpaces * m_spaceWidth;
+                }
+
+                if (line.width + spacing >= win_W) {
+                    currentLine++;
+                    if (currentLine >= maxLines) return false;
+                    m_line.emplace_back();
+                    continue;
+                }
+
+                uint16_t availableWidth = win_W - line.width - spacing;
+                uint16_t pieceWidth = 0;
+                size_t   glyphEnd = glyphPos;
+                while (glyphEnd < word.glyphs.size() && pieceWidth + word.glyphs[glyphEnd].width <= availableWidth) {
+                    pieceWidth += word.glyphs[glyphEnd].width;
+                    glyphEnd++;
+                }
+
+                if (glyphEnd == glyphPos) {
+                    if (!line.words.empty()) {
+                        currentLine++;
+                        if (currentLine >= maxLines) return false;
+                        m_line.emplace_back();
+                        continue;
+                    }
+                    return false;
+                }
+
+                if (glyphEnd < word.glyphs.size()) {
+                    int bestBreak = findBestBreak(word, glyphPos, glyphEnd);
+                    if (bestBreak < 0) {
+                        if (!line.words.empty()) {
+                            currentLine++;
+                            if (currentLine >= maxLines) return false;
+                            m_line.emplace_back();
+                            continue;
+                        }
+                        return false;
+                    }
+
+                    glyphEnd = static_cast<size_t>(bestBreak);
+                    pieceWidth = 0;
+                    for (size_t i = glyphPos; i < glyphEnd; ++i) { pieceWidth += word.glyphs[i].width; }
+                }
+
+                m_wrappedWord.emplace_back();
+                Word& piece = m_wrappedWord.back();
+                piece.glyphs.insert(piece.glyphs.end(), word.glyphs.begin() + glyphPos, word.glyphs.begin() + glyphEnd);
+                piece.width = pieceWidth;
+                piece.trailingSpaces = (glyphEnd == word.glyphs.size()) ? word.trailingSpaces : 0;
+
+                line.words.push_back({&piece, spacing});
+                line.width += spacing + pieceWidth;
+                glyphPos = glyphEnd;
+
+                if (glyphPos < word.glyphs.size()) {
+                    currentLine++;
+                    if (currentLine >= maxLines) return false;
+                    m_line.emplace_back();
+                }
+            }
+            continue;
+        }
+        Line& line = m_line[currentLine];
+        // Space before this word
+        uint16_t spacing = 0;
+        if (!line.words.empty()) {
+            const Word* prevWord = line.words.back().word;
+            spacing = prevWord->trailingSpaces * m_spaceWidth;
+        }
+        uint16_t requiredWidth = spacing + word.width;
+        // Does it still fit on the current line?
+        if (line.width + requiredWidth <= win_W) {
+            line.words.push_back({&word, spacing});
+            line.width += requiredWidth;
+        } else {
+            currentLine++;
+            if (currentLine >= maxLines) return false;
+            m_line.emplace_back();
+            Line& newLine = m_line[currentLine];
+            newLine.words.push_back({&word, 0});
+            newLine.width = word.width;
+        }
+    }
+    return true;
+}
+// ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_Base::prepareFontLayout() {
+    m_spaceWidth = m_current_font.glyph_dsc[m_current_font.lookup_table[' ']].adv_w / 16; // The width of the spaces in the selected font
+    tokenToWords();                                                                       // From this point onwards, `m_word` contains the words and their widths, which were formed from the tokens
+}
+// ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+bool TFT_Base::layoutText(int16_t win_W, int16_t win_H, bool noWrap, bool clipNoWrap) {
+    prepareFontLayout();
+    return wordToLines(win_W, win_H, noWrap, clipNoWrap);
+}
+// ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_Base::drawLines(int16_t win_X, int16_t win_Y, int16_t win_W, int16_t win_H, HAlign hAlign, VAlign vAlign) {
+
+    uint16_t textHeight = static_cast<uint16_t>(m_line.size()) * m_current_font.line_height;
+
+    int16_t y = 0;
+    switch (vAlign) {
+        case VAlign::Top: y = win_Y; break;
+        case VAlign::Middle: y = win_Y + (win_H - textHeight) / 2; break;
+        case VAlign::Bottom: y = win_Y + win_H - textHeight; break;
+    }
+
+    for (const auto& line : m_line) {
+        int16_t x = 0;
+        switch (hAlign) {
+            case HAlign::Left: x = win_X; break;
+            case HAlign::Center: x = win_X + (win_W - line.width) / 2; break;
+            case HAlign::Right: x = win_X + win_W - line.width; break;
+        }
+        for (const auto& placedWord : line.words) {
+            x += placedWord.spacing;
+            drawWord(placedWord.word, x, y);
+            x += placedWord.word->width;
+        }
+        y += m_current_font.line_height;
+        // log_w(" win_X %i, win_W %i. line.width %i, textHeight %i", win_X, win_W, line.width, textHeight);
+    }
+}
+// ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_Base::drawWord(const Word* word, int16_t x, int16_t y) {
+    for (const auto& glyph : word->glyphs) {
+        drawGlyph(glyph, x, y);
+        x += glyph.width;
+    }
+}
+// ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_Base::drawGlyph(const Glyph glyph, int16_t x, int16_t y) {
+    if (glyph.type == GlyphType::Emoji) {
+
+        uint8_t center_y = y + m_current_font.line_height / 2;
+        float   emojiSize = m_current_font.line_height * 0.50f;
+        int     r = round(emojiSize / 2.0f);
+        switch (glyph.emojiShape) {
+            case EmojiShape::Circle: {
+                fillCircle(x + r, center_y, r, glyph.color);
+                break;
+            }
+            case EmojiShape::Square: {
+                fillRect(x, center_y - r, 2 * r, 2 * r, glyph.color);
+                break;
             }
         }
-        else {
-            glyphPos = m_current_font.lookup_table[cpArr[idx]];
-            pxLength += m_current_font.glyph_dsc[glyphPos].adv_w / 16;
-            int ofsX = m_current_font.glyph_dsc[glyphPos].ofs_x;
-            if (ofsX < 0) ofsX = 0;
-            if (!narrow) pxLength += ofsX;
-        }
-        if (pxLength > win_W || cpArr[idx] == '\n') {
-            if (noWrap) return drawableChars;
-            if (lastSpacePos) {
-                *usedPxLength = lastUsedPxLength;
-                return lastSpacePos;
-            }
-            return drawableChars;
-        }
-        idx++;
-        drawableChars++;
-        *usedPxLength = pxLength;
+        return;
     }
-    return drawableChars;
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-uint8_t TFT_Base::fitInAddrWindow(uint16_t* cpArr, uint16_t chLength, int16_t win_W, int16_t win_H, bool narrow, bool noWrap) {
-    uint8_t  nrOfFonts = sizeof(fontSizes);
-    uint8_t  currentFontSize = 0;
-    uint16_t usedPxLength = 0;
-    uint16_t drawableCharsTotal = 0;
-    uint16_t drawableCharsinline = 0;
-    uint16_t startPos = 0;
-    uint8_t  nrOfLines = 0;
-    while (true) {
-        currentFontSize = fontSizes[nrOfFonts - 1];
-        if (currentFontSize == 0) break;
-        setFont(currentFontSize);
-        drawableCharsTotal = 0;
-        startPos = 0;
-        nrOfLines = 1;
-        int16_t win_H_remain = win_H;
-        while (true) {
-            if (win_H_remain < m_current_font.line_height) break;
-            drawableCharsinline = fitinline(cpArr, chLength, startPos, win_W, &usedPxLength, narrow, noWrap);
-            win_H_remain -= m_current_font.line_height;
-            drawableCharsTotal += drawableCharsinline;
-            startPos += drawableCharsinline;
-            if (drawableCharsinline == 0) break;
-            if (drawableCharsTotal == chLength) goto exit;
-            nrOfLines++;
-        }
-        if (drawableCharsTotal == chLength) goto exit;
-        if (nrOfFonts == 0) break;
-        nrOfFonts--;
-    }
-exit:
-    return nrOfLines;
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-size_t TFT_Base::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, uint8_t h_align, uint8_t v_align, bool narrow, bool noWrap, bool autoSize) {
-    uint16_t idx = 0;
-    uint16_t utfPosArr[strlen(str) + 1] = {0};
-    uint16_t colorArr[strlen(str) + 1] = {0};
-    uint16_t strChLength = 0;
-    uint8_t  nrOfLines = 1;
-    bool     isEmoji = false;
-
-    auto drawEmoji = [&](uint16_t idxLocal, uint16_t x, uint16_t y) {
-        uint8_t  emoji = (utfPosArr[idxLocal] & 0x00FF);
-        uint16_t color = 0;
-        char     shape = 'x';
-        switch (emoji) {
-            case 0xA2: color = TFT_GREEN; shape = 'c'; break;
-            case 0xA1: color = TFT_YELLOW; shape = 'c'; break;
-            case 0xB4: color = TFT_RED; shape = 'c'; break;
-            case 0xB5: color = TFT_BLUE; shape = 'c'; break;
-            case 0xA0: color = TFT_ORANGE; shape = 'c'; break;
-            case 0xA3: color = TFT_VIOLET; shape = 'c'; break;
-            case 0xA4: color = TFT_BROWN; shape = 'c'; break;
-            case 0xA9: color = TFT_GREEN; shape = 's'; break;
-            case 0xA8: color = TFT_YELLOW; shape = 's'; break;
-            case 0xA5: color = TFT_RED; shape = 's'; break;
-            case 0xA6: color = TFT_BLUE; shape = 's'; break;
-            case 0xA7: color = TFT_ORANGE; shape = 's'; break;
-            case 0xAA: color = TFT_VIOLET; shape = 's'; break;
-            case 0xAB: color = TFT_BROWN; shape = 's'; break;
-        }
-        if (shape == 'c') {
-            uint16_t fh = m_current_font.font_height;
-            uint16_t fw = fh - fh / 3;
-            uint16_t p = fh / 5;
-            uint16_t r = (fh - 2 * p) / 2;
-            uint16_t corr = fw / 10;
-            uint16_t cx = x + fw / 2;
-            uint16_t cy = y + fh / 2 + corr;
-            fillCircle(cx, cy, r, color);
-            return fw;
-        }
-        if (shape == 's') {
-            uint16_t fh = m_current_font.font_height;
-            uint16_t fw = fh - fh / 3;
-            uint16_t p = fh / 5;
-            uint16_t a = (fh - 2 * p);
-            uint16_t corr = fw / 10;
-            uint16_t sx = x + fw / 2;
-            uint16_t sy = y + fh / 2 + corr;
-            fillRect(sx - a / 2, sy - a / 2, a, a, color);
-            return fw;
-        }
-        log_w("unknown shape %c", shape);
-        return (uint16_t)0;
-    };
-
-    auto drawChar = [&](uint16_t idxLocal, uint16_t x, uint16_t y) {
-        uint16_t glyphPos = m_current_font.lookup_table[utfPosArr[idxLocal]];
-        uint16_t adv_w = m_current_font.glyph_dsc[glyphPos].adv_w / 16;
-        uint32_t bitmap_index = m_current_font.glyph_dsc[glyphPos].bitmap_index;
-        uint16_t box_w = m_current_font.glyph_dsc[glyphPos].box_w;
-        uint16_t box_h = m_current_font.glyph_dsc[glyphPos].box_h;
-        int16_t  ofs_x = m_current_font.glyph_dsc[glyphPos].ofs_x;
-        int16_t  ofs_y = m_current_font.glyph_dsc[glyphPos].ofs_y;
+    if (glyph.type == GlyphType::Font) {
+        setTextColor(glyph.color);
+        uint32_t bitmap_index = m_current_font.glyph_dsc[glyph.glyphPos].bitmap_index;
+        uint16_t box_w = m_current_font.glyph_dsc[glyph.glyphPos].box_w;
+        uint16_t box_h = m_current_font.glyph_dsc[glyph.glyphPos].box_h;
+        int16_t  ofs_x = m_current_font.glyph_dsc[glyph.glyphPos].ofs_x;
+        int16_t  ofs_y = m_current_font.glyph_dsc[glyph.glyphPos].ofs_y;
         if (ofs_x < 0) ofs_x = 0;
         x += ofs_x;
         y = y + (m_current_font.line_height - m_current_font.base_line - 1) - box_h - ofs_y;
         writeTheFramebuffer(m_current_font.glyph_bitmap + bitmap_index, x, y, box_w, box_h);
-        if (!narrow) adv_w += ofs_x;
-        return adv_w;
-    };
-
-    strChLength = analyzeText(str, utfPosArr, colorArr, m_textColor);
-    if (autoSize) nrOfLines = fitInAddrWindow(utfPosArr, strChLength, win_W, win_H, narrow, noWrap);
-    if (!strChLength) return 0;
-
-    if ((win_X + win_W) > logicalWidth()) win_W = logicalWidth() - win_X;
-    if ((win_Y + win_H) > logicalHeight()) win_H = logicalHeight() - win_Y;
-
-    uint16_t pX = win_X;
-    uint16_t pY = win_Y;
-    int16_t  pH = win_H;
-    int16_t  pW = win_W;
-
-    if (v_align == TFT_ALIGN_CENTER) {
-        int offset = (win_H - (nrOfLines * m_current_font.line_height)) / 2;
-        pY = pY + offset;
     }
-    if (v_align == TFT_ALIGN_DOWN) {
-        int offset = (win_H - (nrOfLines * m_current_font.line_height));
-        pY = pY + offset;
-    }
+}
+// ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+size_t TFT_Base::writeText(ps_ptr<char> txt1, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, HAlign hAlign, VAlign vAlign, bool noWrap, bool autoSize) {
 
-    uint16_t charsToDraw = 0;
-    uint16_t usedPxLength = 0;
-    uint16_t charsDrawn = 0;
-    while (true) {
-        if (noWrap && idx) goto exit;
-        if (pH < m_current_font.line_height) goto exit;
-        charsToDraw = fitinline(utfPosArr, strChLength, idx, pW, &usedPxLength, narrow, noWrap);
+    if(!txt1.valid()) {MWR_LOG_WARN("text is not given"); return 0;}
+    std::lock_guard<std::mutex> lock(m_textLayoutMutex);
+    ps_ptr<char>txt = txt1;
+    /*
+            writeText()
+                │
+                ├── txtToToken()
+                ├── layoutText()
+                └── drawLines()
+                         │
+                         ├── drawWord()
+                         │        │
+                         │        └── drawGlyph()
+                         │
+                         └── next line
+    */
 
-        if (h_align == TFT_ALIGN_RIGHT) pX += win_W - usedPxLength - 2;
-        if (h_align == TFT_ALIGN_CENTER) pX += (win_W - usedPxLength) / 2;
-        uint16_t cnt = 0;
+    txtToToken(txt.get());
+    int8_t idx = getFontIndex();
+
+    if (autoSize) {
+        setFontByIndex(getMaxFontIndex());
+        idx = getFontIndex();
         while (true) {
-            isEmoji = false;
-            setTextColor(colorArr[idx]);
-            if ((utfPosArr[idx] & 0xFF00) == 0xF900) {
-                if (utfPosArr[idx] == 0xF9A2) { isEmoji = true; }
-                if (utfPosArr[idx] == 0xF9A1) { isEmoji = true; }
-                if (utfPosArr[idx] == 0xF9B4) { isEmoji = true; }
-                if (utfPosArr[idx] == 0xF9B5) { isEmoji = true; }
-                if (utfPosArr[idx] == 0xF9A0) { isEmoji = true; }
-                if (utfPosArr[idx] == 0xF9A3) { isEmoji = true; }
-                if (utfPosArr[idx] == 0xF9A4) { isEmoji = true; }
-                if (utfPosArr[idx] == 0xF9A9) { isEmoji = true; }
-                if (utfPosArr[idx] == 0xF9A8) { isEmoji = true; }
-                if (utfPosArr[idx] == 0xF9A5) { isEmoji = true; }
-                if (utfPosArr[idx] == 0xF9A6) { isEmoji = true; }
-                if (utfPosArr[idx] == 0xF9A7) { isEmoji = true; }
-                if (utfPosArr[idx] == 0xF9AA) { isEmoji = true; }
-                if (utfPosArr[idx] == 0xF9AB) { isEmoji = true; }
+            if (layoutText(win_W, win_H, noWrap)) {
+                // if (txt.strlen() > 40) { MWR_LOG_ERROR("idx: {}, max: {}, win_W: {}, win_H: {}, noWrap: {}\n {}", idx, getMaxFontIndex(), win_W, win_H, noWrap, txt); }
+                break;
             }
-            uint16_t res = isEmoji ? drawEmoji(idx, pX, pY) : drawChar(idx, pX, pY);
-            pX += res;
-            pW -= res;
-            idx++;
-            cnt++;
-            charsDrawn++;
-            if (idx == strChLength) goto exit;
-            if (cnt == charsToDraw) break;
+            if (--idx < 0) {
+                if (noWrap == true) {
+                    noWrap = false;
+                    setFontByIndex(getMaxFontIndex()); // next round with wrap, starts with biggest font
+                    idx = getFontIndex();
+                    MWR_LOG_DEBUG("next round, idx {}", idx);
+                } else {
+                    MWR_LOG_ERROR("txt '{}', win_X: {}, win_Y: {} does not fit in window", txt, win_X, win_Y);
+                    return 0;
+                }
+            }
+            setFontByIndex(idx);
         }
-        pH -= m_current_font.line_height;
-        pY += m_current_font.line_height;
-        pX = win_X;
-        pW = win_W;
+    } else {
+        if (!layoutText(win_W, win_H, noWrap, noWrap)) {
+            MWR_LOG_ERROR("txt does not fit in window");
+            return 0;
+        }
     }
-exit:
-    return charsDrawn;
+    drawLines(win_X, win_Y, win_W, win_H, hAlign, vAlign);
+
+    return txt.strlen();
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 //  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫   P N G   ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-bool TFT_Base::drawPngFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight) {
+bool TFT_Base::drawPngFile(fs::FS& fs, ps_ptr<char> path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight) {
 
     png_state = PNG_NEW;
     png_error = PNG_EOK;
@@ -3238,20 +3445,20 @@ bool TFT_Base::drawPngFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y,
     png_max_width = maxWidth;
     png_max_height = maxHeight;
 
-    if (!fs.exists(path)) {
+    if (!fs.exists(path.c_get())) {
         log_e("File not found: %s", path);
         return NULL;
     }
-    png_file = fs.open(path, "r");
+    png_file = fs.open(path.c_get(), "r");
     if (!png_file) {
-        log_e("Failed to open file for reading");
+        log_e(ANSI_ESC_RED "[%s:%s] Failed to open file for reading" ANSI_ESC_RESET, __FILE__, __LINE__);
         return NULL;
     }
     int file_size = png_file.size(); /* get filesize */
     png_buffer = (char*)ps_malloc(file_size);
     png_size = file_size;
     if (!png_buffer) {
-        log_e("Failed to allocate memory for file");
+        log_e(ANSI_ESC_RED "[%s:%s] Failed to allocate %i bytes for file %s" ANSI_ESC_RESET, __FILE__, __LINE__, png_file.size(), png_file.name());
         png_file.close();
         return NULL;
     }
@@ -4282,5 +4489,3 @@ void TFT_Base::png_draw_into_Framebuffer(uint16_t x, uint16_t y, uint16_t w, uin
     free(alphaBuffer);
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-

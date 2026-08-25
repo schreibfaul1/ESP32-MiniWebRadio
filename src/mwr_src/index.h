@@ -737,7 +737,7 @@ function connect() {
             case "IR_address":          if(state === 'IR' && IR_addr != val){
                                             IR_addr = val
                                             ir_command_A.value=val
-                                            socket.send("set:IRaddr=" + val)
+                                            socket.send("set_IRaddr=" + val)
                                         }
                                         break
             case "IR_command":          ir_command_C.value=val
@@ -1702,61 +1702,16 @@ function selectserver (presctrl) { // preset, select a server, root, level0
     dlnaLevel = 1
     console.log('DLNA_getContent=' + presctrl.value)
 }
-function select_l1 (presctrl) { // preset, select root
-    var slectedText = presctrl.options[presctrl.selectedIndex].innerText;
-    socket.send('DLNA_getContent=' + presctrl.value + "&" + slectedText)
-    console.log('DLNA_getContent=' + presctrl.value + "&" + slectedText)
-    clearDLNAServerList(2)
-    dlnaLevel = 2
+function select_l (presctrl, level) { // preset, select DLNA level
+    var cmd = 'DLNA_getContent='
+    var selectedText = presctrl.options[presctrl.selectedIndex].innerText;
+    if (presctrl.value.startsWith("http")) { cmd = 'DLNA_playFile='; }
+    socket.send(cmd + presctrl.value + "&" + selectedText)
+    console.log(cmd + presctrl.value + "&" + selectedText)
+    var nextLevel = level + 1
+    if (nextLevel <= 8) clearDLNAServerList(nextLevel)
+    dlnaLevel = nextLevel
 }
-function select_l2 (presctrl) { // preset, select level 1
-    var slectedText = presctrl.options[presctrl.selectedIndex].innerText;
-    socket.send('DLNA_getContent=' + presctrl.value + "&" + slectedText)
-    console.log('DLNA_getContent=' + presctrl.value + "&" + slectedText)
-    clearDLNAServerList(3)
-    dlnaLevel = 3
-}
-function select_l3 (presctrl) { // preset, select level 2
-    var slectedText = presctrl.options[presctrl.selectedIndex].innerText;
-    socket.send('DLNA_getContent=' + presctrl.value + "&" + slectedText)
-    console.log('DLNA_getContent=' + presctrl.value + "&" + slectedText)
-    clearDLNAServerList(4)
-    dlnaLevel = 4
- }
- function select_l4 (presctrl) { // preset, select level 3
-    var slectedText = presctrl.options[presctrl.selectedIndex].innerText;
-    socket.send('DLNA_getContent=' + presctrl.value + "&" + slectedText)
-    console.log('DLNA_getContent=' + presctrl.value + "&" + slectedText)
-    clearDLNAServerList(5)
-    dlnaLevel = 5
- }
- function select_l5 (presctrl) { // preset, select level 4
-    var slectedText = presctrl.options[presctrl.selectedIndex].innerText;
-    socket.send('DLNA_getContent=' + presctrl.value + "&" + slectedText)
-    console.log('DLNA_getContent=' + presctrl.value + "&" + slectedText)
-    clearDLNAServerList(6)
-    dlnaLevel = 6
- }
-function select_l6 (presctrl) { // preset, select level 5
-    var slectedText = presctrl.options[presctrl.selectedIndex].innerText;
-    socket.send('DLNA_getContent=' + presctrl.value + "&" + slectedText)
-    console.log('DLNA_getContent=' + presctrl.value + "&" + slectedText)
-    clearDLNAServerList(7)
-    dlnaLevel = 7
- }
-function select_l7 (presctrl) { // preset, select level 6
-    var slectedText = presctrl.options[presctrl.selectedIndex].innerText;
-    socket.send('DLNA_getContent=' + presctrl.value + "&" + slectedText)
-    console.log('DLNA_getContent=' + presctrl.value + "&" + slectedText)
-    clearDLNAServerList(8)
-    dlnaLevel = 8
- }
-function select_l8 (presctrl) { // preset, select level 7
-    var slectedText = presctrl.options[presctrl.selectedIndex].innerText;
-    socket.send('DLNA_getContent=' + presctrl.value + "&" + slectedText)
-    console.log('DLNA_getContent=' + presctrl.value + "&" + slectedText)
-    dlnaLevel = 9
- }
 // ----------------------------------- TAB Search Stations ------------------------------------
 
 // global var
@@ -2904,28 +2859,28 @@ function appendToTerminal(text) {
                 <select class="boxstyle" style="width: 100%;" onchange="selectserver(this)" id="server">
                     <option value="-1">Select a DLNA Server here</option>
                 </select>
-                <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="select_l1(this)" id="level1">
+                <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="select_l(this, 1)" id="level1">
                     <option value="-1"> </option>
                 </select>
-                <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="select_l2(this)" id="level2">
+                <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="select_l(this, 2)" id="level2">
                     <option value="-1"> </option>
                 </select>
-                <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="select_l3(this)" id="level3">
+                <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="select_l(this, 3)" id="level3">
                     <option value="-1"> </option>
                 </select>
-                <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="select_l4(this)" id="level4">
+                <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="select_l(this, 4)" id="level4">
                     <option value="-1"> </option>
                 </select>
-                <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="select_l5(this)" id="level5">
+                <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="select_l(this, 5)" id="level5">
                     <option value="-1"> </option>
                 </select>
-                <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="select_l6(this)" id="level6">
+                <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="select_l(this, 6)" id="level6">
                     <option value="-1"> </option>
                 </select>
-                <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="select_l7(this)" id="level7">
+                <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="select_l(this, 7)" id="level7">
                     <option value="-1"> </option>
                 </select>
-                <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="select_l8(this)" id="level8">
+                <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="select_l(this, 8)" id="level8">
                     <option value="-1"> </option>
                 </select>
             </div>

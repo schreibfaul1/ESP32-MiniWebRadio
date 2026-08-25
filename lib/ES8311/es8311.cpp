@@ -161,27 +161,29 @@ bool ES8311::begin(TwoWire* twi, int8_t address) {
         return false;
     }
 
-    ok |= WriteReg(0x00, 0x1F); // Reset
+    ok &= WriteReg(0x00, 0x1F); // Reset
     vTaskDelay(20 / portTICK_PERIOD_MS);
-    ok |= WriteReg(0x00, 0x00); // Release reset
-    ok |= WriteReg(0x00, 0x80); // Power on
 
-    ok |= WriteReg(0x01, 0x3F); // Enable all clocks
+    ok &= WriteReg(0x00, 0x00); // Release reset
+
+    ok &= WriteReg(0x00, 0x80); // Power on
+
+    ok &= WriteReg(0x01, 0x3F); // Enable all clocks
 
     reg = ReadReg(0x06);
     reg &= ~BIT(5);            // SCLK (BCLK) pin not inverted
-    ok |= WriteReg(0x06, reg); //
+    ok &= WriteReg(0x06, reg); //
 
-    ok |= setSampleRate(ES8311_SAMPLE_RATE48);        // default
-    ok |= setBitsPerSample(ES8311_BITS_PER_SAMPLE16); // default
+    ok &= setSampleRate(ES8311_SAMPLE_RATE48);        // default
+    ok &= setBitsPerSample(ES8311_BITS_PER_SAMPLE16); // default
 
-    ok |= WriteReg(0x0D, 0x01); // Power up analog circuitry
-    ok |= WriteReg(0x0E, 0x02); // Enable analog PGA, enable ADC modulator
-    ok |= WriteReg(0x12, 0x00); // Power-up DAC
-    ok |= WriteReg(0x13, 0x10); // Enable output to HP drive
-    ok |= WriteReg(0x1C, 0x6A); // ADC Equalizer bypass, cancel DC offset in digital domain
-    ok |= WriteReg(0x37, 0x08); // Bypass DAC equalizer
-
+    ok &= WriteReg(0x0D, 0x01); // Power up analog circuitry
+    ok &= WriteReg(0x0E, 0x02); // Enable analog PGA, enable ADC modulator
+    ok &= WriteReg(0x12, 0x00); // Power-up DAC
+    ok &= WriteReg(0x13, 0x10); // Enable output to HP drive
+    ok &= WriteReg(0x1C, 0x6A); // ADC Equalizer bypass, cancel DC offset in digital domain
+    ok &= WriteReg(0x37, 0x08); // Bypass DAC equalizer
+log_w("ret %i", ok);
     return ok;
 }
 
@@ -311,7 +313,6 @@ uint8_t ES8311::ReadReg(uint8_t reg) {
     uint8_t val = 0u;
     m_TwoWireInstance->requestFrom(uint16_t(m_addr), (uint8_t)1, true);
     if (m_TwoWireInstance->available() >= 1) { val = m_TwoWireInstance->read(); }
-    m_TwoWireInstance->endTransmission();
     return val;
 }
 

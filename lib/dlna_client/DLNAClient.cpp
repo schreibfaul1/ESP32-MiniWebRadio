@@ -1,7 +1,7 @@
 #include "DLNAClient.h"
 
 // Created on: 30.11.2023
-// Updated on: 02.10.2025
+// Updated on: 22.08.2026
 
 DLNA_Client::DLNA_Client() {
     m_state = IDLE;
@@ -220,8 +220,9 @@ bool DLNA_Client::readHttpHeader() {
         DLNA_LOG_DEBUG("{}", rhl.get());
         if (rhl.starts_with_icase("content-length:")) {
             rhl.remove_before(':', false);
+            rhl.trim();
             m_contentlength = rhl.to_uint32();
-            DLNA_LOG_DEBUG("content-length: {}", (long unsigned int)m_contentlength);
+            DLNA_LOG_DEBUG("content-length: {}", m_contentlength);
         } else if (rhl.starts_with_icase("content-type:")) { // content-type: text/html; charset=UTF-8
             int idx = indexOf(rhl.get() + 13, ";", 0);
             if (idx > 0) rhl[13 + idx] = '\0';
@@ -312,10 +313,6 @@ bool DLNA_Client::readContent() {
         return false;
     }
 
-    uint16_t readedBytes = 0;
-    if (m_chunked) { m_contentlength = getChunkSize(&readedBytes); }
-
-    //-------------------------------------------------------------------------------------------------
     auto split_lines = [&](const ps_ptr<char>& buff) -> std::deque<ps_ptr<char>> {
         std::deque<ps_ptr<char>> result;
         const char*              text = buff.get();
@@ -331,58 +328,141 @@ bool DLNA_Client::readContent() {
         }
         return result;
     };
-    //-------------------------------------------------------------------------------------------------
 
     ps_ptr<char> buff;
-    buff.calloc(m_contentlength + 4);
-    m_timeStamp = millis();
-    uint8_t  b = 0;
-    uint16_t pos = 0;
-    uint8_t  cnt = 0;
 
-    while (pos < m_contentlength) { // outer while
+    //-------------------------------------------------------------------------------------------------
+    // HTTP chunked transfer
+    //-------------------------------------------------------------------------------------------------
+    if (m_chunked) {
 
-        if (m_tcp_client.available()) {
-            cnt = 0;
-            b = m_tcp_client.read();
-            buff[pos] = b;
-            pos++;
-        } else {
-            vTaskDelay(10);
-            if (pos == m_contentlength) break;
-            cnt++;
-            if (cnt == 100) {
-                // buff.hex_dump(m_contentlength));
-                DLNA_LOG_ERROR("timeout in readContent");
-                goto error;
-                break;
+        // Start with a reasonable size. It will grow automatically if necessary.
+        buff.calloc(1024);
+
+        uint32_t pos = 0;
+
+        while (true) {
+
+            uint16_t readedBytes = 0;
+            int32_t  chunkSize = getChunkSize(&readedBytes);
+
+            if (chunkSize < 0) {
+                DLNA_LOG_ERROR("invalid chunk size");
+                return false;
+            }
+
+            // Last chunk
+            if (chunkSize == 0) { break; }
+
+            // Make sure there is enough space
+            if (pos + chunkSize + 1 > buff.size()) { buff.realloc(pos + chunkSize + 1); }
+
+            uint32_t chunkPos = 0;
+            uint32_t timeoutStart = millis();
+
+            while (chunkPos < static_cast<uint32_t>(chunkSize)) {
+
+                if (m_tcp_client.available()) {
+                    int b = m_tcp_client.read();
+
+                    if (b < 0) { continue; }
+
+                    buff[pos++] = static_cast<char>(b);
+                    chunkPos++;
+                    timeoutStart = millis();
+                } else {
+                    if ((millis() - timeoutStart) > 2000) {
+                        DLNA_LOG_ERROR("timeout while reading chunk");
+                        return false;
+                    }
+                    vTaskDelay(1);
+                }
+            }
+
+            // getChunkSize() has set this for a non-zero chunk.
+            // Skip CRLF after the chunk data.
+            if (m_skipCRLF) {
+                uint8_t  count = 0;
+                uint32_t timeoutStart = millis();
+
+                while (count < 2) {
+                    if (m_tcp_client.available()) {
+                        int b = m_tcp_client.read();
+                        if (b < 0) { continue; }
+                        count++;
+                    } else {
+                        if ((millis() - timeoutStart) > 2000) {
+                            DLNA_LOG_ERROR("timeout while skipping chunk CRLF");
+                            return false;
+                        }
+                        vTaskDelay(1);
+                    }
+                }
+                m_skipCRLF = false;
             }
         }
+        buff[pos] = '\0';
+        DLNA_LOG_DEBUG("chunked content: {} bytes", pos);
     }
 
-    buff.replace("</", "\n</");       // also new line
-    buff.replace("\r", "");           // remove '\r'
-    buff.replace("\n\n", "\n");       // remove emtpy lines
-    buff.replace("&lt;", "<");        // lower than
-    buff.replace("&gt;", ">");        // greater than
-    buff.replace("> ", ">\n");        // new line
-    buff.replace("</", "\n</");       // new line
-    buff.replace("><", ">\n<");       // also new line
-    buff.replace("&amp;quot;", "\""); // quota sign
-    buff.replace("&amp;pos;", "'");   // apostrophe
-    buff.replace("&amp;", "&");       // ampersand
-    buff.replace("&quot", "\"");      // quota sign
-    buff.replace("&apos", "'");       // apostrophe >&amp;pos; -> &pos; -> '
-    buff.replace("&aquot;", "\"");    // quotation
-    buff.replace("&szlig;;", "ß");    // ß
+    //-------------------------------------------------------------------------------------------------
+    // Normal Content-Length transfer
+    //-------------------------------------------------------------------------------------------------
+    else {
+        buff.calloc(m_contentlength + 4);
+        m_timeStamp = millis();
+
+        uint8_t  b = 0;
+        uint32_t pos = 0;
+        uint32_t cnt = 0;
+
+        while (pos < m_contentlength) {
+            if (m_tcp_client.available()) {
+                cnt = 0;
+                b = m_tcp_client.read();
+                buff[pos] = b;
+                pos++;
+            } else {
+                vTaskDelay(10);
+                if (pos == m_contentlength) { break; }
+                cnt++;
+                if (cnt == 300) {
+                    DLNA_LOG_ERROR("timeout in readContent");
+                    goto error;
+                }
+            }
+        }
+        buff[pos] = '\0';
+    }
+
+    //-------------------------------------------------------------------------------------------------
+    // Process content
+    //-------------------------------------------------------------------------------------------------
+
+    DLNA_LOG_DEBUG("buff {}", buff.get());
+
+    buff.replace("</", "\n</");
+    buff.replace("\r", "");
+    buff.replace("\n\n", "\n");
+    buff.replace("&lt;", "<");
+    buff.replace("&gt;", ">");
+    buff.replace("> ", ">\n");
+    buff.replace("</", "\n</");
+    buff.replace("><", ">\n<");
+    buff.replace("&amp;quot;", "\"");
+    buff.replace("&amp;pos;", "'");
+    buff.replace("&amp;", "&");
+    buff.replace("&quot", "\"");
+    buff.replace("&apos", "'");
+    buff.replace("&aquot;", "\"");
+    buff.replace("&szlig;;", "ß");
 
     buff.trim();
+
     DLNA_LOG_DEBUG("{}", buff.get());
 
-    m_content.clear(); // Delete all old entries
+    m_content.clear();
     m_content = split_lines(buff);
-
-    // for (size_t i = 0; i < m_content.size(); i++) { DLNA_LOG_INFO(m_content[i].get()); }
 
     return true;
 
@@ -517,6 +597,7 @@ bool DLNA_Client::browseResult() {
                 if (parentStr.valid()) m_srv_items[cNr].parentId.clone_from(parentStr); // Parent-ID als String
                 if (childCountS.valid()) {
                     childCountS.replace(";", "");
+                    childCountS.trim();
                     m_srv_items[cNr].childCount = childCountS.to_uint32();
                 }
             }
@@ -559,6 +640,7 @@ bool DLNA_Client::browseResult() {
                 auto        duration = extractAttr(res, "duration"); // "0:00:00.287"
                 if (itemSize.valid()) {
                     itemSize.replace(";", "");
+                    itemSize.trim();
                     m_srv_items[cNr].itemSize = itemSize.to_uint32();
                 } // size as int
                 if (duration.valid()) {
