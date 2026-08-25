@@ -1481,9 +1481,9 @@ class stationManagement {
         return *m_curStation;
     }
     //----------------------------------------------------------------------------------------------------------
-    const char* getStationName(uint16_t staNr) {
-        if (staNr > m_staCnt) return strdup("unknown");
-        if (!m_stations.name[staNr]) return strdup("unknown");
+    ps_ptr<char> getStationName(uint16_t staNr) {
+        if (staNr > m_staCnt) return {};
+        if (!m_stations.name[staNr]) return {};
         return m_stations.name[staNr];
     }
     char getStationFav(uint16_t staNr) { // 0 = not fav, * = fav, 1..3 = fav number (notused)
