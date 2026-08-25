@@ -4191,7 +4191,7 @@ class UniList {
 
     void drawLine1(uint8_t lineNr, ps_ptr<char> prefix, ps_ptr<char> textColor, ps_ptr<char> text, ps_ptr<char> suffix) {
         if (lineNr > 9) return;
-        if (!text.valid()){
+        if (!text.valid()) {
             m_prefix[lineNr].reset();
             m_text[lineNr].reset();
             m_suffix[lineNr].reset();
@@ -4220,17 +4220,15 @@ class UniList {
 
     ps_ptr<char> getPrefixByNumber(uint8_t lineNr) {
         if (lineNr > 9) return {};
-        if(!m_text[lineNr].valid()) return {};
+        if (!m_text[lineNr].valid()) return {};
         return m_prefix[lineNr];
     }
     ps_ptr<char> getSuffixByNumber(uint8_t lineNr) {
         if (lineNr > 9) return {};
-        if(!m_text[lineNr].valid()) return {};
+        if (!m_text[lineNr].valid()) return {};
         return m_suffix[lineNr];
     }
-    ps_ptr<char> getTextByNumber(uint8_t lineNr) {
-        return m_text[lineNr];
-    }
+    ps_ptr<char> getTextByNumber(uint8_t lineNr) { return m_text[lineNr]; }
 
     void drawLine(uint8_t pos, ps_ptr<char> txt, ps_ptr<char> ext1, ps_ptr<char> color = ANSI_ESC_WHITE, int32_t nr = -1) {
         if (!txt.valid()) txt = "";
@@ -5078,7 +5076,7 @@ class FileList : public RegisterTable {
         }
         if (m_browseOnRelease == 3) {                               // MWR_LOG_WARN("m_curAudioFolder = {}", m_curAudioFolder);                                         // previous folder
             if (m_curAudioFolder.equals("/audiofiles/")) goto exit; // is already the root
-            myList.drawLine(pos, m_curAudioFolder.c_get(), "", ANSI_ESC_CYAN, -1);
+            myList.drawLine1(pos, {}, ANSI_ESC_CYAN, m_curAudioFolder, {});
             int lastSlash = m_curAudioFolder.last_index_of('/');
             if (lastSlash != -1) { // Look for the penultimate '/' before the position of the last
                 int secondLastSlash = m_curAudioFolder.last_index_of('/', lastSlash - 1);
@@ -5095,7 +5093,7 @@ class FileList : public RegisterTable {
         if (m_browseOnRelease == 4) {
             m_viewPos += m_fileListPos; // next folder
             int16_t idx = m_viewPos - 1;
-            myList.drawLine(pos, s_SD_content.getColouredSStringByIndex(idx), "", ANSI_ESC_CYAN, -1);
+            myList.drawLine1(pos, {}, ANSI_ESC_CYAN, s_SD_content.getColouredSStringByIndex(idx), {});
             m_curAudioFolder = s_SD_content.getFilePathByIndex(idx);
             m_curAudioFileNr = 0;
             m_viewPos = 0;
@@ -5108,7 +5106,7 @@ class FileList : public RegisterTable {
         }
         if (m_browseOnRelease == 5) {
             m_viewPos += m_fileListPos; // play file
-            myList.drawLine(pos, m_curAudioName.c_get(), "", ANSI_ESC_CYAN, -1);
+            myList.drawLine1(pos, {}, ANSI_ESC_CYAN, m_curAudioName, {});
             vTaskDelay(300 / portTICK_PERIOD_MS);
             m_ra.arg1 = m_curAudioFolder; // fileFolder
             m_ra.arg2 = m_curAudioName;   // fileName
@@ -5164,9 +5162,9 @@ class FileList : public RegisterTable {
         int          pos = m_curAudioFileNr - m_viewPos + 1;
         ps_ptr<char> color = m_fileColor;                                // assume is file
         if (s_SD_content.isDir(m_curAudioFileNr)) color = m_folderColor; // is folder
-        myList.colourLine(pos, color);
+        myList.colorLine(pos, color);
         m_curAudioFileNr--;
-        myList.colourLine(pos - 1, m_irColor);
+        myList.colorLine(pos - 1, m_irColor);
     }
     void nextFile() { // from IR control
         if (m_curAudioFileNr == s_SD_content.getSize() - 1) return;
@@ -5190,14 +5188,14 @@ class FileList : public RegisterTable {
             else
                 color = m_fileColor; // is file
         }
-        myList.colourLine(pos, color);
+        myList.colorLine(pos, color);
         m_curAudioFileNr++;
-        myList.colourLine(pos + 1, m_irColor);
+        myList.colorLine(pos + 1, m_irColor);
     }
     ps_ptr<char> getSelectedFile() {
         if (m_curAudioFileNr == -1) {                               // get parent folder
             if (m_curAudioFolder.equals("/audiofiles/")) return ""; // is already the root
-            myList.colourLine(m_y, m_selectColor);
+            myList.colorLine(m_y, m_selectColor);
             vTaskDelay(300 / portTICK_PERIOD_MS);
             int lastSlash = m_curAudioFolder.last_index_of('/');
             if (lastSlash != -1) { // Look for the penultimate '/' before the position of the last
@@ -5211,19 +5209,19 @@ class FileList : public RegisterTable {
             return {};
         }
         if (s_SD_content.isDir(m_curAudioFileNr)) { // is child folder
-            myList.colourLine(m_y, m_selectColor);
+            myList.colorLine(m_y, m_selectColor);
             vTaskDelay(300 / portTICK_PERIOD_MS);
             m_curAudioPath = s_SD_content.getFilePathByIndex(m_curAudioFileNr);
             show(m_curAudioPath, 0);
             return {};
         }
-        myList.colourLine(m_y, m_selectColor);
+        myList.colorLine(m_y, m_selectColor);
         vTaskDelay(300 / portTICK_PERIOD_MS);
         return s_SD_content.getFilePathByIndex(m_curAudioFileNr);
     }
     ps_ptr<char> getSelectedFileName() { return s_SD_content.getFileNameByIndex(m_curAudioFileNr); }
     ps_ptr<char> getSelectedFilePath() {
-        myList.colourLine(m_curAudioFileNr - m_viewPos + 1, m_selectColor);
+        myList.colorLine(m_curAudioFileNr - m_viewPos + 1, m_selectColor);
         vTaskDelay(300 / portTICK_PERIOD_MS);
         return s_SD_content.getFilePathByIndex(m_curAudioFileNr);
     }
@@ -5247,8 +5245,9 @@ class FileList : public RegisterTable {
         ps_ptr<char> color;
 
         color = m_folderColor;
-        if (m_curAudioFolder.equals("/audiofiles/")) color = m_rootColor; // is root
-        myList.drawLine(0, m_curAudioFolder.c_get(), "", color, 0);
+        if (m_curAudioFolder.equals("/audiofiles/")) { color = m_rootColor; } // is root
+
+        myList.drawLine1(0, {}, color, m_curAudioFolder, {});
         color = m_fileColor;
         for (uint8_t pos = 1; pos < 10; pos++) {
             int idx = pos + viewPos - 1;
@@ -5271,9 +5270,12 @@ class FileList : public RegisterTable {
                 } // is file
             }
             if (s_SD_content.isDir(idx))
-                myList.drawLine(pos, s_SD_content.getFileNameByIndex(idx), "", color, 0);
-            else
-                myList.drawLine(pos, s_SD_content.getFileNameByIndex(idx), "", color, s_SD_content.getFileSizeByIndex(idx));
+                myList.drawLine1(pos, {}, color, s_SD_content.getFileNameByIndex(idx), {});
+            else {
+                ps_ptr<char> fileSize;
+                fileSize.assignf("{}", s_SD_content.getFileSizeByIndex(idx));
+                myList.drawLine1(pos, {}, color, s_SD_content.getFileNameByIndex(idx), fileSize);
+            }
         }
         uint16_t firstVal = viewPos + 1;
         uint16_t secondVal = firstVal + 8;
@@ -5452,8 +5454,7 @@ class StationsList : public RegisterTable {
         if (m_browseOnRelease == 3) {
             myList.colorLine(m_stationListPos, ANSI_ESC_CYAN);
             vTaskDelay(300 / portTICK_PERIOD_MS);
-            if(myList.getTextByNumber(m_stationListPos).valid()){
-            m_ra.val1 = myList.getPrefixByNumber(m_stationListPos).to_int16();}
+            if (myList.getTextByNumber(m_stationListPos).valid()) { m_ra.val1 = myList.getPrefixByNumber(m_stationListPos).to_int16(); }
         }
         m_browseOnRelease = 0;
         m_oldX = 0;
