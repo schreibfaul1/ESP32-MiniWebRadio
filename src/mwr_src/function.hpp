@@ -1223,58 +1223,49 @@ class SD_content {
 
     void setLastConnectedFile(ps_ptr<char> lastconnectedItem) {
         /*  lastconnectedItem                       m_lastConnectedFolder       m_lastConnectedFileName     m_lastConnectedFile
-            "/audiofiles/wavfiles/chicken.wav"      "/audiofiles/wavfiles/"     "chicken.wav"               "/audiofiles/wavfiles/chicken.wav"
-            "xyz/chicken.wav"                       "/audiofiles/"              ""                          "/audiofiles/"                      // does not start with "/"
-            "/audiofiles/wavfiles/chickenwav"       "/audiofiles/wavfiles/"     ""                          "/audiofiles/wavfiles/"             // file has no extension
+            "xyz/chicken.wav"                       "/audiofiles/"              {}                          "/audiofiles/"                      // does not start with "/"
+            "/audiofiles/wavfiles/chickenwav"       "/audiofiles/wavfiles/"     {}                          "/audiofiles/wavfiles/"             // file has no extension
+            "/audiofiles/wavfiles/.wav"             "/audiofiles/wavfiles/"     {}                          "/audiofiles/wavfiles/"             // file has no name
             "/chicken.wav"                          "/"                         "chicken.wav"               "/chicken.wav"                      // we have no folder
-            "/audiofiles/wavfiles/"                 "/audiofiles/wavfiles/"     ""                          "/audiofiles/wavfiles/"             // we have no file
-            "/audiofiles/wavfiles/.wav"             "/audiofiles/wavfiles/"     ""                          "/audiofiles/wavfiles/"             // file has no name
+            "/audiofiles/wavfiles/"                 "/audiofiles/wavfiles/"     {}                          "/audiofiles/wavfiles/"             // we have no file
+            "/audiofiles/wavfiles/chicken.wav"      "/audiofiles/wavfiles/"     "chicken.wav"               "/audiofiles/wavfiles/chicken.wav"
         */
-        m_lastConnectedFileName.assign("");
-        m_lastConnectedFolder.assign("");
         int posFirst = 0, posLast = 0, posDot = 0;
-        if (!lastconnectedItem.valid()) { // guard, lastconnectedItem == NULL
-            m_lastConnectedFileName.assign("");
-            m_lastConnectedFolder.assign("/audiofiles/");
-            goto exit;
-        }
+
+        if (!lastconnectedItem.valid()) { goto exit; } // guard, lastconnectedItem == NULL
+
         posFirst = lastconnectedItem.index_of("/", 0);
-        posLast = lastconnectedItem.last_index_of('/');
-        posDot = m_lastConnectedFileName.index_of('.', 0);
         if (posFirst != 0) { // guard, does not start with /
-            m_lastConnectedFileName.assign("");
             m_lastConnectedFolder.assign("/audiofiles/");
+            m_lastConnectedFileName.reset();
             goto exit;
         }
-        if (posLast == 0) {
-            m_lastConnectedFolder.assign("/");
-        } // we have no folder name
-        else {
+
+        posLast = lastconnectedItem.last_index_of('/');
+        if (posFirst == posLast) { // we have no folder
+            m_lastConnectedFolder = "/";
+        } else {
             m_lastConnectedFolder = lastconnectedItem.substr(0, posLast + 1);
         }
 
-        if (posLast == lastconnectedItem.strlen() - 1) {
-            m_lastConnectedFileName.assign("");
-        } // we have no file name
-        else {
-            m_lastConnectedFileName = lastconnectedItem.substr(posLast + 1);
-        }
-
-        if (posDot == -1) { // no extension
-            m_lastConnectedFileName.assign("");
-        }
-
-        if (posDot <= posLast) { // can't be a file
-            m_lastConnectedFileName.assign("");
+        posDot = lastconnectedItem.index_of('.', posLast);
+        if (posDot == -1) { // file has no extension
+            m_lastConnectedFileName.reset();
+        } else {
+            if (posDot == posLast + 1) {
+                m_lastConnectedFileName.reset(); // extension without name
+            }
+            m_lastConnectedFileName = lastconnectedItem.substr(posLast + 1); // fileNane exists
         }
 
     exit:
         m_lastConnectedFile.clone_from(m_lastConnectedFolder);
         m_lastConnectedFile.append(m_lastConnectedFileName);
         MWR_LOG_DEBUG("lastconnectedItem {}", lastconnectedItem);
-        MWR_LOG_DEBUG("lastConnectedFile {}", m_lastConnectedFile);
-        MWR_LOG_DEBUG("m_lastConnectedFileName {}", m_lastConnectedFileName);
         MWR_LOG_DEBUG("m_lastConnectedFolder {}", m_lastConnectedFolder);
+        MWR_LOG_DEBUG("m_lastConnectedFileName {}", m_lastConnectedFileName);
+        MWR_LOG_DEBUG("lastConnectedFile {}", m_lastConnectedFile);
+
         listFilesInDir(m_lastConnectedFolder, true, false);
     }
 
@@ -1481,9 +1472,9 @@ class stationManagement {
         return *m_curStation;
     }
     //----------------------------------------------------------------------------------------------------------
-    const char* getStationName(uint16_t staNr) {
-        if (staNr > m_staCnt) return strdup("unknown");
-        if (!m_stations.name[staNr]) return strdup("unknown");
+    ps_ptr<char> getStationName(uint16_t staNr) {
+        if (staNr > m_staCnt) return {};
+        if (!m_stations.name[staNr]) return {};
         return m_stations.name[staNr];
     }
     char getStationFav(uint16_t staNr) { // 0 = not fav, * = fav, 1..3 = fav number (notused)
