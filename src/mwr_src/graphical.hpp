@@ -5194,7 +5194,7 @@ class FileList : public RegisterTable {
     }
     ps_ptr<char> getSelectedFile() {
         if (m_curAudioFileNr == -1) {                               // get parent folder
-            if (m_curAudioFolder.equals("/audiofiles/")) return ""; // is already the root
+            if (m_curAudioFolder.equals("/audiofiles/")) return {}; // is already the root
             myList.colorLine(m_y, m_selectColor);
             vTaskDelay(300 / portTICK_PERIOD_MS);
             int lastSlash = m_curAudioFolder.last_index_of('/');
