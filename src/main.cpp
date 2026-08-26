@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.0t1 - Aug 24, 2026                                                                                                               ";
+    Version 4.2.0t2 - Aug 26, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -1889,6 +1889,7 @@ void changeState(int8_t state, int8_t subState) {
             txt_DL_fName.show();
             showFileLogo(DLNA, subState);
             webSrv.send("changeState=", "DLNA");
+MWR_LOG_ERROR("audio.isRunning {}", audio.isRunning());
             if (audio.isRunning()) btn_DL_pause.set_active(true);
             else                   btn_DL_pause.set_active(false);
             sdr_DL_volume.show();
@@ -3164,7 +3165,7 @@ void ir_short_key(int8_t key) {
             }
             if(s_state == DLNAITEMSLIST) {
                 ps_ptr<char> r = lst_DLNA.getSelectedURL();
-                if (r.valid()) { txt_DL_fName.setTextColor(TFT_CYAN); txt_DL_fName.setText(lst_DLNA.getSelectedTitle()); changeState(DLNA, 0); connecttohost(r); }
+                if (r.valid()) { txt_DL_fName.setTextColor(TFT_CYAN); txt_DL_fName.setText(lst_DLNA.getSelectedTitle()); connecttohost(r); changeState(DLNA, 0); }
                 else setTimeCounter(2);
                 break;
             }
@@ -4220,7 +4221,7 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
                                               pgb_DL_progress.reset();
                                               btn_DL_pause.set_active(false);
                                               btn_DL_pause.show();
-                                              if(s_ir_btn_select == 3) set_ir_pos_DL(0);
+                                              if(s_ir_btn_select == 2) set_ir_pos_DL(0);
                                               goto exit; }
         if (name.equals("btn_DL_fileList")) { changeState(DLNAITEMSLIST, 0); txt_DL_fName.setText(""); goto exit; }
         if (name.equals("btn_DL_radio"))    { stopSong(); changeState(RADIO, 0); goto exit; }
