@@ -2989,7 +2989,11 @@ void ir_short_key(int8_t key) {
                 setTimeCounter(2);
                 break;
             }
-                if(s_state == DLNAITEMSLIST){lst_DLNA.nextItem(); setTimeCounter(LIST_TIMER); return;} // item++
+            if(s_state == DLNAITEMSLIST){
+                lst_DLNA.nextItem();
+                setTimeCounter(LIST_TIMER);
+                break;
+            } // item++
             if (s_state == CLOCK) {
                 downvolume();
                 setTimeCounter(2);
@@ -3042,7 +3046,11 @@ void ir_short_key(int8_t key) {
                 volBox.show(TFT_BLUE);
                 break;
             }
-            if(s_state == DLNAITEMSLIST) { lst_DLNA.prevItem(); setTimeCounter(LIST_TIMER); return; } // item++
+            if(s_state == DLNAITEMSLIST) {
+                lst_DLNA.prevItem();
+                setTimeCounter(LIST_TIMER);
+                break;
+            } // item++
             if (s_state == CLOCK) {
                 upvolume();
                 setTimeCounter(2);

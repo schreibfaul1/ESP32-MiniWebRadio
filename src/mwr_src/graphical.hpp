@@ -4230,66 +4230,11 @@ class UniList {
     }
     ps_ptr<char> getTextByNumber(uint8_t lineNr) { return m_text[lineNr]; }
 
-    void drawLine(uint8_t pos, ps_ptr<char> txt, ps_ptr<char> ext1, ps_ptr<char> color = ANSI_ESC_WHITE, int32_t nr = -1) {
-        if (!txt.valid()) txt = "";
-        if (!ext1.valid()) ext1 = "";
-        if (pos > 9) return;
-        getTFT().setFontSize(m_fontSize);
-        if (m_mode == RADIO) {
-            m_buff.assignf(ANSI_ESC_YELLOW "{:03} {}{}", nr, color, txt);
-            if (txt != "") { m_txt[pos] = txt; }
-            m_nr[pos] = nr;
-        }
-        if (m_mode == DLNA) {
-            if (txt == "") {
-                MWR_LOG_WARN("txt is empty");
-                return;
-            }
-            if (ext1 == "")
-                m_buff.assignf("{}{}", color, txt);
-            else if (ext1[0] == '\0')
-                m_buff.assignf("{}{}", color, txt);
-            else
-                m_buff.assignf("{}{} " ANSI_ESC_CYAN "({})", color, txt, ext1); // childcount od duration
-            if (txt != "") {
-                m_txt[pos] = txt;
-                m_nr[pos] = 1;
-            }
-        }
-        if (m_mode == PLAYER) {
-            if (txt == "") {
-                MWR_LOG_WARN("txt is empty");
-                return;
-            }
-            if (nr <= 0)
-                m_buff.assignf("{}{}", color, txt);
-            else
-                m_buff.assignf("{}{}" ANSI_ESC_YELLOW " {}", color, txt, nr);
-            if (txt) {
-                m_txt[pos] = txt;
-                m_nr[pos] = nr;
-            }
-        }
-        uint16_t indent = pos ? m_indentContent : m_indentDirectory;
-        getTFT().writeText(m_buff, indent, m_y + pos * m_lineHight, m_w - indent, m_lineHight, HAlign::Left, VAlign::Middle, true, false);
-    }
     void drawPosInfo(int16_t firstVal, int16_t secondVal, int16_t total, ps_ptr<char> color) { // e.g. 1-9/65
         m_buff.assignf("{}{}-{}-{}", color, firstVal, secondVal, total);
         getTFT().writeText(m_buff, 0, m_y, m_w, m_lineHight, HAlign::Right, VAlign::Middle, true, true);
     }
-    void colourLine(uint8_t pos, ps_ptr<char> color = ANSI_ESC_WHITE) {
-        if (pos > 9) return;
-        getTFT().setFontSize(m_fontSize);
-        if (m_mode == RADIO) { m_buff.assignf(ANSI_ESC_YELLOW "{:03} {}{}", m_nr[pos], color, m_txt[pos]); }
-        if (m_mode == PLAYER) {
-            if (m_nr[pos])
-                m_buff.assignf("{}{}" ANSI_ESC_YELLOW " {}", color, m_txt[pos], m_nr[pos]); // file
-            else
-                m_buff.assignf("{}{}", color, m_txt[pos]); // directory
-        }
-        uint16_t indent = pos ? m_indentContent : m_indentDirectory;
-        getTFT().writeText(m_buff, indent, m_y + pos * m_lineHight, m_w - indent, m_lineHight, HAlign::Left, VAlign::Middle, true, true);
-    }
+
     ps_ptr<char> getTxtByPos(uint8_t pos) { return m_txt[pos]; }
     int16_t      getNumberByPos(uint8_t pos) { return m_nr[pos]; }
     void         drawTriangeUp() {
@@ -4562,7 +4507,7 @@ class DlnaList : public RegisterTable {
                 color = ANSI_ESC_CYAN;
                 res = true;
             }
-            myList.drawLine(pos, m_dlnaHistory[*m_dlnaLevel].name, "", color, 1);
+            myList.drawLine1(pos, {}, color, m_dlnaHistory[*m_dlnaLevel].name, {});
             if (color == ANSI_ESC_MAGENTA) m_itemListPos_last = pos;
             return res;
         }
@@ -4610,7 +4555,7 @@ class DlnaList : public RegisterTable {
         if (itemSize) { sprintf(extension, "%li", itemSize); }                     // only files have itemsize
         if (!duration.equals("?")) { sprintf(extension, "%s", duration.c_get()); } // must be a audiofile
         if (color == ANSI_ESC_MAGENTA) { m_itemListPos_last = pos; }
-        myList.drawLine(pos, item, extension, color, 1);
+        myList.drawLine1(pos, {}, color, item, extension);
         return res;
     }
 
@@ -4799,7 +4744,7 @@ class DlnaList : public RegisterTable {
         }
         m_currItemNr[*m_dlnaLevel]--;
         drawItem(m_currItemNr[*m_dlnaLevel] + 0 - m_viewPoint + 1); // make magenta
-        drawItem(m_currItemNr[*m_dlnaLevel] + 1 - m_viewPoint + 1); // std colour
+        drawItem(m_currItemNr[*m_dlnaLevel] + 1 - m_viewPoint + 1); // std color
     }
 
     void nextItem() { // from IR control, scroll down
@@ -4826,7 +4771,7 @@ class DlnaList : public RegisterTable {
             return;
         }
         drawItem(m_currItemNr[*m_dlnaLevel] + 0 - m_viewPoint + 1); // make magenta
-        drawItem(m_currItemNr[*m_dlnaLevel] - 1 - m_viewPoint + 1); // std colour
+        drawItem(m_currItemNr[*m_dlnaLevel] - 1 - m_viewPoint + 1); // std color
     }
 
     ps_ptr<char> getSelectedURL() { // ok from IR
