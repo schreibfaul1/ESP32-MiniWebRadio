@@ -203,31 +203,35 @@ enum status {
     UNDEFINED = -1
 };
 
-inline ps_ptr<char> getStatusName(int8_t status) {
+struct status_items {
     ps_ptr<char> name;
-    switch (status) {
-        case 0: name = "NONE"; break;
-        case 1: name = "RADIO"; break;
-        case 2: name = "PLAYER"; break;
-        case 3: name = "DLNA"; break;
-        case 4: name = "CLOCK"; break;
-        case 5: name = "BRIGHTNESS"; break;
-        case 6: name = "ALARMCLOCK"; break;
-        case 7: name = "SLEEPTIMER"; break;
-        case 8: name = "STATIONSLIST"; break;
-        case 9: name = "AUDIOFILESLIST"; break;
-        case 10: name = "DLNAITEMSLIST"; break;
-        case 11: name = "BLUETOOTH"; break;
-        case 12: name = "EQUALIZER"; break;
-        case 13: name = "SETTINGS"; break;
-        case 14: name = "IR_SETTINGS"; break;
-        case 15: name = "RINGING"; break;
-        case 16: name = "WIFI_SETTINGS"; break;
-        case 17: name = "SLEEP"; break;
-        default: name = "UNDEFINED"; break;
-    }
-    return name;
-}
+    ps_ptr<char> hl_name;
+    uint16_t     headline_color1;
+    uint16_t     headline_color2;
+};
+
+status_items statusItems[19] = {
+    {"NONE", "", TFT_BLACK, TFT_BLACK},
+    {"RADIO", "Internet Radio", TFT_RED, TFT_BLACK},
+    {"PLAYER", "Audio Player", TFT_DARKGREEN, TFT_BLACK},
+    {"DLNA", "DLNA", TFT_DARKYELLOW, TFT_BLACK},
+    {"CLOCK", "Clock", TFT_DARKBROWN, TFT_BLACK},
+    {"BRIGHTNESS", "Brightness", TFT_BLACK, TFT_BLACK},
+    {"ALARMCLOCK", "Alarm Clock (hh:mm)", TFT_BROWN, TFT_BROWN},
+    {"SLEEPTIMER", "Off Timer (h:mm)", TFT_BLACK, TFT_BLACK},
+    {"STATIONSLIST", "Stations List", TFT_BLACK, TFT_BLACK},
+    {"AUDIOFILESLIST", "Audio Files", TFT_BLACK, TFT_BLACK},
+    {"DLNAITEMSLIST", "DLNA List", TFT_BLACK, TFT_BLACK},
+    {"BLUETOOTH", "Bluetooth", TFT_BLACK, TFT_BLACK},
+    {"EQUALIZER", "Equalizer", TFT_BLACK, TFT_BLACK},
+    {"SETTINGS", "Settings", TFT_DARKMAGENTA, TFT_BLACK},
+    {"IR_SETTINGS", "IR Settings", TFT_BLACK, TFT_BLACK},
+    {"RINGING", "Ringing", TFT_BLACK, TFT_BLACK},
+    {"WIFI_SETTINGS", "WiFi Settings", TFT_BLACK, TFT_BLACK},
+    {"SLEEP", "", TFT_BLACK, TFT_BLACK},
+    {"UNDEFINED", "", TFT_BLACK, TFT_BLACK},
+};
+
 std::mutex mutex_print;
 enum ir_shift { IR_RIGHT = +100, IR_LEFT = -100, IR_UP = +101, IR_DOWN = -101, IR_RESET = -127 };
 
@@ -456,8 +460,8 @@ void         nextStation();
 void         prevStation();
 void         setStationByNumber(uint16_t staNr);
 void         WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg);
-void         WEBSRV_onRequest(ps_ptr<char> cmd,  ps_ptr<char> param, ps_ptr<char> arg, ps_ptr<char> contentType, uint32_t contentLength);
-void         WEBSRV_onDelete(ps_ptr<char> cmd,  ps_ptr<char> param, ps_ptr<char> arg);
+void         WEBSRV_onRequest(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg, ps_ptr<char> contentType, uint32_t contentLength);
+void         WEBSRV_onDelete(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg);
 void         savefile(ps_ptr<char> fileName, uint32_t contentLength, ps_ptr<char> contenttype);
 void         setI2STone();
 ps_ptr<char> getI2STone();
@@ -756,7 +760,8 @@ inline int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min,
 
 inline void setupBacklight(int pin, uint32_t freq_hz) {
 
-    ledc_channel_config_t ch = {.gpio_num = (gpio_num_t)pin, .speed_mode = LEDC_LOW_SPEED_MODE, .channel = LEDC_CHANNEL_1, .intr_type = LEDC_INTR_DISABLE, .timer_sel = LEDC_TIMER_3, .duty = 0, .hpoint = 0};
+    ledc_channel_config_t ch =
+        {.gpio_num = (gpio_num_t)pin, .speed_mode = LEDC_LOW_SPEED_MODE, .channel = LEDC_CHANNEL_1, .intr_type = LEDC_INTR_DISABLE, .timer_sel = LEDC_TIMER_3, .duty = 0, .hpoint = 0};
 
     ledc_timer_config_t tmr = {
         .speed_mode = LEDC_LOW_SPEED_MODE,
@@ -778,9 +783,9 @@ inline void setupBacklight(int pin, uint32_t freq_hz) {
 }
 
 inline void setTFTbrightness(uint8_t brightness, uint8_t bh1750Value) {
-    extern bool s_f_sleeping;
+    extern bool    s_f_sleeping;
     extern uint8_t s_sleepMode;
-    uint8_t     duty = std::min(brightness, bh1750Value);
+    uint8_t        duty = std::min(brightness, bh1750Value);
     if (s_f_sleeping && s_sleepMode == 0) { duty = 0; }
     if (BRIGHTNESS_INVERSION) { duty = 255 - duty; }
 

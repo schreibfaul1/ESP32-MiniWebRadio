@@ -34,25 +34,6 @@ SET_LOOP_TASK_STACK_SIZE(14 * 1024);
 
 // global variables
 
-char _hl_item[18][40]{"",                    // none
-                      "Internet Radio",      // "* интернет-радио *"  "ραδιόφωνο Internet"
-                      "Audio Player",        // "** цифрово́й плеер **
-                      "DLNA",                // Digital Living Network Alliance
-                      "Clock",               // Clock "** часы́ **"  "** ρολόι **"
-                      "Brightness",          // Brightness яркость λάμψη
-                      "Alarm Clock (hh:mm)", // AlarmClock "будильник" "ξύπνημα"
-                      "Off Timer (h:mm)",    // "Sleeptimer" "Χρονομετρητής" "Таймер сна"
-                      "Stations List",
-                      "Audio Files",
-                      "DLNA List",
-                      "Bluetooth",
-                      "Equalizer",
-                      "Settings",
-                      "IR Settings",
-                      "Alarm",
-                      "WiFi Settings", //
-                      ""};
-
 constexpr uint16_t MAX_STATIONS = 1000;
 
 dlnaHistory_s s_dlnaHistory[10];
@@ -1708,7 +1689,7 @@ void setTimeCounter(uint8_t sec) {
 /*🟢🟡🔴*/
 void changeState(int8_t state, int8_t subState) {
 
-    printfln(s_tag.action, "current state is " ANSI_ESC_GREEN "{}({})" ANSI_ESC_RESET ", required state " ANSI_ESC_GREEN "{}({})", getStatusName(s_state), s_subState, getStatusName(state), subState);
+    printfln(s_tag.action, "current state is " ANSI_ESC_GREEN "{}({})" ANSI_ESC_RESET ", required state " ANSI_ESC_GREEN "{}({})", statusItems[s_state].name, s_subState, statusItems[state].name, subState);
     MWR_LOG_DEBUG("state {}, s_state {}, subState {}, s_subState_radio {}, s_subState_player {}", state, s_state, subState, s_subState_radio, s_subState_player);
     bool newState = false;
     bool newSubState = false;
@@ -1740,7 +1721,7 @@ void changeState(int8_t state, int8_t subState) {
     if(newState)disableAllObjects();
     dispHeader.enable();
     dispFooter.enable();
-    if(state != s_state) { dispHeader.updateItem(_hl_item[state]); }
+    if(state != s_state) { dispHeader.updateItem(statusItems[state].hl_name, statusItems[state].headline_color1, statusItems[state].headline_color2); }
 
     s_subState_radio  = UNDEFINED;
     s_subState_player = UNDEFINED;

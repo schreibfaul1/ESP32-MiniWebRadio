@@ -36,6 +36,7 @@ class TFT_Base {
     void     drawRect(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t color);
     void     drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color);
     void     fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color);
+    void     fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color1, uint16_t color2, bool vertical = false);
     void     drawCircle(int16_t cx, int16_t cy, int16_t r, uint16_t color);
     void     fillCircle(int16_t cx, int16_t cy, uint16_t r, uint16_t color, bool updateDisplay = true);
     void     setBackGoundColor(uint16_t BGcolor) { m_backGroundColor = BGcolor; }
@@ -51,7 +52,6 @@ class TFT_Base {
     bool     drawGifFile(fs::FS& fs, ps_ptr<char> path, uint16_t x, uint16_t y, uint8_t repeat);
     bool     drawJpgFile(fs::FS& fs, ps_ptr<char> path, uint16_t x, uint16_t y, uint16_t maxWidth = 0, uint16_t maxHeight = 0);
     bool     drawPngFile(fs::FS& fs, ps_ptr<char> path, uint16_t x, uint16_t y, uint16_t maxWidth = 0, uint16_t maxHeight = 0);
-    uint16_t getLineLength(const char* txt);
     size_t   writeText(ps_ptr<char> txt, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, HAlign h_align, VAlign v_align, bool noWrap, bool autoSize);
 
   private:
