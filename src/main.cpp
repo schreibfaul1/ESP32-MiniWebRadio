@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.0t3 - Aug 28, 2026                                                                                                               ";
+    Version 4.2.0t4 - Aug 28, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -113,7 +113,7 @@ bool s_f_sd_card_found = false;
 bool s_f_isWiFiConnected = false;
 bool s_f_ok_from_ir = false;
 
-int8_t   s_state = UNDEFINED; // statemaschine
+int8_t   s_state = NONE; // statemaschine
 int8_t   s_subState = UNDEFINED;
 int8_t   s_subState_radio = UNDEFINED;
 int8_t   s_subState_player = UNDEFINED;
@@ -1120,7 +1120,7 @@ void setup() {
             s_resetReason == ESP_RST_SW ||        // ESP.restart()
             s_resetReason == ESP_RST_SDIO ||      // The boot button was pressed
             s_resetReason == ESP_RST_DEEPSLEEP) { // Wake up
-            s_state = UNDEFINED;
+            s_state = NONE;
         }
         if (!MDNS.begin("MiniWebRadio")) {
             printfln(s_tag.wifi_info, ANSI_ESC_YELLOW "Error starting mDNS");
@@ -1134,7 +1134,7 @@ void setup() {
         ftpSrv.begin(SD_MMC, FTP_USERNAME, FTP_PASSWORD); // username, password for fgetTP().
         s_f_dlnaSeekServer = true;
     } else {
-        s_state = UNDEFINED;
+        s_state = NONE;
         setTFTbrightness(200, 200);
         changeState(WIFI_SETTINGS, 0);
         return;
