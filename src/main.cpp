@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.0t2 - Aug 26, 2026                                                                                                               ";
+    Version 4.2.0t3 - Aug 28, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -139,6 +139,8 @@ int8_t   s_subState_player = UNDEFINED;
 int8_t   s_subState_clock = UNDEFINED;
 int8_t   s_ir_btn_select = UNDEFINED; // IR menue item
 int8_t   s_currDLNAsrvNr = -1;
+int8_t   s_alarmSubMenue = -1;
+int8_t   s_sleepTimerSubMenue = -1;
 uint8_t  s_alarmdays = 0;
 uint8_t  s_cur_Codec = 0;
 uint8_t  s_numServers = 0; //
@@ -148,18 +150,16 @@ uint8_t  s_staListPos = 0;
 uint8_t  s_cthFailCounter = 0; // connecttohost fail
 uint8_t  s_itemListPos = 0;    // DLNA items
 uint8_t  s_fileListPos = 0;
-int8_t   s_alarmSubMenue = -1;
-int8_t   s_sleepTimerSubMenue = -1;
 uint8_t  s_ambientValue = 50;
 uint8_t  s_dlnaLevel = 0;
 uint8_t  s_resetReason = (esp_reset_reason_t)ESP_RST_UNKNOWN;
+uint8_t  s_brightness = UINT8_MAX;
+uint8_t  s_bh1750Value = UINT8_MAX;
 int16_t  s_totalNumberReturned = -1;
 int16_t  s_dlnaMaxItems = -1;
 int16_t  s_dlnaMaXServers = -1;
 int16_t  s_alarmtime[7] = {0};  // in minutes (23:59 = 23 *60 + 59) [0] Sun, [1] Mon
 int16_t  s_cur_AudioFileNr = 0; // this is the position of the file within the (alpha ordered) folder starting with 0
-uint8_t  s_brightness = UINT8_MAX;
-uint8_t  s_bh1750Value = UINT8_MAX;
 uint16_t s_staListNr = 0;
 uint16_t s_fileListNr = 0;
 uint16_t s_cur_station = 0; // current station(nr), will be set later
@@ -231,8 +231,6 @@ SemaphoreHandle_t mutex_display;
     ║                                                     D E F A U L T S E T T I N G S                                                         ║
     ╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝   */
 
-// clang-format off
-/*🟢🟡🔴*/
 boolean defaultsettings() {
 
     if (!SD_MMC.exists("/ir_buttons.json")) { // if not found ir_buttons.json create a default file
@@ -252,18 +250,17 @@ boolean defaultsettings() {
         updateSettings();
     }
 
-    File         file2 = SD_MMC.open("/settings.json", "r", false);
+    File file2 = SD_MMC.open("/settings.json", "r", false);
+    size_t file2_size =file2.size();
     ps_ptr<char> jO;
-    jO.calloc(2048);
-    ps_ptr<char> tmp;
-    tmp.calloc(1024);
-    file2.readBytes(jO.get(), 2048);
+    jO.calloc(file2_size);
+    file2.readBytes(jO.get(), file2_size);
     s_settingsHash = simpleHash(jO);
     file2.close();
 
     auto parseJson = [&](const char* s) { // lambda, inner function
         ps_ptr<char> res = "0";
-        int16_t pos1 = 0, pos2 = 0, pos3 = 0;
+        int16_t      pos1 = 0, pos2 = 0, pos3 = 0;
         pos1 = jO.index_of(s, 0);
         if (pos1 < 0) {
             MWR_LOG_ERROR("index {} not found", s);
@@ -303,7 +300,7 @@ boolean defaultsettings() {
     s_volume.ringVolume = parseJson("\"ringVolume\":").to_uint8();
     s_volume.volumeAfterAlarm = parseJson("\"volumeAfterAlarm\":").to_uint8();
     s_bt_emitter.volume = parseJson("\"BTvolume\":").to_uint8();
-    s_bt_emitter.enabled  = parseJson("\"BTpower\":").equals("true") ? true : false;
+    s_bt_emitter.enabled = parseJson("\"BTpower\":").equals("true") ? true : false;
     s_bt_emitter.mode = parseJson("\"BTmode\":").equals("TX") ? "TX" : "RX";
     s_alarmtime[0] = computeMinuteOfTheDay(parseJson("\"alarmtime_sun\":"));
     s_alarmtime[1] = computeMinuteOfTheDay(parseJson("\"alarmtime_mon\":"));
@@ -349,8 +346,6 @@ boolean defaultsettings() {
     staMgnt.updateStationsList();
     return true;
 }
-// clang-format on
-/*🟢🟡🔴*/
 
 void updateSettings() {
     if (!s_settings.lastconnectedhost.valid()) s_settings.lastconnectedhost.assign("");
