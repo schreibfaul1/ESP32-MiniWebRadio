@@ -231,8 +231,8 @@ boolean defaultsettings() {
         updateSettings();
     }
 
-    File file2 = SD_MMC.open("/settings.json", "r", false);
-    size_t file2_size =file2.size();
+    File         file2 = SD_MMC.open("/settings.json", "r", false);
+    size_t       file2_size = file2.size();
     ps_ptr<char> jO;
     jO.calloc(file2_size);
     file2.readBytes(jO.get(), file2_size);
@@ -3447,19 +3447,21 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
 
     CMD_EQUALS("webFileURL"){           audio.connecttohost(param.c_get())? changeState(PLAYER, 1) : changeState(PLAYER, 0); showPlayerFileName(param); return;}                        // via websocket
 
-    CMD_EQUALS("get_networks"){         webSrv.send("networks=", WiFi.SSID().c_str()); return;}                                                              // via websocket
+    CMD_EQUALS("get_networks"){         webSrv.send("networks=", WiFi.SSID().c_str()); return; }                                                              // via websocket
 
-    CMD_EQUALS("get_tftSize"){          webSrv.send("tftSize=",displayConfig.tftSize); return;};
+    CMD_EQUALS("get_tftSize"){          webSrv.send("tftSize=",displayConfig.tftSize); return; };
 
-    CMD_EQUALS("get_timeZones"){        webSrv.send("timezones=", timezones_json); return;}
+    CMD_EQUALS("get_timeZones"){        webSrv.send("timezones=", timezones_json); return; }
+
+    CMD_EQUALS("get_locations"){        webSrv.send("location=", locations_json); return; }
 
     CMD_EQUALS("set_timeZone"){         s_TZName = param;  s_TZString = arg;
                                         printfln(s_tag.webserver, "Timezone: .. " ANSI_ESC_BLUE "{}, {}", param, arg);
                                         setRTC(s_TZString);
                                         updateSettings(); // write new TZ items to settings.json
-                                        return;}
+                                        return; }
 
-    CMD_EQUALS("get_timeZoneName"){     webSrv.reply(s_TZName, webSrv.TEXT); return;}
+    CMD_EQUALS("get_timeZoneName"){     webSrv.reply(s_TZName, webSrv.TEXT); return; }
 
     CMD_EQUALS("change_state"){         if     (param == "RADIO"       && s_state != RADIO)       { changeState(RADIO, 0); return; }
                                         else if(param == "PLAYER"      && s_state != PLAYER)      { stopSong(); changeState(PLAYER, 0); return; }
@@ -3596,7 +3598,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
 
     CMD_EQUALS("hardcopy"){             printfln(s_tag.webserver, "Webpage: " ANSI_ESC_YELLOW "create a display hardcopy"); make_hardcopy_on_sd(); webSrv.send("hardcopy=", "/hardcopy.bmp"); return;}
 
-    printfln(s_tag.webserver, ANSI_ESC_RED "unknown HTMLcommand(onCommand): {}, param={}", cmd, param);
+    printfln(s_tag.webserver, ANSI_ESC_RED "unknown HTMLcommand(onCommand): {}, param: {}, arg: {}", cmd, param, arg);
     webSrv.sendStatus(400);
 }
 // clang-format on
@@ -3815,21 +3817,30 @@ void kcx_bt_scanItems(const char* jsonItems) { // Every time an item (name and a
 void tp_pressed(uint16_t x, uint16_t y) {
     // printfln(s_tag.tp_info, "Touchpoint x={}, y={}", x, y);
     if (s_f_sleeping) return; // awake in tp_released()
-    const char* objName = NULL;
-    if(y > layout.winHeader.y + layout.winHeader.h && y < layout.winProgbar.y) {
-        objName = "backpane";
-        if (s_state == RADIO){
+    ps_ptr<char> objName;
+    objName = isObjectClicked(x, y);
+
+    if (s_state == RADIO) {
+        if(objName == "txt_RA_staName") {
             changeState(RADIO, s_subState_radio + 1 == 3 ? 0 : s_subState_radio + 1);
             goto exit;
         }
-        if (s_state == CLOCK){
-            changeState(CLOCK, s_subState_clock + 1 == 2 ? 0 : s_subState_clock + 1);
+        if(objName == "pic_RA_logo") {
+            MWR_LOG_WARN("weather");
             goto exit;
         }
     }
-    objName = isObjectClicked(x, y);
+
+    if (s_state == CLOCK) {
+        if(y > layout.winHeader.y + layout.winHeader.h && y < layout.winProgbar.y) {
+         objName = "backpane";
+            changeState(CLOCK, s_subState_clock + 1 == 2 ? 0 : s_subState_clock + 1);
+           goto exit;
+        }
+    }
+
 exit:
-    if (objName) { printfln(s_tag.tp_info, "click on ..  {}", objName); }
+    if (objName.valid()) { printfln(s_tag.tp_info, "click on ..  {}", objName); }
     return;
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
