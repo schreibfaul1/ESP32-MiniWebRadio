@@ -218,7 +218,7 @@ status_items statusItems[19] = {
     {"CLOCK", "Clock", TFT_DARKBROWN, TFT_BLACK},
     {"BRIGHTNESS", "Brightness", TFT_BLACK, TFT_BLACK},
     {"ALARMCLOCK", "Alarm Clock (hh:mm)", TFT_BROWN, TFT_BROWN},
-    {"SLEEPTIMER", "Off Timer (h:mm)", TFT_BLACK, TFT_BLACK},
+    {"SLEEPTIMER", "Off Timer (h:mm)", TFT_DARKBLUE, TFT_DARKBLUE},
     {"STATIONSLIST", "Stations List", TFT_BLACK, TFT_BLACK},
     {"AUDIOFILESLIST", "Audio Files", TFT_BLACK, TFT_BLACK},
     {"DLNAITEMSLIST", "DLNA List", TFT_BLACK, TFT_BLACK},

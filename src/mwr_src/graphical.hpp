@@ -1024,8 +1024,8 @@ class Textbox : public RegisterTable {
     void set_border(int32_t border_color = TFT_LIGHTGREY, uint8_t border_radius = 0, int32_t fill_color1 = TFT_TRANSPARENT, int32_t fill_color2 = TFT_TRANSPARENT, bool orientation = false) {
         m_border_color = border_color; // TFT_TRANSPARENT -> no border
         m_border_radius = border_radius;
-        m_fill_color1 = fill_color1; // TFT_TRANSPARENT -> no fill
-        m_fill_color2 = fill_color2; // TFT_TRANSPARENT -> no fill gradient
+        m_fill_color1 = fill_color1;          // TFT_TRANSPARENT -> no fill
+        m_fill_color2 = fill_color2;          // TFT_TRANSPARENT -> no fill gradient
         m_gradient_orientation = orientation; // false: horizontal
     }
 
@@ -1078,7 +1078,11 @@ class Textbox : public RegisterTable {
                 }
             }
             if (m_border_color != TFT_TRANSPARENT) {
-                getTFT().drawRoundRect(x, y, w, h, m_border_radius, m_border_color);
+                if (m_border_radius) {
+                    getTFT().drawRoundRect(x, y, w, h, m_border_radius, m_border_color);
+                } else {
+                    getTFT().drawRect(x, y, w, h, m_border_color);
+                }
             }
             getTFT().writeText(txt, x, y, w, h, m_h_align, m_v_align, m_noWrap, m_autoSize);
         }
@@ -5600,38 +5604,46 @@ class DisplayHeader : public RegisterTable {
     //------------------------------------------------------------------------------------------------------------------------------------------------
 #ifdef TFT_LAYOUT_S // 320 x 240px
     //------------------------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
-    struct w_i {
+    struct w_r {
         uint16_t x = 0;
-        uint16_t w = 160;
-        uint8_t  pl = 2;
-        uint8_t  pr = 0;
-        uint8_t  pt = 0;
-        uint8_t  pb = 2;
-    } const s_Item; // Radio, Player, Clock...
-    struct w_l {
-        uint16_t x = 160;
-        uint16_t w = 30;
-        uint8_t  pl = 2;
+        uint16_t w = 28;
+        uint8_t  pl = 0;
         uint8_t  pr = 0;
         uint8_t  pt = 0;
         uint8_t  pb = 0;
-    } const s_Speaker; // loudspeaker symbol 25 x 20 px
+    } const s_RSSID; // RSSID symbol 22 x 22 px
+    struct w_l {
+        uint16_t x = 28;
+        uint16_t w = 30;
+        uint8_t  pl = 0;
+        uint8_t  pr = 0;
+        uint8_t  pt = 0;
+        uint8_t  pb = 0;
+    } const s_Speaker; // loudspeaker symbol 25 x 22 px
     struct w_v {
-        uint16_t x = 190;
+        uint16_t x = 58;
         uint16_t w = 30;
         uint8_t  pl = 0;
         uint8_t  pr = 0;
         uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_Volume; // volume
-    struct w_r {
-        uint16_t x = 220;
-        uint16_t w = 35;
+    struct w_d1 {
+        uint16_t x = 88;
+        uint16_t w = 2;
+        uint8_t  pl = 0;
+        uint8_t  pr = 0;
+        uint8_t  pt = 0;
+        uint8_t  pb = 0;
+    }; // dummy1
+    struct w_i {
+        uint16_t x = 90;
+        uint16_t w = 160;
         uint8_t  pl = 2;
         uint8_t  pr = 0;
-        uint8_t  pt = 1;
-        uint8_t  pb = 0;
-    } const s_RSSID; // RSSID symbol 27 x 20 px
+        uint8_t  pt = 0;
+        uint8_t  pb = 2;
+    } const s_Item; // Radio, Player, Clock...
     struct w_t {
         uint16_t x = 255;
         uint16_t w = 65;
@@ -5643,16 +5655,16 @@ class DisplayHeader : public RegisterTable {
                        //------------------------------------------------------------------------------------------------------------------------------------------------
 #elifdef TFT_LAYOUT_M  // 480 x 320px
     //------------------------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
-    struct w_i {
+    struct w_r {
         uint16_t x = 0;
-        uint16_t w = 240;
-        uint8_t  pl = 2;
+        uint16_t w = 40;
+        uint8_t  pl = 0;
         uint8_t  pr = 0;
         uint8_t  pt = 0;
-        uint8_t  pb = 2;
-    } const s_Item; // Radio, Player, Clock...
+        uint8_t  pb = 0;
+    } const s_RSSID; // RSSID symbol 30 x 30 px
     struct w_l {
-        uint16_t x = 240;
+        uint16_t x = 40;
         uint16_t w = 45;
         uint8_t  pl = 3;
         uint8_t  pr = 0;
@@ -5660,21 +5672,32 @@ class DisplayHeader : public RegisterTable {
         uint8_t  pb = 0;
     } const s_Speaker; // loudspeaker symbol 38 x 30 px
     struct w_v {
-        uint16_t x = 285;
-        uint16_t w = 50;
-        uint8_t  pl = 10;
+        uint16_t x = 85;
+        uint16_t w = 35;
+        uint8_t  pl = 0;
         uint8_t  pr = 0;
         uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_Volume; // volume
-    struct w_r {
-        uint16_t x = 335;
-        uint16_t w = 45;
+    struct w_d1 {
+        uint16_t x = 120;
+        uint16_t w = 10;
+        uint8_t  pl = 0;
+        uint8_t  pr = 0;
+        uint8_t  pt = 0;
+        uint8_t  pb = 0;
+    }; // dummy1
+    struct w_i {
+        uint16_t x = 130;
+        uint16_t w = 220;
         uint8_t  pl = 2;
         uint8_t  pr = 0;
-        uint8_t  pt = 1;
-        uint8_t  pb = 0;
-    } const s_RSSID; // RSSID symbol 39 x 30 px
+        uint8_t  pt = 0;
+        uint8_t  pb = 2;
+    } const s_Item; // Radio, Player, Clock...
+
+
+
     struct w_t {
         uint16_t x = 380;
         uint16_t w = 100;
@@ -5686,42 +5709,50 @@ class DisplayHeader : public RegisterTable {
                     //------------------------------------------------------------------------------------------------------------------------------------------------
 #elifdef TFT_LAYOUT_L  // 800 x 480px
     //------------------------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
-    struct w_i {
+    struct w_r {
         uint16_t x = 0;
-        uint16_t w = 400;
-        uint8_t  pl = 5;
+        uint16_t w = 60;
+        uint8_t  pl = 0;
         uint8_t  pr = 0;
         uint8_t  pt = 0;
         uint8_t  pb = 0;
-    } const s_Item; // Radio, Player, Clock...
+    } const s_RSSID; // RSSID symbol 48 x 48 px
     struct w_l {
-        uint16_t x = 400;
-        uint16_t w = 60;
-        uint8_t  pl = 1;
+        uint16_t x = 60;
+        uint16_t w = 80;
+        uint8_t  pl = 0;
         uint8_t  pr = 0;
         uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_Speaker; // loudspeaker symbol 57 x 46 px
     struct w_v {
-        uint16_t x = 460;
-        uint16_t w = 100;
+        uint16_t x = 140;
+        uint16_t w = 80;
         uint8_t  pl = 10;
         uint8_t  pr = 0;
         uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_Volume; // volume
-    struct w_r {
-        uint16_t x = 560;
-        uint16_t w = 80;
-        uint8_t  pl = 2;
+    struct w_d1 {
+        uint16_t x = 220;
+        uint16_t w = 10;
+        uint8_t  pl = 0;
         uint8_t  pr = 0;
-        uint8_t  pt = 1;
+        uint8_t  pt = 0;
         uint8_t  pb = 0;
-    } const s_RSSID; // RSSID symbol 64 x 48 px
+    }; // dummy1
+    struct w_i {
+        uint16_t x = 230;
+        uint16_t w = 340;
+        uint8_t  pl = 0;
+        uint8_t  pr = 0;
+        uint8_t  pt = 0;
+        uint8_t  pb = 0;
+    } const s_Item; // Radio, Player, Clock...
     struct w_t {
         uint16_t x = 640;
         uint16_t w = 160;
-        uint8_t  pl = 2;
+        uint8_t  pl = 0;
         uint8_t  pr = 0;
         uint8_t  pt = 0;
         uint8_t  pb = 0;
@@ -5729,38 +5760,46 @@ class DisplayHeader : public RegisterTable {
                     //------------------------------------------------------------------------------------------------------------------------------------------------
 #elifdef TFT_LAYOUT_XL // 1024 x 600px
     //------------------------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
-    struct w_i {
+    struct w_r {
         uint16_t x = 0;
-        uint16_t w = 400;
-        uint8_t  pl = 5;
+        uint16_t w = 120;
+        uint8_t  pl = 0;
         uint8_t  pr = 0;
         uint8_t  pt = 0;
         uint8_t  pb = 0;
-    } const s_Item; // Radio, Player, Clock...
+    } const s_RSSID; // RSSID symbol 56 x 56 px
     struct w_l {
-        uint16_t x = 400;
-        uint16_t w = 75;
-        uint8_t  pl = 1;
+        uint16_t x = 120;
+        uint16_t w = 80;
+        uint8_t  pl = 0;
         uint8_t  pr = 0;
         uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_Speaker; // loudspeaker symbol 69 x 56 px
     struct w_v {
-        uint16_t x = 475;
+        uint16_t x = 200;
         uint16_t w = 100;
         uint8_t  pl = 10;
         uint8_t  pr = 0;
         uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_Volume; // volume
-    struct w_r {
-        uint16_t x = 740;
-        uint16_t w = 80;
-        uint8_t  pl = 2;
+    struct w_d1 {
+        uint16_t x = 300;
+        uint16_t w = 12;
+        uint8_t  pl = 0;
         uint8_t  pr = 0;
-        uint8_t  pt = 1;
+        uint8_t  pt = 0;
         uint8_t  pb = 0;
-    } const s_RSSID; // RSSID symbol 75 x 56 px
+    }; // dummy1
+    struct w_i {
+        uint16_t x = 312;
+        uint16_t w = 400;
+        uint8_t  pl = 5;
+        uint8_t  pr = 0;
+        uint8_t  pt = 0;
+        uint8_t  pb = 0;
+    } const s_Item; // Radio, Player, Clock...
     struct w_t {
         uint16_t x = 840;
         uint16_t w = 160;
@@ -5795,13 +5834,16 @@ class DisplayHeader : public RegisterTable {
         pic_RSSID->begin(s_RSSID.x, m_y, s_RSSID.w, m_h, s_RSSID.pl, s_RSSID.pr, s_RSSID.pt, s_RSSID.pb);
         timeStringObject->begin(s_time.x, m_y, s_time.w, m_h, s_time.pl, s_time.pr, s_time.pt, s_time.pb);
 
-        txt_Item->setAlign(HAlign::Center, VAlign::Middle);
         txt_Item->setTextColor(m_itemColor);
         txt_Item->setFontSize(m_fontSize); // 0 -> auto
         pic_Speaker->setPicturePath(m_speakerSymbol[0]);
-        txt_Volume->setAlign(HAlign::Left, VAlign::Middle);
         txt_Volume->setFontSize(m_fontSize); // 0 -> auto
         pic_RSSID->setPicturePath(m_rssiSymbol[0]);
+
+        pic_RSSID->setAlign(HAlign::Center, VAlign::Top);
+        pic_Speaker->setAlign(HAlign::Center, VAlign::Top);
+        txt_Volume->setAlign(HAlign::Left, VAlign::Middle);
+        txt_Item->setAlign(HAlign::Center, VAlign::Middle);
     }
     ps_ptr<char> get_name() { return m_name; }
     void         enable() { enable_all(); }
