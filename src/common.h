@@ -60,6 +60,7 @@
 #include "mbedtls/sha1.h"
 #include "rtime.h"
 #include "websrv.h"
+#include "meteo.h"
 #include <Arduino.h>
 #include <ArduinoOTA.h>
 #include <ESPmDNS.h>

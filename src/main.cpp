@@ -49,6 +49,7 @@ DLNA_Client    dlna;
 KCX_BT_Emitter bt_emitter(BT_EMITTER_RX, BT_EMITTER_TX, BT_EMITTER_CONNECT, BT_EMITTER_MODE);
 hp_BH1750      BH1750; // create the sensor
 ES8311         es8311;
+METEO          meteo;
 
 ps_ptr<char> s_time_s = "00:00:00";
 ps_ptr<char> s_myIP = "000.000.000.000";
@@ -1875,7 +1876,6 @@ void changeState(int8_t state, int8_t subState) {
             txt_DL_fName.show();
             showFileLogo(DLNA, subState);
             webSrv.send("changeState=", "DLNA");
-MWR_LOG_ERROR("audio.isRunning {}", audio.isRunning());
             if (audio.isRunning()) btn_DL_pause.set_active(true);
             else                   btn_DL_pause.set_active(false);
             sdr_DL_volume.show();
@@ -2052,6 +2052,7 @@ void loop() {
     webSrv.loop();
     ftpSrv.handleFTP();
     ir.loop();
+    meteo.loop();
     getTP().loop();
     ArduinoOTA.handle();
     bt_emitter.loop();
