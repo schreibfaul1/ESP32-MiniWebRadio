@@ -3153,7 +3153,7 @@ void ir_short_key(int8_t key) {
             if(s_state == DLNAITEMSLIST) {
                 ps_ptr<char> r = lst_DLNA.getSelectedURL();
                 if (r.valid()) { txt_DL_fName.setTextColor(TFT_CYAN); txt_DL_fName.setText(lst_DLNA.getSelectedTitle()); connecttohost(r); changeState(DLNA, 0); }
-                else setTimeCounter(2);
+                else setTimeCounter(LIST_TIMER);
                 break;
             }
             if (s_state == CLOCK) {
