@@ -2143,6 +2143,21 @@ function fillCitySelect(val) {
         for (let i = 0; i < selectElement.options.length; i++) {
             if (selectElement.options[i].text === loc) {
                 selectElement.selectedIndex = i;
+                var longBox = document.getElementById("CityLong");
+                var latBox  = document.getElementById("CityLat");
+                var okBtn   = document.getElementById("btnCityOK");
+                longBox.value = long;
+                latBox.value = lat;
+                if (i != 0){
+                    longBox.disabled = true;
+                    latBox.disabled  = true;
+                    okBtn.disabled   = true;
+                }
+                else {
+                    longBox.disabled = false;
+                    latBox.disabled  = false;
+                    okBtn.disabled   = false;
+                }
                 break;
             }
         }
