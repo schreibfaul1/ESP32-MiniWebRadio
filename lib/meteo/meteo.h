@@ -26,9 +26,16 @@ class METEO {
     void loop();
 
   private:
-    enum { IDLE, REQUEST, DATA };
+    enum { IDLE, RESPONSE_HEADER, DATA };
 
-    ps_ptr<char>        m_latitude;
-    ps_ptr<char>        m_longitudde;
-    NetworkClientSecure m_client;
+    std::vector<ps_ptr<char>> readHeader();
+    ps_ptr<char>              m_latitude;
+    ps_ptr<char>              m_longitude;
+    ps_ptr<char>              m_httpRespHdrBuff;
+    ps_ptr<char>              m_contentType;
+    NetworkClientSecure       m_client;
+    uint8_t                   m_status = IDLE;
+    bool                      m_f_chunked = false;
+    uint32_t                  m_chunkcount = 0;
+    uint32_t                  m_contentLength = 0;
 };

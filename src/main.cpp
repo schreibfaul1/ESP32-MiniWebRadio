@@ -1111,6 +1111,8 @@ void setup() {
     if (s_volume.volumeSteps < 21) s_volume.volumeSteps = 21;
 
     ir.begin(); // Init InfraredDecoder
+    meteo.begin(); // Init Open-Meteo
+    meteo.set_coordinates(s_latiitude, s_longitude);
 
     if (AMP_ENABLED >= 0) { // enable onboard amplifier
         pinMode(AMP_ENABLED, OUTPUT);
@@ -2551,6 +2553,9 @@ void loop() {
             float t = r.substr(3).to_float();
             printfln(s_tag.terminal, "set volume fading speed {}, current: {}", t, audio.settings.VOL_FADING_SPEED);
             audio.settings.VOL_FADING_SPEED = t;
+        }
+        if (r.starts_with("meteo")) {
+            meteo.send_request("");
         }
     }
 }
