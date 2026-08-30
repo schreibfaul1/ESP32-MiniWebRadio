@@ -4444,7 +4444,6 @@ class DlnaList : public RegisterTable {
         }
         if (m_browseOnRelease == DLNA_NEXT_LEVEL) { // folder, next level
             (*m_dlnaLevel)++;
-            if (m_dlnaHistory[*m_dlnaLevel].childCount == 0) return false;
             m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, 0, 9);
         }
         if (m_browseOnRelease == DLNA_WIPE) { m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_viewPoint, 9); } // scroll up / down
@@ -4509,6 +4508,7 @@ class DlnaList : public RegisterTable {
         ps_ptr<char> item;
         ps_ptr<char> color = ANSI_ESC_WHITE;
         ps_ptr<char> duration = "?";
+        ps_ptr<char> objectId;
         int32_t      itemSize = 0;
         int16_t      childCount = 0;
 
@@ -4537,6 +4537,7 @@ class DlnaList : public RegisterTable {
                 itemSize = m_srvContent->at(pos - 1).itemSize;
                 childCount = m_srvContent->at(pos - 1).childCount;
                 duration = m_srvContent->at(pos - 1).duration;
+                objectId = m_srvContent->at(pos - 1).objectId;
             }
             if (m_srvContent->at(pos - 1).itemURL.starts_with("http")) {
                 isAudio = m_srvContent->at(pos - 1).isAudio;
@@ -4554,7 +4555,7 @@ class DlnaList : public RegisterTable {
         else {
             color = ANSI_ESC_WHITE;
         } // all other
-        if (selectedLine && childCount > 0) {
+        if (selectedLine && objectId.valid()) {
             color = ANSI_ESC_CYAN;
             res = true;
         } // is folder with childs

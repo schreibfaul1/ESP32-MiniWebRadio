@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.0t5 - Aug 29, 2026                                                                                                               ";
+    Version 4.2.0t6 - Aug 30, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -3675,7 +3675,7 @@ void on_dlna_client(const DLNA_Client::msg_s& msg) {
             } else if (item.childCount) {
                 printfln(s_tag.dlna_server, "title " ANSI_ESC_YELLOW "{}" ANSI_ESC_RESET ", childCount " ANSI_ESC_CYAN "{}", item.title, item.childCount);
             } else {
-                printfln(s_tag.dlna_server, "title " ANSI_ESC_YELLOW "{}" ANSI_ESC_RESET ", childCount " ANSI_ESC_CYAN "{}", item.title, 0);
+                printfln(s_tag.dlna_server, "title " ANSI_ESC_YELLOW "{}", item.title);
             }
         }
         if (msg.totalMatches >= 0) printfln(s_tag.dlna_server, "returned " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET " from " ANSI_ESC_CYAN "{}", msg.numberReturned, msg.totalMatches);

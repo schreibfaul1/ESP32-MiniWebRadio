@@ -1,7 +1,7 @@
 #include "DLNAClient.h"
 
 // Created on: 30.11.2023
-// Updated on: 22.08.2026
+// Updated on: 30.08.2026
 
 DLNA_Client::DLNA_Client() {
     m_state = IDLE;
@@ -665,17 +665,18 @@ bool DLNA_Client::browseResult() {
         }
     }
     msg_s msg;
-    if (m_srv_items.size()) {
-        msg.e = evt_content;
-        if (m_numberReturned == -1)
-            msg.numberReturned = m_srv_items.size();
-        else
-            msg.numberReturned = m_numberReturned;
-        msg.totalMatches = m_totalMatches;
-        msg.items = &m_srv_items;
 
-        if (m_dlna_callback) { m_dlna_callback(msg); }
+    msg.e = evt_content;
+    if (m_numberReturned == -1) {
+        msg.numberReturned = m_srv_items.size();
+    } else {
+        msg.numberReturned = m_numberReturned;
     }
+    msg.totalMatches = m_totalMatches;
+    msg.items = &m_srv_items;
+
+    if (m_dlna_callback) { m_dlna_callback(msg); }
+
     return true;
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
