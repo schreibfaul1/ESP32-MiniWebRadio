@@ -3471,10 +3471,10 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
                                         updateSettings(); // write new TZ items to settings.json
                                         return; }
 
-    CMD_EQUALS("set_location"){         s_location = param; ps_ptr<char> coor = arg;
-                                        int pos = arg.index_of('|');
-                                        s_latiitude = arg.substr(0, pos);
-                                        s_longitude = arg.substr(pos + 1);
+    CMD_EQUALS("set_location"){         s_location = param; auto coor = arg.split("|");
+                                        if(coor.size() != 2) return;
+                                        s_latiitude = coor[0];
+                                        s_longitude = coor[1];
                                         printfln(s_tag.webserver, "Location: .. " ANSI_ESC_BLUE "{}, lat: {}, long: {}", s_location, s_latiitude, s_longitude);
                                         updateSettings(); // write new location to settings.json
                                         return;}
