@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.0t5 - Aug 29, 2026                                                                                                               ";
+    Version 4.2.0t6 - Aug 30, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -49,6 +49,7 @@ DLNA_Client    dlna;
 KCX_BT_Emitter bt_emitter(BT_EMITTER_RX, BT_EMITTER_TX, BT_EMITTER_CONNECT, BT_EMITTER_MODE);
 hp_BH1750      BH1750; // create the sensor
 ES8311         es8311;
+METEO          meteo;
 
 ps_ptr<char> s_time_s = "00:00:00";
 ps_ptr<char> s_myIP = "000.000.000.000";
@@ -63,6 +64,9 @@ ps_ptr<char> s_TZName = "Europe/Berlin";
 ps_ptr<char> s_TZString = "CET-1CEST,M3.5.0,M10.5.0/3";
 ps_ptr<char> s_timeSpeechLang = "en";
 ps_ptr<char> s_lyrics = "";
+ps_ptr<char> s_location = "Europe/Berlin";
+ps_ptr<char> s_latiitude = "52.52";
+ps_ptr<char> s_longitude = "13.41";
 
 bool s_f_rtc = false; // true if time from ntp is received
 bool s_f_100ms = false;
@@ -231,8 +235,8 @@ boolean defaultsettings() {
         updateSettings();
     }
 
-    File file2 = SD_MMC.open("/settings.json", "r", false);
-    size_t file2_size =file2.size();
+    File         file2 = SD_MMC.open("/settings.json", "r", false);
+    size_t       file2_size = file2.size();
     ps_ptr<char> jO;
     jO.calloc(file2_size);
     file2.readBytes(jO.get(), file2_size);
@@ -309,6 +313,9 @@ boolean defaultsettings() {
     s_settings.lastconnectedfile = parseJson("\"lastconnectedfile\":");
     s_sleepMode = parseJson("\"sleepMode\":").to_uint8();
     s_state = parseJson("\"state\":").to_int8();
+    s_location = parseJson("\"location\":");
+    s_latiitude = parseJson("\"latiitude\":");
+    s_longitude = parseJson("\"longitude\":");
 
     // set some items ---------------------------------------------------------------------------------------------
     if (!s_settings.lastconnectedfile.starts_with("/")) { s_settings.lastconnectedfile.assign("/audiofiles/"); } // guard
@@ -366,7 +373,11 @@ void updateSettings() {
     jO.appendf(",\n  \"toneHP\":{}", s_tone.HP);
     jO.appendf(",\n  \"balance\":{}", s_tone.BAL);
     jO.appendf(",\n  \"state\":{}", s_state);
-    jO.appendf(",\n  \"sleepMode\":{}\n}", s_sleepMode);
+    jO.appendf(",\n  \"sleepMode\":{}", s_sleepMode);
+    jO.appendf(",\n  \"location\":\"{}\"", s_location);
+    jO.appendf(",\n  \"latiitude\":\"{}\"", s_latiitude);
+    jO.appendf(",\n  \"longitude\":\"{}\"", s_longitude);
+    jO.append("\n}");
 
     if (s_settingsHash != simpleHash(jO)) {
         File file = SD_MMC.open("/settings.json", "w", false);
@@ -1865,7 +1876,6 @@ void changeState(int8_t state, int8_t subState) {
             txt_DL_fName.show();
             showFileLogo(DLNA, subState);
             webSrv.send("changeState=", "DLNA");
-MWR_LOG_ERROR("audio.isRunning {}", audio.isRunning());
             if (audio.isRunning()) btn_DL_pause.set_active(true);
             else                   btn_DL_pause.set_active(false);
             sdr_DL_volume.show();
@@ -2042,6 +2052,7 @@ void loop() {
     webSrv.loop();
     ftpSrv.handleFTP();
     ir.loop();
+    meteo.loop();
     getTP().loop();
     ArduinoOTA.handle();
     bt_emitter.loop();
@@ -3447,19 +3458,32 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
 
     CMD_EQUALS("webFileURL"){           audio.connecttohost(param.c_get())? changeState(PLAYER, 1) : changeState(PLAYER, 0); showPlayerFileName(param); return;}                        // via websocket
 
-    CMD_EQUALS("get_networks"){         webSrv.send("networks=", WiFi.SSID().c_str()); return;}                                                              // via websocket
+    CMD_EQUALS("get_networks"){         webSrv.send("networks=", WiFi.SSID().c_str()); return; }                                                              // via websocket
 
-    CMD_EQUALS("get_tftSize"){          webSrv.send("tftSize=",displayConfig.tftSize); return;};
+    CMD_EQUALS("get_tftSize"){          webSrv.send("tftSize=",displayConfig.tftSize); return; };
 
-    CMD_EQUALS("get_timeZones"){        webSrv.send("timezones=", timezones_json); return;}
+    CMD_EQUALS("get_timeZones"){        webSrv.send("timezones=", timezones_json); return; }
+
+    CMD_EQUALS("get_locations"){        webSrv.send("location=", locations_json); return; }
 
     CMD_EQUALS("set_timeZone"){         s_TZName = param;  s_TZString = arg;
                                         printfln(s_tag.webserver, "Timezone: .. " ANSI_ESC_BLUE "{}, {}", param, arg);
                                         setRTC(s_TZString);
                                         updateSettings(); // write new TZ items to settings.json
+                                        return; }
+
+    CMD_EQUALS("set_location"){         s_location = param; auto coor = arg.split("|");
+                                        if(coor.size() != 2) return;
+                                        s_latiitude = coor[0];
+                                        s_longitude = coor[1];
+                                        printfln(s_tag.webserver, "Location: .. " ANSI_ESC_BLUE "{}, lat: {}, long: {}", s_location, s_latiitude, s_longitude);
+                                        updateSettings(); // write new location to settings.json
                                         return;}
 
-    CMD_EQUALS("get_timeZoneName"){     webSrv.reply(s_TZName, webSrv.TEXT); return;}
+    CMD_EQUALS("get_timeZoneName"){     webSrv.reply(s_TZName, webSrv.TEXT); return; }
+
+    CMD_EQUALS("get_myLocation"){       ps_ptr<char> loc = s_location;
+                                        loc.appendf("&{}|{}", s_latiitude, s_longitude);  webSrv.reply(loc, webSrv.TEXT); return; }
 
     CMD_EQUALS("change_state"){         if     (param == "RADIO"       && s_state != RADIO)       { changeState(RADIO, 0); return; }
                                         else if(param == "PLAYER"      && s_state != PLAYER)      { stopSong(); changeState(PLAYER, 0); return; }
@@ -3596,7 +3620,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
 
     CMD_EQUALS("hardcopy"){             printfln(s_tag.webserver, "Webpage: " ANSI_ESC_YELLOW "create a display hardcopy"); make_hardcopy_on_sd(); webSrv.send("hardcopy=", "/hardcopy.bmp"); return;}
 
-    printfln(s_tag.webserver, ANSI_ESC_RED "unknown HTMLcommand(onCommand): {}, param={}", cmd, param);
+    printfln(s_tag.webserver, ANSI_ESC_RED "unknown HTMLcommand(onCommand): {}, param: {}, arg: {}", cmd, param, arg);
     webSrv.sendStatus(400);
 }
 // clang-format on
@@ -3651,7 +3675,7 @@ void on_dlna_client(const DLNA_Client::msg_s& msg) {
             } else if (item.childCount) {
                 printfln(s_tag.dlna_server, "title " ANSI_ESC_YELLOW "{}" ANSI_ESC_RESET ", childCount " ANSI_ESC_CYAN "{}", item.title, item.childCount);
             } else {
-                printfln(s_tag.dlna_server, "title " ANSI_ESC_YELLOW "{}" ANSI_ESC_RESET ", childCount " ANSI_ESC_CYAN "{}", item.title, 0);
+                printfln(s_tag.dlna_server, "title " ANSI_ESC_YELLOW "{}", item.title);
             }
         }
         if (msg.totalMatches >= 0) printfln(s_tag.dlna_server, "returned " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET " from " ANSI_ESC_CYAN "{}", msg.numberReturned, msg.totalMatches);
@@ -3815,21 +3839,30 @@ void kcx_bt_scanItems(const char* jsonItems) { // Every time an item (name and a
 void tp_pressed(uint16_t x, uint16_t y) {
     // printfln(s_tag.tp_info, "Touchpoint x={}, y={}", x, y);
     if (s_f_sleeping) return; // awake in tp_released()
-    const char* objName = NULL;
-    if(y > layout.winHeader.y + layout.winHeader.h && y < layout.winProgbar.y) {
-        objName = "backpane";
-        if (s_state == RADIO){
+    ps_ptr<char> objName;
+    objName = isObjectClicked(x, y);
+
+    if (s_state == RADIO) {
+        if(objName == "txt_RA_staName") {
             changeState(RADIO, s_subState_radio + 1 == 3 ? 0 : s_subState_radio + 1);
             goto exit;
         }
-        if (s_state == CLOCK){
-            changeState(CLOCK, s_subState_clock + 1 == 2 ? 0 : s_subState_clock + 1);
+        if(objName == "pic_RA_logo") {
+            MWR_LOG_WARN("weather");
             goto exit;
         }
     }
-    objName = isObjectClicked(x, y);
+
+    if (s_state == CLOCK) {
+        if(y > layout.winHeader.y + layout.winHeader.h && y < layout.winProgbar.y) {
+         objName = "backpane";
+            changeState(CLOCK, s_subState_clock + 1 == 2 ? 0 : s_subState_clock + 1);
+           goto exit;
+        }
+    }
+
 exit:
-    if (objName) { printfln(s_tag.tp_info, "click on ..  {}", objName); }
+    if (objName.valid()) { printfln(s_tag.tp_info, "click on ..  {}", objName); }
     return;
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

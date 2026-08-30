@@ -480,6 +480,7 @@ var bt_RxTx = 'TX'
 var state = 'RADIO'
 var cur_volumeSteps = 21
 var stationsLoaded = false
+var cityList = [];
 
 
 function ping() {
@@ -612,12 +613,12 @@ function connect() {
             }
 
             switch(msg) {
-                case "pong":
-                                            clearTimeout(tm); // Important: Clear the ping timeout when a pong arrives!
-                                            console.log("pong");
-                                            reconnectAttempts = 0;
-                                            toastr.clear(); // Only clear the warning if it is there
-                                            break;
+            case "pong":
+                                        clearTimeout(tm); // Important: Clear the ping timeout when a pong arrives!
+                                        console.log("pong");
+                                        reconnectAttempts = 0;
+                                        toastr.clear(); // Only clear the warning if it is there
+                                        break;
             case "mute":                if(val == '1'){ document.getElementById('Mute').src = 'SD/png/Button_Mute_Red.png'
                                                         resultstr1.value = "mute on"
                                                         console.log("mute on")}
@@ -779,6 +780,9 @@ function connect() {
                                         break;
             case "timezones":           console.log(msg, val)
                                         fillTimeZoneSelect(val)
+                                        break;
+            case "location":            console.log(msg, val)
+                                        fillCitySelect(val);
                                         break;
             case "serTerminal":         appendToTerminal(val);
                                         // console.log(msg, val)
@@ -972,6 +976,7 @@ function showTab6 () {
     socket.send('get_volAfterAlarm')
     socket.send("get_timeSpeechLang")
     socket.send("get_timeZones")  // fetch timezones_json
+    socket.send("get_locations")  // fetch locations_json
 }
 
 function showTab7 () {
@@ -2019,14 +2024,6 @@ function downloadCanvasImage () {
 // ------------------------------------------------------------  TAB Settings  -----------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 
-
-
-
-
-
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-// ------------------------------------------------------------    TAB Info    -----------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------------------------------------
 function getTimeZoneName() {
     return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
@@ -2079,6 +2076,152 @@ function fillTimeZoneSelect(timezones_json){
         console.error("Error when calling up the time zone name:", error);
     });
 }
+
+function getMyLocation() {
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.timeout = 2000; // Zeit in Millisekunden
+        xhr.open('GET', 'get_myLocation' + '&version=' + Math.random(), true);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    const myLocation = xhr.responseText;
+                    console.log("myLocation=", myLocation);
+                    resolve(myLocation); // Dissolve the promise with the value obtained
+                } else {
+                    console.log("xhr.status=", xhr.status);
+                    reject(`Error: Status ${xhr.status}`); // Reject the promise if an error occurs
+                }
+            }
+        };
+        xhr.ontimeout = () => {
+            console.log("timeout in getMyLocation()");
+            reject("Error: Investigation of the request"); // Reject the promise if a timeout occurs
+        };
+        xhr.send();
+    });
+}
+
+function fillCitySelect(val) {
+    var select = document.getElementById("CitySelect");
+    select.innerHTML = "";
+    cityList = JSON.parse(val);
+
+    // -------------------------------------------------
+    // Your own location as the first entry
+    // -------------------------------------------------
+    var option = document.createElement("option");
+    option.value = -1;
+    option.text = "Own location";
+    select.appendChild(option);
+
+    // -------------------------------------------------
+    // Cities from the JSON list
+    // -------------------------------------------------
+    for (var i = 0; i < cityList.length; i++) {
+        option = document.createElement("option");
+        option.value = i;
+        option.text = cityList[i][0];
+        select.appendChild(option);
+    }
+
+    // select own location
+    select.selectedIndex = 0;
+    selectCity(select);
+
+    getMyLocation().then((myLoc) => {
+        const selectElement = document.getElementById('CitySelect');
+
+        const parts = myLoc.split(/[&|]/);
+
+        const loc  = parts[0];
+        const lat  = parts[1];
+        const long = parts[2];
+
+        console.log("location=", loc, "lat=", lat, "long=", long)
+
+        for (let i = 0; i < selectElement.options.length; i++) {
+            if (selectElement.options[i].text === loc) {
+                selectElement.selectedIndex = i;
+                var longBox = document.getElementById("CityLong");
+                var latBox  = document.getElementById("CityLat");
+                var okBtn   = document.getElementById("btnCityOK");
+                longBox.value = long;
+                latBox.value = lat;
+                if (i != 0){
+                    longBox.disabled = true;
+                    latBox.disabled  = true;
+                    okBtn.disabled   = true;
+                }
+                else {
+                    longBox.disabled = false;
+                    latBox.disabled  = false;
+                    okBtn.disabled   = false;
+                }
+                break;
+            }
+        }
+    }).catch((error) => {
+        console.error("Error when calling up the time zone name:", error);
+    });
+}
+
+function selectCity(select) {
+    var idx = parseInt(select.value);
+    var longBox = document.getElementById("CityLong");
+    var latBox  = document.getElementById("CityLat");
+    var okBtn   = document.getElementById("btnCityOK");
+
+    // -------------------------------------------------
+    // own location
+    // -------------------------------------------------
+    if (idx == -1) {
+        longBox.disabled = false;
+        latBox.disabled = false;
+        okBtn.disabled = false;
+        return;
+    }
+
+    // -------------------------------------------------
+    // city from the list
+    // -------------------------------------------------
+    var city = cityList[idx];
+    if (!city) {
+        return;
+    }
+    longBox.value = city[3];
+    latBox.value  = city[2];
+    // default values must not be changed
+    longBox.disabled = true;
+    latBox.disabled  = true;
+    okBtn.disabled    = true;
+
+    // send coordinates
+    socket.send("set_location=" + city[0] + "&" + city[2] + "|" + city[3]);
+}
+
+function setOwnLocation() {
+    var lat  = parseFloat(document.getElementById("CityLat").value);
+    var long = parseFloat(document.getElementById("CityLong").value);
+
+    if (isNaN(lat) || isNaN(long)) {
+        alert("Please enter valid coordinates.");
+        return;
+    }
+
+    if (lat < -90 || lat > 90) {
+        alert("Latitude must be between -90 and 90.");
+        return;
+    }
+
+    if (long < -180 || long > 180) {
+        alert("Longitude must be between -180 and 180.");
+        return;
+    }
+
+    socket.send("set_location=Own location" + "&" + lat + "|" + long);
+}
+
 
 function loadRingVolume(){
     const selectRingVolume = document.getElementById('selRingVolume');
@@ -2146,6 +2289,13 @@ function showVolumeSteps(val){
     const selectVolumeSteps = document.getElementById('selVolumeSteps');
     selectVolumeSteps.selectedIndex = val- 21;
 }
+
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------    TAB Info    -----------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------ TAB Remote Control--------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -3100,6 +3250,7 @@ function appendToTerminal(text) {
                             </div>
                         </div>
                     </fieldset>
+                    <br>
                     <fieldset>
                         <legend> volume steps </legend>
                         <div>
@@ -3109,6 +3260,27 @@ function appendToTerminal(text) {
                             </select>
                             <label for="selVolumeSteps">Current Volume Steps: </label>
                             <span class="txtVolumeSteps" id="txtVolumeSteps"></span>
+                        </div>
+                    </fieldset>
+                    <br>
+                    <fieldset>
+                        <legend> location </legend>
+                        <div>
+                            <label for="CitySelect" style="display: inline-block; width: 45px;">City</label>
+                            <select id="CitySelect" class="boxstyle" onchange="selectCity(this)">
+                            </select>
+                        </div>
+                        <div style="margin-top: 10px;">
+                            <label for="CityLong" style="display: inline-block; width: 45px;">Long</label>
+                            <input id="CityLong" type="text" inputmode="decimal" style="width: 90px;" onchange="this.value=this.value.replace(',', '.');">
+                        </div>
+                        <div style="margin-top: 10px;">
+                            <label for="CityLat" style="display: inline-block; width: 45px;">Lat</label>
+                            <input id="CityLat" type="text" inputmode="decimal" style="width: 90px;" onchange="this.value=this.value.replace(',', '.');">
+                        </div>
+                        <div style="margin-top: 10px;">
+                            <label style="display: inline-block; width: 45px;"></label>
+                            <button id="btnCityOK" onclick="setOwnLocation()">OK</button>
                         </div>
                     </fieldset>
                 </td>
