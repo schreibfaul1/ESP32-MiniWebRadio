@@ -63,6 +63,9 @@ ps_ptr<char> s_TZName = "Europe/Berlin";
 ps_ptr<char> s_TZString = "CET-1CEST,M3.5.0,M10.5.0/3";
 ps_ptr<char> s_timeSpeechLang = "en";
 ps_ptr<char> s_lyrics = "";
+ps_ptr<char> s_location = "Europe/Berlin";
+ps_ptr<char> s_latiitude = "52.52";
+ps_ptr<char> s_longitude = "13.41";
 
 bool s_f_rtc = false; // true if time from ntp is received
 bool s_f_100ms = false;
@@ -309,6 +312,9 @@ boolean defaultsettings() {
     s_settings.lastconnectedfile = parseJson("\"lastconnectedfile\":");
     s_sleepMode = parseJson("\"sleepMode\":").to_uint8();
     s_state = parseJson("\"state\":").to_int8();
+    s_location = parseJson("\"location\":");
+    s_latiitude = parseJson("\"latiitude\":");
+    s_longitude = parseJson("\"longitude\":");
 
     // set some items ---------------------------------------------------------------------------------------------
     if (!s_settings.lastconnectedfile.starts_with("/")) { s_settings.lastconnectedfile.assign("/audiofiles/"); } // guard
@@ -366,7 +372,11 @@ void updateSettings() {
     jO.appendf(",\n  \"toneHP\":{}", s_tone.HP);
     jO.appendf(",\n  \"balance\":{}", s_tone.BAL);
     jO.appendf(",\n  \"state\":{}", s_state);
-    jO.appendf(",\n  \"sleepMode\":{}\n}", s_sleepMode);
+    jO.appendf(",\n  \"sleepMode\":{}", s_sleepMode);
+    jO.appendf(",\n  \"location\":\"{}\"", s_location);
+    jO.appendf(",\n  \"latiitude\":\"{}\"", s_latiitude);
+    jO.appendf(",\n  \"longitude\":\"{}\"", s_longitude);
+    jO.append("\n}");
 
     if (s_settingsHash != simpleHash(jO)) {
         File file = SD_MMC.open("/settings.json", "w", false);
@@ -3461,7 +3471,18 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
                                         updateSettings(); // write new TZ items to settings.json
                                         return; }
 
+    CMD_EQUALS("set_location"){         s_location = param; ps_ptr<char> coor = arg;
+                                        int pos = arg.index_of('|');
+                                        s_latiitude = arg.substr(0, pos);
+                                        s_longitude = arg.substr(pos + 1);
+                                        printfln(s_tag.webserver, "Location: .. " ANSI_ESC_BLUE "{}, lat: {}, long: {}", s_location, s_latiitude, s_longitude);
+                                        updateSettings(); // write new location to settings.json
+                                        return;}
+
     CMD_EQUALS("get_timeZoneName"){     webSrv.reply(s_TZName, webSrv.TEXT); return; }
+
+    CMD_EQUALS("get_myLocation"){       ps_ptr<char> loc = s_location;
+                                        loc.appendf("&{}|{}", s_latiitude, s_longitude);  webSrv.reply(loc, webSrv.TEXT); return; }
 
     CMD_EQUALS("change_state"){         if     (param == "RADIO"       && s_state != RADIO)       { changeState(RADIO, 0); return; }
                                         else if(param == "PLAYER"      && s_state != PLAYER)      { stopSong(); changeState(PLAYER, 0); return; }

@@ -2024,14 +2024,6 @@ function downloadCanvasImage () {
 // ------------------------------------------------------------  TAB Settings  -----------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 
-
-
-
-
-
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-// ------------------------------------------------------------    TAB Info    -----------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------------------------------------
 function getTimeZoneName() {
     return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
@@ -2085,6 +2077,31 @@ function fillTimeZoneSelect(timezones_json){
     });
 }
 
+function getMyLocation() {
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.timeout = 2000; // Zeit in Millisekunden
+        xhr.open('GET', 'get_myLocation' + '&version=' + Math.random(), true);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    const myLocation = xhr.responseText;
+                    console.log("myLocation=", myLocation);
+                    resolve(myLocation); // Dissolve the promise with the value obtained
+                } else {
+                    console.log("xhr.status=", xhr.status);
+                    reject(`Error: Status ${xhr.status}`); // Reject the promise if an error occurs
+                }
+            }
+        };
+        xhr.ontimeout = () => {
+            console.log("timeout in getMyLocation()");
+            reject("Error: Investigation of the request"); // Reject the promise if a timeout occurs
+        };
+        xhr.send();
+    });
+}
+
 function fillCitySelect(val) {
     var select = document.getElementById("CitySelect");
     select.innerHTML = "";
@@ -2111,6 +2128,27 @@ function fillCitySelect(val) {
     // select own location
     select.selectedIndex = 0;
     selectCity(select);
+
+    getMyLocation().then((myLoc) => {
+        const selectElement = document.getElementById('CitySelect');
+
+        const parts = myLoc.split(/[&|]/);
+
+        const loc  = parts[0];
+        const lat  = parts[1];
+        const long = parts[2];
+
+        console.log("location=", loc, "lat=", lat, "long=", long)
+
+        for (let i = 0; i < selectElement.options.length; i++) {
+            if (selectElement.options[i].text === loc) {
+                selectElement.selectedIndex = i;
+                break;
+            }
+        }
+    }).catch((error) => {
+        console.error("Error when calling up the time zone name:", error);
+    });
 }
 
 function selectCity(select) {
@@ -2236,6 +2274,13 @@ function showVolumeSteps(val){
     const selectVolumeSteps = document.getElementById('selVolumeSteps');
     selectVolumeSteps.selectedIndex = val- 21;
 }
+
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------    TAB Info    -----------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------ TAB Remote Control--------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------------------------------------
