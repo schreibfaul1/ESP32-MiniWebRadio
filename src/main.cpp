@@ -1113,6 +1113,7 @@ void setup() {
     ir.begin(); // Init InfraredDecoder
     meteo.begin(); // Init Open-Meteo
     meteo.set_coordinates(s_latiitude, s_longitude);
+    meteo.set_timeZone(s_TZName);
 
     if (AMP_ENABLED >= 0) { // enable onboard amplifier
         pinMode(AMP_ENABLED, OUTPUT);
@@ -2066,7 +2067,7 @@ void loop() {
         if (s_logBuffer[i - 1].strlen() > 0 && s_logBuffer[i - 1].strlen() < 1024) {
             webSrv.send("serTerminal=", s_logBuffer[i - 1]);
         } else
-            log_w("%s %i: strlen %i", __FILE__, __LINE__, s_logBuffer[i - 1].strlen());
+            log_w("%s %i: log budder full, strlen %i", __FILE__, __LINE__, s_logBuffer[i - 1].strlen());
         s_logBuffer.pop_back();
         if (s_logBuffer.size() == 0) s_logBuffer.clear(); // Löscht alle Elemente und gibt den Speicher frei
     }
@@ -2555,6 +2556,8 @@ void loop() {
             audio.settings.VOL_FADING_SPEED = t;
         }
         if (r.starts_with("meteo")) {
+            meteo.set_coordinates(s_latiitude, s_longitude);
+            meteo.set_timeZone(s_TZName);
             meteo.send_request("");
         }
     }
