@@ -3677,7 +3677,7 @@ void on_dlna_client(const DLNA_Client::msg_s& msg) {
                              "{}",
                              item.title, item.duration);
                 }
-            } else if (item.childCount) {
+            } else if (item.childCount >= 0) {
                 printfln(s_tag.dlna_server, "title " ANSI_ESC_YELLOW "{}" ANSI_ESC_RESET ", childCount " ANSI_ESC_CYAN "{}", item.title, item.childCount);
             } else {
                 printfln(s_tag.dlna_server, "title " ANSI_ESC_YELLOW "{}", item.title);

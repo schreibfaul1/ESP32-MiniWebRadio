@@ -4369,7 +4369,7 @@ class DlnaList : public RegisterTable {
             m_dlnaHistory[i].objId = "0";
             m_dlnaHistory[i].name = "";
             m_dlnaHistory[i].maxItems = 9;
-            m_dlnaHistory[i].childCount = 0;
+            m_dlnaHistory[i].childCount = -1;
         }
         m_dlnaHistory[0].name = "Media Server";
     }
@@ -4510,7 +4510,7 @@ class DlnaList : public RegisterTable {
         ps_ptr<char> duration = "?";
         ps_ptr<char> objectId;
         int32_t      itemSize = 0;
-        int16_t      childCount = 0;
+        int16_t      childCount = -1;
 
         if (pos == 0) {
             if (pos + m_viewPoint == m_currItemNr[*m_dlnaLevel] + 1) {
@@ -4567,7 +4567,7 @@ class DlnaList : public RegisterTable {
             color = ANSI_ESC_CYAN;
             res = true;
         } // is file
-        if (childCount) { sprintf(extension, "%i", childCount); }                  // only folders have childCount
+        if (childCount >= 0) { sprintf(extension, "%i", childCount); }             // only folders have childCount
         if (itemSize) { sprintf(extension, "%li", itemSize); }                     // only files have itemsize
         if (!duration.equals("?")) { sprintf(extension, "%s", duration.c_get()); } // must be a audiofile
         if (color == ANSI_ESC_MAGENTA) { m_itemListPos_last = pos; }
