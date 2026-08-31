@@ -3,16 +3,16 @@
 METEO::METEO() {}
 
 METEO::~METEO() {}
-
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void METEO::begin() {
     m_client.setInsecure();
     m_httpRespHdrBuff.alloc(4096, "m_httpRespHdrBuff"); // enough space to store http response header
 }
-
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool METEO::set_coordinates(ps_ptr<char> latitude, ps_ptr<char> longitude) {
     return false;
 }
-
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool METEO::send_request(ps_ptr<char> req) {
     if (m_status != IDLE) return false;
 
@@ -36,7 +36,7 @@ bool METEO::send_request(ps_ptr<char> req) {
     m_status = RESPONSE_HEADER;
     return res;
 }
-
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool METEO::parseHttpResponseHeader() {
 
     ps_ptr<char> name;
@@ -60,6 +60,8 @@ bool METEO::parseHttpResponseHeader() {
             int sc = atoi(name.get() + 9);
             if (sc > 310) { // e.g. HTTP/1.1 301 Moved Permanently, HTTP/1.1 302 Found
                 log_w("%s", name.get());
+                m_client.stop();
+                m_status = IDLE;
                 return false;
             }
         }
@@ -81,13 +83,13 @@ bool METEO::parseHttpResponseHeader() {
     if (m_contentLength) log_w("m_contentLength %i", m_contentLength);
     if (m_contentType.valid()) log_w("ct: %s", m_contentType.c_get());
 
-    m_client.stop();
-    m_status = IDLE;
-    return false;
+    m_status = PAYLOAD;
+    return true;;
 }
-
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void METEO::loop() {
     if (m_status == RESPONSE_HEADER) parseHttpResponseHeader();
+    if (m_status == PAYLOAD) payload();
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 std::vector<ps_ptr<char>> METEO::readHeader() {
@@ -129,5 +131,66 @@ std::vector<ps_ptr<char>> METEO::readHeader() {
         pos = idx + 1;
     }
     return hdr_lines;
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void METEO::payload() {
+    uint16_t                  pos = 0;
+    uint32_t                  t = millis() + 3000;
+
+
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+int32_t METEO::getChunkSize(uint16_t* readedBytes) {
+    std::string chunkLine;
+    uint32_t    timeout = 2000; // ms
+    uint32_t    ctime = millis();
+    int32_t     transportLimit = 0;
+
+    while (true) {
+        if ((millis() - ctime) > timeout) {
+            log_e("chunkedDataTransfer: timeout");
+            return 0;
+        }
+        if (!m_client.available()) continue;
+        int b = m_client.read();
+        if (b < 0) continue;
+
+        (*readedBytes)++;
+
+        if (b == '\n') break; // End of the line
+        if (b == '\r') continue;
+
+        chunkLine += static_cast<char>(b);
+
+        // Detection: if signs are not hexadecimal and not ';'→ No http chunk
+        if (!isxdigit(b) && b != ';') {
+            // We have no valid HTTP chunk line → assume transport chunking
+            m_f_chunked = false;
+            // determine limit from the current data volume + already read bytes
+            transportLimit = m_client.available() + *readedBytes;
+            log_i("No http chunked recognized-switch to transport chunking with limit %i", transportLimit);
+            return transportLimit;
+        }
+    }
+
+    // Extract the hex number (before possibly ';')
+    size_t      semicolonPos = chunkLine.find(';');
+    std::string hexSize = (semicolonPos != std::string::npos) ? chunkLine.substr(0, semicolonPos) : chunkLine;
+
+    size_t chunksize = strtoul(hexSize.c_str(), nullptr, 16);
+
+    if (chunksize > 0) {
+        m_skipCRLF = true; // skip next CRLF after data
+    } else {
+        // last chunk: read the final CRLF
+        uint8_t idx = 0;
+        ctime = millis();
+        while (idx < 2 && (millis() - ctime) < timeout) {
+            int ch = m_client.read();
+            if (ch < 0) continue;
+            idx++;
+        }
+    }
+    return chunksize;
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

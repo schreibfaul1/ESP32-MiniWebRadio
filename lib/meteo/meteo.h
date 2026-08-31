@@ -19,15 +19,18 @@ class METEO {
   public:
     METEO();
     ~METEO();
-    void begin();
-    bool set_coordinates(ps_ptr<char> latitude, ps_ptr<char> longitude);
-    bool send_request(ps_ptr<char> req);
-    bool parseHttpResponseHeader();
-    void loop();
+    void    begin();
+    bool    set_coordinates(ps_ptr<char> latitude, ps_ptr<char> longitude);
+    bool    send_request(ps_ptr<char> req);
+    bool    parseHttpResponseHeader();
+    void    loop();
+    void    payload();
+    int32_t getChunkSize(uint16_t* readedBytes);
 
   private:
-    enum { IDLE, RESPONSE_HEADER, DATA };
+    enum { IDLE, RESPONSE_HEADER, PAYLOAD };
 
+    bool                      m_skipCRLF = false;
     std::vector<ps_ptr<char>> readHeader();
     ps_ptr<char>              m_latitude;
     ps_ptr<char>              m_longitude;
