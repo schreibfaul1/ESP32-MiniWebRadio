@@ -50,8 +50,8 @@ KCX_BT_Emitter bt_emitter(BT_EMITTER_RX, BT_EMITTER_TX, BT_EMITTER_CONNECT, BT_E
 hp_BH1750      BH1750; // create the sensor
 ES8311         es8311;
 METEO          meteo;
+RTIME::rtime   s_time;
 
-ps_ptr<char> s_time_s = "00:00:00";
 ps_ptr<char> s_myIP = "000.000.000.000";
 ps_ptr<char> s_cur_AudioFolder = "/audiofiles/";
 ps_ptr<char> s_icyDescription;
@@ -1166,7 +1166,7 @@ void setup() {
 
     dispHeader.updateVolume(s_volume.cur_volume);
     dispHeader.speakerOnOff(!s_f_mute);
-    dispHeader.updateTime("00:00:00", true);
+    dispHeader.updateTime(s_time, true);
 
     dispFooter.setIpAddr(s_myIP);
     dispFooter.updateStation(s_cur_station);
@@ -2147,6 +2147,7 @@ void loop() {
     if (s_f_1sec) { // calls every second
         s_f_1sec = false;
 
+        s_time = rtc.get_rtime();
         s_totalRuntime++;
         uint16_t minuteOfTheDay = rtc.getMinuteOfTheDay();
         uint8_t  weekDay = rtc.getweekday();
@@ -2179,10 +2180,9 @@ void loop() {
         }
         //------------------------------------------UPDATE DISPLAY------------------------------------------------------------------------------------
         if (!s_f_sleeping || s_state == RINGING) {
-            s_time_s = rtc.gettime_s();
-            if (s_time_s.ends_with("59:53")) s_f_timeSpeech = true;
+            if(s_time.minute == 59 && s_time.second >= 53) s_f_timeSpeech = true;
 
-            dispHeader.updateTime(s_time_s, false);
+            dispHeader.updateTime(s_time, false);
             if (s_f_newBitRate) {
                 s_f_newBitRate = false;
                 dispFooter.updateBitRate(s_icyBitRate);
@@ -2196,9 +2196,7 @@ void loop() {
         static bool f_resume = false;
         if (s_f_timeSpeech) { // speech the time 7 sec before a new hour is arrived
             s_f_timeSpeech = false;
-            ps_ptr<char> hh = s_time_s.substr(0, 2);
-            int          hour = hh.to_uint32();
-            hour++;
+            uint8_t hour = s_time.hour + 1;
             if (hour == 24) hour = 0; //  extract the hour
             if (s_f_mute) return;
             if (s_f_sleeping) return;
