@@ -3583,7 +3583,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
                                         return;}
 
     CMD_EQUALS("SD_rename"){            ps_ptr<char> _arg = arg.substr(0, arg.index_of("&")); // only the first argument is used                              // via XMLHttpRequest
-                                        printfln(s_tag.webserver, "Rename " ANSI_ESC_YELLOW "old \"{}\" new \"%s\"", param, _arg);
+                                        printfln(s_tag.webserver, "Rename " ANSI_ESC_YELLOW "old \"{}\" new \"{}\"", param, _arg);
                                         bool res = SD_rename(param, _arg);
                                         if(res) webSrv.reply("refresh", webSrv.TEXT);
                                         else webSrv.sendStatus(400);

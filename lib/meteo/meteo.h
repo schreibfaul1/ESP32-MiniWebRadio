@@ -27,27 +27,36 @@ class METEO {
     void    loop();
     bool    readContent();
     int32_t getChunkSize(uint16_t* readedBytes);
+    void    protocol();
+
+    struct MeteoTime {
+        uint16_t year;
+        uint8_t  month;
+        uint8_t  day;
+        uint8_t  hour;
+        uint8_t  minute;
+    };
 
     struct METEO_HOURLY {
-        char     time[17];
-        float    temperature;
-        uint8_t  precipitationProbability;
-        uint8_t  cloudCover;
-        float    windSpeed;
-        uint16_t sunshineDuration;
-        uint8_t  weatherCode;
+        MeteoTime time;
+        float     temperature;
+        uint8_t   precipitationProbability;
+        uint8_t   cloudCover;
+        float     windSpeed;
+        uint8_t   sunshineDuration;
+        uint8_t   weatherCode;
     };
 
     struct METEO_DAILY {
-        char    date[11];
-        float   temperatureMax;
-        float   temperatureMin;
-        uint8_t weatherCode;
-        float   precipitationSum;
-        uint8_t precipitationProbabilityMax;
-        char    sunrise[17];
-        char    sunset[17];
-        float   windSpeedMax;
+        MeteoTime date;
+        float     temperatureMax;
+        float     temperatureMin;
+        uint8_t   weatherCode;
+        float     precipitationSum;
+        uint8_t   precipitationProbabilityMax;
+        MeteoTime sunrise;
+        MeteoTime sunset;
+        float     windSpeedMax;
     };
 
     std::vector<METEO_HOURLY> m_hourly;
@@ -58,7 +67,7 @@ class METEO {
 
     const char* findJsonArray(const char* json, const char* object, const char* name);
     bool        readJsonFloat(const char*& p, float& value);
-    bool        readJsonString(const char*& p, char* dest, size_t destSize);
+    bool        readJsonString(const char*& p, MeteoTime& dest);
     bool        parseHourly(const char* json);
     bool        parseDaily(const char* json);
     bool        parseForecast(ps_ptr<char>& buff);

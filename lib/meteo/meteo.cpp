@@ -59,7 +59,7 @@ bool METEO::send_request(ps_ptr<char> req) {
 
     bool res = m_client.connect("api.open-meteo.com", port);
     if (res) {
-        rqh.println();
+        // rqh.println();
         m_client.print(rqh.get());
     }
 
@@ -89,7 +89,7 @@ bool METEO::parseHttpResponseHeader() {
         if (name.starts_with_icase("http/")) { // HTTP status error code
             int sc = atoi(name.get() + 9);
             if (sc > 310) { // e.g. HTTP/1.1 301 Moved Permanently, HTTP/1.1 302 Found
-                log_w("%s", name.get());
+                log_d("%s", name.get());
                 m_client.stop();
                 m_status = IDLE;
                 return false;
@@ -109,13 +109,12 @@ bool METEO::parseHttpResponseHeader() {
         }
     }
 
-    if (m_f_chunked) log_w("chunked");
-    if (m_contentLength) log_w("m_contentLength %i", m_contentLength);
-    if (m_contentType.valid()) log_w("ct: %s", m_contentType.c_get());
+    if (m_f_chunked) log_d("chunked");
+    if (m_contentLength) log_d("m_contentLength %i", m_contentLength);
+    if (m_contentType.valid()) log_d("ct: %s", m_contentType.c_get());
 
     m_status = READ_CONTENT;
     return true;
-    ;
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void METEO::loop() {
@@ -275,15 +274,12 @@ bool METEO::readContent() {
     // Process content
     //-------------------------------------------------------------------------------------------------
 
-    //    buff.replace(",", "\n");
-    buff.println();
+    // buff.println();
 
     if (parseForecast(buff)) {
-
-        log_i("Hourly entries: %u", m_hourly.size());
-        log_i("Daily entries : %u", m_daily.size());
-        for (int i = 0; i < m_daily.size(); i++) log_i("%s, %s, %i", m_daily[i].date, m_daily[i].sunrise, m_daily[i].weatherCode);
-        for (int i = 0; i < m_hourly.size(); i++) log_i("%i, %s, %f", m_hourly[i].cloudCover, m_hourly[i].time, m_hourly[i].temperature);
+        log_d("Hourly entries: %u", m_hourly.size());
+        log_d("Daily entries : %u", m_daily.size());
+        protocol();
     }
 
     m_status = IDLE;
@@ -383,20 +379,38 @@ bool METEO::readJsonFloat(const char*& p, float& value) {
     return true;
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-bool METEO::readJsonString(const char*& p, char* dest, size_t destSize) {
-    if (!p || !dest || destSize == 0) return false;
-
+bool METEO::readJsonString(const char*& p, MeteoTime& dest) {
+    if (!p) return false;
     while (*p == ' ' || *p == '\t' || *p == '\r' || *p == '\n') { p++; }
     if (*p != '"') return false;
     p++; // "
-    size_t i = 0;
-    while (*p && *p != '"') {
-        if (i < destSize - 1) { dest[i++] = *p; }
-        p++;
+
+    // YYYY-MM-DD
+    if (!isdigit(p[0]) || !isdigit(p[1]) || !isdigit(p[2]) || !isdigit(p[3]) || p[4] != '-' || !isdigit(p[5]) || !isdigit(p[6]) || p[7] != '-' || !isdigit(p[8]) || !isdigit(p[9])) { return false; }
+    dest.year = (p[0] - '0') * 1000 + (p[1] - '0') * 100 + (p[2] - '0') * 10 + (p[3] - '0');
+    dest.month = (p[5] - '0') * 10 + (p[6] - '0');
+    dest.day = (p[8] - '0') * 10 + (p[9] - '0');
+    p += 10;
+
+    // Daily: "YYYY-MM-DD"
+    if (*p == '"') {
+        dest.hour = 0;
+        dest.minute = 0;
     }
+    // Hourly: "YYYY-MM-DDTHH:MM"
+    else if (*p == 'T') {
+        p++; // T
+        if (!isdigit(p[0]) || !isdigit(p[1]) || p[2] != ':' || !isdigit(p[3]) || !isdigit(p[4])) { return false; }
+        dest.hour = (p[0] - '0') * 10 + (p[1] - '0');
+        dest.minute = (p[3] - '0') * 10 + (p[4] - '0');
+        p += 5;
+    } else {
+        return false;
+    }
+
+    // closing "
     if (*p != '"') return false;
-    dest[i] = '\0';
-    p++; // "
+    p++;
     while (*p == ' ' || *p == '\t' || *p == '\r' || *p == '\n') { p++; }
     if (*p == ',') { p++; }
     return true;
@@ -421,7 +435,7 @@ bool METEO::parseHourly(const char* json) {
 
         METEO_HOURLY item{};
         // time
-        if (!readJsonString(pTime, item.time, sizeof(item.time))) { break; }
+        if (!readJsonString(pTime, item.time)) { break; }
         float value;
         // temperature
         if (!readJsonFloat(pTemp, value)) return false;
@@ -437,7 +451,7 @@ bool METEO::parseHourly(const char* json) {
         item.windSpeed = value;
         // sunshine duration
         if (!readJsonFloat(pSun, value)) return false;
-        item.sunshineDuration = static_cast<uint16_t>(value);
+        item.sunshineDuration = static_cast<uint8_t>(value / 60);
         // weather code
         if (!readJsonFloat(pCode, value)) return false;
         item.weatherCode = static_cast<uint8_t>(value);
@@ -478,7 +492,9 @@ bool METEO::parseDaily(const char* json) {
 
         METEO_DAILY item{};
         // date
-        if (!readJsonString(pDate, item.date, sizeof(item.date))) { break; }
+        // if (!readJsonString(pDate, item.date, sizeof(item.date))) { break; }
+        if (*pDate == ']') { break; } // If time is already at ] -> done
+        if (!readJsonString(pDate, item.date)) { return false; }
         float value;
         // max temperature
         if (*pMax == ']') { break; } // If time is already at ] -> done
@@ -497,9 +513,9 @@ bool METEO::parseDaily(const char* json) {
         if (!readJsonFloat(pProb, value)) { return false; }
         item.precipitationProbabilityMax = static_cast<uint8_t>(value);
         // sunrise
-        if (!readJsonString(pSunrise, item.sunrise, sizeof(item.sunrise))) { return false; }
+        if (!readJsonString(pSunrise, item.sunrise)) { return false; }
         // sunset
-        if (!readJsonString(pSunset, item.sunset, sizeof(item.sunset))) { return false; }
+        if (!readJsonString(pSunset, item.sunset)) { return false; }
         // max wind
         if (!readJsonFloat(pWind, value)) { return false; }
         item.windSpeedMax = value;
@@ -520,5 +536,29 @@ bool METEO::parseForecast(ps_ptr<char>& buff) {
         return false;
     }
     return true;
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void METEO::protocol() {
+
+    printf(ANSI_ESC_CYAN "\n date       sunrise  sunset   t-max(°C)  t-min(°C)  prec(%%)  prec-sum  wid-speed-max  w-code\n");
+    for (int i = 0; i < m_daily.size(); i++) {
+        printf(ANSI_ESC_GREEN);
+        printf("%04u-%02u-%02u  ", m_daily[i].date.year, m_daily[i].date.month, m_daily[i].date.day);
+        printf("%2u:%2u    ", m_daily[i].sunrise.hour, m_daily[i].sunrise.minute);
+        printf("%2u:%2u      ", m_daily[i].sunset.hour, m_daily[i].sunset.minute);
+        printf("%5.2f     %5.2f      ", m_daily[i].temperatureMax, m_daily[i].temperatureMin);
+        printf("%3u     %5.2f        ", m_daily[i].precipitationProbabilityMax, m_daily[i].precipitationSum);
+        printf("%5.2f         %2u", m_daily[i].windSpeedMax, m_daily[i].weatherCode);
+        printf("\n");
+    };
+    printf(ANSI_ESC_RESET "\n");
+
+    printf(ANSI_ESC_CYAN "\nYYYY-MM-DD hh:mm cloud(%%) temp(°C)  rain(%%) sun(min)  wind(km/h) w-code\n");
+    for (int i = 0; i < min((size_t)24, m_hourly.size()); i++) {
+        printf(ANSI_ESC_GREEN "%04i-%02i-%02i %02i:%02i", m_hourly[i].time.year, m_hourly[i].time.month, m_hourly[i].time.day, m_hourly[i].time.hour, m_hourly[i].time.minute);
+        printf("   %3i     %5.2f     %3i     %4i     %6.2f      %2u\n", m_hourly[i].cloudCover, m_hourly[i].temperature, m_hourly[i].precipitationProbability, m_hourly[i].sunshineDuration,
+               m_hourly[i].windSpeed, m_hourly[i].weatherCode);
+    }
+    printf(ANSI_ESC_RESET "\n\n");
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
