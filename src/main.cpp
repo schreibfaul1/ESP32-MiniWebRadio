@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.0t6 - Aug 30, 2026                                                                                                               ";
+    Version 4.2.0t7 - Sep 02, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -67,6 +67,7 @@ ps_ptr<char> s_lyrics = "";
 ps_ptr<char> s_location = "Europe/Berlin";
 ps_ptr<char> s_latiitude = "52.52";
 ps_ptr<char> s_longitude = "13.41";
+ps_ptr<char> s_version;
 
 bool s_f_rtc = false; // true if time from ntp is received
 bool s_f_100ms = false;
@@ -104,7 +105,6 @@ bool s_f_clearLogo = false;
 bool s_f_clearStationName = false;
 bool s_f_dlnaBrowseServer = false;
 bool s_f_dlnaWaitForResponse = false;
-bool s_f_dlnaSeekServer = false;
 bool s_f_dlnaMakePlaylistOTF = false; // notify callback that this browsing was to build a On-The_fly playlist
 bool s_f_dlna_browseReady = false;
 bool s_f_brightnessIsChangeable = false;
@@ -140,6 +140,7 @@ uint8_t  s_dlnaLevel = 0;
 uint8_t  s_resetReason = (esp_reset_reason_t)ESP_RST_UNKNOWN;
 uint8_t  s_brightness = UINT8_MAX;
 uint8_t  s_bh1750Value = UINT8_MAX;
+uint8_t  s_start_counter = 0;
 int16_t  s_totalNumberReturned = -1;
 int16_t  s_dlnaMaxItems = -1;
 int16_t  s_dlnaMaXServers = -1;
@@ -1001,15 +1002,15 @@ void stopSong() {
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 void setup() {
-    ps_ptr<char> version = Version;
-    version.trim();
+    s_version = Version;
+    s_version.trim();
     //---- BEGIN ---------
     Serial.begin(MONITOR_SPEED);
     vTaskDelay(1500); // wait for Serial to be ready
     printf("\n\n");
     printfln(s_tag.none, "");
     printfln(s_tag.none, "             " ANSI_ESC_YELLOW " ***************************************************** ");
-    printfln(s_tag.none, "             " ANSI_ESC_YELLOW " *     MiniWebRadio {:29}    * " ANSI_ESC_RESET "      ", version);
+    printfln(s_tag.none, "             " ANSI_ESC_YELLOW " *     MiniWebRadio {:29}    * " ANSI_ESC_RESET "      ", s_version);
     printfln(s_tag.none, "             " ANSI_ESC_YELLOW " ***************************************************** ");
     printfln(s_tag.none, "");
 
@@ -1110,7 +1111,7 @@ void setup() {
 
     if (s_volume.volumeSteps < 21) s_volume.volumeSteps = 21;
 
-    ir.begin(); // Init InfraredDecoder
+    ir.begin();    // Init InfraredDecoder
     meteo.begin(); // Init Open-Meteo
     meteo.set_coordinates(s_latiitude, s_longitude);
     meteo.set_timeZone(s_TZName);
@@ -1120,8 +1121,6 @@ void setup() {
         digitalWrite(AMP_ENABLED, HIGH);
         printfln(s_tag.setup, "On Board Amplifier pin is: " ANSI_ESC_CYAN "{}", AMP_ENABLED);
     }
-
-    if (s_f_isWiFiConnected) webSrv.begin(80, 81, "MiniWebRadio", version); // HTTP port, WebSocket port, Server, Last-Modified
 
     if (s_f_mute) { printfln(s_tag.setup, "volume is muted: (from " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET ")", s_volume.cur_volume); }
     setI2STone();
@@ -1136,17 +1135,7 @@ void setup() {
             s_resetReason == ESP_RST_DEEPSLEEP) { // Wake up
             s_state = NONE;
         }
-        if (!MDNS.begin("MiniWebRadio")) {
-            printfln(s_tag.wifi_info, ANSI_ESC_YELLOW "Error starting mDNS");
-        } else {
-            printfln(s_tag.wifi_info, "mDNS started");
-            MDNS.addService("esp32", "tcp", 80);
-            printfln(s_tag.wifi_info, "mDNS name: " ANSI_ESC_YELLOW "MiniWebRadio");
-        }
         ArduinoOTA.setHostname("MiniWebRadio");
-        ArduinoOTA.begin();
-        ftpSrv.begin(SD_MMC, FTP_USERNAME, FTP_PASSWORD); // username, password for fgetTP().
-        s_f_dlnaSeekServer = true;
     } else {
         s_state = NONE;
         setTFTbrightness(200, 200);
@@ -1172,10 +1161,9 @@ void setup() {
     dispFooter.updateStation(s_cur_station);
     dispFooter.updateOffTime(s_sleeptime);
 
-    setRTC(s_TZString);
     s_stationURL = s_settings.lastconnectedhost;
-    setStation(s_cur_station);
-    changeState(RADIO, 0);
+
+    s_start_counter = 1;
 
     // ES8311 es;
     // es.begin(&i2cBusOne, 0x18);
@@ -2062,6 +2050,18 @@ void loop() {
     getTFT().loop();
     BH1750.loop();
 
+    if (s_start_counter) s_start_counter++;
+    if (s_start_counter == 20) { MDNS.begin("MiniWebRadio"); }
+    if (s_start_counter == 25) { MDNS.addService("esp32", "tcp", 80); }
+    if (s_start_counter == 30) { ArduinoOTA.begin(); }
+    if (s_start_counter == 40) { ftpSrv.begin(SD_MMC, FTP_USERNAME, FTP_PASSWORD); }
+    if (s_start_counter == 60) { setRTC(s_TZString); }
+    if (s_start_counter == 70) { setStation(s_cur_station); }
+    if (s_start_counter == 80) { changeState(RADIO, 0); }
+    if (s_start_counter == 90) { dlna.seekServer(); }
+    if (s_start_counter == 95) { webSrv.begin(80, 81, "MiniWebRadio", s_version); }
+    if (s_start_counter == 100) { s_start_counter = 0; }
+
     while (s_logBuffer.size() > 0) {
         size_t i = s_logBuffer.size();
         if (s_logBuffer[i - 1].strlen() > 0 && s_logBuffer[i - 1].strlen() < 1024) {
@@ -2180,7 +2180,7 @@ void loop() {
         }
         //------------------------------------------UPDATE DISPLAY------------------------------------------------------------------------------------
         if (!s_f_sleeping || s_state == RINGING) {
-            if(s_time.minute == 59 && s_time.second >= 53) s_f_timeSpeech = true;
+            if (s_time.minute == 59 && s_time.second == 53) s_f_timeSpeech = true;
 
             dispHeader.updateTime(s_time, false);
             if (s_f_newBitRate) {
@@ -2307,11 +2307,6 @@ void loop() {
         if (s_f_reconnect && !s_f_isWiFiConnected) { // not used yet
             s_f_reconnect = false;
             connecttohost(s_settings.lastconnectedhost.get());
-        }
-        //------------------------------------------SEEK DLNA SERVER----------------------------------------------------------------------------------
-        if (s_f_dlnaSeekServer) {
-            s_f_dlnaSeekServer = false;
-            dlna.seekServer();
         }
         //------------------------------------------CREATE DLNA PLAYLIST------------------------------------------------------------------------------
         if (s_f_dlnaMakePlaylistOTF && s_f_dlna_browseReady) {
