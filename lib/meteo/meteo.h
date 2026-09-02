@@ -17,18 +17,6 @@
 class METEO {
 
   public:
-    METEO();
-    ~METEO();
-    void    begin();
-    bool    set_coordinates(ps_ptr<char> latitude, ps_ptr<char> longitude);
-    void    set_timeZone(ps_ptr<char> timeZone);
-    bool    send_request(ps_ptr<char> req);
-    bool    parseHttpResponseHeader();
-    void    loop();
-    bool    readContent();
-    int32_t getChunkSize(uint16_t* readedBytes);
-    void    protocol();
-
     struct MeteoTime {
         uint16_t year;
         uint8_t  month;
@@ -58,6 +46,21 @@ class METEO {
         MeteoTime sunset;
         float     windSpeedMax;
     };
+
+  public:
+    METEO();
+    ~METEO();
+    std::vector<METEO_DAILY>  get_daily_data();
+    std::vector<METEO_HOURLY> get_hourly_data();
+    void                      begin();
+    bool                      set_coordinates(ps_ptr<char> latitude, ps_ptr<char> longitude);
+    void                      set_timeZone(ps_ptr<char> timeZone);
+    bool                      send_request();
+    bool                      parseHttpResponseHeader();
+    void                      loop();
+    bool                      readContent();
+    int32_t                   getChunkSize(uint16_t* readedBytes);
+    void                      protocol();
 
     std::vector<METEO_HOURLY> m_hourly;
     std::vector<METEO_DAILY>  m_daily;

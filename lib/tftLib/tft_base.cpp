@@ -3059,6 +3059,13 @@ void TFT_Base::txtToToken(const char* p) {
                 p += ch.length;
                 continue;
             }
+            if (cp == 0x2019) { // RIGHT SINGLE QUOTATION MARK
+                cp = 0x0027;    // ’ --> ' (Apostrophe)
+                m_token.emplace_back(TokenType::Glyph, cp);
+                p += ch.length;
+                MWR_LOG_INFO("character U+2019 replaced by U+0027");
+                continue;
+            }
             MWR_LOG_WARN("character U+{:04X} outside font", cp);
             cp = 0x20;
         } else if (m_current_font.lookup_table[cp] == 0xFFFF) {

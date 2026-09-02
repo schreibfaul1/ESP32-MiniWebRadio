@@ -326,6 +326,7 @@ struct tag_s {
     ps_ptr<char> tft_info = "TFT_Info:";
     ps_ptr<char> tp_info = "TP_Info:";
     ps_ptr<char> ir_info = "IR_Info:";
+    ps_ptr<char> meteo_info = "Meteo_Info:";
     ps_ptr<char> webserver = "Web_Server:";
     ps_ptr<char> dlna_server = "DLNA_Server:";
     ps_ptr<char> bt_emitter = "BT_Emitter:";
