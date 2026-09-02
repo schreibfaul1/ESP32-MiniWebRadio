@@ -279,7 +279,6 @@ bool METEO::readContent() {
     if (parseForecast(buff)) {
         log_d("Hourly entries: %u", m_hourly.size());
         log_d("Daily entries : %u", m_daily.size());
-        protocol();
     }
 
     m_status = IDLE;
@@ -540,6 +539,9 @@ bool METEO::parseForecast(ps_ptr<char>& buff) {
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void METEO::protocol() {
 
+    for (int i = 0; i < 100; i++) printf("—");
+    printf("\nCoor lat: %s, long:%s, Timezone: %s\n", m_latitude.c_get(), m_longitude.c_get(), m_timeZone.c_get());
+
     printf(ANSI_ESC_CYAN "\n date       sunrise  sunset   t-max(°C)  t-min(°C)  prec(%%)  prec-sum  wid-speed-max  w-code\n");
     for (int i = 0; i < m_daily.size(); i++) {
         printf(ANSI_ESC_GREEN);
@@ -551,7 +553,7 @@ void METEO::protocol() {
         printf("%5.2f         %2u", m_daily[i].windSpeedMax, m_daily[i].weatherCode);
         printf("\n");
     };
-    printf(ANSI_ESC_RESET "\n");
+    printf(ANSI_ESC_RESET);
 
     printf(ANSI_ESC_CYAN "\nYYYY-MM-DD hh:mm cloud(%%) temp(°C)  rain(%%) sun(min)  wind(km/h) w-code\n");
     for (int i = 0; i < min((size_t)24, m_hourly.size()); i++) {
@@ -559,6 +561,9 @@ void METEO::protocol() {
         printf("   %3i     %5.2f     %3i     %4i     %6.2f      %2u\n", m_hourly[i].cloudCover, m_hourly[i].temperature, m_hourly[i].precipitationProbability, m_hourly[i].sunshineDuration,
                m_hourly[i].windSpeed, m_hourly[i].weatherCode);
     }
-    printf(ANSI_ESC_RESET "\n\n");
+    printf(ANSI_ESC_RESET);
+    for (int i = 0; i < 90; i++) printf("—");
+    printf("\n");
+
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

@@ -2051,11 +2051,12 @@ void loop() {
     BH1750.loop();
 
     if (s_start_counter) s_start_counter++;
-    if (s_start_counter == 20) { MDNS.begin("MiniWebRadio"); }
-    if (s_start_counter == 25) { MDNS.addService("esp32", "tcp", 80); }
+    if (s_start_counter == 10) { MDNS.begin("MiniWebRadio"); }
+    if (s_start_counter == 20) { MDNS.addService("esp32", "tcp", 80); }
     if (s_start_counter == 30) { ArduinoOTA.begin(); }
     if (s_start_counter == 40) { ftpSrv.begin(SD_MMC, FTP_USERNAME, FTP_PASSWORD); }
-    if (s_start_counter == 60) { setRTC(s_TZString); }
+    if (s_start_counter == 50) { setRTC(s_TZString); }
+    if (s_start_counter == 60) { meteo.send_request("");}
     if (s_start_counter == 70) { setStation(s_cur_station); }
     if (s_start_counter == 80) { changeState(RADIO, 0); }
     if (s_start_counter == 90) { dlna.seekServer(); }
@@ -2549,9 +2550,9 @@ void loop() {
             audio.settings.VOL_FADING_SPEED = t;
         }
         if (r.starts_with("meteo")) {
-            meteo.set_coordinates(s_latiitude, s_longitude);
-            meteo.set_timeZone(s_TZName);
-            meteo.send_request("");
+
+
+            meteo.protocol();
         }
     }
 }
@@ -3470,6 +3471,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
     CMD_EQUALS("set_timeZone"){         s_TZName = param;  s_TZString = arg;
                                         printfln(s_tag.webserver, "Timezone: .. " ANSI_ESC_BLUE "{}, {}", param, arg);
                                         setRTC(s_TZString);
+                                        meteo.set_timeZone(s_TZName);
                                         updateSettings(); // write new TZ items to settings.json
                                         return; }
 
@@ -3477,6 +3479,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
                                         if(coor.size() != 2) return;
                                         s_latiitude = coor[0];
                                         s_longitude = coor[1];
+                                        meteo.set_coordinates(s_latiitude, s_longitude);
                                         printfln(s_tag.webserver, "Location: .. " ANSI_ESC_BLUE "{}, lat: {}, long: {}", s_location, s_latiitude, s_longitude);
                                         updateSettings(); // write new location to settings.json
                                         return;}
