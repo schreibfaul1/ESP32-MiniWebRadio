@@ -63,3 +63,13 @@ uint16_t RTIME::getMinuteOfTheDay() { // counts at 00:00, from 0...23*60+59
     localtime_r(&now, &timeinfo);
     return timeinfo.tm_hour * 60 + timeinfo.tm_min;
 }
+
+RTIME::rtime RTIME::get_rtime(){
+    m_rtime.year = timeinfo.tm_year;
+    m_rtime.month = timeinfo.tm_mon;
+    m_rtime.day = timeinfo.tm_mday;
+    m_rtime.hour = timeinfo.tm_hour;
+    m_rtime.minute = timeinfo.tm_min;
+    m_rtime.second = timeinfo.tm_sec;
+    return m_rtime;
+}

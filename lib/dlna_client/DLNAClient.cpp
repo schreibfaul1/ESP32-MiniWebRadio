@@ -546,7 +546,7 @@ bool DLNA_Client::browseResult() {
         item.itemSize = 0;
         item.duration.assign("?");
         item.title.assign("?");
-        item.childCount = 0;
+        item.childCount = -1;
 
         m_srv_items.push_back(std::move(item));
     };

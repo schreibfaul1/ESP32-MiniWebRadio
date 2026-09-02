@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.0t6 - Aug 30, 2026                                                                                                               ";
+    Version 4.2.0t7 - Sep 02, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -50,8 +50,8 @@ KCX_BT_Emitter bt_emitter(BT_EMITTER_RX, BT_EMITTER_TX, BT_EMITTER_CONNECT, BT_E
 hp_BH1750      BH1750; // create the sensor
 ES8311         es8311;
 METEO          meteo;
+RTIME::rtime   s_time;
 
-ps_ptr<char> s_time_s = "00:00:00";
 ps_ptr<char> s_myIP = "000.000.000.000";
 ps_ptr<char> s_cur_AudioFolder = "/audiofiles/";
 ps_ptr<char> s_icyDescription;
@@ -67,6 +67,7 @@ ps_ptr<char> s_lyrics = "";
 ps_ptr<char> s_location = "Europe/Berlin";
 ps_ptr<char> s_latiitude = "52.52";
 ps_ptr<char> s_longitude = "13.41";
+ps_ptr<char> s_version;
 
 bool s_f_rtc = false; // true if time from ntp is received
 bool s_f_100ms = false;
@@ -104,7 +105,6 @@ bool s_f_clearLogo = false;
 bool s_f_clearStationName = false;
 bool s_f_dlnaBrowseServer = false;
 bool s_f_dlnaWaitForResponse = false;
-bool s_f_dlnaSeekServer = false;
 bool s_f_dlnaMakePlaylistOTF = false; // notify callback that this browsing was to build a On-The_fly playlist
 bool s_f_dlna_browseReady = false;
 bool s_f_brightnessIsChangeable = false;
@@ -140,6 +140,7 @@ uint8_t  s_dlnaLevel = 0;
 uint8_t  s_resetReason = (esp_reset_reason_t)ESP_RST_UNKNOWN;
 uint8_t  s_brightness = UINT8_MAX;
 uint8_t  s_bh1750Value = UINT8_MAX;
+uint8_t  s_start_counter = 0;
 int16_t  s_totalNumberReturned = -1;
 int16_t  s_dlnaMaxItems = -1;
 int16_t  s_dlnaMaXServers = -1;
@@ -1001,15 +1002,15 @@ void stopSong() {
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 void setup() {
-    ps_ptr<char> version = Version;
-    version.trim();
+    s_version = Version;
+    s_version.trim();
     //---- BEGIN ---------
     Serial.begin(MONITOR_SPEED);
     vTaskDelay(1500); // wait for Serial to be ready
     printf("\n\n");
     printfln(s_tag.none, "");
     printfln(s_tag.none, "             " ANSI_ESC_YELLOW " ***************************************************** ");
-    printfln(s_tag.none, "             " ANSI_ESC_YELLOW " *     MiniWebRadio {:29}    * " ANSI_ESC_RESET "      ", version);
+    printfln(s_tag.none, "             " ANSI_ESC_YELLOW " *     MiniWebRadio {:29}    * " ANSI_ESC_RESET "      ", s_version);
     printfln(s_tag.none, "             " ANSI_ESC_YELLOW " ***************************************************** ");
     printfln(s_tag.none, "");
 
@@ -1110,15 +1111,16 @@ void setup() {
 
     if (s_volume.volumeSteps < 21) s_volume.volumeSteps = 21;
 
-    ir.begin(); // Init InfraredDecoder
+    ir.begin();    // Init InfraredDecoder
+    meteo.begin(); // Init Open-Meteo
+    meteo.set_coordinates(s_latiitude, s_longitude);
+    meteo.set_timeZone(s_TZName);
 
     if (AMP_ENABLED >= 0) { // enable onboard amplifier
         pinMode(AMP_ENABLED, OUTPUT);
         digitalWrite(AMP_ENABLED, HIGH);
         printfln(s_tag.setup, "On Board Amplifier pin is: " ANSI_ESC_CYAN "{}", AMP_ENABLED);
     }
-
-    if (s_f_isWiFiConnected) webSrv.begin(80, 81, "MiniWebRadio", version); // HTTP port, WebSocket port, Server, Last-Modified
 
     if (s_f_mute) { printfln(s_tag.setup, "volume is muted: (from " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET ")", s_volume.cur_volume); }
     setI2STone();
@@ -1133,17 +1135,7 @@ void setup() {
             s_resetReason == ESP_RST_DEEPSLEEP) { // Wake up
             s_state = NONE;
         }
-        if (!MDNS.begin("MiniWebRadio")) {
-            printfln(s_tag.wifi_info, ANSI_ESC_YELLOW "Error starting mDNS");
-        } else {
-            printfln(s_tag.wifi_info, "mDNS started");
-            MDNS.addService("esp32", "tcp", 80);
-            printfln(s_tag.wifi_info, "mDNS name: " ANSI_ESC_YELLOW "MiniWebRadio");
-        }
         ArduinoOTA.setHostname("MiniWebRadio");
-        ArduinoOTA.begin();
-        ftpSrv.begin(SD_MMC, FTP_USERNAME, FTP_PASSWORD); // username, password for fgetTP().
-        s_f_dlnaSeekServer = true;
     } else {
         s_state = NONE;
         setTFTbrightness(200, 200);
@@ -1163,16 +1155,15 @@ void setup() {
 
     dispHeader.updateVolume(s_volume.cur_volume);
     dispHeader.speakerOnOff(!s_f_mute);
-    dispHeader.updateTime("00:00:00", true);
+    dispHeader.updateTime(s_time, true);
 
     dispFooter.setIpAddr(s_myIP);
     dispFooter.updateStation(s_cur_station);
     dispFooter.updateOffTime(s_sleeptime);
 
-    setRTC(s_TZString);
     s_stationURL = s_settings.lastconnectedhost;
-    setStation(s_cur_station);
-    changeState(RADIO, 0);
+
+    s_start_counter = 1;
 
     // ES8311 es;
     // es.begin(&i2cBusOne, 0x18);
@@ -2059,12 +2050,25 @@ void loop() {
     getTFT().loop();
     BH1750.loop();
 
+    if (s_start_counter) s_start_counter++;
+    if (s_start_counter == 10) { MDNS.begin("MiniWebRadio"); }
+    if (s_start_counter == 20) { MDNS.addService("esp32", "tcp", 80); }
+    if (s_start_counter == 30) { ArduinoOTA.begin(); }
+    if (s_start_counter == 40) { ftpSrv.begin(SD_MMC, FTP_USERNAME, FTP_PASSWORD); }
+    if (s_start_counter == 50) { setRTC(s_TZString); }
+    if (s_start_counter == 60) { meteo.send_request("");}
+    if (s_start_counter == 70) { setStation(s_cur_station); }
+    if (s_start_counter == 80) { changeState(RADIO, 0); }
+    if (s_start_counter == 90) { dlna.seekServer(); }
+    if (s_start_counter == 95) { webSrv.begin(80, 81, "MiniWebRadio", s_version); }
+    if (s_start_counter == 100) { s_start_counter = 0; }
+
     while (s_logBuffer.size() > 0) {
         size_t i = s_logBuffer.size();
         if (s_logBuffer[i - 1].strlen() > 0 && s_logBuffer[i - 1].strlen() < 1024) {
             webSrv.send("serTerminal=", s_logBuffer[i - 1]);
         } else
-            log_w("%s %i: strlen %i", __FILE__, __LINE__, s_logBuffer[i - 1].strlen());
+            log_w("%s %i: log budder full, strlen %i", __FILE__, __LINE__, s_logBuffer[i - 1].strlen());
         s_logBuffer.pop_back();
         if (s_logBuffer.size() == 0) s_logBuffer.clear(); // Löscht alle Elemente und gibt den Speicher frei
     }
@@ -2144,6 +2148,7 @@ void loop() {
     if (s_f_1sec) { // calls every second
         s_f_1sec = false;
 
+        s_time = rtc.get_rtime();
         s_totalRuntime++;
         uint16_t minuteOfTheDay = rtc.getMinuteOfTheDay();
         uint8_t  weekDay = rtc.getweekday();
@@ -2176,10 +2181,9 @@ void loop() {
         }
         //------------------------------------------UPDATE DISPLAY------------------------------------------------------------------------------------
         if (!s_f_sleeping || s_state == RINGING) {
-            s_time_s = rtc.gettime_s();
-            if (s_time_s.ends_with("59:53")) s_f_timeSpeech = true;
+            if (s_time.minute == 59 && s_time.second == 53) s_f_timeSpeech = true;
 
-            dispHeader.updateTime(s_time_s, false);
+            dispHeader.updateTime(s_time, false);
             if (s_f_newBitRate) {
                 s_f_newBitRate = false;
                 dispFooter.updateBitRate(s_icyBitRate);
@@ -2193,9 +2197,7 @@ void loop() {
         static bool f_resume = false;
         if (s_f_timeSpeech) { // speech the time 7 sec before a new hour is arrived
             s_f_timeSpeech = false;
-            ps_ptr<char> hh = s_time_s.substr(0, 2);
-            int          hour = hh.to_uint32();
-            hour++;
+            uint8_t hour = s_time.hour + 1;
             if (hour == 24) hour = 0; //  extract the hour
             if (s_f_mute) return;
             if (s_f_sleeping) return;
@@ -2306,11 +2308,6 @@ void loop() {
         if (s_f_reconnect && !s_f_isWiFiConnected) { // not used yet
             s_f_reconnect = false;
             connecttohost(s_settings.lastconnectedhost.get());
-        }
-        //------------------------------------------SEEK DLNA SERVER----------------------------------------------------------------------------------
-        if (s_f_dlnaSeekServer) {
-            s_f_dlnaSeekServer = false;
-            dlna.seekServer();
         }
         //------------------------------------------CREATE DLNA PLAYLIST------------------------------------------------------------------------------
         if (s_f_dlnaMakePlaylistOTF && s_f_dlna_browseReady) {
@@ -2551,6 +2548,11 @@ void loop() {
             float t = r.substr(3).to_float();
             printfln(s_tag.terminal, "set volume fading speed {}, current: {}", t, audio.settings.VOL_FADING_SPEED);
             audio.settings.VOL_FADING_SPEED = t;
+        }
+        if (r.starts_with("meteo")) {
+
+
+            meteo.protocol();
         }
     }
 }
@@ -3153,7 +3155,7 @@ void ir_short_key(int8_t key) {
             if(s_state == DLNAITEMSLIST) {
                 ps_ptr<char> r = lst_DLNA.getSelectedURL();
                 if (r.valid()) { txt_DL_fName.setTextColor(TFT_CYAN); txt_DL_fName.setText(lst_DLNA.getSelectedTitle()); connecttohost(r); changeState(DLNA, 0); }
-                else setTimeCounter(2);
+                else setTimeCounter(LIST_TIMER);
                 break;
             }
             if (s_state == CLOCK) {
@@ -3469,6 +3471,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
     CMD_EQUALS("set_timeZone"){         s_TZName = param;  s_TZString = arg;
                                         printfln(s_tag.webserver, "Timezone: .. " ANSI_ESC_BLUE "{}, {}", param, arg);
                                         setRTC(s_TZString);
+                                        meteo.set_timeZone(s_TZName);
                                         updateSettings(); // write new TZ items to settings.json
                                         return; }
 
@@ -3476,6 +3479,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
                                         if(coor.size() != 2) return;
                                         s_latiitude = coor[0];
                                         s_longitude = coor[1];
+                                        meteo.set_coordinates(s_latiitude, s_longitude);
                                         printfln(s_tag.webserver, "Location: .. " ANSI_ESC_BLUE "{}, lat: {}, long: {}", s_location, s_latiitude, s_longitude);
                                         updateSettings(); // write new location to settings.json
                                         return;}
@@ -3575,7 +3579,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
                                         return;}
 
     CMD_EQUALS("SD_rename"){            ps_ptr<char> _arg = arg.substr(0, arg.index_of("&")); // only the first argument is used                              // via XMLHttpRequest
-                                        printfln(s_tag.webserver, "Rename " ANSI_ESC_YELLOW "old \"{}\" new \"%s\"", param, _arg);
+                                        printfln(s_tag.webserver, "Rename " ANSI_ESC_YELLOW "old \"{}\" new \"{}\"", param, _arg);
                                         bool res = SD_rename(param, _arg);
                                         if(res) webSrv.reply("refresh", webSrv.TEXT);
                                         else webSrv.sendStatus(400);
@@ -3672,7 +3676,7 @@ void on_dlna_client(const DLNA_Client::msg_s& msg) {
                              "{}",
                              item.title, item.duration);
                 }
-            } else if (item.childCount) {
+            } else if (item.childCount >= 0) {
                 printfln(s_tag.dlna_server, "title " ANSI_ESC_YELLOW "{}" ANSI_ESC_RESET ", childCount " ANSI_ESC_CYAN "{}", item.title, item.childCount);
             } else {
                 printfln(s_tag.dlna_server, "title " ANSI_ESC_YELLOW "{}", item.title);

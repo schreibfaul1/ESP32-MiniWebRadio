@@ -2791,6 +2791,7 @@ class TimeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     int32_t      m_borderColor = 0;
     ps_ptr<char> m_name;
     ps_ptr<char> m_time = "00:00:00";
+    ps_ptr<char> m_time_old = "00:00:00";
     bool         m_enabled = false;
     bool         m_active = true;
     bool         m_focus = false;
@@ -2851,7 +2852,8 @@ class TimeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
         }
         enable_all();
-        updateTime(m_time, true);
+        RTIME::rtime dummy{};
+        updateTime(dummy, true);
     }
 
     void hide() {
@@ -2880,25 +2882,20 @@ class TimeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     }
 
     void setBorderColor(int32_t color) { m_borderColor = color; }
-    void updateTime(ps_ptr<char> hl_time, bool complete = true) {
-        if (hl_time.strlen() != 8) return;
+    void updateTime(RTIME::rtime hl_time, bool complete = true) {
         if (!m_enabled) return;
-        m_time = hl_time;                                                  // hhmmss
-        static char oldtime[8] = {255, 255, 255, 255, 255, 255, 255, 255}; // hhmmss
-                                                                           //    getTFT().setFontSize(m_fontSize);
-                                                                           //    getTFT().setTextColor(m_fgColor);
-        if (complete == true) {
-            for (uint8_t i = 0; i < 8; i++) { oldtime[i] = 255; }
-        }
-        for (uint8_t i = 0; i < 8; i++) {
-            if (oldtime[i] != m_time[i]) {
+        m_time.assignf("{:02}:{:02}:{:02}", hl_time.hour, hl_time.minute, hl_time.second); // hhmmss
+                                                                                           //    getTFT().setFontSize(m_fontSize);
+                                                                                           //    getTFT().setTextColor(m_fgColor);
+        for (int i = 0; i < 8; i++) {
+            if (m_time[i] != m_time_old[i] || complete) {
                 char ch[2] = {0, 0};
                 ch[0] = m_time[i];
                 txt_time[i].setText(ch);
                 txt_time[i].show();
-                oldtime[i] = m_time[i];
             }
         }
+        m_time_old = m_time;
     }
     bool positionXY(uint16_t x, uint16_t y) {
         if (x < m_x) return false;
@@ -4316,7 +4313,7 @@ class DlnaList : public RegisterTable {
     ps_ptr<char>                               m_buff;
     ps_ptr<char>                               m_tftSize = "";
     const std::deque<DLNA_Client::dlnaServer>* m_dlnaServer;
-    const std::deque<DLNA_Client ::srvItem>*   m_srvContent;
+    const std::deque<DLNA_Client::srvItem>*    m_srvContent;
     DLNA_Client*                               m_dlna;
     dlnaHistory_s*                             m_dlnaHistory = {};
     releasedArg                                m_ra;
@@ -4369,7 +4366,7 @@ class DlnaList : public RegisterTable {
             m_dlnaHistory[i].objId = "0";
             m_dlnaHistory[i].name = "";
             m_dlnaHistory[i].maxItems = 9;
-            m_dlnaHistory[i].childCount = 0;
+            m_dlnaHistory[i].childCount = -1;
         }
         m_dlnaHistory[0].name = "Media Server";
     }
@@ -4510,7 +4507,7 @@ class DlnaList : public RegisterTable {
         ps_ptr<char> duration = "?";
         ps_ptr<char> objectId;
         int32_t      itemSize = 0;
-        int16_t      childCount = 0;
+        int16_t      childCount = -1;
 
         if (pos == 0) {
             if (pos + m_viewPoint == m_currItemNr[*m_dlnaLevel] + 1) {
@@ -4567,7 +4564,7 @@ class DlnaList : public RegisterTable {
             color = ANSI_ESC_CYAN;
             res = true;
         } // is file
-        if (childCount) { sprintf(extension, "%i", childCount); }                  // only folders have childCount
+        if (childCount >= 0) { sprintf(extension, "%i", childCount); }             // only folders have childCount
         if (itemSize) { sprintf(extension, "%li", itemSize); }                     // only files have itemsize
         if (!duration.equals("?")) { sprintf(extension, "%s", duration.c_get()); } // must be a audiofile
         if (color == ANSI_ESC_MAGENTA) { m_itemListPos_last = pos; }
@@ -5590,7 +5587,7 @@ class DisplayHeader : public RegisterTable {
     int32_t      m_bg_color = TFT_TRANSPARENT;
     ps_ptr<char> m_name;
     ps_ptr<char> m_item;
-    ps_ptr<char> m_time = "00:00:00";
+    RTIME::rtime m_time;
     bool         m_enabled = false;
     bool         m_active = true;
     bool         m_focus = false;
@@ -5696,8 +5693,6 @@ class DisplayHeader : public RegisterTable {
         uint8_t  pt = 0;
         uint8_t  pb = 2;
     } const s_Item; // Radio, Player, Clock...
-
-
 
     struct w_t {
         uint16_t x = 380;
@@ -5947,7 +5942,7 @@ class DisplayHeader : public RegisterTable {
             pic_RSSID->show();
         }
     }
-    void updateTime(ps_ptr<char> hl_time, bool complete = true) {
+    void updateTime(RTIME::rtime hl_time, bool complete = true) {
         if (!m_enabled) return;
         m_time = hl_time; // hhmmss
         timeStringObject->updateTime(m_time, false);
