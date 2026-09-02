@@ -2432,10 +2432,10 @@ void loop() {
         }
         if (r.starts_with("st")) { // testtext for streamtitle
             if (r[2] == '0') s_streamTitle = "We’re Going To Ibiza";
-            if (r[2] == '1') s_streamTitle = "A B C D E F G";
-            if (r[2] == '2') s_streamTitle = "A B C D E F G H I";
-            if (r[2] == '3') s_streamTitle = "A B C D E F G H I J K L";
-            if (r[2] == '4') s_streamTitle = "A B C D E F G H I J K J M Q O";
+            if (r[2] == '1') s_streamTitle = "Á á É é Í í Ó ó Ő ő Ú ú Ű ű";
+            if (r[2] == '2') s_streamTitle = "Č č Ć ć Š š Ž ž Đ đ Ł ł Ń ń Ś ś Ź ź Ż ż";
+            if (r[2] == '3') s_streamTitle = "Ő ő Ű ű € – ← ’ “ ” …";
+            if (r[2] == '4') s_streamTitle = "Ă ă Â â Î î Ș ș Ț ț Ş ş Ţ ţ Ş ş Ţ ţ";
             if (r[2] == '5') s_streamTitle = "A B C D E F G H I K L J M y O P Q R";
             if (r[2] == '6')
                 s_streamTitle = "A B C D E F G H I K L J M g O P Q R S T V A B C D E F G H I K L J M p O P Q R S T U V W K J Q p O P Q R S T U V W K J Q A B C D E F G H I K L J M p O P Q R S T "
