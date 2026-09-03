@@ -483,7 +483,7 @@ Button     btn_RA_staList("btn_RA_staList", ButtonType::PushButton);     // subS
 Button     btn_RA_player("btn_RA_player", ButtonType::PushButton);       // subState 2
 Button     btn_RA_dlna("btn_RA_dlna", ButtonType::PushButton);           // subState 2
 Button     btn_RA_clock("btn_RA_clock", ButtonType::PushButton);         // subState 2
-Button     btn_RA_sleep("btn_RA_sleep", ButtonType::PushButton);         // subState 2
+Button     btn_RA_weather("btn_RA_weather", ButtonType::PushButton);     // subState 2
 Button     btn_RA_settings("btn_RA_settings", ButtonType::PushButton);   // subState 2
 Button     btn_RA_bt("btn_RA_bt", ButtonType::PushButton);               // subState 2
 Button     btn_RA_off("btn_RA_off", ButtonType::PushButton);             // subState 2
@@ -528,9 +528,10 @@ Progressbar pgb_DL_progress("pgb_DL_progress");
 // DLNAITEMSLIST
 DlnaList lst_DLNA("lst_DLNA");
 // CLOCK
-Button     btn_CL_mute("btn_CL_mute", ButtonType::ToggleButton);
 Button     btn_CL_alarm("btn_CL_alarm", ButtonType::PushButton);
+Button     btn_CL_sleep("btn_CL_sleep", ButtonType::PushButton);
 Button     btn_CL_radio("btn_CL_radio", ButtonType::PushButton);
+Button     btn_CL_mute("btn_CL_mute", ButtonType::ToggleButton);
 Button     btn_CL_off("btn_CL_off", ButtonType::PushButton);
 ImgClock24 clk_CL_24("clk_CL_24");
 Slider     sdr_CL_volume("sdr_CL_volume");
@@ -621,8 +622,8 @@ void placingGraphicObjects() { // and initialize them
     btn_RA_dlna.setPicturePath("/btn/Button_DLNA");
     btn_RA_clock.begin(3 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_RA_clock.setPicturePath("/btn/Button_Clock");
-    btn_RA_sleep.begin(4 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
-    btn_RA_sleep.setPicturePath("/btn/Button_OffTimer");
+    btn_RA_weather.begin(4 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
+    btn_RA_weather.setPicturePath("/btn/Button_Weather");
     btn_RA_settings.begin(5 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_RA_settings.setPicturePath("/btn/Button_Settings");
     btn_RA_bt.begin(6 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
@@ -714,13 +715,16 @@ void placingGraphicObjects() { // and initialize them
     btn_CL_alarm.begin(0 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_CL_alarm.setPicturePath("/btn/Button_Bell");
     btn_CL_alarm.set_bg_color(TFT_BLACK);
-    btn_CL_radio.begin(1 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
+    btn_CL_sleep.begin(1 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
+    btn_CL_sleep.setPicturePath("/btn/Button_OffTimer");
+    btn_CL_sleep.set_bg_color(TFT_BLACK);
+    btn_CL_radio.begin(2 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_CL_radio.setPicturePath("/btn/Button_Radio");
     btn_CL_radio.set_bg_color(TFT_BLACK);
-    btn_CL_mute.begin(2 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
+    btn_CL_mute.begin(3 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_CL_mute.setPicturePath("/btn/Button_Mute");
     btn_CL_mute.set_bg_color(TFT_BLACK);
-    btn_CL_off.begin(3 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
+    btn_CL_off.begin(4 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_CL_off.setPicturePath("/btn/Button_Off");
     btn_CL_off.set_bg_color(TFT_BLACK);
     sdr_CL_volume.begin(5 * layout.winButton.w + 10, layout.winButton.y, layout.winButton.w * 3 - 10, layout.winButton.h, layout.winButton.pl, layout.winButton.pr, layout.winButton.pt, layout.winButton.pb);
@@ -868,7 +872,7 @@ next:
         case 1: res = btn_RA_player.set_focus(true); break;
         case 2: res = btn_RA_dlna.set_focus(true); break;
         case 3: res = btn_RA_clock.set_focus(true); break;
-        case 4: res = btn_RA_sleep.set_focus(true); break;
+        case 4: res = btn_RA_weather.set_focus(true); break;
         case 5: res = btn_RA_settings.set_focus(true); break;
         case 6: res = btn_RA_bt.set_focus(true); break;
         case 7: res = btn_RA_off.set_focus(true); break;
@@ -967,25 +971,26 @@ next:
 void set_ir_pos_CL(int lr) { // CLOCK   -100 left, +100 right, -127 reset
     uint8_t i = 0;
     if (s_ir_btn_select == -1) return;
-    if (s_ir_btn_select == 4) return;
+    if (s_ir_btn_select == 5) return;
     defocusAllObjects();
 next:
     i++;
     if (lr == IR_LEFT) {
         s_ir_btn_select--;
-        if (s_ir_btn_select == -1) s_ir_btn_select = 3;
+        if (s_ir_btn_select == -1) s_ir_btn_select = 4;
     }
     if (lr == IR_RIGHT) {
         s_ir_btn_select++;
-        if (s_ir_btn_select == 4) s_ir_btn_select = 0;
+        if (s_ir_btn_select == 5) s_ir_btn_select = 0;
     }
     if (lr == IR_RESET) return;
     bool res = false;
     switch (s_ir_btn_select) {
         case 0: res = btn_CL_alarm.set_focus(true); break;
-        case 1: res = btn_CL_radio.set_focus(true); break;
-        case 2: res = btn_CL_mute.set_focus(true); break;
-        case 3: res = btn_CL_off.set_focus(true); break;
+        case 1: res = btn_CL_sleep.set_focus(true); break;
+        case 2: res = btn_CL_radio.set_focus(true); break;
+        case 3: res = btn_CL_mute.set_focus(true); break;
+        case 4: res = btn_CL_off.set_focus(true); break;
     }
     if (i == 2) return;
     if (res == false) goto next;

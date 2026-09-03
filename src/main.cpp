@@ -1798,14 +1798,14 @@ void changeState(int8_t state, int8_t subState) {
             if (subState == 2){ // Player, DLNA, Clock, SleepTime, Brightness, EQ, BT, Off
                 if(newSubState) {
                     btn_RA_staList.show();
-                    btn_RA_player.show(); btn_RA_dlna.show(); btn_RA_clock.show(); btn_RA_sleep.show(); btn_RA_settings.show();
+                    btn_RA_player.show(); btn_RA_dlna.show(); btn_RA_clock.show(); btn_RA_weather.show(); btn_RA_settings.show();
                     btn_RA_bt.show();
                     btn_RA_off.show();
                     setTimeCounter(2);
                 }
                 else {
                     btn_RA_staList.enable();
-                    btn_RA_player.enable(); btn_RA_dlna.enable(); btn_RA_clock.enable(); btn_RA_sleep.enable(); btn_RA_settings.enable();
+                    btn_RA_player.enable(); btn_RA_dlna.enable(); btn_RA_clock.enable(); btn_RA_weather.enable(); btn_RA_settings.enable();
                     btn_RA_bt.enable();
                     btn_RA_off.enable();
                 }
@@ -1885,12 +1885,12 @@ void changeState(int8_t state, int8_t subState) {
         case CLOCK: {
             clk_CL_24.show();
             if (subState == 0) {
-                btn_CL_mute.hide(); btn_CL_alarm.hide(); btn_CL_radio.hide(); sdr_CL_volume.hide(); btn_CL_off.hide();
+                btn_CL_alarm.hide(); btn_CL_sleep.hide(); btn_CL_radio.hide(); btn_CL_mute.hide(); btn_CL_off.hide(); sdr_CL_volume.hide();
             }
             if (subState == 1) {
                 setTimeCounter(2);
                 sdr_CL_volume.show();
-                btn_CL_mute.show(); btn_CL_alarm.show(); btn_CL_radio.show(); btn_CL_off.show();
+                btn_CL_mute.show(); btn_CL_alarm.show(); btn_CL_radio.show(); btn_CL_off.show(); btn_CL_sleep.show();
             }
 
             s_subState_clock = subState;
@@ -3103,7 +3103,7 @@ void ir_short_key(int8_t key) {
                     if (s_ir_btn_select == 1) { btn_RA_player.click(); }
                     if (s_ir_btn_select == 2) { btn_RA_dlna.click(); }
                     if (s_ir_btn_select == 3) { btn_RA_clock.click(); }
-                    if (s_ir_btn_select == 4) { btn_RA_sleep.click(); }
+                    if (s_ir_btn_select == 4) { btn_RA_weather.click(); }
                     if (s_ir_btn_select == 5) { btn_RA_settings.click(); }
                     if (s_ir_btn_select == 6) { btn_RA_bt.click(); }
                     if (s_ir_btn_select == 7) { btn_RA_off.click(); }
@@ -3173,9 +3173,10 @@ void ir_short_key(int8_t key) {
                 }
                 if (s_subState_clock == 1) {
                     if (s_ir_btn_select == 0) { btn_CL_alarm.click(); }
-                    if (s_ir_btn_select == 1) { btn_CL_radio.click(); }
-                    if (s_ir_btn_select == 2) { btn_CL_mute.click(); }
-                    if (s_ir_btn_select == 3) { btn_CL_off.click(); }
+                    if (s_ir_btn_select == 1) { btn_CL_sleep.click(); }
+                    if (s_ir_btn_select == 2) { btn_CL_radio.click(); }
+                    if (s_ir_btn_select == 3) { btn_CL_mute.click(); }
+                    if (s_ir_btn_select == 4) { btn_CL_off.click(); }
                 }
                 break;
             }
@@ -3911,7 +3912,7 @@ void tp_released(uint16_t x, uint16_t y){
     switch(s_state){
         case RADIO:
             VUmeter_RA.released();    sdr_RA_volume.released(); btn_RA_mute.released();    btn_RA_prevSta.released();  btn_RA_nextSta.released();
-            btn_RA_player.released(); btn_RA_dlna.released();   btn_RA_clock.released();   btn_RA_sleep.released();    btn_RA_settings.released();
+            btn_RA_player.released(); btn_RA_dlna.released();   btn_RA_clock.released();   btn_RA_weather.released();    btn_RA_settings.released();
             btn_RA_bt.released();     btn_RA_off.released();    btn_RA_staList.released(); btn_RA_recorder.released();
             break;
         case STATIONSLIST:
@@ -3933,7 +3934,7 @@ void tp_released(uint16_t x, uint16_t y){
             lst_DLNA.released(x, y);
             break;
         case CLOCK:
-            btn_CL_mute.released(); btn_CL_alarm.released(); btn_CL_radio.released(); clk_CL_24.released(); sdr_CL_volume.released(); btn_CL_off.released();
+            btn_CL_alarm.released(); btn_CL_sleep.released(); btn_CL_mute.released(); btn_CL_radio.released(); clk_CL_24.released(); sdr_CL_volume.released(); btn_CL_off.released();
             break;
         case ALARMCLOCK:
             clk_AC_red.released(); btn_AC_left.released(); btn_AC_right.released(); btn_AC_up.released(); btn_AC_down.released(); btn_AC_ready.released();
@@ -4018,7 +4019,7 @@ void graphicObjects_OnClick(ps_ptr<char> name, uint8_t val) { // val = 0 --> is 
         if (val && name.equals("btn_RA_player"))   { goto exit; }
         if (val && name.equals("btn_RA_dlna"))     { goto exit; }
         if (val && name.equals("btn_RA_clock"))    { goto exit; }
-        if (val && name.equals("btn_RA_sleep"))    { goto exit; }
+        if (val && name.equals("btn_RA_weather"))  { goto exit; }
         if (val && name.equals("btn_RA_bright"))   { goto exit; }
         if (!val && name.equals("btn_RA_bright"))  { setTimeCounter(2); goto exit; }
         if (val && name.equals("btn_RA_equal"))    { goto exit; }
@@ -4091,6 +4092,7 @@ void graphicObjects_OnClick(ps_ptr<char> name, uint8_t val) { // val = 0 --> is 
         if (val && name.equals("btn_CL_radio"))        { goto exit; }
         if (val && name.equals("clk_CL_24"))           { goto exit; }
         if (val && name.equals("btn_CL_off"))          { goto exit; }
+        if (val && name.equals("btn_CL_sleep"))        { goto exit; }
     }
     if (s_state == ALARMCLOCK) {
         if (val && name.equals("clk_AC_red"))          { goto exit; }
@@ -4183,7 +4185,7 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
         if (name.equals("btn_RA_player"))   { changeState(PLAYER, 0);     if(s_f_ok_from_ir) { s_ir_btn_select = 0; set_ir_pos_PL(0); } goto exit; }
         if (name.equals("btn_RA_dlna"))     { changeState(DLNA, 0);       if(s_f_ok_from_ir) { s_ir_btn_select = 0; set_ir_pos_DL(0); } goto exit; }
         if (name.equals("btn_RA_clock"))    { changeState(CLOCK, 0);                                                                    goto exit; }
-        if (name.equals("btn_RA_sleep"))    { changeState(SLEEPTIMER, 0); if(s_f_ok_from_ir) { s_ir_btn_select = 0; set_ir_pos_SL(0); } goto exit; }
+        if (name.equals("btn_RA_weather"))  { changeState(SLEEPTIMER, 0); if(s_f_ok_from_ir) { s_ir_btn_select = 0; set_ir_pos_SL(0); } goto exit; }
         if (name.equals("btn_RA_settings")) { changeState(SETTINGS, 0);   if(s_f_ok_from_ir) { s_ir_btn_select = 0; set_ir_pos_SE(0); } goto exit; }
         if (name.equals("btn_RA_equal"))    { changeState(EQUALIZER, 0);  if(s_f_ok_from_ir) { s_ir_btn_select = 0; set_ir_pos_EQ(0); } goto exit; }
         if (name.equals("btn_RA_bt"))       { changeState(BLUETOOTH, 0);  if(s_f_ok_from_ir) { s_ir_btn_select = 0; set_ir_pos_BT(0); } goto exit; }
@@ -4270,6 +4272,7 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
     }
     if (s_state == CLOCK) {
         if (name.equals("btn_CL_mute"))     { muteChanged(btn_CL_mute.getValue()); if(s_ir_btn_select == 2) set_ir_pos_CL(2); goto exit; }
+        if (name.equals("btn_CL_sleep"))    { changeState(SLEEPTIMER, 0); if(s_f_ok_from_ir) { s_ir_btn_select = 0; set_ir_pos_SL(0); } goto exit; }
         if (name.equals("btn_CL_alarm"))    { changeState(ALARMCLOCK, 0); if(s_f_ok_from_ir) { s_ir_btn_select = 0; set_ir_pos_AC(0); } goto exit; }
         if (name.equals("btn_CL_radio"))    { changeState(RADIO, 0); goto exit; }
         if (name.equals("clk_CL_24"))       { changeState(CLOCK, 0); goto exit; }
