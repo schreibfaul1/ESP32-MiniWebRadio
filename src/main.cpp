@@ -74,6 +74,7 @@ bool s_f_100ms = false;
 bool s_f_1sec = false;
 bool s_f_10sec = false;
 bool s_f_1min = false;
+bool s_f_1h = false;
 bool s_f_mute = false;
 bool s_f_muteIsPressed = false;
 bool s_f_recording = false;
@@ -397,13 +398,16 @@ void updateSettings() {
  *****************************************************************************************************************************************************/
 
 void timer100ms() {
-    static uint16_t ms100 = 0;
+    static uint32_t tick = 0;
     s_f_100ms = true;
-    ms100++;
-    if (!(ms100 % 10)) { s_f_1sec = true; }
-    if (!(ms100 % 100)) s_f_10sec = true;
-    if (!(ms100 % 600)) { s_f_1min = true; }
-    if (ms100 == 60000) { ms100 = 0; }
+    tick++;
+    if (tick % 10 == 0) s_f_1sec = true;
+    if (tick % 100 == 0) s_f_10sec = true;
+    if (tick % 600 == 0) s_f_1min = true;
+    if (tick == 36000) {
+        s_f_1h = true;
+        tick = 0;
+    }
 }
 
 /*****************************************************************************************************************************************************
@@ -2056,7 +2060,7 @@ void loop() {
     if (s_start_counter == 30) { ArduinoOTA.begin(); }
     if (s_start_counter == 40) { ftpSrv.begin(SD_MMC, FTP_USERNAME, FTP_PASSWORD); }
     if (s_start_counter == 50) { setRTC(s_TZString); }
-    if (s_start_counter == 60) { meteo.send_request("");}
+    if (s_start_counter == 60) { meteo.send_request(); }
     if (s_start_counter == 70) { setStation(s_cur_station); }
     if (s_start_counter == 80) { changeState(RADIO, 0); }
     if (s_start_counter == 90) { dlna.seekServer(); }
@@ -2379,6 +2383,12 @@ void loop() {
         // }
     }
 
+    if (s_f_1h == true) { // calls every hour
+        s_f_1h = false;
+        printfln(s_tag.meteo_info, ANSI_ESC_GREEN "Update Meteo");
+        meteo.send_request();
+    }
+
     //-------------------------------------------------DEBUG / WIFI_SETTINGS ----------------------------------------------------------------------------------
     if (Serial.available()) { // input: serial terminal
 
@@ -2421,11 +2431,11 @@ void loop() {
             printfln(s_tag.terminal, "inBuffer free   {} bytes", (long unsigned)audio.inBufferFree());
         }
         if (r.starts_with("st")) { // testtext for streamtitle
-            if (r[2] == '0') s_streamTitle = "A Ё Ю";
-            if (r[2] == '1') s_streamTitle = "A B C D E F G";
-            if (r[2] == '2') s_streamTitle = "A B C D E F G H I";
-            if (r[2] == '3') s_streamTitle = "A B C D E F G H I J K L";
-            if (r[2] == '4') s_streamTitle = "A B C D E F G H I J K J M Q O";
+            if (r[2] == '0') s_streamTitle = "We’re Going To Ibiza";
+            if (r[2] == '1') s_streamTitle = "Á á É é Í í Ó ó Ő ő Ú ú Ű ű";
+            if (r[2] == '2') s_streamTitle = "Č č Ć ć Š š Ž ž Đ đ Ł ł Ń ń Ś ś Ź ź Ż ż";
+            if (r[2] == '3') s_streamTitle = "Ő ő Ű ű € – ← ’ “ ” …";
+            if (r[2] == '4') s_streamTitle = "Ă ă Â â Î î Ș ș Ț ț Ş ş Ţ ţ Ş ş Ţ ţ";
             if (r[2] == '5') s_streamTitle = "A B C D E F G H I K L J M y O P Q R";
             if (r[2] == '6')
                 s_streamTitle = "A B C D E F G H I K L J M g O P Q R S T V A B C D E F G H I K L J M p O P Q R S T U V W K J Q p O P Q R S T U V W K J Q A B C D E F G H I K L J M p O P Q R S T "
@@ -2549,11 +2559,7 @@ void loop() {
             printfln(s_tag.terminal, "set volume fading speed {}, current: {}", t, audio.settings.VOL_FADING_SPEED);
             audio.settings.VOL_FADING_SPEED = t;
         }
-        if (r.starts_with("meteo")) {
-
-
-            meteo.protocol();
-        }
+        if (r.starts_with("meteo")) { meteo.protocol(); }
     }
 }
 

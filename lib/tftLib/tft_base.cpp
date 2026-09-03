@@ -3059,6 +3059,20 @@ void TFT_Base::txtToToken(const char* p) {
                 p += ch.length;
                 continue;
             }
+            if (cp == 0x201E) { // Double Low-9 Quotation Mark
+                cp = 0x0084;    // „ --> „
+                m_token.emplace_back(TokenType::Glyph, cp);
+                p += ch.length;
+                MWR_LOG_INFO("character U+201E replaced by U+0084");
+                continue;
+            }
+            if (cp == 0x201C) { // Left Double Quotation Mark
+                cp = 0x0022;    // " --> "
+                m_token.emplace_back(TokenType::Glyph, cp);
+                p += ch.length;
+                MWR_LOG_INFO("character U+201C replaced by U+0022");
+                continue;
+            }
             MWR_LOG_WARN("character U+{:04X} outside font", cp);
             cp = 0x20;
         } else if (m_current_font.lookup_table[cp] == 0xFFFF) {
