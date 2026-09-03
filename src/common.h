@@ -202,6 +202,7 @@ enum {
     RINGING = 15,
     WIFI_SETTINGS = 16,
     SLEEP = 17,
+    WEATHER = 18,
 };
 
 struct status_items {
@@ -211,7 +212,7 @@ struct status_items {
     uint16_t     headline_color2;
 };
 
-status_items statusItems[19] = {
+status_items statusItems[20] = {
     {"NONE", "", TFT_BLACK, TFT_BLACK},
     {"RADIO", "Internet Radio", TFT_RED, TFT_BLACK},
     {"PLAYER", "Audio Player", TFT_DARKGREEN, TFT_BLACK},
@@ -230,6 +231,7 @@ status_items statusItems[19] = {
     {"RINGING", "Ringing", TFT_BLACK, TFT_BLACK},
     {"WIFI_SETTINGS", "WiFi Settings", TFT_BLACK, TFT_BLACK},
     {"SLEEP", "", TFT_BLACK, TFT_BLACK},
+    {"WEATHER", "Weather Clock", TFT_DARKORCHID, TFT_BLACK},
     {"UNDEFINED", "", TFT_BLACK, TFT_BLACK},
 };
 

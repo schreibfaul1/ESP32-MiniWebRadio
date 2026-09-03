@@ -86,6 +86,7 @@ extern __attribute__((weak)) void tft_info(const char*);
 #define TFT_ORANGE          0xFD20 // 255, 165,   0
 #define TFT_LIGHTORANGE     0xFDB8 // 255, 200, 124
 #define TFT_DARKORANGE      0xFC00 // 255, 140,   0
+#define TFT_DARKORCHID      0x9999 // 153,  50, 204
 #define TFT_PINK            0xFE19 // 255, 192, 203
 #define TFT_PURPLE          0x780F // 128,   0, 128
 #define TFT_SANDYBROWN      0xF52C // 244, 164,  96
