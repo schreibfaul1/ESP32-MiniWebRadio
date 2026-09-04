@@ -231,7 +231,7 @@ status_items statusItems[20] = {
     {"RINGING", "Ringing", TFT_BLACK, TFT_BLACK},
     {"WIFI_SETTINGS", "WiFi Settings", TFT_BLACK, TFT_BLACK},
     {"SLEEP", "", TFT_BLACK, TFT_BLACK},
-    {"WEATHER", "Weather Clock", TFT_DARKORCHID, TFT_BLACK},
+    {"WEATHER", "Weather Clock", TFT_BLACK, TFT_DARKBROWN},
     {"UNDEFINED", "", TFT_BLACK, TFT_BLACK},
 };
 
