@@ -123,6 +123,7 @@ int8_t   s_subState = UNDEFINED;
 int8_t   s_subState_radio = UNDEFINED;
 int8_t   s_subState_player = UNDEFINED;
 int8_t   s_subState_clock = UNDEFINED;
+int8_t   s_subState_weather = UNDEFINED;
 int8_t   s_ir_btn_select = UNDEFINED; // IR menue item
 int8_t   s_currDLNAsrvNr = -1;
 int8_t   s_alarmSubMenue = -1;
@@ -2011,8 +2012,19 @@ void changeState(int8_t state, int8_t subState) {
             }
             break;
 
-        case WEATHER:
+        case WEATHER:{
+            cls_weather.show();
+            if (subState == 0) {
+                btn_WR_alarm.hide(); btn_WR_sleep.hide(); btn_WR_radio.hide(); btn_WR_mute.hide(); btn_WR_off.hide(); sdr_WR_volume.hide();
+            }
+            if (subState == 1) {
+                setTimeCounter(2);
+                sdr_WR_volume.show();
+                btn_WR_mute.show(); btn_WR_alarm.show(); btn_WR_radio.show(); btn_CL_off.show(); btn_WR_sleep.show();
+            }
+            s_subState_weather = subState;
             break;
+        }
     }
     s_ir_btn_select = UNDEFINED;
     s_state = state;
