@@ -2898,6 +2898,13 @@ void ir_short_key(int8_t key) {
             if (s_state == BLUETOOTH) { // scroll forward (bright, equal, radio)
                 set_ir_pos_BT(IR_RIGHT);
             }
+            if (s_state == WEATHER) {
+                if (s_subState_weather == 1) { // scroll backward (alarm, radio, mute, off)
+                    set_ir_pos_WR(IR_RIGHT); // scroll right
+                    setTimeCounter(2);
+                }
+                return;
+            }
             break;
         case 12: // ARROW LEFT  ----------------------------------------------------------------------------------------------------------------------
             if (s_state == RADIO) {
@@ -2968,6 +2975,13 @@ void ir_short_key(int8_t key) {
             }
             if (s_state == BLUETOOTH) { // scroll forward (bright, equal, radio)
                 set_ir_pos_BT(IR_LEFT);
+            }
+            if (s_state == WEATHER) {
+                if (s_subState_weather == 1) { // scroll backward (alarm, radio, mute, off)
+                    set_ir_pos_WR(IR_LEFT);
+                    setTimeCounter(2);
+                    return;
+                }
             }
             break;
         case 13: // ARROW DOWN  ----------------------------------------------------------------------------------------------------------------------
@@ -3255,6 +3269,22 @@ void ir_short_key(int8_t key) {
                     if (s_ir_btn_select == 5) { btn_BT_power.click(); }
                     if(s_ir_btn_select == -1) { s_ir_btn_select = 0; set_ir_pos_BT(0); }
                     break;
+            }
+            if (s_state == WEATHER) {
+                if (s_subState_weather == 0) {
+                    changeState(WEATHER, 1);
+                    setTimeCounter(2);
+                    if(s_ir_btn_select == -1){ s_ir_btn_select = 0; set_ir_pos_WR(0); }
+                    break;
+                }
+                if (s_subState_weather == 1) {
+                    if (s_ir_btn_select == 0) { btn_WR_alarm.click(); }
+                    if (s_ir_btn_select == 1) { btn_WR_sleep.click(); }
+                    if (s_ir_btn_select == 2) { btn_WR_radio.click(); }
+                    if (s_ir_btn_select == 3) { btn_WR_mute.click(); }
+                    if (s_ir_btn_select == 4) { btn_WR_off.click(); }
+                }
+                break;
             }
             break;
         case 18: // PAUSE/RESUME  --------------------------------------------------------------------------------------------------------------------
