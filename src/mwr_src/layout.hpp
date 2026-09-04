@@ -600,7 +600,7 @@ Button       btn_WR_sleep("btn_WR_sleep", ButtonType::PushButton);
 Button       btn_WR_radio("btn_WR_radio", ButtonType::PushButton);
 Button       btn_WR_mute("btn_WRL_mute", ButtonType::ToggleButton);
 Button       btn_WR_off("btn_WR_off", ButtonType::PushButton);
-WeatherClock cls_weather("WeatherClock");
+WeatherClock cls_weather("cls_weather");
 Slider       sdr_WR_volume("sdr_WR_volume");
 
 // ALL_STATE
@@ -862,6 +862,7 @@ void placingGraphicObjects() { // and initialize them
     cls_wifiSettings.begin(layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, layout.winWoHF.pl, layout.winWoHF.pr, layout.winWoHF.pt, layout.winWoHF.pb);
     // WEATHER_CLOCK -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     cls_weather.begin(layout.winDigits.x, layout.winDigits.y, layout.winDigits.w, layout.winDigits.h);
+    cls_weather.set_bg_color(TFT_BLACK);
     btn_WR_alarm.begin(0 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_WR_alarm.setPicturePath("/btn/Button_Bell");
     btn_WR_alarm.set_bg_color(TFT_BLACK);
@@ -1207,6 +1208,35 @@ next:
         case 3: res = btn_BT_mode.set_focus(true); break;
         case 4: res = btn_BT_radio.set_focus(true); break;
         case 5: res = btn_BT_power.set_focus(true); break;
+    }
+    if (i == 2) return;
+    if (res == false) goto next;
+}
+
+//-------------------------------------------------------------------------------------
+void set_ir_pos_WR(int lr) { // CLOCK   -100 left, +100 right, -127 reset
+    uint8_t i = 0;
+    if (s_ir_btn_select == -1) return;
+    if (s_ir_btn_select == 5) return;
+    defocusAllObjects();
+next:
+    i++;
+    if (lr == IR_LEFT) {
+        s_ir_btn_select--;
+        if (s_ir_btn_select == -1) s_ir_btn_select = 4;
+    }
+    if (lr == IR_RIGHT) {
+        s_ir_btn_select++;
+        if (s_ir_btn_select == 5) s_ir_btn_select = 0;
+    }
+    if (lr == IR_RESET) return;
+    bool res = false;
+    switch (s_ir_btn_select) {
+        case 0: res = btn_WR_alarm.set_focus(true); break;
+        case 1: res = btn_WR_sleep.set_focus(true); break;
+        case 2: res = btn_WR_radio.set_focus(true); break;
+        case 3: res = btn_WR_mute.set_focus(true); break;
+        case 4: res = btn_WR_off.set_focus(true); break;
     }
     if (i == 2) return;
     if (res == false) goto next;
