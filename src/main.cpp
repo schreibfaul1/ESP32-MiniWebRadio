@@ -1025,6 +1025,7 @@ void setup() {
     dlna.dlna_client_callbak(on_dlna_client);   // dlna callback
     bt_emitter.kcx_bt_emitter_callback(on_kcx_bt_emitter);
     webSrv.websrv_callbak(on_websrv);
+    meteo.meteo_callback(on_meteo);
     esp_log_level_set("*", ESP_LOG_DEBUG);
     esp_log_set_vprintf(log_redirect_handler);
     if (!get_esp_items(&s_resetReason, &s_f_FFatFound)) return;
@@ -2406,8 +2407,8 @@ void loop() {
 
     if (s_f_1h == true) { // calls every hour
         s_f_1h = false;
-        printfln(s_tag.meteo_info, ANSI_ESC_GREEN "Update Meteo");
         meteo.send_request();
+        printfln(s_tag.meteo_info, ANSI_ESC_GREEN "Update Meteo");
     }
 
     //-------------------------------------------------DEBUG / WIFI_SETTINGS ----------------------------------------------------------------------------------
@@ -2580,7 +2581,8 @@ void loop() {
             printfln(s_tag.terminal, "set volume fading speed {}, current: {}", t, audio.settings.VOL_FADING_SPEED);
             audio.settings.VOL_FADING_SPEED = t;
         }
-        if (r.starts_with("meteo")) { meteo.protocol(); }
+        if (r.starts_with("meteor")) { meteo.send_request(); }
+        if (r.starts_with("meteop")) { meteo.protocol(); }
     }
 }
 
@@ -3737,6 +3739,11 @@ void on_dlna_client(const DLNA_Client::msg_s& msg) {
         s_dlnaMaXServers = msg.server->size();
         printfln(s_tag.dlna_server, ANSI_ESC_CYAN "{}" ANSI_ESC_RESET " media server found", msg.server->size());
     }
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//  Events from METEO
+void on_meteo(const METEO::msg_s& msg) {
+    MWR_LOG_INFO("sunrise {}:{}", msg.daily[0].sunrise.hour, msg.daily[0].sunrise.minute);
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg) {

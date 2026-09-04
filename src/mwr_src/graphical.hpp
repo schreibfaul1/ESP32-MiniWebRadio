@@ -6748,10 +6748,38 @@ class MessageBox : public RegisterTable {
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class WeatherClock : public RegisterTable { // draw a clock in 24h format
   private:
-    int16_t     m_x = 0;
-    int16_t     m_y = 0;
-    int16_t     m_w = 0;
-    int16_t     m_h = 0;
+    //------------------------------------------------------------------------------------------------------------------------------------------------
+#ifdef TFT_LAYOUT_S // 320 x 240px
+
+    struct w_i { // Weather code icon
+        uint16_t w = 96;
+        uint16_t h = 96;
+    } const s_Icon; // icon 96 x 96 px
+
+#elifdef TFT_LAYOUT_M // 480 x 320px
+    struct w_i { // Weather code icon
+        uint16_t w = 128;
+        uint16_t h = 128;
+    } const s_Icon; // icon 128 x 128 px
+
+#elifdef TFT_LAYOUT_L // 800 x 480px
+    struct w_i { // Weather code icon
+        uint16_t w = 184;
+        uint16_t h = 184;
+    } const s_Icon; // icon 184 x 184 px
+
+#elifdef TFT_LAYOUT_XL // 1024 x 600px
+    struct w_i { // Weather code icon
+        uint16_t w = 232;
+        uint16_t h = 232;
+    } const s_Icon; // icon 232 x 232 px
+#endif
+
+    PictureBox* pic_weather_code = new PictureBox("pic_weather_code");     // digits hour   * 10
+    int16_t m_x = 0;
+    int16_t m_y = 0;
+    int16_t m_w = 0;
+    int16_t m_h = 0;
 
     int32_t      m_bg_color = TFT_TRANSPARENT;
     bool         m_enabled = false;
@@ -6760,6 +6788,7 @@ class WeatherClock : public RegisterTable { // draw a clock in 24h format
     bool         m_clicked = false;
     bool         m_state = false;
     bool         m_showAll = false;
+    bool         m_first_call = true;
     ps_ptr<char> m_name;
     ps_ptr<char> m_pathBuff;
     uint8_t      m_min = 0, m_hour = 0, m_weekday = 0;
@@ -6774,7 +6803,7 @@ class WeatherClock : public RegisterTable { // draw a clock in 24h format
         m_state = false;
     }
     ~WeatherClock() {
-;
+        delete pic_weather_code;
     }
 
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
@@ -6796,16 +6825,32 @@ class WeatherClock : public RegisterTable { // draw a clock in 24h format
     bool         set_focus(bool focus) { return false; }
 
     void show(bool inactive = false) {
+        if (m_first_call) m_first_call = false;
+        if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+        }
         m_clicked = false;
         if (inactive) {
             //    setInactive();
             return;
         }
+        pic_weather_code->begin(m_x, m_y, s_Icon.w, s_Icon.h);
+        pic_weather_code->setPicturePath("/meteo//2.png");
+        pic_weather_code->show();
         m_enabled = true;
         m_showAll = true;
     }
 
     void hide() {
+        if (m_first_call) return;
+        if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+        }
+        m_enabled = false;
         disable_all();
     }
 
@@ -6816,7 +6861,7 @@ class WeatherClock : public RegisterTable { // draw a clock in 24h format
         h = m_h;
     }
 
-     bool positionXY(uint16_t x, uint16_t y) {
+    bool positionXY(uint16_t x, uint16_t y) {
         if (!m_enabled) return false;
         if (x < m_x) return false;
         if (y < m_y) return false;
@@ -6836,13 +6881,9 @@ class WeatherClock : public RegisterTable { // draw a clock in 24h format
     }
 
   private:
-    void enable_all() {
-        m_enabled = true;
-    }
+    void enable_all() { m_enabled = true; }
 
-    void disable_all() {
-        m_enabled = false;
-    }
+    void disable_all() { m_enabled = false; }
 
   private:
     void set_bg_color_all(int32_t color) {

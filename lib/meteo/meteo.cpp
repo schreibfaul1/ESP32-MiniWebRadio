@@ -279,6 +279,9 @@ bool METEO::readContent() {
     if (parseForecast(buff)) {
         log_d("Hourly entries: %u", m_hourly.size());
         log_d("Daily entries : %u", m_daily.size());
+
+        msg_s msg{m_hourly, m_daily};
+        if (m_meteo_callback) { m_meteo_callback(msg); }
     }
 
     m_status = IDLE;
