@@ -3743,7 +3743,7 @@ void on_dlna_client(const DLNA_Client::msg_s& msg) {
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 //  Events from METEO
 void on_meteo(const METEO::msg_s& msg) {
-    MWR_LOG_INFO("sunrise {}:{}", msg.daily[0].sunrise.hour, msg.daily[0].sunrise.minute);
+    cls_weather.update(msg.hourly, msg.daily);
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg) {

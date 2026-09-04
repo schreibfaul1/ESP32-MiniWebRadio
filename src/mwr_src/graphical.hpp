@@ -6880,6 +6880,10 @@ class WeatherClock : public RegisterTable { // draw a clock in 24h format
         return true;
     }
 
+    void update(const std::vector<METEO::METEO_HOURLY>& hourly, const std::vector<METEO::METEO_DAILY>& daily){
+        log_i("sunrise %u:%02u", daily[0].sunrise.hour, daily[0].sunrise.minute);
+    }
+
   private:
     void enable_all() { m_enabled = true; }
 
