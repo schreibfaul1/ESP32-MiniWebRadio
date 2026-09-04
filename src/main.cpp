@@ -1394,6 +1394,7 @@ uint8_t downvolume() {
     sdr_DL_volume.setValue(s_volume.cur_volume);
     sdr_PL_volume.setValue(s_volume.cur_volume);
     sdr_RA_volume.setValue(s_volume.cur_volume);
+    sdr_WR_volume.setValue(s_volume.cur_volume);
     s_f_mute = false;
     muteChanged(s_f_mute); // set mute off
     return s_volume.cur_volume;
@@ -1412,6 +1413,7 @@ uint8_t upvolume() {
     sdr_DL_volume.setValue(s_volume.cur_volume);
     sdr_PL_volume.setValue(s_volume.cur_volume);
     sdr_RA_volume.setValue(s_volume.cur_volume);
+    sdr_WR_volume.setValue(s_volume.cur_volume);
     s_f_mute = false;
     muteChanged(s_f_mute); // set mute off
     return s_volume.cur_volume;
@@ -3041,6 +3043,11 @@ void ir_short_key(int8_t key) {
                 set_ir_pos_EQ(IR_DOWN);
                 break;
             }
+            if (s_state == WEATHER) {
+                downvolume();
+                setTimeCounter(2);
+                break;
+            }
             break;
         case 14: // ARROW UP  ------------------------------------------------------------------------------------------------------------------------
             if (s_state == RADIO) {
@@ -3098,6 +3105,11 @@ void ir_short_key(int8_t key) {
                 set_ir_pos_EQ(IR_UP);
                 return;
             }
+            if (s_state == WEATHER) {
+                upvolume();
+                setTimeCounter(2);
+                break;
+            } // VOLUME++
             break;
         case 15: // MODE  ----------------------------------------------------------------------------------------------------------------------------
             if (s_state == SLEEPTIMER) {
