@@ -3696,7 +3696,7 @@ class ImgClock24small : public RegisterTable { // draw a clock in 24h format
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class AlarmClock : public RegisterTable { // draw a clock in 12 or 24h format
+class AlarmClock : public RegisterTable { // draw a clock in 24h format
   private:
     PictureBox* pic_alarm_digitsH10 = new PictureBox("alarm_digitsH10");     // digits hour   * 10
     PictureBox* pic_alarm_digitsH01 = new PictureBox("alarm_digitsH01");     // digits hour   * 01
@@ -6746,3 +6746,108 @@ class MessageBox : public RegisterTable {
     }
 };
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class WeatherClock : public RegisterTable { // draw a clock in 24h format
+  private:
+    int16_t     m_x = 0;
+    int16_t     m_y = 0;
+    int16_t     m_w = 0;
+    int16_t     m_h = 0;
+
+    int32_t      m_bg_color = TFT_TRANSPARENT;
+    bool         m_enabled = false;
+    bool         m_active = true;
+    bool         m_focus = false;
+    bool         m_clicked = false;
+    bool         m_state = false;
+    bool         m_showAll = false;
+    ps_ptr<char> m_name;
+    ps_ptr<char> m_pathBuff;
+    uint8_t      m_min = 0, m_hour = 0, m_weekday = 0;
+    releasedArg  m_ra;
+
+  public:
+    WeatherClock(ps_ptr<char> name) {
+        register_object(this);
+        m_name = name;
+        m_enabled = false;
+        m_clicked = false;
+        m_state = false;
+    }
+    ~WeatherClock() {
+;
+    }
+
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
+        m_x = x; // x pos
+        m_y = y; // y pos
+        m_w = w; // width
+        m_h = h; // high
+        m_enabled = false;
+    }
+
+    ps_ptr<char> get_name() { return m_name; }
+    void         enable() { enable_all(); }
+    void         disable() { disable_all(); }
+    bool         is_enabled() { return m_enabled; }
+    bool         is_active() { return m_active; }
+    void         set_active(bool active) { m_active = active; }
+    bool         has_focus() { return m_focus; }
+    void         set_bg_color(int32_t color) { set_bg_color_all(color); }
+    bool         set_focus(bool focus) { return false; }
+
+    void show(bool inactive = false) {
+        m_clicked = false;
+        if (inactive) {
+            //    setInactive();
+            return;
+        }
+        m_enabled = true;
+        m_showAll = true;
+    }
+
+    void hide() {
+        disable_all();
+    }
+
+    void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
+        x = m_x;
+        y = m_y;
+        w = m_w;
+        h = m_h;
+    }
+
+     bool positionXY(uint16_t x, uint16_t y) {
+        if (!m_enabled) return false;
+        if (x < m_x) return false;
+        if (y < m_y) return false;
+        if (x > m_x + m_w) return false;
+        if (y > m_y + m_h) return false;
+        if (m_enabled) m_clicked = true;
+        if (graphicObjects_OnClick) graphicObjects_OnClick(m_name, m_enabled);
+        //    if(!m_enabled) return false;
+        return true;
+    }
+    bool released() {
+        if (!m_enabled) return false;
+        if (!m_clicked) return false;
+        if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
+        m_clicked = false;
+        return true;
+    }
+
+  private:
+    void enable_all() {
+        m_enabled = true;
+    }
+
+    void disable_all() {
+        m_enabled = false;
+    }
+
+  private:
+    void set_bg_color_all(int32_t color) {
+        if (m_bg_color == color) return;
+        m_bg_color = color;
+    }
+};
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

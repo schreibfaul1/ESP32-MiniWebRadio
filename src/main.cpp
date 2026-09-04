@@ -3863,7 +3863,7 @@ void tp_pressed(uint16_t x, uint16_t y) {
             goto exit;
         }
         if(objName == "pic_RA_logo") {
-            MWR_LOG_WARN("weather");
+            changeState(RADIO, s_subState_radio + 1 == 3 ? 0 : s_subState_radio + 1);
             goto exit;
         }
     }

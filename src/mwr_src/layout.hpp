@@ -442,7 +442,8 @@ inline Layout makeLayout() {
 #else
     printf() "Unsupported TFT_LAYOUT\n"
 #endif
-    return {winHeader, winLogo, winName, winProgbar, winArea1, winArea2, winSTitle, winVUmeter, winSpectrum, winFooter, winButton, winDigits, winWoHF, sdrHP, sdrBP, sdrLP, sdrBAL, btnHP, btnBP, btnLP, btnBAL, txtHP, txtBP, txtLP, txtBAL};
+    return {winHeader, winLogo, winName, winProgbar, winArea1, winArea2, winSTitle, winVUmeter, winSpectrum, winFooter, winButton, winDigits, winWoHF,
+            sdrHP,     sdrBP,   sdrLP,   sdrBAL,     btnHP,    btnBP,    btnLP,     btnBAL,     txtHP,       txtBP,     txtLP,     txtBAL};
 }
 
 // global constant - finished initialized
@@ -593,6 +594,15 @@ Textbox    txt_BT_mode("txt_BT_mode");
 Button btn_IR_radio("btn_IR_radio", ButtonType::PushButton);
 // WIFI_SETTINGS
 WifiSettings cls_wifiSettings("wifiSettings", 2);
+// WEATHER_CLOCK
+Button       btn_WR_alarm("btn_WR_alarm", ButtonType::PushButton);
+Button       btn_WR_sleep("btn_WR_sleep", ButtonType::PushButton);
+Button       btn_WR_radio("btn_WR_radio", ButtonType::PushButton);
+Button       btn_WR_mute("btn_WRL_mute", ButtonType::ToggleButton);
+Button       btn_WR_off("btn_WR_off", ButtonType::PushButton);
+WeatherClock cls_weather("WeatherClock");
+Slider       sdr_WR_volume("sdr_WR_volume");
+
 // ALL_STATE
 MessageBox msg_box("messagebox");
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -657,7 +667,8 @@ void placingGraphicObjects() { // and initialize them
     btn_PL_pause.setValue(false);
     btn_PL_cancel.begin(2 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_PL_cancel.setPicturePath("/btn/Button_Cancel");
-    sdr_PL_volume.begin(5 * layout.winButton.w + 10, layout.winButton.y, displayConfig.dispWidth - (5 * layout.winButton.w + 20), layout.winButton.h, layout.winButton.pl, layout.winButton.pr, layout.winButton.pt, layout.winButton.pb);
+    sdr_PL_volume.begin(5 * layout.winButton.w + 10, layout.winButton.y, displayConfig.dispWidth - (5 * layout.winButton.w + 20), layout.winButton.h, layout.winButton.pl, layout.winButton.pr,
+                        layout.winButton.pt, layout.winButton.pb);
     btn_PL_showPrevFile.begin(0 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_PL_showPrevFile.setPicturePath("/btn/Button_Left");
     btn_PL_showNextFile.begin(1 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
@@ -682,7 +693,8 @@ void placingGraphicObjects() { // and initialize them
     txt_PL_fName.setAlign(HAlign::Left, VAlign::Middle);
     txt_PL_fName.setFontSize(0); // 0 -> auto
     pic_PL_logo.begin(layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h, layout.winLogo.pl, layout.winLogo.pr, layout.winLogo.pt, layout.winLogo.pb);
-    pgb_PL_progress.begin(layout.winProgbar.x, layout.winProgbar.y, layout.winProgbar.w, layout.winProgbar.h, layout.winProgbar.pl, layout.winProgbar.pr, layout.winProgbar.pt, layout.winProgbar.pb, 0, 30);
+    pgb_PL_progress.begin(layout.winProgbar.x, layout.winProgbar.y, layout.winProgbar.w, layout.winProgbar.h, layout.winProgbar.pl, layout.winProgbar.pr, layout.winProgbar.pt, layout.winProgbar.pb, 0,
+                          30);
     pgb_PL_progress.setValue(0);
     // AUDIOFILESLIST-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     lst_PLAYER.begin(layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, displayConfig.tftSize, displayConfig.listFontSize);
@@ -699,12 +711,14 @@ void placingGraphicObjects() { // and initialize them
     btn_DL_fileList.setPicturePath("/btn/Button_List");
     btn_DL_radio.begin(4 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_DL_radio.setPicturePath("/btn/Button_Radio");
-    sdr_DL_volume.begin(5 * layout.winButton.w + 10, layout.winButton.y, displayConfig.dispWidth - (5 * layout.winButton.w + 20), layout.winButton.h, layout.winButton.pl, layout.winButton.pr, layout.winButton.pt, layout.winButton.pb);
+    sdr_DL_volume.begin(5 * layout.winButton.w + 10, layout.winButton.y, displayConfig.dispWidth - (5 * layout.winButton.w + 20), layout.winButton.h, layout.winButton.pl, layout.winButton.pr,
+                        layout.winButton.pt, layout.winButton.pb);
     txt_DL_fName.begin(layout.winName.x, layout.winName.y, layout.winName.w, layout.winName.h, layout.winName.pl, layout.winName.pr, layout.winName.pt, layout.winName.pb);
     txt_DL_fName.setAlign(HAlign::Left, VAlign::Middle);
     txt_DL_fName.setFontSize(0); // 0 -> auto)
     pic_DL_logo.begin(layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h, layout.winLogo.pl, layout.winLogo.pr, layout.winLogo.pt, layout.winLogo.pb);
-    pgb_DL_progress.begin(layout.winProgbar.x, layout.winProgbar.y, layout.winProgbar.w, layout.winProgbar.h, layout.winProgbar.pl, layout.winProgbar.pr, layout.winProgbar.pt, layout.winProgbar.pb, 0, 30);
+    pgb_DL_progress.begin(layout.winProgbar.x, layout.winProgbar.y, layout.winProgbar.w, layout.winProgbar.h, layout.winProgbar.pl, layout.winProgbar.pr, layout.winProgbar.pt, layout.winProgbar.pb, 0,
+                          30);
     pgb_DL_progress.setValue(0);
     // DLNAITEMSLIST -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     lst_DLNA.begin(layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, displayConfig.tftSize, displayConfig.listFontSize);
@@ -727,7 +741,8 @@ void placingGraphicObjects() { // and initialize them
     btn_CL_off.begin(4 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_CL_off.setPicturePath("/btn/Button_Off");
     btn_CL_off.set_bg_color(TFT_BLACK);
-    sdr_CL_volume.begin(5 * layout.winButton.w + 10, layout.winButton.y, layout.winButton.w * 3 - 10, layout.winButton.h, layout.winButton.pl, layout.winButton.pr, layout.winButton.pt, layout.winButton.pb);
+    sdr_CL_volume.begin(5 * layout.winButton.w + 10, layout.winButton.y, layout.winButton.w * 3 - 10, layout.winButton.h, layout.winButton.pl, layout.winButton.pr, layout.winButton.pt,
+                        layout.winButton.pb);
     sdr_CL_volume.set_bg_color(TFT_BLACK);
     // ALARM -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     clk_AC_red.begin(layout.winDigits.x, layout.winDigits.y, layout.winDigits.w, layout.winDigits.h);
