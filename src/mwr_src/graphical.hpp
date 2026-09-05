@@ -237,13 +237,14 @@ class Button : public RegisterTable {
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
         }
-        m_clicked = false;
         if (!m_active) {
             setInactive();
-            return;
+        } else {
+            drawImage(pic(IDLE), m_x, m_y, m_w, m_h);
         }
-        drawImage(pic(IDLE), m_x, m_y, m_w, m_h);
+        m_clicked = false;
         m_enabled = true;
+        return;
     }
 
     void hide() {
@@ -299,6 +300,7 @@ class Button : public RegisterTable {
 
     bool click() {
         if (!m_enabled) return false;
+        if (!m_active) return false;
         drawImage(pic(CLICK), m_button_image_x, m_button_image_y, m_button_image_w, m_button_image_h);
         m_clicked = true;
         if (m_type == ButtonType::ToggleButton) m_state = !m_state;
@@ -317,6 +319,7 @@ class Button : public RegisterTable {
     bool released() {
         if (!m_enabled) return false;
         if (!m_clicked) return false;
+        if (!m_active) return false;
         drawImage(pic(IDLE), m_button_image_x, m_button_image_y, m_button_image_w, m_button_image_h);
         m_clicked = false;
         if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
@@ -349,7 +352,7 @@ class Button : public RegisterTable {
 
     void setInactive() {
         drawImage(pic(INACTIVE), m_button_image_x, m_button_image_y, m_button_image_w, m_button_image_h);
-        m_enabled = false;
+        // m_enabled = false;
         m_active = false;
     }
 };
@@ -3696,7 +3699,7 @@ class ImgClock24small : public RegisterTable { // draw a clock in 24h format
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class AlarmClock : public RegisterTable { // draw a clock in 12 or 24h format
+class AlarmClock : public RegisterTable { // draw a clock in 24h format
   private:
     PictureBox* pic_alarm_digitsH10 = new PictureBox("alarm_digitsH10");     // digits hour   * 10
     PictureBox* pic_alarm_digitsH01 = new PictureBox("alarm_digitsH01");     // digits hour   * 01
@@ -6746,3 +6749,146 @@ class MessageBox : public RegisterTable {
     }
 };
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class WeatherClock : public RegisterTable { // draw a clock in 24h format
+  private:
+    //------------------------------------------------------------------------------------------------------------------------------------------------
+#ifdef TFT_LAYOUT_S // 320 x 240px
+
+    struct w_i { // Weather code icon
+        uint16_t w = 96;
+        uint16_t h = 96;
+    } const s_Icon; // icon 96 x 96 px
+
+#elifdef TFT_LAYOUT_M // 480 x 320px
+    struct w_i { // Weather code icon
+        uint16_t w = 128;
+        uint16_t h = 128;
+    } const s_Icon; // icon 128 x 128 px
+
+#elifdef TFT_LAYOUT_L // 800 x 480px
+    struct w_i { // Weather code icon
+        uint16_t w = 184;
+        uint16_t h = 184;
+    } const s_Icon; // icon 184 x 184 px
+
+#elifdef TFT_LAYOUT_XL // 1024 x 600px
+    struct w_i { // Weather code icon
+        uint16_t w = 232;
+        uint16_t h = 232;
+    } const s_Icon; // icon 232 x 232 px
+#endif
+
+    PictureBox* pic_weather_code = new PictureBox("pic_weather_code"); // digits hour   * 10
+    int16_t     m_x = 0;
+    int16_t     m_y = 0;
+    int16_t     m_w = 0;
+    int16_t     m_h = 0;
+
+    int32_t      m_bg_color = TFT_TRANSPARENT;
+    bool         m_enabled = false;
+    bool         m_active = true;
+    bool         m_focus = false;
+    bool         m_clicked = false;
+    bool         m_state = false;
+    bool         m_showAll = false;
+    bool         m_first_call = true;
+    ps_ptr<char> m_name;
+    ps_ptr<char> m_pathBuff;
+    uint8_t      m_min = 0, m_hour = 0, m_weekday = 0;
+    releasedArg  m_ra;
+
+  public:
+    WeatherClock(ps_ptr<char> name) {
+        register_object(this);
+        m_name = name;
+        m_enabled = false;
+        m_clicked = false;
+        m_state = false;
+    }
+    ~WeatherClock() { delete pic_weather_code; }
+
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
+        m_x = x; // x pos
+        m_y = y; // y pos
+        m_w = w; // width
+        m_h = h; // high
+        m_enabled = false;
+    }
+
+    ps_ptr<char> get_name() { return m_name; }
+    void         enable() { enable_all(); }
+    void         disable() { disable_all(); }
+    bool         is_enabled() { return m_enabled; }
+    bool         is_active() { return m_active; }
+    void         set_active(bool active) { m_active = active; }
+    bool         has_focus() { return m_focus; }
+    void         set_bg_color(int32_t color) { set_bg_color_all(color); }
+    bool         set_focus(bool focus) { return false; }
+
+    void show() {
+        MWR_LOG_ERROR("show ");
+        if (m_first_call) m_first_call = false;
+        if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+        }
+        m_clicked = false;
+        pic_weather_code->begin(m_x, m_y, s_Icon.w, s_Icon.h);
+        pic_weather_code->setPicturePath("/meteo//2.png");
+        pic_weather_code->show();
+        m_enabled = true;
+        m_showAll = true;
+    }
+
+    void hide() {
+        if (m_first_call) return;
+        if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+        }
+        m_enabled = false;
+        disable_all();
+    }
+
+    void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
+        x = m_x;
+        y = m_y;
+        w = m_w;
+        h = m_h;
+    }
+
+    bool positionXY(uint16_t x, uint16_t y) {
+        if (!m_enabled) return false;
+        if (x < m_x) return false;
+        if (y < m_y) return false;
+        if (x > m_x + m_w) return false;
+        if (y > m_y + m_h) return false;
+        if (m_enabled) m_clicked = true;
+        if (graphicObjects_OnClick) graphicObjects_OnClick(m_name, m_enabled);
+        //    if(!m_enabled) return false;
+        return true;
+    }
+    bool released() {
+        if (!m_enabled) return false;
+        if (!m_clicked) return false;
+        if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
+        m_clicked = false;
+        return true;
+    }
+
+    void update(const std::vector<METEO::METEO_HOURLY>& hourly, const std::vector<METEO::METEO_DAILY>& daily) { log_i("sunrise %u:%02u", daily[0].sunrise.hour, daily[0].sunrise.minute); }
+
+  private:
+    void enable_all() { m_enabled = true; }
+
+    void disable_all() { m_enabled = false; }
+
+  private:
+    void set_bg_color_all(int32_t color) {
+        if (m_bg_color == color) return;
+        m_bg_color = color;
+    }
+};
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

@@ -47,6 +47,19 @@ class METEO {
         float     windSpeedMax;
     };
 
+    // callbacks ---------------------------------------------------------
+  public:
+    struct msg_s {
+        const std::vector<METEO_HOURLY>& hourly;
+        const std::vector<METEO_DAILY>&  daily;
+    };
+    using BrowseCallback = std::function<void(const msg_s&)>;
+    void meteo_callback(BrowseCallback cb) { m_meteo_callback = std::move(cb); }
+
+  private:
+    BrowseCallback m_meteo_callback;
+    // -------------------------------------------------------------------
+
   public:
     METEO();
     ~METEO();

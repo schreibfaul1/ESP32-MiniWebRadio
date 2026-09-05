@@ -202,6 +202,7 @@ enum {
     RINGING = 15,
     WIFI_SETTINGS = 16,
     SLEEP = 17,
+    WEATHER = 18,
 };
 
 struct status_items {
@@ -211,7 +212,7 @@ struct status_items {
     uint16_t     headline_color2;
 };
 
-status_items statusItems[19] = {
+status_items statusItems[20] = {
     {"NONE", "", TFT_BLACK, TFT_BLACK},
     {"RADIO", "Internet Radio", TFT_RED, TFT_BLACK},
     {"PLAYER", "Audio Player", TFT_DARKGREEN, TFT_BLACK},
@@ -230,6 +231,7 @@ status_items statusItems[19] = {
     {"RINGING", "Ringing", TFT_BLACK, TFT_BLACK},
     {"WIFI_SETTINGS", "WiFi Settings", TFT_BLACK, TFT_BLACK},
     {"SLEEP", "", TFT_BLACK, TFT_BLACK},
+    {"WEATHER", "Weather Clock", TFT_BLACK, TFT_DARKBROWN},
     {"UNDEFINED", "", TFT_BLACK, TFT_BLACK},
 };
 
@@ -485,6 +487,7 @@ void         my_audio_info(Audio::msg_t m);
 void         on_dlna_client(const DLNA_Client::msg_s& msg);
 void         on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg);
 void         on_websrv(const WebSrv::msg_s& msg);
+void         on_meteo(const METEO::msg_s& msg);
 void         tp_pressed(uint16_t x, uint16_t y);
 void         tp_long_pressed(uint16_t x, uint16_t y);
 void         tp_moved(uint16_t x, uint16_t y);
