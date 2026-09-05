@@ -237,13 +237,14 @@ class Button : public RegisterTable {
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
         }
-        m_clicked = false;
         if (!m_active) {
             setInactive();
-            return;
+        } else {
+            drawImage(pic(IDLE), m_x, m_y, m_w, m_h);
         }
-        drawImage(pic(IDLE), m_x, m_y, m_w, m_h);
+        m_clicked = false;
         m_enabled = true;
+        return;
     }
 
     void hide() {
@@ -299,6 +300,7 @@ class Button : public RegisterTable {
 
     bool click() {
         if (!m_enabled) return false;
+        if (!m_active) return false;
         drawImage(pic(CLICK), m_button_image_x, m_button_image_y, m_button_image_w, m_button_image_h);
         m_clicked = true;
         if (m_type == ButtonType::ToggleButton) m_state = !m_state;
@@ -317,6 +319,7 @@ class Button : public RegisterTable {
     bool released() {
         if (!m_enabled) return false;
         if (!m_clicked) return false;
+        if (!m_active) return false;
         drawImage(pic(IDLE), m_button_image_x, m_button_image_y, m_button_image_w, m_button_image_h);
         m_clicked = false;
         if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
@@ -349,7 +352,7 @@ class Button : public RegisterTable {
 
     void setInactive() {
         drawImage(pic(INACTIVE), m_button_image_x, m_button_image_y, m_button_image_w, m_button_image_h);
-        m_enabled = false;
+        // m_enabled = false;
         m_active = false;
     }
 };
@@ -6775,11 +6778,11 @@ class WeatherClock : public RegisterTable { // draw a clock in 24h format
     } const s_Icon; // icon 232 x 232 px
 #endif
 
-    PictureBox* pic_weather_code = new PictureBox("pic_weather_code");     // digits hour   * 10
-    int16_t m_x = 0;
-    int16_t m_y = 0;
-    int16_t m_w = 0;
-    int16_t m_h = 0;
+    PictureBox* pic_weather_code = new PictureBox("pic_weather_code"); // digits hour   * 10
+    int16_t     m_x = 0;
+    int16_t     m_y = 0;
+    int16_t     m_w = 0;
+    int16_t     m_h = 0;
 
     int32_t      m_bg_color = TFT_TRANSPARENT;
     bool         m_enabled = false;
@@ -6802,9 +6805,7 @@ class WeatherClock : public RegisterTable { // draw a clock in 24h format
         m_clicked = false;
         m_state = false;
     }
-    ~WeatherClock() {
-        delete pic_weather_code;
-    }
+    ~WeatherClock() { delete pic_weather_code; }
 
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
         m_x = x; // x pos
@@ -6824,7 +6825,8 @@ class WeatherClock : public RegisterTable { // draw a clock in 24h format
     void         set_bg_color(int32_t color) { set_bg_color_all(color); }
     bool         set_focus(bool focus) { return false; }
 
-    void show(bool inactive = false) {
+    void show() {
+        MWR_LOG_ERROR("show ");
         if (m_first_call) m_first_call = false;
         if (m_bg_color == TFT_TRANSPARENT) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
@@ -6832,10 +6834,6 @@ class WeatherClock : public RegisterTable { // draw a clock in 24h format
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
         }
         m_clicked = false;
-        if (inactive) {
-            //    setInactive();
-            return;
-        }
         pic_weather_code->begin(m_x, m_y, s_Icon.w, s_Icon.h);
         pic_weather_code->setPicturePath("/meteo//2.png");
         pic_weather_code->show();
@@ -6880,9 +6878,7 @@ class WeatherClock : public RegisterTable { // draw a clock in 24h format
         return true;
     }
 
-    void update(const std::vector<METEO::METEO_HOURLY>& hourly, const std::vector<METEO::METEO_DAILY>& daily){
-        log_i("sunrise %u:%02u", daily[0].sunrise.hour, daily[0].sunrise.minute);
-    }
+    void update(const std::vector<METEO::METEO_HOURLY>& hourly, const std::vector<METEO::METEO_DAILY>& daily) { log_i("sunrise %u:%02u", daily[0].sunrise.hour, daily[0].sunrise.minute); }
 
   private:
     void enable_all() { m_enabled = true; }

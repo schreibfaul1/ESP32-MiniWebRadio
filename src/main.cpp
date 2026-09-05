@@ -1728,9 +1728,10 @@ void changeState(int8_t state, int8_t subState) {
     if (state == WEATHER        && s_state != WEATHER)            { dispHeader.set_bg_color(TFT_TRANSPARENT); dispHeader.show(); dispFooter.set_bg_color(TFT_TRANSPARENT); dispFooter.show(); clearWithOutHeaderFooter(TFT_TRANSPARENT); newState = true;}
     if (state == SLEEP          && s_state != SLEEP)              { dispHeader.set_bg_color(TFT_BLACK);       dispFooter.set_bg_color(TFT_BLACK);        clearAll(TFT_BLACK);                                                            newState = true;}
 
-    if (state == RADIO          && s_subState_radio  != subState) { newSubState = true;  }
-    if (state == PLAYER         && s_subState_player != subState) { newSubState = true;  }
-    if (state == CLOCK          && s_subState_clock  != subState) { newSubState = true;  }
+    if (state == RADIO          && s_subState_radio   != subState) { newSubState = true;  }
+    if (state == PLAYER         && s_subState_player  != subState) { newSubState = true;  }
+    if (state == CLOCK          && s_subState_clock   != subState) { newSubState = true;  }
+    if (state == WEATHER        && s_subState_weather != subState) { newSubState = true;  }
 
     if(newState)disableAllObjects();
     dispHeader.enable();
@@ -1804,6 +1805,7 @@ void changeState(int8_t state, int8_t subState) {
                 }
             }
             if (subState == 2){ // Player, DLNA, Clock, SleepTime, Brightness, EQ, BT, Off
+                btn_RA_weather.set_active(false); // todo
                 if(newSubState) {
                     btn_RA_staList.show();
                     btn_RA_player.show(); btn_RA_dlna.show(); btn_RA_clock.show(); btn_RA_weather.show(); btn_RA_settings.show();
@@ -2019,8 +2021,8 @@ void changeState(int8_t state, int8_t subState) {
             break;
 
         case WEATHER:{
-            cls_weather.show();
             if (subState == 0) {
+                if(newSubState) cls_weather.show();
                 btn_WR_alarm.hide(); btn_WR_sleep.hide(); btn_WR_radio.hide(); btn_WR_mute.hide(); btn_WR_off.hide(); sdr_WR_volume.hide();
             }
             if (subState == 1) {
@@ -3139,6 +3141,10 @@ void ir_short_key(int8_t key) {
                 break;
             }
             if (s_state == CLOCK) {
+                changeState(WEATHER, 0);
+                break;
+            }
+            if (s_state == WEATHER) {
                 s_sleepTimerSubMenue = 0;
                 changeState(SLEEPTIMER, 0);
                 break;
