@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.0t7 - Sep 02, 2026                                                                                                               ";
+    Version 4.2.0t8 - Sep 05, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -4118,6 +4118,7 @@ void graphicObjects_OnClick(ps_ptr<char> name, uint8_t val) { // val = 0 --> is 
         if (val && name.equals("btn_RA_off"))      { goto exit; }
         if (val && name.equals("btn_RA_settings")) { goto exit; }
         if (val && name.equals("VUmeter_RA"))      { goto exit; }
+        if (val && name.equals("txt_RA_staName"))  { goto exit; }
         if (val && name.equals("txt_RA_sTitle"))   { goto exit; }
         if (       name.equals("sdr_RA_volume"))   { goto exit; }
         if (val && name.equals("pic_RA_logo"))     { goto exit; }
