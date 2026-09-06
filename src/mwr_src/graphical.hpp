@@ -186,6 +186,7 @@ class Button : public RegisterTable {
     bool             m_active = true;
     bool             m_state = false;
     bool             m_first_call = true;
+    bool             m_transparency = false;
     HAlign           m_h_align = HAlign::Center;
     VAlign           m_v_align = VAlign::Middle;
     int16_t          m_x = 0;
@@ -229,6 +230,7 @@ class Button : public RegisterTable {
     bool         getValue() { return m_state; }
     void         setOn() { m_state = true; }
     void         setOff() { m_state = false; }
+    void         set_transparency(bool transparency) { m_transparency = transparency; }
 
     void show() {
         if (m_first_call) m_first_call = false;
@@ -590,6 +592,7 @@ class Slider : public RegisterTable {
         }
         if (m_transparency) {
             getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
+            if (m_bg_color != TFT_TRANSPARENT) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
         } else if (m_bg_color == TFT_TRANSPARENT) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
@@ -6836,7 +6839,7 @@ class LineChart : public RegisterTable {
         txt_t_min->setFontSize(0);
         txt_t_min->setAlign(HAlign::Left, VAlign::Middle);
 
-        txt_p_max->begin(m_x, m_y + 2 *txt_h, m_w / 2, txt_h, 2, 0, 0, 1);
+        txt_p_max->begin(m_x, m_y + 2 * txt_h, m_w / 2, txt_h, 2, 0, 0, 1);
         txt_p_max->setTextColor(TFT_LIGHTBLUE);
         txt_p_max->set_transparency(true);
         txt_p_max->setFontSize(0);
@@ -7012,12 +7015,13 @@ class WeatherClock : public RegisterTable {
     } const s_Icon; // icon 232 x 232 px
 #endif
 
-    PictureBox* pic_weather_code = new PictureBox("pic_weather_code"); // digits hour   * 10
-    LineChart*  crt_temperature = new LineChart("crt_temperature");
-    int16_t     m_x = 0;
-    int16_t     m_y = 0;
-    int16_t     m_w = 0;
-    int16_t     m_h = 0;
+    PictureBox*      pic_weather_code = new PictureBox("pic_weather_code"); // digits hour   * 10
+    LineChart*       crt_temperature = new LineChart("crt_temperature");
+    ImgClock24small* clk_24s = new ImgClock24small("ImgClock24small");
+    int16_t          m_x = 0;
+    int16_t          m_y = 0;
+    int16_t          m_w = 0;
+    int16_t          m_h = 0;
 
     int32_t              m_bg_color = TFT_TRANSPARENT;
     bool                 m_enabled = false;
@@ -7045,6 +7049,7 @@ class WeatherClock : public RegisterTable {
     ~WeatherClock() {
         delete pic_weather_code;
         delete crt_temperature;
+        delete clk_24s;
     }
 
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
@@ -7053,8 +7058,11 @@ class WeatherClock : public RegisterTable {
         m_w = w; // width
         m_h = h; // high
         m_enabled = false;
+        pic_weather_code->set_bg_color(TFT_BLACK);
         crt_temperature->begin(x + s_Icon.w, m_y, m_w - s_Icon.w, s_Icon.h);
         crt_temperature->set_bg_color(TFT_BLACK);
+        clk_24s->set_bg_color(TFT_BLACK);
+        clk_24s->begin(m_x, m_y + s_Icon.h, m_w, s_Icon.h);
     }
 
     ps_ptr<char> get_name() { return m_name; }
@@ -7082,6 +7090,7 @@ class WeatherClock : public RegisterTable {
         m_enabled = true;
         m_showAll = true;
         crt_temperature->show();
+        clk_24s->show();
     }
 
     void hide() {

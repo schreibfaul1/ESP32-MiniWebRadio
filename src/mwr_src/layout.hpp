@@ -868,19 +868,20 @@ void placingGraphicObjects() { // and initialize them
     btn_WR_alarm.set_bg_color(TFT_BLACK);
     btn_WR_sleep.begin(1 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_WR_sleep.setPicturePath("/btn/Button_OffTimer");
-    btn_WR_sleep.set_bg_color(TFT_BLACK);
+    //  btn_WR_sleep.set_bg_color(TFT_BLACK);
     btn_WR_radio.begin(2 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_WR_radio.setPicturePath("/btn/Button_Radio");
-    btn_WR_radio.set_bg_color(TFT_BLACK);
+    //  btn_WR_radio.set_bg_color(TFT_BLACK);
     btn_WR_mute.begin(3 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_WR_mute.setPicturePath("/btn/Button_Mute");
-    btn_WR_mute.set_bg_color(TFT_BLACK);
+    //  btn_WR_mute.set_bg_color(TFT_BLACK);
     btn_WR_off.begin(4 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_WR_off.setPicturePath("/btn/Button_Off");
-    btn_WR_off.set_bg_color(TFT_BLACK);
-    sdr_WR_volume.begin(5 * layout.winButton.w + 10, layout.winButton.y, layout.winButton.w * 3 - 10, layout.winButton.h, layout.winButton.pl, layout.winButton.pr, layout.winButton.pt,
+    //  btn_WR_off.set_bg_color(TFT_BLACK);
+    sdr_WR_volume.begin(5 * layout.winButton.w, layout.winButton.y, layout.winButton.w * 3, layout.winButton.h, layout.winButton.pl + 10, layout.winButton.pr, layout.winButton.pt,
                         layout.winButton.pb);
     sdr_WR_volume.set_bg_color(TFT_BLACK);
+    sdr_WR_volume.set_transparency(true);
     // ALL_STATE ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     msg_box.begin(-1, -1, -1, -1);
 }

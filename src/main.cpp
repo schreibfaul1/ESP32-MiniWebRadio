@@ -2021,8 +2021,8 @@ void changeState(int8_t state, int8_t subState) {
             break;
 
         case WEATHER:{
+            if(newState) cls_weather.show();
             if (subState == 0) {
-                if(newSubState) cls_weather.show();
                 btn_WR_alarm.hide(); btn_WR_sleep.hide(); btn_WR_radio.hide(); btn_WR_mute.hide(); btn_WR_off.hide(); sdr_WR_volume.hide();
             }
             if (subState == 1) {
@@ -3943,17 +3943,17 @@ void tp_pressed(uint16_t x, uint16_t y) {
 
     if (s_state == CLOCK) {
         if(y > layout.winHeader.y + layout.winHeader.h && y < layout.winProgbar.y) {
-         objName = "backpane";
+            objName = "backpane";
             changeState(CLOCK, s_subState_clock + 1 == 2 ? 0 : s_subState_clock + 1);
-           goto exit;
+            goto exit;
         }
     }
 
     if (s_state == WEATHER) {
         if(y > layout.winHeader.y + layout.winHeader.h && y < layout.winProgbar.y) {
-         objName = "backpane";
+            objName = "backpane";
             changeState(WEATHER, s_subState_weather + 1 == 2 ? 0 : s_subState_weather + 1);
-           goto exit;
+            goto exit;
         }
     }
 
@@ -4262,6 +4262,8 @@ void graphicObjects_OnClick(ps_ptr<char> name, uint8_t val) { // val = 0 --> is 
         if (val && name.equals("cls_weather"))         { goto exit; }
         if (val && name.equals("btn_WR_off"))          { goto exit; }
         if (val && name.equals("btn_WR_sleep"))        { goto exit; }
+        if (val && name.equals("txt_p_max"))           { goto exit; }
+        if (val && name.equals("crt_temperature"))     { goto exit; }
     }
     if(val == 0) goto exit;
     MWR_LOG_WARN("unused event: graphicObject {} was clicked", name);
@@ -4449,7 +4451,7 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
         if (name.equals("btn_WR_sleep"))    { changeState(SLEEPTIMER, 0); if(s_f_ok_from_ir) { s_ir_btn_select = 0; set_ir_pos_SL(0); } goto exit; }
         if (name.equals("btn_WR_alarm"))    { changeState(ALARMCLOCK, 0); if(s_f_ok_from_ir) { s_ir_btn_select = 0; set_ir_pos_AC(0); } goto exit; }
         if (name.equals("btn_WR_radio"))    { changeState(RADIO, 0); goto exit; }
-        if (name.equals("cls_weather"))     { changeState(WEATHER, 0); goto exit; }
+        if (name.equals("cls_weather"))     { /*changeState(WEATHER, 0);*/ goto exit; }
         if (name.equals("btn_WR_off"))      { fall_asleep(); goto exit; }
         if (name.equals("sdr_WR_volume"))   { goto exit; }
     }
