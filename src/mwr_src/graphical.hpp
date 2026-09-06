@@ -1068,7 +1068,6 @@ class Textbox : public RegisterTable {
         if (!txt.valid()) return;
         if (m_enabled) {
             if (m_fontSize != 0) { getTFT().setFontSize(m_fontSize); }
-            getTFT().setTextColor(m_textColor);
             int x = m_x + m_padding_left;
             int y = m_y + m_paddig_top;
             int w = m_w - (m_paddig_right + m_padding_left);
@@ -1087,6 +1086,7 @@ class Textbox : public RegisterTable {
                     getTFT().drawRect(x, y, w, h, m_border_color);
                 }
             }
+            getTFT().setTextColor(m_textColor);
             getTFT().writeText(txt, x, y, w, h, m_h_align, m_v_align, m_noWrap, m_autoSize);
         }
     }
@@ -6768,12 +6768,22 @@ class LineChart : public RegisterTable {
     bool                  m_showAll = false;
     bool                  m_first_call = true;
     bool                  m_transparency = false;
+    bool                  m_data_valid = false;
     std::vector<float>    m_hourly_temperature;
-    float                 m_temp_min;
-    float                 m_temp_max;
+    std::vector<uint8_t>  m_hourly_precipitationProbability;
+    float                 m_temp_min = 0.0f;
+    float                 m_temp_max = 0.0f;
+    uint8_t               m_preProb_max = 0;
     ps_ptr<char>          m_name;
     ps_ptr<uint16_t>      m_cache_bg = {};
     releasedArg           m_ra;
+    Textbox*              txt_0 = new Textbox("txt_0");
+    Textbox*              txt_23 = new Textbox("txt_23");
+    Textbox*              txt_t_max = new Textbox("txt_t_max");
+    Textbox*              txt_t_min = new Textbox("txt_t_min");
+    Textbox*              txt_p_max = new Textbox("txt_p_max");
+
+    static constexpr size_t HOURS = 24;
 
   public:
     LineChart(ps_ptr<char> name) {
@@ -6783,7 +6793,13 @@ class LineChart : public RegisterTable {
         m_clicked = false;
         m_state = false;
     }
-    ~LineChart() { ; }
+    ~LineChart() {
+        delete txt_0;
+        delete txt_23;
+        delete txt_t_min;
+        delete txt_t_max;
+        delete txt_p_max;
+    }
 
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
         m_x = x;                // x pos
@@ -6793,6 +6809,38 @@ class LineChart : public RegisterTable {
         m_pl = m_pr = m_w / 20; // 5% of w
         m_pt = m_pb = m_h / 10; // 10% of h
         m_enabled = false;
+        uint8_t txt_h = m_h / 5;
+        txt_0->begin(m_x, m_y + m_h - txt_h, 2 * txt_h, txt_h, m_pl / 2, 0, 0, 1);
+        txt_0->setTextColor(TFT_LIGHTGREY);
+        txt_0->set_transparency(true);
+        txt_0->setText("0");
+        txt_0->setFontSize(0);
+        txt_0->setAlign(HAlign::Left, VAlign::Bottom);
+
+        txt_23->begin(m_x + m_w - 2 * txt_h, m_y + m_h - txt_h, 2 * txt_h, txt_h, 0, m_pr / 2, 0, 1);
+        txt_23->setTextColor(TFT_LIGHTGREY);
+        txt_23->set_transparency(true);
+        txt_23->setText("23");
+        txt_23->setFontSize(0);
+        txt_23->setAlign(HAlign::Right, VAlign::Bottom);
+
+        txt_t_max->begin(m_x, m_y, m_w / 2, txt_h, 2, 0, 0, 1);
+        txt_t_max->setTextColor(TFT_LIGHTRED);
+        txt_t_max->set_transparency(true);
+        txt_t_max->setFontSize(0);
+        txt_t_max->setAlign(HAlign::Left, VAlign::Middle);
+
+        txt_t_min->begin(m_x, m_y + txt_h, m_w / 2, txt_h, 2, 0, 0, 1);
+        txt_t_min->setTextColor(TFT_LIGHTRED);
+        txt_t_min->set_transparency(true);
+        txt_t_min->setFontSize(0);
+        txt_t_min->setAlign(HAlign::Left, VAlign::Middle);
+
+        txt_p_max->begin(m_x, m_y + 2 *txt_h, m_w / 2, txt_h, 2, 0, 0, 1);
+        txt_p_max->setTextColor(TFT_LIGHTBLUE);
+        txt_p_max->set_transparency(true);
+        txt_p_max->setFontSize(0);
+        txt_p_max->setAlign(HAlign::Left, VAlign::Middle);
     }
 
     ps_ptr<char> get_name() { return m_name; }
@@ -6806,6 +6854,7 @@ class LineChart : public RegisterTable {
     bool         set_focus(bool focus) { return false; }
 
     void show() {
+        if (!m_data_valid) return;
         if (m_first_call) {
             m_cache_bg.alloc_array(m_w * m_h, m_name.c_get());
             getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
@@ -6826,10 +6875,25 @@ class LineChart : public RegisterTable {
         uint16_t y_min = m_y + m_h - m_pb;
         log_i("m_temp_min %4.2f, m_temp_max %4.2f, y_min %u, y_max %u", m_temp_min, m_temp_max, y_min, y_max);
 
-        float y_scale = 0.0f;
+        // ----------------------------------------------------
+        // Probability of rain
+        // ----------------------------------------------------
+        uint16_t bar_w = m_pos_x[1] - m_pos_x[0] - 1; // Width of a column
+        uint16_t rain_top = y_min - (y_min - y_max) * 0.75;
+        for (uint8_t i = 0; i < HOURS; i++) {
+            uint8_t  probability = m_hourly_precipitationProbability[i];
+            uint16_t y = map(probability, 0, 100, y_min, rain_top);
+            uint16_t x = m_x + m_pos_x[i] - bar_w / 2;
+            getTFT().fillRect(x, y, bar_w, y_min - y, TFT_BLUE);
+        }
+
+        // ----------------------------------------------------
+        // Temperature
+        // ----------------------------------------------------
+        float    y_scale = 0.0f;
         uint16_t y_prev = 0;
         if (m_temp_max > m_temp_min) { y_scale = (float)(y_min - y_max) / (m_temp_max - m_temp_min); }
-        for (size_t i = 0; i < m_hourly_temperature.size(); i++) {
+        for (size_t i = 0; i < HOURS; i++) {
             uint16_t y;
             if (m_temp_max == m_temp_min) {
                 y = (y_min + y_max) / 2;
@@ -6840,6 +6904,18 @@ class LineChart : public RegisterTable {
             getTFT().fillCircle(m_x + m_pos_x[i], y, 2, TFT_RED);
             y_prev = y;
         }
+        ps_ptr<char> tmp;
+        txt_0->show();
+        txt_23->show();
+        tmp.assignf("Tmax:{:4.2}°C", m_temp_max);
+        txt_t_max->setText(tmp);
+        txt_t_max->show();
+        tmp.assignf("Tmin:{:4.2}°C", m_temp_min);
+        txt_t_min->setText(tmp);
+        txt_t_min->show();
+        tmp.assignf("Pmax:{}%", m_preProb_max);
+        txt_p_max->setText(tmp);
+        txt_p_max->show();
     }
 
     void hide() {
@@ -6877,7 +6953,6 @@ class LineChart : public RegisterTable {
         if (y > m_y + m_h) return false;
         if (m_enabled) m_clicked = true;
         if (graphicObjects_OnClick) graphicObjects_OnClick(m_name, m_enabled);
-        //    if(!m_enabled) return false;
         return true;
     }
     bool released() {
@@ -6887,19 +6962,24 @@ class LineChart : public RegisterTable {
         m_clicked = false;
         return true;
     }
-    void update(std::vector<float>& hourly_temperature, std::vector<uint8_t>& hourly_precipitationProbability) {
-        if (!hourly_temperature.size()) return;
+    void update(const std::vector<float>& hourly_temperature, const std::vector<uint8_t>& hourly_precipitationProbability) {
+        if (hourly_temperature.size() < HOURS || hourly_precipitationProbability.size() < HOURS) { return; }
         m_hourly_temperature.clear();
+        m_hourly_precipitationProbability.clear();
         m_temp_min = hourly_temperature[0];
         m_temp_max = hourly_temperature[0];
-        for (int i = 0; i < 24; i++) {
+        m_preProb_max = hourly_precipitationProbability[0];
+        for (size_t i = 0; i < HOURS; i++) {
             m_hourly_temperature.push_back(hourly_temperature[i]);
+            m_hourly_precipitationProbability.push_back(hourly_precipitationProbability[i + 72]);
             m_temp_min = std::min(m_temp_min, hourly_temperature[i]);
             m_temp_max = std::max(m_temp_max, hourly_temperature[i]);
+            m_preProb_max = std::max(m_preProb_max, hourly_precipitationProbability[i + 72]);
         }
         m_pos_x.clear();
-        float dist = (m_w - m_pl - m_pr) / (float)(m_hourly_temperature.size() - 1);
-        for (int i = 0; i < m_hourly_temperature.size(); i++) { m_pos_x.push_back(m_pl + i * dist); }
+        float dist = (m_w - m_pl - m_pr) / (float)(HOURS - 1);
+        for (size_t i = 0; i < HOURS; i++) { m_pos_x.push_back(m_pl + i * dist); }
+        m_data_valid = true;
     }
 };
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

@@ -3434,7 +3434,7 @@ void TFT_Base::drawGlyph(const Glyph glyph, int16_t x, int16_t y) {
         return;
     }
     if (glyph.type == GlyphType::Font) {
-        setTextColor(glyph.color);
+    //    setTextColor(glyph.color);
         uint32_t bitmap_index = m_current_font.glyph_dsc[glyph.glyphPos].bitmap_index;
         uint16_t box_w = m_current_font.glyph_dsc[glyph.glyphPos].box_w;
         uint16_t box_h = m_current_font.glyph_dsc[glyph.glyphPos].box_h;
@@ -3453,6 +3453,7 @@ size_t TFT_Base::writeText(ps_ptr<char> txt1, uint16_t win_X, uint16_t win_Y, in
         MWR_LOG_WARN("text is not given");
         return 0;
     }
+
     std::lock_guard<std::mutex> lock(m_textLayoutMutex);
     ps_ptr<char>                txt = txt1;
     /*
@@ -3487,7 +3488,7 @@ size_t TFT_Base::writeText(ps_ptr<char> txt1, uint16_t win_X, uint16_t win_Y, in
                     idx = getFontIndex();
                     MWR_LOG_DEBUG("next round, idx {}", idx);
                 } else {
-                    MWR_LOG_ERROR("txt '{}', win_X: {}, win_Y: {} does not fit in window", txt, win_X, win_Y);
+                    MWR_LOG_ERROR("txt '{}', win_X: {}, win_Y: {}, win_H {}, win_W {} does not fit in window", txt, win_X, win_Y, win_H, win_W);
                     return 0;
                 }
             }
