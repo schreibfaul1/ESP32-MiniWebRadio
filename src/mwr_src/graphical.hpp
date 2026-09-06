@@ -6748,8 +6748,162 @@ class MessageBox : public RegisterTable {
         ;
     }
 };
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class LineChart : public RegisterTable {
+    std::vector<uint16_t> m_pos_x;
+    int16_t               m_x = 0;
+    int16_t               m_y = 0;
+    int16_t               m_w = 0;
+    int16_t               m_h = 0;
+    int16_t               m_pl = 0;
+    int16_t               m_pr = 0;
+    int16_t               m_pt = 0;
+    int16_t               m_pb = 0;
+    int32_t               m_bg_color = TFT_TRANSPARENT;
+    bool                  m_enabled = false;
+    bool                  m_active = true;
+    bool                  m_focus = false;
+    bool                  m_clicked = false;
+    bool                  m_state = false;
+    bool                  m_showAll = false;
+    bool                  m_first_call = true;
+    bool                  m_transparency = false;
+    std::vector<float>    m_hourly_temperature;
+    float                 m_temp_min;
+    float                 m_temp_max;
+    ps_ptr<char>          m_name;
+    ps_ptr<uint16_t>      m_cache_bg = {};
+    releasedArg           m_ra;
+
+  public:
+    LineChart(ps_ptr<char> name) {
+        register_object(this);
+        m_name = name;
+        m_enabled = false;
+        m_clicked = false;
+        m_state = false;
+    }
+    ~LineChart() { ; }
+
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
+        m_x = x;                // x pos
+        m_y = y;                // y pos
+        m_w = w;                // width
+        m_h = h;                // high
+        m_pl = m_pr = m_w / 20; // 5% of w
+        m_pt = m_pb = m_h / 10; // 10% of h
+        m_enabled = false;
+    }
+
+    ps_ptr<char> get_name() { return m_name; }
+    void         enable() { m_enabled = true; }
+    void         disable() { m_enabled = false; }
+    bool         is_enabled() { return m_enabled; }
+    bool         is_active() { return m_active; }
+    void         set_active(bool active) { m_active = active; }
+    bool         has_focus() { return m_focus; }
+    void         set_bg_color(int32_t color) { m_bg_color = color; }
+    bool         set_focus(bool focus) { return false; }
+
+    void show() {
+        if (m_first_call) {
+            m_cache_bg.alloc_array(m_w * m_h, m_name.c_get());
+            getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
+        }
+        if (m_transparency) {
+            getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+        }
+        m_first_call = false;
+        m_enabled = true;
+        m_clicked = false;
+        getTFT().drawRect(m_x, m_y, m_w, m_h, TFT_RED);
+
+        uint16_t y_max = m_y + m_pt;
+        uint16_t y_min = m_y + m_h - m_pb;
+        log_i("m_temp_min %4.2f, m_temp_max %4.2f, y_min %u, y_max %u", m_temp_min, m_temp_max, y_min, y_max);
+
+        float y_scale = 0.0f;
+        uint16_t y_prev = 0;
+        if (m_temp_max > m_temp_min) { y_scale = (float)(y_min - y_max) / (m_temp_max - m_temp_min); }
+        for (size_t i = 0; i < m_hourly_temperature.size(); i++) {
+            uint16_t y;
+            if (m_temp_max == m_temp_min) {
+                y = (y_min + y_max) / 2;
+            } else {
+                y = y_min - (m_hourly_temperature[i] - m_temp_min) * y_scale;
+            }
+            if (i > 0) { getTFT().drawLine(m_x + m_pos_x[i - 1], y_prev, m_x + m_pos_x[i], y, TFT_RED); }
+            getTFT().fillCircle(m_x + m_pos_x[i], y, 2, TFT_RED);
+            y_prev = y;
+        }
+    }
+
+    void hide() {
+        if (m_first_call) return;
+        if (m_transparency) {
+            getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+        }
+        m_enabled = false;
+    }
+
+    void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
+        x = m_x;
+        y = m_y;
+        w = m_w;
+        h = m_h;
+    }
+
+    bool click() {
+        if (!m_enabled) return false;
+        if (!m_active) return false;
+        m_clicked = true;
+        if (graphicObjects_OnClick) graphicObjects_OnClick(m_name, m_enabled);
+        return true;
+    }
+
+    bool positionXY(uint16_t x, uint16_t y) {
+        if (!m_enabled) return false;
+        if (x < m_x) return false;
+        if (y < m_y) return false;
+        if (x > m_x + m_w) return false;
+        if (y > m_y + m_h) return false;
+        if (m_enabled) m_clicked = true;
+        if (graphicObjects_OnClick) graphicObjects_OnClick(m_name, m_enabled);
+        //    if(!m_enabled) return false;
+        return true;
+    }
+    bool released() {
+        if (!m_enabled) return false;
+        if (!m_clicked) return false;
+        if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
+        m_clicked = false;
+        return true;
+    }
+    void update(std::vector<float>& hourly_temperature, std::vector<uint8_t>& hourly_precipitationProbability) {
+        if (!hourly_temperature.size()) return;
+        m_hourly_temperature.clear();
+        m_temp_min = hourly_temperature[0];
+        m_temp_max = hourly_temperature[0];
+        for (int i = 0; i < 24; i++) {
+            m_hourly_temperature.push_back(hourly_temperature[i]);
+            m_temp_min = std::min(m_temp_min, hourly_temperature[i]);
+            m_temp_max = std::max(m_temp_max, hourly_temperature[i]);
+        }
+        m_pos_x.clear();
+        float dist = (m_w - m_pl - m_pr) / (float)(m_hourly_temperature.size() - 1);
+        for (int i = 0; i < m_hourly_temperature.size(); i++) { m_pos_x.push_back(m_pl + i * dist); }
+    }
+};
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class WeatherClock : public RegisterTable { // draw a clock in 24h format
+class WeatherClock : public RegisterTable {
   private:
     //------------------------------------------------------------------------------------------------------------------------------------------------
 #ifdef TFT_LAYOUT_S // 320 x 240px
@@ -6779,23 +6933,26 @@ class WeatherClock : public RegisterTable { // draw a clock in 24h format
 #endif
 
     PictureBox* pic_weather_code = new PictureBox("pic_weather_code"); // digits hour   * 10
+    LineChart*  crt_temperature = new LineChart("crt_temperature");
     int16_t     m_x = 0;
     int16_t     m_y = 0;
     int16_t     m_w = 0;
     int16_t     m_h = 0;
 
-    int32_t      m_bg_color = TFT_TRANSPARENT;
-    bool         m_enabled = false;
-    bool         m_active = true;
-    bool         m_focus = false;
-    bool         m_clicked = false;
-    bool         m_state = false;
-    bool         m_showAll = false;
-    bool         m_first_call = true;
-    ps_ptr<char> m_name;
-    ps_ptr<char> m_pathBuff;
-    uint8_t      m_min = 0, m_hour = 0, m_weekday = 0;
-    releasedArg  m_ra;
+    int32_t              m_bg_color = TFT_TRANSPARENT;
+    bool                 m_enabled = false;
+    bool                 m_active = true;
+    bool                 m_focus = false;
+    bool                 m_clicked = false;
+    bool                 m_state = false;
+    bool                 m_showAll = false;
+    bool                 m_first_call = true;
+    ps_ptr<char>         m_name;
+    ps_ptr<char>         m_pathBuff;
+    uint8_t              m_min = 0, m_hour = 0, m_weekday = 0;
+    releasedArg          m_ra;
+    std::vector<float>   m_hourly_temperature;
+    std::vector<uint8_t> m_hourly_precipitationProbability;
 
   public:
     WeatherClock(ps_ptr<char> name) {
@@ -6805,7 +6962,10 @@ class WeatherClock : public RegisterTable { // draw a clock in 24h format
         m_clicked = false;
         m_state = false;
     }
-    ~WeatherClock() { delete pic_weather_code; }
+    ~WeatherClock() {
+        delete pic_weather_code;
+        delete crt_temperature;
+    }
 
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
         m_x = x; // x pos
@@ -6813,6 +6973,8 @@ class WeatherClock : public RegisterTable { // draw a clock in 24h format
         m_w = w; // width
         m_h = h; // high
         m_enabled = false;
+        crt_temperature->begin(x + s_Icon.w, m_y, m_w - s_Icon.w, s_Icon.h);
+        crt_temperature->set_bg_color(TFT_BLACK);
     }
 
     ps_ptr<char> get_name() { return m_name; }
@@ -6839,6 +7001,7 @@ class WeatherClock : public RegisterTable { // draw a clock in 24h format
         pic_weather_code->show();
         m_enabled = true;
         m_showAll = true;
+        crt_temperature->show();
     }
 
     void hide() {
@@ -6878,7 +7041,15 @@ class WeatherClock : public RegisterTable { // draw a clock in 24h format
         return true;
     }
 
-    void update(const std::vector<METEO::METEO_HOURLY>& hourly, const std::vector<METEO::METEO_DAILY>& daily) { log_i("sunrise %u:%02u", daily[0].sunrise.hour, daily[0].sunrise.minute); }
+    void update(const std::vector<METEO::METEO_HOURLY>& hourly, const std::vector<METEO::METEO_DAILY>& daily) {
+        for (int i = 0; i < hourly.size(); i++) {
+            m_hourly_temperature.push_back(hourly[i].temperature);
+            m_hourly_precipitationProbability.push_back(hourly[i].precipitationProbability);
+        }
+        crt_temperature->update(m_hourly_temperature, m_hourly_precipitationProbability);
+
+        log_i("sunrise %u:%02u", daily[0].sunrise.hour, daily[0].sunrise.minute);
+    }
 
   private:
     void enable_all() { m_enabled = true; }
