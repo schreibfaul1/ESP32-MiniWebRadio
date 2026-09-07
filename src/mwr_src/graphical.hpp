@@ -196,7 +196,7 @@ class Button : public RegisterTable {
     uint16_t         m_button_image_h = 0;
     uint16_t         m_button_image_x = 0;
     uint16_t         m_button_image_y = 0;
-    int32_t          m_bg_color = TFT_BG_BACKGROUND;
+    int32_t          m_bg_color = TFT_BG_IS_WALLPAPER;
     ps_ptr<char>     m_picturePath[2][4];
     ps_ptr<char>     m_name;
     ps_ptr<uint16_t> m_cache_idle_pic = {};
@@ -232,14 +232,14 @@ class Button : public RegisterTable {
     void         setOff() { m_state = false; }
 
     void show() {
-        if (m_bg_color == TFT_BG_VISIBLE) {
+        if (m_bg_color == TFT_BG_IS_VISIBLE) {
             if (m_first_call) {
                 m_cache_bg.alloc_array(m_w * m_h, m_name.c_get());
                 getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
             } else {
                 getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
             }
-        } else if (m_bg_color == TFT_BG_BACKGROUND) { //
+        } else if (m_bg_color == TFT_BG_IS_WALLPAPER) { //
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else { // e.g. m_bg_color == TFT_BLACK
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -258,9 +258,9 @@ class Button : public RegisterTable {
 
     void hide() {
         if (m_first_call) return;
-        if (m_bg_color == TFT_BG_VISIBLE) {
+        if (m_bg_color == TFT_BG_IS_VISIBLE) {
             getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
-        } else if (m_bg_color == TFT_BG_BACKGROUND) {
+        } else if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -384,7 +384,7 @@ class PictureBox : public RegisterTable {
     uint8_t          m_padding_bottom = 0; // bottom margin
     HAlign           m_h_align = HAlign::Center;
     VAlign           m_v_align = VAlign::Middle;
-    int32_t          m_bg_color = TFT_BG_BACKGROUND;
+    int32_t          m_bg_color = TFT_BG_IS_WALLPAPER;
     ps_ptr<char>     m_PicturePath;
     ps_ptr<char>     m_name;
     ps_ptr<uint16_t> m_cache_bg = {};
@@ -428,14 +428,14 @@ class PictureBox : public RegisterTable {
 
     bool show() {
 
-        if (m_bg_color == TFT_BG_VISIBLE) {
+        if (m_bg_color == TFT_BG_IS_VISIBLE) {
             if (m_first_call) {
                 m_cache_bg.alloc_array(m_w * m_h, m_name.c_get());
                 getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
             } else {
                 if (m_content_has_changed) getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
             }
-        } else if (m_bg_color == TFT_BG_BACKGROUND) { //
+        } else if (m_bg_color == TFT_BG_IS_WALLPAPER) { //
             if (m_content_has_changed) getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else { // e.g. m_bg_color == TFT_BLACK
             if (m_content_has_changed) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -450,9 +450,9 @@ class PictureBox : public RegisterTable {
 
     void hide() {
         if (m_first_call) return;
-        if (m_bg_color == TFT_BG_VISIBLE) {
+        if (m_bg_color == TFT_BG_IS_VISIBLE) {
             getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
-        } else if (m_bg_color == TFT_BG_BACKGROUND) {
+        } else if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -546,7 +546,7 @@ class Slider : public RegisterTable {
     int16_t          m_maxVal = 0;
     uint16_t         m_leftStop = 0;
     uint16_t         m_rightStop = 0;
-    int32_t          m_bg_color = TFT_BG_BACKGROUND;
+    int32_t          m_bg_color = TFT_BG_IS_WALLPAPER;
     int32_t          m_railColor = 0;
     int32_t          m_spotColor = 0;
     uint8_t          m_railHigh = 0;
@@ -603,14 +603,14 @@ class Slider : public RegisterTable {
     bool         set_focus(bool focus) { return false; }
 
     void show() {
-        if (m_bg_color == TFT_BG_VISIBLE) {
+        if (m_bg_color == TFT_BG_IS_VISIBLE) {
             if (m_first_call) {
                 m_cache_bg.alloc_array(m_w * m_h, m_name.c_get());
                 getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
             } else {
                 getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
             }
-        } else if (m_bg_color == TFT_BG_BACKGROUND) { //
+        } else if (m_bg_color == TFT_BG_IS_WALLPAPER) { //
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else { // e.g. m_bg_color == TFT_BLACK
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -633,9 +633,9 @@ class Slider : public RegisterTable {
 
     void hide() {
         if (m_first_call) return;
-        if (m_bg_color == TFT_BG_VISIBLE) {
+        if (m_bg_color == TFT_BG_IS_VISIBLE) {
             getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
-        } else if (m_bg_color == TFT_BG_BACKGROUND) {
+        } else if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -752,7 +752,7 @@ class Progressbar : public RegisterTable {
     uint16_t     m_padding_bottom = 0;
     uint16_t     m_railHight = 0;
     uint16_t     m_rail_y_pos = 0;
-    int32_t      m_bg_color = TFT_TRANSPARENT;
+    int32_t      m_bg_color = TFT_BG_IS_WALLPAPER;
     int32_t      m_frameColor = 0;
     int32_t      m_railColorLeft = 0;
     uint32_t     m_railColorRight = 0;
@@ -805,7 +805,7 @@ class Progressbar : public RegisterTable {
 
     void show() {
         if (m_first_call) { m_first_call = false; }
-        if (m_bg_color == TFT_TRANSPARENT) {
+        if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -817,7 +817,7 @@ class Progressbar : public RegisterTable {
 
     void hide() {
         if (m_first_call) return;
-        if (m_bg_color == TFT_TRANSPARENT) {
+        if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -922,9 +922,9 @@ class Textbox : public RegisterTable {
     uint8_t          m_paddig_right = 0;  // right margin
     uint8_t          m_paddig_top = 0;    // top margin
     uint8_t          m_paddig_bottom = 0; // bottom margin
-    int32_t          m_bg_color = TFT_BG_BACKGROUND;
-    int32_t          m_fill_color1 = TFT_BG_BACKGROUND;
-    int32_t          m_fill_color2 = TFT_BG_BACKGROUND;
+    int32_t          m_bg_color = TFT_BG_IS_WALLPAPER;
+    int32_t          m_fill_color1 = TFT_BG_IS_WALLPAPER;
+    int32_t          m_fill_color2 = TFT_BG_IS_WALLPAPER;
     int32_t          m_textColor = 0;
     int32_t          m_border_color = 0;
     uint8_t          m_border_radius = 0;
@@ -939,7 +939,7 @@ class Textbox : public RegisterTable {
         register_object(this);
         m_name = name;
         m_textColor = TFT_LIGHTGREY;
-        m_border_color = TFT_TRANSPARENT;
+        m_border_color = TFT_BG_IS_WALLPAPER;
         m_fontSize = 1;
     }
     ~Textbox() {}
@@ -965,14 +965,14 @@ class Textbox : public RegisterTable {
     bool         set_focus(bool focus) { return false; }
 
     void show() {
-        if (m_bg_color == TFT_BG_VISIBLE) {
+        if (m_bg_color == TFT_BG_IS_VISIBLE) {
             if (m_first_call) {
                 m_cache_bg.alloc_array(m_w * m_h, m_name.c_get());
                 getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
             } else {
                 if (m_content_has_changed) getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
             }
-        } else if (m_bg_color == TFT_BG_BACKGROUND) { //
+        } else if (m_bg_color == TFT_BG_IS_WALLPAPER) { //
             if (m_content_has_changed) getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else { // e.g. m_bg_color == TFT_BLACK
             if (m_content_has_changed) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -986,9 +986,9 @@ class Textbox : public RegisterTable {
 
     void hide() {
         if (m_first_call) return;
-        if (m_bg_color == TFT_BG_VISIBLE) {
+        if (m_bg_color == TFT_BG_IS_VISIBLE) {
             getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
-        } else if (m_bg_color == TFT_BG_BACKGROUND) {
+        } else if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -1041,11 +1041,11 @@ class Textbox : public RegisterTable {
     }
     void setTextColor(int32_t color) { m_textColor = color; }
 
-    void set_border(int32_t border_color = TFT_LIGHTGREY, uint8_t border_radius = 0, int32_t fill_color1 = TFT_TRANSPARENT, int32_t fill_color2 = TFT_TRANSPARENT, bool orientation = false) {
-        m_border_color = border_color; // TFT_TRANSPARENT -> no border
+    void set_border(int32_t border_color = TFT_LIGHTGREY, uint8_t border_radius = 0, int32_t fill_color1 = TFT_BG_IS_WALLPAPER, int32_t fill_color2 = TFT_BG_IS_WALLPAPER, bool orientation = false) {
+        m_border_color = border_color; // TFT_BG_IS_WALLPAPER -> no border
         m_border_radius = border_radius;
-        m_fill_color1 = fill_color1;          // TFT_TRANSPARENT -> no fill
-        m_fill_color2 = fill_color2;          // TFT_TRANSPARENT -> no fill gradient
+        m_fill_color1 = fill_color1;          // TFT_BG_IS_WALLPAPER -> no fill
+        m_fill_color2 = fill_color2;          // TFT_BG_IS_WALLPAPER -> no fill gradient
         m_gradient_orientation = orientation; // false: horizontal
     }
 
@@ -1089,14 +1089,14 @@ class Textbox : public RegisterTable {
             int y = m_y + m_paddig_top;
             int w = m_w - (m_paddig_right + m_padding_left);
             int h = m_h - (m_paddig_bottom + m_paddig_top);
-            if (m_fill_color1 != TFT_TRANSPARENT) {
-                if (m_fill_color2 == TFT_TRANSPARENT) {
+            if (m_fill_color1 != TFT_BG_IS_WALLPAPER) {
+                if (m_fill_color2 == TFT_BG_IS_WALLPAPER) {
                     getTFT().fillRoundRect(x, y, w, h, m_border_radius, m_fill_color1);
                 } else {
                     getTFT().fillRoundRect(x, y, w, h, m_border_radius, m_fill_color1, m_fill_color2, m_gradient_orientation); // with gradient
                 }
             }
-            if (m_border_color != TFT_TRANSPARENT) {
+            if (m_border_color != TFT_BG_IS_WALLPAPER) {
                 if (m_border_radius) {
                     getTFT().drawRoundRect(x, y, w, h, m_border_radius, m_border_color);
                 } else {
@@ -1123,7 +1123,7 @@ class Inputbox : public RegisterTable {
     uint8_t      m_paddig_top = 0;    // top margin
     uint8_t      m_paddig_bottom = 0; // bottom margin
     uint8_t      m_borderWidth = 0;
-    int32_t      m_bg_color = TFT_TRANSPARENT;
+    int32_t      m_bg_color = TFT_BG_IS_WALLPAPER;
     int32_t      m_fgColor = 0;
     int32_t      m_borderColor = 0;
     ps_ptr<char> m_text;
@@ -1168,7 +1168,7 @@ class Inputbox : public RegisterTable {
 
     void show() {
         if (m_first_call) { m_first_call = false; }
-        if (m_bg_color == TFT_TRANSPARENT) {
+        if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -1180,7 +1180,7 @@ class Inputbox : public RegisterTable {
 
     void hide() {
         if (m_first_call) return;
-        if (m_bg_color == TFT_TRANSPARENT) {
+        if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -1246,7 +1246,7 @@ class Inputbox : public RegisterTable {
             uint16_t bgColor_tmp = getTFT().getBackGroundColor();
             getTFT().setTextColor(m_fgColor);
             getTFT().setBackGoundColor(m_bg_color);
-            if (m_bg_color == TFT_TRANSPARENT) {
+            if (m_bg_color == TFT_BG_IS_WALLPAPER) {
                 getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
             } else {
                 getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -1281,7 +1281,7 @@ class Textbutton : public RegisterTable {
     uint8_t      m_paddig_top = 0;    // top margin
     uint8_t      m_paddig_bottom = 0; // bottom margin
     uint8_t      m_borderWidth = 0;
-    int32_t      m_bg_color = TFT_TRANSPARENT;
+    int32_t      m_bg_color = TFT_BG_IS_WALLPAPER;
     int32_t      m_fgColor = 0;
     int32_t      m_borderColor = 0;
     int32_t      m_clickColor = 0;
@@ -1373,7 +1373,7 @@ class Textbutton : public RegisterTable {
 
     void show() {
         if (m_first_call) { m_first_call = false; }
-        if (m_bg_color == TFT_TRANSPARENT) {
+        if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -1385,7 +1385,7 @@ class Textbutton : public RegisterTable {
 
     void hide() {
         if (m_first_call) return;
-        if (m_bg_color == TFT_TRANSPARENT) {
+        if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -1464,7 +1464,7 @@ class Textbutton : public RegisterTable {
                 getTFT().setTextColor(m_clickColor);
             }
 
-            if (m_bg_color == TFT_TRANSPARENT) {
+            if (m_bg_color == TFT_BG_IS_WALLPAPER) {
                 getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
             } else {
                 getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -1503,7 +1503,7 @@ class VU_Meter : public RegisterTable {
     uint16_t         m_y = 0;
     uint16_t         m_w = 0;
     uint16_t         m_h = 0;
-    int32_t          m_bg_color = TFT_BG_BACKGROUND;
+    int32_t          m_bg_color = TFT_BG_IS_WALLPAPER;
     uint32_t         m_frameColor = TFT_DARKGREY;
     ps_ptr<char>     m_name;
     ps_ptr<uint16_t> m_cache_bg = {};
@@ -1566,14 +1566,14 @@ class VU_Meter : public RegisterTable {
     bool         set_focus(bool focus) { return false; }
 
     void show() {
-        if (m_bg_color == TFT_BG_VISIBLE) {
+        if (m_bg_color == TFT_BG_IS_VISIBLE) {
             if (m_first_call) {
                 m_cache_bg.alloc_array(m_w * m_h, m_name.c_get());
                 getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
             } else {
                 getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
             }
-        } else if (m_bg_color == TFT_BG_BACKGROUND) { //
+        } else if (m_bg_color == TFT_BG_IS_WALLPAPER) { //
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else { // e.g. m_bg_color == TFT_BLACK
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -1593,9 +1593,9 @@ class VU_Meter : public RegisterTable {
 
     void hide() {
         if (m_first_call) return;
-        if (m_bg_color == TFT_BG_VISIBLE) {
+        if (m_bg_color == TFT_BG_IS_VISIBLE) {
             getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
-        } else if (m_bg_color == TFT_BG_BACKGROUND) {
+        } else if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -1700,11 +1700,11 @@ class VU_Meter : public RegisterTable {
             color = inactiveColor;
         }
 
-        if (color == TFT_BG_VISIBLE) {
+        if (color == TFT_BG_IS_VISIBLE) {
             uint16_t srcX = xPos - m_x;
             uint16_t srcY = yPos - m_y;
             getTFT().copyFramebuffer(m_cache_bg.get(), m_w, m_h, srcX, srcY, FB_VISIBLE, xPos, yPos, m_segm_w, m_segm_h);
-        } else if (color == TFT_BG_BACKGROUND) {
+        } else if (color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, xPos, yPos, m_segm_w, m_segm_h);
         } else {
             getTFT().fillRect(xPos, yPos, m_segm_w, m_segm_h, color);
@@ -1718,7 +1718,7 @@ class Spectrum : public RegisterTable {
     uint16_t         m_y = 0;
     uint16_t         m_w = 0;
     uint16_t         m_h = 0;
-    int32_t          m_bg_color = TFT_BG_BACKGROUND;
+    int32_t          m_bg_color = TFT_BG_IS_WALLPAPER;
     ps_ptr<char>     m_name;
     ps_ptr<uint16_t> m_colums_pos_x;
     ps_ptr<uint16_t> m_bars_pos_y;
@@ -1791,14 +1791,14 @@ class Spectrum : public RegisterTable {
     bool         set_focus(bool focus) { return false; }
 
     void show() {
-        if (m_bg_color == TFT_BG_VISIBLE) {
+        if (m_bg_color == TFT_BG_IS_VISIBLE) {
             if (m_first_call) {
                 m_cache_bg.alloc_array(m_w * m_h, m_name.c_get());
                 getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
             } else {
                 getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
             }
-        } else if (m_bg_color == TFT_BG_BACKGROUND) { //
+        } else if (m_bg_color == TFT_BG_IS_WALLPAPER) { //
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else { // e.g. m_bg_color == TFT_BLACK
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -1811,9 +1811,9 @@ class Spectrum : public RegisterTable {
 
     void hide() {
         if (m_first_call) return;
-        if (m_bg_color == TFT_BG_VISIBLE) {
+        if (m_bg_color == TFT_BG_IS_VISIBLE) {
             getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
-        } else if (m_bg_color == TFT_BG_BACKGROUND) {
+        } else if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -1919,11 +1919,11 @@ class Spectrum : public RegisterTable {
             color = inactiveColor;
         }
 
-        if (color == TFT_BG_VISIBLE) {
+        if (color == TFT_BG_IS_VISIBLE) {
             uint16_t srcX = xPos - m_x;
             uint16_t srcY = yPos - m_y;
             getTFT().copyFramebuffer(m_cache_bg.get(), m_w, m_h, srcX, srcY, FB_VISIBLE, xPos, yPos, m_bar_w, m_bar_h);
-        } else if (color == TFT_BG_BACKGROUND) {
+        } else if (color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, xPos, yPos, m_bar_w, m_bar_h);
         } else {
             getTFT().fillRect(m_colums_pos_x[col], m_bars_pos_y[row], m_bar_w, m_bar_h, color);
@@ -1951,7 +1951,7 @@ class Selectbox : public RegisterTable {
     uint8_t                   m_paddig_bottom = 0; // bottom margin
     uint8_t                   m_borderWidth = 0;
     int8_t                    m_idx = 0;
-    int32_t                   m_bg_color = TFT_TRANSPARENT;
+    int32_t                   m_bg_color = TFT_BG_IS_WALLPAPER;
     int32_t                   m_fgColor = 0;
     int32_t                   m_borderColor = 0;
     ps_ptr<char>              m_name;
@@ -2036,7 +2036,7 @@ class Selectbox : public RegisterTable {
     }
 
     void hide() {
-        if (m_bg_color == TFT_TRANSPARENT) {
+        if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -2161,12 +2161,12 @@ class Selectbox : public RegisterTable {
         if (m_enabled) {
             MWR_LOG_DEBUG("writeText: {}", txt);
             m_txt_select->setText(txt);
-            m_txt_select->set_bg_color(TFT_BLACK);
+            m_txt_select->set_bg_color(TFT_BG_IS_BLACK);
             m_txt_select->show();
             char c_idx[5] = {0};
             itoa(idx + 1, c_idx, 10);
             m_txt_btn_idx->setText(c_idx);
-            m_txt_btn_idx->set_bg_color(TFT_BLACK);
+            m_txt_btn_idx->set_bg_color(TFT_BG_IS_BLACK);
             m_txt_btn_idx->show();
         }
     }
@@ -2223,7 +2223,7 @@ class KeyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
                                  TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_YELLOW};
     int32_t      m_color2[11] = {TFT_YELLOW, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_RED};
     int32_t      m_color3[11] = {TFT_YELLOW, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY};
-    int32_t      m_bg_color = TFT_TRANSPARENT;
+    int32_t      m_bg_color = TFT_BG_IS_WALLPAPER;
     int32_t      m_fgColor = 0;
     int32_t      m_clickColor = TFT_CYAN;
     Textbutton* txt_btn_array = new Textbutton[34]{Textbutton("txt_btn0"),  Textbutton("txt_btn1"),  Textbutton("txt_btn2"),  Textbutton("txt_btn3"),  Textbutton("txt_btn4"),  Textbutton("txt_btn5"),
@@ -2314,7 +2314,7 @@ class KeyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     bool         set_focus(bool focus) { return false; }
 
     void show() {
-        if (m_bg_color == TFT_TRANSPARENT) {
+        if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -2328,7 +2328,7 @@ class KeyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     }
 
     void hide() {
-        if (m_bg_color == TFT_TRANSPARENT) {
+        if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -2452,7 +2452,7 @@ class WifiSettings : public RegisterTable {
     uint8_t      m_padding_top = 0;    // top margin
     uint8_t      m_padding_bottom = 0; // bottom margin
     uint8_t      m_credentials_idx = 0;
-    int32_t      m_bg_color = TFT_TRANSPARENT;
+    int32_t      m_bg_color = TFT_BG_IS_WALLPAPER;
     int32_t      m_fgColor = 0;
     int32_t      m_borderColor = 0;
     ps_ptr<char> m_name;
@@ -2668,7 +2668,7 @@ class WifiSettings : public RegisterTable {
     }
 
     void hide() {
-        if (m_bg_color == TFT_TRANSPARENT) {
+        if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -2815,7 +2815,7 @@ class TimeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     uint8_t      m_fontSize = 0;
     HAlign       m_h_align = HAlign::Center;
     VAlign       m_v_align = VAlign::Middle;
-    int32_t      m_bg_color = TFT_TRANSPARENT;
+    int32_t      m_bg_color = TFT_BG_IS_WALLPAPER;
     int32_t      m_fgColor = 0;
     int32_t      m_borderColor = 0;
     ps_ptr<char> m_name;
@@ -2875,7 +2875,7 @@ class TimeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     bool         set_focus(bool focus) { return false; }
 
     void show() {
-        if (m_bg_color == TFT_TRANSPARENT) {
+        if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -2886,7 +2886,7 @@ class TimeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     }
 
     void hide() {
-        if (m_bg_color == TFT_TRANSPARENT) {
+        if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -2972,7 +2972,7 @@ class NumbersBox : public RegisterTable { // range 000...999
     int16_t      m_box_y = 0;
     int16_t      m_box_w = 0;
     int16_t      m_box_h = 0;
-    int32_t      m_bg_color = TFT_TRANSPARENT;
+    int32_t      m_bg_color = TFT_BG_IS_WALLPAPER;
     bool         m_enabled = false;
     bool         m_active = true;
     bool         m_focus = false;
@@ -3030,7 +3030,7 @@ class NumbersBox : public RegisterTable { // range 000...999
     }
 
     void hide() {
-        if (m_bg_color == TFT_TRANSPARENT) {
+        if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -3104,7 +3104,7 @@ class OffTimerBox : public RegisterTable { // range 000...999
     int16_t      m_box_y = 0;
     int16_t      m_box_w = 0;
     int16_t      m_box_h = 0;
-    int32_t      m_bg_color = TFT_TRANSPARENT;
+    int32_t      m_bg_color = TFT_BG_IS_WALLPAPER;
     ps_ptr<char> m_color = "green";
     uint16_t     m_offColor = TFT_RED;
     uint16_t     m_onColor = TFT_GREEN;
@@ -3165,7 +3165,7 @@ class OffTimerBox : public RegisterTable { // range 000...999
     }
 
     void hide() {
-        if (m_bg_color == TFT_TRANSPARENT) {
+        if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -3256,7 +3256,7 @@ class ImgClock24 : public RegisterTable { // draw a clock in 24h format
         uint8_t  pb = 0;
     } m_h10, m_h01, m_c, m_m10, m_m01;
 
-    int32_t      m_bg_color = TFT_TRANSPARENT;
+    int32_t      m_bg_color = TFT_BG_IS_WALLPAPER;
     bool         m_enabled = false;
     bool         m_active = true;
     bool         m_focus = false;
@@ -3320,7 +3320,7 @@ class ImgClock24 : public RegisterTable { // draw a clock in 24h format
     }
 
     void hide() {
-        if (m_bg_color == TFT_TRANSPARENT) {
+        if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -3493,7 +3493,7 @@ class ImgClock24small : public RegisterTable { // draw a clock in 24h format
     int16_t      m_y = 0;
     int16_t      m_w = 0;
     int16_t      m_h = 0;
-    int32_t      m_bg_color = TFT_TRANSPARENT;
+    int32_t      m_bg_color = TFT_BG_IS_WALLPAPER;
     bool         m_enabled = false;
     bool         m_active = true;
     bool         m_focus = false;
@@ -3555,7 +3555,7 @@ class ImgClock24small : public RegisterTable { // draw a clock in 24h format
     bool         set_focus(bool focus) { return false; }
 
     void show(bool inactive = false) {
-        if (m_bg_color == TFT_TRANSPARENT) {
+        if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -3567,7 +3567,7 @@ class ImgClock24small : public RegisterTable { // draw a clock in 24h format
     }
 
     void hide() {
-        if (m_bg_color == TFT_TRANSPARENT) {
+        if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -3759,7 +3759,7 @@ class AlarmClock : public RegisterTable { // draw a clock in 24h format
     uint16_t     m_alarmdaysW = 0;
     uint16_t     m_alarmdaysH = 0;
     uint16_t     m_fontSize = 0; // auto
-    int32_t      m_bg_color = TFT_TRANSPARENT;
+    int32_t      m_bg_color = TFT_BG_IS_WALLPAPER;
     bool         m_enabled = false;
     bool         m_active = true;
     bool         m_focus = false;
@@ -3848,7 +3848,7 @@ class AlarmClock : public RegisterTable { // draw a clock in 24h format
     }
 
     void hide() {
-        if (m_bg_color == TFT_TRANSPARENT) {
+        if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -4163,7 +4163,7 @@ class UniList {
     uint8_t      m_tftSize = 0;
     uint8_t      m_lineHight = 0;
     uint8_t      m_mode = 0;
-    int32_t      m_bg_color = TFT_TRANSPARENT;
+    int32_t      m_bg_color = TFT_BG_IS_WALLPAPER;
     uint8_t      m_indentContent = 0;
     uint8_t      m_indentDirectory = 0;
     ps_ptr<char> m_name;
@@ -4329,7 +4329,7 @@ class DlnaList : public RegisterTable {
     int16_t                                    m_viewPoint = 0;
     int16_t                                    m_dlnaMaxItems = -1;
     int16_t                                    m_dlnaMaxServers = -1;
-    int32_t                                    m_bg_color = TFT_TRANSPARENT;
+    int32_t                                    m_bg_color = TFT_BG_IS_WALLPAPER;
     bool                                       m_enabled = false;
     bool                                       m_active = true;
     bool                                       m_focus = false;
@@ -4421,7 +4421,7 @@ class DlnaList : public RegisterTable {
         dlnaItemsList();
     }
     void hide() {
-        if (m_bg_color == TFT_TRANSPARENT) {
+        if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -4932,7 +4932,7 @@ class FileList : public RegisterTable {
     int16_t      m_curAudioFileNr = 0;
     uint16_t     m_viewPos = 0;
     uint8_t      m_fontSize = 0;
-    int32_t      m_bg_color = TFT_TRANSPARENT;
+    int32_t      m_bg_color = TFT_BG_IS_WALLPAPER;
     bool         m_enabled = false;
     bool         m_active = true;
     bool         m_focus = false;
@@ -5010,7 +5010,7 @@ class FileList : public RegisterTable {
         audioFileslist(m_viewPos);
     }
     void hide() {
-        if (m_bg_color == TFT_TRANSPARENT) {
+        if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -5353,7 +5353,7 @@ class StationsList : public RegisterTable {
     uint8_t      m_browseOnRelease = 0;
     uint8_t      m_fontSize = 0;
     uint8_t      m_stationListPos = 0;
-    int32_t      m_bg_color = TFT_TRANSPARENT;
+    int32_t      m_bg_color = TFT_BG_IS_WALLPAPER;
     ps_ptr<char> m_name;
     releasedArg  m_ra;
     ps_ptr<char> m_tftSize = "";
@@ -5409,7 +5409,7 @@ class StationsList : public RegisterTable {
         create_list(true);
     }
     void hide() {
-        if (m_bg_color == TFT_TRANSPARENT) {
+        if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -5455,7 +5455,7 @@ class StationsList : public RegisterTable {
   private:
     void set_bg_color_all(int32_t color) {
         m_bg_color = color;
-        myList.set_bg_color(TFT_BLACK);
+        myList.set_bg_color(TFT_BG_IS_BLACK);
         ;
     }
     void create_list(bool first) {
@@ -5613,7 +5613,7 @@ class DisplayHeader : public RegisterTable {
     int8_t       m_old_rssi = -1;
     uint8_t      m_fontSize = 0;
     uint8_t      m_volume = 0;
-    int32_t      m_bg_color = TFT_TRANSPARENT;
+    int32_t      m_bg_color = TFT_BG_IS_WALLPAPER;
     ps_ptr<char> m_name;
     ps_ptr<char> m_item;
     RTIME::rtime m_time;
@@ -5888,7 +5888,7 @@ class DisplayHeader : public RegisterTable {
     }
 
     void show() {
-        if (m_bg_color == TFT_TRANSPARENT) {
+        if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -5909,7 +5909,7 @@ class DisplayHeader : public RegisterTable {
     }
 
     void hide() {
-        if (m_bg_color == TFT_TRANSPARENT) {
+        if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -6051,7 +6051,7 @@ class DisplayFooter : public RegisterTable {
     uint16_t     m_staNr = 0;
     uint16_t     m_offTime = 0;
     uint32_t     m_bitRate = 0;
-    int32_t      m_bg_color = TFT_TRANSPARENT;
+    int32_t      m_bg_color = TFT_BG_IS_WALLPAPER;
     uint16_t     m_stationColor = TFT_LAVENDER;
     uint16_t     m_bitRateColor = TFT_LAVENDER;
     uint16_t     m_ipAddrColor = TFT_GREENYELLOW;
@@ -6402,7 +6402,7 @@ class DisplayFooter : public RegisterTable {
     bool         set_focus(bool focus) { return false; }
 
     void show() {
-        if (m_bg_color == TFT_TRANSPARENT) {
+        if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -6422,7 +6422,7 @@ class DisplayFooter : public RegisterTable {
     }
 
     void hide() {
-        if (m_bg_color == TFT_TRANSPARENT) {
+        if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -6511,7 +6511,7 @@ class DisplayFooter : public RegisterTable {
         uint16_t triangle_x1x2 = x + w * m_timeCounter - 1;
         uint16_t triangle_y2 = triangle_y0y1 - h * m_timeCounter;
 
-        if (m_bg_color == TFT_TRANSPARENT) {
+        if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, s_BitRate.x, m_y, s_BitRate.w, m_h);
         } else {
             getTFT().fillRect(s_BitRate.x, m_y, s_BitRate.w, m_h, m_bg_color);
@@ -6727,7 +6727,7 @@ class MessageBox : public RegisterTable {
 
     void hide() {
         if (m_first_call) return;
-        if (m_bg_color == TFT_TRANSPARENT) {
+        if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -6785,7 +6785,7 @@ class LineChart : public RegisterTable {
     int16_t               m_pr = 0;
     int16_t               m_pt = 0;
     int16_t               m_pb = 0;
-    int32_t               m_bg_color = TFT_TRANSPARENT;
+    int32_t               m_bg_color = TFT_BG_IS_WALLPAPER;
     bool                  m_enabled = false;
     bool                  m_active = true;
     bool                  m_focus = false;
@@ -6838,33 +6838,33 @@ class LineChart : public RegisterTable {
         uint8_t txt_h = m_h / 5;
         txt_0->begin(m_x, m_y + m_h - txt_h, 2 * txt_h, txt_h, m_pl / 2, 0, 0, 1);
         txt_0->setTextColor(TFT_LIGHTGREY);
-        txt_0->set_bg_color(TFT_BG_VISIBLE);
+        txt_0->set_bg_color(TFT_BG_IS_VISIBLE);
         txt_0->setText("0");
         txt_0->setFontSize(0);
         txt_0->setAlign(HAlign::Left, VAlign::Bottom);
 
         txt_23->begin(m_x + m_w - 2 * txt_h, m_y + m_h - txt_h, 2 * txt_h, txt_h, 0, m_pr / 2, 0, 1);
         txt_23->setTextColor(TFT_LIGHTGREY);
-        txt_23->set_bg_color(TFT_BG_VISIBLE);
+        txt_23->set_bg_color(TFT_BG_IS_VISIBLE);
         txt_23->setText("23");
         txt_23->setFontSize(0);
         txt_23->setAlign(HAlign::Right, VAlign::Bottom);
 
         txt_t_max->begin(m_x, m_y, m_w / 2, txt_h, 2, 0, 0, 1);
         txt_t_max->setTextColor(TFT_LIGHTRED);
-        txt_t_max->set_bg_color(TFT_BG_VISIBLE);
+        txt_t_max->set_bg_color(TFT_BG_IS_VISIBLE);
         txt_t_max->setFontSize(0);
         txt_t_max->setAlign(HAlign::Left, VAlign::Middle);
 
         txt_t_min->begin(m_x, m_y + txt_h, m_w / 2, txt_h, 2, 0, 0, 1);
         txt_t_min->setTextColor(TFT_LIGHTRED);
-        txt_t_min->set_bg_color(TFT_BG_VISIBLE);
+        txt_t_min->set_bg_color(TFT_BG_IS_VISIBLE);
         txt_t_min->setFontSize(0);
         txt_t_min->setAlign(HAlign::Left, VAlign::Middle);
 
         txt_p_max->begin(m_x, m_y + 2 * txt_h, m_w / 2, txt_h, 2, 0, 0, 1);
         txt_p_max->setTextColor(TFT_LIGHTBLUE);
-        txt_p_max->set_bg_color(TFT_BG_VISIBLE);
+        txt_p_max->set_bg_color(TFT_BG_IS_VISIBLE);
         txt_p_max->setFontSize(0);
         txt_p_max->setAlign(HAlign::Left, VAlign::Middle);
     }
@@ -6887,7 +6887,7 @@ class LineChart : public RegisterTable {
         }
         if (m_transparency) {
             getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
-        } else if (m_bg_color == TFT_TRANSPARENT) {
+        } else if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -6948,7 +6948,7 @@ class LineChart : public RegisterTable {
         if (m_first_call) return;
         if (m_transparency) {
             getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
-        } else if (m_bg_color == TFT_TRANSPARENT) {
+        } else if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -7046,7 +7046,7 @@ class WeatherClock : public RegisterTable {
     int16_t          m_w = 0;
     int16_t          m_h = 0;
 
-    int32_t              m_bg_color = TFT_TRANSPARENT;
+    int32_t              m_bg_color = TFT_BG_IS_WALLPAPER;
     bool                 m_enabled = false;
     bool                 m_active = true;
     bool                 m_focus = false;
@@ -7081,10 +7081,10 @@ class WeatherClock : public RegisterTable {
         m_w = w; // width
         m_h = h; // high
         m_enabled = false;
-        pic_weather_code->set_bg_color(TFT_BLACK);
+        pic_weather_code->set_bg_color(TFT_BG_IS_BLACK);
         crt_temperature->begin(x + s_Icon.w, m_y, m_w - s_Icon.w, s_Icon.h);
-        crt_temperature->set_bg_color(TFT_BLACK);
-        clk_24s->set_bg_color(TFT_BLACK);
+        crt_temperature->set_bg_color(TFT_BG_IS_BLACK);
+        clk_24s->set_bg_color(TFT_BG_IS_BLACK);
         clk_24s->begin(m_x, m_y + s_Icon.h, m_w, s_Icon.h);
     }
 
@@ -7100,7 +7100,7 @@ class WeatherClock : public RegisterTable {
 
     void show() {
         if (m_first_call) m_first_call = false;
-        if (m_bg_color == TFT_TRANSPARENT) {
+        if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -7117,7 +7117,7 @@ class WeatherClock : public RegisterTable {
 
     void hide() {
         if (m_first_call) return;
-        if (m_bg_color == TFT_TRANSPARENT) {
+        if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);

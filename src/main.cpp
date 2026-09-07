@@ -428,14 +428,14 @@ inline void clearArea2() { // without VUmeter
     getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, layout.winArea2.x, layout.winArea2.y, layout.winArea2.w, layout.winArea2.h);
 }
 inline void clearWithOutHeaderFooter(int32_t bgColor) {
-    if (bgColor == TFT_TRANSPARENT) {
+    if (bgColor == TFT_BG_IS_WALLPAPER) {
         getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h);
     } else {
         getTFT().fillRect(layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, TFT_BLACK);
     }
 }
 inline void clearAll(int32_t bgColor) {
-    if (bgColor == TFT_TRANSPARENT) {
+    if (bgColor == TFT_BG_IS_WALLPAPER) {
         getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, 0, 0, displayConfig.dispWidth, displayConfig.dispHeight); // copy wallpaper
     } else {
         getTFT().fillRect(0, 0, displayConfig.dispWidth, displayConfig.dispHeight, TFT_BLACK);
@@ -1595,11 +1595,11 @@ void wake_up(int8_t state, int8_t subState) {
     if (s_bt_emitter.found && s_bt_emitter.enabled) bt_emitter.power_on(s_bt_emitter.mode);
     muteChanged(false);
     printfln(s_tag.action, "awake");
-    clearAll(TFT_TRANSPARENT);
+    clearAll(TFT_BG_IS_WALLPAPER);
     clk_CL_24.hide();
     setTFTbrightness(s_brightness, s_bh1750Value);
-    dispHeader.set_bg_color(TFT_TRANSPARENT);
-    dispFooter.set_bg_color(TFT_TRANSPARENT);
+    dispHeader.set_bg_color(TFT_BG_IS_WALLPAPER);
+    dispFooter.set_bg_color(TFT_BG_IS_WALLPAPER);
     dispHeader.show();
     dispFooter.show();
     changeState(state, subState);
@@ -1709,24 +1709,24 @@ void changeState(int8_t state, int8_t subState) {
     s_subState = subState;
    // disableAllObjects();
     setTimeCounter(0);
-    if (state == RADIO          && s_state != RADIO)              { dispHeader.set_bg_color(TFT_TRANSPARENT); dispHeader.show(); dispFooter.set_bg_color(TFT_TRANSPARENT); dispFooter.show(); clearWithOutHeaderFooter(TFT_TRANSPARENT); newState = true;}
-    if (state == STATIONSLIST   && s_state != STATIONSLIST)       { dispHeader.set_bg_color(TFT_BLACK);       dispHeader.show(); dispFooter.set_bg_color(TFT_BLACK);       dispFooter.show(); clearWithOutHeaderFooter(TFT_BLACK);       newState = true;}
-    if (state == PLAYER         && s_state != PLAYER)             { dispHeader.set_bg_color(TFT_TRANSPARENT); dispHeader.show(); dispFooter.set_bg_color(TFT_TRANSPARENT); dispFooter.show(); clearWithOutHeaderFooter(TFT_TRANSPARENT); newState = true;}
-    if (state == AUDIOFILESLIST && s_state != AUDIOFILESLIST)     { dispHeader.set_bg_color(TFT_BLACK);       dispHeader.show(); dispFooter.set_bg_color(TFT_BLACK);       dispFooter.show(); clearWithOutHeaderFooter(TFT_BLACK);       newState = true;}
-    if (state == DLNA           && s_state != DLNA)               { dispHeader.set_bg_color(TFT_TRANSPARENT); dispHeader.show(); dispFooter.set_bg_color(TFT_TRANSPARENT); dispFooter.show(); clearWithOutHeaderFooter(TFT_TRANSPARENT); newState = true;}
-    if (state == DLNAITEMSLIST  && s_state != DLNAITEMSLIST)      { dispHeader.set_bg_color(TFT_BLACK);       dispHeader.show(); dispFooter.set_bg_color(TFT_BLACK);       dispFooter.show(); clearWithOutHeaderFooter(TFT_BLACK);       newState = true;}
-    if (state == CLOCK          && s_state != CLOCK)              { dispHeader.set_bg_color(TFT_BLACK);       dispHeader.show(); dispFooter.set_bg_color(TFT_BLACK);       dispFooter.show(); clearWithOutHeaderFooter(TFT_BLACK);       newState = true;}
-    if (state == ALARMCLOCK     && s_state != ALARMCLOCK)         { dispHeader.set_bg_color(TFT_BLACK);       dispHeader.show(); dispFooter.set_bg_color(TFT_BLACK);       dispFooter.show(); clearWithOutHeaderFooter(TFT_BLACK);       newState = true;}
-    if (state == SLEEPTIMER     && s_state != SLEEPTIMER)         { dispHeader.set_bg_color(TFT_TRANSPARENT); dispHeader.show(); dispFooter.set_bg_color(TFT_TRANSPARENT); dispFooter.show(); clearWithOutHeaderFooter(TFT_TRANSPARENT); newState = true;}
-    if (state == SETTINGS       && s_state != SETTINGS)           { dispHeader.set_bg_color(TFT_TRANSPARENT); dispHeader.show(); dispFooter.set_bg_color(TFT_TRANSPARENT); dispFooter.show(); clearWithOutHeaderFooter(TFT_TRANSPARENT); newState = true;}
-    if (state == BRIGHTNESS     && s_state != BRIGHTNESS)         { dispHeader.set_bg_color(TFT_BLACK);       dispHeader.show(); dispFooter.set_bg_color(TFT_BLACK);       dispFooter.show(); clearWithOutHeaderFooter(TFT_BLACK);       newState = true;}
-    if (state == EQUALIZER      && s_state != EQUALIZER)          { dispHeader.set_bg_color(TFT_TRANSPARENT); dispHeader.show(); dispFooter.set_bg_color(TFT_TRANSPARENT); dispFooter.show(); clearWithOutHeaderFooter(TFT_TRANSPARENT); newState = true;}
-    if (state == BLUETOOTH      && s_state != BLUETOOTH)          { dispHeader.set_bg_color(TFT_TRANSPARENT); dispHeader.show(); dispFooter.set_bg_color(TFT_TRANSPARENT); dispFooter.show(); clearWithOutHeaderFooter(TFT_TRANSPARENT); newState = true;}
-    if (state == IR_SETTINGS    && s_state != IR_SETTINGS)        { dispHeader.set_bg_color(TFT_TRANSPARENT); dispHeader.show(); dispFooter.set_bg_color(TFT_TRANSPARENT); dispFooter.show(); clearWithOutHeaderFooter(TFT_TRANSPARENT); newState = true;}
-    if (state == RINGING        && s_state != RINGING)            { dispHeader.set_bg_color(TFT_BLACK);       dispHeader.show(); dispFooter.set_bg_color(TFT_BLACK);       dispFooter.show(); clearWithOutHeaderFooter(TFT_BLACK);       newState = true;}
-    if (state == WIFI_SETTINGS  && s_state != WIFI_SETTINGS)      { dispHeader.set_bg_color(TFT_TRANSPARENT); dispHeader.show(); dispFooter.set_bg_color(TFT_TRANSPARENT); dispFooter.show(); clearWithOutHeaderFooter(TFT_TRANSPARENT); newState = true;}
-    if (state == WEATHER        && s_state != WEATHER)            { dispHeader.set_bg_color(TFT_TRANSPARENT); dispHeader.show(); dispFooter.set_bg_color(TFT_TRANSPARENT); dispFooter.show(); clearWithOutHeaderFooter(TFT_TRANSPARENT); newState = true;}
-    if (state == SLEEP          && s_state != SLEEP)              { dispHeader.set_bg_color(TFT_BLACK);       dispFooter.set_bg_color(TFT_BLACK);        clearAll(TFT_BLACK);                                                            newState = true;}
+    if (state == RADIO          && s_state != RADIO)              { dispHeader.set_bg_color(TFT_BG_IS_WALLPAPER); dispHeader.show(); dispFooter.set_bg_color(TFT_BG_IS_WALLPAPER); dispFooter.show(); clearWithOutHeaderFooter(TFT_BG_IS_WALLPAPER); newState = true;}
+    if (state == STATIONSLIST   && s_state != STATIONSLIST)       { dispHeader.set_bg_color(TFT_BG_IS_BLACK);     dispHeader.show(); dispFooter.set_bg_color(TFT_BG_IS_BLACK);     dispFooter.show(); clearWithOutHeaderFooter(TFT_BG_IS_BLACK);     newState = true;}
+    if (state == PLAYER         && s_state != PLAYER)             { dispHeader.set_bg_color(TFT_BG_IS_WALLPAPER); dispHeader.show(); dispFooter.set_bg_color(TFT_BG_IS_WALLPAPER); dispFooter.show(); clearWithOutHeaderFooter(TFT_BG_IS_WALLPAPER); newState = true;}
+    if (state == AUDIOFILESLIST && s_state != AUDIOFILESLIST)     { dispHeader.set_bg_color(TFT_BG_IS_BLACK);     dispHeader.show(); dispFooter.set_bg_color(TFT_BG_IS_BLACK);     dispFooter.show(); clearWithOutHeaderFooter(TFT_BG_IS_BLACK);     newState = true;}
+    if (state == DLNA           && s_state != DLNA)               { dispHeader.set_bg_color(TFT_BG_IS_WALLPAPER); dispHeader.show(); dispFooter.set_bg_color(TFT_BG_IS_WALLPAPER); dispFooter.show(); clearWithOutHeaderFooter(TFT_BG_IS_WALLPAPER); newState = true;}
+    if (state == DLNAITEMSLIST  && s_state != DLNAITEMSLIST)      { dispHeader.set_bg_color(TFT_BG_IS_BLACK);     dispHeader.show(); dispFooter.set_bg_color(TFT_BG_IS_BLACK);     dispFooter.show(); clearWithOutHeaderFooter(TFT_BG_IS_BLACK);     newState = true;}
+    if (state == CLOCK          && s_state != CLOCK)              { dispHeader.set_bg_color(TFT_BG_IS_BLACK);     dispHeader.show(); dispFooter.set_bg_color(TFT_BG_IS_BLACK);     dispFooter.show(); clearWithOutHeaderFooter(TFT_BG_IS_BLACK);     newState = true;}
+    if (state == ALARMCLOCK     && s_state != ALARMCLOCK)         { dispHeader.set_bg_color(TFT_BG_IS_BLACK);     dispHeader.show(); dispFooter.set_bg_color(TFT_BG_IS_BLACK);     dispFooter.show(); clearWithOutHeaderFooter(TFT_BG_IS_BLACK);     newState = true;}
+    if (state == SLEEPTIMER     && s_state != SLEEPTIMER)         { dispHeader.set_bg_color(TFT_BG_IS_WALLPAPER); dispHeader.show(); dispFooter.set_bg_color(TFT_BG_IS_WALLPAPER); dispFooter.show(); clearWithOutHeaderFooter(TFT_BG_IS_WALLPAPER); newState = true;}
+    if (state == SETTINGS       && s_state != SETTINGS)           { dispHeader.set_bg_color(TFT_BG_IS_WALLPAPER); dispHeader.show(); dispFooter.set_bg_color(TFT_BG_IS_WALLPAPER); dispFooter.show(); clearWithOutHeaderFooter(TFT_BG_IS_WALLPAPER); newState = true;}
+    if (state == BRIGHTNESS     && s_state != BRIGHTNESS)         { dispHeader.set_bg_color(TFT_BG_IS_BLACK);     dispHeader.show(); dispFooter.set_bg_color(TFT_BG_IS_BLACK);     dispFooter.show(); clearWithOutHeaderFooter(TFT_BG_IS_BLACK);     newState = true;}
+    if (state == EQUALIZER      && s_state != EQUALIZER)          { dispHeader.set_bg_color(TFT_BG_IS_WALLPAPER); dispHeader.show(); dispFooter.set_bg_color(TFT_BG_IS_WALLPAPER); dispFooter.show(); clearWithOutHeaderFooter(TFT_BG_IS_WALLPAPER); newState = true;}
+    if (state == BLUETOOTH      && s_state != BLUETOOTH)          { dispHeader.set_bg_color(TFT_BG_IS_WALLPAPER); dispHeader.show(); dispFooter.set_bg_color(TFT_BG_IS_WALLPAPER); dispFooter.show(); clearWithOutHeaderFooter(TFT_BG_IS_WALLPAPER); newState = true;}
+    if (state == IR_SETTINGS    && s_state != IR_SETTINGS)        { dispHeader.set_bg_color(TFT_BG_IS_WALLPAPER); dispHeader.show(); dispFooter.set_bg_color(TFT_BG_IS_WALLPAPER); dispFooter.show(); clearWithOutHeaderFooter(TFT_BG_IS_WALLPAPER); newState = true;}
+    if (state == RINGING        && s_state != RINGING)            { dispHeader.set_bg_color(TFT_BG_IS_BLACK);     dispHeader.show(); dispFooter.set_bg_color(TFT_BG_IS_BLACK);     dispFooter.show(); clearWithOutHeaderFooter(TFT_BG_IS_BLACK);     newState = true;}
+    if (state == WIFI_SETTINGS  && s_state != WIFI_SETTINGS)      { dispHeader.set_bg_color(TFT_BG_IS_WALLPAPER); dispHeader.show(); dispFooter.set_bg_color(TFT_BG_IS_WALLPAPER); dispFooter.show(); clearWithOutHeaderFooter(TFT_BG_IS_WALLPAPER); newState = true;}
+    if (state == WEATHER        && s_state != WEATHER)            { dispHeader.set_bg_color(TFT_BG_IS_WALLPAPER); dispHeader.show(); dispFooter.set_bg_color(TFT_BG_IS_WALLPAPER); dispFooter.show(); clearWithOutHeaderFooter(TFT_BG_IS_WALLPAPER); newState = true;}
+    if (state == SLEEP          && s_state != SLEEP)              { dispHeader.set_bg_color(TFT_BG_IS_BLACK);     dispFooter.set_bg_color(TFT_BG_IS_BLACK);        clearAll(TFT_BG_IS_BLACK);                                                        newState = true;}
 
     if (state == RADIO          && s_subState_radio   != subState) { newSubState = true;  }
     if (state == PLAYER         && s_subState_player  != subState) { newSubState = true;  }
@@ -1986,7 +1986,7 @@ void changeState(int8_t state, int8_t subState) {
                 audio.setVolume(s_volume.ringVolume);
                 muteChanged(false);
                 connecttoFS("SD_MMC", "/ring/alarm_clock.mp3");
-                clk_RI_24small.set_bg_color(TFT_BLACK);
+                clk_RI_24small.set_bg_color(TFT_BG_IS_BLACK);
                 clk_RI_24small.show();
             } else { // alarm without bell
                 s_f_eof_alarm = true;
