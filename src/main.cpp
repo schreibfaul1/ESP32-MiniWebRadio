@@ -4263,6 +4263,7 @@ void graphicObjects_OnClick(ps_ptr<char> name, uint8_t val) { // val = 0 --> is 
         if (val && name.equals("btn_WR_off"))          { goto exit; }
         if (val && name.equals("btn_WR_sleep"))        { goto exit; }
         if (val && name.equals("txt_p_max"))           { goto exit; }
+        if (val && name.equals("txt_t_max"))           { goto exit; }
         if (val && name.equals("crt_temperature"))     { goto exit; }
     }
     if(val == 0) goto exit;

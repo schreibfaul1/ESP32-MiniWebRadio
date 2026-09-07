@@ -7102,7 +7102,6 @@ class WeatherClock : public RegisterTable {
     bool         set_focus(bool focus) { return false; }
 
     void show() {
-        MWR_LOG_ERROR("show ");
         if (m_first_call) m_first_call = false;
         if (m_bg_color == TFT_TRANSPARENT) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
