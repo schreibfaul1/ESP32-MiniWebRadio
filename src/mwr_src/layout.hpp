@@ -793,7 +793,7 @@ void placingGraphicObjects() { // and initialize them
     // BRIGHTNESS --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     sdr_BR_value.begin(2 * layout.winButton.w, layout.winButton.y, 4 * layout.winButton.w, layout.winButton.h, 0, 0, 0, 0);
     sdr_BR_value.setMinMaxVal(displayConfig.brightnessMin, displayConfig.brightnessMax);
-    sdr_BR_value.set_transparency(true);
+    sdr_BR_value.set_bg_color(TFT_BG_VISIBLE);
     btn_BR_ready.begin(7 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_BR_ready.setPicturePath("/btn/Button_Ready");
     pic_BR_logo.begin(0, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, layout.winWoHF.pl, layout.winWoHF.pr, layout.winWoHF.pt, layout.winWoHF.pb);
@@ -880,8 +880,7 @@ void placingGraphicObjects() { // and initialize them
     //  btn_WR_off.set_bg_color(TFT_BLACK);
     sdr_WR_volume.begin(5 * layout.winButton.w, layout.winButton.y, layout.winButton.w * 3, layout.winButton.h, layout.winButton.pl + 10, layout.winButton.pr, layout.winButton.pt,
                         layout.winButton.pb);
-    sdr_WR_volume.set_bg_color(TFT_BLACK);
-    sdr_WR_volume.set_transparency(true);
+    sdr_WR_volume.set_bg_color(TFT_BG_VISIBLE);
     // ALL_STATE ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     msg_box.begin(-1, -1, -1, -1);
 }
