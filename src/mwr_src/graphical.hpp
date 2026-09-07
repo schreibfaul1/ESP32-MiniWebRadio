@@ -968,7 +968,7 @@ class Textbox : public RegisterTable {
 
     void set_bg_color(int32_t color) {
         m_bg_color = color;
-        m_bg_color == TFT_BG_IS_VISIBLE ? m_init_bg_cache = true :  m_init_bg_cache = false;
+        m_bg_color == TFT_BG_IS_VISIBLE ? m_init_bg_cache = true : m_init_bg_cache = false;
     }
 
     void show() {
@@ -6538,6 +6538,9 @@ class DisplayFooter : public RegisterTable {
 
         if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, s_BitRate.x, m_y, s_BitRate.w, m_h);
+
+        } else if (m_bg_color == TFT_BG_IS_VISIBLE) {
+            ; //
         } else {
             getTFT().fillRect(s_BitRate.x, m_y, s_BitRate.w, m_h, m_bg_color);
         }
