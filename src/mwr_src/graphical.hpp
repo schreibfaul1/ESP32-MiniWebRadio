@@ -186,7 +186,6 @@ class Button : public RegisterTable {
     bool             m_active = true;
     bool             m_state = false;
     bool             m_first_call = true;
-    bool             m_transparency = false;
     HAlign           m_h_align = HAlign::Center;
     VAlign           m_v_align = VAlign::Middle;
     int16_t          m_x = 0;
@@ -197,7 +196,7 @@ class Button : public RegisterTable {
     uint16_t         m_button_image_h = 0;
     uint16_t         m_button_image_x = 0;
     uint16_t         m_button_image_y = 0;
-    int32_t          m_bg_color = TFT_TRANSPARENT;
+    int32_t          m_bg_color = TFT_BG_BACKGROUND;
     ps_ptr<char>     m_picturePath[2][4];
     ps_ptr<char>     m_name;
     ps_ptr<uint16_t> m_cache_idle_pic = {};
@@ -231,38 +230,26 @@ class Button : public RegisterTable {
     bool         getValue() { return m_state; }
     void         setOn() { m_state = true; }
     void         setOff() { m_state = false; }
-    void         set_transparency(bool transparency) { m_transparency = transparency; }
+
 
     void show() {
-
-        // if (m_bg_color == TFT_BG_VISIBLE) {
-        //     if (m_first_call) {
-        //         m_cache_bg.alloc_array(m_w * m_h, m_name.c_get());
-        //         getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
-        //     }
-        //     else{
-        //         getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
-        //     }
-        // }
-        // else if(m_bg_color == TFT_BG_BACKGROUND){ //
-        //     getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
-        // }
-        // else {  // e.g. m_bg_color == TFT_BLACK
-        //     getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
-        // }
-
-
-
-
-
-
-
-        if (m_first_call) m_first_call = false;
-        if (m_bg_color == TFT_TRANSPARENT) {
+        if (m_bg_color == TFT_BG_VISIBLE) {
+            if (m_first_call) {
+                m_cache_bg.alloc_array(m_w * m_h, m_name.c_get());
+                getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
+            }
+            else{
+                getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
+            }
+        }
+        else if(m_bg_color == TFT_BG_BACKGROUND){ //
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
-        } else {
+        }
+        else {  // e.g. m_bg_color == TFT_BLACK
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
         }
+        if (m_first_call) m_first_call = false;
+
         if (!m_active) {
             setInactive();
         } else {
@@ -275,7 +262,9 @@ class Button : public RegisterTable {
 
     void hide() {
         if (m_first_call) return;
-        if (m_bg_color == TFT_TRANSPARENT) {
+        if (m_bg_color == TFT_BG_VISIBLE) {
+            getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else if (m_bg_color == TFT_BG_BACKGROUND) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
