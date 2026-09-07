@@ -1506,7 +1506,7 @@ class VU_Meter : public RegisterTable {
     uint16_t         m_y = 0;
     uint16_t         m_w = 0;
     uint16_t         m_h = 0;
-    int32_t          m_bg_color = TFT_TRANSPARENT;
+    int32_t          m_bg_color = TFT_BG_BACKGROUND;
     uint32_t         m_frameColor = TFT_DARKGREY;
     ps_ptr<char>     m_name;
     ps_ptr<uint16_t> m_cache_bg = {};
@@ -1516,7 +1516,6 @@ class VU_Meter : public RegisterTable {
     bool             m_clicked = false;
     bool             m_content_has_changed = false;
     bool             m_first_call = true;
-    bool             m_transparency = false;
     uint64_t         m_barLeft;  // Bit = Bars
     uint64_t         m_peakLeft; // Bit = Peak
     releasedArg      m_ra;
@@ -1568,18 +1567,18 @@ class VU_Meter : public RegisterTable {
     bool         has_focus() { return m_focus; }
     void         set_bg_color(int32_t color) { m_bg_color = color; }
     bool         set_focus(bool focus) { return false; }
-    void         set_transparency(bool transparency) { m_transparency = transparency; }
 
     void show() {
-        if (m_first_call) {
-            m_cache_bg.alloc_array(m_w * m_h, m_name.c_get());
-            getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
-        }
-        if (m_transparency) {
-            getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
-        } else if (m_bg_color == TFT_TRANSPARENT) {
+        if (m_bg_color == TFT_BG_VISIBLE) {
+            if (m_first_call) {
+                m_cache_bg.alloc_array(m_w * m_h, m_name.c_get());
+                getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
+            } else {
+                getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
+            }
+        } else if (m_bg_color == TFT_BG_BACKGROUND) { //
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
-        } else {
+        } else { // e.g. m_bg_color == TFT_BLACK
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
             getTFT().drawRect(m_frame_x, m_frame_y, m_frame_w, m_frame_h, m_frameColor);
         }
@@ -1597,9 +1596,9 @@ class VU_Meter : public RegisterTable {
 
     void hide() {
         if (m_first_call) return;
-        if (m_transparency) {
+        if (m_bg_color == TFT_BG_VISIBLE) {
             getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
-        } else if (m_bg_color == TFT_TRANSPARENT) {
+        } else if (m_bg_color == TFT_BG_BACKGROUND) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -1684,25 +1683,32 @@ class VU_Meter : public RegisterTable {
         uint16_t yellowLimit = 85.0 * s;
 
         int32_t activeColor;
-        int32_t inactiveColor;
+        int32_t inactiveColor = m_bg_color;
+        int32_t color;
 
         if (row < greenLimit) {
             activeColor = TFT_GREEN;
-            inactiveColor = m_transparency ? TFT_TRANSPARENT : TFT_DARKGREEN;
+            if (m_bg_color >= 0) inactiveColor = TFT_DARKGREEN;
         } else if (row < yellowLimit) {
             activeColor = TFT_YELLOW;
-            inactiveColor = m_transparency ? TFT_TRANSPARENT : TFT_DARKYELLOW;
+            if (m_bg_color >= 0) inactiveColor = TFT_DARKYELLOW;
         } else {
             activeColor = TFT_LIGHTRED;
-            inactiveColor = m_transparency ? TFT_TRANSPARENT : TFT_DARKRED;
+            if (m_bg_color >= 0) inactiveColor = TFT_DARKRED;
         }
 
-        int32_t color = br ? activeColor : inactiveColor;
+        if (br) {
+            color = activeColor;
+        } else {
+            color = inactiveColor;
+        }
 
-        if (color == TFT_TRANSPARENT) {
+        if (color == TFT_BG_VISIBLE) {
             uint16_t srcX = xPos - m_x;
             uint16_t srcY = yPos - m_y;
             getTFT().copyFramebuffer(m_cache_bg.get(), m_w, m_h, srcX, srcY, FB_VISIBLE, xPos, yPos, m_segm_w, m_segm_h);
+        } else if (color == TFT_BG_BACKGROUND) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, xPos, yPos, m_segm_w, m_segm_h);
         } else {
             getTFT().fillRect(xPos, yPos, m_segm_w, m_segm_h, color);
         }
@@ -1724,20 +1730,16 @@ class Spectrum : public RegisterTable {
     bool             m_focus = false;
     bool             m_active = true;
     bool             m_clicked = false;
-    // bool             m_content_has_changed = false;
-    bool m_first_call = true;
-    bool m_transparency = false;
-    // uint64_t         m_barLeft;  // Bit = Bars
-    // uint64_t         m_peakLeft; // Bit = Peak
-    releasedArg m_ra;
-    uint8_t     m_space_between_cols = 1;
-    uint8_t     m_space_between_bars = 1;
-    uint8_t     m_bar_w = 0;
-    uint8_t     m_bar_h = 0;
-    uint16_t    m_window_x = 0;
-    uint16_t    m_window_y = 0;
-    uint16_t    m_window_w = 0;
-    uint16_t    m_window_h = 0;
+    bool             m_first_call = true;
+    releasedArg      m_ra;
+    uint8_t          m_space_between_cols = 1;
+    uint8_t          m_space_between_bars = 1;
+    uint8_t          m_bar_w = 0;
+    uint8_t          m_bar_h = 0;
+    uint16_t         m_window_x = 0;
+    uint16_t         m_window_y = 0;
+    uint16_t         m_window_w = 0;
+    uint16_t         m_window_h = 0;
 
     enum SegmentState : uint8_t { OFF, BAR, PEAK };
     uint16_t                  m_numSegments = 26;
@@ -1790,7 +1792,6 @@ class Spectrum : public RegisterTable {
     bool         has_focus() { return m_focus; }
     void         set_bg_color(int32_t color) { m_bg_color = color; }
     bool         set_focus(bool focus) { return false; }
-    void         set_transparency(bool transparency) { m_transparency = transparency; }
 
     void show() {
         if (m_bg_color == TFT_BG_VISIBLE) {
@@ -1822,7 +1823,6 @@ class Spectrum : public RegisterTable {
         }
         m_enabled = false;
     }
-
 
     void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
         x = m_x;
@@ -1927,7 +1927,7 @@ class Spectrum : public RegisterTable {
             uint16_t srcY = yPos - m_y;
             getTFT().copyFramebuffer(m_cache_bg.get(), m_w, m_h, srcX, srcY, FB_VISIBLE, xPos, yPos, m_bar_w, m_bar_h);
         } else if (color == TFT_BG_BACKGROUND) {
-            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE,  xPos, yPos, m_bar_w, m_bar_h);
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, xPos, yPos, m_bar_w, m_bar_h);
         } else {
             getTFT().fillRect(m_colums_pos_x[col], m_bars_pos_y[row], m_bar_w, m_bar_h, color);
         }

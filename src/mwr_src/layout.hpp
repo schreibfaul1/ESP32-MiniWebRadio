@@ -652,9 +652,9 @@ void placingGraphicObjects() { // and initialize them
     txt_RA_irNum.setFontSize(displayConfig.bigNumbersFontSize);
     pic_RA_logo.begin(layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h, layout.winLogo.pl, layout.winLogo.pr, layout.winLogo.pt, layout.winLogo.pb);
     VUmeter_RA.begin(layout.winVUmeter.x, layout.winVUmeter.y, layout.winVUmeter.w, layout.winVUmeter.h, layout.winVUmeter.pl, layout.winVUmeter.pr, layout.winVUmeter.pt, layout.winVUmeter.pb);
-    VUmeter_RA.set_transparency(true);
+    VUmeter_RA.set_bg_color(TFT_BG_BACKGROUND);
     spectrum_RA.begin(layout.winSpectrum.x, layout.winSpectrum.y, layout.winSpectrum.w, layout.winSpectrum.h, 0, 0, 0, 0);
-    spectrum_RA.set_transparency(true);
+    spectrum_RA.set_bg_color(TFT_BG_BACKGROUND);
     nbr_RA_staBox.begin(layout.winName.x, layout.winName.y, layout.winName.w, layout.winName.h);
     // STATIONSLIST ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     lst_RADIO.begin(layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, displayConfig.tftSize, displayConfig.listFontSize);
