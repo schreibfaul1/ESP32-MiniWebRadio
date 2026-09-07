@@ -231,21 +231,17 @@ class Button : public RegisterTable {
     void         setOn() { m_state = true; }
     void         setOff() { m_state = false; }
 
-
     void show() {
         if (m_bg_color == TFT_BG_VISIBLE) {
             if (m_first_call) {
                 m_cache_bg.alloc_array(m_w * m_h, m_name.c_get());
                 getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
-            }
-            else{
+            } else {
                 getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
             }
-        }
-        else if(m_bg_color == TFT_BG_BACKGROUND){ //
+        } else if (m_bg_color == TFT_BG_BACKGROUND) { //
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
-        }
-        else {  // e.g. m_bg_color == TFT_BLACK
+        } else { // e.g. m_bg_color == TFT_BLACK
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
         }
         if (m_first_call) m_first_call = false;
@@ -374,30 +370,31 @@ class Button : public RegisterTable {
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class PictureBox : public RegisterTable {
   private:
-    int16_t      m_x = 0;
-    int16_t      m_y = 0;
-    int16_t      m_w = 0;
-    int16_t      m_h = 0;
-    uint16_t     m_image_w = 0;
-    uint16_t     m_image_h = 0;
-    uint16_t     m_image_x = 0;
-    uint16_t     m_image_y = 0;
-    uint8_t      m_padding_left = 0;   // left margin
-    uint8_t      m_padding_right = 0;  // right margin
-    uint8_t      m_padding_top = 0;    // top margin
-    uint8_t      m_padding_bottom = 0; // bottom margin
-    HAlign       m_h_align = HAlign::Center;
-    VAlign       m_v_align = VAlign::Middle;
-    int32_t      m_bg_color = TFT_TRANSPARENT;
-    ps_ptr<char> m_PicturePath;
-    ps_ptr<char> m_name;
-    bool         m_enabled = false;
-    bool         m_focus = false;
-    bool         m_active = true;
-    bool         m_clicked = false;
-    bool         m_content_has_changed = false;
-    bool         m_first_call = true;
-    releasedArg  m_ra;
+    int16_t          m_x = 0;
+    int16_t          m_y = 0;
+    int16_t          m_w = 0;
+    int16_t          m_h = 0;
+    uint16_t         m_image_w = 0;
+    uint16_t         m_image_h = 0;
+    uint16_t         m_image_x = 0;
+    uint16_t         m_image_y = 0;
+    uint8_t          m_padding_left = 0;   // left margin
+    uint8_t          m_padding_right = 0;  // right margin
+    uint8_t          m_padding_top = 0;    // top margin
+    uint8_t          m_padding_bottom = 0; // bottom margin
+    HAlign           m_h_align = HAlign::Center;
+    VAlign           m_v_align = VAlign::Middle;
+    int32_t          m_bg_color = TFT_BG_BACKGROUND;
+    ps_ptr<char>     m_PicturePath;
+    ps_ptr<char>     m_name;
+    ps_ptr<uint16_t> m_cache_bg = {};
+    bool             m_enabled = false;
+    bool             m_focus = false;
+    bool             m_active = true;
+    bool             m_clicked = false;
+    bool             m_content_has_changed = true;
+    bool             m_first_call = true;
+    releasedArg      m_ra;
 
   public:
     PictureBox(ps_ptr<char> name) {
@@ -430,23 +427,32 @@ class PictureBox : public RegisterTable {
     bool         set_focus(bool focus) { return false; }
 
     bool show() {
-        if (m_first_call) { m_first_call = false; }
-        if (m_content_has_changed) { // restore background
-            if (m_bg_color == TFT_TRANSPARENT) {
-                getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+
+        if (m_bg_color == TFT_BG_VISIBLE) {
+            if (m_first_call) {
+                m_cache_bg.alloc_array(m_w * m_h, m_name.c_get());
+                getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
             } else {
-                getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+                if (m_content_has_changed) getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
             }
-            m_content_has_changed = false;
+        } else if (m_bg_color == TFT_BG_BACKGROUND) { //
+            if (m_content_has_changed) getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else { // e.g. m_bg_color == TFT_BLACK
+            if (m_content_has_changed) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
         }
+        if (m_first_call) m_first_call = false;
+        m_content_has_changed = false;
+
         if (m_image_w > m_w || m_image_h > m_h) { MWR_LOG_WARN("image {}, w: {}, h: {} > {}x{}", m_PicturePath, m_image_w, m_image_h, m_w, m_h); }
         m_enabled = drawImage(m_PicturePath, m_image_x, m_image_y, m_image_w, m_image_h);
         return m_enabled;
     }
 
     void hide() {
-        if (!m_first_call) return;
-        if (m_bg_color == TFT_TRANSPARENT) {
+        if (m_first_call) return;
+        if (m_bg_color == TFT_BG_VISIBLE) {
+            getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else if (m_bg_color == TFT_BG_BACKGROUND) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -601,15 +607,12 @@ class Slider : public RegisterTable {
             if (m_first_call) {
                 m_cache_bg.alloc_array(m_w * m_h, m_name.c_get());
                 getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
-            }
-            else{
+            } else {
                 getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
             }
-        }
-        else if(m_bg_color == TFT_BG_BACKGROUND){ //
+        } else if (m_bg_color == TFT_BG_BACKGROUND) { //
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
-        }
-        else {  // e.g. m_bg_color == TFT_BLACK
+        } else { // e.g. m_bg_color == TFT_BLACK
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
         }
         m_enabled = true;
