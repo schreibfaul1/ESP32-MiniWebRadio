@@ -879,8 +879,8 @@ void placingGraphicObjects() { // and initialize them
     btn_WR_off.begin(4 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_WR_off.setPicturePath("/btn/Button_Off");
     btn_WR_off.set_bg_color(TFT_BG_IS_VISIBLE);
-    sdr_WR_volume.begin(5 * layout.winButton.w, layout.winButton.y, layout.winButton.w * 3, layout.winButton.h, layout.winButton.pl + 10, layout.winButton.pr, layout.winButton.pt,
-                        layout.winButton.pb);
+    sdr_WR_volume.begin(5 * layout.winButton.w + 10, layout.winButton.y, displayConfig.dispWidth - (5 * layout.winButton.w + 20), layout.winButton.h, layout.winButton.pl, layout.winButton.pr,
+                        layout.winButton.pt, layout.winButton.pb);
     sdr_WR_volume.set_bg_color(TFT_BG_IS_VISIBLE);
     // ALL_STATE ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     msg_box.begin(-1, -1, -1, -1);

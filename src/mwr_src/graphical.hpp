@@ -7059,14 +7059,14 @@ class WeatherClock : public RegisterTable {
 
 #elifdef TFT_LAYOUT_L // 800 x 480px
     struct w_i { // Weather code icon
-        uint16_t w = 184;
-        uint16_t h = 184;
+        uint16_t w = 192;
+        uint16_t h = 192;
     } const s_Icon; // icon 184 x 184 px
 
 #elifdef TFT_LAYOUT_XL // 1024 x 600px
     struct w_i { // Weather code icon
-        uint16_t w = 232;
-        uint16_t h = 232;
+        uint16_t w = 240;
+        uint16_t h = 240;
     } const s_Icon; // icon 232 x 232 px
 #endif
 
@@ -7113,6 +7113,7 @@ class WeatherClock : public RegisterTable {
         m_w = w; // width
         m_h = h; // high
         m_enabled = false;
+        pic_weather_code->setAlign(HAlign::Center, VAlign::Middle);
         pic_weather_code->set_bg_color(TFT_BG_IS_BLACK);
         crt_temperature->begin(x + s_Icon.w, m_y, m_w - s_Icon.w, s_Icon.h);
         crt_temperature->set_bg_color(TFT_BG_IS_BLACK);
@@ -7201,8 +7202,10 @@ class WeatherClock : public RegisterTable {
 
   private:
     void set_bg_color_all(int32_t color) {
-        if (m_bg_color == color) return;
         m_bg_color = color;
+        pic_weather_code->set_bg_color(m_bg_color);
+        crt_temperature->set_bg_color(m_bg_color);
+        clk_24s->set_bg_color(m_bg_color);
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

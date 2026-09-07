@@ -1726,7 +1726,7 @@ void changeState(int8_t state, int8_t subState) {
     if (state == IR_SETTINGS    && s_state != IR_SETTINGS)    { dispHeader.set_bg_color(TFT_BG_IS_WALLPAPER); dispFooter.set_bg_color(TFT_BG_IS_WALLPAPER); clearWithOutHeaderFooter(TFT_BG_IS_WALLPAPER); newState = true;}
     if (state == RINGING        && s_state != RINGING)        { dispHeader.set_bg_color(TFT_BG_IS_BLACK);     dispFooter.set_bg_color(TFT_BG_IS_BLACK);     clearWithOutHeaderFooter(TFT_BG_IS_BLACK);     newState = true;}
     if (state == WIFI_SETTINGS  && s_state != WIFI_SETTINGS)  { dispHeader.set_bg_color(TFT_BG_IS_WALLPAPER); dispFooter.set_bg_color(TFT_BG_IS_WALLPAPER); clearWithOutHeaderFooter(TFT_BG_IS_WALLPAPER); newState = true;}
-    if (state == WEATHER        && s_state != WEATHER)        { dispHeader.set_bg_color(TFT_BG_IS_WALLPAPER); dispFooter.set_bg_color(TFT_BG_IS_WALLPAPER); clearWithOutHeaderFooter(TFT_BG_IS_WALLPAPER); newState = true;}
+    if (state == WEATHER        && s_state != WEATHER)        { dispHeader.set_bg_color(TFT_BG_IS_BLACK);     dispFooter.set_bg_color(TFT_BG_IS_BLACK);     clearWithOutHeaderFooter(TFT_BG_IS_WALLPAPER); newState = true;}
     if (state == SLEEP          && s_state != SLEEP)          { dispHeader.set_bg_color(TFT_BG_IS_BLACK);     dispFooter.set_bg_color(TFT_BG_IS_BLACK);     clearAll(TFT_BG_IS_BLACK);                     newState = true;}
 
     if (state == RADIO          && s_subState_radio   != subState) { newSubState = true;  }
@@ -4270,6 +4270,7 @@ void graphicObjects_OnClick(ps_ptr<char> name, uint8_t val) { // val = 0 --> is 
         if (val && name.equals("btn_WR_sleep"))        { goto exit; }
         if (val && name.equals("txt_p_max"))           { goto exit; }
         if (val && name.equals("txt_t_max"))           { goto exit; }
+        if (val && name.equals("pic_weather_code"))    { goto exit; }
         if (val && name.equals("crt_temperature"))     { goto exit; }
     }
     if(val == 0) goto exit;
