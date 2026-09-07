@@ -6988,10 +6988,10 @@ class LineChart : public RegisterTable {
         m_preProb_max = hourly_precipitationProbability[0];
         for (size_t i = 0; i < HOURS; i++) {
             m_hourly_temperature.push_back(hourly_temperature[i]);
-            m_hourly_precipitationProbability.push_back(hourly_precipitationProbability[i + 72]);
+            m_hourly_precipitationProbability.push_back(hourly_precipitationProbability[i]);
             m_temp_min = std::min(m_temp_min, hourly_temperature[i]);
             m_temp_max = std::max(m_temp_max, hourly_temperature[i]);
-            m_preProb_max = std::max(m_preProb_max, hourly_precipitationProbability[i + 72]);
+            m_preProb_max = std::max(m_preProb_max, hourly_precipitationProbability[i]);
         }
         m_pos_x.clear();
         float dist = (m_w - m_pl - m_pr) / (float)(HOURS - 1);

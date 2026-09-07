@@ -1805,7 +1805,7 @@ void changeState(int8_t state, int8_t subState) {
                 }
             }
             if (subState == 2){ // Player, DLNA, Clock, SleepTime, Brightness, EQ, BT, Off
-                btn_RA_weather.set_active(false); // todo
+            //    btn_RA_weather.set_active(false); // todo
                 if(newSubState) {
                     btn_RA_staList.show();
                     btn_RA_player.show(); btn_RA_dlna.show(); btn_RA_clock.show(); btn_RA_weather.show(); btn_RA_settings.show();
