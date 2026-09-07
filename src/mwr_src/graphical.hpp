@@ -5890,6 +5890,8 @@ class DisplayHeader : public RegisterTable {
     void show() {
         if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else if (m_bg_color == TFT_BG_IS_VISIBLE) {
+            ; //
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
         }
@@ -5911,6 +5913,8 @@ class DisplayHeader : public RegisterTable {
     void hide() {
         if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else if (m_bg_color == TFT_BG_IS_VISIBLE) {
+            ; //
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
         }

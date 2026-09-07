@@ -444,6 +444,7 @@ inline void clearAll(int32_t bgColor) {
 
 void showStationName() {
     if (s_f_sleeping) return;
+    if (s_state != RADIO) return;
     txt_RA_staName.setTextColor(TFT_CYAN);
     txt_RA_staName.setText(getStationName());
     txt_RA_staName.show();
@@ -1709,24 +1710,24 @@ void changeState(int8_t state, int8_t subState) {
     s_subState = subState;
    // disableAllObjects();
     setTimeCounter(0);
-    if (state == RADIO          && s_state != RADIO)              { dispHeader.set_bg_color(TFT_BG_IS_WALLPAPER); dispHeader.show(); dispFooter.set_bg_color(TFT_BG_IS_WALLPAPER); dispFooter.show(); clearWithOutHeaderFooter(TFT_BG_IS_WALLPAPER); newState = true;}
-    if (state == STATIONSLIST   && s_state != STATIONSLIST)       { dispHeader.set_bg_color(TFT_BG_IS_BLACK);     dispHeader.show(); dispFooter.set_bg_color(TFT_BG_IS_BLACK);     dispFooter.show(); clearWithOutHeaderFooter(TFT_BG_IS_BLACK);     newState = true;}
-    if (state == PLAYER         && s_state != PLAYER)             { dispHeader.set_bg_color(TFT_BG_IS_WALLPAPER); dispHeader.show(); dispFooter.set_bg_color(TFT_BG_IS_WALLPAPER); dispFooter.show(); clearWithOutHeaderFooter(TFT_BG_IS_WALLPAPER); newState = true;}
-    if (state == AUDIOFILESLIST && s_state != AUDIOFILESLIST)     { dispHeader.set_bg_color(TFT_BG_IS_BLACK);     dispHeader.show(); dispFooter.set_bg_color(TFT_BG_IS_BLACK);     dispFooter.show(); clearWithOutHeaderFooter(TFT_BG_IS_BLACK);     newState = true;}
-    if (state == DLNA           && s_state != DLNA)               { dispHeader.set_bg_color(TFT_BG_IS_WALLPAPER); dispHeader.show(); dispFooter.set_bg_color(TFT_BG_IS_WALLPAPER); dispFooter.show(); clearWithOutHeaderFooter(TFT_BG_IS_WALLPAPER); newState = true;}
-    if (state == DLNAITEMSLIST  && s_state != DLNAITEMSLIST)      { dispHeader.set_bg_color(TFT_BG_IS_BLACK);     dispHeader.show(); dispFooter.set_bg_color(TFT_BG_IS_BLACK);     dispFooter.show(); clearWithOutHeaderFooter(TFT_BG_IS_BLACK);     newState = true;}
-    if (state == CLOCK          && s_state != CLOCK)              { dispHeader.set_bg_color(TFT_BG_IS_BLACK);     dispHeader.show(); dispFooter.set_bg_color(TFT_BG_IS_BLACK);     dispFooter.show(); clearWithOutHeaderFooter(TFT_BG_IS_BLACK);     newState = true;}
-    if (state == ALARMCLOCK     && s_state != ALARMCLOCK)         { dispHeader.set_bg_color(TFT_BG_IS_BLACK);     dispHeader.show(); dispFooter.set_bg_color(TFT_BG_IS_BLACK);     dispFooter.show(); clearWithOutHeaderFooter(TFT_BG_IS_BLACK);     newState = true;}
-    if (state == SLEEPTIMER     && s_state != SLEEPTIMER)         { dispHeader.set_bg_color(TFT_BG_IS_WALLPAPER); dispHeader.show(); dispFooter.set_bg_color(TFT_BG_IS_WALLPAPER); dispFooter.show(); clearWithOutHeaderFooter(TFT_BG_IS_WALLPAPER); newState = true;}
-    if (state == SETTINGS       && s_state != SETTINGS)           { dispHeader.set_bg_color(TFT_BG_IS_WALLPAPER); dispHeader.show(); dispFooter.set_bg_color(TFT_BG_IS_WALLPAPER); dispFooter.show(); clearWithOutHeaderFooter(TFT_BG_IS_WALLPAPER); newState = true;}
-    if (state == BRIGHTNESS     && s_state != BRIGHTNESS)         { dispHeader.set_bg_color(TFT_BG_IS_BLACK);     dispHeader.show(); dispFooter.set_bg_color(TFT_BG_IS_BLACK);     dispFooter.show(); clearWithOutHeaderFooter(TFT_BG_IS_BLACK);     newState = true;}
-    if (state == EQUALIZER      && s_state != EQUALIZER)          { dispHeader.set_bg_color(TFT_BG_IS_WALLPAPER); dispHeader.show(); dispFooter.set_bg_color(TFT_BG_IS_WALLPAPER); dispFooter.show(); clearWithOutHeaderFooter(TFT_BG_IS_WALLPAPER); newState = true;}
-    if (state == BLUETOOTH      && s_state != BLUETOOTH)          { dispHeader.set_bg_color(TFT_BG_IS_WALLPAPER); dispHeader.show(); dispFooter.set_bg_color(TFT_BG_IS_WALLPAPER); dispFooter.show(); clearWithOutHeaderFooter(TFT_BG_IS_WALLPAPER); newState = true;}
-    if (state == IR_SETTINGS    && s_state != IR_SETTINGS)        { dispHeader.set_bg_color(TFT_BG_IS_WALLPAPER); dispHeader.show(); dispFooter.set_bg_color(TFT_BG_IS_WALLPAPER); dispFooter.show(); clearWithOutHeaderFooter(TFT_BG_IS_WALLPAPER); newState = true;}
-    if (state == RINGING        && s_state != RINGING)            { dispHeader.set_bg_color(TFT_BG_IS_BLACK);     dispHeader.show(); dispFooter.set_bg_color(TFT_BG_IS_BLACK);     dispFooter.show(); clearWithOutHeaderFooter(TFT_BG_IS_BLACK);     newState = true;}
-    if (state == WIFI_SETTINGS  && s_state != WIFI_SETTINGS)      { dispHeader.set_bg_color(TFT_BG_IS_WALLPAPER); dispHeader.show(); dispFooter.set_bg_color(TFT_BG_IS_WALLPAPER); dispFooter.show(); clearWithOutHeaderFooter(TFT_BG_IS_WALLPAPER); newState = true;}
-    if (state == WEATHER        && s_state != WEATHER)            { dispHeader.set_bg_color(TFT_BG_IS_WALLPAPER); dispHeader.show(); dispFooter.set_bg_color(TFT_BG_IS_WALLPAPER); dispFooter.show(); clearWithOutHeaderFooter(TFT_BG_IS_WALLPAPER); newState = true;}
-    if (state == SLEEP          && s_state != SLEEP)              { dispHeader.set_bg_color(TFT_BG_IS_BLACK);     dispFooter.set_bg_color(TFT_BG_IS_BLACK);        clearAll(TFT_BG_IS_BLACK);                                                        newState = true;}
+    if (state == RADIO          && s_state != RADIO)          { dispHeader.set_bg_color(TFT_BG_IS_WALLPAPER); dispFooter.set_bg_color(TFT_BG_IS_WALLPAPER); clearWithOutHeaderFooter(TFT_BG_IS_WALLPAPER); newState = true;}
+    if (state == STATIONSLIST   && s_state != STATIONSLIST)   { dispHeader.set_bg_color(TFT_BG_IS_BLACK);     dispFooter.set_bg_color(TFT_BG_IS_BLACK);     clearWithOutHeaderFooter(TFT_BG_IS_BLACK);     newState = true;}
+    if (state == PLAYER         && s_state != PLAYER)         { dispHeader.set_bg_color(TFT_BG_IS_WALLPAPER); dispFooter.set_bg_color(TFT_BG_IS_WALLPAPER); clearWithOutHeaderFooter(TFT_BG_IS_WALLPAPER); newState = true;}
+    if (state == AUDIOFILESLIST && s_state != AUDIOFILESLIST) { dispHeader.set_bg_color(TFT_BG_IS_BLACK);     dispFooter.set_bg_color(TFT_BG_IS_BLACK);     clearWithOutHeaderFooter(TFT_BG_IS_BLACK);     newState = true;}
+    if (state == DLNA           && s_state != DLNA)           { dispHeader.set_bg_color(TFT_BG_IS_WALLPAPER); dispFooter.set_bg_color(TFT_BG_IS_WALLPAPER); clearWithOutHeaderFooter(TFT_BG_IS_WALLPAPER); newState = true;}
+    if (state == DLNAITEMSLIST  && s_state != DLNAITEMSLIST)  { dispHeader.set_bg_color(TFT_BG_IS_BLACK);     dispFooter.set_bg_color(TFT_BG_IS_BLACK);     clearWithOutHeaderFooter(TFT_BG_IS_BLACK);     newState = true;}
+    if (state == CLOCK          && s_state != CLOCK)          { dispHeader.set_bg_color(TFT_BG_IS_BLACK);     dispFooter.set_bg_color(TFT_BG_IS_BLACK);     clearWithOutHeaderFooter(TFT_BG_IS_BLACK);     newState = true;}
+    if (state == ALARMCLOCK     && s_state != ALARMCLOCK)     { dispHeader.set_bg_color(TFT_BG_IS_BLACK);     dispFooter.set_bg_color(TFT_BG_IS_BLACK);     clearWithOutHeaderFooter(TFT_BG_IS_BLACK);     newState = true;}
+    if (state == SLEEPTIMER     && s_state != SLEEPTIMER)     { dispHeader.set_bg_color(TFT_BG_IS_WALLPAPER); dispFooter.set_bg_color(TFT_BG_IS_WALLPAPER); clearWithOutHeaderFooter(TFT_BG_IS_WALLPAPER); newState = true;}
+    if (state == SETTINGS       && s_state != SETTINGS)       { dispHeader.set_bg_color(TFT_BG_IS_WALLPAPER); dispFooter.set_bg_color(TFT_BG_IS_WALLPAPER); clearWithOutHeaderFooter(TFT_BG_IS_WALLPAPER); newState = true;}
+    if (state == BRIGHTNESS     && s_state != BRIGHTNESS)     { dispHeader.set_bg_color(TFT_BG_IS_BLACK);     dispFooter.set_bg_color(TFT_BG_IS_BLACK);  /* clearWithOutHeaderFooter(TFT_BG_IS_BLACK); */  newState = true;}
+    if (state == EQUALIZER      && s_state != EQUALIZER)      { dispHeader.set_bg_color(TFT_BG_IS_WALLPAPER); dispFooter.set_bg_color(TFT_BG_IS_WALLPAPER); clearWithOutHeaderFooter(TFT_BG_IS_WALLPAPER); newState = true;}
+    if (state == BLUETOOTH      && s_state != BLUETOOTH)      { dispHeader.set_bg_color(TFT_BG_IS_WALLPAPER); dispFooter.set_bg_color(TFT_BG_IS_WALLPAPER); clearWithOutHeaderFooter(TFT_BG_IS_WALLPAPER); newState = true;}
+    if (state == IR_SETTINGS    && s_state != IR_SETTINGS)    { dispHeader.set_bg_color(TFT_BG_IS_WALLPAPER); dispFooter.set_bg_color(TFT_BG_IS_WALLPAPER); clearWithOutHeaderFooter(TFT_BG_IS_WALLPAPER); newState = true;}
+    if (state == RINGING        && s_state != RINGING)        { dispHeader.set_bg_color(TFT_BG_IS_BLACK);     dispFooter.set_bg_color(TFT_BG_IS_BLACK);     clearWithOutHeaderFooter(TFT_BG_IS_BLACK);     newState = true;}
+    if (state == WIFI_SETTINGS  && s_state != WIFI_SETTINGS)  { dispHeader.set_bg_color(TFT_BG_IS_WALLPAPER); dispFooter.set_bg_color(TFT_BG_IS_WALLPAPER); clearWithOutHeaderFooter(TFT_BG_IS_WALLPAPER); newState = true;}
+    if (state == WEATHER        && s_state != WEATHER)        { dispHeader.set_bg_color(TFT_BG_IS_WALLPAPER); dispFooter.set_bg_color(TFT_BG_IS_WALLPAPER); clearWithOutHeaderFooter(TFT_BG_IS_WALLPAPER); newState = true;}
+    if (state == SLEEP          && s_state != SLEEP)          { dispHeader.set_bg_color(TFT_BG_IS_BLACK);     dispFooter.set_bg_color(TFT_BG_IS_BLACK);     clearAll(TFT_BG_IS_BLACK);                     newState = true;}
 
     if (state == RADIO          && s_subState_radio   != subState) { newSubState = true;  }
     if (state == PLAYER         && s_subState_player  != subState) { newSubState = true;  }
@@ -2034,6 +2035,8 @@ void changeState(int8_t state, int8_t subState) {
             break;
         }
     }
+    dispHeader.show();
+    dispFooter.show();
     s_ir_btn_select = UNDEFINED;
     s_state = state;
 }
