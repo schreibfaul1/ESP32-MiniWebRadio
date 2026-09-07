@@ -911,7 +911,6 @@ class Textbox : public RegisterTable {
     bool             m_noWrap = false;
     bool             m_content_has_changed = false;
     bool             m_first_call = true;
-    bool             m_transparency = false;
     int16_t          m_x = 0;
     int16_t          m_y = 0;
     int16_t          m_w = 0;
@@ -923,9 +922,9 @@ class Textbox : public RegisterTable {
     uint8_t          m_paddig_right = 0;  // right margin
     uint8_t          m_paddig_top = 0;    // top margin
     uint8_t          m_paddig_bottom = 0; // bottom margin
-    int32_t          m_bg_color = TFT_TRANSPARENT;
-    int32_t          m_fill_color1 = TFT_TRANSPARENT;
-    int32_t          m_fill_color2 = TFT_TRANSPARENT;
+    int32_t          m_bg_color = TFT_BG_BACKGROUND;
+    int32_t          m_fill_color1 = TFT_BG_BACKGROUND;
+    int32_t          m_fill_color2 = TFT_BG_BACKGROUND;
     int32_t          m_textColor = 0;
     int32_t          m_border_color = 0;
     uint8_t          m_border_radius = 0;
@@ -964,24 +963,22 @@ class Textbox : public RegisterTable {
     bool         has_focus() { return m_focus; }
     void         set_bg_color(int32_t color) { m_bg_color = color; }
     bool         set_focus(bool focus) { return false; }
-    void         set_transparency(bool transparency) { m_transparency = transparency; }
 
     void show() {
-        if (m_first_call) {
-            m_cache_bg.alloc_array(m_w * m_h, m_name.c_get());
-            getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
-            m_first_call = false;
-        }
-        if (m_content_has_changed) {
-            if (m_transparency) {
-                getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
-            } else if (m_bg_color == TFT_TRANSPARENT) {
-                getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        if (m_bg_color == TFT_BG_VISIBLE) {
+            if (m_first_call) {
+                m_cache_bg.alloc_array(m_w * m_h, m_name.c_get());
+                getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
             } else {
-                getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+                if (m_content_has_changed) getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
             }
-            m_content_has_changed = false;
+        } else if (m_bg_color == TFT_BG_BACKGROUND) { //
+            if (m_content_has_changed) getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else { // e.g. m_bg_color == TFT_BLACK
+            if (m_content_has_changed) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
         }
+        m_first_call = false;
+        m_content_has_changed = false;
         m_enabled = true;
         m_clicked = false;
         writeText(m_text);
@@ -989,9 +986,9 @@ class Textbox : public RegisterTable {
 
     void hide() {
         if (m_first_call) return;
-        if (m_transparency) {
+        if (m_bg_color == TFT_BG_VISIBLE) {
             getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
-        } else if (m_bg_color == TFT_TRANSPARENT) {
+        } else if (m_bg_color == TFT_BG_BACKGROUND) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
@@ -6841,33 +6838,33 @@ class LineChart : public RegisterTable {
         uint8_t txt_h = m_h / 5;
         txt_0->begin(m_x, m_y + m_h - txt_h, 2 * txt_h, txt_h, m_pl / 2, 0, 0, 1);
         txt_0->setTextColor(TFT_LIGHTGREY);
-        txt_0->set_transparency(true);
+        txt_0->set_bg_color(TFT_BG_VISIBLE);
         txt_0->setText("0");
         txt_0->setFontSize(0);
         txt_0->setAlign(HAlign::Left, VAlign::Bottom);
 
         txt_23->begin(m_x + m_w - 2 * txt_h, m_y + m_h - txt_h, 2 * txt_h, txt_h, 0, m_pr / 2, 0, 1);
         txt_23->setTextColor(TFT_LIGHTGREY);
-        txt_23->set_transparency(true);
+        txt_23->set_bg_color(TFT_BG_VISIBLE);
         txt_23->setText("23");
         txt_23->setFontSize(0);
         txt_23->setAlign(HAlign::Right, VAlign::Bottom);
 
         txt_t_max->begin(m_x, m_y, m_w / 2, txt_h, 2, 0, 0, 1);
         txt_t_max->setTextColor(TFT_LIGHTRED);
-        txt_t_max->set_transparency(true);
+        txt_t_max->set_bg_color(TFT_BG_VISIBLE);
         txt_t_max->setFontSize(0);
         txt_t_max->setAlign(HAlign::Left, VAlign::Middle);
 
         txt_t_min->begin(m_x, m_y + txt_h, m_w / 2, txt_h, 2, 0, 0, 1);
         txt_t_min->setTextColor(TFT_LIGHTRED);
-        txt_t_min->set_transparency(true);
+        txt_t_min->set_bg_color(TFT_BG_VISIBLE);
         txt_t_min->setFontSize(0);
         txt_t_min->setAlign(HAlign::Left, VAlign::Middle);
 
         txt_p_max->begin(m_x, m_y + 2 * txt_h, m_w / 2, txt_h, 2, 0, 0, 1);
         txt_p_max->setTextColor(TFT_LIGHTBLUE);
-        txt_p_max->set_transparency(true);
+        txt_p_max->set_bg_color(TFT_BG_VISIBLE);
         txt_p_max->setFontSize(0);
         txt_p_max->setAlign(HAlign::Left, VAlign::Middle);
     }

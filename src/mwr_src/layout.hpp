@@ -802,7 +802,7 @@ void placingGraphicObjects() { // and initialize them
     txt_BR_value.begin(0, layout.winButton.y, layout.winButton.w * 2, layout.winButton.h, layout.winButton.pl, layout.winButton.pr, layout.winButton.pt, layout.winButton.pb);
     txt_BR_value.setAlign(HAlign::Center, VAlign::Middle);
     txt_BR_value.setFontSize(0); // auto
-    txt_BR_value.set_transparency(true);
+    txt_BR_value.set_bg_color(TFT_BG_VISIBLE);
     // EQUALIZER ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     sdr_EQ_lowPass.begin(layout.sdrLP.x, layout.sdrLP.y, layout.sdrLP.w, layout.sdrLP.h, layout.sdrLP.pl, layout.sdrLP.pr, layout.sdrLP.pt, layout.sdrLP.pb);
     sdr_EQ_lowPass.setMinMaxVal(-12, 12);
