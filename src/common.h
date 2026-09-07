@@ -45,6 +45,7 @@
 
 #pragma once
 
+#include "tft_common_defs.h"
 #include "Audio.h"
 #include "BH1750.h"
 #include "DLNAClient.h"

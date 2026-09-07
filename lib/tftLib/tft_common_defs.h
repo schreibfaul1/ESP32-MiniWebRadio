@@ -33,7 +33,7 @@ extern __attribute__((weak)) void tft_info(const char*);
  #define ANSI_ESC_BROWN       "\033[38;5;130m"
  #define ANSI_ESC_ORANGE      "\033[38;5;214m"
  #define ANSI_ESC_DARKORANGE  "\033[38;5;166m"
-#define ANSI_ESC_LIGHTORANGE "\033[38;5;215m"
+ #define ANSI_ESC_LIGHTORANGE "\033[38;5;215m"
  #define ANSI_ESC_PURPLE      "\033[38;5;129m"
  #define ANSI_ESC_PINK        "\033[38;5;213m"
  #define ANSI_ESC_LIME        "\033[38;5;190m"
@@ -94,6 +94,8 @@ extern __attribute__((weak)) void tft_info(const char*);
 #define TFT_VIOLET          0x801F // 128,   0, 255
 
 #define TFT_TRANSPARENT -1
+#define TFT_BG_WALLPAPER -1
+#define TFT_BG_VISIBLE -2
 
 #if TFT_FONT == 0
     #define TFT_GARAMOND
@@ -108,12 +110,6 @@ extern __attribute__((weak)) void tft_info(const char*);
 #else
     #define TFT_GARAMOND
 #endif
-
-// #define TFT_ALIGN_RIGHT  (1)
-// #define TFT_ALIGN_LEFT   (2)
-// #define TFT_ALIGN_CENTER (3)
-// #define TFT_ALIGN_TOP    (4)
-// #define TFT_ALIGN_DOWN   (5)
 
 enum class HAlign : uint8_t {
     Left,

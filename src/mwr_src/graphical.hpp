@@ -186,6 +186,7 @@ class Button : public RegisterTable {
     bool             m_active = true;
     bool             m_state = false;
     bool             m_first_call = true;
+    bool             m_transparency = false;
     HAlign           m_h_align = HAlign::Center;
     VAlign           m_v_align = VAlign::Middle;
     int16_t          m_x = 0;
@@ -229,6 +230,7 @@ class Button : public RegisterTable {
     bool         getValue() { return m_state; }
     void         setOn() { m_state = true; }
     void         setOff() { m_state = false; }
+    void         set_transparency(bool transparency) { m_transparency = transparency; }
 
     void show() {
         if (m_first_call) m_first_call = false;
@@ -590,6 +592,7 @@ class Slider : public RegisterTable {
         }
         if (m_transparency) {
             getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
+            if (m_bg_color != TFT_TRANSPARENT) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
         } else if (m_bg_color == TFT_TRANSPARENT) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else {
@@ -1068,7 +1071,6 @@ class Textbox : public RegisterTable {
         if (!txt.valid()) return;
         if (m_enabled) {
             if (m_fontSize != 0) { getTFT().setFontSize(m_fontSize); }
-            getTFT().setTextColor(m_textColor);
             int x = m_x + m_padding_left;
             int y = m_y + m_paddig_top;
             int w = m_w - (m_paddig_right + m_padding_left);
@@ -1087,6 +1089,7 @@ class Textbox : public RegisterTable {
                     getTFT().drawRect(x, y, w, h, m_border_color);
                 }
             }
+            getTFT().setTextColor(m_textColor);
             getTFT().writeText(txt, x, y, w, h, m_h_align, m_v_align, m_noWrap, m_autoSize);
         }
     }
@@ -6748,8 +6751,242 @@ class MessageBox : public RegisterTable {
         ;
     }
 };
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class LineChart : public RegisterTable {
+    std::vector<uint16_t> m_pos_x;
+    int16_t               m_x = 0;
+    int16_t               m_y = 0;
+    int16_t               m_w = 0;
+    int16_t               m_h = 0;
+    int16_t               m_pl = 0;
+    int16_t               m_pr = 0;
+    int16_t               m_pt = 0;
+    int16_t               m_pb = 0;
+    int32_t               m_bg_color = TFT_TRANSPARENT;
+    bool                  m_enabled = false;
+    bool                  m_active = true;
+    bool                  m_focus = false;
+    bool                  m_clicked = false;
+    bool                  m_state = false;
+    bool                  m_showAll = false;
+    bool                  m_first_call = true;
+    bool                  m_transparency = false;
+    bool                  m_data_valid = false;
+    std::vector<float>    m_hourly_temperature;
+    std::vector<uint8_t>  m_hourly_precipitationProbability;
+    float                 m_temp_min = 0.0f;
+    float                 m_temp_max = 0.0f;
+    uint8_t               m_preProb_max = 0;
+    ps_ptr<char>          m_name;
+    ps_ptr<uint16_t>      m_cache_bg = {};
+    releasedArg           m_ra;
+    Textbox*              txt_0 = new Textbox("txt_0");
+    Textbox*              txt_23 = new Textbox("txt_23");
+    Textbox*              txt_t_max = new Textbox("txt_t_max");
+    Textbox*              txt_t_min = new Textbox("txt_t_min");
+    Textbox*              txt_p_max = new Textbox("txt_p_max");
+
+    static constexpr size_t HOURS = 24;
+
+  public:
+    LineChart(ps_ptr<char> name) {
+        register_object(this);
+        m_name = name;
+        m_enabled = false;
+        m_clicked = false;
+        m_state = false;
+    }
+    ~LineChart() {
+        delete txt_0;
+        delete txt_23;
+        delete txt_t_min;
+        delete txt_t_max;
+        delete txt_p_max;
+    }
+
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
+        m_x = x;                // x pos
+        m_y = y;                // y pos
+        m_w = w;                // width
+        m_h = h;                // high
+        m_pl = m_pr = m_w / 20; // 5% of w
+        m_pt = m_pb = m_h / 10; // 10% of h
+        m_enabled = false;
+        uint8_t txt_h = m_h / 5;
+        txt_0->begin(m_x, m_y + m_h - txt_h, 2 * txt_h, txt_h, m_pl / 2, 0, 0, 1);
+        txt_0->setTextColor(TFT_LIGHTGREY);
+        txt_0->set_transparency(true);
+        txt_0->setText("0");
+        txt_0->setFontSize(0);
+        txt_0->setAlign(HAlign::Left, VAlign::Bottom);
+
+        txt_23->begin(m_x + m_w - 2 * txt_h, m_y + m_h - txt_h, 2 * txt_h, txt_h, 0, m_pr / 2, 0, 1);
+        txt_23->setTextColor(TFT_LIGHTGREY);
+        txt_23->set_transparency(true);
+        txt_23->setText("23");
+        txt_23->setFontSize(0);
+        txt_23->setAlign(HAlign::Right, VAlign::Bottom);
+
+        txt_t_max->begin(m_x, m_y, m_w / 2, txt_h, 2, 0, 0, 1);
+        txt_t_max->setTextColor(TFT_LIGHTRED);
+        txt_t_max->set_transparency(true);
+        txt_t_max->setFontSize(0);
+        txt_t_max->setAlign(HAlign::Left, VAlign::Middle);
+
+        txt_t_min->begin(m_x, m_y + txt_h, m_w / 2, txt_h, 2, 0, 0, 1);
+        txt_t_min->setTextColor(TFT_LIGHTRED);
+        txt_t_min->set_transparency(true);
+        txt_t_min->setFontSize(0);
+        txt_t_min->setAlign(HAlign::Left, VAlign::Middle);
+
+        txt_p_max->begin(m_x, m_y + 2 * txt_h, m_w / 2, txt_h, 2, 0, 0, 1);
+        txt_p_max->setTextColor(TFT_LIGHTBLUE);
+        txt_p_max->set_transparency(true);
+        txt_p_max->setFontSize(0);
+        txt_p_max->setAlign(HAlign::Left, VAlign::Middle);
+    }
+
+    ps_ptr<char> get_name() { return m_name; }
+    void         enable() { m_enabled = true; }
+    void         disable() { m_enabled = false; }
+    bool         is_enabled() { return m_enabled; }
+    bool         is_active() { return m_active; }
+    void         set_active(bool active) { m_active = active; }
+    bool         has_focus() { return m_focus; }
+    void         set_bg_color(int32_t color) { m_bg_color = color; }
+    bool         set_focus(bool focus) { return false; }
+
+    void show() {
+        if (!m_data_valid) return;
+        if (m_first_call) {
+            m_cache_bg.alloc_array(m_w * m_h, m_name.c_get());
+            getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
+        }
+        if (m_transparency) {
+            getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+        }
+        m_first_call = false;
+        m_enabled = true;
+        m_clicked = false;
+        getTFT().drawRect(m_x, m_y, m_w, m_h, TFT_RED);
+
+        uint16_t y_max = m_y + m_pt;
+        uint16_t y_min = m_y + m_h - m_pb;
+        log_i("m_temp_min %4.2f, m_temp_max %4.2f, y_min %u, y_max %u", m_temp_min, m_temp_max, y_min, y_max);
+
+        // ----------------------------------------------------
+        // Probability of rain
+        // ----------------------------------------------------
+        uint16_t bar_w = m_pos_x[1] - m_pos_x[0] - 1; // Width of a column
+        uint16_t rain_top = y_min - (y_min - y_max) * 0.75;
+        for (uint8_t i = 0; i < HOURS; i++) {
+            uint8_t  probability = m_hourly_precipitationProbability[i];
+            uint16_t y = map(probability, 0, 100, y_min, rain_top);
+            uint16_t x = m_x + m_pos_x[i] - bar_w / 2;
+            getTFT().fillRect(x, y, bar_w, y_min - y, TFT_BLUE);
+        }
+
+        // ----------------------------------------------------
+        // Temperature
+        // ----------------------------------------------------
+        float    y_scale = 0.0f;
+        uint16_t y_prev = 0;
+        if (m_temp_max > m_temp_min) { y_scale = (float)(y_min - y_max) / (m_temp_max - m_temp_min); }
+        for (size_t i = 0; i < HOURS; i++) {
+            uint16_t y;
+            if (m_temp_max == m_temp_min) {
+                y = (y_min + y_max) / 2;
+            } else {
+                y = y_min - (m_hourly_temperature[i] - m_temp_min) * y_scale;
+            }
+            if (i > 0) { getTFT().drawLine(m_x + m_pos_x[i - 1], y_prev, m_x + m_pos_x[i], y, TFT_RED); }
+            getTFT().fillCircle(m_x + m_pos_x[i], y, 2, TFT_RED);
+            y_prev = y;
+        }
+        ps_ptr<char> tmp;
+        txt_0->show();
+        txt_23->show();
+        tmp.assignf("Tmax:{:4.2}°C", m_temp_max);
+        txt_t_max->setText(tmp);
+        txt_t_max->show();
+        tmp.assignf("Tmin:{:4.2}°C", m_temp_min);
+        txt_t_min->setText(tmp);
+        txt_t_min->show();
+        tmp.assignf("Pmax:{}%", m_preProb_max);
+        txt_p_max->setText(tmp);
+        txt_p_max->show();
+    }
+
+    void hide() {
+        if (m_first_call) return;
+        if (m_transparency) {
+            getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else if (m_bg_color == TFT_TRANSPARENT) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+        }
+        m_enabled = false;
+    }
+
+    void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
+        x = m_x;
+        y = m_y;
+        w = m_w;
+        h = m_h;
+    }
+
+    bool click() {
+        if (!m_enabled) return false;
+        if (!m_active) return false;
+        m_clicked = true;
+        if (graphicObjects_OnClick) graphicObjects_OnClick(m_name, m_enabled);
+        return true;
+    }
+
+    bool positionXY(uint16_t x, uint16_t y) {
+        if (!m_enabled) return false;
+        if (x < m_x) return false;
+        if (y < m_y) return false;
+        if (x > m_x + m_w) return false;
+        if (y > m_y + m_h) return false;
+        if (m_enabled) m_clicked = true;
+        if (graphicObjects_OnClick) graphicObjects_OnClick(m_name, m_enabled);
+        return true;
+    }
+    bool released() {
+        if (!m_enabled) return false;
+        if (!m_clicked) return false;
+        if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
+        m_clicked = false;
+        return true;
+    }
+    void update(const std::vector<float>& hourly_temperature, const std::vector<uint8_t>& hourly_precipitationProbability) {
+        if (hourly_temperature.size() < HOURS || hourly_precipitationProbability.size() < HOURS) { return; }
+        m_hourly_temperature.clear();
+        m_hourly_precipitationProbability.clear();
+        m_temp_min = hourly_temperature[0];
+        m_temp_max = hourly_temperature[0];
+        m_preProb_max = hourly_precipitationProbability[0];
+        for (size_t i = 0; i < HOURS; i++) {
+            m_hourly_temperature.push_back(hourly_temperature[i]);
+            m_hourly_precipitationProbability.push_back(hourly_precipitationProbability[i + 72]);
+            m_temp_min = std::min(m_temp_min, hourly_temperature[i]);
+            m_temp_max = std::max(m_temp_max, hourly_temperature[i]);
+            m_preProb_max = std::max(m_preProb_max, hourly_precipitationProbability[i + 72]);
+        }
+        m_pos_x.clear();
+        float dist = (m_w - m_pl - m_pr) / (float)(HOURS - 1);
+        for (size_t i = 0; i < HOURS; i++) { m_pos_x.push_back(m_pl + i * dist); }
+        m_data_valid = true;
+    }
+};
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class WeatherClock : public RegisterTable { // draw a clock in 24h format
+class WeatherClock : public RegisterTable {
   private:
     //------------------------------------------------------------------------------------------------------------------------------------------------
 #ifdef TFT_LAYOUT_S // 320 x 240px
@@ -6778,24 +7015,28 @@ class WeatherClock : public RegisterTable { // draw a clock in 24h format
     } const s_Icon; // icon 232 x 232 px
 #endif
 
-    PictureBox* pic_weather_code = new PictureBox("pic_weather_code"); // digits hour   * 10
-    int16_t     m_x = 0;
-    int16_t     m_y = 0;
-    int16_t     m_w = 0;
-    int16_t     m_h = 0;
+    PictureBox*      pic_weather_code = new PictureBox("pic_weather_code"); // digits hour   * 10
+    LineChart*       crt_temperature = new LineChart("crt_temperature");
+    ImgClock24small* clk_24s = new ImgClock24small("ImgClock24small");
+    int16_t          m_x = 0;
+    int16_t          m_y = 0;
+    int16_t          m_w = 0;
+    int16_t          m_h = 0;
 
-    int32_t      m_bg_color = TFT_TRANSPARENT;
-    bool         m_enabled = false;
-    bool         m_active = true;
-    bool         m_focus = false;
-    bool         m_clicked = false;
-    bool         m_state = false;
-    bool         m_showAll = false;
-    bool         m_first_call = true;
-    ps_ptr<char> m_name;
-    ps_ptr<char> m_pathBuff;
-    uint8_t      m_min = 0, m_hour = 0, m_weekday = 0;
-    releasedArg  m_ra;
+    int32_t              m_bg_color = TFT_TRANSPARENT;
+    bool                 m_enabled = false;
+    bool                 m_active = true;
+    bool                 m_focus = false;
+    bool                 m_clicked = false;
+    bool                 m_state = false;
+    bool                 m_showAll = false;
+    bool                 m_first_call = true;
+    ps_ptr<char>         m_name;
+    ps_ptr<char>         m_pathBuff;
+    uint8_t              m_min = 0, m_hour = 0, m_weekday = 0;
+    releasedArg          m_ra;
+    std::vector<float>   m_hourly_temperature;
+    std::vector<uint8_t> m_hourly_precipitationProbability;
 
   public:
     WeatherClock(ps_ptr<char> name) {
@@ -6805,7 +7046,11 @@ class WeatherClock : public RegisterTable { // draw a clock in 24h format
         m_clicked = false;
         m_state = false;
     }
-    ~WeatherClock() { delete pic_weather_code; }
+    ~WeatherClock() {
+        delete pic_weather_code;
+        delete crt_temperature;
+        delete clk_24s;
+    }
 
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
         m_x = x; // x pos
@@ -6813,6 +7058,11 @@ class WeatherClock : public RegisterTable { // draw a clock in 24h format
         m_w = w; // width
         m_h = h; // high
         m_enabled = false;
+        pic_weather_code->set_bg_color(TFT_BLACK);
+        crt_temperature->begin(x + s_Icon.w, m_y, m_w - s_Icon.w, s_Icon.h);
+        crt_temperature->set_bg_color(TFT_BLACK);
+        clk_24s->set_bg_color(TFT_BLACK);
+        clk_24s->begin(m_x, m_y + s_Icon.h, m_w, s_Icon.h);
     }
 
     ps_ptr<char> get_name() { return m_name; }
@@ -6839,6 +7089,8 @@ class WeatherClock : public RegisterTable { // draw a clock in 24h format
         pic_weather_code->show();
         m_enabled = true;
         m_showAll = true;
+        crt_temperature->show();
+        clk_24s->show();
     }
 
     void hide() {
@@ -6878,7 +7130,15 @@ class WeatherClock : public RegisterTable { // draw a clock in 24h format
         return true;
     }
 
-    void update(const std::vector<METEO::METEO_HOURLY>& hourly, const std::vector<METEO::METEO_DAILY>& daily) { log_i("sunrise %u:%02u", daily[0].sunrise.hour, daily[0].sunrise.minute); }
+    void update(const std::vector<METEO::METEO_HOURLY>& hourly, const std::vector<METEO::METEO_DAILY>& daily) {
+        for (int i = 0; i < hourly.size(); i++) {
+            m_hourly_temperature.push_back(hourly[i].temperature);
+            m_hourly_precipitationProbability.push_back(hourly[i].precipitationProbability);
+        }
+        crt_temperature->update(m_hourly_temperature, m_hourly_precipitationProbability);
+
+        log_i("sunrise %u:%02u", daily[0].sunrise.hour, daily[0].sunrise.minute);
+    }
 
   private:
     void enable_all() { m_enabled = true; }
