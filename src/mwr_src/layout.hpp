@@ -797,7 +797,7 @@ void placingGraphicObjects() { // and initialize them
     btn_BR_ready.begin(7 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_BR_ready.setPicturePath("/btn/Button_Ready");
     btn_BR_ready.set_bg_color(TFT_BG_IS_VISIBLE);
-    pic_BR_logo.begin(0, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, layout.winWoHF.pl, layout.winWoHF.pr, layout.winWoHF.pt, layout.winWoHF.pb);
+    pic_BR_logo.begin(0, 0, displayConfig.dispWidth, displayConfig.dispHeight, 0, 0, 0, 0);
     pic_BR_logo.setPicturePath("/common/Brightness.jpg");
     txt_BR_value.begin(0, layout.winButton.y, layout.winButton.w * 2, layout.winButton.h, layout.winButton.pl, layout.winButton.pr, layout.winButton.pt, layout.winButton.pb);
     txt_BR_value.setAlign(HAlign::Center, VAlign::Middle);

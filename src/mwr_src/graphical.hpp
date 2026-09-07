@@ -393,7 +393,7 @@ class PictureBox : public RegisterTable {
     bool             m_active = true;
     bool             m_clicked = false;
     bool             m_content_has_changed = true;
-    bool             m_first_call = true;
+    bool             m_init_bg_cache = true;
     releasedArg      m_ra;
 
   public:
@@ -423,13 +423,16 @@ class PictureBox : public RegisterTable {
     bool         is_active() { return m_active; }
     void         set_active(bool active) { m_active = active; }
     bool         has_focus() { return m_focus; }
-    void         set_bg_color(int32_t color) { m_bg_color = color; }
     bool         set_focus(bool focus) { return false; }
 
-    bool show() {
+    void set_bg_color(int32_t color) {
+        m_bg_color = color;
+        if (m_bg_color == TFT_BG_IS_VISIBLE) m_init_bg_cache = true;
+    }
 
+    bool show() {
         if (m_bg_color == TFT_BG_IS_VISIBLE) {
-            if (m_first_call) {
+            if (m_init_bg_cache) {
                 m_cache_bg.alloc_array(m_w * m_h, m_name.c_get());
                 getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
             } else {
@@ -440,7 +443,7 @@ class PictureBox : public RegisterTable {
         } else { // e.g. m_bg_color == TFT_BLACK
             if (m_content_has_changed) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
         }
-        if (m_first_call) m_first_call = false;
+        m_init_bg_cache = false;
         m_content_has_changed = false;
 
         if (m_image_w > m_w || m_image_h > m_h) { MWR_LOG_WARN("image {}, w: {}, h: {} > {}x{}", m_PicturePath, m_image_w, m_image_h, m_w, m_h); }
@@ -449,7 +452,7 @@ class PictureBox : public RegisterTable {
     }
 
     void hide() {
-        if (m_first_call) return;
+        if (m_init_bg_cache) return;
         if (m_bg_color == TFT_BG_IS_VISIBLE) {
             getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else if (m_bg_color == TFT_BG_IS_WALLPAPER) {
@@ -910,7 +913,7 @@ class Textbox : public RegisterTable {
     bool             m_autoSize = false;
     bool             m_noWrap = false;
     bool             m_content_has_changed = false;
-    bool             m_first_call = true;
+    bool             m_init_bg_cache = true;
     int16_t          m_x = 0;
     int16_t          m_y = 0;
     int16_t          m_w = 0;
@@ -961,12 +964,16 @@ class Textbox : public RegisterTable {
     bool         is_active() { return m_active; }
     void         set_active(bool active) { m_active = active; }
     bool         has_focus() { return m_focus; }
-    void         set_bg_color(int32_t color) { m_bg_color = color; }
     bool         set_focus(bool focus) { return false; }
+
+    void set_bg_color(int32_t color) {
+        m_bg_color = color;
+        m_bg_color == TFT_BG_IS_VISIBLE ? m_init_bg_cache = true :  m_init_bg_cache = false;
+    }
 
     void show() {
         if (m_bg_color == TFT_BG_IS_VISIBLE) {
-            if (m_first_call) {
+            if (m_init_bg_cache) {
                 m_cache_bg.alloc_array(m_w * m_h, m_name.c_get());
                 getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
             } else {
@@ -977,7 +984,7 @@ class Textbox : public RegisterTable {
         } else { // e.g. m_bg_color == TFT_BLACK
             if (m_content_has_changed) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
         }
-        m_first_call = false;
+        m_init_bg_cache = false;
         m_content_has_changed = false;
         m_enabled = true;
         m_clicked = false;
@@ -985,7 +992,7 @@ class Textbox : public RegisterTable {
     }
 
     void hide() {
-        if (m_first_call) return;
+        if (m_init_bg_cache) return;
         if (m_bg_color == TFT_BG_IS_VISIBLE) {
             getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else if (m_bg_color == TFT_BG_IS_WALLPAPER) {
@@ -1015,7 +1022,7 @@ class Textbox : public RegisterTable {
             new_bounds = true;
         }
         if (new_bounds) {
-            m_first_call = true;
+            m_init_bg_cache = true;
             if (m_enabled) {
                 hide();
                 show();
@@ -2877,6 +2884,8 @@ class TimeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     void show() {
         if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else if (m_bg_color == TFT_BG_IS_VISIBLE) {
+            ; //
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
         }
@@ -2888,6 +2897,8 @@ class TimeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     void hide() {
         if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else if (m_bg_color == TFT_BG_IS_VISIBLE) {
+            ; //
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
         }
@@ -6024,9 +6035,11 @@ class DisplayHeader : public RegisterTable {
     }
     void set_bg_color_all(int32_t color) {
         m_bg_color = color;
-        timeStringObject->set_bg_color(color);
+        timeStringObject->set_bg_color(m_bg_color);
         txt_Volume->set_bg_color(m_bg_color);
         txt_Item->set_bg_color(m_bg_color);
+        pic_RSSID->set_bg_color(m_bg_color);
+        pic_Speaker->set_bg_color(m_bg_color);
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -6045,6 +6058,7 @@ class DisplayFooter : public RegisterTable {
     Textbox*     txt_BitRate = new Textbox("footer_BitRate");        // bit rate
     Textbox*     txt_IpAddr = new Textbox("footer_IPaddr");          // ip address
     Textbox*     txt_FileNr = new Textbox("footer_FileNr");          // fileNr
+    int8_t       m_state = -1;
     int16_t      m_x = 0;
     int16_t      m_y = 0;
     int16_t      m_w = 0;
@@ -6404,30 +6418,34 @@ class DisplayFooter : public RegisterTable {
     bool         has_focus() { return m_focus; }
     void         set_bg_color(int32_t color) { set_bg_color_all(color); }
     bool         set_focus(bool focus) { return false; }
+    void         set_state(int8_t state) { m_state = state; }
 
     void show() {
         if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else if (m_bg_color == TFT_BG_IS_VISIBLE) {
+            ; //
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
         }
         m_enabled = true;
         m_clicked = false;
         pic_Antenna->show();
-        //    txt_StaNr->show();
-        //    pic_Flag->show();
+        if (m_state == RADIO) txt_StaNr->show();
+        if (m_state == RADIO) pic_Flag->show();
         //    txt_OffTimer->show();
-        //    txt_BitRate->show();
         txt_IpAddr->show();
-        //    txt_FileNr->show();
+        if (m_state == PLAYER) txt_FileNr->show();
         //    updateStation(m_staNr);
         updateOffTime(m_offTime);
-        //    updateBitRate(m_bitRate);
+        updateBitRate(m_bitRate);
     }
 
     void hide() {
         if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else if (m_bg_color == TFT_BG_IS_VISIBLE) {
+            ; //
         } else {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
         }
@@ -6460,14 +6478,15 @@ class DisplayFooter : public RegisterTable {
         char buff[10];
         sprintf(buff, "%03d", m_staNr);
         txt_StaNr->setText(buff);
-        txt_StaNr->show();
+        if (m_state == RADIO) txt_StaNr->show();
     }
+
     void updateFileNr(ps_ptr<char> fNr) { // or BT Volume
         if (txt_StaNr->is_enabled()) txt_StaNr->hide();
         if (pic_Flag->is_enabled()) pic_Flag->hide();
         m_fileNr = fNr;
         txt_FileNr->setText(m_fileNr);
-        txt_FileNr->show();
+        if (m_state == PLAYER) txt_FileNr->show();
     }
     void setStationNrColor(uint16_t stationColor) { m_stationColor = stationColor; }
 
@@ -6476,11 +6495,13 @@ class DisplayFooter : public RegisterTable {
             pic_Flag->hide(); // Don't draw over it, the new flag could be smaller
             if (!SD_MMC.exists(scaleImage(flag).c_get())) flag = "/flags/unknown.jpg";
             pic_Flag->setPicturePath(flag);
-            pic_Flag->show();
         } else {
             pic_Flag->hide();
+            pic_Flag->setPicturePath("/flags/unknown.jpg");
         }
+        if (m_state == RADIO) pic_Flag->show();
     }
+
     void updateOffTime(uint16_t offTime) {
         m_offTime = offTime;
         if (!m_enabled) return;
@@ -6542,21 +6563,25 @@ class DisplayFooter : public RegisterTable {
         txt_BitRate->setText(sbr);
         txt_BitRate->show();
     }
+
     void setBitRateColor(uint16_t bitRateColor) {
         m_bitRateColor = bitRateColor;
         txt_BitRate->set_border(m_bitRateColor);
         txt_BitRate->setTextColor(m_bitRateColor);
     }
+
     void setIpAddr(ps_ptr<char> ipAddr) {
         ipAddr.insert("IP:", 0);
         m_ipAddr = ipAddr;
         txt_IpAddr->setText(ipAddr);
         txt_IpAddr->show();
     }
+
     void setIpAddrColor(uint16_t ipAddrColor) {
         m_ipAddrColor = ipAddrColor;
         txt_IpAddr->setTextColor(m_ipAddrColor);
     }
+
     bool positionXY(uint16_t x, uint16_t y) {
         if (x < m_x) return false;
         if (y < m_y) return false;
@@ -6610,12 +6635,12 @@ class DisplayFooter : public RegisterTable {
     }
     void set_bg_color_all(int32_t color) {
         m_bg_color = color;
-        //        pic_Antenna->set_bg_color(m_bg_color);
+        pic_Antenna->set_bg_color(m_bg_color);
         txt_StaNr->set_bg_color(m_bg_color);
         txt_FileNr->set_bg_color(m_bg_color);
-        //        pic_Flag->set_bg_color(m_bg_color);
+        pic_Flag->set_bg_color(m_bg_color);
         txt_OffTimer->set_bg_color(m_bg_color);
-        //        pic_Hourglass->set_bg_color(m_bg_color);
+        pic_Hourglass->set_bg_color(m_bg_color);
         txt_BitRate->set_bg_color(m_bg_color);
         txt_OffTimer->set_bg_color(m_bg_color);
         txt_IpAddr->set_bg_color(m_bg_color);
