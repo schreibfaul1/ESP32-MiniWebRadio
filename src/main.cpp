@@ -2025,6 +2025,7 @@ void changeState(int8_t state, int8_t subState) {
             if(newState) cls_weather.show();
             if (subState == 0) {
                 btn_WR_alarm.hide(); btn_WR_sleep.hide(); btn_WR_radio.hide(); btn_WR_mute.hide(); btn_WR_off.hide(); sdr_WR_volume.hide();
+                cls_weather.restore_clock();
             }
             if (subState == 1) {
                 setTimeCounter(2);
@@ -2189,6 +2190,7 @@ void loop() {
         uint16_t minuteOfTheDay = rtc.getMinuteOfTheDay();
         uint8_t  weekDay = rtc.getweekday();
         clk_CL_24.updateTime(minuteOfTheDay, weekDay);
+        if(s_state == WEATHER && s_subState_weather == 0) cls_weather.update_time(s_time);
         if (s_state == RINGING) clk_RI_24small.updateTime(minuteOfTheDay, weekDay);
         static uint8_t semaphore = 0;
         if (!semaphore) { s_f_alarm = isAlarm(weekDay, s_alarmdays, minuteOfTheDay, s_alarmtime) && s_f_rtc; } // alarm if rtc and CL green
@@ -2408,6 +2410,7 @@ void loop() {
             if (!s_sleeptime) fall_asleep();
             dispFooter.updateOffTime(s_sleeptime);
         }
+
         // static uint8_t btEmitterCnt = 0;
         // if (!s_bt_emitter.found && btEmitterCnt < 1) {
         //     btEmitterCnt++;

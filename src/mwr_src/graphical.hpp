@@ -22,6 +22,8 @@ extern __attribute__((weak)) void graphicObjects_OnRelease(ps_ptr<char> name, re
 extern SemaphoreHandle_t mutex_display;
 extern SD_content        s_SD_content;
 
+enum class Colors : uint8_t { Blue, Green, Orange, Red };
+
 struct imgSize {
     uint16_t w = 0;
     uint16_t h = 0;
@@ -3513,6 +3515,7 @@ class ImgClock24small : public RegisterTable { // draw a clock in 24h format
     bool         m_showAll = false;
     ps_ptr<char> m_name;
     ps_ptr<char> m_pathBuff;
+    ps_ptr<char> m_color = "red";
     uint8_t      m_min = 0, m_hour = 0, m_weekday = 0;
     releasedArg  m_ra;
 
@@ -3565,6 +3568,13 @@ class ImgClock24small : public RegisterTable { // draw a clock in 24h format
     void         set_bg_color(int32_t color) { set_bg_color_all(color); }
     bool         set_focus(bool focus) { return false; }
 
+    void set_fg_color(Colors color) {
+        if (color == Colors::Blue) m_color = "blue";
+        if (color == Colors::Green) m_color = "green";
+        if (color == Colors::Orange) m_color = "orange";
+        if (color == Colors::Red) m_color = "red";
+    }
+
     void show(bool inactive = false) {
         if (m_bg_color == TFT_BG_IS_WALLPAPER) {
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
@@ -3576,6 +3586,8 @@ class ImgClock24small : public RegisterTable { // draw a clock in 24h format
         m_showAll = true;
         writeTime(m_hour, m_min);
     }
+
+    void show_all() { m_showAll = true; }
 
     void hide() {
         if (m_bg_color == TFT_BG_IS_WALLPAPER) {
@@ -3613,7 +3625,7 @@ class ImgClock24small : public RegisterTable { // draw a clock in 24h format
 
         for (uint8_t i = 0; i < 4; i++) {
             if ((time[i] != oldTime[i]) || m_showAll) {
-                m_pathBuff.assignf("/digits/s/{}red.jpg", time[i]);
+                m_pathBuff.assignf("/digits/s/{}{}.jpg", time[i], m_color);
                 if (i == 0) {
                     pic_clock24_digitsH10->setPicturePath(m_pathBuff);
                     pic_clock24_digitsH10->show();
@@ -3636,10 +3648,10 @@ class ImgClock24small : public RegisterTable { // draw a clock in 24h format
 
         k = !k;
         if (k) {
-            pic_clock24_digitsColon->setPicturePath("/digits/s/cred.jpg");
+            pic_clock24_digitsColon->setPicturePath("/digits/s/c" + m_color + ".jpg");
             pic_clock24_digitsColon->show();
         } else {
-            pic_clock24_digitsColon->setPicturePath("/digits/s/cred_dk.jpg");
+            pic_clock24_digitsColon->setPicturePath("/digits/s/c" + m_color + "_dk.jpg");
             pic_clock24_digitsColon->show();
         }
         m_showAll = false;
@@ -7049,30 +7061,35 @@ class WeatherClock : public RegisterTable {
     struct w_i { // Weather code icon
         uint16_t w = 96;
         uint16_t h = 96;
-    } const s_Icon; // icon 96 x 96 px
+    } const s_Icon;         // icon 96 x 96 px
+    uint16_t clock_w = 205; // hh:mm   4 * 47px + 17px
 
 #elifdef TFT_LAYOUT_M // 480 x 320px
     struct w_i { // Weather code icon
         uint16_t w = 128;
         uint16_t h = 128;
-    } const s_Icon; // icon 128 x 128 px
+    } const s_Icon;         // icon 128 x 128 px
+    uint16_t clock_w = 291; // hh:mm   4 * 67px + 23px
 
 #elifdef TFT_LAYOUT_L // 800 x 480px
     struct w_i { // Weather code icon
         uint16_t w = 192;
         uint16_t h = 192;
-    } const s_Icon; // icon 184 x 184 px
+    } const s_Icon;         // icon 184 x 184 px
+    uint16_t clock_w = 422; // hh:mm   4 * 97px + 34px
 
 #elifdef TFT_LAYOUT_XL // 1024 x 600px
     struct w_i { // Weather code icon
         uint16_t w = 240;
         uint16_t h = 240;
-    } const s_Icon; // icon 232 x 232 px
+    } const s_Icon;         // icon 232 x 232 px
+    uint16_t clock_w = 526; // hh:mm   4 * 121px + 42px
 #endif
 
     PictureBox*      pic_weather_code = new PictureBox("pic_weather_code"); // digits hour   * 10
     LineChart*       crt_temperature = new LineChart("crt_temperature");
     ImgClock24small* clk_24s = new ImgClock24small("ImgClock24small");
+    Textbox*         txt_info = new Textbox("txt_info");
     int16_t          m_x = 0;
     int16_t          m_y = 0;
     int16_t          m_w = 0;
@@ -7088,6 +7105,7 @@ class WeatherClock : public RegisterTable {
     bool                 m_first_call = true;
     ps_ptr<char>         m_name;
     ps_ptr<char>         m_pathBuff;
+    ps_ptr<char>         m_weather_daily;
     uint8_t              m_min = 0, m_hour = 0, m_weekday = 0;
     releasedArg          m_ra;
     std::vector<float>   m_hourly_temperature;
@@ -7118,7 +7136,12 @@ class WeatherClock : public RegisterTable {
         crt_temperature->begin(x + s_Icon.w, m_y, m_w - s_Icon.w, s_Icon.h);
         crt_temperature->set_bg_color(TFT_BG_IS_BLACK);
         clk_24s->set_bg_color(TFT_BG_IS_BLACK);
-        clk_24s->begin(m_x, m_y + s_Icon.h, m_w, s_Icon.h);
+        clk_24s->begin(m_x, m_y + s_Icon.h, clock_w, s_Icon.h);
+        clk_24s->set_fg_color(Colors::Blue);
+        txt_info->begin(m_x + clock_w, m_y + s_Icon.h, m_w - clock_w, s_Icon.h, 0, 0, 0, 0);
+        txt_info->set_bg_color(TFT_BLACK);
+        txt_info->setFontSize(0);
+        txt_info->setAlign(HAlign::Right, VAlign::Top);
     }
 
     ps_ptr<char> get_name() { return m_name; }
@@ -7146,6 +7169,8 @@ class WeatherClock : public RegisterTable {
         m_showAll = true;
         crt_temperature->show();
         clk_24s->show();
+        txt_info->setText(m_weather_daily);
+        txt_info->show();
     }
 
     void hide() {
@@ -7192,8 +7217,22 @@ class WeatherClock : public RegisterTable {
         }
         crt_temperature->update(m_hourly_temperature, m_hourly_precipitationProbability);
 
-        log_i("sunrise %u:%02u", daily[0].sunrise.hour, daily[0].sunrise.minute);
+        // log_i("sunrise %u:%02u", daily[0].sunrise.hour, daily[0].sunrise.minute);
+        m_weather_daily.assignf(ANSI_ESC_LIGHTGREY "{}.{}.{} ", daily[0].date.day, daily[0].date.month, daily[0].date.year);
+        m_weather_daily.appendf(ANSI_ESC_YELLOW "sunrise:" ANSI_ESC_LIGHTGREY "{:02}:{:02} ", daily[0].sunrise.hour, daily[0].sunrise.minute);
+        m_weather_daily.appendf(ANSI_ESC_YELLOW "sunset:" ANSI_ESC_LIGHTGREY "{:02}:{:02} ", daily[0].sunset.hour, daily[0].sunset.minute);
+        m_weather_daily.appendf(ANSI_ESC_LIGHTBLUE "rain-sum:" ANSI_ESC_LIGHTGREY "{}l/m² ", daily[0].precipitationSum);
+        m_weather_daily.appendf(ANSI_ESC_LIGHTBLUE "gusts:" ANSI_ESC_LIGHTGREY "{}Km/h", daily[0].windSpeedMax);
     }
+
+    void update_time(RTIME::rtime time) {
+        if (!m_enabled) return;
+        uint8_t minute = time.minute;
+        uint8_t hour = time.hour;
+        clk_24s->writeTime(hour, minute);
+    }
+
+    void restore_clock() { clk_24s->show_all(); }
 
   private:
     void enable_all() { m_enabled = true; }
