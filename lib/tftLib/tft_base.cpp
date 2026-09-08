@@ -3091,9 +3091,11 @@ void TFT_Base::tokenToWords() {
 
     for (const auto& token : m_token) {
         switch (token.type) {
+
             case TokenType::Color:
                 if (token.arg == Arg::foreground) fgColor = token.value;
                 break;
+
             case TokenType::Glyph: {
                 if (token.value == ' ') {
                     if (!currentWord.glyphs.empty()) {
@@ -3103,9 +3105,10 @@ void TFT_Base::tokenToWords() {
                     }
                     break;
                 }
+
                 Glyph g;
+
                 if (const EmojiDef* emoji = findEmoji(token.value)) {
-                    log_w("emoji found");
                     g.type = GlyphType::Emoji;
                     g.emojiShape = emoji->shape;
                     g.color = emoji->color;
@@ -3117,6 +3120,7 @@ void TFT_Base::tokenToWords() {
                     g.glyphPos = m_current_font.lookup_table[g.codepoint];
                     g.width = m_current_font.glyph_dsc[g.glyphPos].adv_w / 16;
                 }
+
                 currentWord.width += g.width;
                 currentWord.glyphs.push_back(g);
                 break;
@@ -3127,11 +3131,15 @@ void TFT_Base::tokenToWords() {
                     m_word.push_back(std::move(currentWord));
                     currentWord = Word{};
                 }
+
                 currentWord.newLine = true;
+                m_word.push_back(std::move(currentWord));
+                currentWord = Word{};
                 break;
         }
     }
-    if (!currentWord.glyphs.empty() || currentWord.newLine) { m_word.push_back(std::move(currentWord)); }
+
+    if (!currentWord.glyphs.empty()) { m_word.push_back(std::move(currentWord)); }
 }
 // ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool TFT_Base::isVowel(uint32_t cp) {

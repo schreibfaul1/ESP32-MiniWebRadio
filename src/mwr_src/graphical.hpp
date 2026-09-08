@@ -7141,7 +7141,7 @@ class WeatherClock : public RegisterTable {
         txt_info->begin(m_x + clock_w, m_y + s_Icon.h, m_w - clock_w, s_Icon.h, 0, 0, 0, 0);
         txt_info->set_bg_color(TFT_BLACK);
         txt_info->setFontSize(0);
-        txt_info->setAlign(HAlign::Right, VAlign::Top);
+        txt_info->setAlign(HAlign::Right, VAlign::Middle);
     }
 
     ps_ptr<char> get_name() { return m_name; }
@@ -7218,11 +7218,11 @@ class WeatherClock : public RegisterTable {
         crt_temperature->update(m_hourly_temperature, m_hourly_precipitationProbability);
 
         // log_i("sunrise %u:%02u", daily[0].sunrise.hour, daily[0].sunrise.minute);
-        m_weather_daily.assignf(ANSI_ESC_LIGHTGREY "{}.{}.{} ", daily[0].date.day, daily[0].date.month, daily[0].date.year);
-        m_weather_daily.appendf(ANSI_ESC_YELLOW "sunrise:" ANSI_ESC_LIGHTGREY "{:02}:{:02} ", daily[0].sunrise.hour, daily[0].sunrise.minute);
-        m_weather_daily.appendf(ANSI_ESC_YELLOW "sunset:" ANSI_ESC_LIGHTGREY "{:02}:{:02} ", daily[0].sunset.hour, daily[0].sunset.minute);
-        m_weather_daily.appendf(ANSI_ESC_LIGHTBLUE "rain-sum:" ANSI_ESC_LIGHTGREY "{}l/m² ", daily[0].precipitationSum);
-        m_weather_daily.appendf(ANSI_ESC_LIGHTBLUE "gusts:" ANSI_ESC_LIGHTGREY "{}Km/h", daily[0].windSpeedMax);
+        m_weather_daily.assignf(ANSI_ESC_LIGHTGREY "{:02}.{:02}.{}\n", daily[0].date.day, daily[0].date.month, daily[0].date.year);
+        m_weather_daily.appendf(ANSI_ESC_YELLOW "sunrise:" ANSI_ESC_LIGHTGREY " {:02}:{:02}\n", daily[0].sunrise.hour, daily[0].sunrise.minute);
+        m_weather_daily.appendf(ANSI_ESC_YELLOW "sunset:" ANSI_ESC_LIGHTGREY " {:02}:{:02}\n", daily[0].sunset.hour, daily[0].sunset.minute);
+        m_weather_daily.appendf(ANSI_ESC_LIGHTBLUE "rain-sum:" ANSI_ESC_LIGHTGREY " {} l/m²\n", daily[0].precipitationSum);
+        m_weather_daily.appendf(ANSI_ESC_LIGHTBLUE "gusts:" ANSI_ESC_LIGHTGREY " {} Km/h", daily[0].windSpeedMax);
     }
 
     void update_time(RTIME::rtime time) {
