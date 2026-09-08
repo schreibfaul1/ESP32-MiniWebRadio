@@ -652,13 +652,13 @@ void placingGraphicObjects() { // and initialize them
     txt_RA_irNum.setFontSize(displayConfig.bigNumbersFontSize);
     pic_RA_logo.begin(layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h, layout.winLogo.pl, layout.winLogo.pr, layout.winLogo.pt, layout.winLogo.pb);
     VUmeter_RA.begin(layout.winVUmeter.x, layout.winVUmeter.y, layout.winVUmeter.w, layout.winVUmeter.h, layout.winVUmeter.pl, layout.winVUmeter.pr, layout.winVUmeter.pt, layout.winVUmeter.pb);
-    VUmeter_RA.set_transparency(true);
+    VUmeter_RA.set_bg_color(TFT_BG_IS_WALLPAPER);
     spectrum_RA.begin(layout.winSpectrum.x, layout.winSpectrum.y, layout.winSpectrum.w, layout.winSpectrum.h, 0, 0, 0, 0);
-    spectrum_RA.set_transparency(true);
+    spectrum_RA.set_bg_color(TFT_BG_IS_WALLPAPER);
     nbr_RA_staBox.begin(layout.winName.x, layout.winName.y, layout.winName.w, layout.winName.h);
     // STATIONSLIST ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     lst_RADIO.begin(layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, displayConfig.tftSize, displayConfig.listFontSize);
-    lst_RADIO.set_bg_color(TFT_BLACK);
+    lst_RADIO.set_bg_color(TFT_BG_IS_BLACK);
     // PLAYER-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     btn_PL_mute.begin(0 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_PL_mute.setPicturePath("/btn/Button_Mute");
@@ -698,7 +698,7 @@ void placingGraphicObjects() { // and initialize them
     pgb_PL_progress.setValue(0);
     // AUDIOFILESLIST-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     lst_PLAYER.begin(layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, displayConfig.tftSize, displayConfig.listFontSize);
-    lst_PLAYER.set_bg_color(TFT_BLACK);
+    lst_PLAYER.set_bg_color(TFT_BG_IS_BLACK);
     // DLNA --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     btn_DL_mute.begin(0 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_DL_mute.setPicturePath("/btn/Button_Mute");
@@ -722,46 +722,46 @@ void placingGraphicObjects() { // and initialize them
     pgb_DL_progress.setValue(0);
     // DLNAITEMSLIST -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     lst_DLNA.begin(layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, displayConfig.tftSize, displayConfig.listFontSize);
-    lst_DLNA.set_bg_color(TFT_BLACK);
+    lst_DLNA.set_bg_color(TFT_BG_IS_BLACK);
     // CLOCK -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     clk_CL_24.begin(layout.winDigits.x, layout.winDigits.y, layout.winDigits.w, layout.winDigits.h);
-    clk_CL_24.set_bg_color(TFT_BLACK);
+    clk_CL_24.set_bg_color(TFT_BG_IS_BLACK);
     btn_CL_alarm.begin(0 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_CL_alarm.setPicturePath("/btn/Button_Bell");
-    btn_CL_alarm.set_bg_color(TFT_BLACK);
+    btn_CL_alarm.set_bg_color(TFT_BG_IS_BLACK);
     btn_CL_sleep.begin(1 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_CL_sleep.setPicturePath("/btn/Button_OffTimer");
-    btn_CL_sleep.set_bg_color(TFT_BLACK);
+    btn_CL_sleep.set_bg_color(TFT_BG_IS_BLACK);
     btn_CL_radio.begin(2 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_CL_radio.setPicturePath("/btn/Button_Radio");
-    btn_CL_radio.set_bg_color(TFT_BLACK);
+    btn_CL_radio.set_bg_color(TFT_BG_IS_BLACK);
     btn_CL_mute.begin(3 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_CL_mute.setPicturePath("/btn/Button_Mute");
-    btn_CL_mute.set_bg_color(TFT_BLACK);
+    btn_CL_mute.set_bg_color(TFT_BG_IS_BLACK);
     btn_CL_off.begin(4 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_CL_off.setPicturePath("/btn/Button_Off");
-    btn_CL_off.set_bg_color(TFT_BLACK);
+    btn_CL_off.set_bg_color(TFT_BG_IS_BLACK);
     sdr_CL_volume.begin(5 * layout.winButton.w + 10, layout.winButton.y, layout.winButton.w * 3 - 10, layout.winButton.h, layout.winButton.pl, layout.winButton.pr, layout.winButton.pt,
                         layout.winButton.pb);
-    sdr_CL_volume.set_bg_color(TFT_BLACK);
+    sdr_CL_volume.set_bg_color(TFT_BG_IS_BLACK);
     // ALARM -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     clk_AC_red.begin(layout.winDigits.x, layout.winDigits.y, layout.winDigits.w, layout.winDigits.h);
-    clk_AC_red.set_bg_color(TFT_BLACK);
+    clk_AC_red.set_bg_color(TFT_BG_IS_BLACK);
     btn_AC_left.begin(0 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_AC_left.setPicturePath("/btn/Button_Left");
-    btn_AC_left.set_bg_color(TFT_BLACK);
+    btn_AC_left.set_bg_color(TFT_BG_IS_BLACK);
     btn_AC_right.begin(1 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_AC_right.setPicturePath("/btn/Button_Right");
-    btn_AC_right.set_bg_color(TFT_BLACK);
+    btn_AC_right.set_bg_color(TFT_BG_IS_BLACK);
     btn_AC_up.begin(2 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_AC_up.setPicturePath("/btn/Button_Up");
-    btn_AC_up.set_bg_color(TFT_BLACK);
+    btn_AC_up.set_bg_color(TFT_BG_IS_BLACK);
     btn_AC_down.begin(3 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_AC_down.setPicturePath("/btn/Button_Down");
-    btn_AC_down.set_bg_color(TFT_BLACK);
+    btn_AC_down.set_bg_color(TFT_BG_IS_BLACK);
     btn_AC_ready.begin(4 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_AC_ready.setPicturePath("/btn/Button_Ready");
-    btn_AC_ready.set_bg_color(TFT_BLACK);
+    btn_AC_ready.set_bg_color(TFT_BG_IS_BLACK);
     // RINGING -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     pic_RI_logo.begin(layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h, layout.winLogo.pl, layout.winLogo.pr, layout.winLogo.pt, layout.winLogo.pb);
     clk_RI_24small.begin(layout.winName.x, layout.winName.y, layout.winName.w, layout.winName.h);
@@ -793,15 +793,16 @@ void placingGraphicObjects() { // and initialize them
     // BRIGHTNESS --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     sdr_BR_value.begin(2 * layout.winButton.w, layout.winButton.y, 4 * layout.winButton.w, layout.winButton.h, 0, 0, 0, 0);
     sdr_BR_value.setMinMaxVal(displayConfig.brightnessMin, displayConfig.brightnessMax);
-    sdr_BR_value.set_transparency(true);
+    sdr_BR_value.set_bg_color(TFT_BG_IS_VISIBLE);
     btn_BR_ready.begin(7 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_BR_ready.setPicturePath("/btn/Button_Ready");
-    pic_BR_logo.begin(0, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, layout.winWoHF.pl, layout.winWoHF.pr, layout.winWoHF.pt, layout.winWoHF.pb);
+    btn_BR_ready.set_bg_color(TFT_BG_IS_VISIBLE);
+    pic_BR_logo.begin(0, 0, displayConfig.dispWidth, displayConfig.dispHeight, 0, 0, 0, 0);
     pic_BR_logo.setPicturePath("/common/Brightness.jpg");
     txt_BR_value.begin(0, layout.winButton.y, layout.winButton.w * 2, layout.winButton.h, layout.winButton.pl, layout.winButton.pr, layout.winButton.pt, layout.winButton.pb);
     txt_BR_value.setAlign(HAlign::Center, VAlign::Middle);
     txt_BR_value.setFontSize(0); // auto
-    txt_BR_value.set_transparency(true);
+    txt_BR_value.set_bg_color(TFT_BG_IS_VISIBLE);
     // EQUALIZER ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     sdr_EQ_lowPass.begin(layout.sdrLP.x, layout.sdrLP.y, layout.sdrLP.w, layout.sdrLP.h, layout.sdrLP.pl, layout.sdrLP.pr, layout.sdrLP.pt, layout.sdrLP.pb);
     sdr_EQ_lowPass.setMinMaxVal(-12, 12);
@@ -862,26 +863,25 @@ void placingGraphicObjects() { // and initialize them
     cls_wifiSettings.begin(layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, layout.winWoHF.pl, layout.winWoHF.pr, layout.winWoHF.pt, layout.winWoHF.pb);
     // WEATHER_CLOCK -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     cls_weather.begin(layout.winDigits.x, layout.winDigits.y, layout.winDigits.w, layout.winDigits.h);
-    cls_weather.set_bg_color(TFT_BLACK);
+    cls_weather.set_bg_color(TFT_BG_IS_BLACK);
     btn_WR_alarm.begin(0 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_WR_alarm.setPicturePath("/btn/Button_Bell");
-    btn_WR_alarm.set_bg_color(TFT_BLACK);
+    btn_WR_alarm.set_bg_color(TFT_BG_IS_VISIBLE);
     btn_WR_sleep.begin(1 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_WR_sleep.setPicturePath("/btn/Button_OffTimer");
-    //  btn_WR_sleep.set_bg_color(TFT_BLACK);
+    btn_WR_sleep.set_bg_color(TFT_BG_IS_VISIBLE);
     btn_WR_radio.begin(2 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_WR_radio.setPicturePath("/btn/Button_Radio");
-    //  btn_WR_radio.set_bg_color(TFT_BLACK);
+    btn_WR_radio.set_bg_color(TFT_BG_IS_VISIBLE);
     btn_WR_mute.begin(3 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_WR_mute.setPicturePath("/btn/Button_Mute");
-    //  btn_WR_mute.set_bg_color(TFT_BLACK);
+    btn_WR_mute.set_bg_color(TFT_BG_IS_VISIBLE);
     btn_WR_off.begin(4 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_WR_off.setPicturePath("/btn/Button_Off");
-    //  btn_WR_off.set_bg_color(TFT_BLACK);
-    sdr_WR_volume.begin(5 * layout.winButton.w, layout.winButton.y, layout.winButton.w * 3, layout.winButton.h, layout.winButton.pl + 10, layout.winButton.pr, layout.winButton.pt,
-                        layout.winButton.pb);
-    sdr_WR_volume.set_bg_color(TFT_BLACK);
-    sdr_WR_volume.set_transparency(true);
+    btn_WR_off.set_bg_color(TFT_BG_IS_VISIBLE);
+    sdr_WR_volume.begin(5 * layout.winButton.w + 10, layout.winButton.y, displayConfig.dispWidth - (5 * layout.winButton.w + 20), layout.winButton.h, layout.winButton.pl, layout.winButton.pr,
+                        layout.winButton.pt, layout.winButton.pb);
+    sdr_WR_volume.set_bg_color(TFT_BG_IS_VISIBLE);
     // ALL_STATE ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     msg_box.begin(-1, -1, -1, -1);
 }
