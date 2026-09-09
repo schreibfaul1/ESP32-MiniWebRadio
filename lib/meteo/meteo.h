@@ -33,6 +33,7 @@ class METEO {
         float     windSpeed;
         uint8_t   sunshineDuration;
         uint8_t   weatherCode;
+        float     pressure_msl_mean;
     };
 
     struct METEO_DAILY {
@@ -45,6 +46,7 @@ class METEO {
         MeteoTime sunrise;
         MeteoTime sunset;
         float     windSpeedMax;
+        float     meanSurfacePressure;
     };
 
     // callbacks ---------------------------------------------------------

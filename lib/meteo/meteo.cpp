@@ -40,7 +40,8 @@ bool METEO::send_request() {
     daily.append("weather_code,");
     daily.append("precipitation_sum,precipitation_probability_max,");
     daily.append("sunrise,sunset,");
-    daily.append("wind_speed_10m_max");
+    daily.append("wind_speed_10m_max,");
+    daily.append("surface_pressure_mean");
 
     ps_ptr<char> user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36";
 
@@ -473,8 +474,9 @@ bool METEO::parseDaily(const char* json) {
     const char* pSunrise = findJsonArray(json, "daily", "sunrise");
     const char* pSunset = findJsonArray(json, "daily", "sunset");
     const char* pWind = findJsonArray(json, "daily", "wind_speed_10m_max");
+    const char* pPressure= findJsonArray(json, "daily", "surface_pressure_mean");
 
-    if (!pDate || !pMax || !pMin || !pCode || !pPrec || !pProb || !pSunrise || !pSunset || !pWind) {
+    if (!pDate || !pMax || !pMin || !pCode || !pPrec || !pProb || !pSunrise || !pSunset || !pWind || !pPressure) {
         if (!pDate) log_e("\"time\" not found");
         if (!pMax) log_e("\"temperature_2m_max\" not found");
         if (!pMin) log_e("\"temperature_2m_min\" not found");
@@ -484,6 +486,7 @@ bool METEO::parseDaily(const char* json) {
         if (!pSunrise) log_e("\"sunrise\" not found");
         if (!pSunset) log_e("\"sunset\" not found");
         if (!pWind) log_e("\"wind_speed_10m_max\" not found");
+        if (!pPressure) log_e("\"surface_pressure_mean\" not found");
         return false;
     }
 
@@ -521,6 +524,9 @@ bool METEO::parseDaily(const char* json) {
         // max wind
         if (!readJsonFloat(pWind, value)) { return false; }
         item.windSpeedMax = value;
+        // mean surface pressure
+        if (!readJsonFloat(pPressure, value)) { return false; }
+        item.meanSurfacePressure = value;
         m_daily.push_back(item);
     }
     return !m_daily.empty();
@@ -545,15 +551,16 @@ void METEO::protocol() {
     for (int i = 0; i < 100; i++) printf("—");
     printf("\nCoor lat: %s, long:%s, Timezone: %s\n", m_latitude.c_get(), m_longitude.c_get(), m_timeZone.c_get());
 
-    printf(ANSI_ESC_CYAN "\n date       sunrise  sunset   t-max(°C)  t-min(°C)  prec(%%)  prec-sum  wid-speed-max  w-code\n");
+    printf(ANSI_ESC_CYAN "\n date       sunrise  sunset   t-max(°C)  t-min(°C)  prec(%%)  prec-sum(mm)  wind-max(km/h)  w-code, press(hPa)\n");
     for (int i = 0; i < m_daily.size(); i++) {
         printf(ANSI_ESC_GREEN);
         printf("%04u-%02u-%02u  ", m_daily[i].date.year, m_daily[i].date.month, m_daily[i].date.day);
         printf("%2u:%2u    ", m_daily[i].sunrise.hour, m_daily[i].sunrise.minute);
         printf("%2u:%2u      ", m_daily[i].sunset.hour, m_daily[i].sunset.minute);
-        printf("%5.2f     %5.2f      ", m_daily[i].temperatureMax, m_daily[i].temperatureMin);
-        printf("%3u     %5.2f        ", m_daily[i].precipitationProbabilityMax, m_daily[i].precipitationSum);
-        printf("%5.2f         %2u", m_daily[i].windSpeedMax, m_daily[i].weatherCode);
+        printf("%5.1f     %5.1f      ", m_daily[i].temperatureMax, m_daily[i].temperatureMin);
+        printf("%3u       %5.2f          ", m_daily[i].precipitationProbabilityMax, m_daily[i].precipitationSum);
+        printf("%4.1f           %2u     ", m_daily[i].windSpeedMax, m_daily[i].weatherCode);
+        printf("%6.1f         ", m_daily[i].meanSurfacePressure);
         printf("\n");
     };
     printf(ANSI_ESC_RESET);

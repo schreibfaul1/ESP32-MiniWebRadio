@@ -6843,6 +6843,7 @@ class LineChart : public RegisterTable {
     std::vector<uint8_t>  m_hourly_precipitationProbability;
     float                 m_temp_min = 0.0f;
     float                 m_temp_max = 0.0f;
+    float                 m_precipitationSum = 0.0f;
     uint8_t               m_preProb_max = 0;
     ps_ptr<char>          m_name;
     ps_ptr<uint16_t>      m_cache_bg = {};
@@ -6977,13 +6978,13 @@ class LineChart : public RegisterTable {
         ps_ptr<char> tmp;
         txt_0->show();
         txt_23->show();
-        tmp.assignf("Tmax:{:4.2}°C", m_temp_max);
+        tmp.assignf("Tmax:{:4.1}°C", m_temp_max);
         txt_t_max->setText(tmp);
         txt_t_max->show();
-        tmp.assignf("Tmin:{:4.2}°C", m_temp_min);
+        tmp.assignf("Tmin:{:4.1}°C", m_temp_min);
         txt_t_min->setText(tmp);
         txt_t_min->show();
-        tmp.assignf("Pmax:{}%", m_preProb_max);
+        tmp.assignf("Rain:{}%, {:3.1}mm", m_preProb_max, m_precipitationSum);
         txt_p_max->setText(tmp);
         txt_p_max->show();
     }
@@ -7032,7 +7033,7 @@ class LineChart : public RegisterTable {
         m_clicked = false;
         return true;
     }
-    void update(const std::vector<float>& hourly_temperature, const std::vector<uint8_t>& hourly_precipitationProbability) {
+    void update(const std::vector<float>& hourly_temperature, const std::vector<uint8_t>& hourly_precipitationProbability, const float precipitationSum) {
         if (hourly_temperature.size() < HOURS || hourly_precipitationProbability.size() < HOURS) { return; }
         m_hourly_temperature.clear();
         m_hourly_precipitationProbability.clear();
@@ -7139,7 +7140,6 @@ class WeatherClock : public RegisterTable {
         clk_24s->begin(m_x, m_y + s_Icon.h, clock_w, s_Icon.h);
         clk_24s->set_fg_color(Colors::Blue);
         txt_info->begin(m_x + clock_w, m_y + s_Icon.h, m_w - clock_w, s_Icon.h, 0, 0, 0, 0);
-        txt_info->set_bg_color(TFT_BLACK);
         txt_info->setFontSize(0);
         txt_info->setAlign(HAlign::Right, VAlign::Middle);
     }
@@ -7213,16 +7213,16 @@ class WeatherClock : public RegisterTable {
     void update(const std::vector<METEO::METEO_HOURLY>& hourly, const std::vector<METEO::METEO_DAILY>& daily) {
         for (int i = 0; i < hourly.size(); i++) {
             m_hourly_temperature.push_back(hourly[i].temperature);
-            m_hourly_precipitationProbability.push_back(hourly[i].precipitationProbability);
+            m_hourly_precipitationProbability.push_back(hourly[i].windSpeed);
         }
-        crt_temperature->update(m_hourly_temperature, m_hourly_precipitationProbability);
+        crt_temperature->update(m_hourly_temperature, m_hourly_precipitationProbability, daily[0].precipitationSum);
 
         // log_i("sunrise %u:%02u", daily[0].sunrise.hour, daily[0].sunrise.minute);
         m_weather_daily.assignf(ANSI_ESC_LIGHTGREY "{:02}.{:02}.{}\n", daily[0].date.day, daily[0].date.month, daily[0].date.year);
         m_weather_daily.appendf(ANSI_ESC_YELLOW "sunrise:" ANSI_ESC_LIGHTGREY " {:02}:{:02}\n", daily[0].sunrise.hour, daily[0].sunrise.minute);
         m_weather_daily.appendf(ANSI_ESC_YELLOW "sunset:" ANSI_ESC_LIGHTGREY " {:02}:{:02}\n", daily[0].sunset.hour, daily[0].sunset.minute);
-        m_weather_daily.appendf(ANSI_ESC_LIGHTBLUE "rain-sum:" ANSI_ESC_LIGHTGREY " {} l/m²\n", daily[0].precipitationSum);
-        m_weather_daily.appendf(ANSI_ESC_LIGHTBLUE "gusts:" ANSI_ESC_LIGHTGREY " {} Km/h", daily[0].windSpeedMax);
+        m_weather_daily.appendf(ANSI_ESC_LIGHTBLUE "press:" ANSI_ESC_LIGHTGREY " {} hPa\n", daily[0].meanSurfacePressure);
+        m_weather_daily.appendf(ANSI_ESC_LIGHTBLUE "gusts:" ANSI_ESC_LIGHTGREY " {} km/h", daily[0].windSpeedMax);
     }
 
     void update_time(RTIME::rtime time) {
@@ -7245,6 +7245,7 @@ class WeatherClock : public RegisterTable {
         pic_weather_code->set_bg_color(m_bg_color);
         crt_temperature->set_bg_color(m_bg_color);
         clk_24s->set_bg_color(m_bg_color);
+        txt_info->set_bg_color(m_bg_color);
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
