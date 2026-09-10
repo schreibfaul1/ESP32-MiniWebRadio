@@ -737,6 +737,7 @@ class Slider : public RegisterTable {
         m_spotPos = xPos;
         int32_t val = map_l(m_spotPos, m_leftStop, m_rightStop, m_minVal, m_maxVal); // xPos -> val
         m_ra.val1 = val;
+        m_val = val;
         if (graphicObjects_OnChange) graphicObjects_OnChange(m_name, val);
     }
 };
