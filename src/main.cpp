@@ -140,7 +140,8 @@ uint8_t  s_fileListPos = 0;
 uint8_t  s_ambientValue = 50;
 uint8_t  s_dlnaLevel = 0;
 uint8_t  s_resetReason = (esp_reset_reason_t)ESP_RST_UNKNOWN;
-uint8_t  s_brightness = UINT8_MAX;
+uint8_t  s_brightness_max = UINT8_MAX / 2;
+uint8_t  s_brightness_min = UINT8_MAX / 2;
 uint8_t  s_bh1750Value = UINT8_MAX;
 uint8_t  s_start_counter = 0;
 int16_t  s_totalNumberReturned = -1;
@@ -303,7 +304,8 @@ boolean defaultsettings() {
     s_f_mute = parseJson("\"mute\":").equals("true") ? true : false;
     s_f_vu_meter_enabled = parseJson("\"vu_meter_enabled\":").equals("true") ? true : false;
     s_f_spectrum_enabled = parseJson("\"spectrum_enabled\":").equals("true") ? true : false;
-    s_brightness = max((uint8_t)5, parseJson("\"brightness\":").to_uint8());
+    s_brightness_max = max((uint8_t)5, parseJson("\"brightness_max\":").to_uint8());
+    s_brightness_min = max((uint8_t)5, parseJson("\"brightness_max\":").to_uint8());
     s_sleeptime = parseJson("\"sleeptime\":").to_uint16();
     s_cur_station = parseJson("\"station\":").to_uint16();
     s_tone.LP = parseJson("\"toneLP\":").to_int16();
@@ -364,7 +366,8 @@ void updateSettings() {
     jO.appendf(",\n  \"mute\":\"{}\"", s_f_mute);
     jO.appendf(",\n  \"vu_meter_enabled\":\"{}\"", s_f_vu_meter_enabled);
     jO.appendf(",\n  \"spectrum_enabled\":\"{}\"", s_f_spectrum_enabled);
-    jO.appendf(",\n  \"brightness\":{}", s_brightness);
+    jO.appendf(",\n  \"brightness_max\":{}", s_brightness_max);
+    jO.appendf(",\n  \"brightness_min\":{}", s_brightness_min);
     jO.appendf(",\n  \"sleeptime\":{}", s_sleeptime);
     jO.appendf(",\n  \"lastconnectedhost\":\"{}\"", s_settings.lastconnectedhost);
     jO.appendf(",\n  \"lastconnectedfile\":\"{}\"", s_settings.lastconnectedfile);
@@ -1072,8 +1075,8 @@ void setup() {
     s_f_isWiFiConnected = connectToWiFi();
 
     placingGraphicObjects();
-    sdr_BR_value_max.setValue(s_brightness);
-    sdr_BR_value_min.setValue(s_brightness);
+    sdr_BR_value_max.setValue(s_brightness_max);
+    sdr_BR_value_min.setValue(s_brightness_max);
     sdr_EQ_lowPass.setValue(s_tone.LP);
     sdr_EQ_bandPass.setValue(s_tone.BP);
     sdr_EQ_highPass.setValue(s_tone.HP);
@@ -1599,7 +1602,7 @@ void wake_up(int8_t state, int8_t subState) {
     printfln(s_tag.action, "awake");
     clearAll(TFT_BG_IS_WALLPAPER);
     clk_CL_24.hide();
-    setTFTbrightness(s_brightness, s_bh1750Value);
+    setTFTbrightness(s_brightness_max, s_bh1750Value);
     dispHeader.set_bg_color(TFT_BG_IS_WALLPAPER);
     dispFooter.set_bg_color(TFT_BG_IS_WALLPAPER);
     dispHeader.show();
@@ -1932,13 +1935,13 @@ void changeState(int8_t state, int8_t subState) {
         case BRIGHTNESS: {
             if (newState) {
                 pic_BR_logo.show();
-                sdr_BR_value_max.setValue(s_brightness);
+                sdr_BR_value_max.setValue(s_brightness_max);
                 sdr_BR_value_max.show();
-                txt_BR_value_max.setText(int2str(s_brightness));
+                txt_BR_value_max.setText(int2str(s_brightness_max));
                 txt_BR_value_max.show();
-                sdr_BR_value_min.setValue(s_brightness);
+                sdr_BR_value_min.setValue(s_brightness_min);
                 sdr_BR_value_min.show();
-                txt_BR_value_min.setText(int2str(s_brightness));
+                txt_BR_value_min.setText(int2str(s_brightness_min));
                 txt_BR_value_min.show();
                 txt_BR_max.show();
                 txt_BR_min.show();
@@ -1992,7 +1995,7 @@ void changeState(int8_t state, int8_t subState) {
             if (s_volume.ringVolume > 0) { // alarm with bell
                 pic_RI_logo.enable();
                 showFileLogo(RINGING, subState);
-                setTFTbrightness(s_brightness, s_bh1750Value);
+                setTFTbrightness(s_brightness_max, s_bh1750Value);
                 printfln(s_tag.action, ANSI_ESC_MAGENTA "Alarm");
                 setVolume(s_volume.ringVolume);
                 audio.setVolume(s_volume.ringVolume);
@@ -2025,7 +2028,7 @@ void changeState(int8_t state, int8_t subState) {
             dispHeader.hide();
             dispFooter.hide();
             if (subState == 0) {
-                setTFTbrightness(s_brightness, s_bh1750Value);
+                setTFTbrightness(s_brightness_max, s_bh1750Value);
             }
             if (subState == 1) {
                 clk_CL_24.show();
@@ -2785,8 +2788,8 @@ void my_audio_info(Audio::msg_t m) {
 void on_BH1750(int32_t ambVal) { //--AMBIENT LIGHT SENSOR BH1750--
     int16_t bh1750Value = 0;
     s_bh1750Value = map_l(ambVal, 0, 1600, displayConfig.brightnessMin, displayConfig.brightnessMax);
-    MWR_LOG_DEBUG("ambVal {}, bh1750Value {}, s_brightness {}", ambVal, bh1750Value, s_brightness);
-    setTFTbrightness(s_brightness, s_bh1750Value);
+    MWR_LOG_DEBUG("ambVal {}, bh1750Value {}, s_brightness_max {}", ambVal, bh1750Value, s_brightness_max);
+    setTFTbrightness(s_brightness_max, s_bh1750Value);
 }
 // ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void ftp_debug(const char* info) {
@@ -2906,10 +2909,10 @@ void ir_short_key(int8_t key) {
                 return;
             }
             if (s_state == BRIGHTNESS) {
-                s_brightness += 5;
-                s_brightness = clamp_min_max(s_brightness, displayConfig.brightnessMin, displayConfig.brightnessMax);
-                sdr_BR_value_max.setValue(s_brightness);
-                sdr_BR_value_min.setValue(s_brightness);
+                s_brightness_max += 5;
+                s_brightness_max = clamp_min_max(s_brightness_max, displayConfig.brightnessMin, displayConfig.brightnessMax);
+                sdr_BR_value_max.setValue(s_brightness_max);
+                sdr_BR_value_min.setValue(s_brightness_max);
             }
             if (s_state == EQUALIZER) { // scroll forward (radio, player, mute)
                 if(s_ir_btn_select < 3) set_ir_pos_EQ(IR_RIGHT);
@@ -2983,10 +2986,10 @@ void ir_short_key(int8_t key) {
                     return;
             }
             if (s_state == BRIGHTNESS) {
-                s_brightness -= 5;
-                s_brightness = clamp_min_max(s_brightness, displayConfig.brightnessMin, displayConfig.brightnessMax);
-                sdr_BR_value_max.setValue(s_brightness);
-                sdr_BR_value_min.setValue(s_brightness);
+                s_brightness_max -= 5;
+                s_brightness_max = clamp_min_max(s_brightness_max, displayConfig.brightnessMin, displayConfig.brightnessMax);
+                sdr_BR_value_max.setValue(s_brightness_max);
+                sdr_BR_value_min.setValue(s_brightness_max);
                 setTimeCounter(2);
                 return;
             }
@@ -4101,7 +4104,7 @@ void graphicObjects_OnChange(ps_ptr<char> name, int32_t val) {
                                            s_tone.BAL = val; webSrv.send("settone=", getI2STone()); setI2STone(); txt_EQ_balance.setText(c); txt_EQ_balance.show(); goto exit; }
     if (name.equals("pgb_PL_progress"))  { goto exit; }
     if (name.equals("pgb_DL_progress"))  { goto exit; }
-    if (name.equals("sdr_BR_value_max")) { s_brightness = val; setTFTbrightness(s_brightness, s_bh1750Value); txt_BR_value_max.setText(int2str(val));txt_BR_value_max.show();
+    if (name.equals("sdr_BR_value_max")) { s_brightness_max = val; setTFTbrightness(s_brightness_max, s_bh1750Value); txt_BR_value_max.setText(int2str(val));txt_BR_value_max.show();
                                            if(s_i2c_items.bh1750_found){
                                                  txt_BR_value_min.setText(int2str(val)); txt_BR_value_min.show(); if(sdr_BR_value_max.getValue() < sdr_BR_value_min.getValue()) sdr_BR_value_min.setValue(val);  // >=
                                            } else {
@@ -4109,7 +4112,7 @@ void graphicObjects_OnChange(ps_ptr<char> name, int32_t val) {
                                            }
                                            goto exit;
                                          }
-    if (name.equals("sdr_BR_value_min")) { s_brightness = val; setTFTbrightness(s_brightness, s_bh1750Value); txt_BR_value_min.setText(int2str(val)); txt_BR_value_min.show();
+    if (name.equals("sdr_BR_value_min")) { s_brightness_min = val; setTFTbrightness(s_brightness_min, s_bh1750Value); txt_BR_value_min.setText(int2str(val)); txt_BR_value_min.show();
                                            if(s_i2c_items.bh1750_found){
                                                txt_BR_value_max.setText(int2str(val)); txt_BR_value_max.show();
                                                MWR_LOG_WARN("min {}, max {}", sdr_BR_value_min.getValue(), sdr_BR_value_max.getValue());
