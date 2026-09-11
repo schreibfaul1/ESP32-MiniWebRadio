@@ -25,7 +25,6 @@ bool METEO::send_request() {
 
     uint16_t     port = 443;
     ps_ptr<char> rqh;
-    ps_ptr<char> tz = "timezone=" + m_timeZone;
 
     ps_ptr<char> hourly;
     hourly.assign("temperature_2m,");
@@ -47,6 +46,7 @@ bool METEO::send_request() {
 
     rqh.assign("GET /v1/forecast?");
     rqh.appendf("latitude={}&longitude={}", m_latitude, m_longitude);
+    rqh.appendf("&timezone={}", m_timeZone);
     rqh.appendf("&hourly={}", hourly);
     rqh.appendf("&daily={}", daily);
     rqh.append(" HTTP/1.1\r\n");
