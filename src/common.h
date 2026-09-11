@@ -764,7 +764,8 @@ inline int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min,
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-inline void setupBacklight(int pin, uint32_t freq_hz) {
+bool setupBacklight(int pin, uint32_t freq_hz) {
+    if(pin < 0) return false;
 
     ledc_channel_config_t ch =
         {.gpio_num = (gpio_num_t)pin, .speed_mode = LEDC_LOW_SPEED_MODE, .channel = LEDC_CHANNEL_1, .intr_type = LEDC_INTR_DISABLE, .timer_sel = LEDC_TIMER_3, .duty = 0, .hpoint = 0};
@@ -784,14 +785,15 @@ inline void setupBacklight(int pin, uint32_t freq_hz) {
     ledc_channel_config(&ch);
 
     // Optional Helligkeit setzen
-    ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1, 255);
+    ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1, 127);
     ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1);
+    return true;
 }
 
-inline void setTFTbrightness(uint8_t brightness, uint8_t bh1750Value) {
+inline void setTFTbrightness(uint8_t brightness) {
     extern bool    s_f_sleeping;
     extern uint8_t s_sleepMode;
-    uint8_t        duty = std::min(brightness, bh1750Value);
+    uint8_t        duty = std::max(brightness, (uint8_t) 5);
     if (s_f_sleeping && s_sleepMode == 0) { duty = 0; }
     if (BRIGHTNESS_INVERSION) { duty = 255 - duty; }
 
