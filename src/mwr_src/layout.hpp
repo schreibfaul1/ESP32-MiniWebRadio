@@ -557,8 +557,12 @@ Button     btn_SE_vu_meter("btn_SE_vu_meter", ButtonType::ToggleButton);
 // BRIGHTNESS
 Button     btn_BR_ready("btn_BR_ready", ButtonType::PushButton);
 PictureBox pic_BR_logo("pic_BR_logo");
-Slider     sdr_BR_value("sdr_BR_value");
-Textbox    txt_BR_value("txt_BR_value");
+Slider     sdr_BR_value_max("sdr_BR_value_max");
+Slider     sdr_BR_value_min("sdr_BR_value_min");
+Textbox    txt_BR_value_max("txt_BR_value_max");
+Textbox    txt_BR_value_min("txt_BR_value_min");
+Textbox    txt_BR_max("txt_BR_max");
+Textbox    txt_BR_min("txt_BR_min");
 // SLEEPTIMER
 Button      btn_SL_up("btn_SL_up", ButtonType::PushButton);
 Button      btn_SL_down("btn_SL_down", ButtonType::PushButton);
@@ -791,18 +795,37 @@ void placingGraphicObjects() { // and initialize them
     btn_SE_spectrum.setPicturePath("/btn/Button_Spectrum");
     pic_SE_logo.begin(layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h, layout.winLogo.pl, layout.winLogo.pr, layout.winLogo.pt, layout.winLogo.pb);
     // BRIGHTNESS --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    sdr_BR_value.begin(2 * layout.winButton.w, layout.winButton.y, 4 * layout.winButton.w, layout.winButton.h, 0, 0, 0, 0);
-    sdr_BR_value.setMinMaxVal(displayConfig.brightnessMin, displayConfig.brightnessMax);
-    sdr_BR_value.set_bg_color(TFT_BG_IS_VISIBLE);
+    sdr_BR_value_max.begin(2 * layout.winButton.w, layout.winButton.y - layout.winButton.h, 4 * layout.winButton.w, layout.winButton.h, 0, 0, 0, 0);
+    sdr_BR_value_max.setMinMaxVal(displayConfig.brightnessMin, displayConfig.brightnessMax);
+    sdr_BR_value_max.set_bg_color(TFT_BG_IS_VISIBLE);
+    sdr_BR_value_min.begin(2 * layout.winButton.w, layout.winButton.y, 4 * layout.winButton.w, layout.winButton.h, 0, 0, 0, 0);
+    sdr_BR_value_min.setMinMaxVal(displayConfig.brightnessMin, displayConfig.brightnessMax);
+    sdr_BR_value_min.set_bg_color(TFT_BG_IS_VISIBLE);
     btn_BR_ready.begin(7 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_BR_ready.setPicturePath("/btn/Button_Ready");
     btn_BR_ready.set_bg_color(TFT_BG_IS_VISIBLE);
     pic_BR_logo.begin(0, 0, displayConfig.dispWidth, displayConfig.dispHeight, 0, 0, 0, 0);
     pic_BR_logo.setPicturePath("/common/Brightness.jpg");
-    txt_BR_value.begin(0, layout.winButton.y, layout.winButton.w * 2, layout.winButton.h, layout.winButton.pl, layout.winButton.pr, layout.winButton.pt, layout.winButton.pb);
-    txt_BR_value.setAlign(HAlign::Center, VAlign::Middle);
-    txt_BR_value.setFontSize(0); // auto
-    txt_BR_value.set_bg_color(TFT_BG_IS_VISIBLE);
+    txt_BR_value_max.begin(0, layout.winButton.y - layout.winButton.h, layout.winButton.w * 2, layout.winButton.h, layout.winButton.pl, layout.winButton.pr, layout.winButton.pt, layout.winButton.pb);
+    txt_BR_value_max.setAlign(HAlign::Center, VAlign::Middle);
+    txt_BR_value_max.setFontSize(0); // auto
+    txt_BR_value_max.set_bg_color(TFT_BG_IS_VISIBLE);
+    txt_BR_value_min.begin(0, layout.winButton.y, layout.winButton.w * 2, layout.winButton.h, layout.winButton.pl, layout.winButton.pr, layout.winButton.pt, layout.winButton.pb);
+    txt_BR_value_min.setAlign(HAlign::Center, VAlign::Middle);
+    txt_BR_value_min.setFontSize(0); // auto
+    txt_BR_value_min.set_bg_color(TFT_BG_IS_VISIBLE);
+    txt_BR_max.begin(6 * layout.winButton.w, layout.winButton.y - layout.winButton.h, layout.winButton.w, layout.winButton.h, 0, 0, 0, 0);
+    txt_BR_max.setAlign(HAlign::Center, VAlign::Middle);
+    txt_BR_max.setFontSize(0);
+    txt_BR_max.set_bg_color(TFT_BG_IS_VISIBLE);
+    txt_BR_max.setTextColor(TFT_WHITE);
+    txt_BR_max.setText("max");
+    txt_BR_min.begin(6 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h, 0, 0, 0, 0);
+    txt_BR_min.setAlign(HAlign::Center, VAlign::Middle);
+    txt_BR_min.setFontSize(0);
+    txt_BR_min.set_bg_color(TFT_BG_IS_VISIBLE);
+    txt_BR_min.setTextColor(TFT_WHITE);
+    txt_BR_min.setText("min");
     // EQUALIZER ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     sdr_EQ_lowPass.begin(layout.sdrLP.x, layout.sdrLP.y, layout.sdrLP.w, layout.sdrLP.h, layout.sdrLP.pl, layout.sdrLP.pr, layout.sdrLP.pt, layout.sdrLP.pb);
     sdr_EQ_lowPass.setMinMaxVal(-12, 12);

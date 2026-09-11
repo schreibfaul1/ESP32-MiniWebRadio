@@ -737,6 +737,7 @@ class Slider : public RegisterTable {
         m_spotPos = xPos;
         int32_t val = map_l(m_spotPos, m_leftStop, m_rightStop, m_minVal, m_maxVal); // xPos -> val
         m_ra.val1 = val;
+        m_val = val;
         if (graphicObjects_OnChange) graphicObjects_OnChange(m_name, val);
     }
 };
@@ -7245,6 +7246,139 @@ class WeatherClock : public RegisterTable {
         pic_weather_code->set_bg_color(m_bg_color);
         crt_temperature->set_bg_color(m_bg_color);
         clk_24s->set_bg_color(m_bg_color);
+        txt_info->set_bg_color(m_bg_color);
+    }
+};
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class Brightness : public RegisterTable {
+  private:
+
+    Textbox*         txt_info = new Textbox("txt_info"); // BH1760 found or not
+    Textbox*         txt_a_value = new Textbox("sdr_a_value");
+    Textbox*         txt_b_value = new Textbox("sdr_b_value");
+    Slider*          sdr_a = new Slider("sdr_a"); // if BH1760, is visible -> brightness_min, else is not visible
+    Slider*          sdr_b = new Slider("sdr_b"); // if BH1760, brightness_max, else brightness_min and brightness_max
+    Button*          btn_ready = new Button("btn_ready", ButtonType::PushButton); // ok
+    int16_t          m_x = 0;
+    int16_t          m_y = 0;
+    int16_t          m_w = 0;
+    int16_t          m_h = 0;
+    int32_t              m_bg_color = TFT_BG_IS_WALLPAPER;
+    bool                 m_enabled = false;
+    bool                 m_active = true;
+    bool                 m_focus = false;
+    bool                 m_clicked = false;
+    bool                 m_showAll = false;
+    bool                 m_first_call = true;
+    ps_ptr<char>         m_name;
+    uint8_t              m_min = 0, m_max = 0;
+    releasedArg          m_ra;
+
+  public:
+    Brightness(ps_ptr<char> name) {
+        register_object(this);
+        m_name = name;
+        m_enabled = false;
+        m_clicked = false;
+    }
+    ~Brightness() {
+        delete txt_info;
+        delete txt_a_value;
+        delete txt_b_value;
+        delete sdr_a;
+        delete sdr_b;
+        delete btn_ready;
+    }
+
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
+        m_x = x; // x pos
+        m_y = y; // y pos
+        m_w = w; // width
+        m_h = h; // high
+        m_enabled = false;
+        txt_info->setFontSize(0);
+        txt_info->setAlign(HAlign::Left, VAlign::Middle);
+        txt_a_value->setFontSize(0);
+        txt_a_value->setAlign(HAlign::Right, VAlign::Middle);
+        txt_b_value->setFontSize(0);
+        txt_b_value->setAlign(HAlign::Right, VAlign::Middle);
+
+        txt_info->begin(m_x, m_y, m_w, m_h, 0, 0, 0, 0);
+        txt_a_value->begin(m_x, m_y, m_w, m_h, 0, 0, 0, 0);
+        txt_b_value->begin(m_x, m_y, m_w, m_h, 0, 0, 0, 0);
+
+    }
+
+    ps_ptr<char> get_name() { return m_name; }
+    void         enable() { enable_all(); }
+    void         disable() { disable_all(); }
+    bool         is_enabled() { return m_enabled; }
+    bool         is_active() { return m_active; }
+    void         set_active(bool active) { m_active = active; }
+    bool         has_focus() { return m_focus; }
+    void         set_bg_color(int32_t color) { set_bg_color_all(color); }
+    bool         set_focus(bool focus) { return false; }
+
+    void show() {
+        if (m_first_call) m_first_call = false;
+        if (m_bg_color == TFT_BG_IS_WALLPAPER) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+        }
+        m_clicked = false;
+
+        m_enabled = true;
+        m_showAll = true;
+        txt_info->setText("");
+        txt_info->show();
+    }
+
+    void hide() {
+        if (m_first_call) return;
+        if (m_bg_color == TFT_BG_IS_WALLPAPER) {
+            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else {
+            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
+        }
+        m_enabled = false;
+        disable_all();
+    }
+
+    void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
+        x = m_x;
+        y = m_y;
+        w = m_w;
+        h = m_h;
+    }
+
+    bool positionXY(uint16_t x, uint16_t y) {
+        if (!m_enabled) return false;
+        if (x < m_x) return false;
+        if (y < m_y) return false;
+        if (x > m_x + m_w) return false;
+        if (y > m_y + m_h) return false;
+        if (m_enabled) m_clicked = true;
+        if (graphicObjects_OnClick) graphicObjects_OnClick(m_name, m_enabled);
+        //    if(!m_enabled) return false;
+        return true;
+    }
+    bool released() {
+        if (!m_enabled) return false;
+        if (!m_clicked) return false;
+        if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
+        m_clicked = false;
+        return true;
+    }
+
+  private:
+    void enable_all() { m_enabled = true; }
+
+    void disable_all() { m_enabled = false; }
+
+  private:
+    void set_bg_color_all(int32_t color) {
+        m_bg_color = color;
         txt_info->set_bg_color(m_bg_color);
     }
 };

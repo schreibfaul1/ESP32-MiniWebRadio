@@ -102,22 +102,34 @@ bool hp_BH1750::start() { // Start a single shot measurement with given resoluti
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 uint16_t hp_BH1750::getBrightness() {
-    if(!isInit) return 0;
+    if (!isInit) return 0;
     return (float)readValue() / ((float)SENSITIVITY_ADJ_DEFAULT / m_sensitivity) * m_resolution;
     ;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void hp_BH1750::loop() {
-    if(!isInit) return;
-    if(_timeflag == false){
+    if (!isInit) return;
+    if (_timeflag == false) {
         _timeflag = true;
         _timer = millis();
         start();
     }
-    if(_timer + 1000 < millis() && _timeflag){
+    if (_timer + 1000 < millis() && _timeflag) {
         _timeflag = false;
-        int32_t res = readValue() / ((float)SENSITIVITY_ADJ_DEFAULT / m_sensitivity) * m_resolution;
-        if(on_BH1750) (on_BH1750(res));
+        int32_t lux = readValue();
+
+        constexpr float MIN_PWM = 5.0f;
+        constexpr float MAX_PWM = 255.0f;
+        constexpr float MAX_LUX = 20000.0f;
+        constexpr float EXP = 0.4f;  // 1.0f lineae, 0.5f sqrt, 0.4 greater amplification of small values
+        float           retValue = 0;
+
+        float x = lux / MAX_LUX;
+        retValue = MAX_PWM * powf(x, EXP);
+        retValue = std::clamp(retValue, MIN_PWM, MAX_PWM);
+
+        // log_w("lux %i, retValue %u", lux, static_cast<uint8_t>(retValue));
+        if (on_BH1750) on_BH1750(static_cast<uint8_t>(retValue));
     }
     return;
 }

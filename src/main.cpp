@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.0v - Sep 09, 2026                                                                                                               ";
+    Version 4.2.0w - Sep 11, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -140,8 +140,9 @@ uint8_t  s_fileListPos = 0;
 uint8_t  s_ambientValue = 50;
 uint8_t  s_dlnaLevel = 0;
 uint8_t  s_resetReason = (esp_reset_reason_t)ESP_RST_UNKNOWN;
-uint8_t  s_brightness = UINT8_MAX;
-uint8_t  s_bh1750Value = UINT8_MAX;
+uint8_t  s_brightness = UINT8_MAX / 2;
+uint8_t  s_brightness_max = UINT8_MAX / 2;
+uint8_t  s_brightness_min = UINT8_MAX / 2;
 uint8_t  s_start_counter = 0;
 int16_t  s_totalNumberReturned = -1;
 int16_t  s_dlnaMaxItems = -1;
@@ -303,7 +304,8 @@ boolean defaultsettings() {
     s_f_mute = parseJson("\"mute\":").equals("true") ? true : false;
     s_f_vu_meter_enabled = parseJson("\"vu_meter_enabled\":").equals("true") ? true : false;
     s_f_spectrum_enabled = parseJson("\"spectrum_enabled\":").equals("true") ? true : false;
-    s_brightness = max((uint8_t)5, parseJson("\"brightness\":").to_uint8());
+    s_brightness_max = max((uint8_t)5, parseJson("\"brightness_max\":").to_uint8());
+    s_brightness_min = max((uint8_t)5, parseJson("\"brightness_min\":").to_uint8());
     s_sleeptime = parseJson("\"sleeptime\":").to_uint16();
     s_cur_station = parseJson("\"station\":").to_uint16();
     s_tone.LP = parseJson("\"toneLP\":").to_int16();
@@ -364,7 +366,8 @@ void updateSettings() {
     jO.appendf(",\n  \"mute\":\"{}\"", s_f_mute);
     jO.appendf(",\n  \"vu_meter_enabled\":\"{}\"", s_f_vu_meter_enabled);
     jO.appendf(",\n  \"spectrum_enabled\":\"{}\"", s_f_spectrum_enabled);
-    jO.appendf(",\n  \"brightness\":{}", s_brightness);
+    jO.appendf(",\n  \"brightness_max\":{}", s_brightness_max);
+    jO.appendf(",\n  \"brightness_min\":{}", s_brightness_min);
     jO.appendf(",\n  \"sleeptime\":{}", s_sleeptime);
     jO.appendf(",\n  \"lastconnectedhost\":\"{}\"", s_settings.lastconnectedhost);
     jO.appendf(",\n  \"lastconnectedfile\":\"{}\"", s_settings.lastconnectedfile);
@@ -1031,11 +1034,9 @@ void setup() {
     esp_log_set_vprintf(log_redirect_handler);
     if (!get_esp_items(&s_resetReason, &s_f_FFatFound)) return;
 
-    if (TFT_BL >= 0) {
-        s_f_brightnessIsChangeable = true;
-        setupBacklight(TFT_BL, 512);
-        setTFTbrightness(200, 200);
-    }
+    s_f_brightnessIsChangeable = setupBacklight(TFT_BL, 512);
+    setTFTbrightness(s_brightness);
+
     if (IR_PIN >= 0) {
         pinMode(IR_PIN, INPUT_PULLUP); // if ir_pin is read only, have a external resistor (~10...40KOhm)
     }
@@ -1056,7 +1057,6 @@ void setup() {
         if (res) printfln(s_tag.setup, "DAC ES8311 found at " ANSI_ESC_CYAN "0x{:02X}", s_i2c_items.es8311_addr);
         es8311.setVolume(90);
     }
-    vTaskDelay(3000);
 
     set_tft_items(); // TFT, Resolotion
     set_tp_items();  // TP, Resolotion
@@ -1072,7 +1072,8 @@ void setup() {
     s_f_isWiFiConnected = connectToWiFi();
 
     placingGraphicObjects();
-    sdr_BR_value.setValue(s_brightness);
+    sdr_BR_value_max.setValue(s_brightness_max);
+    sdr_BR_value_min.setValue(s_brightness_min);
     sdr_EQ_lowPass.setValue(s_tone.LP);
     sdr_EQ_bandPass.setValue(s_tone.BP);
     sdr_EQ_highPass.setValue(s_tone.HP);
@@ -1147,7 +1148,6 @@ void setup() {
         ArduinoOTA.setHostname("MiniWebRadio");
     } else {
         s_state = NONE;
-        setTFTbrightness(200, 200);
         changeState(WIFI_SETTINGS, 0);
         return;
     }
@@ -1171,6 +1171,7 @@ void setup() {
     dispFooter.updateOffTime(s_sleeptime);
 
     s_stationURL = s_settings.lastconnectedhost;
+    s_brightness = (s_brightness_max + s_brightness_min) / 2;
 
     s_start_counter = 1;
 
@@ -1598,7 +1599,7 @@ void wake_up(int8_t state, int8_t subState) {
     printfln(s_tag.action, "awake");
     clearAll(TFT_BG_IS_WALLPAPER);
     clk_CL_24.hide();
-    setTFTbrightness(s_brightness, s_bh1750Value);
+    setTFTbrightness(s_brightness);
     dispHeader.set_bg_color(TFT_BG_IS_WALLPAPER);
     dispFooter.set_bg_color(TFT_BG_IS_WALLPAPER);
     dispHeader.show();
@@ -1931,13 +1932,23 @@ void changeState(int8_t state, int8_t subState) {
         case BRIGHTNESS: {
             if (newState) {
                 pic_BR_logo.show();
-                sdr_BR_value.setValue(s_brightness);
-                sdr_BR_value.show();
-                txt_BR_value.setText(int2str(s_brightness));
-                txt_BR_value.show();
+                sdr_BR_value_max.setValue(s_brightness_max);
+                sdr_BR_value_max.show();
+                txt_BR_value_max.setText(int2str(s_brightness_max));
+                txt_BR_value_max.show();
+                sdr_BR_value_min.setValue(s_brightness_min);
+                sdr_BR_value_min.show();
+                txt_BR_value_min.setText(int2str(s_brightness_min));
+                txt_BR_value_min.show();
+                txt_BR_max.show();
+                txt_BR_min.show();
             } else {
-                sdr_BR_value.enable();
-                txt_BR_value.enable();
+                sdr_BR_value_max.enable();
+                txt_BR_value_max.enable();
+                sdr_BR_value_min.enable();
+                txt_BR_value_min.enable();
+                txt_BR_max.enable();
+                txt_BR_min.enable();
             }
             btn_BR_ready.show();
             break;
@@ -1981,7 +1992,7 @@ void changeState(int8_t state, int8_t subState) {
             if (s_volume.ringVolume > 0) { // alarm with bell
                 pic_RI_logo.enable();
                 showFileLogo(RINGING, subState);
-                setTFTbrightness(s_brightness, s_bh1750Value);
+                setTFTbrightness(s_brightness);
                 printfln(s_tag.action, ANSI_ESC_MAGENTA "Alarm");
                 setVolume(s_volume.ringVolume);
                 audio.setVolume(s_volume.ringVolume);
@@ -2014,7 +2025,7 @@ void changeState(int8_t state, int8_t subState) {
             dispHeader.hide();
             dispFooter.hide();
             if (subState == 0) {
-                setTFTbrightness(s_brightness, s_bh1750Value);
+                setTFTbrightness(0);
             }
             if (subState == 1) {
                 clk_CL_24.show();
@@ -2190,7 +2201,7 @@ void loop() {
         uint16_t minuteOfTheDay = rtc.getMinuteOfTheDay();
         uint8_t  weekDay = rtc.getweekday();
         clk_CL_24.updateTime(minuteOfTheDay, weekDay);
-        if(s_state == WEATHER && s_subState_weather == 0) cls_weather.update_time(s_time);
+        if (s_state == WEATHER && s_subState_weather == 0) cls_weather.update_time(s_time);
         if (s_state == RINGING) clk_RI_24small.updateTime(minuteOfTheDay, weekDay);
         static uint8_t semaphore = 0;
         if (!semaphore) { s_f_alarm = isAlarm(weekDay, s_alarmdays, minuteOfTheDay, s_alarmtime) && s_f_rtc; } // alarm if rtc and CL green
@@ -2771,11 +2782,12 @@ void my_audio_info(Audio::msg_t m) {
 //     *continueI2S = true;
 // }
 // ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void on_BH1750(int32_t ambVal) { //--AMBIENT LIGHT SENSOR BH1750--
-    int16_t bh1750Value = 0;
-    s_bh1750Value = map_l(ambVal, 0, 1600, displayConfig.brightnessMin, displayConfig.brightnessMax);
-    MWR_LOG_DEBUG("ambVal {}, bh1750Value {}, s_brightness {}", ambVal, bh1750Value, s_brightness);
-    setTFTbrightness(s_brightness, s_bh1750Value);
+void on_BH1750(uint8_t ambVal) { //--AMBIENT LIGHT SENSOR BH1750--
+    if(ambVal < s_brightness_min) s_brightness = 5;
+    else if(ambVal > s_brightness_max) s_brightness = 255;
+    else s_brightness = map(ambVal, s_brightness_min, s_brightness_max, 5, 255);
+//    MWR_LOG_INFO("s_brightness {}, ambVal {}, s_brightness_min {}, s_brightness_max {}", s_brightness, ambVal, s_brightness_min, s_brightness_max);
+    setTFTbrightness(s_brightness);
 }
 // ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void ftp_debug(const char* info) {
@@ -2895,9 +2907,8 @@ void ir_short_key(int8_t key) {
                 return;
             }
             if (s_state == BRIGHTNESS) {
-                s_brightness += 5;
-                s_brightness = clamp_min_max(s_brightness, displayConfig.brightnessMin, displayConfig.brightnessMax);
-                sdr_BR_value.setValue(s_brightness);
+                sdr_BR_value_max.setValue(0);
+                sdr_BR_value_min.setValue(255);
             }
             if (s_state == EQUALIZER) { // scroll forward (radio, player, mute)
                 if(s_ir_btn_select < 3) set_ir_pos_EQ(IR_RIGHT);
@@ -2971,9 +2982,8 @@ void ir_short_key(int8_t key) {
                     return;
             }
             if (s_state == BRIGHTNESS) {
-                s_brightness -= 5;
-                s_brightness = clamp_min_max(s_brightness, displayConfig.brightnessMin, displayConfig.brightnessMax);
-                sdr_BR_value.setValue(s_brightness);
+                sdr_BR_value_max.setValue(255);
+                sdr_BR_value_min.setValue(5);
                 setTimeCounter(2);
                 return;
             }
@@ -3988,7 +3998,8 @@ void tp_moved(uint16_t x, uint16_t y) {
     if (s_state == CLOCK)          { if (sdr_CL_volume.positionXY(x, y))     return; }
     if (s_state == WEATHER)        { if (sdr_WR_volume.positionXY(x, y))     return; }
     if (s_state == DLNAITEMSLIST)  { if (lst_DLNA.positionXY(x, y))          return; }
-    if (s_state == BRIGHTNESS)     { if (sdr_BR_value.positionXY(x, y))      return; }
+    if (s_state == BRIGHTNESS)     { if (sdr_BR_value_max.positionXY(x, y)) {return; }
+                                     if (sdr_BR_value_min.positionXY(x, y)) {return; }}
     if (s_state == EQUALIZER)      { if (sdr_EQ_lowPass.positionXY(x, y))  { return; }
                                      if (sdr_EQ_bandPass.positionXY(x, y)) { return; }
                                      if (sdr_EQ_highPass.positionXY(x, y)) { return; }
@@ -4041,7 +4052,7 @@ void tp_released(uint16_t x, uint16_t y){
             btn_SE_bright.released(); btn_SE_equal.released();  btn_SE_wifi.released(); btn_SE_radio.released(); btn_SE_vu_meter.released(); btn_SE_spectrum.released();
             break;
         case BRIGHTNESS:
-            sdr_BR_value.released();  btn_BR_ready.released(); pic_BR_logo.released();
+            sdr_BR_value_max.released(); sdr_BR_value_min.released(); btn_BR_ready.released(); pic_BR_logo.released();
             break;
         case EQUALIZER:
             sdr_EQ_lowPass.released(); sdr_EQ_bandPass.released(); sdr_EQ_highPass.released(); sdr_EQ_balance.released(); btn_EQ_lowPass.released(); btn_EQ_bandPass.released();
@@ -4073,22 +4084,46 @@ void tp_long_released(uint16_t x, uint16_t y){
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void graphicObjects_OnChange(ps_ptr<char> name, int32_t val) {
     ps_ptr<char> c;
-    if (name.equals("sdr_RA_volume"))   { setTimeCounter(2); setVolume(val); goto exit; }
-    if (name.equals("sdr_PL_volume"))   {                    setVolume(val); goto exit; }
-    if (name.equals("sdr_DL_volume"))   {                    setVolume(val); goto exit; }
-    if (name.equals("sdr_CL_volume"))   { setTimeCounter(2); setVolume(val); goto exit; }
-    if (name.equals("sdr_WR_volume"))   { setTimeCounter(2); setVolume(val); goto exit; }
-    if (name.equals("sdr_BR_value"))    { s_brightness = val; setTFTbrightness(s_brightness, s_bh1750Value); txt_BR_value.setText(int2str(val)); txt_BR_value.show(); goto exit; }
-    if (name.equals("sdr_EQ_LP"))       { c.assignf("{} dB", val); s_tone.LP  = val; webSrv.send("settone=", getI2STone()); setI2STone(); txt_EQ_lowPass.setText(c);  txt_EQ_lowPass.show(); goto exit; }
-    if (name.equals("sdr_EQ_BP"))       { c.assignf("{} dB", val); s_tone.BP  = val; webSrv.send("settone=", getI2STone()); setI2STone(); txt_EQ_bandPass.setText(c); txt_EQ_bandPass.show(); goto exit; }
-    if (name.equals("sdr_EQ_HP"))       { c.assignf("{} dB", val); s_tone.HP  = val; webSrv.send("settone=", getI2STone()); setI2STone(); txt_EQ_highPass.setText(c); txt_EQ_highPass.show(); goto exit; }
-    if (name.equals("sdr_EQ_BAL"))      { if(val < 0)       c.assignf("{}/0 dB", val);  // e.g. -10/0 dB
-                                          else if (val > 0) c.assignf("0/-{} dB", val); // e.g. 0/-8 dB
-                                          else              c.assign("0/0 dB");   // 0/0 dB
-                                          s_tone.BAL = val; webSrv.send("settone=", getI2STone()); setI2STone(); txt_EQ_balance.setText(c); txt_EQ_balance.show(); goto exit; }
-    if (name.equals("pgb_PL_progress")) { goto exit; }
-    if (name.equals("pgb_DL_progress")) { goto exit; }
-
+    if (name.equals("sdr_RA_volume"))       { setTimeCounter(2); setVolume(val); goto exit; }
+    if (name.equals("sdr_PL_volume"))       {                    setVolume(val); goto exit; }
+    if (name.equals("sdr_DL_volume"))       {                    setVolume(val); goto exit; }
+    if (name.equals("sdr_CL_volume"))       { setTimeCounter(2); setVolume(val); goto exit; }
+    if (name.equals("sdr_WR_volume"))       { setTimeCounter(2); setVolume(val); goto exit; }
+    if (name.equals("sdr_EQ_LP"))           { c.assignf("{} dB", val); s_tone.LP  = val; webSrv.send("settone=", getI2STone()); setI2STone(); txt_EQ_lowPass.setText(c);  txt_EQ_lowPass.show(); goto exit; }
+    if (name.equals("sdr_EQ_BP"))           { c.assignf("{} dB", val); s_tone.BP  = val; webSrv.send("settone=", getI2STone()); setI2STone(); txt_EQ_bandPass.setText(c); txt_EQ_bandPass.show(); goto exit; }
+    if (name.equals("sdr_EQ_HP"))           { c.assignf("{} dB", val); s_tone.HP  = val; webSrv.send("settone=", getI2STone()); setI2STone(); txt_EQ_highPass.setText(c); txt_EQ_highPass.show(); goto exit; }
+    if (name.equals("sdr_EQ_BAL"))          { if(val < 0)       c.assignf("{}/0 dB", val);  // e.g. -10/0 dB
+                                              else if (val > 0) c.assignf("0/-{} dB", val); // e.g. 0/-8 dB
+                                              else              c.assign("0/0 dB");   // 0/0 dB
+                                              s_tone.BAL = val; webSrv.send("settone=", getI2STone()); setI2STone(); txt_EQ_balance.setText(c); txt_EQ_balance.show(); goto exit; }
+    if (name.equals("pgb_PL_progress"))     { goto exit; }
+    if (name.equals("pgb_DL_progress"))     { goto exit; }
+    if (name.equals("sdr_BR_value_max"))    {   s_brightness_max = val; txt_BR_value_max.setText(int2str(val)); txt_BR_value_max.show();
+                                                if(s_i2c_items.bh1750_found){
+                                                    if(sdr_BR_value_max.getValue() < sdr_BR_value_min.getValue()) {  // >=
+                                                        sdr_BR_value_min.setValue(val);
+                                                        txt_BR_value_min.setText(int2str(val)); txt_BR_value_min.show();
+                                                    }
+                                                } else {
+                                                    txt_BR_value_min.setText(int2str(val)); txt_BR_value_min.show();
+                                                    if(sdr_BR_value_min.getValue()!=val) { sdr_BR_value_min.setValue(val); }
+                                                    setTFTbrightness(s_brightness_max);
+                                                }
+                                                goto exit;
+                                            }
+    if (name.equals("sdr_BR_value_min"))    {   s_brightness_min = val;  txt_BR_value_min.setText(int2str(val)); txt_BR_value_min.show();
+                                                if(s_i2c_items.bh1750_found){
+                                                    if(sdr_BR_value_min.getValue() > sdr_BR_value_max.getValue()){ // <=
+                                                        sdr_BR_value_max.setValue(val);
+                                                        txt_BR_value_max.setText(int2str(val)); txt_BR_value_max.show();
+                                                    }
+                                                } else {
+                                                    txt_BR_value_max.setText(int2str(val)); txt_BR_value_max.show();
+                                                    if(sdr_BR_value_max.getValue()!=val) { sdr_BR_value_max.setValue(val); }
+                                                    setTFTbrightness(s_brightness_min);
+                                                }
+                                                goto exit;
+                                            }
     MWR_LOG_WARN("unused event: graphicObject {} was changed, val {}", name, val);
 exit:
     return;
@@ -4408,7 +4443,8 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
     if (s_state == BRIGHTNESS) {
         if (name.equals("btn_BR_ready"))    { changeState(RADIO, 0); goto exit;}
         if (name.equals("pic_BR_logo"))     { goto exit; }
-        if (name.equals("sdr_BR_value"))    { goto exit; }
+        if (name.equals("sdr_BR_value_max")){ goto exit; }
+        if (name.equals("sdr_BR_value_min")){ goto exit; }
     }
     if (s_state == EQUALIZER) {
         if (name.equals("btn_EQ_Radio"))    { changeState(RADIO, 0); goto exit; }

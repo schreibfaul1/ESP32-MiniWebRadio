@@ -5,9 +5,8 @@
 
 #pragma once
 
-extern __attribute__((weak)) void on_BH1750(int32_t);
+extern __attribute__((weak)) void on_BH1750(uint8_t);
 
-static const unsigned int BH1750_SATURATED = 65535;
 enum BH1750Quality {
     BH1750_QUALITY_HIGH = 0x20,
     BH1750_QUALITY_HIGH2 = 0x21,
