@@ -3,8 +3,8 @@
 #include "tft_structures.h"
 
 //———————————— predifined displays —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-#define SPI_DISPLAY 1                  //                    SPI display  320x240, 2.8inch,        ILI9341             XPT2046, ESP32-S3 or ESP32-P4
-// #define SPI_DISPLAY 2                  //                    SPI display  480x320, 3.5" od 4"      ILI9488 or ST7796,  XPT2046, ESP32-S3 or ESP32-P4
+// #define SPI_DISPLAY 1                  //                    SPI display  320x240, 2.8inch,        ILI9341             XPT2046, ESP32-S3 or ESP32-P4
+#define SPI_DISPLAY 2                  //                    SPI display  480x320, 3.5" od 4"      ILI9488 or ST7796,  XPT2046, ESP32-S3 or ESP32-P4
 // #define SPI_DISPLAY 3                  //                    SPI display  480x320, 3.5" od 4"      ILI9488 or ST7796,  FT6x63,  ESP32-S3 or ESP32-P4
 // #define ESP32_8048S070                 // Sunton             RGB display  800x480, 7",                                 GT911,   ESP32-S3 N16R8
 // #define ESP32_WZ8048C050               // Elecrow            RGB display  800x480, 5",                                 GT911,   ESP32-S3 N4R8
@@ -118,7 +118,7 @@
         #define TFT_CONTROLLER       5 // (5)SPI-ILI9488 or ST7796[480x320]
         #define TFT_ROTATION         0 // (0) none, (1) 90°CW, (2) 180°CW, (3) 270°CW
         #define TP_CONTROLLER        1 // (1)XPT2046 3.5" or 4.0
-        #define TP_ROTATION          0 // (0) none, (1) 90°CW, (2) 180°CW, (3) 270°CW
+        #define TP_ROTATION          2 // (0) none, (1) 90°CW, (2) 180°CW, (3) 270°CW
         #define TP_H_MIRROR          0 // (0) default, (1) mirror left <-> right
         #define TP_V_MIRROR          0 // (0) default, (1) mirror up <-> down
         #define DISPLAY_INVERSION    0 // (0) off (1) on
