@@ -5455,7 +5455,7 @@ class StationsList : public RegisterTable {
     bool released() {
         if (!m_enabled) return false;
         if (!m_clicked) return false;
-        MWR_LOG_ERROR("released, m_browseOnRelease {}", m_browseOnRelease);
+        MWR_LOG_DEBUG("released, m_browseOnRelease {}", m_browseOnRelease);
         if (m_browseOnRelease == 1) {
             create_list(false); // wipe up
         }
@@ -5496,7 +5496,7 @@ class StationsList : public RegisterTable {
             m_curStaNrCpy = *m_curSstationNr;
             if (m_curStaNrCpy == 0) m_curStaNrCpy = 1;
         }
-        MWR_LOG_ERROR("create_list m_firstStationsLineNr {}", m_firstStationsLineNr);
+        MWR_LOG_DEBUG("create_list m_firstStationsLineNr {}", m_firstStationsLineNr);
         myList.clearList();
         myList.setMode(RADIO, m_tftSize, m_fontSize);
 
@@ -5529,7 +5529,7 @@ class StationsList : public RegisterTable {
                 } else {
                     m_firstStationsLineNr -= 9;
                 }
-                MWR_LOG_ERROR("wipe up, m_firstStationsLineNr {}, m_browseOnRelease {}", m_firstStationsLineNr, m_browseOnRelease);
+                MWR_LOG_DEBUG("wipe up, m_firstStationsLineNr {}, m_browseOnRelease {}", m_firstStationsLineNr, m_browseOnRelease);
             }
             return;
         }
@@ -5544,7 +5544,7 @@ class StationsList : public RegisterTable {
                 else {
                     m_firstStationsLineNr += 9;
                 }
-                MWR_LOG_ERROR("wipe down, m_firstStationsLineNr {}, m_browseOnRelease {}", m_firstStationsLineNr, m_browseOnRelease);
+                MWR_LOG_DEBUG("wipe down, m_firstStationsLineNr {}, m_browseOnRelease {}", m_firstStationsLineNr, m_browseOnRelease);
             }
             return;
         }

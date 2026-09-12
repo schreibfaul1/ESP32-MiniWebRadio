@@ -1035,6 +1035,7 @@ void setup() {
     if (!get_esp_items(&s_resetReason, &s_f_FFatFound)) return;
 
     s_f_brightnessIsChangeable = setupBacklight(TFT_BL, 512);
+    if(!s_f_brightnessIsChangeable) btn_SE_bright.set_active(false);
     setTFTbrightness(s_brightness);
 
     if (IR_PIN >= 0) {
@@ -2786,6 +2787,7 @@ void on_BH1750(uint8_t ambVal) { //--AMBIENT LIGHT SENSOR BH1750--
     if(ambVal < s_brightness_min) s_brightness = 5;
     else if(ambVal > s_brightness_max) s_brightness = 255;
     else s_brightness = map(ambVal, s_brightness_min, s_brightness_max, 5, 255);
+    if (BRIGHTNESS_INVERSION) { s_brightness = 255 - s_brightness; }
 //    MWR_LOG_INFO("s_brightness {}, ambVal {}, s_brightness_min {}, s_brightness_max {}", s_brightness, ambVal, s_brightness_min, s_brightness_max);
     setTFTbrightness(s_brightness);
 }

@@ -795,7 +795,6 @@ inline void setTFTbrightness(uint8_t brightness) {
     extern uint8_t s_sleepMode;
     uint8_t        duty = std::max(brightness, (uint8_t) 5);
     if (s_f_sleeping && s_sleepMode == 0) { duty = 0; }
-    if (BRIGHTNESS_INVERSION) { duty = 255 - duty; }
 
     if (TFT_BL >= 0) {
         ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1, duty);
