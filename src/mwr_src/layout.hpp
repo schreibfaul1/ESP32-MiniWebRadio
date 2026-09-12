@@ -335,7 +335,7 @@ inline constexpr DisplayConfig config = {
     112,                    // sleeptimeYPos
     800,                    // width
     480,                    // height
-    30,                     // brightnessMin
+    0,                      // brightnessMin
     255,                    // brightnessMax
     "l"                     // size code
 };
@@ -422,7 +422,7 @@ inline constexpr DisplayConfig config = {
     112,                    // sleeptimeYPos
     h_res,                  // width
     v_res,                  // height
-    1,                      // brightnessMin
+    5,                      // brightnessMin
     255,                    // brightnessMax
     "xl"                    // size code
 };
