@@ -4,11 +4,9 @@
 
 //———————————— predifined displays —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // #define SPI_DISPLAY 1                  //                    SPI display  320x240, 2.8inch,        ILI9341             XPT2046, ESP32-S3 or ESP32-P4
-// #define SPI_DISPLAY 2                  //                    SPI display  480x320, 3.5" od 4"      ILI9488 or ST7796,  XPT2046, ESP32-S3 or ESP32-P4
+#define SPI_DISPLAY 2                  //                    SPI display  480x320, 3.5" od 4"      ILI9488 or ST7796,  XPT2046, ESP32-S3 or ESP32-P4
 // #define SPI_DISPLAY 3                  //                    SPI display  480x320, 3.5" od 4"      ILI9488 or ST7796,  FT6x63,  ESP32-S3 or ESP32-P4
-#define ESP32_8048S070                 // Sunton             RGB display  800x480, 7",                                 GT911,   ESP32-S3 N16R8
-// #define ESP32_WZ8048C050               // Elecrow            RGB display  800x480, 5",                                 GT911,   ESP32-S3 N4R8
-// #define ESP32_DIS08070H                // Elecrow            RGB display  800x480, 7",                                 GT911,   ESP32-S3 N4R8
+// #define ESP32_8048S070                 // Sunton             RGB display  800x480, 7",                                 GT911,   ESP32-S3 N16R8
 // #define ESP32_S3_Touch_LCD7            // Waveshare          RGB display  800x480, 7",                                 GT911,   ESP32-S3 N8R8
 // #define ESP32_P4_WIFI6_TOUCH_LCD7_7B   // Waveshare          DSI display 1024x600, 7",             EK97007,            GT911,   ESP32-P4 N32R32
 // #define JC1060P470                     // Guition            DSI display  024x600, 7",             JD9165,             GT911,   ESP32-P4 N32R32
@@ -231,92 +229,6 @@ const Timing RGB_TIMING = {.h_res = 800, .v_res = 480, .pixel_clock_hz = 8600000
         #define AMP_ENABLED        -1 // onboard amplifier (-1 if not available)
     #endif
 #endif // CONFIG_IDF_TARGET_ESP32S3
-// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-// 📌📌📌  DISPLAY [800x480] ESP32-S3 ELECROW 5"   📌📌📌
-// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-#if (CONFIG_IDF_TARGET_ESP32S3 == 1)
-    #ifdef ESP32_WZ8048C050
-        #define TFT_CONTROLLER       7 // (7)RGB[800x480]
-        #define TFT_ROTATION         2 // (0) none, (1) 90°CW, (2) 180°CW, (3) 270°CW
-        #define TP_CONTROLLER        7 // (7)GT911
-        #define TP_ROTATION          1 // (0) none, (1) 90°CW, (2) 180°CW, (3) 270°CW
-        #define TP_H_MIRROR          0 // (0) default, (1) mirror left <-> right
-        #define TP_V_MIRROR          0 // (0) default, (1) mirror up <-> down
-        #define DISPLAY_INVERSION    0 // (0) off (1) on
-        #define BRIGHTNESS_INVERSION 0 // (0) off (1) on, bg-led
-
-const Pins RGB_PINS = { // ELECROW 5"
-    .b0 = 8, .b1 = 3, .b2 = 46, .b3 = 9, .b4 = 1, .g0 = 5, .g1 = 6, .g2 = 7, .g3 = 15, .g4 = 16, .g5 = 4, .r0 = 45, .r1 = 48, .r2 = 47, .r3 = 21, .r4 = 14, .hsync = 39, .vsync = 41, .de = 40, .pclk = 0, .bl = -1};
-
-const Timing RGB_TIMING = {.h_res = 800, .v_res = 480, .pixel_clock_hz = 11000000, .hsync_pulse_width = 4, .hsync_back_porch = 43, .hsync_front_porch = 8, .vsync_pulse_width = 4, .vsync_back_porch = 12, .vsync_front_porch = 8};
-
-        #define TP_IRQ     -1
-        #define SD_MMC_CMD 11
-        #define SD_MMC_CLK 12
-        #define SD_MMC_D0  13
-
-        #define I2C_MASTER_FREQ_HZ 400000 // 400 kHz I2C-frequency
-
-        #define I2S_DOUT 17
-        #define I2S_BCLK 42
-        #define I2S_LRC  18
-        #define I2S_MCLK -1 // important!
-
-        #define IR_PIN             38 // IR Receiver (if available)
-        #define BT_EMITTER_RX      -1 // must be -1, not enough pins
-        #define BT_EMITTER_TX      -1 // must be -1, not enough pins
-        #define BT_EMITTER_LINK    -1 // must be -1, not enough pins
-        #define BT_EMITTER_MODE    -1 // must be -1, not enough pins
-        #define BT_EMITTER_CONNECT -1 // must be -1, not enough pins
-
-        #define TFT_BL      2  // same as RGB_PINS.bl
-        #define AMP_ENABLED -1 // control pin for extenal amplifier (if available)
-
-        #define I2C_SDA 19 // dala line for capacitive touchpadand and light sensor  (-1 if not used)
-        #define I2C_SCL 20 // clock line for capacitive touchpad  and light sensor (-1 if not used)
-
-    #endif
-#endif // CONFIG_IDF_TARGET_ESP32S3
-// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-// 📌📌📌  DISPLAY [800x480] ESP32-S3 ELECROW 7"   📌📌📌
-// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-#if (CONFIG_IDF_TARGET_ESP32S3 == 1)
-    #ifdef ESP32_DIS08070H
-        #define TFT_CONTROLLER       7 // (7)RGB[800x480]
-        #define TFT_ROTATION         2 // (0) none, (1) 90°CW, (2) 180°CW, (3) 270°CW
-        #define TP_CONTROLLER        7 // (7)GT911
-        #define TP_ROTATION          1 // (0) none, (1) 90°CW, (2) 180°CW, (3) 270°CW
-        #define TP_H_MIRROR          0 // (0) default, (1) mirror left <-> right
-        #define TP_V_MIRROR          0 // (0) default, (1) mirror up <-> down
-        #define DISPLAY_INVERSION    0 // (0) off (1) on
-        #define BRIGHTNESS_INVERSION 0 // (0) off (1) on, bg-led
-
-const Pins RGB_PINS = { // ELECROW 7"
-    .b0 = 15, .b1 = 7, .b2 = 6, .b3 = 5, .b4 = 4, .g0 = 9, .g1 = 46, .g2 = 3, .g3 = 8, .g4 = 16, .g5 = 1, .r0 = 14, .r1 = 21, .r2 = 47, .r3 = 48, .r4 = 45, .hsync = 39, .vsync = 40, .de = 41, .pclk = 0, .bl = -1};
-
-const Timing RGB_TIMING = {.h_res = 800, .v_res = 480, .pixel_clock_hz = 11000000, .hsync_pulse_width = 4, .hsync_back_porch = 160, .hsync_front_porch = 1, .vsync_pulse_width = 4, .vsync_back_porch = 140, .vsync_front_porch = 1};
-
-        #define TP_IRQ             -1
-        #define SD_MMC_CMD         11
-        #define SD_MMC_CLK         12
-        #define SD_MMC_D0          13
-        #define I2S_DOUT           17
-        #define I2S_BCLK           42
-        #define I2S_LRC            18
-        #define I2S_MCLK           -1 // important!
-        #define IR_PIN             38 // IR Receiver (if available)
-        #define BT_EMITTER_RX      -1 // must be -1, not enough pins
-        #define BT_EMITTER_TX      -1 // must be -1, not enough pins
-        #define BT_EMITTER_LINK    -1 // must be -1, not enough pins
-        #define BT_EMITTER_MODE    -1 // must be -1, not enough pins
-        #define BT_EMITTER_CONNECT -1 // must be -1, not enough pins
-        #define TFT_BL             2  // same as RGB_PINS.bl
-        #define AMP_ENABLED        -1 // control pin for extenal amplifier (if available)
-        #define I2C_SDA            19 // I2C, data line for capacitive touchpad and light sensor (-1 if not available)
-        #define I2C_SCL            20 // I2C, clock line for capacitive touchpad and light sensor (-1 if not available)
-    #endif
-#endif // CONFIG_IDF_TARGET_ESP32S3
-
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // 📌📌📌  DISPLAY [800x480] ESP32-S3 WAVESHARE 7"   📌📌📌
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
