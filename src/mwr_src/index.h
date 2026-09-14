@@ -784,6 +784,30 @@ function connect() {
             case "location":            console.log(msg, val)
                                         fillCitySelect(val);
                                         break;
+            case "temperature_unit":    if(val === "C") {
+                                            document.getElementById("selTempUnit").value = "C";
+                                        }
+                                        if(val === "F") {
+                                            document.getElementById("selTempUnit").value = "F";
+                                        }
+                                        break;
+            case "pressure_unit":       if(val === "hPa") {
+                                            document.getElementById("selPressUnit").value = "hPa";
+                                        }
+                                        if(val === "mmHg") {
+                                            document.getElementById("selPressUnit").value = "mmHg";
+                                        }
+                                        break;
+            case "wind_speed_unit":     if(val === "km/h") {
+                                            document.getElementById("selWindUnit").value = "km/h";
+                                        }
+                                        if(val === "m/s") {
+                                            document.getElementById("selWindUnit").value = "m/s";
+                                        }
+                                        if(val === "bft") {
+                                            document.getElementById("selWindUnit").value = "bft";
+                                        }
+                                        break;
             case "serTerminal":         appendToTerminal(val);
                                         // console.log(msg, val)
                                         break;
@@ -977,6 +1001,9 @@ function showTab6 () {
     socket.send("get_timeSpeechLang")
     socket.send("get_timeZones")  // fetch timezones_json
     socket.send("get_locations")  // fetch locations_json
+    socket.send("get_temperature_unit")
+    socket.send("get_pressure_unit")
+    socket.send("get_wind_speed_unit")
 }
 
 function showTab7 () {
@@ -3213,6 +3240,33 @@ function appendToTerminal(text) {
                                 <option value="ru">ru</option>
                             </select>
                         </h3>
+                    </div>
+                    <div style="margin-top: 0px; border-bottom: 3px double #999999;">
+                        <div style="display: grid; grid-template-columns: 170px 60px; align-items: center; margin-bottom: 10px; font-size: 1.17em;">
+                            <label for="selTempUnit">Unit of temperature:</label>
+                            <select id="selTempUnit"
+                                    onchange="socket.send('set_temperature_unit=' + this.value);">
+                                <option value="C">°C</option>
+                                <option value="F">°F</option>
+                            </select>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 170px 60px; align-items: center; margin-bottom: 10px; font-size: 1.17em;">
+                            <label for="selPressUnit">Unit of pressure:</label>
+                            <select id="selPressUnit"
+                                onchange="socket.send('set_pressure_unit=' + this.value);">
+                                <option value="hPa">hPa</option>
+                                <option value="mmHg">mmHg</option>
+                            </select>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 170px 60px; align-items: center; margin-bottom: 10px; font-size: 1.17em;">
+                            <label for="selWindUnit">Unit of wind speed:</label>
+                            <select id="selWindUnit"
+                                onchange="socket.send('set_wind_speed_unit=' + this.value);">
+                                <option value="km/h">km/h</option>
+                                <option value="m/s">m/s</option>
+                                <option value="bft">bft</option>
+                            </select>
+                        </div>
                     </div>
                 </td>
                 <td style="padding: 10px; min-width: 350px; margin-left: 0px;">
