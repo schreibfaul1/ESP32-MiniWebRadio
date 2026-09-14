@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.0x - Sep 11, 2026                                                                                                               ";
+    Version 4.2.0y - Sep 14, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -67,6 +67,10 @@ ps_ptr<char> s_lyrics = "";
 ps_ptr<char> s_location = "Europe/Berlin";
 ps_ptr<char> s_latiitude = "52.52";
 ps_ptr<char> s_longitude = "13.41";
+ps_ptr<char> s_temperature_unit = "C";  // *C or °F
+ps_ptr<char> s_pressure_unit = "hPa"; // hPa or mmHg
+ps_ptr<char> s_wind_speed_unit = "km/h"; // km/h, m/s, bft
+
 ps_ptr<char> s_version;
 
 bool s_f_rtc = false; // true if time from ntp is received
@@ -321,6 +325,9 @@ boolean defaultsettings() {
     s_location = parseJson("\"location\":");
     s_latiitude = parseJson("\"latiitude\":");
     s_longitude = parseJson("\"longitude\":");
+    s_temperature_unit = parseJson("\"temp_unit\":");
+    s_pressure_unit = parseJson("\"press_unit\":");
+    s_wind_speed_unit = parseJson("\"wind_speed_unit\":");
 
     // set some items ---------------------------------------------------------------------------------------------
     if (!s_settings.lastconnectedfile.starts_with("/")) { s_settings.lastconnectedfile.assign("/audiofiles/"); } // guard
@@ -383,6 +390,9 @@ void updateSettings() {
     jO.appendf(",\n  \"location\":\"{}\"", s_location);
     jO.appendf(",\n  \"latiitude\":\"{}\"", s_latiitude);
     jO.appendf(",\n  \"longitude\":\"{}\"", s_longitude);
+    jO.appendf(",\n  \"temp_unit\":\"{}\"", s_temperature_unit);
+    jO.appendf(",\n  \"press_unit\":\"{}\"", s_pressure_unit);
+    jO.appendf(",\n  \"wind_speed_unit\":\"{}\"", s_wind_speed_unit);
     jO.append("\n}");
 
     if (s_settingsHash != simpleHash(jO)) {
@@ -1126,6 +1136,7 @@ void setup() {
     meteo.begin(); // Init Open-Meteo
     meteo.set_coordinates(s_latiitude, s_longitude);
     meteo.set_timeZone(s_TZName);
+    cls_weather.locale(&s_temperature_unit, &s_pressure_unit, &s_wind_speed_unit);
 
     if (AMP_ENABLED >= 0) { // enable onboard amplifier
         pinMode(AMP_ENABLED, OUTPUT);
@@ -3588,6 +3599,15 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
 
     CMD_EQUALS("get_myLocation"){       ps_ptr<char> loc = s_location;
                                         loc.appendf("&{}|{}", s_latiitude, s_longitude);  webSrv.reply(loc, webSrv.TEXT); return; }
+
+    CMD_EQUALS("get_temperature_unit"){ webSrv.send("temp_unit=", s_temperature_unit); return; }
+    CMD_EQUALS("set_temperature_unit"){ s_temperature_unit = param; updateSettings(); meteo.send_request(); printfln(s_tag.meteo_info, ANSI_ESC_GREEN "Update Meteo [°{}]", s_temperature_unit); return; }
+
+    CMD_EQUALS("get_pressure_unit"){    webSrv.send("press_unit=", s_pressure_unit); return; }
+    CMD_EQUALS("set_pressure_unit"){    s_pressure_unit = param; updateSettings(); meteo.send_request(); printfln(s_tag.meteo_info, ANSI_ESC_GREEN "Update Meteo [{}]", s_pressure_unit); return; }
+
+    CMD_EQUALS("get_wind_speed_unit"){  webSrv.send("wind_speed_unit=", s_wind_speed_unit); return; }
+    CMD_EQUALS("set_wind_speed_unit"){  s_wind_speed_unit = param; updateSettings(); meteo.send_request(); printfln(s_tag.meteo_info, ANSI_ESC_GREEN "Update Meteo [{}]", s_wind_speed_unit); return; }
 
     CMD_EQUALS("change_state"){         if     (param == "RADIO"       && s_state != RADIO)       { changeState(RADIO, 0); return; }
                                         else if(param == "PLAYER"      && s_state != PLAYER)      { stopSong(); changeState(PLAYER, 0); return; }
