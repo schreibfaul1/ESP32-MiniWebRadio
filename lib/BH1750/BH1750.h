@@ -5,7 +5,7 @@
 
 #pragma once
 
-extern __attribute__((weak)) void on_BH1750(uint8_t);
+extern __attribute__((weak)) void on_BH1750(uint16_t);
 
 enum BH1750Quality {
     BH1750_QUALITY_HIGH = 0x20,
