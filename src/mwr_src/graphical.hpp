@@ -682,14 +682,15 @@ class Slider : public RegisterTable {
         if (!m_objectInit) return;
         if (val < m_minVal) val = m_minVal;
         if (val > m_maxVal) val = m_maxVal;
-        m_val = val;
         if (m_clicked) return;
-        uint16_t spotPos = map_l(val, m_minVal, m_maxVal, m_leftStop, m_rightStop); // val -> x
-        if (m_enabled)
-            drawNewSpot(spotPos);
-        else
-            m_spotPos = spotPos;
+
+        if (m_enabled) {
+            drawNewSpot(val);
+        } else {
+            m_val = val;
+        }
     }
+
     int16_t getValue() { return m_val; }
 
     bool released() {
@@ -711,6 +712,7 @@ class Slider : public RegisterTable {
         const int32_t delta = x - in_min;
         return round((float)(delta * rise) / run + out_min);
     }
+
     void drawNewSpot(uint16_t xPos) {
         if (m_enabled) {
             const uint16_t oldX = m_spotPos - m_spotRadius - 1;
@@ -736,6 +738,36 @@ class Slider : public RegisterTable {
         }
         m_spotPos = xPos;
         int32_t val = map_l(m_spotPos, m_leftStop, m_rightStop, m_minVal, m_maxVal); // xPos -> val
+        m_ra.val1 = val;
+        m_val = val;
+        if (graphicObjects_OnChange) graphicObjects_OnChange(m_name, val);
+    }
+
+    void drawNewSpot(int16_t val) {
+        uint16_t xPos = map_l(val, m_minVal, m_maxVal, m_leftStop, m_rightStop); // val -> x
+        if (m_enabled) {
+            const uint16_t oldX = m_spotPos - m_spotRadius - 1;
+            const uint16_t oldY = m_middle_h - m_spotRadius - 1;
+            const uint16_t newX = xPos - m_spotRadius - 1;
+            const uint16_t boxW = 2 * m_spotRadius + 2;
+            const uint16_t boxH = 2 * m_spotRadius + 2;
+
+            if (m_cache_slider_base.valid()) {
+                const uint16_t srcX = oldX - m_x;
+                const uint16_t srcY = oldY - m_y;
+                const uint16_t dirtyX = oldX < newX ? oldX : newX;
+                const uint16_t dirtyY = oldY;
+                const uint16_t dirtyRight = oldX > newX ? oldX + boxW : newX + boxW;
+                const uint16_t dirtyW = dirtyRight - dirtyX;
+
+                getTFT().copyFramebuffer(m_cache_slider_base.get(), m_w, m_h, srcX, srcY, FB_VISIBLE, oldX, oldY, boxW, boxH, false);
+                getTFT().fillCircle(xPos, m_middle_h, m_spotRadius, m_spotColor, false);
+                getTFT().drawRectLogicalFromFB(FB_VISIBLE, dirtyX, dirtyY, dirtyW, boxH);
+            } else {
+                getTFT().fillCircle(xPos, m_middle_h, m_spotRadius, m_spotColor);
+            }
+        }
+        m_spotPos = xPos;
         m_ra.val1 = val;
         m_val = val;
         if (graphicObjects_OnChange) graphicObjects_OnChange(m_name, val);
@@ -7229,8 +7261,8 @@ class WeatherClock : public RegisterTable {
 
   public:
     void update(const std::vector<METEO::METEO_HOURLY>& hourly, const std::vector<METEO::METEO_DAILY>& daily) {
-        if(!m_wind_speed_unit->valid()) return;
-        if(!m_press_unit->valid()) return;
+        if (!m_wind_speed_unit->valid()) return;
+        if (!m_press_unit->valid()) return;
         for (int i = 0; i < hourly.size(); i++) {
             m_hourly_temperature.push_back(hourly[i].temperature);
             m_hourly_precipitationProbability.push_back(hourly[i].windSpeed);
