@@ -598,7 +598,7 @@ WifiSettings cls_wifiSettings("wifiSettings", 2);
 Button       btn_WR_alarm("btn_WR_alarm", ButtonType::PushButton);
 Button       btn_WR_sleep("btn_WR_sleep", ButtonType::PushButton);
 Button       btn_WR_radio("btn_WR_radio", ButtonType::PushButton);
-Button       btn_WR_mute("btn_WRL_mute", ButtonType::ToggleButton);
+Button       btn_WR_mute("btn_WR_mute", ButtonType::ToggleButton);
 Button       btn_WR_off("btn_WR_off", ButtonType::PushButton);
 WeatherClock cls_weather("cls_weather");
 Slider       sdr_WR_volume("sdr_WR_volume");

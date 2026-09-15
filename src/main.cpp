@@ -1099,6 +1099,7 @@ void setup() {
     btn_EQ_mute.setValue(s_f_mute);
     btn_PL_mute.setValue(s_f_mute);
     btn_DL_mute.setValue(s_f_mute);
+    btn_WR_mute.setValue(s_f_mute);
     btn_BT_power.setValue(s_bt_emitter.enabled);
     btn_SE_spectrum.setValue(s_f_spectrum_enabled);
     btn_SE_vu_meter.setValue(s_f_vu_meter_enabled);
@@ -1658,6 +1659,7 @@ void muteChanged(bool m) {
     btn_EQ_mute.setValue(m);
     btn_PL_mute.setValue(m);
     btn_RA_mute.setValue(m);
+    btn_WR_mute.setValue(m);
     if (m) {
         s_f_mute = true;
         if (AMP_ENABLED != -1) {
@@ -4310,7 +4312,7 @@ void graphicObjects_OnClick(ps_ptr<char> name, uint8_t val) { // val = 0 --> is 
         if (val && name.equals("select_txtbtn_down"))          { goto exit; }
     }
     if (s_state == WEATHER) {
-        if (val && name.equals("btn_CL_mute"))         { if (!s_f_mute) { s_f_muteIsPressed = true; } goto exit; }
+        if (val && name.equals("btn_WR_mute"))         { if (!s_f_mute) { s_f_muteIsPressed = true; } goto exit; }
         if (val && name.equals("btn_WR_alarm"))        { goto exit; }
         if (val && name.equals("btn_WR_radio"))        { goto exit; }
         if (val && name.equals("cls_weather"))         { goto exit; }
@@ -4320,6 +4322,12 @@ void graphicObjects_OnClick(ps_ptr<char> name, uint8_t val) { // val = 0 --> is 
         if (val && name.equals("txt_t_max"))           { goto exit; }
         if (val && name.equals("pic_weather_code"))    { goto exit; }
         if (val && name.equals("crt_temperature"))     { goto exit; }
+        if (val && name.equals("ImgClock24small"))     { goto exit; }
+        if (val && name.equals("clock24_digitsH10"))   { goto exit; }
+        if (val && name.equals("clock24_digitsH01"))   { goto exit; }
+        if (val && name.equals("clock24_digitsColon")) { goto exit; }
+        if (val && name.equals("clock24_digitsM10"))   { goto exit; }
+        if (val && name.equals("clock24_digitsM01"))   { goto exit; }
     }
     if(val == 0) goto exit;
     MWR_LOG_WARN("unused event: graphicObject {} was clicked", name);
