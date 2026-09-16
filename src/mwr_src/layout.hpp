@@ -641,10 +641,10 @@ void placingGraphicObjects() { // and initialize them
     btn_RA_off.begin(7 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_RA_off.setPicturePath("/btn/Button_Off");
     txt_RA_sTitle.begin(layout.winSTitle.x, layout.winSTitle.y, layout.winSTitle.w, layout.winSTitle.h, layout.winSTitle.pl, layout.winSTitle.pr, layout.winSTitle.pt, layout.winSTitle.pb);
-    txt_RA_sTitle.setAlign(HAlign::Left, VAlign::Middle);
+    txt_RA_sTitle.setAlign(HAlign::Center, VAlign::Middle);
     txt_RA_sTitle.setFontSize(0); // 0 -> auto
     txt_RA_staName.begin(layout.winName.x, layout.winName.y, layout.winName.w, layout.winName.h, layout.winName.pl, layout.winName.pr, layout.winName.pt, layout.winName.pb);
-    txt_RA_staName.setAlign(HAlign::Left, VAlign::Top);
+    txt_RA_staName.setAlign(HAlign::Center, VAlign::Middle);
     txt_RA_staName.setFontSize(0); // 0 -> auto
     txt_RA_irNum.begin(layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, layout.winWoHF.pl, layout.winWoHF.pr, layout.winWoHF.pt, layout.winWoHF.pb);
     txt_RA_irNum.setAlign(HAlign::Center, VAlign::Middle);
