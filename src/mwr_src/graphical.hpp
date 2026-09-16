@@ -632,7 +632,7 @@ class Slider : public RegisterTable {
             m_cache_slider_base.alloc_array(m_w * m_h, m_name.c_get());
             getTFT().copyFramebuffer(FB_VISIBLE, m_cache_slider_base.get(), m_x, m_y, m_w, m_h);
         }
-        drawNewSpot(m_spotPos);
+        drawNewSpot(m_val);
         m_first_call = false;
     }
 
@@ -682,13 +682,9 @@ class Slider : public RegisterTable {
         if (!m_objectInit) return;
         if (val < m_minVal) val = m_minVal;
         if (val > m_maxVal) val = m_maxVal;
+        m_val = val;
         if (m_clicked) return;
-
-        if (m_enabled) {
-            drawNewSpot(val);
-        } else {
-            m_val = val;
-        }
+        if (m_enabled) { drawNewSpot(val); }
     }
 
     int16_t getValue() { return m_val; }
@@ -740,6 +736,7 @@ class Slider : public RegisterTable {
         int32_t val = map_l(m_spotPos, m_leftStop, m_rightStop, m_minVal, m_maxVal); // xPos -> val
         m_ra.val1 = val;
         m_val = val;
+MWR_LOG_INFO("val {}", val);
         if (graphicObjects_OnChange) graphicObjects_OnChange(m_name, val);
     }
 
@@ -770,6 +767,7 @@ class Slider : public RegisterTable {
         m_spotPos = xPos;
         m_ra.val1 = val;
         m_val = val;
+MWR_LOG_INFO("val {}", val);
         if (graphicObjects_OnChange) graphicObjects_OnChange(m_name, val);
     }
 };
