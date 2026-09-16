@@ -6923,7 +6923,7 @@ class LineChart : public RegisterTable {
         txt_23->setFontSize(0);
         txt_23->setAlign(HAlign::Right, VAlign::Bottom);
 
-        txt_info->begin(m_x, m_y, m_w / 2, m_h / 1.75f, 2, 0, 2, 0);
+        txt_info->begin(m_x, m_y, m_w / 1.75f, m_h / 1.75f, 2, 0, 2, 0);
         txt_info->set_bg_color(TFT_BG_IS_VISIBLE);
         txt_info->setFontSize(0);
         txt_info->setAlign(HAlign::Left, VAlign::Top);
@@ -6970,7 +6970,7 @@ class LineChart : public RegisterTable {
             uint8_t  probability = m_hourly_precipitationProbability[i];
             uint16_t y = map(probability, 0, 100, y_min, rain_top);
             uint16_t x = m_x + m_pos_x[i] - bar_w / 2;
-            getTFT().fillRect(x, y, bar_w, y_min - y, TFT_BLUE);
+            getTFT().fillRect(x, y, bar_w, y_min - y, TFT_DARKBLUE);
         }
 
         // ----------------------------------------------------
@@ -6987,7 +6987,7 @@ class LineChart : public RegisterTable {
                 y = y_min - (m_hourly_temperature[i] - m_temp_min) * y_scale;
             }
             if (i > 0) { getTFT().drawLine(m_x + m_pos_x[i - 1], y_prev, m_x + m_pos_x[i], y, TFT_RED); }
-            getTFT().fillCircle(m_x + m_pos_x[i], y, 2, TFT_RED);
+            getTFT().fillCircle(m_x + m_pos_x[i], y, 2, TFT_DARKRED);
             y_prev = y;
         }
         ps_ptr<char> tmp;
@@ -7003,7 +7003,7 @@ class LineChart : public RegisterTable {
             m_info.appendf("Tmin: {:4.1}°F\n", m_temp_min * (9 / 5) + 32);
         }
         m_info.append(ANSI_ESC_LIGHTBLUE);
-        m_info.appendf("Rain: {}%, {:3.1}mm", m_preProb_max, m_precipitationSum);
+        m_info.appendf("Rain: {}%, Σ {:3.1}mm", m_preProb_max, m_precipitationSum);
         txt_info->setText(m_info);
         txt_info->show();
     }
@@ -7060,6 +7060,7 @@ class LineChart : public RegisterTable {
         m_temp_min = hourly_temperature[0];
         m_temp_max = hourly_temperature[0];
         m_preProb_max = hourly_precipitationProbability[0];
+        m_precipitationSum = precipitationSum;
         for (size_t i = 0; i < HOURS; i++) {
             m_hourly_temperature.push_back(hourly_temperature[i]);
             m_hourly_precipitationProbability.push_back(hourly_precipitationProbability[i]);
@@ -7108,7 +7109,7 @@ class WeatherClock : public RegisterTable {
 #endif
 
     PictureBox*      pic_weather_code = new PictureBox("pic_weather_code"); // digits hour   * 10
-    LineChart*       crt_temperature = new LineChart("crt_temperature");
+    LineChart*       crt_temperature_rain = new LineChart("crt_temperature_rain");
     ImgClock24small* clk_24s = new ImgClock24small("ImgClock24small");
     Textbox*         txt_info = new Textbox("txt_info");
     int16_t          m_x = 0;
@@ -7126,7 +7127,7 @@ class WeatherClock : public RegisterTable {
     bool                 m_first_call = true;
     ps_ptr<char>         m_name;
     ps_ptr<char>         m_pathBuff;
-    ps_ptr<char>         m_weather_daily;
+    ps_ptr<char>         m_weather_daily = "no data yet";
     ps_ptr<char>*        m_temp_unit;
     ps_ptr<char>*        m_press_unit;
     ps_ptr<char>*        m_wind_speed_unit;
@@ -7161,7 +7162,7 @@ class WeatherClock : public RegisterTable {
     }
     ~WeatherClock() {
         delete pic_weather_code;
-        delete crt_temperature;
+        delete crt_temperature_rain;
         delete clk_24s;
     }
 
@@ -7173,8 +7174,8 @@ class WeatherClock : public RegisterTable {
         m_enabled = false;
         pic_weather_code->setAlign(HAlign::Center, VAlign::Middle);
         pic_weather_code->set_bg_color(TFT_BG_IS_BLACK);
-        crt_temperature->begin(x + s_Icon.w, m_y, m_w - s_Icon.w, s_Icon.h);
-        crt_temperature->set_bg_color(TFT_BG_IS_BLACK);
+        crt_temperature_rain->begin(x + s_Icon.w, m_y, m_w - s_Icon.w, s_Icon.h);
+        crt_temperature_rain->set_bg_color(TFT_BG_IS_BLACK);
         clk_24s->set_bg_color(TFT_BG_IS_BLACK);
         clk_24s->begin(m_x, m_y + s_Icon.h, clock_w, s_Icon.h);
         clk_24s->set_fg_color(Colors::Blue);
@@ -7206,7 +7207,7 @@ class WeatherClock : public RegisterTable {
         pic_weather_code->show();
         m_enabled = true;
         m_showAll = true;
-        crt_temperature->show();
+        crt_temperature_rain->show();
         clk_24s->show();
         txt_info->setText(m_weather_daily);
         txt_info->show();
@@ -7263,9 +7264,9 @@ class WeatherClock : public RegisterTable {
         if (!m_press_unit->valid()) return;
         for (int i = 0; i < hourly.size(); i++) {
             m_hourly_temperature.push_back(hourly[i].temperature);
-            m_hourly_precipitationProbability.push_back(hourly[i].windSpeed);
+            m_hourly_precipitationProbability.push_back(hourly[i].precipitationProbability);
         }
-        crt_temperature->update(m_hourly_temperature, m_hourly_precipitationProbability, daily[0].precipitationSum, m_temp_unit);
+        crt_temperature_rain->update(m_hourly_temperature, m_hourly_precipitationProbability, daily[0].precipitationSum, m_temp_unit);
 
         // log_i("sunrise %u:%02u", daily[0].sunrise.hour, daily[0].sunrise.minute);
         m_weather_daily.assignf(ANSI_ESC_LIGHTGREY "{:02}.{:02}.{}\n", daily[0].date.day, daily[0].date.month, daily[0].date.year);
@@ -7280,7 +7281,7 @@ class WeatherClock : public RegisterTable {
             m_weather_daily.appendf(ANSI_ESC_LIGHTBLUE "gusts:" ANSI_ESC_LIGHTGREY " {} bft", beaufort);
         }
         if (m_enabled) {
-            crt_temperature->show();
+            crt_temperature_rain->show();
             txt_info->setText(m_weather_daily);
             txt_info->show();
         }
@@ -7310,7 +7311,7 @@ class WeatherClock : public RegisterTable {
     void set_bg_color_all(int32_t color) {
         m_bg_color = color;
         pic_weather_code->set_bg_color(m_bg_color);
-        crt_temperature->set_bg_color(m_bg_color);
+        crt_temperature_rain->set_bg_color(m_bg_color);
         clk_24s->set_bg_color(m_bg_color);
         txt_info->set_bg_color(m_bg_color);
     }

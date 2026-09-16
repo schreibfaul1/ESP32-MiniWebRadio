@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.0z4 - Sep 16, 2026                                                                                                               ";
+    Version 4.2.0z5 - Sep 16, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -4321,7 +4321,7 @@ void graphicObjects_OnClick(ps_ptr<char> name, uint8_t val) { // val = 0 --> is 
         if (val && name.equals("txt_p_max"))           { goto exit; }
         if (val && name.equals("txt_t_max"))           { goto exit; }
         if (val && name.equals("pic_weather_code"))    { goto exit; }
-        if (val && name.equals("crt_temperature"))     { goto exit; }
+        if (val && name.equals("crt_temperature_rain"))     { goto exit; }
         if (val && name.equals("ImgClock24small"))     { goto exit; }
         if (val && name.equals("clock24_digitsH10"))   { goto exit; }
         if (val && name.equals("clock24_digitsH01"))   { goto exit; }
