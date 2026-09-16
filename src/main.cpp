@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.0z1 - Sep 15, 2026                                                                                                               ";
+    Version 4.2.0z2 - Sep 16, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -117,6 +117,7 @@ bool s_f_connectToLastStation = false;
 bool s_f_msg_box = false;
 bool s_f_esp_restart = false;
 bool s_f_timeSpeech = false;
+bool s_f_update_meteo = false;
 bool s_f_stationsChanged = false;
 bool s_f_sd_card_found = false;
 bool s_f_isWiFiConnected = false;
@@ -2229,7 +2230,6 @@ void loop() {
         }
         if (s_f_eof_alarm) { // AFTER RINGING
             s_f_eof_alarm = false;
-            if (!s_f_rtc) return;
             s_volume.cur_volume = s_volume.volumeAfterAlarm;
             changeState(RADIO, 0);
         }
@@ -2252,22 +2252,25 @@ void loop() {
                 showStationName();
             }
         }
+        //------------------------------------------ UPDATE METEO ------------------------------------------------------------------------------------
+        if (s_f_update_meteo) {
+            meteo.send_request();
+            printfln(s_tag.meteo_info, ANSI_ESC_GREEN "Update Meteo");
+            s_f_update_meteo = false;
+        }
+        if (s_time.minute == 0 && s_time.second == 10) s_f_update_meteo = true;
         //---------------------------------------------TIME SPEECH -----------------------------------------------------------------------------------
         static bool f_resume = false;
         if (s_f_timeSpeech) { // speech the time 7 sec before a new hour is arrived
             s_f_timeSpeech = false;
             uint8_t hour = s_time.hour + 1;
             if (hour == 24) hour = 0; //  extract the hour
-            if (s_f_mute) return;
-            if (s_f_sleeping) return;
-            if (s_state != RADIO) return;
-            if (s_f_timeAnnouncement) {
+            if (s_f_timeAnnouncement && !s_f_mute && !s_f_sleeping && s_state == RADIO) {
                 f_resume = true;
                 s_f_eof = false;
                 ps_ptr<char> p;
                 p.assignf("/voice_time/{}/{}_00.mp3", s_timeSpeechLang, hour);
                 connecttoFS("SD_MMC", p);
-                return;
             } else {
                 printfln(s_tag.action, "Time announcement at " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET " o'clock is silent", hour);
             }
@@ -2276,7 +2279,6 @@ void loop() {
             f_resume = false;
             s_f_eof = false;
             setStation(s_cur_station);
-            return;
         }
         //------------------------------------------AUDIO_CURRENT_TIME - DURATION---------------------------------------------------------------------
         if (audio.isRunning()) {
@@ -2441,8 +2443,6 @@ void loop() {
 
     if (s_f_1h == true) { // calls every hour
         s_f_1h = false;
-        meteo.send_request();
-        printfln(s_tag.meteo_info, ANSI_ESC_GREEN "Update Meteo");
     }
 
     //-------------------------------------------------DEBUG / WIFI_SETTINGS ----------------------------------------------------------------------------------
