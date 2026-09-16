@@ -736,7 +736,6 @@ class Slider : public RegisterTable {
         int32_t val = map_l(m_spotPos, m_leftStop, m_rightStop, m_minVal, m_maxVal); // xPos -> val
         m_ra.val1 = val;
         m_val = val;
-MWR_LOG_INFO("val {}", val);
         if (graphicObjects_OnChange) graphicObjects_OnChange(m_name, val);
     }
 
@@ -767,7 +766,6 @@ MWR_LOG_INFO("val {}", val);
         m_spotPos = xPos;
         m_ra.val1 = val;
         m_val = val;
-MWR_LOG_INFO("val {}", val);
         if (graphicObjects_OnChange) graphicObjects_OnChange(m_name, val);
     }
 };
@@ -2869,11 +2867,10 @@ class TimeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     Textbox*     txt_time = new Textbox[8]{Textbox("txt_timeH10"), Textbox("txt_timeH01"), Textbox("txt_timeC1"),  Textbox("txt_timeM10"),
                                            Textbox("txt_timeM01"), Textbox("txt_timeC2"),  Textbox("txt_timeS10"), Textbox("txt_timeS01")}; // time of the day
   public:
-    TimeString(ps_ptr<char> name, uint8_t fontSize) {
+    TimeString(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
         m_fgColor = TFT_LIGHTGREY;
-        m_fontSize = fontSize;
     }
     ~TimeString() { delete[] txt_time; }
 
@@ -2899,8 +2896,6 @@ class TimeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
         for (uint8_t i = 0; i < 8; i++) {
             txt_time[i].begin(xPos[i], m_y + pt, width[i], h, 0, 0, 0, 0);
             txt_time[i].setAlign(HAlign::Center, VAlign::Middle);
-            txt_time[i].setTextColor(m_fgColor);
-            txt_time[i].setFontSize(m_fontSize);
         }
     }
 
@@ -5654,11 +5649,11 @@ class StationsList : public RegisterTable {
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class DisplayHeader : public RegisterTable {
   private:
-    Textbox*     txt_Item = new Textbox("header_Item");              // Radio, Player, Clock....
-    PictureBox*  pic_Speaker = new PictureBox("header_Speaker");     // loudspeaker symbol
-    Textbox*     txt_Volume = new Textbox("header_Volume");          // volume
-    PictureBox*  pic_RSSID = new PictureBox("header_RSSID");         // RSSID symbol
-    TimeString*  timeStringObject = new TimeString("timeString", 0); // 10:34:09
+    Textbox*     txt_Item = new Textbox("header_Item");           // Radio, Player, Clock....
+    PictureBox*  pic_Speaker = new PictureBox("header_Speaker");  // loudspeaker symbol
+    Textbox*     txt_Volume = new Textbox("header_Volume");       // volume
+    PictureBox*  pic_RSSID = new PictureBox("header_RSSID");      // RSSID symbol
+    TimeString*  timeStringObject = new TimeString("timeString"); // 10:34:09
     int16_t      m_x = 0;
     int16_t      m_y = 0;
     int16_t      m_w = 0;
@@ -5754,14 +5749,14 @@ class DisplayHeader : public RegisterTable {
     } const s_Speaker; // loudspeaker symbol 38 x 30 px
     struct w_v {
         uint16_t x = 85;
-        uint16_t w = 35;
+        uint16_t w = 45;
         uint8_t  pl = 0;
         uint8_t  pr = 0;
         uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_Volume; // volume
     struct w_d1 {
-        uint16_t x = 120;
+        uint16_t x = 130;
         uint16_t w = 10;
         uint8_t  pl = 0;
         uint8_t  pr = 0;
@@ -5769,7 +5764,7 @@ class DisplayHeader : public RegisterTable {
         uint8_t  pb = 0;
     }; // dummy1
     struct w_i {
-        uint16_t x = 130;
+        uint16_t x = 140;
         uint16_t w = 220;
         uint8_t  pl = 2;
         uint8_t  pr = 0;
@@ -5893,7 +5888,6 @@ class DisplayHeader : public RegisterTable {
         register_object(this);
         m_name = name;
         m_fontSize = fontSize;
-        timeStringObject->setFontSize(m_fontSize);
     }
     ~DisplayHeader() {
         delete txt_Item;
@@ -5914,15 +5908,15 @@ class DisplayHeader : public RegisterTable {
         timeStringObject->begin(s_time.x, m_y, s_time.w, m_h, s_time.pl, s_time.pr, s_time.pt, s_time.pb);
 
         txt_Item->setTextColor(m_itemColor);
-        txt_Item->setFontSize(m_fontSize); // 0 -> auto
-        pic_Speaker->setPicturePath(m_speakerSymbol[0]);
-        txt_Volume->setFontSize(m_fontSize); // 0 -> auto
-        pic_RSSID->setPicturePath(m_rssiSymbol[0]);
-
-        pic_RSSID->setAlign(HAlign::Center, VAlign::Top);
-        pic_Speaker->setAlign(HAlign::Center, VAlign::Top);
-        txt_Volume->setAlign(HAlign::Left, VAlign::Middle);
+        txt_Item->setFontSize(0); // 0 -> auto
         txt_Item->setAlign(HAlign::Center, VAlign::Middle);
+        pic_Speaker->setPicturePath(m_speakerSymbol[0]);
+        txt_Volume->setFontSize(m_fontSize);
+        txt_Volume->setAlign(HAlign::Left, VAlign::Middle);
+        pic_RSSID->setPicturePath(m_rssiSymbol[0]);
+        pic_RSSID->setAlign(HAlign::Center, VAlign::Middle);
+        pic_Speaker->setAlign(HAlign::Center, VAlign::Middle);
+        timeStringObject->setFontSize(m_fontSize);
     }
     ps_ptr<char> get_name() { return m_name; }
     void         enable() { enable_all(); }

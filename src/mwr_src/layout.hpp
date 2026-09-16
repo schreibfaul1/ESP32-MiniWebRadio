@@ -153,7 +153,7 @@ inline constexpr uint8_t fonts[13] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66
 inline constexpr DisplayConfig config = {
     fonts,
     15,                  // listFontSize
-    0,                   // headerFontSize, 0 -> autoSize
+    16,                  // headerFontSize, 0 -> autoSize
     0,                   // footerFontSize, 0 -> autoSize
     156,                 // bigNumbersFontSize
     15,                  // fileNumberFontSize
@@ -240,7 +240,7 @@ inline constexpr uint8_t fonts[13] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66
 inline constexpr DisplayConfig config = {
     fonts,
     21,                   // listFontSize
-    0,                    // headerFontSize, 0 -> autoSize
+    25,                   // headerFontSize, 0 -> autoSize
     0,                    // footerFontSize, 0 -> autoSize
     156,                  // bigNumbersFontSize
     21,                   // fileNumberFontSize
