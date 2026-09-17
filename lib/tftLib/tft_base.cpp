@@ -2123,12 +2123,20 @@ uint8_t TFT_Base::JPEG_jd_decomp(JDEC* jd, uint8_t scale) {
     }
     return rc;
 }
-
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫   F O N T S   ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool TFT_Base::setFontByIndex(uint16_t fontIndex) {
     if (fontIndex > 12) return false;
     const uint8_t fontSize[] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66, 81, 96};
     setFontSize(fontSize[fontIndex]);
     return true;
+}
+
+int8_t TFT_Base::getFontSizeByIndex(uint16_t fontIndex){
+    if (fontIndex > 12) return -1;
+    const uint8_t fontSize[] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66, 81, 96};
+    return fontSize[fontIndex];
 }
 
 uint8_t TFT_Base::getFontIndex() {
@@ -2993,6 +3001,36 @@ void TFT_Base::writeTheFramebuffer(const uint8_t* bmi, uint16_t posX, uint16_t p
 // ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 //  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫   writeText   ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
 // ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
+uint16_t TFT_Base::getGlyphHeight(char c){  // exact glyph height - is not line height
+    uint16_t glyphPos = m_current_font.lookup_table[(int32_t)c];
+    uint16_t height = m_current_font.glyph_dsc[glyphPos].box_h;
+    return height;
+}
+
+uint16_t TFT_Base::getGlyphWidth(char c){
+    uint16_t glyphPos = m_current_font.lookup_table[(int32_t)c];
+    uint16_t width = m_current_font.glyph_dsc[glyphPos].adv_w / 16;
+    return width;
+}
+
+uint16_t TFT_Base::getCurrentFontLineHigh(){
+    return m_current_font.line_height;
+}
+
+uint8_t TFT_Base::getHighestFontIndex(char c, uint8_t h){
+    setFontByIndex(getMaxFontIndex());
+    int8_t idx = getFontIndex();
+    while (true) {
+        if(m_current_font.line_height <= h) break;
+        if (--idx < 0) {
+            MWR_LOG_ERROR("char '{}' does not fit in heigt {}", c, h);
+            return 0;
+        }
+        setFontByIndex(idx);
+    }
+    return idx;
+}
 
 TFT_Base::Utf8Char TFT_Base::decodeUtf8(const char* s) {
     Utf8Char       u8ch{};
