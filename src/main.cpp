@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.0z5 - Sep 16, 2026                                                                                                               ";
+    Version 4.2.0z6 - Sep 16, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -3605,6 +3605,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
                                         s_longitude = coor[1];
                                         meteo.set_coordinates(s_latiitude, s_longitude);
                                         printfln(s_tag.webserver, "Location: .. " ANSI_ESC_BLUE "{}, lat: {}, long: {}", s_location, s_latiitude, s_longitude);
+                                        meteo.send_request();
                                         updateSettings(); // write new location to settings.json
                                         return;}
 

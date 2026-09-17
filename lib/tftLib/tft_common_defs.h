@@ -96,6 +96,7 @@ extern __attribute__((weak)) void tft_info(const char*);
 #define TFT_BG_IS_BLACK     0
 #define TFT_BG_IS_WALLPAPER -1
 #define TFT_BG_IS_VISIBLE   -2
+#define TFT_BG_OVERWRITE    -3
 
 #if TFT_FONT == 0
     #define TFT_GARAMOND

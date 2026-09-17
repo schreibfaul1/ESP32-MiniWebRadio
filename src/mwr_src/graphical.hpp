@@ -1012,6 +1012,8 @@ class Textbox : public RegisterTable {
             }
         } else if (m_bg_color == TFT_BG_IS_WALLPAPER) { //
             if (m_content_has_changed) getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else if (m_bg_color == TFT_BG_OVERWRITE) {
+            ; // do nothing but write only
         } else { // e.g. m_bg_color == TFT_BLACK
             if (m_content_has_changed) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
         }
@@ -6880,6 +6882,7 @@ class LineChart : public RegisterTable {
     Textbox*              txt_info = new Textbox("txt_info");
 
     static constexpr size_t HOURS = 24;
+    static constexpr size_t DAYS = 7;
 
   public:
     LineChart(ps_ptr<char> name) {
@@ -6918,9 +6921,13 @@ class LineChart : public RegisterTable {
         txt_23->setAlign(HAlign::Right, VAlign::Bottom);
 
         txt_info->begin(m_x, m_y, m_w / 1.75f, m_h / 1.75f, 2, 0, 2, 0);
-        txt_info->set_bg_color(TFT_BG_IS_VISIBLE);
+        txt_info->set_bg_color(TFT_BG_OVERWRITE);
         txt_info->setFontSize(0);
         txt_info->setAlign(HAlign::Left, VAlign::Top);
+
+        m_pos_x.clear();
+        float dist = (m_w - m_pl - m_pr) / (float)(HOURS - 1);
+        for (size_t i = 0; i < HOURS; i++) { m_pos_x.push_back(m_pl + i * dist); }
     }
 
     ps_ptr<char> get_name() { return m_name; }
@@ -6934,7 +6941,10 @@ class LineChart : public RegisterTable {
     bool         set_focus(bool focus) { return false; }
 
     void show() {
-        if (!m_data_valid) return;
+        if (!m_data_valid) {
+            MWR_LOG_WARN("no data");
+            return;
+        }
         if (m_first_call) {
             m_cache_bg.alloc_array(m_w * m_h, m_name.c_get());
             getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
@@ -7046,25 +7056,32 @@ class LineChart : public RegisterTable {
         m_clicked = false;
         return true;
     }
-    void update(const std::vector<float>& hourly_temperature, const std::vector<uint8_t>& hourly_precipitationProbability, const float precipitationSum, ps_ptr<char>* temp_unit) {
-        if (hourly_temperature.size() < HOURS || hourly_precipitationProbability.size() < HOURS) { return; }
+
+    void update(const std::vector<METEO::METEO_HOURLY>& hourly, const std::vector<METEO::METEO_DAILY>& daily, ps_ptr<char>* temp_unit) {
+        if (hourly.size() < HOURS * DAYS || daily.size() < DAYS) {
+            MWR_LOG_ERROR("hourly_size: {}, daily_size {}", hourly.size(), daily.size());
+            return;
+        }
+
         m_temp_unit = temp_unit;
         m_hourly_temperature.clear();
         m_hourly_precipitationProbability.clear();
-        m_temp_min = hourly_temperature[0];
-        m_temp_max = hourly_temperature[0];
-        m_preProb_max = hourly_precipitationProbability[0];
-        m_precipitationSum = precipitationSum;
+        m_temp_min = hourly[0].temperature;
+        m_temp_max = hourly[0].temperature;
+        m_preProb_max = hourly[0].precipitationProbability;;
+        m_preProb_max = daily[0].precipitationProbabilityMax;
+        m_precipitationSum = daily[0].precipitationSum;
+
         for (size_t i = 0; i < HOURS; i++) {
-            m_hourly_temperature.push_back(hourly_temperature[i]);
-            m_hourly_precipitationProbability.push_back(hourly_precipitationProbability[i]);
-            m_temp_min = std::min(m_temp_min, hourly_temperature[i]);
-            m_temp_max = std::max(m_temp_max, hourly_temperature[i]);
-            m_preProb_max = std::max(m_preProb_max, hourly_precipitationProbability[i]);
+            m_hourly_temperature.push_back(hourly[i].temperature);
+            m_hourly_precipitationProbability.push_back(hourly[i].precipitationProbability);
+
+            m_temp_min = std::min(m_temp_min, m_hourly_temperature[i]);
+            m_temp_max = std::max(m_temp_max, m_hourly_temperature[i]);
+            m_preProb_max = std::max(m_preProb_max, m_hourly_precipitationProbability[i]);
         }
-        m_pos_x.clear();
-        float dist = (m_w - m_pl - m_pr) / (float)(HOURS - 1);
-        for (size_t i = 0; i < HOURS; i++) { m_pos_x.push_back(m_pl + i * dist); }
+
+
         m_data_valid = true;
     }
 };
@@ -7120,15 +7137,13 @@ class WeatherClock : public RegisterTable {
     bool                 m_showAll = false;
     bool                 m_first_call = true;
     ps_ptr<char>         m_name;
-    ps_ptr<char>         m_pathBuff;
+    ps_ptr<char>         m_weather_code_path;
     ps_ptr<char>         m_weather_daily = "no data yet";
     ps_ptr<char>*        m_temp_unit;
     ps_ptr<char>*        m_press_unit;
     ps_ptr<char>*        m_wind_speed_unit;
     uint8_t              m_min = 0, m_hour = 0, m_weekday = 0;
     releasedArg          m_ra;
-    std::vector<float>   m_hourly_temperature;
-    std::vector<uint8_t> m_hourly_precipitationProbability;
 
     static constexpr float beaufortMax[] = {
         1.0f,   // Bft 0
@@ -7168,6 +7183,7 @@ class WeatherClock : public RegisterTable {
         m_enabled = false;
         pic_weather_code->setAlign(HAlign::Center, VAlign::Middle);
         pic_weather_code->set_bg_color(TFT_BG_IS_BLACK);
+        pic_weather_code->begin(m_x, m_y, s_Icon.w, s_Icon.h);
         crt_temperature_rain->begin(x + s_Icon.w, m_y, m_w - s_Icon.w, s_Icon.h);
         crt_temperature_rain->set_bg_color(TFT_BG_IS_BLACK);
         clk_24s->set_bg_color(TFT_BG_IS_BLACK);
@@ -7176,6 +7192,7 @@ class WeatherClock : public RegisterTable {
         txt_info->begin(m_x + clock_w, m_y + s_Icon.h, m_w - clock_w, s_Icon.h, 0, 1, 0, 0);
         txt_info->setFontSize(0);
         txt_info->setAlign(HAlign::Right, VAlign::Middle);
+        txt_info->set_bg_color(TFT_BG_IS_BLACK);
     }
 
     ps_ptr<char> get_name() { return m_name; }
@@ -7196,8 +7213,7 @@ class WeatherClock : public RegisterTable {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
         }
         m_clicked = false;
-        pic_weather_code->begin(m_x, m_y, s_Icon.w, s_Icon.h);
-        pic_weather_code->setPicturePath("/meteo//2.png");
+        pic_weather_code->setPicturePath(m_weather_code_path);
         pic_weather_code->show();
         m_enabled = true;
         m_showAll = true;
@@ -7256,12 +7272,9 @@ class WeatherClock : public RegisterTable {
     void update(const std::vector<METEO::METEO_HOURLY>& hourly, const std::vector<METEO::METEO_DAILY>& daily) {
         if (!m_wind_speed_unit->valid()) return;
         if (!m_press_unit->valid()) return;
-        for (int i = 0; i < hourly.size(); i++) {
-            m_hourly_temperature.push_back(hourly[i].temperature);
-            m_hourly_precipitationProbability.push_back(hourly[i].precipitationProbability);
-        }
-        crt_temperature_rain->update(m_hourly_temperature, m_hourly_precipitationProbability, daily[0].precipitationSum, m_temp_unit);
 
+        crt_temperature_rain->update(hourly, daily, m_temp_unit);
+        m_weather_code_path.assignf("/meteo/{}.png", daily[0].weatherCode);
         // log_i("sunrise %u:%02u", daily[0].sunrise.hour, daily[0].sunrise.minute);
         m_weather_daily.assignf(ANSI_ESC_LIGHTGREY "{:02}.{:02}.{}\n", daily[0].date.day, daily[0].date.month, daily[0].date.year);
         m_weather_daily.appendf(ANSI_ESC_YELLOW "sunrise:" ANSI_ESC_LIGHTGREY " {:02}:{:02}\n", daily[0].sunrise.hour, daily[0].sunrise.minute);
@@ -7278,6 +7291,8 @@ class WeatherClock : public RegisterTable {
             crt_temperature_rain->show();
             txt_info->setText(m_weather_daily);
             txt_info->show();
+            pic_weather_code->setPicturePath(m_weather_code_path);
+            pic_weather_code->show();
         }
     }
 
