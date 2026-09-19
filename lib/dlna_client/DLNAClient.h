@@ -11,7 +11,7 @@
 #define SEEK_TIMEOUT        8000
 #define READ_TIMEOUT        2500
 #define CONNECT_TIMEOUT     6000
-#define AVAIL_TIMEOUT       2000
+#define AVAIL_TIMEOUT       25000 // some servers (e.g. Windows Media Player sharing) need a long time to group/enumerate large libraries (e.g. "Genre" over thousands of tracks) before replying at all
 
 class DLNA_Client {
 

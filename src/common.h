@@ -78,6 +78,7 @@
 #include <mbedtls/aes.h>
 #include <mbedtls/base64.h>
 #include <vector>
+#include <Adafruit_XCA9554.h>
 
 Audio       audio;
 Preferences pref;
@@ -307,6 +308,8 @@ struct i2c_items_s {
     int  ft6x36u_addr = -1;
     bool bh1750_found = false;
     int  bh1750_addr = -1;
+    bool TCA9554_found = false;
+    int  TCA9554_addr = -1;
 } s_i2c_items;
 
 struct tag_s {
