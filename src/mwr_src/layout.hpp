@@ -153,7 +153,7 @@ inline constexpr uint8_t fonts[13] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66
 inline constexpr DisplayConfig config = {
     fonts,
     15,                  // listFontSize
-    0,                   // headerFontSize, 0 -> autoSize
+    16,                  // headerFontSize, 0 -> autoSize
     0,                   // footerFontSize, 0 -> autoSize
     156,                 // bigNumbersFontSize
     15,                  // fileNumberFontSize
@@ -161,7 +161,7 @@ inline constexpr DisplayConfig config = {
     48,                  // sleeptimeYPos
     320,                 // width
     240,                 // height
-    5,                   // brightnessMin
+    0,                   // brightnessMin
     255,                 // brightnessMax
     "s"                  // size code
 };
@@ -240,7 +240,7 @@ inline constexpr uint8_t fonts[13] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66
 inline constexpr DisplayConfig config = {
     fonts,
     21,                   // listFontSize
-    0,                    // headerFontSize, 0 -> autoSize
+    25,                   // headerFontSize, 0 -> autoSize
     0,                    // footerFontSize, 0 -> autoSize
     156,                  // bigNumbersFontSize
     21,                   // fileNumberFontSize
@@ -248,7 +248,7 @@ inline constexpr DisplayConfig config = {
     48,                   // sleeptimeYPos
     480,                  // width
     320,                  // height
-    5,                    // brightnessMin
+    0,                    // brightnessMin
     255,                  // brightnessMax
     "m"                   // size code
 };
@@ -422,7 +422,7 @@ inline constexpr DisplayConfig config = {
     112,                    // sleeptimeYPos
     h_res,                  // width
     v_res,                  // height
-    5,                      // brightnessMin
+    0,                      // brightnessMin
     255,                    // brightnessMax
     "xl"                    // size code
 };
@@ -557,12 +557,8 @@ Button     btn_SE_vu_meter("btn_SE_vu_meter", ButtonType::ToggleButton);
 // BRIGHTNESS
 Button     btn_BR_ready("btn_BR_ready", ButtonType::PushButton);
 PictureBox pic_BR_logo("pic_BR_logo");
-Slider     sdr_BR_value_max("sdr_BR_value_max");
-Slider     sdr_BR_value_min("sdr_BR_value_min");
-Textbox    txt_BR_value_max("txt_BR_value_max");
-Textbox    txt_BR_value_min("txt_BR_value_min");
-Textbox    txt_BR_max("txt_BR_max");
-Textbox    txt_BR_min("txt_BR_min");
+Slider     sdr_BR_value("sdr_BR_value");
+Textbox    txt_BR_value("txt_BR_value");
 // SLEEPTIMER
 Button      btn_SL_up("btn_SL_up", ButtonType::PushButton);
 Button      btn_SL_down("btn_SL_down", ButtonType::PushButton);
@@ -602,7 +598,7 @@ WifiSettings cls_wifiSettings("wifiSettings", 2);
 Button       btn_WR_alarm("btn_WR_alarm", ButtonType::PushButton);
 Button       btn_WR_sleep("btn_WR_sleep", ButtonType::PushButton);
 Button       btn_WR_radio("btn_WR_radio", ButtonType::PushButton);
-Button       btn_WR_mute("btn_WRL_mute", ButtonType::ToggleButton);
+Button       btn_WR_mute("btn_WR_mute", ButtonType::ToggleButton);
 Button       btn_WR_off("btn_WR_off", ButtonType::PushButton);
 WeatherClock cls_weather("cls_weather");
 Slider       sdr_WR_volume("sdr_WR_volume");
@@ -645,10 +641,10 @@ void placingGraphicObjects() { // and initialize them
     btn_RA_off.begin(7 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_RA_off.setPicturePath("/btn/Button_Off");
     txt_RA_sTitle.begin(layout.winSTitle.x, layout.winSTitle.y, layout.winSTitle.w, layout.winSTitle.h, layout.winSTitle.pl, layout.winSTitle.pr, layout.winSTitle.pt, layout.winSTitle.pb);
-    txt_RA_sTitle.setAlign(HAlign::Left, VAlign::Middle);
+    txt_RA_sTitle.setAlign(HAlign::Center, VAlign::Middle);
     txt_RA_sTitle.setFontSize(0); // 0 -> auto
     txt_RA_staName.begin(layout.winName.x, layout.winName.y, layout.winName.w, layout.winName.h, layout.winName.pl, layout.winName.pr, layout.winName.pt, layout.winName.pb);
-    txt_RA_staName.setAlign(HAlign::Left, VAlign::Top);
+    txt_RA_staName.setAlign(HAlign::Center, VAlign::Middle);
     txt_RA_staName.setFontSize(0); // 0 -> auto
     txt_RA_irNum.begin(layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, layout.winWoHF.pl, layout.winWoHF.pr, layout.winWoHF.pt, layout.winWoHF.pb);
     txt_RA_irNum.setAlign(HAlign::Center, VAlign::Middle);
@@ -795,37 +791,18 @@ void placingGraphicObjects() { // and initialize them
     btn_SE_spectrum.setPicturePath("/btn/Button_Spectrum");
     pic_SE_logo.begin(layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h, layout.winLogo.pl, layout.winLogo.pr, layout.winLogo.pt, layout.winLogo.pb);
     // BRIGHTNESS --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    sdr_BR_value_max.begin(2 * layout.winButton.w, layout.winButton.y - layout.winButton.h, 4 * layout.winButton.w, layout.winButton.h, 0, 0, 0, 0);
-    sdr_BR_value_max.setMinMaxVal(displayConfig.brightnessMin, displayConfig.brightnessMax);
-    sdr_BR_value_max.set_bg_color(TFT_BG_IS_VISIBLE);
-    sdr_BR_value_min.begin(2 * layout.winButton.w, layout.winButton.y, 4 * layout.winButton.w, layout.winButton.h, 0, 0, 0, 0);
-    sdr_BR_value_min.setMinMaxVal(displayConfig.brightnessMin, displayConfig.brightnessMax);
-    sdr_BR_value_min.set_bg_color(TFT_BG_IS_VISIBLE);
+    sdr_BR_value.begin(2 * layout.winButton.w, layout.winButton.y, 4 * layout.winButton.w, layout.winButton.h, 0, 0, 0, 0);
+    sdr_BR_value.setMinMaxVal(displayConfig.brightnessMin, displayConfig.brightnessMax);
+    sdr_BR_value.set_bg_color(TFT_BG_IS_VISIBLE);
     btn_BR_ready.begin(7 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_BR_ready.setPicturePath("/btn/Button_Ready");
     btn_BR_ready.set_bg_color(TFT_BG_IS_VISIBLE);
     pic_BR_logo.begin(0, 0, displayConfig.dispWidth, displayConfig.dispHeight, 0, 0, 0, 0);
     pic_BR_logo.setPicturePath("/common/Brightness.jpg");
-    txt_BR_value_max.begin(0, layout.winButton.y - layout.winButton.h, layout.winButton.w * 2, layout.winButton.h, layout.winButton.pl, layout.winButton.pr, layout.winButton.pt, layout.winButton.pb);
-    txt_BR_value_max.setAlign(HAlign::Center, VAlign::Middle);
-    txt_BR_value_max.setFontSize(0); // auto
-    txt_BR_value_max.set_bg_color(TFT_BG_IS_VISIBLE);
-    txt_BR_value_min.begin(0, layout.winButton.y, layout.winButton.w * 2, layout.winButton.h, layout.winButton.pl, layout.winButton.pr, layout.winButton.pt, layout.winButton.pb);
-    txt_BR_value_min.setAlign(HAlign::Center, VAlign::Middle);
-    txt_BR_value_min.setFontSize(0); // auto
-    txt_BR_value_min.set_bg_color(TFT_BG_IS_VISIBLE);
-    txt_BR_max.begin(6 * layout.winButton.w, layout.winButton.y - layout.winButton.h, layout.winButton.w, layout.winButton.h, 0, 0, 0, 0);
-    txt_BR_max.setAlign(HAlign::Center, VAlign::Middle);
-    txt_BR_max.setFontSize(0);
-    txt_BR_max.set_bg_color(TFT_BG_IS_VISIBLE);
-    txt_BR_max.setTextColor(TFT_WHITE);
-    txt_BR_max.setText("max");
-    txt_BR_min.begin(6 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h, 0, 0, 0, 0);
-    txt_BR_min.setAlign(HAlign::Center, VAlign::Middle);
-    txt_BR_min.setFontSize(0);
-    txt_BR_min.set_bg_color(TFT_BG_IS_VISIBLE);
-    txt_BR_min.setTextColor(TFT_WHITE);
-    txt_BR_min.setText("min");
+    txt_BR_value.begin(0, layout.winButton.y, layout.winButton.w * 2, layout.winButton.h, layout.winButton.pl, layout.winButton.pr, layout.winButton.pt, layout.winButton.pb);
+    txt_BR_value.setAlign(HAlign::Center, VAlign::Middle);
+    txt_BR_value.setFontSize(0); // auto
+    txt_BR_value.set_bg_color(TFT_BG_IS_VISIBLE);
     // EQUALIZER ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     sdr_EQ_lowPass.begin(layout.sdrLP.x, layout.sdrLP.y, layout.sdrLP.w, layout.sdrLP.h, layout.sdrLP.pl, layout.sdrLP.pr, layout.sdrLP.pt, layout.sdrLP.pb);
     sdr_EQ_lowPass.setMinMaxVal(-12, 12);

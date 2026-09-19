@@ -632,7 +632,7 @@ class Slider : public RegisterTable {
             m_cache_slider_base.alloc_array(m_w * m_h, m_name.c_get());
             getTFT().copyFramebuffer(FB_VISIBLE, m_cache_slider_base.get(), m_x, m_y, m_w, m_h);
         }
-        drawNewSpot(m_spotPos);
+        drawNewSpot(m_val);
         m_first_call = false;
     }
 
@@ -684,12 +684,9 @@ class Slider : public RegisterTable {
         if (val > m_maxVal) val = m_maxVal;
         m_val = val;
         if (m_clicked) return;
-        uint16_t spotPos = map_l(val, m_minVal, m_maxVal, m_leftStop, m_rightStop); // val -> x
-        if (m_enabled)
-            drawNewSpot(spotPos);
-        else
-            m_spotPos = spotPos;
+        if (m_enabled) { drawNewSpot(val); }
     }
+
     int16_t getValue() { return m_val; }
 
     bool released() {
@@ -711,6 +708,7 @@ class Slider : public RegisterTable {
         const int32_t delta = x - in_min;
         return round((float)(delta * rise) / run + out_min);
     }
+
     void drawNewSpot(uint16_t xPos) {
         if (m_enabled) {
             const uint16_t oldX = m_spotPos - m_spotRadius - 1;
@@ -736,6 +734,36 @@ class Slider : public RegisterTable {
         }
         m_spotPos = xPos;
         int32_t val = map_l(m_spotPos, m_leftStop, m_rightStop, m_minVal, m_maxVal); // xPos -> val
+        m_ra.val1 = val;
+        m_val = val;
+        if (graphicObjects_OnChange) graphicObjects_OnChange(m_name, val);
+    }
+
+    void drawNewSpot(int16_t val) {
+        uint16_t xPos = map_l(val, m_minVal, m_maxVal, m_leftStop, m_rightStop); // val -> x
+        if (m_enabled) {
+            const uint16_t oldX = m_spotPos - m_spotRadius - 1;
+            const uint16_t oldY = m_middle_h - m_spotRadius - 1;
+            const uint16_t newX = xPos - m_spotRadius - 1;
+            const uint16_t boxW = 2 * m_spotRadius + 2;
+            const uint16_t boxH = 2 * m_spotRadius + 2;
+
+            if (m_cache_slider_base.valid()) {
+                const uint16_t srcX = oldX - m_x;
+                const uint16_t srcY = oldY - m_y;
+                const uint16_t dirtyX = oldX < newX ? oldX : newX;
+                const uint16_t dirtyY = oldY;
+                const uint16_t dirtyRight = oldX > newX ? oldX + boxW : newX + boxW;
+                const uint16_t dirtyW = dirtyRight - dirtyX;
+
+                getTFT().copyFramebuffer(m_cache_slider_base.get(), m_w, m_h, srcX, srcY, FB_VISIBLE, oldX, oldY, boxW, boxH, false);
+                getTFT().fillCircle(xPos, m_middle_h, m_spotRadius, m_spotColor, false);
+                getTFT().drawRectLogicalFromFB(FB_VISIBLE, dirtyX, dirtyY, dirtyW, boxH);
+            } else {
+                getTFT().fillCircle(xPos, m_middle_h, m_spotRadius, m_spotColor);
+            }
+        }
+        m_spotPos = xPos;
         m_ra.val1 = val;
         m_val = val;
         if (graphicObjects_OnChange) graphicObjects_OnChange(m_name, val);
@@ -984,6 +1012,8 @@ class Textbox : public RegisterTable {
             }
         } else if (m_bg_color == TFT_BG_IS_WALLPAPER) { //
             if (m_content_has_changed) getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
+        } else if (m_bg_color == TFT_BG_OVERWRITE) {
+            ;    // do nothing but write only
         } else { // e.g. m_bg_color == TFT_BLACK
             if (m_content_has_changed) getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
         }
@@ -2822,7 +2852,14 @@ class TimeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     int16_t      m_y = 0;
     int16_t      m_w = 0;
     int16_t      m_h = 0;
+    int16_t      m_pl = 0;
+    int16_t      m_pr = 0;
+    int16_t      m_pt = 0;
+    int16_t      m_pb = 0;
     uint8_t      m_fontSize = 0;
+    uint16_t     m_digits_w;
+    uint16_t     m_colon_w;
+    uint16_t     m_all_w;
     HAlign       m_h_align = HAlign::Center;
     VAlign       m_v_align = VAlign::Middle;
     int32_t      m_bg_color = TFT_BG_IS_WALLPAPER;
@@ -2835,15 +2872,15 @@ class TimeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     bool         m_active = true;
     bool         m_focus = false;
     bool         m_clicked = false;
-    releasedArg  m_ra;
-    Textbox*     txt_time = new Textbox[8]{Textbox("txt_timeH10"), Textbox("txt_timeH01"), Textbox("txt_timeC1"),  Textbox("txt_timeM10"),
-                                           Textbox("txt_timeM01"), Textbox("txt_timeC2"),  Textbox("txt_timeS10"), Textbox("txt_timeS01")}; // time of the day
+
+    releasedArg m_ra;
+    Textbox*    txt_time = new Textbox[8]{Textbox("txt_timeH10"), Textbox("txt_timeH01"), Textbox("txt_timeC1"),  Textbox("txt_timeM10"),
+                                          Textbox("txt_timeM01"), Textbox("txt_timeC2"),  Textbox("txt_timeS10"), Textbox("txt_timeS01")}; // time of the day
   public:
-    TimeString(ps_ptr<char> name, uint8_t fontSize) {
+    TimeString(ps_ptr<char> name) {
         register_object(this);
         m_name = name;
         m_fgColor = TFT_LIGHTGREY;
-        m_fontSize = fontSize;
     }
     ~TimeString() { delete[] txt_time; }
 
@@ -2852,26 +2889,28 @@ class TimeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
         m_y = y; // y pos
         m_w = w; // width
         m_h = h; // high
-        uint8_t  w_digits = m_w / 7;
-        uint8_t  w_colon = w_digits / 2;
-        uint16_t xPos[8] = {
-            static_cast<uint16_t>(m_x + pl + 0 * w_digits + 0 * w_colon), /* H10 */
-            static_cast<uint16_t>(m_x + pl + 1 * w_digits + 0 * w_colon), /* H01 */
-            static_cast<uint16_t>(m_x + pl + 2 * w_digits + 0 * w_colon), /* C1 */
-            static_cast<uint16_t>(m_x + pl + 2 * w_digits + 1 * w_colon), /* M10 */
-            static_cast<uint16_t>(m_x + pl + 3 * w_digits + 1 * w_colon), /* M01 */
-            static_cast<uint16_t>(m_x + pl + 4 * w_digits + 1 * w_colon), /* C2 */
-            static_cast<uint16_t>(m_x + pl + 4 * w_digits + 2 * w_colon), /* S10 */
-            static_cast<uint16_t>(m_x + pl + 5 * w_digits + 2 * w_colon)  /* S01 */
-        };
+        m_pl = pl;
+        m_pr = pr;
+        m_pt = pt;
+        m_pb = pb;
 
-        uint8_t width[8] = {w_digits, w_digits, w_colon, w_digits, w_digits, w_colon, w_digits, w_digits};
-        for (uint8_t i = 0; i < 8; i++) {
-            txt_time[i].begin(xPos[i], m_y + pt, width[i], h, 0, 0, 0, 0);
-            txt_time[i].setAlign(HAlign::Center, VAlign::Middle);
-            txt_time[i].setTextColor(m_fgColor);
-            txt_time[i].setFontSize(m_fontSize);
+        int8_t best_font_size_index = getTFT().getHighestFontIndex('0', m_h);
+        getTFT().setFontByIndex(best_font_size_index);
+        while (true) {
+            m_digits_w = getTFT().getGlyphWidth('0') + 1;
+            m_colon_w = getTFT().getGlyphWidth(':') + 1;
+            m_all_w = m_digits_w * 6 + m_colon_w * 2; // "00:00:00"
+            if (m_all_w < m_w) break;
+            if (--best_font_size_index < 0) {
+                MWR_LOG_ERROR("timeString does not fit in width {}", m_w);
+                best_font_size_index = 0;
+            }
+            getTFT().setFontByIndex(best_font_size_index);
         }
+        MWR_LOG_DEBUG("timestringObject width: {}", m_all_w);
+        getTFT().getFontIndex();
+        if (getTFT().getFontSizeByIndex(best_font_size_index) >= 0) m_fontSize = getTFT().getFontSizeByIndex(best_font_size_index);
+        for (uint8_t i = 0; i < 8; i++) { txt_time[i].setFontSize(m_fontSize); }
     }
 
     ps_ptr<char> get_name() { return m_name; }
@@ -2893,6 +2932,19 @@ class TimeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
         }
         enable_all();
+
+        uint16_t posX = m_x;
+        if (m_h_align == HAlign::Left) { posX += m_pt; }
+        if (m_h_align == HAlign::Center) { posX += (m_w / 2 - m_all_w / 2); }
+        if (m_h_align == HAlign::Right) { posX = (posX + m_w) - m_all_w + m_pr; }
+
+        uint16_t width[8] = {m_digits_w, m_digits_w, m_colon_w, m_digits_w, m_digits_w, m_colon_w, m_digits_w, m_digits_w};
+        for (uint8_t i = 0; i < 8; i++) {
+            txt_time[i].begin(posX, m_y + m_pt, width[i], m_h, 0, 0, 0, 0);
+            posX += width[i];
+            txt_time[i].setAlign(HAlign::Center, m_v_align);
+            txt_time[i].setFontSize(m_fontSize);
+        }
         RTIME::rtime dummy{};
         updateTime(dummy, true);
     }
@@ -2915,10 +2967,28 @@ class TimeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
         h = m_h;
     }
 
-    void setFontSize(uint8_t size) { // size 0 -> auto, choose besr font size
-        m_fontSize = size;
-        for (uint8_t i = 0; i < 8; i++) { txt_time[i].setFontSize(m_fontSize); }
+    void setAlign(HAlign h_align, VAlign v_align) {
+        m_h_align = h_align;
+        m_v_align = v_align;
     }
+
+    void setFontSize(uint8_t size) { // size 0 -> auto
+        if (size == 0) return;
+        getTFT().setFontSize(size);
+        if (getTFT().getCurrentFontLineHigh() > m_h) {
+            MWR_LOG_ERROR("Font doesn't fit in line, font high: {}px, line high: {}px", getTFT().getCurrentFontLineHigh(), m_h);
+            return;
+        }
+        m_digits_w = getTFT().getGlyphWidth('0') + 1;
+        m_colon_w = getTFT().getGlyphWidth(':') + 1;
+        m_all_w = m_digits_w * 6 + m_colon_w * 2; // "00:00:00"
+        if (m_all_w > m_w) {
+            MWR_LOG_ERROR("Font doesn't fit in line, timeString width: {}px, line width: {}px", m_all_w, m_w);
+            return;
+        }
+        m_fontSize = size;
+    }
+
     void setTextColor(int32_t color) {
         m_fgColor = color;
         for (uint8_t i = 0; i < 8; i++) { txt_time[i].setTextColor(m_fgColor); }
@@ -5624,11 +5694,11 @@ class StationsList : public RegisterTable {
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class DisplayHeader : public RegisterTable {
   private:
-    Textbox*     txt_Item = new Textbox("header_Item");              // Radio, Player, Clock....
-    PictureBox*  pic_Speaker = new PictureBox("header_Speaker");     // loudspeaker symbol
-    Textbox*     txt_Volume = new Textbox("header_Volume");          // volume
-    PictureBox*  pic_RSSID = new PictureBox("header_RSSID");         // RSSID symbol
-    TimeString*  timeStringObject = new TimeString("timeString", 0); // 10:34:09
+    Textbox*     txt_Item = new Textbox("header_Item");           // Radio, Player, Clock....
+    PictureBox*  pic_Speaker = new PictureBox("header_Speaker");  // loudspeaker symbol
+    Textbox*     txt_Volume = new Textbox("header_Volume");       // volume
+    PictureBox*  pic_RSSID = new PictureBox("header_RSSID");      // RSSID symbol
+    TimeString*  timeStringObject = new TimeString("timeString"); // 10:34:09
     int16_t      m_x = 0;
     int16_t      m_y = 0;
     int16_t      m_w = 0;
@@ -5724,14 +5794,14 @@ class DisplayHeader : public RegisterTable {
     } const s_Speaker; // loudspeaker symbol 38 x 30 px
     struct w_v {
         uint16_t x = 85;
-        uint16_t w = 35;
+        uint16_t w = 45;
         uint8_t  pl = 0;
         uint8_t  pr = 0;
         uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_Volume; // volume
     struct w_d1 {
-        uint16_t x = 120;
+        uint16_t x = 130;
         uint16_t w = 10;
         uint8_t  pl = 0;
         uint8_t  pr = 0;
@@ -5739,7 +5809,7 @@ class DisplayHeader : public RegisterTable {
         uint8_t  pb = 0;
     }; // dummy1
     struct w_i {
-        uint16_t x = 130;
+        uint16_t x = 140;
         uint16_t w = 220;
         uint8_t  pl = 2;
         uint8_t  pr = 0;
@@ -5850,8 +5920,8 @@ class DisplayHeader : public RegisterTable {
         uint8_t  pb = 0;
     } const s_Item; // Radio, Player, Clock...
     struct w_t {
-        uint16_t x = 840;
-        uint16_t w = 160;
+        uint16_t x = 712;
+        uint16_t w = 312;
         uint8_t  pl = 2;
         uint8_t  pr = 0;
         uint8_t  pt = 0;
@@ -5863,7 +5933,6 @@ class DisplayHeader : public RegisterTable {
         register_object(this);
         m_name = name;
         m_fontSize = fontSize;
-        timeStringObject->setFontSize(m_fontSize);
     }
     ~DisplayHeader() {
         delete txt_Item;
@@ -5884,15 +5953,16 @@ class DisplayHeader : public RegisterTable {
         timeStringObject->begin(s_time.x, m_y, s_time.w, m_h, s_time.pl, s_time.pr, s_time.pt, s_time.pb);
 
         txt_Item->setTextColor(m_itemColor);
-        txt_Item->setFontSize(m_fontSize); // 0 -> auto
-        pic_Speaker->setPicturePath(m_speakerSymbol[0]);
-        txt_Volume->setFontSize(m_fontSize); // 0 -> auto
-        pic_RSSID->setPicturePath(m_rssiSymbol[0]);
-
-        pic_RSSID->setAlign(HAlign::Center, VAlign::Top);
-        pic_Speaker->setAlign(HAlign::Center, VAlign::Top);
-        txt_Volume->setAlign(HAlign::Left, VAlign::Middle);
+        txt_Item->setFontSize(0); // 0 -> auto
         txt_Item->setAlign(HAlign::Center, VAlign::Middle);
+        pic_Speaker->setPicturePath(m_speakerSymbol[0]);
+        txt_Volume->setFontSize(m_fontSize);
+        txt_Volume->setAlign(HAlign::Left, VAlign::Middle);
+        pic_RSSID->setPicturePath(m_rssiSymbol[0]);
+        pic_RSSID->setAlign(HAlign::Center, VAlign::Middle);
+        pic_Speaker->setAlign(HAlign::Center, VAlign::Middle);
+        timeStringObject->setFontSize(0);
+        timeStringObject->setAlign(HAlign::Center, VAlign::Middle);
     }
     ps_ptr<char> get_name() { return m_name; }
     void         enable() { enable_all(); }
@@ -6847,15 +6917,16 @@ class LineChart : public RegisterTable {
     float                 m_precipitationSum = 0.0f;
     uint8_t               m_preProb_max = 0;
     ps_ptr<char>          m_name;
+    ps_ptr<char>          m_info;
+    ps_ptr<char>*         m_temp_unit;
     ps_ptr<uint16_t>      m_cache_bg = {};
     releasedArg           m_ra;
     Textbox*              txt_0 = new Textbox("txt_0");
     Textbox*              txt_23 = new Textbox("txt_23");
-    Textbox*              txt_t_max = new Textbox("txt_t_max");
-    Textbox*              txt_t_min = new Textbox("txt_t_min");
-    Textbox*              txt_p_max = new Textbox("txt_p_max");
+    Textbox*              txt_info = new Textbox("txt_info");
 
     static constexpr size_t HOURS = 24;
+    static constexpr size_t DAYS = 7;
 
   public:
     LineChart(ps_ptr<char> name) {
@@ -6868,9 +6939,6 @@ class LineChart : public RegisterTable {
     ~LineChart() {
         delete txt_0;
         delete txt_23;
-        delete txt_t_min;
-        delete txt_t_max;
-        delete txt_p_max;
     }
 
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
@@ -6896,23 +6964,14 @@ class LineChart : public RegisterTable {
         txt_23->setFontSize(0);
         txt_23->setAlign(HAlign::Right, VAlign::Bottom);
 
-        txt_t_max->begin(m_x, m_y, m_w / 2, txt_h, 2, 0, 0, 1);
-        txt_t_max->setTextColor(TFT_LIGHTRED);
-        txt_t_max->set_bg_color(TFT_BG_IS_VISIBLE);
-        txt_t_max->setFontSize(0);
-        txt_t_max->setAlign(HAlign::Left, VAlign::Middle);
+        txt_info->begin(m_x, m_y, m_w / 1.75f, m_h / 1.75f, 2, 0, 2, 0);
+        txt_info->set_bg_color(TFT_BG_OVERWRITE);
+        txt_info->setFontSize(0);
+        txt_info->setAlign(HAlign::Left, VAlign::Top);
 
-        txt_t_min->begin(m_x, m_y + txt_h, m_w / 2, txt_h, 2, 0, 0, 1);
-        txt_t_min->setTextColor(TFT_LIGHTRED);
-        txt_t_min->set_bg_color(TFT_BG_IS_VISIBLE);
-        txt_t_min->setFontSize(0);
-        txt_t_min->setAlign(HAlign::Left, VAlign::Middle);
-
-        txt_p_max->begin(m_x, m_y + 2 * txt_h, m_w / 2, txt_h, 2, 0, 0, 1);
-        txt_p_max->setTextColor(TFT_LIGHTBLUE);
-        txt_p_max->set_bg_color(TFT_BG_IS_VISIBLE);
-        txt_p_max->setFontSize(0);
-        txt_p_max->setAlign(HAlign::Left, VAlign::Middle);
+        m_pos_x.clear();
+        float dist = (m_w - m_pl - m_pr) / (float)(HOURS - 1);
+        for (size_t i = 0; i < HOURS; i++) { m_pos_x.push_back(m_pl + i * dist); }
     }
 
     ps_ptr<char> get_name() { return m_name; }
@@ -6926,7 +6985,10 @@ class LineChart : public RegisterTable {
     bool         set_focus(bool focus) { return false; }
 
     void show() {
-        if (!m_data_valid) return;
+        if (!m_data_valid) {
+            MWR_LOG_WARN("no data");
+            return;
+        }
         if (m_first_call) {
             m_cache_bg.alloc_array(m_w * m_h, m_name.c_get());
             getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
@@ -6945,7 +7007,7 @@ class LineChart : public RegisterTable {
 
         uint16_t y_max = m_y + m_pt;
         uint16_t y_min = m_y + m_h - m_pb;
-        log_i("m_temp_min %4.2f, m_temp_max %4.2f, y_min %u, y_max %u", m_temp_min, m_temp_max, y_min, y_max);
+        log_d("m_temp_min %4.2f, m_temp_max %4.2f, y_min %u, y_max %u", m_temp_min, m_temp_max, y_min, y_max);
 
         // ----------------------------------------------------
         // Probability of rain
@@ -6956,11 +7018,11 @@ class LineChart : public RegisterTable {
             uint8_t  probability = m_hourly_precipitationProbability[i];
             uint16_t y = map(probability, 0, 100, y_min, rain_top);
             uint16_t x = m_x + m_pos_x[i] - bar_w / 2;
-            getTFT().fillRect(x, y, bar_w, y_min - y, TFT_BLUE);
+            getTFT().fillRect(x, y, bar_w, y_min - y, TFT_DARKBLUE);
         }
 
         // ----------------------------------------------------
-        // Temperature
+        // Temperature / RAIN
         // ----------------------------------------------------
         float    y_scale = 0.0f;
         uint16_t y_prev = 0;
@@ -6973,21 +7035,25 @@ class LineChart : public RegisterTable {
                 y = y_min - (m_hourly_temperature[i] - m_temp_min) * y_scale;
             }
             if (i > 0) { getTFT().drawLine(m_x + m_pos_x[i - 1], y_prev, m_x + m_pos_x[i], y, TFT_RED); }
-            getTFT().fillCircle(m_x + m_pos_x[i], y, 2, TFT_RED);
+            getTFT().fillCircle(m_x + m_pos_x[i], y, 2, TFT_DARKRED);
             y_prev = y;
         }
         ps_ptr<char> tmp;
         txt_0->show();
         txt_23->show();
-        tmp.assignf("Tmax:{:4.1}°C", m_temp_max);
-        txt_t_max->setText(tmp);
-        txt_t_max->show();
-        tmp.assignf("Tmin:{:4.1}°C", m_temp_min);
-        txt_t_min->setText(tmp);
-        txt_t_min->show();
-        tmp.assignf("Rain:{}%, {:3.1}mm", m_preProb_max, m_precipitationSum);
-        txt_p_max->setText(tmp);
-        txt_p_max->show();
+        m_info.assign(ANSI_ESC_LIGHTRED);
+        if (*m_temp_unit == "C") {
+            m_info.appendf("Tmax: {:4.1}°C\n", m_temp_max);
+            m_info.appendf("Tmin: {:4.1}°C\n", m_temp_min);
+        }
+        if (*m_temp_unit == "F") {
+            m_info.appendf("Tmax: {:4.1}°F\n", m_temp_max * (9 / 5) + 32);
+            m_info.appendf("Tmin: {:4.1}°F\n", m_temp_min * (9 / 5) + 32);
+        }
+        m_info.append(ANSI_ESC_LIGHTBLUE);
+        m_info.appendf("Rain: {}%, Σ {:3.1}mm", m_preProb_max, m_precipitationSum);
+        txt_info->setText(m_info);
+        txt_info->show();
     }
 
     void hide() {
@@ -7034,23 +7100,32 @@ class LineChart : public RegisterTable {
         m_clicked = false;
         return true;
     }
-    void update(const std::vector<float>& hourly_temperature, const std::vector<uint8_t>& hourly_precipitationProbability, const float precipitationSum) {
-        if (hourly_temperature.size() < HOURS || hourly_precipitationProbability.size() < HOURS) { return; }
+
+    void update(const std::vector<METEO::METEO_HOURLY>& hourly, const std::vector<METEO::METEO_DAILY>& daily, ps_ptr<char>* temp_unit) {
+        if (hourly.size() < HOURS * DAYS || daily.size() < DAYS) {
+            MWR_LOG_ERROR("hourly_size: {}, daily_size {}", hourly.size(), daily.size());
+            return;
+        }
+
+        m_temp_unit = temp_unit;
         m_hourly_temperature.clear();
         m_hourly_precipitationProbability.clear();
-        m_temp_min = hourly_temperature[0];
-        m_temp_max = hourly_temperature[0];
-        m_preProb_max = hourly_precipitationProbability[0];
+        m_temp_min = hourly[0].temperature;
+        m_temp_max = hourly[0].temperature;
+        m_preProb_max = hourly[0].precipitationProbability;
+        ;
+        m_preProb_max = daily[0].precipitationProbabilityMax;
+        m_precipitationSum = daily[0].precipitationSum;
+
         for (size_t i = 0; i < HOURS; i++) {
-            m_hourly_temperature.push_back(hourly_temperature[i]);
-            m_hourly_precipitationProbability.push_back(hourly_precipitationProbability[i]);
-            m_temp_min = std::min(m_temp_min, hourly_temperature[i]);
-            m_temp_max = std::max(m_temp_max, hourly_temperature[i]);
-            m_preProb_max = std::max(m_preProb_max, hourly_precipitationProbability[i]);
+            m_hourly_temperature.push_back(hourly[i].temperature);
+            m_hourly_precipitationProbability.push_back(hourly[i].precipitationProbability);
+
+            m_temp_min = std::min(m_temp_min, m_hourly_temperature[i]);
+            m_temp_max = std::max(m_temp_max, m_hourly_temperature[i]);
+            m_preProb_max = std::max(m_preProb_max, m_hourly_precipitationProbability[i]);
         }
-        m_pos_x.clear();
-        float dist = (m_w - m_pl - m_pr) / (float)(HOURS - 1);
-        for (size_t i = 0; i < HOURS; i++) { m_pos_x.push_back(m_pl + i * dist); }
+
         m_data_valid = true;
     }
 };
@@ -7089,7 +7164,7 @@ class WeatherClock : public RegisterTable {
 #endif
 
     PictureBox*      pic_weather_code = new PictureBox("pic_weather_code"); // digits hour   * 10
-    LineChart*       crt_temperature = new LineChart("crt_temperature");
+    LineChart*       crt_temperature_rain = new LineChart("crt_temperature_rain");
     ImgClock24small* clk_24s = new ImgClock24small("ImgClock24small");
     Textbox*         txt_info = new Textbox("txt_info");
     int16_t          m_x = 0;
@@ -7097,21 +7172,38 @@ class WeatherClock : public RegisterTable {
     int16_t          m_w = 0;
     int16_t          m_h = 0;
 
-    int32_t              m_bg_color = TFT_BG_IS_WALLPAPER;
-    bool                 m_enabled = false;
-    bool                 m_active = true;
-    bool                 m_focus = false;
-    bool                 m_clicked = false;
-    bool                 m_state = false;
-    bool                 m_showAll = false;
-    bool                 m_first_call = true;
-    ps_ptr<char>         m_name;
-    ps_ptr<char>         m_pathBuff;
-    ps_ptr<char>         m_weather_daily;
-    uint8_t              m_min = 0, m_hour = 0, m_weekday = 0;
-    releasedArg          m_ra;
-    std::vector<float>   m_hourly_temperature;
-    std::vector<uint8_t> m_hourly_precipitationProbability;
+    int32_t       m_bg_color = TFT_BG_IS_WALLPAPER;
+    bool          m_enabled = false;
+    bool          m_active = true;
+    bool          m_focus = false;
+    bool          m_clicked = false;
+    bool          m_state = false;
+    bool          m_showAll = false;
+    bool          m_first_call = true;
+    ps_ptr<char>  m_name;
+    ps_ptr<char>  m_weather_code_path;
+    ps_ptr<char>  m_weather_daily = "no data yet";
+    ps_ptr<char>* m_temp_unit;
+    ps_ptr<char>* m_press_unit;
+    ps_ptr<char>* m_wind_speed_unit;
+    uint8_t       m_min = 0, m_hour = 0, m_weekday = 0;
+    releasedArg   m_ra;
+
+    static constexpr float beaufortMax[] = {
+        1.0f,   // Bft 0
+        5.0f,   // Bft 1
+        11.0f,  // Bft 2
+        19.0f,  // Bft 3
+        28.0f,  // Bft 4
+        38.0f,  // Bft 5
+        49.0f,  // Bft 6
+        61.0f,  // Bft 7
+        74.0f,  // Bft 8
+        88.0f,  // Bft 9
+        102.0f, // Bft 10
+        117.0f, // Bft 11
+        999.0f  // Bft 12
+    };
 
   public:
     WeatherClock(ps_ptr<char> name) {
@@ -7123,7 +7215,7 @@ class WeatherClock : public RegisterTable {
     }
     ~WeatherClock() {
         delete pic_weather_code;
-        delete crt_temperature;
+        delete crt_temperature_rain;
         delete clk_24s;
     }
 
@@ -7135,14 +7227,16 @@ class WeatherClock : public RegisterTable {
         m_enabled = false;
         pic_weather_code->setAlign(HAlign::Center, VAlign::Middle);
         pic_weather_code->set_bg_color(TFT_BG_IS_BLACK);
-        crt_temperature->begin(x + s_Icon.w, m_y, m_w - s_Icon.w, s_Icon.h);
-        crt_temperature->set_bg_color(TFT_BG_IS_BLACK);
+        pic_weather_code->begin(m_x, m_y, s_Icon.w, s_Icon.h);
+        crt_temperature_rain->begin(x + s_Icon.w, m_y, m_w - s_Icon.w, s_Icon.h);
+        crt_temperature_rain->set_bg_color(TFT_BG_IS_BLACK);
         clk_24s->set_bg_color(TFT_BG_IS_BLACK);
         clk_24s->begin(m_x, m_y + s_Icon.h, clock_w, s_Icon.h);
         clk_24s->set_fg_color(Colors::Blue);
-        txt_info->begin(m_x + clock_w, m_y + s_Icon.h, m_w - clock_w, s_Icon.h, 0, 0, 0, 0);
+        txt_info->begin(m_x + clock_w, m_y + s_Icon.h, m_w - clock_w, s_Icon.h, 0, 1, 0, 0);
         txt_info->setFontSize(0);
         txt_info->setAlign(HAlign::Right, VAlign::Middle);
+        txt_info->set_bg_color(TFT_BG_IS_BLACK);
     }
 
     ps_ptr<char> get_name() { return m_name; }
@@ -7163,12 +7257,11 @@ class WeatherClock : public RegisterTable {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
         }
         m_clicked = false;
-        pic_weather_code->begin(m_x, m_y, s_Icon.w, s_Icon.h);
-        pic_weather_code->setPicturePath("/meteo//2.png");
+        pic_weather_code->setPicturePath(m_weather_code_path);
         pic_weather_code->show();
         m_enabled = true;
         m_showAll = true;
-        crt_temperature->show();
+        crt_temperature_rain->show();
         clk_24s->show();
         txt_info->setText(m_weather_daily);
         txt_info->show();
@@ -7211,19 +7304,40 @@ class WeatherClock : public RegisterTable {
         return true;
     }
 
-    void update(const std::vector<METEO::METEO_HOURLY>& hourly, const std::vector<METEO::METEO_DAILY>& daily) {
-        for (int i = 0; i < hourly.size(); i++) {
-            m_hourly_temperature.push_back(hourly[i].temperature);
-            m_hourly_precipitationProbability.push_back(hourly[i].windSpeed);
+  private:
+    uint8_t windSpeedToBeaufort(float speedKmh) {
+        for (uint8_t bft = 0; bft < 13; ++bft) {
+            if (speedKmh <= beaufortMax[bft]) return bft;
         }
-        crt_temperature->update(m_hourly_temperature, m_hourly_precipitationProbability, daily[0].precipitationSum);
+        return 12;
+    }
 
+  public:
+    void update(const std::vector<METEO::METEO_HOURLY>& hourly, const std::vector<METEO::METEO_DAILY>& daily) {
+        if (!m_wind_speed_unit->valid()) return;
+        if (!m_press_unit->valid()) return;
+
+        crt_temperature_rain->update(hourly, daily, m_temp_unit);
+        m_weather_code_path.assignf("/meteo/{}.png", daily[0].weatherCode);
         // log_i("sunrise %u:%02u", daily[0].sunrise.hour, daily[0].sunrise.minute);
         m_weather_daily.assignf(ANSI_ESC_LIGHTGREY "{:02}.{:02}.{}\n", daily[0].date.day, daily[0].date.month, daily[0].date.year);
         m_weather_daily.appendf(ANSI_ESC_YELLOW "sunrise:" ANSI_ESC_LIGHTGREY " {:02}:{:02}\n", daily[0].sunrise.hour, daily[0].sunrise.minute);
         m_weather_daily.appendf(ANSI_ESC_YELLOW "sunset:" ANSI_ESC_LIGHTGREY " {:02}:{:02}\n", daily[0].sunset.hour, daily[0].sunset.minute);
-        m_weather_daily.appendf(ANSI_ESC_LIGHTBLUE "press:" ANSI_ESC_LIGHTGREY " {} hPa\n", daily[0].meanSurfacePressure);
-        m_weather_daily.appendf(ANSI_ESC_LIGHTBLUE "gusts:" ANSI_ESC_LIGHTGREY " {} km/h", daily[0].windSpeedMax);
+        if (*m_press_unit == "hPa") { m_weather_daily.appendf(ANSI_ESC_LIGHTBLUE "press:" ANSI_ESC_LIGHTGREY " {} hPa\n", daily[0].meanSurfacePressure); }
+        if (*m_press_unit == "mmHg") { m_weather_daily.appendf(ANSI_ESC_LIGHTBLUE "press:" ANSI_ESC_LIGHTGREY " {:3.0} mmHg\n", daily[0].meanSurfacePressure * 0.75f); }
+        if (*m_wind_speed_unit == "km/h") m_weather_daily.appendf(ANSI_ESC_LIGHTBLUE "gusts:" ANSI_ESC_LIGHTGREY " {} km/h", daily[0].windSpeedMax);
+        if (*m_wind_speed_unit == "m/s") m_weather_daily.appendf(ANSI_ESC_LIGHTBLUE "gusts:" ANSI_ESC_LIGHTGREY " {:2.1} m/s", daily[0].windSpeedMax / 3.6f);
+        if (*m_wind_speed_unit == "bft") {
+            uint8_t beaufort = windSpeedToBeaufort(daily[0].windSpeedMax);
+            m_weather_daily.appendf(ANSI_ESC_LIGHTBLUE "gusts:" ANSI_ESC_LIGHTGREY " {} bft", beaufort);
+        }
+        if (m_enabled) {
+            crt_temperature_rain->show();
+            txt_info->setText(m_weather_daily);
+            txt_info->show();
+            pic_weather_code->setPicturePath(m_weather_code_path);
+            pic_weather_code->show();
+        }
     }
 
     void update_time(RTIME::rtime time) {
@@ -7231,6 +7345,12 @@ class WeatherClock : public RegisterTable {
         uint8_t minute = time.minute;
         uint8_t hour = time.hour;
         clk_24s->writeTime(hour, minute);
+    }
+
+    void locale(ps_ptr<char>* temp_unit, ps_ptr<char>* press_unit, ps_ptr<char>* wind_speed_unit) {
+        m_temp_unit = temp_unit;
+        m_press_unit = press_unit;
+        m_wind_speed_unit = wind_speed_unit;
     }
 
     void restore_clock() { clk_24s->show_all(); }
@@ -7244,142 +7364,8 @@ class WeatherClock : public RegisterTable {
     void set_bg_color_all(int32_t color) {
         m_bg_color = color;
         pic_weather_code->set_bg_color(m_bg_color);
-        crt_temperature->set_bg_color(m_bg_color);
+        crt_temperature_rain->set_bg_color(m_bg_color);
         clk_24s->set_bg_color(m_bg_color);
         txt_info->set_bg_color(m_bg_color);
     }
 };
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class Brightness : public RegisterTable {
-  private:
-
-    Textbox*         txt_info = new Textbox("txt_info"); // BH1760 found or not
-    Textbox*         txt_a_value = new Textbox("sdr_a_value");
-    Textbox*         txt_b_value = new Textbox("sdr_b_value");
-    Slider*          sdr_a = new Slider("sdr_a"); // if BH1760, is visible -> brightness_min, else is not visible
-    Slider*          sdr_b = new Slider("sdr_b"); // if BH1760, brightness_max, else brightness_min and brightness_max
-    Button*          btn_ready = new Button("btn_ready", ButtonType::PushButton); // ok
-    int16_t          m_x = 0;
-    int16_t          m_y = 0;
-    int16_t          m_w = 0;
-    int16_t          m_h = 0;
-    int32_t              m_bg_color = TFT_BG_IS_WALLPAPER;
-    bool                 m_enabled = false;
-    bool                 m_active = true;
-    bool                 m_focus = false;
-    bool                 m_clicked = false;
-    bool                 m_showAll = false;
-    bool                 m_first_call = true;
-    ps_ptr<char>         m_name;
-    uint8_t              m_min = 0, m_max = 0;
-    releasedArg          m_ra;
-
-  public:
-    Brightness(ps_ptr<char> name) {
-        register_object(this);
-        m_name = name;
-        m_enabled = false;
-        m_clicked = false;
-    }
-    ~Brightness() {
-        delete txt_info;
-        delete txt_a_value;
-        delete txt_b_value;
-        delete sdr_a;
-        delete sdr_b;
-        delete btn_ready;
-    }
-
-    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
-        m_x = x; // x pos
-        m_y = y; // y pos
-        m_w = w; // width
-        m_h = h; // high
-        m_enabled = false;
-        txt_info->setFontSize(0);
-        txt_info->setAlign(HAlign::Left, VAlign::Middle);
-        txt_a_value->setFontSize(0);
-        txt_a_value->setAlign(HAlign::Right, VAlign::Middle);
-        txt_b_value->setFontSize(0);
-        txt_b_value->setAlign(HAlign::Right, VAlign::Middle);
-
-        txt_info->begin(m_x, m_y, m_w, m_h, 0, 0, 0, 0);
-        txt_a_value->begin(m_x, m_y, m_w, m_h, 0, 0, 0, 0);
-        txt_b_value->begin(m_x, m_y, m_w, m_h, 0, 0, 0, 0);
-
-    }
-
-    ps_ptr<char> get_name() { return m_name; }
-    void         enable() { enable_all(); }
-    void         disable() { disable_all(); }
-    bool         is_enabled() { return m_enabled; }
-    bool         is_active() { return m_active; }
-    void         set_active(bool active) { m_active = active; }
-    bool         has_focus() { return m_focus; }
-    void         set_bg_color(int32_t color) { set_bg_color_all(color); }
-    bool         set_focus(bool focus) { return false; }
-
-    void show() {
-        if (m_first_call) m_first_call = false;
-        if (m_bg_color == TFT_BG_IS_WALLPAPER) {
-            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
-        } else {
-            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
-        }
-        m_clicked = false;
-
-        m_enabled = true;
-        m_showAll = true;
-        txt_info->setText("");
-        txt_info->show();
-    }
-
-    void hide() {
-        if (m_first_call) return;
-        if (m_bg_color == TFT_BG_IS_WALLPAPER) {
-            getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
-        } else {
-            getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
-        }
-        m_enabled = false;
-        disable_all();
-    }
-
-    void getBounds(int16_t& x, int16_t& y, int16_t& w, int16_t& h) override {
-        x = m_x;
-        y = m_y;
-        w = m_w;
-        h = m_h;
-    }
-
-    bool positionXY(uint16_t x, uint16_t y) {
-        if (!m_enabled) return false;
-        if (x < m_x) return false;
-        if (y < m_y) return false;
-        if (x > m_x + m_w) return false;
-        if (y > m_y + m_h) return false;
-        if (m_enabled) m_clicked = true;
-        if (graphicObjects_OnClick) graphicObjects_OnClick(m_name, m_enabled);
-        //    if(!m_enabled) return false;
-        return true;
-    }
-    bool released() {
-        if (!m_enabled) return false;
-        if (!m_clicked) return false;
-        if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
-        m_clicked = false;
-        return true;
-    }
-
-  private:
-    void enable_all() { m_enabled = true; }
-
-    void disable_all() { m_enabled = false; }
-
-  private:
-    void set_bg_color_all(int32_t color) {
-        m_bg_color = color;
-        txt_info->set_bg_color(m_bg_color);
-    }
-};
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

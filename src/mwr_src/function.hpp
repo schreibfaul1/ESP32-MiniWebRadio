@@ -1375,7 +1375,7 @@ class AudioRecorder {
             return false;
         }
 
-        for (size_t i = 0; i < frames * 2; i++) {
+        for (size_t i = 0; i < frames; i++) {
             // 32 → 16 Bit (High word)
             int32_t v = data[i] >> 16;
 

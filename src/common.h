@@ -45,7 +45,6 @@
 
 #pragma once
 
-#include "tft_common_defs.h"
 #include "Audio.h"
 #include "BH1750.h"
 #include "DLNAClient.h"
@@ -61,6 +60,7 @@
 #include "mbedtls/sha1.h"
 #include "meteo.h"
 #include "rtime.h"
+#include "tft_common_defs.h"
 #include "websrv.h"
 #include <Arduino.h>
 #include <ArduinoOTA.h>
@@ -486,6 +486,7 @@ void         stopSong();
 void         placingGraphicObjects();
 void         muteChanged(bool m);
 void         setTimeCounter(uint8_t sec);
+void         setTFTbrightness(uint8_t brightness);
 ps_ptr<char> get_WiFi_PW(const char* ssid);
 void         my_audio_info(Audio::msg_t m);
 void         on_dlna_client(const DLNA_Client::msg_s& msg);
@@ -768,7 +769,7 @@ inline int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min,
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 bool setupBacklight(int pin, uint32_t freq_hz) {
-    if(pin < 0) return false;
+    if (pin < 0) return false;
 
     ledc_channel_config_t ch =
         {.gpio_num = (gpio_num_t)pin, .speed_mode = LEDC_LOW_SPEED_MODE, .channel = LEDC_CHANNEL_1, .intr_type = LEDC_INTR_DISABLE, .timer_sel = LEDC_TIMER_3, .duty = 0, .hpoint = 0};
@@ -791,18 +792,6 @@ bool setupBacklight(int pin, uint32_t freq_hz) {
     ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1, 127);
     ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1);
     return true;
-}
-
-inline void setTFTbrightness(uint8_t brightness) {
-    extern bool    s_f_sleeping;
-    extern uint8_t s_sleepMode;
-    uint8_t        duty = std::max(brightness, (uint8_t) 5);
-    if (s_f_sleeping && s_sleepMode == 0) { duty = 0; }
-
-    if (TFT_BL >= 0) {
-        ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1, duty);
-        ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1);
-    }
 }
 
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

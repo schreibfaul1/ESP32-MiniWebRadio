@@ -566,7 +566,7 @@ void METEO::protocol() {
     printf(ANSI_ESC_RESET);
 
     printf(ANSI_ESC_CYAN "\nYYYY-MM-DD hh:mm cloud(%%) temp(°C)  rain(%%) sun(min)  wind(km/h) w-code\n");
-    for (int i = 0; i < min((size_t)24, m_hourly.size()); i++) {
+    for (int i = 0; i < min((size_t)48, m_hourly.size()); i++) {
         printf(ANSI_ESC_GREEN "%04i-%02i-%02i %02i:%02i", m_hourly[i].time.year, m_hourly[i].time.month, m_hourly[i].time.day, m_hourly[i].time.hour, m_hourly[i].time.minute);
         printf("   %3i     %5.2f     %3i     %4i     %6.2f      %2u\n", m_hourly[i].cloudCover, m_hourly[i].temperature, m_hourly[i].precipitationProbability, m_hourly[i].sunshineDuration,
                m_hourly[i].windSpeed, m_hourly[i].weatherCode);
