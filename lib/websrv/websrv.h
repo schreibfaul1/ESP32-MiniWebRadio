@@ -28,7 +28,7 @@ class WebSrv {
 
     // callbacks ---------------------------------------------------------
   public:
-    typedef enum { evt_info = 0, evt_error, evt_warn, evt_command, evt_request , evt_delete} event_t;
+    typedef enum { evt_info = 0, evt_error, evt_warn, evt_command, evt_request, evt_delete } event_t;
     struct msg_s {
         const char*  msg = nullptr;
         const char*  s = nullptr;
@@ -70,7 +70,31 @@ class WebSrv {
         void reset() { *this = upload_items{}; }
     };
     upload_items m_upload_items;
+// ************************************************************************************************************************************
+    bool m_handle_download = false;
+    struct download_items { // state for chunked SD -> browser file transfer, drained a bit per loop() call
+        File   file{};
+        size_t bytesTotal{};
+        size_t bytesSent {};
 
+        void reset() {
+            if (file) file.close();
+            bytesTotal = 0;
+            bytesSent = 0;
+        }
+    };
+    download_items m_download_items;
+
+    bool m_handle_show = false;
+    struct show_items { // state for chunked in-memory page transfer (index.html/index.js), drained a bit per loop() call
+        ps_ptr<char> pagename;
+        size_t       bytesTotal = 0;
+        size_t       bytesSent = 0;
+
+        void reset() { *this = show_items{}; }
+    };
+    show_items m_show_items;
+// ************************************************************************************************************************************
     struct HttpRequest {
         enum class Method { Unknown, GET, POST, DELETE };
 
@@ -94,6 +118,8 @@ class WebSrv {
     boolean                   handleWS();
     void                      parseWsMessage(uint32_t len);
     void                      handle_upload_file();
+    void                      handle_download_file();
+    void                      handle_show_file();
 
   public:
     enum { HTTP_NONE = 0, HTTP_GET = 1, HTTP_POST = 2, HTTP_PUT = 3 };
