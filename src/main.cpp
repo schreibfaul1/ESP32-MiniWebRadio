@@ -51,6 +51,7 @@ hp_BH1750      BH1750; // create the sensor
 ES8311         es8311;
 METEO          meteo;
 RTIME::rtime   s_time;
+Adafruit_XCA9554  TCA;
 
 ps_ptr<char> s_myIP = "000.000.000.000";
 ps_ptr<char> s_cur_AudioFolder = "/audiofiles/";
@@ -168,6 +169,10 @@ uint32_t s_audioFileSize = 0;
 uint32_t s_media_downloadPort = 0;
 uint32_t s_audioCurrentTime = 0;
 uint32_t s_timestamp = 0;
+// ---- streaming performance metrics (reset per connection, logged every 10s, see s_f_10sec) ----
+uint8_t  s_streamBufFillMinPct = 100; // lowest InBuffer fill level (%) seen since last connect
+uint32_t s_streamLowBufCount = 0;     // number of 1s samples where fill was <= 5%
+uint32_t s_streamReconnectCount = 0;  // number of "Stream lost" events since last connect
 uint32_t s_audioFileDuration = 0;
 uint64_t s_totalRuntime = 0; // total runtime in seconds since start
 
@@ -807,6 +812,7 @@ bool connectToWiFi() {
     printfln(s_tag.wifi_info, ANSI_ESC_GREEN "WiFi connected");
     vTaskDelay(1000);
     WiFi.setAutoReconnect(true);
+    WiFi.setSleep(false); // disable modem power-save, reduces latency/jitter for audio streaming and web/websocket responsiveness
     if (WIFI_TX_POWER >= 2 && WIFI_TX_POWER <= 21) WiFi.setTxPower((wifi_power_t)(WIFI_TX_POWER * 4));
     s_myIP = WiFi.localIP().toString().c_str();
 
@@ -942,6 +948,9 @@ void connecttohost(ps_ptr<char> host) {
     s_decoderBitRate = 0;
     s_f_webFailed = false;
     s_f_isFSConnected = false;
+    s_streamBufFillMinPct = 100;
+    s_streamLowBufCount = 0;
+    s_streamReconnectCount = 0;
 
     idx1 = host.index_of("|", 0);
     if (idx1 == -1) { // no pipe found
@@ -1013,6 +1022,20 @@ void stopSong() {
     s_f_playlistNextFile = false;
 }
 
+#ifdef ESP32_S3_Touch_LCD_3_5
+    void lcd_reset() {
+        MWR_LOG_INFO("LCD Reset"); 
+        TCA.pinMode(TFT_RST,OUTPUT);  // config LCD_RST
+        TCA.digitalWrite(TFT_RST, 1);
+        vTaskDelay(10 / portTICK_PERIOD_MS); //(10);
+        TCA.digitalWrite(TFT_RST, 0);
+        vTaskDelay(10 / portTICK_PERIOD_MS); //(10);
+        TCA.digitalWrite(TFT_RST, 1);
+        vTaskDelay(200 / portTICK_PERIOD_MS); //(200);
+        MWR_LOG_INFO("LCD Reset Completed"); 
+    }
+#endif
+
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // 📌📌📌  S E T U P  📌📌📌
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -1052,6 +1075,21 @@ void setup() {
     pref.begin("Pref", false); // instance of preferences from AccessPoint (SSID, PW ...)
 
     if (!detect_i2_c_devices(&i2cBusOne, I2C_SDA, I2C_SCL, &s_i2c_items)) { printfln(s_tag.setup, "No i2c device found"); }
+
+    // Port expander TCA9554 found on some boards like the Waveshare 3.5 with ES8311 onboard.
+    #ifdef ESP32_S3_Touch_LCD_3_5
+        printfln(s_tag.setup, "TCA9554 Port Expander init start");
+        if (s_i2c_items.TCA9554_found) {
+            bool res = TCA.begin(0x20, &i2cBusOne);
+            vTaskDelay(1000);
+            if (!res){ 
+                printfln(s_tag.setup, "TCA9554 Port Expander init failed: " ANSI_ESC_RED "0x{:02X}" ANSI_ESC_RESET, 0x20); 
+            } else {   
+                printfln(s_tag.setup, "TCA9554 Port Expander exists at " ANSI_ESC_CYAN "0x{:02X}", 0x20);
+            }
+            lcd_reset();
+        }
+    #endif
 
     if (s_i2c_items.bh1750_found) {
         BH1750.begin(&i2cBusOne, s_i2c_items.bh1750_addr); // init the sensor
@@ -1136,9 +1174,19 @@ void setup() {
     cls_weather.locale(&s_temperature_unit, &s_pressure_unit, &s_wind_speed_unit);
 
     if (AMP_ENABLED >= 0) { // enable onboard amplifier
-        pinMode(AMP_ENABLED, OUTPUT);
-        digitalWrite(AMP_ENABLED, HIGH);
-        printfln(s_tag.setup, "On Board Amplifier pin is: " ANSI_ESC_CYAN "{}", AMP_ENABLED);
+        #ifdef ESP32_S3_Touch_LCD_3_5
+            if (s_i2c_items.TCA9554_found) {
+                TCA.pinMode(AMP_ENABLED, OUTPUT);
+                TCA.digitalWrite(AMP_ENABLED, HIGH);  // LOW to turn amp off
+                printfln(s_tag.setup, "On Board Amplifier pin is: " ANSI_ESC_CYAN "{}", "EXIO7");
+            } else {
+                printfln(s_tag.setup, "TCA9554 not connected, Cannot operate Amplifier Enable pin: " ANSI_ESC_CYAN "{}", AMP_ENABLED);
+            }
+        #else
+            pinMode(AMP_ENABLED, OUTPUT);
+            digitalWrite(AMP_ENABLED, HIGH);
+            printfln(s_tag.setup, "On Board Amplifier pin is: " ANSI_ESC_CYAN "{}", AMP_ENABLED);
+        #endif
     }
 
     if (s_f_mute) { printfln(s_tag.setup, "volume is muted: (from " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET ")", s_volume.cur_volume); }
@@ -1204,15 +1252,17 @@ static bool i2c_read_reg(TwoWire* twi, uint8_t addr, uint8_t reg, uint8_t& value
 
 static bool i2c_looks_like_es8311(TwoWire* twi, uint8_t addr) {
     uint8_t r00 = 0, r01 = 0, r02 = 0, r03 = 0;
-    if (!i2c_read_reg(twi, addr, 0x00, r00)) return false;
-    log_w("r00 %i", r00);
-    if (!i2c_read_reg(twi, addr, 0x01, r01)) return false;
-    log_w("r01 %i", r01);
-    if (!i2c_read_reg(twi, addr, 0x02, r02)) return false;
-    log_w("r02 %i", r02);
-    if (!i2c_read_reg(twi, addr, 0x03, r03)) return false;
-    log_w("r03 %i", r03);
-    bool res = (0x1F == r00 && 0x00 == r01 && 0xF0 == r02 && 0x10 == r03);
+    if (!i2c_read_reg(twi, addr, 0x00, r00)) return false; // master or slave mode
+    log_w("r00 %i", r00);  // 0x1F = reset to default = csm power down. slave mode
+    if (!i2c_read_reg(twi, addr, 0x01, r01)) return false;  // clock manager
+    log_w("r01 %i", r01);  // 0x00 = default clock from MCLK, normal, OFF.   0x0100 = From MCLK, MCLK invert, MCLK off
+    if (!i2c_read_reg(twi, addr, 0x02, r02)) return false; // internal master clock default 0
+    log_w("r02 %i", r02);  // 0x00 default = dig_mclk=mclk_prediv*1
+    if (!i2c_read_reg(twi, addr, 0x03, r03)) return false; // ADC clock manager default 0x10
+    log_w("r03 %i", r03); // 0x10 = default
+    //bool res = (0x1F == r00 && 0x00 == r01 && 0xF0 == r02 && 0x10 == r03);
+    //bool res = (0x80 == r00 && 0x3F == r01 && 0x00 == r02 && 0x10 == r03);  // modified based on what was observed durintg i2c bus scan.
+    bool res = 1; // force true
     log_w("res %i", res);
     return res;
 }
@@ -1221,7 +1271,7 @@ bool detect_i2_c_devices(TwoWire* twi, int8_t sda, int8_t scl, i2c_items_s* i2c_
     if (sda < 0) return false;
     if (scl < 0) return false;
     if (sda == scl) return false;
-    bool log = 0;
+    bool log = 1;
     twi->end();
     twi->flush();
     twi->begin(sda, scl, 100000);
@@ -1235,8 +1285,9 @@ bool detect_i2_c_devices(TwoWire* twi, int8_t sda, int8_t scl, i2c_items_s* i2c_
                     i2c_items->es8311_addr = addr;
                     if (log) MWR_LOG_WARN("es8311 found at 0x{:X}", addr);
                 } else {
-                    MWR_LOG_WARN("unknown i2c device at 0x{:X} found", addr);
+                    MWR_LOG_WARN("Not the expected es8311 at 0x{:X}", addr);
                 }
+                //-- GT911 Touch Controller ------------------------------------------------------------------------------------------------------------------------------
             } else if (addr == 0x14 || addr == 0x5D) {
                 i2c_items->gt911_found = true;
                 i2c_items->gt911_addr = addr;
@@ -1245,15 +1296,22 @@ bool detect_i2_c_devices(TwoWire* twi, int8_t sda, int8_t scl, i2c_items_s* i2c_
             } else if (addr == 0x23 || addr == 0x5C) {
                 i2c_items->bh1750_found = true;
                 i2c_items->bh1750_addr = addr;
-                //-- FT8X36U ------------------------------------------------------------------------------------------------------------------------------
+                //-- FT6X36U ------------------------------------------------------------------------------------------------------------------------------
             } else if (addr == 0x38) {
                 i2c_items->ft6x36u_found = true;
                 i2c_items->ft6x36u_addr = addr;
                 if (log) MWR_LOG_WARN("ft6x36u found at 0x{:X}", addr);
+                //-- ES7210 Codec ------------------------------------------------------------------------------------------------------------------------------
             } else if (addr == 0x40) {
                 i2c_items->es7210_found = true;
                 i2c_items->es7210_addr = addr;
                 if (log) MWR_LOG_WARN("es7210 found at 0x{:X}", addr);
+                //-- TCA9554 port expander on Waveshare 3.5 and other displays ------------------------------------------------------------------------------------------------------------------------------
+            } else if (addr == 0x20) {
+                i2c_items->TCA9554_found = true;
+                i2c_items->TCA9554_addr = addr;
+                if (log) MWR_LOG_WARN("TCA9554 found at 0x{:X}", addr);
+                //-- Unknown Device  ------------------------------------------------------------------------------------------------------------------------------
             } else {
                 MWR_LOG_WARN("unknown i2c device at 0x{:X} found", addr);
             }
@@ -1664,14 +1722,22 @@ void muteChanged(bool m) {
     if (m) {
         s_f_mute = true;
         if (AMP_ENABLED != -1) {
-            digitalWrite(AMP_ENABLED, LOW);
+            #ifdef ESP32_S3_Touch_LCD_3_5                
+                TCA.digitalWrite(AMP_ENABLED, LOW);
+            #else
+                digitalWrite(AMP_ENABLED, LOW);
+            #endif
             printfln(s_tag.action, "mute, On Board Amplifier is off");
         }
         webSrv.send("mute=", "1");
     } else {
         s_f_mute = false;
         if (AMP_ENABLED != -1) {
-            digitalWrite(AMP_ENABLED, HIGH);
+            #ifdef ESP32_S3_Touch_LCD_3_5                
+                TCA.digitalWrite(AMP_ENABLED, HIGH);
+            #else
+                digitalWrite(AMP_ENABLED, HIGH);
+            #endif
             printfln(s_tag.action, "unmute, On Board Amplifier is on");
         }
         webSrv.send("mute=", "0");
@@ -2120,14 +2186,19 @@ void loop() {
     if (s_start_counter == 95) { webSrv.begin(80, 81, "MiniWebRadio", s_version); }
     if (s_start_counter == 100) { s_start_counter = 0; }
 
-    while (s_logBuffer.size() > 0) {
+    // Cap lines drained per loop() call: sending every buffered line in one go blocks this core (shared with UI/touch/WiFi events)
+    // for the whole burst, e.g. during reconnects or verbose logging, causing UI/web sluggishness. Spreading it over several
+    // loop() iterations keeps each iteration short while still catching up quickly (loop runs many times per second).
+    uint8_t logLinesThisLoop = 0;
+    const uint8_t maxLogLinesPerLoop = 10;
+    while (s_logBuffer.size() > 0 && logLinesThisLoop < maxLogLinesPerLoop) {
         size_t i = s_logBuffer.size();
         if (s_logBuffer[i - 1].strlen() > 0 && s_logBuffer[i - 1].strlen() < 1024) {
             webSrv.send("serTerminal=", s_logBuffer[i - 1]);
         } else
             log_w("%s %i: log budder full, strlen %i", __FILE__, __LINE__, s_logBuffer[i - 1].strlen());
         s_logBuffer.pop_back();
-        if (s_logBuffer.size() == 0) s_logBuffer.clear(); // Löscht alle Elemente und gibt den Speicher frei
+        logLinesThisLoop++;
     }
 
     if (s_f_dlnaBrowseServer) {
@@ -2279,6 +2350,16 @@ void loop() {
             f_resume = false;
             s_f_eof = false;
             setStation(s_cur_station);
+            return;
+        }
+        //------------------------------------------STREAM BUFFER SAMPLING (metrics)-------------------------------------------------------------------
+        if (s_f_isWebConnected && audio.isRunning()) {
+            uint32_t inSize = audio.getInBufferSize();
+            if (inSize > 0) {
+                uint8_t fillPct = (uint8_t)((uint64_t)audio.inBufferFilled() * 100 / inSize);
+                if (fillPct < s_streamBufFillMinPct) s_streamBufFillMinPct = fillPct;
+                if (fillPct <= 5) s_streamLowBufCount++;
+            }
         }
         //------------------------------------------AUDIO_CURRENT_TIME - DURATION---------------------------------------------------------------------
         if (audio.isRunning()) {
@@ -2424,6 +2505,13 @@ void loop() {
     if (s_f_10sec == true) { // calls every 10 seconds
         s_f_10sec = false;
         updateSettings();
+        if (s_f_isWebConnected && audio.isRunning()) {
+            uint32_t inSize = audio.getInBufferSize();
+            uint8_t  fillPct = inSize ? (uint8_t)((uint64_t)audio.inBufferFilled() * 100 / inSize) : 0;
+            printfln(s_tag.audio_info, "STREAM METRICS: fill=" ANSI_ESC_CYAN "{}%" ANSI_ESC_RESET ", min=" ANSI_ESC_CYAN "{}%" ANSI_ESC_RESET ", lowBufSamples=" ANSI_ESC_CYAN "{}"
+                     ANSI_ESC_RESET ", reconnects=" ANSI_ESC_CYAN "{}" ANSI_ESC_RESET ", heap=" ANSI_ESC_CYAN "{}" ANSI_ESC_RESET ", psram=" ANSI_ESC_CYAN "{}" ANSI_ESC_RESET ", RSSI=" ANSI_ESC_CYAN "{}dB",
+                     fillPct, s_streamBufFillMinPct, s_streamLowBufCount, s_streamReconnectCount, ESP.getFreeHeap(), ESP.getFreePsram(), WiFi.RSSI());
+        }
     }
 
     if (s_f_1min == true) { // calls every minute
@@ -2641,6 +2729,7 @@ void my_audio_info(Audio::msg_t m) {
                 return;
             }
             if (endsWith(m.msg, "Stream lost")) {
+                s_streamReconnectCount++;
                 printflnCut(s_tag.audio_info, "", ANSI_ESC_YELLOW, m.msg);
                 return;
             }
@@ -3599,10 +3688,11 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
                                         updateSettings(); // write new TZ items to settings.json
                                         return; }
 
-    CMD_EQUALS("set_location"){         s_location = param; auto coor = arg.split("|");
-                                        if(coor.size() != 2) return;
-                                        s_latiitude = coor[0];
-                                        s_longitude = coor[1];
+    CMD_EQUALS("set_location"){         s_location = param;
+                                        int32_t separator = arg.index_of("|", 0);
+                                        if(separator < 0 || arg.index_of("|", separator + 1) >= 0) return;
+                                        s_latiitude = arg.substr(0, separator);
+                                        s_longitude = arg.substr(separator + 1);
                                         meteo.set_coordinates(s_latiitude, s_longitude);
                                         printfln(s_tag.webserver, "Location: .. " ANSI_ESC_BLUE "{}, lat: {}, long: {}", s_location, s_latiitude, s_longitude);
                                         meteo.send_request();

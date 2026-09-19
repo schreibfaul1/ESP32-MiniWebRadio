@@ -64,19 +64,12 @@ void WebSrv::show(ps_ptr<char> pagename, ps_ptr<char> MIMEType, int16_t len) {
         m_websrv_callback(m_msg);
     }
 
-    // --- Main transmission ---
-    uint32_t t = millis() + 3000;
-    size_t   sent = 0;
-    while (sent < pagelen) {
-
-        sent += cmdclient.write(pagename.get() + sent);
-        WS_LOG_DEBUG("sent {}, pl {}", sent, pagelen);
-        if (millis() > t) {
-            WS_LOG_ERROR("timeout, sent: {}", sent);
-            cmdclient.clear();
-            break;
-        }
-    }
+    // hand off to handle_show_file(), called from loop() so a large page doesn't block the whole main loop
+    m_show_items.reset();
+    m_show_items.pagename = std::move(pagename);
+    m_show_items.bytesTotal = pagelen;
+    m_show_items.bytesSent = 0;
+    if (pagelen > 0) m_handle_show = true;
 }
 //--------------------------------------------------------------------------------------------------------------
 bool WebSrv::streamfile(fs::FS& fs, ps_ptr<char> path) { // transfer file from SD to webbrowser
@@ -135,31 +128,17 @@ bool WebSrv::streamfile(fs::FS& fs, ps_ptr<char> path) { // transfer file from S
 
     cmdclient.print(httpheader.c_get()); // header sent
 
-    size_t          bytesTransmitted = 0, bytesInBuff = 0, bytesToSend = file.size();
-    ps_ptr<uint8_t> transBuff;
-    transBuff.alloc(INT16_MAX);
-
-    while (bytesTransmitted < file.size()) {
-        bytesInBuff = file.read(transBuff.get(), INT16_MAX);
-        int16_t bytesWritten = 0, buffPtr = 0;
-        while (bytesWritten < bytesInBuff) {
-            bytesWritten = cmdclient.write(transBuff.get() + buffPtr, bytesInBuff);
-            if (bytesWritten <= 0) {
-                goto error; // reset by peer while sending
-            }
-            bytesTransmitted += bytesWritten;
-            buffPtr += bytesWritten;
-            bytesToSend -= bytesWritten;
-            bytesInBuff -= bytesWritten;
-        }
+    // hand off to handle_download_file(), called from loop() so a large file doesn't block the whole main loop
+    m_download_items.reset();
+    m_download_items.file = file;
+    m_download_items.bytesTotal = file.size();
+    m_download_items.bytesSent = 0;
+    if (m_download_items.bytesTotal > 0) {
+        m_handle_download = true;
+    } else {
+        file.close();
     }
-
-    file.close();
     return true;
-
-error:
-    file.close();
-    return false;
 }
 //--------------------------------------------------------------------------------------------------------------
 bool WebSrv::send(ps_ptr<char> cmd, ps_ptr<char> msg, uint8_t opcode) { // sends text messages via websocket
@@ -541,6 +520,60 @@ exit:
     m_msg.arg = msg;
     if (m_websrv_callback) m_websrv_callback(m_msg);
     return false;
+}
+//--------------------------------------------------------------------------------------------------------------
+void WebSrv::handle_show_file() { // sends one bounded chunk per call, keeps loop() responsive for large pages
+    const size_t bytes_per_transaction = 4096;
+    size_t       bytesLeft = m_show_items.bytesTotal - m_show_items.bytesSent;
+    size_t       toSend = (bytesLeft > bytes_per_transaction) ? bytes_per_transaction : bytesLeft;
+
+    int written = cmdclient.write(m_show_items.pagename.get() + m_show_items.bytesSent, toSend);
+    if (written <= 0) { // reset by peer while sending
+        WS_LOG_ERROR("show: write error, connection closed");
+        m_show_items.reset();
+        m_handle_show = false;
+        return;
+    }
+
+    m_show_items.bytesSent += written;
+    if (m_show_items.bytesSent >= m_show_items.bytesTotal) {
+        m_show_items.reset();
+        m_handle_show = false;
+    }
+}
+//--------------------------------------------------------------------------------------------------------------
+void WebSrv::handle_download_file() { // sends one bounded chunk per call, keeps loop() responsive for large files
+    const size_t    bytes_per_transaction = 4096;
+    size_t          bytesLeft = m_download_items.bytesTotal - m_download_items.bytesSent;
+    size_t          toRead = (bytesLeft > bytes_per_transaction) ? bytes_per_transaction : bytesLeft;
+    ps_ptr<uint8_t> transBuff;
+    transBuff.alloc(toRead);
+
+    size_t bytesInBuff = m_download_items.file.read(transBuff.get(), toRead);
+    if (bytesInBuff == 0) {
+        WS_LOG_ERROR("download: read error, {} bytes left", bytesLeft);
+        m_download_items.file.close();
+        m_handle_download = false;
+        return;
+    }
+
+    size_t buffPtr = 0;
+    while (buffPtr < bytesInBuff) {
+        int written = cmdclient.write(transBuff.get() + buffPtr, bytesInBuff - buffPtr);
+        if (written <= 0) { // reset by peer while sending
+            WS_LOG_ERROR("download: write error, connection closed");
+            m_download_items.file.close();
+            m_handle_download = false;
+            return;
+        }
+        buffPtr += written;
+    }
+
+    m_download_items.bytesSent += bytesInBuff;
+    if (m_download_items.bytesSent >= m_download_items.bytesTotal) {
+        m_download_items.file.close();
+        m_handle_download = false;
+    }
 }
 //--------------------------------------------------------------------------------------------------------------
 void WebSrv::handle_upload_file() {
@@ -1084,7 +1117,11 @@ void WebSrv::loop() {
         cmdClientAccept = true;
     }
 
-    if (m_handle_upload) {
+    if (m_handle_download) {
+        handle_download_file();
+    } else if (m_handle_show) {
+        handle_show_file();
+    } else if (m_handle_upload) {
         handle_upload_file();
     } else if (cmdclient.available()) {
         handlehttp();

@@ -426,7 +426,7 @@ bool DLNA_Client::readContent() {
                 vTaskDelay(10);
                 if (pos == m_contentlength) { break; }
                 cnt++;
-                if (cnt == 300) {
+                if (cnt == 500) { // ~5s of inactivity, a bit more headroom for slow servers/large responses
                     DLNA_LOG_ERROR("timeout in readContent");
                     goto error;
                 }

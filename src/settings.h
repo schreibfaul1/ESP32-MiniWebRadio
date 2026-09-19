@@ -2,26 +2,27 @@
 #include "Arduino.h"
 #include "tft_structures.h"
 
-//———————————— predifined displays —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
- #define SPI_DISPLAY 1                  //                    SPI display  320x240, 2.8inch,        ILI9341             XPT2046, ESP32-S3 or ESP32-P4
+// predefined displays
+
+// #define SPI_DISPLAY 1                  //                    SPI display  320x240, 2.8inch,        ILI9341             XPT2046, ESP32-S3 or ESP32-P4
 // #define SPI_DISPLAY 2                  //                    SPI display  480x320, 3.5" od 4"      ILI9488 or ST7796,  XPT2046, ESP32-S3 or ESP32-P4
-// #define SPI_DISPLAY 3                  //                    SPI display  480x320, 3.5" od 4"      ILI9488 or ST7796,  FT6x63,  ESP32-S3 or ESP32-P4
+//#define SPI_DISPLAY 3                  //                    SPI display  480x320, 3.5" od 4"      ILI9488 or ST7796,  FT6x63,  ESP32-S3 or ESP32-P4
+#define ESP32_S3_Touch_LCD_3_5            // Waveshare          SPI display  480x320, 3.5",           ST7796              FT6336,  ESP32-S3 N16R8
 // #define ESP32_8048S070                 // Sunton             RGB display  800x480, 7",                                 GT911,   ESP32-S3 N16R8
 // #define ESP32_S3_Touch_LCD7            // Waveshare          RGB display  800x480, 7",                                 GT911,   ESP32-S3 N8R8
 // #define ESP32_P4_WIFI6_TOUCH_LCD7_7B   // Waveshare          DSI display 1024x600, 7",             EK97007,            GT911,   ESP32-P4 N32R32
-// #define JC1060P470                     // Guition            DSI display  024x600, 7",             JD9165,             GT911,   ESP32-P4 N32R32
+// #define JC1060P470                     // Guition            DSI display 1024x600, 7",             JD9165,             GT911,   ESP32-P4 N32R32
 // #define JC4880P443                     // Guition            DSI display  800x480, 4.3",           ST7701,             GT911,   ESP32-P4 N16R32
 // #define USER_DEFINED_DISPLAY           // Self configurated ESP32-S3 or ESP32-P4 devBoard with SPI display
 
-//———————————— common ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-#define I2S_COMM_FMT         0        // (0) MAX98357A PCM5102A CS4344, (1) LSBJ (Least Significant Bit Justified format) PT8211
+#define I2S_COMM_FMT         0        // (0) MAX98357A PCM5102A CS4344 ES8311 (MSBJ), (1) LSBJ (Least Significant Bit Justified format) PT8211
 #define SDMMC_FREQUENCY      80000000 // 80000000 or 40000000 Hz
 #define FTP_USERNAME         "esp32"  // user name in FTP Client
 #define FTP_PASSWORD         "esp32"  // pw in FTP Client
 #define CONN_TIMEOUT         2500     // unencrypted connection timeout in ms (http://...)
 #define CONN_TIMEOUT_SSL     3500     // encrypted connection timeout in ms (https://...)
-#define WIFI_TX_POWER        5        // 2 ... 21 (dBm) Adjust the WiFi transmission power to optimise power consumption or increase range, default: 5
-#define LIST_TIMER           10        // After this time (seconds), the display returns from the list view
+#define WIFI_TX_POWER        18       // 2 ... 21 (dBm) Adjust the WiFi transmission power to optimise power consumption or increase range, default: 19 (low values can cause weak signal, retries and slow streaming/web UI)
+#define LIST_TIMER           5        // After this time (seconds), the display returns from the list view
 
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // 📌📌📌 YOUR OWN DISPLAY [320x240] OR [480x320] TOUCHPAD-CONTROLLER XPT2046 OR FT6x36   📌📌📌
@@ -101,6 +102,11 @@
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 #ifdef SPI_DISPLAY
+    #undef TFT_CONTROLLER
+    #undef TFT_ROTATION
+    #undef TP_CONTROLLER
+    #undef TP_ROTATION
+    #undef DISPLAY_INVERSION
     #if (SPI_DISPLAY == 1)
         #define TFT_FREQUENCY 40000000 // only SPI displays, 80000000, 40000000, 27000000, 20000000, 10000000
         #define TFT_CONTROLLER       0 // (0)SPI-ILI9341[320x240]
@@ -196,6 +202,49 @@
 #endif
 
 // // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// 📌📌📌  DISPLAY [480x320] ESP32-S3 Waveshare Touch_LCD_3.5 with onboard ES8311   📌📌📌
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+#if (CONFIG_IDF_TARGET_ESP32S3 == 1)
+  #ifdef ESP32_S3_Touch_LCD_3_5
+          #define TFT_FREQUENCY 40000000 // only SPI displays, 80000000, 40000000, 27000000, 20000000, 10000000
+        #define TFT_CONTROLLER       5 // (5)SPI-ILI9488 or ST7796[480x320]
+        #define TFT_ROTATION         0 // (0) none, (1) 90°CW, (2) 180°CW, (3) 270°CW
+        #define TP_CONTROLLER        8 // FT6x63
+        #define TP_ROTATION          1 // (0) none, (1) 90°CW, (2) 180°CW, (3) 270°CW
+        #define TP_H_MIRROR          0 // (0) default, (1) mirror left <-> right
+        #define TP_V_MIRROR          0 // (0) default, (1) mirror up <-> down
+        #define DISPLAY_INVERSION    1 // (0) off (1) on
+        #define BRIGHTNESS_INVERSION 0 // (0) off (1) on, bg-led
+        #define BRIGHTNESS_MIN       5 // you can’t see anything underneath
+        #undef DISPLAY_INVERSION
+        #define DISPLAY_INVERSION 1
+    // Digital I/O used
+        #define TFT_CS             38  // CS hardwired to ground on waveshare 3.5 with es8311.  -1 does not work, set to unused port like 38
+        #define TFT_DC              3
+        #define TFT_BL              6  // at -1 the brightness menu is not displayed
+        #define TFT_RST             1  // For Waveshare 3.5 w/ES8311, use 1 for EXIO1
+        #define SD_MMC_D0           9
+        #define SD_MMC_CLK         11
+        #define SD_MMC_CMD         10
+        #define IR_PIN             -1  // Set to unused port// IR Receiver -1 does not work, set to unused pin like 39
+        #define TFT_MOSI            1  // TFT and TP (FSPI)
+        #define TFT_MISO            2  // TFT and TP (FSPI)
+        #define TFT_SCK             5  // TFT and TP (FSPI)
+        #define I2S_DOUT           16  // Schematic wrong, 16 is actually out, 14 is in. Example prgrams work.
+        #define I2S_BCLK           13  // SCLK
+        #define I2S_LRC            15
+        #define I2S_MCLK           12
+        #define BT_EMITTER_RX      -1 // TX pin - KCX Bluetooth Transmitter    (-1 if not available)
+        #define BT_EMITTER_TX      -1 // RX pin - KCX Bluetooth Transmitter    (-1 if not available)
+        #define BT_EMITTER_MODE    -1 // high transmit - low receive           (-1 if not available)
+        #define BT_EMITTER_CONNECT -1 // high impulse -> awake after POWER_OFF (-1 if not available)
+        #define I2C_SDA             8 // I2C, data line for capacitive touchpad and and light sensor (-1 if not available)
+        #define I2C_SCL             7 // I2C, clock line for capacitive touchpad and and light sensor (-1 if not available)
+        #define AMP_ENABLED         7 //7 //exio7 on TCA9554 use value = 7 // onboard amplifier (-1 if not available)
+    #endif     
+#endif
+
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // 📌📌📌  DISPLAY [800x480] ESP32-S3 SUNTON   📌📌📌
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 #if (CONFIG_IDF_TARGET_ESP32S3 == 1)
@@ -215,23 +264,23 @@ const Pins RGB_PINS = { // SUNTON 7"
 
 const Timing RGB_TIMING = {.h_res = 800, .v_res = 480, .pixel_clock_hz = 8600000, .hsync_pulse_width = 40, .hsync_back_porch = 16, .hsync_front_porch = 10, .vsync_pulse_width = 20, .vsync_back_porch = 10, .vsync_front_porch = 22};
 
-        #define TP_IRQ              -1
-        #define SD_MMC_CMD          11
-        #define SD_MMC_CLK          12
-        #define SD_MMC_D0           13
-        #define I2S_DOUT            17
-        #define I2S_BCLK            0
-        #define I2S_LRC             18
-        #define I2S_MCLK            -1 // important!
-        #define IR_PIN              38 // IR Receiver (if available)
-        #define BT_EMITTER_RX       -1 // must be -1, not enough pins
-        #define BT_EMITTER_TX       -1 // must be -1, not enough pins
-        #define BT_EMITTER_MODE     -1 // must be -1, not enough pins
-        #define BT_EMITTER_CONNECT  -1 // must be -1, not enough pins
-        #define TFT_BL              2  // same as RGB_PINS.bl
-        #define I2C_SDA             19 // I2C, data line for capacitive touchpad and light sensor (-1 if not available)
-        #define I2C_SCL             20 // I2C, clock line for capacitive touchpad and light sensor (-1 if not available)
-        #define AMP_ENABLED         -1 // onboard amplifier (-1 if not available)
+        #define TP_IRQ             -1
+        #define SD_MMC_CMD         11
+        #define SD_MMC_CLK         12
+        #define SD_MMC_D0          13
+        #define I2S_DOUT           17
+        #define I2S_BCLK           0
+        #define I2S_LRC            18
+        #define I2S_MCLK           -1 // important!
+        #define IR_PIN             38 // IR Receiver (if available)
+        #define BT_EMITTER_RX      -1 // must be -1, not enough pins
+        #define BT_EMITTER_TX      -1 // must be -1, not enough pins
+        #define BT_EMITTER_MODE    -1 // must be -1, not enough pins
+        #define BT_EMITTER_CONNECT -1 // must be -1, not enough pins
+        #define TFT_BL             2  // same as RGB_PINS.bl
+        #define I2C_SDA            19 // I2C, data line for capacitive touchpad and light sensor (-1 if not available)
+        #define I2C_SCL            20 // I2C, clock line for capacitive touchpad and light sensor (-1 if not available)
+        #define AMP_ENABLED        -1 // onboard amplifier (-1 if not available)
     #endif
 #endif // CONFIG_IDF_TARGET_ESP32S3
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -240,7 +289,7 @@ const Timing RGB_TIMING = {.h_res = 800, .v_res = 480, .pixel_clock_hz = 8600000
 #if (CONFIG_IDF_TARGET_ESP32S3 == 1)
     #ifdef ESP32_S3_Touch_LCD7
         #define TFT_CONTROLLER       7 // (7)RGB[800x480]
-        #define TFT_ROTATION         2 // (0) none, (1) 90°CW, (2) 180°CW, (3) 270°CW
+        #define TFT_ROTATION         0 // (0) none, (1) 90°CW, (2) 180°CW, (3) 270°CW
         #define TP_CONTROLLER        7 // (7)GT911
         #define TP_ROTATION          1 // (0) none, (1) 90°CW, (2) 180°CW, (3) 270°CW
         #define TP_H_MIRROR          0 // (0) default, (1) mirror left <-> right
@@ -255,21 +304,21 @@ const Timing RGB_TIMING = {.h_res = 800, .v_res = 480, .pixel_clock_hz = 1300000
 
         #define TP_IRQ              -1
 
-        #define SD_MMC_CMD          11
-        #define SD_MMC_CLK          12
-        #define SD_MMC_D0           13
+        #define SD_MMC_CMD 11  // MOSi
+        #define SD_MMC_CLK 12  // SCL
+        #define SD_MMC_D0  13  // MISO
 
-        #define I2S_DOUT            19
-        #define I2S_BCLK            20
-        #define I2S_LRC             15
-        #define I2S_MCLK            -1 // important, don't change!
+        #define I2S_DOUT 20  // 
+        #define I2S_BCLK 15
+        #define I2S_LRC  43
+        #define I2S_MCLK -1 // important, don't change!
 
-        #define IR_PIN               6  // IR Receiver (if available)
-        #define BT_EMITTER_RX       -1 // must be -1, not enough pins
-        #define BT_EMITTER_TX       -1 // must be -1, not enough pins
-        #define BT_EMITTER_LINK     -1 // must be -1, not enough pins
-        #define BT_EMITTER_MODE     -1 // must be -1, not enough pins
-        #define BT_EMITTER_CONNECT  -1 // must be -1, not enough pins
+        #define IR_PIN             6  // IR Receiver (if available)
+        #define BT_EMITTER_RX      -1 // must be -1, not enough pins
+        #define BT_EMITTER_TX      -1 // must be -1, not enough pins
+        #define BT_EMITTER_LINK    -1 // must be -1, not enough pins
+        #define BT_EMITTER_MODE    -1 // must be -1, not enough pins
+        #define BT_EMITTER_CONNECT -1 // must be -1, not enough pins
 
         #define TFT_BL              -1 // same as RGB_PINS.bl
         #define AMP_ENABLED         -1 // control pin for extenal amplifier (if available)
