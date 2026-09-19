@@ -11,6 +11,40 @@ TFT_RGB& getTFT();
 #endif
 
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void writeDirect(File& file, int32_t width, int32_t height) {
+    uint16_t row[width];
+    for (int32_t y = height - 1; y >= 0; y--) {
+        getTFT().readRect(0, y, width, 1, row);
+        file.write((uint8_t*)row, width * sizeof(uint16_t));
+    }
+}
+
+void writeRotated90(File& file, int32_t width, int32_t height) {
+    uint16_t column[height];
+    for (int32_t y = 0; y < width; y++) {
+        getTFT().readRect(y, 0, 1, height, column);
+        file.write((uint8_t*)column, height * sizeof(uint16_t));
+    }
+}
+
+void writeRotated180(File& file, int32_t width, int32_t height) {
+    uint16_t row[width];
+    for (int32_t y = 0; y < height; y++) {
+        getTFT().readRect(0, y, width, 1, row);
+        std::reverse(row, row + width);
+        file.write((uint8_t*)row, width * sizeof(uint16_t));
+    }
+}
+
+void writeRotated270(File& file, int32_t width, int32_t height) {
+    uint16_t column[height];
+    for (int32_t y = width - 1; y >= 0; y--) {
+        getTFT().readRect(y, 0, 1, height, column);
+        std::reverse(column, column + height);
+        file.write((uint8_t*)column, height * sizeof(uint16_t));
+    }
+}
+
 void make_hardcopy_on_sd() {
     const uint8_t bmp320x240[70] = {
         0x42, 0x4D, 0x46, 0x58, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46, 0x00, 0x00, 0x00, 0x38, 0x00, 0x00, 0x00, 0x40, 0x01, 0x00, 0x00, 0xF0, 0x00,
@@ -73,45 +107,31 @@ void make_hardcopy_on_sd() {
     File hc = SD_MMC.open("/hardcopy.bmp", "w", true);
 #ifdef TFT_LAYOUT_S
     hc.write(bmp320x240, sizeof(bmp320x240));
-    uint16_t buff[320];
-    for (int i = 240; i > 0; i--) {
-        getTFT().readRect(0, i - 1, 320, 1, buff);
-        hc.write((uint8_t*)buff, 320 * 2);
-    }
+    if(TFT_ROTATION == 0) writeDirect(hc, 320, 240);
+    if(TFT_ROTATION == 1) writeRotated90(hc, 240, 320);
+    if(TFT_ROTATION == 2) writeRotated180(hc, 320, 240);
+    if(TFT_ROTATION == 3) writeRotated270(hc, 240, 320);
     hc.close();
 #elifdef TFT_LAYOUT_M
     hc.write(bmp480x320, sizeof(bmp480x320));
-    uint16_t buff[480];
-    for (int i = 320; i > 0; i--) {
-        getTFT().readRect(0, i - 1, 480, 1, buff);
-        hc.write((uint8_t*)buff, 480 * 2);
-    }
+    if(TFT_ROTATION == 0) writeDirect(hc, 480, 320);
+    if(TFT_ROTATION == 1) writeRotated90(hc, 320, 480);
+    if(TFT_ROTATION == 2) writeRotated180(hc, 480, 320);
+    if(TFT_ROTATION == 3) writeRotated270(hc, 320, 480);
     hc.close();
 #elifdef TFT_LAYOUT_L
-    #ifdef TFT_ALIGN_LANDSCAPE
     hc.write(bmp800x480, sizeof(bmp800x480));
-    uint16_t buff[800];
-    for (int i = 480; i > 0; i--) {
-        getTFT().readRect(0, i - 1, 800, 1, buff);
-        hc.write((uint8_t*)buff, 800 * 2);
-    }
+    if(TFT_ROTATION == 0) writeDirect(hc, 800, 480);
+    if(TFT_ROTATION == 1) writeRotated90(hc, 480, 800);
+    if(TFT_ROTATION == 2) writeRotated180(hc, 800, 480);
+    if(TFT_ROTATION == 3) writeRotated270(hc, 480, 800);
     hc.close();
-    #elifdef TFT_ALIGN_PORTRAIT
-    hc.write(bmp800x480, sizeof(bmp800x480));
-    uint16_t row[800];
-    for (int bmp_y = 0; bmp_y < 480; bmp_y++) {
-        getTFT().readRect(bmp_y, 0, 1, 800, row);
-        hc.write((uint8_t*)row, 800 * 2);
-    }
-    hc.close();
-    #endif
 #elifdef TFT_LAYOUT_XL
     hc.write(bmp1024x600, sizeof(bmp1024x600));
-    uint16_t buff[1024];
-    for (int i = 600; i > 0; i--) {
-        getTFT().readRect(0, i - 1, 1024, 1, buff);
-        hc.write((uint8_t*)buff, 1024 * 2);
-    }
+    if(TFT_ROTATION == 0) writeDirect(hc, 1024, 600);
+    if(TFT_ROTATION == 1) writeRotated90(hc, 600, 1024);
+    if(TFT_ROTATION == 2) writeRotated180(hc, 1024, 600);
+    if(TFT_ROTATION == 3) writeRotated270(hc, 600, 1024);
     hc.close();
 #else
 
