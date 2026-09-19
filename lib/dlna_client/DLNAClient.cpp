@@ -1,7 +1,7 @@
 #include "DLNAClient.h"
 
 // Created on: 30.11.2023
-// Updated on: 30.08.2026
+// Updated on: 19.09.2026
 
 DLNA_Client::DLNA_Client() {
     m_state = IDLE;
@@ -426,7 +426,7 @@ bool DLNA_Client::readContent() {
                 vTaskDelay(10);
                 if (pos == m_contentlength) { break; }
                 cnt++;
-                if (cnt == 300) {
+                if (cnt == 500) { // ~5s of inactivity, a bit more headroom for slow servers/large responses
                     DLNA_LOG_ERROR("timeout in readContent");
                     goto error;
                 }

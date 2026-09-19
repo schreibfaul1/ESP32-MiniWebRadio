@@ -11,7 +11,7 @@
 #define SEEK_TIMEOUT        8000
 #define READ_TIMEOUT        2500
 #define CONNECT_TIMEOUT     6000
-#define AVAIL_TIMEOUT       2000
+#define AVAIL_TIMEOUT       25000 // some servers (e.g. Windows Media Player sharing) need a long time to group/enumerate large libraries (e.g. "Genre" over thousands of tracks) before replying at all
 
 class DLNA_Client {
 
@@ -116,13 +116,13 @@ class DLNA_Client {
     bool    srvPost(uint8_t srvNr, ps_ptr<char> objectId, const uint16_t startingIndex, const uint16_t maxCount);
 
   private:
-    bool     m_chunked = false;
-    bool     m_skipCRLF = false;
+    bool         m_chunked = false;
+    bool         m_skipCRLF = false;
     ps_ptr<char> m_objectId;
-    uint8_t  m_srvNr = 0;
-    uint32_t m_contentlength = 0;
-    uint16_t m_startingIndex = 0;
-    uint16_t m_maxCount = 100;
+    uint8_t      m_srvNr = 0;
+    uint32_t     m_contentlength = 0;
+    uint16_t     m_startingIndex = 0;
+    uint16_t     m_maxCount = 100;
     // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
     int32_t indexOf(const char* haystack, const char* needle, int32_t startIndex) {
         const char* p = haystack;
@@ -141,4 +141,3 @@ class DLNA_Client {
 #define DLNA_LOG_VERBOSE(fmt, ...) Audio::AUDIO_LOG_IMPL(5, __FILE__, __LINE__, __func__, fmt, ##__VA_ARGS__)
 };
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
