@@ -807,6 +807,7 @@ bool connectToWiFi() {
     printfln(s_tag.wifi_info, ANSI_ESC_GREEN "WiFi connected");
     vTaskDelay(1000);
     WiFi.setAutoReconnect(true);
+    WiFi.setSleep(false); // disable modem power-save, reduces latency/jitter for audio streaming and web/websocket responsiveness
     if (WIFI_TX_POWER >= 2 && WIFI_TX_POWER <= 21) WiFi.setTxPower((wifi_power_t)(WIFI_TX_POWER * 4));
     s_myIP = WiFi.localIP().toString().c_str();
 
@@ -942,7 +943,6 @@ void connecttohost(ps_ptr<char> host) {
     s_decoderBitRate = 0;
     s_f_webFailed = false;
     s_f_isFSConnected = false;
-
     idx1 = host.index_of("|", 0);
     if (idx1 == -1) { // no pipe found
         s_f_isWebConnected = audio.connecttohost(host.c_get());
@@ -1204,17 +1204,17 @@ static bool i2c_read_reg(TwoWire* twi, uint8_t addr, uint8_t reg, uint8_t& value
 
 static bool i2c_looks_like_es8311(TwoWire* twi, uint8_t addr) {
     uint8_t r00 = 0, r01 = 0, r02 = 0, r03 = 0;
-    if (!i2c_read_reg(twi, addr, 0x00, r00)) return false;
-    log_w("r00 %i", r00);
-    if (!i2c_read_reg(twi, addr, 0x01, r01)) return false;
-    log_w("r01 %i", r01);
-    if (!i2c_read_reg(twi, addr, 0x02, r02)) return false;
-    log_w("r02 %i", r02);
-    if (!i2c_read_reg(twi, addr, 0x03, r03)) return false;
-    log_w("r03 %i", r03);
-    bool res = (0x1F == r00 && 0x00 == r01 && 0xF0 == r02 && 0x10 == r03);
-    log_w("res %i", res);
-    return res;
+    if (!i2c_read_reg(twi, addr, 0x00, r00)) return false; // master or slave mode
+    log_d("r00 %i", r00);                                  // 0x1F = reset to default = csm power down. slave mode
+    if (!i2c_read_reg(twi, addr, 0x01, r01)) return false; // clock manager
+    log_d("r01 %i", r01);                                  // 0x00 = default clock from MCLK, normal, OFF.   0x0100 = From MCLK, MCLK invert, MCLK off
+    if (!i2c_read_reg(twi, addr, 0x02, r02)) return false; // internal master clock default 0
+    log_d("r02 %i", r02);                                  // 0x00 default = dig_mclk=mclk_prediv*1
+    if (!i2c_read_reg(twi, addr, 0x03, r03)) return false; // ADC clock manager default 0x10
+    log_d("r03 %i", r03);                                  // 0x10 = default
+    // bool res = (0x1F == r00 && 0x00 == r01 && 0xF0 == r02 && 0x10 == r03);
+    // bool res = (0x80 == r00 && 0x3F == r01 && 0x00 == r02 && 0x10 == r03);  // modified based on what was observed durintg i2c bus scan.
+    return true;
 }
 
 bool detect_i2_c_devices(TwoWire* twi, int8_t sda, int8_t scl, i2c_items_s* i2c_items) {
@@ -1245,11 +1245,12 @@ bool detect_i2_c_devices(TwoWire* twi, int8_t sda, int8_t scl, i2c_items_s* i2c_
             } else if (addr == 0x23 || addr == 0x5C) {
                 i2c_items->bh1750_found = true;
                 i2c_items->bh1750_addr = addr;
-                //-- FT8X36U ------------------------------------------------------------------------------------------------------------------------------
+                //-- FT6X36U ------------------------------------------------------------------------------------------------------------------------------
             } else if (addr == 0x38) {
                 i2c_items->ft6x36u_found = true;
                 i2c_items->ft6x36u_addr = addr;
                 if (log) MWR_LOG_WARN("ft6x36u found at 0x{:X}", addr);
+                //-- ES7210 Codec -------------------------------------------------------------------------------------------------------------------------
             } else if (addr == 0x40) {
                 i2c_items->es7210_found = true;
                 i2c_items->es7210_addr = addr;
@@ -2120,14 +2121,19 @@ void loop() {
     if (s_start_counter == 95) { webSrv.begin(80, 81, "MiniWebRadio", s_version); }
     if (s_start_counter == 100) { s_start_counter = 0; }
 
-    while (s_logBuffer.size() > 0) {
+    // Cap lines drained per loop() call: sending every buffered line in one go blocks this core (shared with UI/touch/WiFi events)
+    // for the whole burst, e.g. during reconnects or verbose logging, causing UI/web sluggishness. Spreading it over several
+    // loop() iterations keeps each iteration short while still catching up quickly (loop runs many times per second).
+    uint8_t       logLinesThisLoop = 0;
+    const uint8_t maxLogLinesPerLoop = 10;
+    while (s_logBuffer.size() > 0 && logLinesThisLoop < maxLogLinesPerLoop) {
         size_t i = s_logBuffer.size();
         if (s_logBuffer[i - 1].strlen() > 0 && s_logBuffer[i - 1].strlen() < 1024) {
             webSrv.send("serTerminal=", s_logBuffer[i - 1]);
         } else
             log_w("%s %i: log budder full, strlen %i", __FILE__, __LINE__, s_logBuffer[i - 1].strlen());
         s_logBuffer.pop_back();
-        if (s_logBuffer.size() == 0) s_logBuffer.clear(); // Löscht alle Elemente und gibt den Speicher frei
+        logLinesThisLoop++;
     }
 
     if (s_f_dlnaBrowseServer) {
@@ -2279,6 +2285,7 @@ void loop() {
             f_resume = false;
             s_f_eof = false;
             setStation(s_cur_station);
+            return;
         }
         //------------------------------------------AUDIO_CURRENT_TIME - DURATION---------------------------------------------------------------------
         if (audio.isRunning()) {
@@ -3599,10 +3606,11 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
                                         updateSettings(); // write new TZ items to settings.json
                                         return; }
 
-    CMD_EQUALS("set_location"){         s_location = param; auto coor = arg.split("|");
-                                        if(coor.size() != 2) return;
-                                        s_latiitude = coor[0];
-                                        s_longitude = coor[1];
+    CMD_EQUALS("set_location"){         s_location = param;
+                                        int32_t separator = arg.index_of("|", 0);
+                                        if(separator < 0 || arg.index_of("|", separator + 1) >= 0) return;
+                                        s_latiitude = arg.substr(0, separator);
+                                        s_longitude = arg.substr(separator + 1);
                                         meteo.set_coordinates(s_latiitude, s_longitude);
                                         printfln(s_tag.webserver, "Location: .. " ANSI_ESC_BLUE "{}, lat: {}, long: {}", s_location, s_latiitude, s_longitude);
                                         meteo.send_request();
