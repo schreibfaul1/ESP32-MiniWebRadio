@@ -174,52 +174,17 @@ uint32_t s_audioFileDuration = 0;
 uint64_t s_totalRuntime = 0; // total runtime in seconds since start
 
 std::deque<ps_ptr<char>> s_PLS_content;
-std::deque<ps_ptr<char>> s_logBuffer;
+
 
 ps_ptr<char> codecname[10] = {"unknown", "WAV", "MP3", "AAC", "M4A", "FLAC", "OPUS", "VORBIS", "OGG"};
 
-#ifdef TFT_MODE_SPI // ⏹⏹⏹⏹
-TFT_SPI  tft(spiBus, TFT_CS);
-TFT_SPI& getTFT() {
-    return tft;
-}
-#elif defined TFT_MODE_RGB
-TFT_RGB  tft;
-TFT_RGB& getTFT() {
-    return tft;
-}
-#elif defined TFT_MODE_DSI
-TFT_DSI  tft;
-TFT_DSI& getTFT() {
-    return tft;
-}
-#else
-    #error "wrong TFT_CONTROLLER"
-#endif
 
-#ifdef TP_MODE_XPT2046 // ⏹⏹⏹⏹
-TP_XPT2046  tp(spiBus, TP_CS);
-TP_XPT2046& getTP() {
-    return tp;
-}
-#elif defined TP_MODE_GT911
-TP_GT911  tp;
-TP_GT911& getTP() {
-    return tp;
-}
-#elif defined TP_MODE_FT6X63
-FT6x36  tp;
-FT6x36& getTP() {
-    return tp;
-}
-#else
-    #error "wrong TP_CONTROLLER"
-#endif
+
+
 
 stationManagement staMgnt(&s_cur_station);
 
-SemaphoreHandle_t mutex_rtc;
-SemaphoreHandle_t mutex_display;
+
 
 /*  ╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
     ║                                                     D E F A U L T S E T T I N G S                                                         ║

@@ -51,10 +51,10 @@
 #include "ESP32FtpServer.h"
 #include "IR.h"
 #include "SPIFFS.h"
+#include "TCA9554.h"
 #include "base64.h"
 #include "driver/ledc.h"
 #include "es8311.h"
-#include "TCA9554.h"
 #include "esp_log.h"
 #include "esp_psram.h"
 #include "kcx_bt_emitter.h"
@@ -90,25 +90,59 @@ TwoWire     i2cBusOne = TwoWire(0); // additional HW, sensors, buttons, encoder 
 TwoWire     i2cBusTwo = TwoWire(1); // external DAC, AC101 or ES8388
 SPIClass    spiBus(FSPI);
 
-#ifdef TFT_MODE_SPI
-    #include "tft_spi.h"
-#elifdef TFT_MODE_RGB
-    #include "tft_rgb.h"
-#elifdef TFT_MODE_DSI
-    #include "tft_dsi.h"
+SemaphoreHandle_t mutex_rtc;
+SemaphoreHandle_t mutex_display;
+std::deque<ps_ptr<char>> s_logBuffer;
+
+#include "tft_dsi.h"
+#include "tft_rgb.h"
+#include "tft_spi.h"
+#include "tp_ft6x36.h"
+#include "tp_gt911.h"
+#include "tp_xpt2046.h"
+
+#ifdef TFT_MODE_SPI // ⏹⏹⏹⏹
+TFT_SPI  tft(spiBus, TFT_CS);
+TFT_SPI& getTFT() {
+    return tft;
+}
+#elif defined TFT_MODE_RGB // ⏹⏹⏹⏹
+TFT_RGB  tft;
+TFT_RGB& getTFT() {
+    return tft;
+}
+#elif defined TFT_MODE_DSI // ⏹⏹⏹⏹
+TFT_DSI  tft;
+TFT_DSI& getTFT() {
+    return tft;
+}
 #else
-printf("unknown TFT_CONTROLLER\n")
+    #error "wrong TFT_CONTROLLER"
 #endif
 
-#ifdef TP_MODE_XPT2046
-    #include "tp_xpt2046.h"
-#elifdef TP_MODE_GT911
-    #include "tp_gt911.h"
-#elifdef TP_MODE_FT6X63
-    #include "tp_ft6x36.h"
+#ifdef TP_MODE_XPT2046 // ⏹⏹⏹⏹
+TP_XPT2046  tp(spiBus, TP_CS);
+TP_XPT2046& getTP() {
+    return tp;
+}
+#elif defined TP_MODE_GT911  // ⏹⏹⏹⏹
+TP_GT911  tp;
+TP_GT911& getTP() {
+    return tp;
+}
+#elif defined TP_MODE_FT6X63 // ⏹⏹⏹⏹
+FT6x36  tp;
+FT6x36& getTP() {
+    return tp;
+}
 #else
-    printf("unknown TP_CONTROLLER\n")
+    #error "wrong TP_CONTROLLER"
 #endif
+
+
+
+
+
 
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 //  output on serial terminal
@@ -239,11 +273,6 @@ status_items statusItems[20] = {
 
 std::mutex mutex_print;
 enum ir_shift { IR_RIGHT = +100, IR_LEFT = -100, IR_UP = +101, IR_DOWN = -101, IR_RESET = -127 };
-
-extern SemaphoreHandle_t        mutex_rtc;
-extern RTIME                    rtc;
-extern WebSrv                   webSrv;
-extern std::deque<ps_ptr<char>> s_logBuffer;
 
 struct dlnaHistory_s {
     ps_ptr<char> objId;

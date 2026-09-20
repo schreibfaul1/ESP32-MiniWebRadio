@@ -2,14 +2,6 @@
 
 #pragma once
 
-#ifdef TFT_MODE_DSI
-TFT_DSI& getTFT();
-#elif defined(TFT_MODE_SPI)
-TFT_SPI& getTFT();
-#elif defined(TFT_MODE_RGB)
-TFT_RGB& getTFT();
-#endif
-
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void writeDirect(File& file, int32_t width, int32_t height) {
     uint16_t row[width];
