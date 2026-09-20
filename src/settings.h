@@ -20,7 +20,7 @@
 #define FTP_PASSWORD         "esp32"  // pw in FTP Client
 #define CONN_TIMEOUT         2500     // unencrypted connection timeout in ms (http://...)
 #define CONN_TIMEOUT_SSL     3500     // encrypted connection timeout in ms (https://...)
-#define WIFI_TX_POWER        5        // 2 ... 21 (dBm) Adjust the WiFi transmission power to optimise power consumption or increase range, default: 5
+#define WIFI_TX_POWER        10       // 2 ... 21 (dBm) Adjust the WiFi transmission power to optimise power consumption or increase range, default: 5
 #define LIST_TIMER           10        // After this time (seconds), the display returns from the list view
 
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

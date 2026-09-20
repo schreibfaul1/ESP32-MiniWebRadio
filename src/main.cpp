@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.0z10 - Sep 19, 2026                                                                                                               ";
+    Version 4.2.0z11 - Sep 20, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -51,6 +51,7 @@ hp_BH1750      BH1750; // create the sensor
 ES8311         es8311;
 METEO          meteo;
 RTIME::rtime   s_time;
+TCA9554        tca9554;
 
 ps_ptr<char> s_myIP = "000.000.000.000";
 ps_ptr<char> s_cur_AudioFolder = "/audiofiles/";
@@ -124,6 +125,7 @@ bool s_f_isWiFiConnected = false;
 bool s_f_ok_from_ir = false;
 
 int8_t   s_state = NONE; // statemaschine
+int8_t   s_lastState = NONE;
 int8_t   s_subState = UNDEFINED;
 int8_t   s_subState_radio = UNDEFINED;
 int8_t   s_subState_player = UNDEFINED;
@@ -319,7 +321,7 @@ boolean defaultsettings() {
     s_settings.lastconnectedhost = parseJson("\"lastconnectedhost\":");
     s_settings.lastconnectedfile = parseJson("\"lastconnectedfile\":");
     s_sleepMode = parseJson("\"sleepMode\":").to_uint8();
-    s_state = parseJson("\"state\":").to_int8();
+    s_lastState = parseJson("\"state\":").to_int8();
     s_location = parseJson("\"location\":");
     s_latiitude = parseJson("\"latiitude\":");
     s_longitude = parseJson("\"longitude\":");
@@ -1055,15 +1057,18 @@ void setup() {
 
     if (s_i2c_items.bh1750_found) {
         BH1750.begin(&i2cBusOne, s_i2c_items.bh1750_addr); // init the sensor
-        printfln(s_tag.setup, "Ambient Light Sensor BH1750 found at " ANSI_ESC_CYAN "0x{:02X}", s_i2c_items.bh1750_addr);
         BH1750.setResolutionMode(BH1750.ONE_TIME_H_RESOLUTION_MODE);
         BH1750.setSensitivity(BH1750.SENSITIVITY_ADJ_MAX);
     }
 
     if (s_i2c_items.es8311_found) {
         bool res = es8311.begin(&i2cBusOne, s_i2c_items.es8311_addr); // init the dac
-        if (res) printfln(s_tag.setup, "DAC ES8311 found at " ANSI_ESC_CYAN "0x{:02X}", s_i2c_items.es8311_addr);
-        es8311.setVolume(90);
+        if (res) es8311.setVolume(90);
+    }
+
+    if (s_i2c_items.tca9554_found) {
+        bool res = tca9554.begin(&i2cBusOne, s_i2c_items.tca9554_addr); // init the port expander
+        (void)res;
     }
 
     set_tft_items(); // TFT, Resolotion
@@ -1221,43 +1226,75 @@ bool detect_i2_c_devices(TwoWire* twi, int8_t sda, int8_t scl, i2c_items_s* i2c_
     if (sda < 0) return false;
     if (scl < 0) return false;
     if (sda == scl) return false;
-    bool log = 0;
     twi->end();
     twi->flush();
     twi->begin(sda, scl, 100000);
+    uint8_t arr[128] = {0};
+
+    for (uint8_t i = 0; i < 128; i++) {
+        twi->beginTransmission(i);
+        if (twi->endTransmission() == 0) arr[i] = 1;
+    }
 
     for (uint8_t addr = 0; addr < 128; addr++) {
-        twi->beginTransmission(addr);
-        if (twi->endTransmission() == 0) {
+        if (arr[addr]) {
+            //-- CH422G  I/O Extended (Digital Tube Display Drive) ----------------------------------------------------------------------------------------------------------
+            if (addr == 0x20) {
+                if (arr[0x21] && arr[0x22] && arr[0x23] && arr[0x24] && arr[0x25] && arr[0x26] && arr[0x27]) {
+                    for (int i = 0x20; i < 0x28; i++) arr[i] = 0;
+                    for (int i = 0x30; i < 0x40; i++) arr[i] = 0;
+                    i2c_items->ch422g_found = true;
+                    i2c_items->ch422g_addr = 0x20;
+                    printfln(s_tag.setup, "CH422G (I/O Extended) found at " ANSI_ESC_CYAN "0x{:X}-0x{:X}, 0x{:X}-0x{:X}", 0x20, 0x27, 0x30, 0x3F);
+                    continue;
+                }
+            }
+            //-- ES8311 Mono DAC ----------------------------------------------------------------------------------------------------------
             if (addr == 0x18 || addr == 0x19) {
                 if (i2c_looks_like_es8311(twi, addr)) {
                     i2c_items->es8311_found = true;
-                    i2c_items->es8311_addr = addr;
-                    if (log) MWR_LOG_WARN("es8311 found at 0x{:X}", addr);
-                } else {
-                    MWR_LOG_WARN("unknown i2c device at 0x{:X} found", addr);
+                    i2c_items->es8311_addr = 0x18;
+                    printfln(s_tag.setup, "es8311 (Mono Audio Codec) found at " ANSI_ESC_CYAN "0x{:X}", 0x18);
+                    continue;
                 }
-            } else if (addr == 0x14 || addr == 0x5D) {
+            }
+            //-- GT911 Touch Controller ----------------------------------------------------------------------------------------------------------
+            if (addr == 0x14 || addr == 0x5D) {
                 i2c_items->gt911_found = true;
                 i2c_items->gt911_addr = addr;
-                if (log) MWR_LOG_WARN("gt911 found at 0x{:X}", addr);
-                //-- BH1750 -------------------------------------------------------------------------------------------------------------------------------
-            } else if (addr == 0x23 || addr == 0x5C) {
+                printfln(s_tag.setup, "gt911 (Capacitive Touch Controller) found at " ANSI_ESC_CYAN "0x{:X}", addr);
+                continue;
+            }
+            //-- BH1750 --------------------------------------------------------------------------------------------------------------------------
+            if (addr == 0x23 || addr == 0x5C) {
                 i2c_items->bh1750_found = true;
                 i2c_items->bh1750_addr = addr;
-                //-- FT6X36U ------------------------------------------------------------------------------------------------------------------------------
-            } else if (addr == 0x38) {
+                printfln(s_tag.setup, "BH1750 (digital Ambient Light Sensor) found at " ANSI_ESC_CYAN "0x{:X}", addr);
+                continue;
+            }
+            //-- FT6X36U -------------------------------------------------------------------------------------------------------------------------
+            if (addr == 0x38) {
                 i2c_items->ft6x36u_found = true;
                 i2c_items->ft6x36u_addr = addr;
-                if (log) MWR_LOG_WARN("ft6x36u found at 0x{:X}", addr);
-                //-- ES7210 Codec -------------------------------------------------------------------------------------------------------------------------
-            } else if (addr == 0x40) {
+                printfln(s_tag.setup, "ft6x36u (Capacitive Touch Controller) found at " ANSI_ESC_CYAN "0x{:X}", addr);
+                continue;
+            }
+            //-- ES7210 Codec --------------------------------------------------------------------------------------------------------------------
+            if (addr == 0x40) {
                 i2c_items->es7210_found = true;
                 i2c_items->es7210_addr = addr;
-                if (log) MWR_LOG_WARN("es7210 found at 0x{:X}", addr);
-            } else {
-                MWR_LOG_WARN("unknown i2c device at 0x{:X} found", addr);
+                printfln(s_tag.setup, "es7210 (Four Channels Audio ADC) found at " ANSI_ESC_CYAN "0x{:X}", addr);
+                continue;
             }
+            //-- TCA9554 port expander -----------------------------------------------------------------------------------------------------------
+            if (addr == 0x20) {
+                i2c_items->tca9554_found = true;
+                i2c_items->tca9554_addr = addr;
+                printfln(s_tag.setup, "TCA9554 (8 Channel Port Expander) found at " ANSI_ESC_CYAN "0x{:X}", addr);
+                continue;
+            }
+            //-- Unknown Device  ------------------------------------------------------------------------------------------------------------------
+            MWR_LOG_WARN("unknown i2c device at 0x{:X} found", addr);
         }
     }
     return true;
@@ -2116,7 +2153,7 @@ void loop() {
     if (s_start_counter == 50) { setRTC(s_TZString); }
     if (s_start_counter == 60) { meteo.send_request(); }
     if (s_start_counter == 70) { setStation(s_cur_station); }
-    if (s_start_counter == 80) { changeState(RADIO, 0); }
+    if (s_start_counter == 80) { changeState(s_lastState, 0); }
     if (s_start_counter == 90) { dlna.seekServer(); }
     if (s_start_counter == 95) { webSrv.begin(80, 81, "MiniWebRadio", s_version); }
     if (s_start_counter == 100) { s_start_counter = 0; }

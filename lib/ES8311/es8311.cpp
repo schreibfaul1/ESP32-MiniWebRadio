@@ -183,7 +183,6 @@ bool ES8311::begin(TwoWire* twi, int8_t address) {
     ok &= WriteReg(0x13, 0x10); // Enable output to HP drive
     ok &= WriteReg(0x1C, 0x6A); // ADC Equalizer bypass, cancel DC offset in digital domain
     ok &= WriteReg(0x37, 0x08); // Bypass DAC equalizer
-log_w("ret %i", ok);
     return ok;
 }
 
