@@ -230,7 +230,7 @@ boolean defaultsettings() {
             pos3 = jO.index_of("\"", pos2 + 1) + 1;
         else
             pos3 = jO.index_of(",", pos2);
-        if (pos3 < 0) pos3 = find_first_of(jO.get(), "}\n", pos2);
+        if (pos3 < 0) pos3 = jO.index_of("}\n", pos2);
         if (jO[pos2] == '\"') {
             pos2++;
             pos3--;

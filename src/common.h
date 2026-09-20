@@ -720,31 +720,6 @@ inline char* x_ps_calloc(uint16_t len, uint8_t size) {
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-int find_first_of(const char* source, const char* delimiters, int start = 0) {
-    for (int i = start; source[i] != '\0'; ++i) {     // search at start
-        for (int j = 0; delimiters[j] != '\0'; ++j) { // search delimiters
-            if (source[i] == delimiters[j]) {
-                return i; // position of first found delimiter
-            }
-        }
-    }
-    return -1; // not found
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-inline int16_t strlenUTF8(const char* str) { // returns only printable glyphs, all ASCII and UTF-8 until 0xDFBD
-    if (str == NULL) return -1;
-    uint16_t idx = 0;
-    uint16_t cnt = 0;
-    while (*(str + idx) != '\0') {
-        if ((*(str + idx) < 0xC0) && (*(str + idx) > 0x1F)) cnt++;
-        if ((*(str + idx) == 0xE2) && (*(str + idx + 1) == 0x80)) cnt++; // general punctuation
-        idx++;
-    }
-    return cnt;
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
 inline int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max) {
     // --- Clamp Input ---
     if (x <= in_min) return out_min;
