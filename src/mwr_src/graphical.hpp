@@ -2189,7 +2189,7 @@ class Selectbox : public RegisterTable {
                 }
             }
         }
-        m_selContent.push_back(x_ps_strdup(txt.get()));
+        m_selContent.push_back(txt);
     }
     void clearText() { m_selContent.clear(); }
     void writeText(uint8_t idx) {

@@ -477,7 +477,7 @@ ps_ptr<char> getFlagPath(uint16_t station) {
         return flagPath;
     }
     flagPath.assign("/flags/");
-    flagPath.appendf(staMgnt.getStationCountry(station));
+    flagPath.appendf("{}", staMgnt.getStationCountry(station));
     flagPath.toLowerCase();
     flagPath.append(".jpg");
     return flagPath;

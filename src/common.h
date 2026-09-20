@@ -720,41 +720,6 @@ inline char* x_ps_calloc(uint16_t len, uint8_t size) {
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-inline char* x_ps_strdup(const char* str) {
-    if (!str) {
-        log_e("str is NULL");
-        return NULL;
-    }
-    char* ps_str = NULL;
-    if (psramFound()) { ps_str = (char*)ps_malloc(strlen(str) + 1); }
-    if (!ps_str) { ps_str = (char*)malloc(strlen(str) + 1); }
-    if (!ps_str) {
-        log_e("oom");
-        return NULL;
-    }
-    strcpy(ps_str, str);
-    return ps_str;
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-inline char* x_ps_strndup(const char* str, uint16_t n) { // with '\0' termination
-    if (!str) {
-        log_e("str is NULL");
-        return NULL;
-    }
-    char* ps_str = NULL;
-    if (psramFound()) { ps_str = (char*)ps_malloc(n + 1); }
-    if (!ps_str) { ps_str = (char*)malloc(n + 1); }
-    if (!ps_str) {
-        log_e("oom");
-        return NULL;
-    }
-    strncpy(ps_str, str, n);
-    ps_str[n] = '\0';
-    return ps_str;
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
 int find_first_of(const char* source, const char* delimiters, int start = 0) {
     for (int i = start; source[i] != '\0'; ++i) {     // search at start
         for (int j = 0; delimiters[j] != '\0'; ++j) { // search delimiters
@@ -826,16 +791,6 @@ bool setupBacklight(int pin, uint32_t freq_hz) {
 }
 
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-#ifdef TFT_MODE_SPI // ⏹⏹⏹⏹
-extern TFT_SPI tft;
-#elif defined(TFT_MODE_RGB)
-extern TFT_RGB tft;
-#elif defined(TFT_MODE_DSI)
-extern TFT_DSI tft;
-#endif
-
 inline void x_ps_free(char** b) {
     if (*b) {
         free(*b);
