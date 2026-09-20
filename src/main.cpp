@@ -1956,7 +1956,9 @@ void changeState(int8_t state, int8_t subState) {
                 pic_BR_logo.show();
                 sdr_BR_value.setValue(s_brightness);
                 sdr_BR_value.show();
-                txt_BR_value.setText(int2str(s_brightness));
+                ps_ptr<char>c;
+                c.assignf("{}", s_brightness);
+                txt_BR_value.setText(c);
                 txt_BR_value.show();
             } else {
                 sdr_BR_value.enable();
@@ -3515,7 +3517,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
     }
     #define CMD_EQUALS(x) if(cmd.equals(x) == true)
 
-    CMD_EQUALS("ping"){                 webSrv.send("pong"); return;}                                                                                     // via websocket
+    CMD_EQUALS("ping"){                 webSrv.send("pong", ""); return;}                                                                                     // via websocket
 
     CMD_EQUALS("index.html"){           printfln(s_tag.webserver, "Webpage: " ANSI_ESC_ORANGE "index.html");                                                     // via XMLHttpRequest
                                         webSrv.show(index_html, webSrv.TEXT);
@@ -3536,13 +3538,13 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
 
     CMD_EQUALS("get_mute"){             s_f_mute == true ? webSrv.send("mute=", "1") : webSrv.send("mute=", "0"); return;}
     CMD_EQUALS("set_mute"){             muteChanged(!s_f_mute); return;}
-    CMD_EQUALS("upvolume"){             webSrv.send("volume=", int2str(upvolume()));  return;}                                                            // via websocket
-    CMD_EQUALS("downvolume"){           webSrv.send("volume=", int2str(downvolume())); return;}                                                           // via websocket
-    CMD_EQUALS("get_volumeSteps"){      webSrv.send("volumeSteps=", int2str(s_volume.volumeSteps)); return;}
+    CMD_EQUALS("upvolume"){             webSrv.send("volume=", upvolume());  return;}                                                            // via websocket
+    CMD_EQUALS("downvolume"){           webSrv.send("volume=", downvolume()); return;}                                                           // via websocket
+    CMD_EQUALS("get_volumeSteps"){      webSrv.send("volumeSteps=", s_volume.volumeSteps); return;}
 
     CMD_EQUALS("set_volumeSteps"){      s_volume.cur_volume = map_l(s_volume.cur_volume, 0, s_volume.volumeSteps, 0, param.to_uint32());
-                                        s_volume.ringVolume = map_l(s_volume.ringVolume, 0, s_volume.volumeSteps, 0, param.to_uint32()); webSrv.send("ringVolume=", int2str(s_volume.ringVolume));
-                                        s_volume.volumeAfterAlarm = map_l(s_volume.volumeAfterAlarm, 0, s_volume.volumeSteps, 0, param.to_uint32()); webSrv.send("volAfterAlarm=", int2str(s_volume.volumeAfterAlarm));
+                                        s_volume.ringVolume = map_l(s_volume.ringVolume, 0, s_volume.volumeSteps, 0, param.to_uint32()); webSrv.send("ringVolume=", s_volume.ringVolume);
+                                        s_volume.volumeAfterAlarm = map_l(s_volume.volumeAfterAlarm, 0, s_volume.volumeSteps, 0, param.to_uint32()); webSrv.send("volAfterAlarm=", s_volume.volumeAfterAlarm);
                                         s_volume.volumeSteps = param.to_uint32(); webSrv.send("volumeSteps=", param); audio.setVolumeSteps(s_volume.volumeSteps);
                                         MWR_LOG_DEBUG("s_volumeSteps  {}", s_volume.volumeSteps);
                                         sdr_CL_volume.setMinMaxVal(0, s_volume.volumeSteps);
@@ -3554,12 +3556,12 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
                                         printfln(s_tag.webserver, "new volume steps: " ANSI_ESC_CYAN "{}", s_volume.volumeSteps);
                                         return;}
 
-    CMD_EQUALS("get_ringVolume"){       webSrv.send("ringVolume=", int2str(s_volume.ringVolume)); return;}
-    CMD_EQUALS("set_ringVolume"){       s_volume.ringVolume = param.to_int32(); webSrv.send("ringVolume=", int2str(s_volume.ringVolume));
+    CMD_EQUALS("get_ringVolume"){       webSrv.send("ringVolume=", s_volume.ringVolume); return;}
+    CMD_EQUALS("set_ringVolume"){       s_volume.ringVolume = param.to_int32(); webSrv.send("ringVolume=", s_volume.ringVolume);
                                         printfln(s_tag.webserver, "new ring volume: " ANSI_ESC_CYAN "{}", s_volume.ringVolume); return;}
 
-    CMD_EQUALS("get_volAfterAlarm"){    webSrv.send("volAfterAlarm=", int2str(s_volume.volumeAfterAlarm)); return;}
-    CMD_EQUALS("set_volAfterAlarm"){    s_volume.volumeAfterAlarm = param.to_int32(); webSrv.send("volAfterAlarm=", int2str(s_volume.volumeAfterAlarm));
+    CMD_EQUALS("get_volAfterAlarm"){    webSrv.send("volAfterAlarm=", s_volume.volumeAfterAlarm); return;}
+    CMD_EQUALS("set_volAfterAlarm"){    s_volume.volumeAfterAlarm = param.to_int32(); webSrv.send("volAfterAlarm=", s_volume.volumeAfterAlarm);
                                         printfln(s_tag.webserver, "new volume after alarm: " ANSI_ESC_CYAN "{}", s_volume.volumeAfterAlarm); return;}
     CMD_EQUALS("homepage"){             webSrv.send("homepage=", s_homepage); return;}
 
@@ -4143,7 +4145,7 @@ void graphicObjects_OnChange(ps_ptr<char> name, int32_t val) {
                                               s_tone.BAL = val; webSrv.send("settone=", getI2STone()); setI2STone(); txt_EQ_balance.setText(c); txt_EQ_balance.show(); goto exit; }
     if (name.equals("pgb_PL_progress"))     { goto exit; }
     if (name.equals("pgb_DL_progress"))     { goto exit; }
-    if (name.equals("sdr_BR_value"))        { s_brightness = val;  txt_BR_value.setText(int2str(val)); txt_BR_value.show();
+    if (name.equals("sdr_BR_value"))        { s_brightness = val; c.assignf("{}", val); txt_BR_value.setText(c); txt_BR_value.show();
                                               if(!s_i2c_items.bh1750_found) setTFTbrightness(s_brightness);
                                               goto exit;
                                             }

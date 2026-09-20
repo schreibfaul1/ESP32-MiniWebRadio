@@ -130,7 +130,8 @@ class WebSrv {
     void show(ps_ptr<char> pagename, ps_ptr<char> MIMEType, int16_t len = -1);
     void show_not_found();
     bool streamfile(fs::FS& fs, ps_ptr<char> path);
-    bool send(ps_ptr<char> cmd, ps_ptr<char> msg = "", uint8_t opcode = Text_Frame);
+    bool send(ps_ptr<char> cmd, uint8_t msg, uint8_t opcode = Text_Frame);
+    bool send(ps_ptr<char> cmd, ps_ptr<char> msg, uint8_t opcode = Text_Frame);
     void sendPing();
     void sendPong();
     bool uploadfile(fs::FS& fs, ps_ptr<char> path, uint32_t contentLength, ps_ptr<char> contentType);

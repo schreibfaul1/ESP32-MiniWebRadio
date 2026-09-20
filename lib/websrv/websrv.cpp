@@ -153,6 +153,11 @@ bool WebSrv::streamfile(fs::FS& fs, ps_ptr<char> path) { // transfer file from S
 
 }
 //--------------------------------------------------------------------------------------------------------------
+bool WebSrv::send(ps_ptr<char> cmd, uint8_t msg, uint8_t opcode){
+    static char ret[12];
+    itoa(msg, ret, 10);
+    return send(cmd, ret, opcode);
+}
 bool WebSrv::send(ps_ptr<char> cmd, ps_ptr<char> msg, uint8_t opcode) { // sends text messages via websocket
     uint8_t headerLen = 2;
 
