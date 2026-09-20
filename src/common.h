@@ -691,34 +691,6 @@ inline int replacestr(char* line, const char* search, const char* replace, int d
     return (count);
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-inline int32_t clamp_min_max(int32_t val, int32_t min, int32_t max) {
-    if (min >= max) {
-        log_e("min >= max, min: %i, max %i", min, max);
-        return val;
-    }
-    if (val < min) val = min;
-    if (val > max) val = max;
-    return val;
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-inline char* x_ps_malloc(uint16_t len) {
-    char* ps_str = NULL;
-    if (psramFound()) { ps_str = (char*)ps_malloc(len); }
-    if (!ps_str) { ps_str = (char*)malloc(len); }
-    if (!ps_str) { log_e("oom"); }
-    return ps_str;
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-inline char* x_ps_calloc(uint16_t len, uint8_t size) {
-    char* ps_str = NULL;
-    if (psramFound()) { ps_str = (char*)ps_calloc(len, size); }
-    if (!ps_str) { ps_str = (char*)calloc(len, size); }
-    if (!ps_str) { log_e("oom"); }
-    return ps_str;
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 inline int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max) {
     // --- Clamp Input ---

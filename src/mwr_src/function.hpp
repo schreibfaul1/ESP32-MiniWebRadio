@@ -130,7 +130,7 @@ void make_hardcopy_on_sd() {
 #endif
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void GetRunTimeStats(char* pcWriteBuffer) {
+void GetRunTimeStats(ps_ptr<char>& pcWriteBuffer) {
     //     TaskStatus_t* pxTaskStatusArray;
     //     UBaseType_t   uxArraySize;
     //     uint8_t       ulStatsAsPercentage;

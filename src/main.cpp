@@ -2473,10 +2473,10 @@ void loop() {
             make_hardcopy_on_sd();
         }
         if (r.starts_with("rts")) { // run time stats
-            char* timeStatsBuffer = x_ps_calloc(2000, sizeof(char));
+            ps_ptr<char> timeStatsBuffer;
+            timeStatsBuffer.alloc(2000);
             GetRunTimeStats(timeStatsBuffer);
             { printfln(s_tag.terminal, ANSI_ESC_YELLOW "task statistics\n\n{}", timeStatsBuffer); }
-            x_ps_free(&timeStatsBuffer);
         }
         if (r.starts_with("lf")) { // local file
             const char* path = "/audiofiles/raw.mp3";
