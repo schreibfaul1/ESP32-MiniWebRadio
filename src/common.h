@@ -549,36 +549,6 @@ inline uint32_t simpleHash(ps_ptr<char> str) {
     return hash;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-inline int32_t str2int(const char* str) {
-    int32_t len = strlen(str);
-    if (len > 0) {
-        for (int32_t i = 0; i < len; i++) {
-            if (!isdigit(str[i])) {
-                log_e("NaN");
-                return 0;
-            }
-        }
-        return std::stoi(str);
-    }
-    return 0;
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-inline int32_t indexOf(const char* haystack, const char* needle, int32_t startIndex) {
-    const char* p = haystack;
-    for (; startIndex > 0; startIndex--)
-        if (*p++ == '\0') return -1;
-    const char* pos = strstr(p, needle);
-    if (pos == nullptr) return -1;
-    return pos - haystack;
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-inline int32_t lastIndexOf(const char* haystack, const char needle) {
-    const char* p = strrchr(haystack, needle);
-    return (p ? p - haystack : -1);
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 inline int rfind(const char* str, char ch, int start = -1) { // same as indexof() burt from right to left
     if (!str) return -1;                                     // if str is NULL
     int len = strlen(str);
