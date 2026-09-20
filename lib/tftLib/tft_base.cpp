@@ -3542,7 +3542,7 @@ size_t TFT_Base::writeText(ps_ptr<char> txt1, uint16_t win_X, uint16_t win_Y, in
         }
     } else {
         if (!layoutText(win_W, win_H, noWrap, noWrap)) {
-            MWR_LOG_ERROR("txt does not fit in window");
+            MWR_LOG_ERROR("txt does not fit in window, w: {}, h: {}, txt: {}", win_W, win_H, txt);
             return 0;
         }
     }

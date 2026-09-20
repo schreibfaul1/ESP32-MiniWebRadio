@@ -125,6 +125,7 @@ bool s_f_isWiFiConnected = false;
 bool s_f_ok_from_ir = false;
 
 int8_t   s_state = NONE; // statemaschine
+int8_t   s_lastState = NONE;
 int8_t   s_subState = UNDEFINED;
 int8_t   s_subState_radio = UNDEFINED;
 int8_t   s_subState_player = UNDEFINED;
@@ -320,7 +321,7 @@ boolean defaultsettings() {
     s_settings.lastconnectedhost = parseJson("\"lastconnectedhost\":");
     s_settings.lastconnectedfile = parseJson("\"lastconnectedfile\":");
     s_sleepMode = parseJson("\"sleepMode\":").to_uint8();
-    s_state = parseJson("\"state\":").to_int8();
+    s_lastState = parseJson("\"state\":").to_int8();
     s_location = parseJson("\"location\":");
     s_latiitude = parseJson("\"latiitude\":");
     s_longitude = parseJson("\"longitude\":");
@@ -1062,7 +1063,7 @@ void setup() {
 
     if (s_i2c_items.es8311_found) {
         bool res = es8311.begin(&i2cBusOne, s_i2c_items.es8311_addr); // init the dac
-        if(res) es8311.setVolume(90);
+        if (res) es8311.setVolume(90);
     }
 
     if (s_i2c_items.tca9554_found) {
@@ -2152,7 +2153,7 @@ void loop() {
     if (s_start_counter == 50) { setRTC(s_TZString); }
     if (s_start_counter == 60) { meteo.send_request(); }
     if (s_start_counter == 70) { setStation(s_cur_station); }
-    if (s_start_counter == 80) { changeState(RADIO, 0); }
+    if (s_start_counter == 80) { changeState(s_lastState, 0); }
     if (s_start_counter == 90) { dlna.seekServer(); }
     if (s_start_counter == 95) { webSrv.begin(80, 81, "MiniWebRadio", s_version); }
     if (s_start_counter == 100) { s_start_counter = 0; }
