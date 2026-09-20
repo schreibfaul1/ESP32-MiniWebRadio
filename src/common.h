@@ -310,6 +310,8 @@ struct i2c_items_s {
     int  bh1750_addr = -1;
     bool tca9554_found = false;
     int  tca9554_addr = -1;
+    bool ch422g_found = false;
+    int  ch422g_addr = -1;
 } s_i2c_items;
 
 struct tag_s {
