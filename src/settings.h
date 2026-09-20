@@ -4,10 +4,10 @@
 
 //———————————— predifined displays —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // #define SPI_DISPLAY 1                  //                    SPI display  320x240, 2.8inch,        ILI9341             XPT2046, ESP32-S3 or ESP32-P4
-#define SPI_DISPLAY 2                  //                    SPI display  480x320, 3.5" od 4"      ILI9488 or ST7796,  XPT2046, ESP32-S3 or ESP32-P4
+// #define SPI_DISPLAY 2                  //                    SPI display  480x320, 3.5" od 4"      ILI9488 or ST7796,  XPT2046, ESP32-S3 or ESP32-P4
 // #define SPI_DISPLAY 3                  //                    SPI display  480x320, 3.5" od 4"      ILI9488 or ST7796,  FT6x63,  ESP32-S3 or ESP32-P4
 // #define ESP32_8048S070                 // Sunton             RGB display  800x480, 7",                                 GT911,   ESP32-S3 N16R8
-// #define ESP32_S3_Touch_LCD7            // Waveshare          RGB display  800x480, 7",                                 GT911,   ESP32-S3 N8R8
+#define ESP32_S3_Touch_LCD7            // Waveshare          RGB display  800x480, 7",                                 GT911,   ESP32-S3 N8R8
 // #define ESP32_P4_WIFI6_TOUCH_LCD7_7B   // Waveshare          DSI display 1024x600, 7",             EK97007,            GT911,   ESP32-P4 N32R32
 // #define JC1060P470                     // Guition            DSI display 1024x600, 7",             JD9165,             GT911,   ESP32-P4 N32R32
 // #define JC4880P443                     // Guition            DSI display  800x480, 4.3",           ST7701,             GT911,   ESP32-P4 N16R32
@@ -20,7 +20,7 @@
 #define FTP_PASSWORD         "esp32"  // pw in FTP Client
 #define CONN_TIMEOUT         2500     // unencrypted connection timeout in ms (http://...)
 #define CONN_TIMEOUT_SSL     3500     // encrypted connection timeout in ms (https://...)
-#define WIFI_TX_POWER        5        // 2 ... 21 (dBm) Adjust the WiFi transmission power to optimise power consumption or increase range, default: 5
+#define WIFI_TX_POWER        10       // 2 ... 21 (dBm) Adjust the WiFi transmission power to optimise power consumption or increase range, default: 5
 #define LIST_TIMER           10        // After this time (seconds), the display returns from the list view
 
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

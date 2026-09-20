@@ -54,6 +54,7 @@
 #include "base64.h"
 #include "driver/ledc.h"
 #include "es8311.h"
+#include "TCA9554.h"
 #include "esp_log.h"
 #include "esp_psram.h"
 #include "kcx_bt_emitter.h"
@@ -307,6 +308,8 @@ struct i2c_items_s {
     int  ft6x36u_addr = -1;
     bool bh1750_found = false;
     int  bh1750_addr = -1;
+    bool tca9554_found = false;
+    int  tca9554_addr = -1;
 } s_i2c_items;
 
 struct tag_s {

@@ -51,6 +51,7 @@ hp_BH1750      BH1750; // create the sensor
 ES8311         es8311;
 METEO          meteo;
 RTIME::rtime   s_time;
+TCA9554        tca9554;
 
 ps_ptr<char> s_myIP = "000.000.000.000";
 ps_ptr<char> s_cur_AudioFolder = "/audiofiles/";
@@ -1066,6 +1067,11 @@ void setup() {
         es8311.setVolume(90);
     }
 
+    if(s_i2c_items.tca9554_found){
+        bool res = tca9554.begin(&i2cBusOne, s_i2c_items.tca9554_addr); // init the port expander
+        if (res) printfln(s_tag.setup, "Port Expander TCA9554 found at " ANSI_ESC_CYAN "0x{:02X}", s_i2c_items.tca9554_addr);
+    }
+
     set_tft_items(); // TFT, Resolotion
     set_tp_items();  // TP, Resolotion
     if (!init_SD_card()) return;
@@ -1221,7 +1227,7 @@ bool detect_i2_c_devices(TwoWire* twi, int8_t sda, int8_t scl, i2c_items_s* i2c_
     if (sda < 0) return false;
     if (scl < 0) return false;
     if (sda == scl) return false;
-    bool log = 0;
+    bool log = false;
     twi->end();
     twi->flush();
     twi->begin(sda, scl, 100000);
@@ -1233,28 +1239,36 @@ bool detect_i2_c_devices(TwoWire* twi, int8_t sda, int8_t scl, i2c_items_s* i2c_
                 if (i2c_looks_like_es8311(twi, addr)) {
                     i2c_items->es8311_found = true;
                     i2c_items->es8311_addr = addr;
-                    if (log) MWR_LOG_WARN("es8311 found at 0x{:X}", addr);
+                    if(log) printfln(s_tag.setup, "es8311 (Mono Audio Codec) found at 0x{:X}", addr);
                 } else {
-                    MWR_LOG_WARN("unknown i2c device at 0x{:X} found", addr);
+                    MWR_LOG_WARN("Not the expected es8311 at 0x{:X}", addr);
                 }
+                //-- GT911 Touch Controller ----------------------------------------------------------------------------------------------------------
             } else if (addr == 0x14 || addr == 0x5D) {
                 i2c_items->gt911_found = true;
                 i2c_items->gt911_addr = addr;
-                if (log) MWR_LOG_WARN("gt911 found at 0x{:X}", addr);
-                //-- BH1750 -------------------------------------------------------------------------------------------------------------------------------
+                if(log) printfln(s_tag.setup, "gt911 (Capacitive Touch Controller) found at 0x{:X}", addr);
+                //-- BH1750 --------------------------------------------------------------------------------------------------------------------------
             } else if (addr == 0x23 || addr == 0x5C) {
                 i2c_items->bh1750_found = true;
                 i2c_items->bh1750_addr = addr;
-                //-- FT6X36U ------------------------------------------------------------------------------------------------------------------------------
+                if(log) printfln(s_tag.setup, "BH1750 (digital Ambient Light Sensor) found at 0x{:X}", addr);
+                //-- FT6X36U -------------------------------------------------------------------------------------------------------------------------
             } else if (addr == 0x38) {
                 i2c_items->ft6x36u_found = true;
                 i2c_items->ft6x36u_addr = addr;
-                if (log) MWR_LOG_WARN("ft6x36u found at 0x{:X}", addr);
-                //-- ES7210 Codec -------------------------------------------------------------------------------------------------------------------------
+                if(log) printfln(s_tag.setup, "ft6x36u (Capacitive Touch Controller) found at 0x{:X}", addr);
+                //-- ES7210 Codec --------------------------------------------------------------------------------------------------------------------
             } else if (addr == 0x40) {
                 i2c_items->es7210_found = true;
                 i2c_items->es7210_addr = addr;
-                if (log) MWR_LOG_WARN("es7210 found at 0x{:X}", addr);
+                if(log) printfln(s_tag.setup, "es7210 (Four Channels Audio ADC) found at 0x{:X}", addr);
+                //-- TCA9554 port expander -----------------------------------------------------------------------------------------------------------
+            } else if (addr == 0x20) {
+                i2c_items->tca9554_found = true;
+                i2c_items->tca9554_addr = addr;
+                if(log) printfln(s_tag.setup, "TCA9554 (8 Channel Port Expander) found at 0x{:X}", addr);
+                //-- Unknown Device  ------------------------------------------------------------------------------------------------------------------
             } else {
                 MWR_LOG_WARN("unknown i2c device at 0x{:X} found", addr);
             }
