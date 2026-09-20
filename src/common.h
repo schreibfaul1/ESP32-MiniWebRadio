@@ -479,9 +479,7 @@ void         showPlsFileNumber();
 void         showAudioFileNumber();
 void         display_sleeptime(int8_t ud = 0);
 boolean      drawImage(ps_ptr<char> path, uint16_t posX, uint16_t posY, uint16_t maxWidth = 0, uint16_t maxHeigth = 0);
-boolean      isAudio(File file);
-boolean      isAudio(const char* path);
-boolean      isPlaylist(File file);
+boolean      isAudio(ps_ptr<char> path);
 bool         connectToWiFi();
 void         setWiFiCredentials(ps_ptr<char> ssid, ps_ptr<char> password);
 ps_ptr<char> scaleImage(ps_ptr<char> path);
@@ -564,58 +562,6 @@ inline int32_t str2int(const char* str) {
         return std::stoi(str);
     }
     return 0;
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-inline void trim(char* s) {
-    // fb   trim in place
-    char* pe;
-    char* p = s;
-    while (isspace(*p)) p++; // left
-    pe = p;                  // right
-    while (*pe != '\0') pe++;
-    do { pe--; } while ((pe > p) && isspace(*pe));
-    if (p == s) {
-        *++pe = '\0';
-    } else { // move
-        while (p <= pe) *s++ = *p++;
-        *s = '\0';
-    }
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-inline bool startsWith(const char* base, const char* searchString) {
-    if (base == NULL) {
-        log_e("base = NULL");
-        return false;
-    } // guard
-    if (searchString == NULL) {
-        log_e("searchString == NULL");
-        return false;
-    } // guard
-    if (strlen(searchString) > strlen(base)) return false;
-    char c;
-    while ((c = *searchString++) != '\0')
-        if (c != *base++) return false;
-    return true;
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-inline bool endsWith(const char* base, const char* searchString) {
-    if (base == NULL) {
-        log_e("base = NULL");
-        return false;
-    } // guard
-    if (searchString == NULL) {
-        log_e("searchString == NULL");
-        return false;
-    } // guard
-    int32_t slen = strlen(searchString);
-    if (slen == 0) return false;
-    const char* p = base + strlen(base);
-    //  while(p > base && isspace(*p)) p--;  // rtrim
-    p -= slen;
-    if (p < base) return false;
-    return (strncmp(p, searchString, slen) == 0);
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 

@@ -4785,7 +4785,7 @@ class DlnaList : public RegisterTable {
         }
 
         if (guard2) { // is file
-            if (startsWith(m_srvContent->at(m_itemListPos - 1).itemURL.c_get(), "http")) {
+            if (m_srvContent->at(m_itemListPos - 1).itemURL.starts_with("http")) {
                 m_currItemNr[*m_dlnaLevel] = m_itemListPos - 1;
                 if (m_srvContent->at(m_itemListPos - 1).isAudio) {
                     m_chptr.assignf("{}", m_srvContent->at(m_itemListPos - 1).title.c_get());

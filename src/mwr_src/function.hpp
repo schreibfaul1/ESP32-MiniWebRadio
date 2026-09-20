@@ -614,15 +614,16 @@ class SD_content {
                     m_files.emplace_back(-1, slaveFile.name(), filePath);
                 }
             } else {
-                if (!audioFilesOnly ||                     //
-                    endsWith(slaveFile.name(), ".mp3") ||  //
-                    endsWith(slaveFile.name(), ".aac") ||  //
-                    endsWith(slaveFile.name(), ".m4a") ||  //
-                    endsWith(slaveFile.name(), ".wav") ||  //
-                    endsWith(slaveFile.name(), ".m3u") ||  //
-                    endsWith(slaveFile.name(), ".flac") || //
-                    endsWith(slaveFile.name(), ".opus") || //
-                    endsWith(slaveFile.name(), ".ogg")) {  //
+                ps_ptr<char> name = slaveFile.name();
+                if (!audioFilesOnly ||         //
+                    name.ends_with(".mp3") ||  //
+                    name.ends_with(".aac") ||  //
+                    name.ends_with(".m4a") ||  //
+                    name.ends_with(".wav") ||  //
+                    name.ends_with(".m3u") ||  //
+                    name.ends_with(".flac") || //
+                    name.ends_with(".opus") || //
+                    name.ends_with(".ogg")) {  //
 
                     m_files.emplace_back( //
                         slaveFile.size(), //
@@ -887,9 +888,9 @@ class SD_content {
 class stationManagement {
   private:
     struct sta {
-        std::vector<uint8_t>  fav;
-        std::vector<uint16_t> favStaNr;
-        std::vector <ps_ptr<char>> country;
+        std::vector<uint8_t>      fav;
+        std::vector<uint16_t>     favStaNr;
+        std::vector<ps_ptr<char>> country;
         std::vector<ps_ptr<char>> name;
         std::vector<ps_ptr<char>> url;
     } m_stations;
@@ -1070,16 +1071,14 @@ class Playlist {
         m_index = -1;
     }
 
-    boolean isAudio(File file) {
-        if (endsWith(file.name(), ".mp3") || endsWith(file.name(), ".aac") || endsWith(file.name(), ".m4a") || endsWith(file.name(), ".wav") || endsWith(file.name(), ".flac") ||
-            endsWith(file.name(), ".opus") || endsWith(file.name(), ".ogg")) {
-            return true;
-        }
-        return false;
-    }
-
     boolean isAudio(ps_ptr<char> file) {
-        if (file.ends_with(".mp3") || file.ends_with(".aac") || file.ends_with(".m4a") || file.ends_with(".wav") || file.ends_with(".flac") || file.ends_with(".opus") || file.ends_with(".ogg")) {
+        if (file.ends_with(".mp3") ||  //
+            file.ends_with(".aac") ||  //
+            file.ends_with(".m4a") ||  //
+            file.ends_with(".wav") ||  //
+            file.ends_with(".flac") || //
+            file.ends_with(".opus") || //
+            file.ends_with(".ogg")) {  //
             return true;
         }
         return false;
@@ -1132,7 +1131,7 @@ class Playlist {
             if (bytesRead < 1) continue;
 
             readBuff[bytesRead] = '\0';
-            trim(readBuff.get());
+            readBuff.trim();
 
             if (readBuff.empty()) continue;                // blank line
             if (readBuff.starts_with("#EXTM3U")) continue; // #EXTM3U
@@ -1216,7 +1215,7 @@ class Playlist {
             File file = folder.openNextFile();
             if (!file) break;
             if (file.isDirectory()) continue;
-            if (isAudio(file)) {
+            if (isAudio(file.name())) {
                 m_content_file.push_back(file.path());
                 ps_ptr<char> name;
                 name = file.name();

@@ -175,16 +175,9 @@ uint64_t s_totalRuntime = 0; // total runtime in seconds since start
 
 std::deque<ps_ptr<char>> s_PLS_content;
 
-
 ps_ptr<char> codecname[10] = {"unknown", "WAV", "MP3", "AAC", "M4A", "FLAC", "OPUS", "VORBIS", "OGG"};
 
-
-
-
-
 stationManagement staMgnt(&s_cur_station);
-
-
 
 /*  ╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
     ║                                                     D E F A U L T S E T T I N G S                                                         ║
@@ -594,19 +587,6 @@ boolean drawImage(ps_ptr<char> path, uint16_t posX, uint16_t posY, uint16_t maxW
  *                                                   H A N D L E  A U D I O F I L E                                                                  *
  *****************************************************************************************************************************************************/
 
-boolean isAudio(File file) {
-    if (endsWith(file.name(), ".mp3") ||  //
-        endsWith(file.name(), ".aac") ||  //
-        endsWith(file.name(), ".m4a") ||  //
-        endsWith(file.name(), ".wav") ||  //
-        endsWith(file.name(), ".flac") || //
-        endsWith(file.name(), ".opus") || //
-        endsWith(file.name(), ".ogg")) {
-        return true;
-    }
-    return false;
-}
-
 boolean isAudio(ps_ptr<char> path) {
     if (path.ends_with(".mp3") ||  //
         path.ends_with(".aac") ||  //
@@ -617,11 +597,6 @@ boolean isAudio(ps_ptr<char> path) {
         path.ends_with(".ogg")) {
         return true;
     }
-    return false;
-}
-
-boolean isPlaylist(File file) {
-    if (endsWith(file.name(), ".m3u")) { return true; }
     return false;
 }
 
@@ -2637,58 +2612,59 @@ void loop() {
 
 // Events from audioI2S library
 void my_audio_info(Audio::msg_t m) {
+    ps_ptr<char> msg = m.msg;
     switch (m.e) {
         case Audio::evt_info:
-            if (endsWith(m.msg, "failed!")) {
-                printflnCut(s_tag.audio_info, "", ANSI_ESC_YELLOW, m.msg);
+            if (msg.ends_with("failed!")) {
+                printflnCut(s_tag.audio_info, "", ANSI_ESC_YELLOW, msg);
 
-                s_streamTitle.assignf(ANSI_ESC_ORANGE "{}", m.msg);
+                s_streamTitle.assignf(ANSI_ESC_ORANGE "{}", msg);
                 s_f_newStreamTitle = true;
                 s_f_webFailed = true;
                 return;
             }
-            if (startsWith(m.msg, "FLAC")) {
-                printflnCut(s_tag.audio_info, "", ANSI_ESC_GREEN, m.msg);
+            if (msg.starts_with("FLAC")) {
+                printflnCut(s_tag.audio_info, "", ANSI_ESC_GREEN, msg);
                 return;
             }
-            if (endsWith(m.msg, "Stream lost")) {
-                printflnCut(s_tag.audio_info, "", ANSI_ESC_YELLOW, m.msg);
+            if (msg.ends_with("Stream lost")) {
+                printflnCut(s_tag.audio_info, "", ANSI_ESC_YELLOW, msg);
                 return;
             }
-            if (startsWith(m.msg, "authent")) {
-                printflnCut(s_tag.audio_info, "", ANSI_ESC_GREEN, m.msg);
+            if (msg.starts_with("authent")) {
+                printflnCut(s_tag.audio_info, "", ANSI_ESC_GREEN, msg);
                 return;
             }
-            if (startsWith(m.msg, "StreamTitle=")) { return; }
-            if (startsWith(m.msg, "BitsPerSample")) {
+            if (msg.starts_with("StreamTitle=")) { return; }
+            if (msg.starts_with("BitsPerSample")) {
                 // es8311.setBitsPerSample(m.arg1);
             }
-            if (startsWith(m.msg, "SampleRate (Hz)")) {
+            if (msg.starts_with("SampleRate (Hz)")) {
                 // es8311.setSampleRate(m.arg1);
             }
-            if (startsWith(m.msg, "HTTP/") && m.msg[9] > '3') {
-                printflnCut(s_tag.audio_info, "", ANSI_ESC_RED, m.msg);
+            if (msg.starts_with("HTTP/") && msg[9] > '3') {
+                printflnCut(s_tag.audio_info, "", ANSI_ESC_RED, msg);
                 return;
             }
-            if (startsWith(m.msg, "ERROR:")) {
-                printflnCut(s_tag.audio_info, "", ANSI_ESC_RED, m.msg);
+            if (msg.starts_with("ERROR:")) {
+                printflnCut(s_tag.audio_info, "", ANSI_ESC_RED, msg);
                 return;
             }
             if (CORE_DEBUG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN) {
-                printfln(s_tag.audio_info, ANSI_ESC_GREEN "{}", m.msg);
+                printfln(s_tag.audio_info, ANSI_ESC_GREEN "{}", msg);
                 return;
             } // all other
             break;
 
         case Audio::evt_name:
-            s_stationName_air = m.msg; // set max length
-            printfln(s_tag.audio_info, "StationName: " ANSI_ESC_MAGENTA "{}", m.msg);
+            s_stationName_air = msg; // set max length
+            printfln(s_tag.audio_info, "StationName: " ANSI_ESC_MAGENTA "{}", msg);
             s_f_newStationName = true;
             break;
 
         case Audio::evt_streamtitle:
-            s_streamTitle = m.msg;
-            printfln(s_tag.audio_info, "StreamTitle: " ANSI_ESC_YELLOW "{}", m.msg);
+            s_streamTitle = msg;
+            printfln(s_tag.audio_info, "StreamTitle: " ANSI_ESC_YELLOW "{}", msg);
             s_f_newStreamTitle = true;
             break;
 
@@ -2696,7 +2672,7 @@ void my_audio_info(Audio::msg_t m) {
             s_f_isWebConnected = false;
             s_f_eof = true;
             s_f_isFSConnected = false;
-            printflnCut(s_tag.audio_info, "end of file: ", ANSI_ESC_YELLOW, m.msg);
+            printflnCut(s_tag.audio_info, "end of file: ", ANSI_ESC_YELLOW, msg);
             if (s_state == PLAYER) {
                 webSrv.send("SD_playFile=", "end of audiofile");
                 if (!s_f_playlistEnabled) {
@@ -2713,56 +2689,56 @@ void my_audio_info(Audio::msg_t m) {
                 btn_DL_pause.show();
             }
             if (s_state == RINGING) {
-                if (startsWith(m.msg, "alarm")) s_f_eof_alarm = true;
+                if (msg.starts_with("alarm")) s_f_eof_alarm = true;
             }
             s_f_eof = true;
             break;
 
         case Audio::evt_lasthost:
             if (s_f_playlistEnabled) return;
-            if (s_state == RADIO) s_settings.lastconnectedhost.assign(m.msg);
-            printflnCut(s_tag.audio_info, "lastURL: ", ANSI_ESC_YELLOW, m.msg);
-            webSrv.send("stationURL=", m.msg);
+            if (s_state == RADIO) s_settings.lastconnectedhost = msg;
+            printflnCut(s_tag.audio_info, "lastURL: ", ANSI_ESC_YELLOW, msg);
+            webSrv.send("stationURL=", msg);
             break;
 
         case Audio::evt_icyurl:
-            if (strlen(m.msg) > 5) {
-                printflnCut(s_tag.audio_info, "icy-url: ", ANSI_ESC_YELLOW, m.msg);
-                s_homepage = m.msg;
+            if (msg.strlen() > 5) {
+                printflnCut(s_tag.audio_info, "icy-url: ", ANSI_ESC_YELLOW, msg);
+                s_homepage = msg;
                 if (!s_homepage.starts_with("http")) s_homepage = "http://" + s_homepage;
             }
             break;
 
         case Audio::evt_icylogo:
-            if (strlen(m.msg) > 5) { printflnCut(s_tag.audio_info, "icy-logo: ", ANSI_ESC_RESET, m.msg); }
+            if (msg.strlen() > 5) { printflnCut(s_tag.audio_info, "icy-logo: ", ANSI_ESC_RESET, msg); }
             break;
 
-        case Audio::evt_id3data: printfln(s_tag.audio_info, "id3data: " ANSI_ESC_GREEN "{}", m.msg); break;
+        case Audio::evt_id3data: printfln(s_tag.audio_info, "id3data: " ANSI_ESC_GREEN "{}", msg); break;
 
         case Audio::evt_image:
             for (int i = 0; i < m.vec1.size(); i += 2) { printfln(s_tag.audio_info, "CoverImage: " ANSI_ESC_GREEN "segment {:02}, pos {:08}, len {:08}", i / 2, m.vec1[i], m.vec1[i + 1]); }
             break;
 
         case Audio::evt_icydescription:
-            s_icyDescription = m.msg;
+            s_icyDescription = msg;
             s_f_newIcyDescription = true;
-            if (strlen(m.msg)) printfln(s_tag.audio_info, "icy-descr: " ANSI_ESC_YELLOW "{}", m.msg);
+            if (msg.strlen()) printfln(s_tag.audio_info, "icy-descr: " ANSI_ESC_YELLOW "{}", msg);
             break;
 
         case Audio::evt_bitrate:
-            if (!strlen(m.msg)) return; // guard
-            s_icyBitRate = str2int(m.msg);
+            if (!msg.strlen()) return; // guard
+            s_icyBitRate = msg.to_uint32();
             s_f_newBitRate = true;
             printfln(s_tag.audio_info, "bitRate: " ANSI_ESC_CYAN "{}", s_icyBitRate);
             break;
 
         case Audio::evt_lyrics:
-            printfln(s_tag.audio_info, "sync lyrics: " ANSI_ESC_YELLOW "{}", m.msg);
-            s_lyrics = m.msg;
+            printfln(s_tag.audio_info, "sync lyrics: " ANSI_ESC_YELLOW "{}", msg);
+            s_lyrics = msg;
             s_f_newLyrics = true;
             break;
 
-        case Audio::evt_genre: printfln(s_tag.audio_info, "genre: " ANSI_ESC_YELLOW "{}", m.msg); break;
+        case Audio::evt_genre: printfln(s_tag.audio_info, "genre: " ANSI_ESC_YELLOW "{}", msg); break;
 
         case Audio::evt_vu: {
             if (s_state == RADIO && s_subState_radio == 0) { VUmeter_RA.update(m.vec1[0], m.vec1[1], m.vec1[2], m.vec1[3]); }
@@ -2775,9 +2751,9 @@ void my_audio_info(Audio::msg_t m) {
             }
             break;
 
-        case Audio::evt_log: printfln(m.s, "{}", m.msg); break;
+        case Audio::evt_log: printfln(m.s, "{}", msg); break;
 
-        default: printfln("message", "{}", m.msg); break;
+        default: printfln("message", "{}", msg); break;
     }
 }
 
@@ -2821,7 +2797,8 @@ void on_BH1750(uint16_t lux) { //-- AMBIENT LIGHT SENSOR BH1750 --
 }
 // ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void ftp_debug(const char* info) {
-    if (startsWith(info, "File Name")) return;
+    ps_ptr<char> i = info;
+    if (i.starts_with("File Name")) return;
     printfln(s_tag.ftp_server, "{}", info);
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------

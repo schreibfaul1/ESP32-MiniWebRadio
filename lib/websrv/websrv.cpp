@@ -150,7 +150,6 @@ bool WebSrv::streamfile(fs::FS& fs, ps_ptr<char> path) { // transfer file from S
         file.close();
     }
     return true;
-
 }
 //--------------------------------------------------------------------------------------------------------------
 bool WebSrv::send(ps_ptr<char> cmd, uint8_t msg, uint8_t opcode){
