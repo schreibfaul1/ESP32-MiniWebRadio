@@ -424,9 +424,6 @@ void showStreamTitle(ps_ptr<char> streamtitle) {
     if (s_f_sleeping) return;
 
     streamtitle.trim();
-    // replacestr(st, " | ", "\n"); // some stations use pipe as \n or
-    // replacestr(st, "| ", "\n");
-    // replacestr(st, "|", "\n");
 
     txt_RA_sTitle.setTextColor(TFT_CORNSILK);
     txt_RA_sTitle.setText(streamtitle);

@@ -560,44 +560,6 @@ inline int rfind(const char* str, char ch, int start = -1) { // same as indexof(
     return -1; // character not found
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-inline int replacestr(char* line, const char* search, const char* replace, int depth = 0) { /* returns number of strings replaced.*/
-    const int MAX_RECURSION_DEPTH = 100;                                                    // Prevent stack overflow from excessive recursion
-    if (depth > MAX_RECURSION_DEPTH) {
-        log_w("replacestr: max recursion depth reached");
-        return 0;
-    }
-    int   count = 0;
-    char* sp; // start of pattern
-    // printf("replacestr(%s, %s, %s)\n", line, search, replace);
-    if ((sp = strstr(line, search)) == NULL) { return (0); }
-    count = 1;
-    int sLen = strlen(search);
-    int rLen = strlen(replace);
-    if (sLen > rLen) {
-        // move from right to left
-        char* src = sp + sLen;
-        char* dst = sp + rLen;
-        while ((*dst = *src) != '\0') {
-            dst++;
-            src++;
-        }
-    } else if (sLen < rLen) {
-        // move from left to right
-        int   tLen = strlen(sp) - sLen;
-        char* stop = sp + rLen;
-        char* src = sp + sLen + tLen;
-        char* dst = sp + rLen + tLen;
-        while (dst >= stop) {
-            *dst = *src;
-            dst--;
-            src--;
-        }
-    }
-    memcpy(sp, replace, rLen);
-    count += replacestr(sp + rLen, search, replace, depth + 1);
-    return (count);
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 inline int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max) {
     // --- Clamp Input ---
