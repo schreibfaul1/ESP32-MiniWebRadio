@@ -406,6 +406,25 @@ void GetRunTimeStats(ps_ptr<char>& pcWriteBuffer) {
 
     pcWriteBuffer.append("             |---------------------+----------------+-----------------+------+-------|\n");
 }
+
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+inline int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max) {
+    // --- Clamp Input ---
+    if (x <= in_min) return out_min;
+    if (x >= in_max) return out_max;
+
+    // --- Normal map operation with 64-bit ---
+    const int64_t run = int64_t(in_max) - int64_t(in_min);
+    if (run == 0) {
+        log_e("map(): Invalid range, %li == %li (min == max)", in_min, in_max);
+        return out_min; // fallback
+    }
+
+    const int64_t rise = int64_t(out_max) - int64_t(out_min);
+    const int64_t delta = int64_t(x) - int64_t(in_min);
+
+    return int32_t((delta * rise) / run + out_min);
+}
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 const char ir_buttons_json[] = "[{\"A\":\"0x00\",\"label\":\"IR address\"},"
                                "{\"C\":\"0x4a\",\"label\":\"IR command\"},"

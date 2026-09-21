@@ -92,7 +92,7 @@ TwoWire     i2cBusOne = TwoWire(0); // additional HW, sensors, buttons, encoder 
 TwoWire     i2cBusTwo = TwoWire(1); // external DAC, AC101 or ES8388
 SPIClass    spiBus(FSPI);
 
-#include "mwr_src/function1.h"
+#include "mwr_src/function.h"
 #include "tft_dsi.h"
 #include "tft_rgb.h"
 #include "tft_spi.h"
@@ -282,36 +282,7 @@ void         tp_long_pressed(uint16_t x, uint16_t y);
 void         tp_moved(uint16_t x, uint16_t y);
 void         tp_released(uint16_t x, uint16_t y);
 
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-inline int rfind(const char* str, char ch, int start = -1) { // same as indexof() burt from right to left
-    if (!str) return -1;                                     // if str is NULL
-    int len = strlen(str);
-    if (start == -1 || start >= len) start = len - 1; // Default: Search from the end of the string
 
-    for (int i = start; i >= 0; --i) {
-        if (str[i] == ch) return i; // character found
-    }
-    return -1; // character not found
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-inline int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max) {
-    // --- Clamp Input ---
-    if (x <= in_min) return out_min;
-    if (x >= in_max) return out_max;
-
-    // --- Normal map operation with 64-bit ---
-    const int64_t run = int64_t(in_max) - int64_t(in_min);
-    if (run == 0) {
-        log_e("map(): Invalid range, %li == %li (min == max)", in_min, in_max);
-        return out_min; // fallback
-    }
-
-    const int64_t rise = int64_t(out_max) - int64_t(out_min);
-    const int64_t delta = int64_t(x) - int64_t(in_min);
-
-    return int32_t((delta * rise) / run + out_min);
-}
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 bool setupBacklight(int pin, uint32_t freq_hz) {
@@ -340,19 +311,6 @@ bool setupBacklight(int pin, uint32_t freq_hz) {
     return true;
 }
 
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-inline void x_ps_free(char** b) {
-    if (*b) {
-        free(*b);
-        *b = NULL;
-    }
-}
-inline void x_ps_free(unsigned char** b) {
-    if (*b) {
-        free(*b);
-        *b = NULL;
-    }
-}
 
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // 📌📌📌   H A R D C O P Y    📌📌📌
