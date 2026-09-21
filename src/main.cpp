@@ -2092,7 +2092,7 @@ void loop() {
     if (s_start_counter == 50) { setRTC(s_TZString); }
     if (s_start_counter == 60) { meteo.send_request(); }
     if (s_start_counter == 70) { setStation(s_cur_station); }
-    if (s_start_counter == 80) { changeState(s_lastState, 0); }
+    if (s_start_counter == 80) { changeState(RADIO, 0); } // s_lastState
     if (s_start_counter == 90) { dlna.seekServer(); }
     if (s_start_counter == 95) { webSrv.begin(80, 81, "MiniWebRadio", s_version); }
     if (s_start_counter == 100) { s_start_counter = 0; }

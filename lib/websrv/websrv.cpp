@@ -2,12 +2,13 @@
  * websrv.cpp
  *
  *  Created on: 09.07.2017
- *  updated on: 19.09.2026
+ *  updated on: 21.09.2026
  *      Author: Wolle
  */
 
 #include "websrv.h"
 #include "esp_memory_utils.h"
+
 //--------------------------------------------------------------------------------------------------------------
 WebSrv::WebSrv() {
     ; //
@@ -152,11 +153,11 @@ bool WebSrv::streamfile(fs::FS& fs, ps_ptr<char> path) { // transfer file from S
     return true;
 }
 //--------------------------------------------------------------------------------------------------------------
-bool WebSrv::send(ps_ptr<char> cmd, uint8_t msg, uint8_t opcode){
-    static char ret[12];
-    itoa(msg, ret, 10);
-    return send(cmd, ret, opcode);
+
+bool WebSrv::send(ps_ptr<char> cmd, const char* msg, uint8_t opcode) {
+    return send(cmd, ps_ptr<char>(msg), opcode);
 }
+
 bool WebSrv::send(ps_ptr<char> cmd, ps_ptr<char> msg, uint8_t opcode) { // sends text messages via websocket
     uint8_t headerLen = 2;
 

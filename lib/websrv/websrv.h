@@ -2,7 +2,7 @@
  * websrv.h
  *
  *  Created on: 09.07.2017
- *  updated on: 22.08.2026
+ *  updated on: 21.09.2026
  *      Author: Wolle
  */
 
@@ -12,6 +12,8 @@
 #include "base64.h"
 #include "mbedtls/base64.h"
 #include "mbedtls/sha1.h"
+#include <charconv>
+#include <type_traits>
 
 #define ANSI_ESC_RED "\033[31m"
 
@@ -70,12 +72,12 @@ class WebSrv {
         void reset() { *this = upload_items{}; }
     };
     upload_items m_upload_items;
-// ************************************************************************************************************************************
+    // ************************************************************************************************************************************
     bool m_handle_download = false;
     struct download_items { // state for chunked SD -> browser file transfer, drained a bit per loop() call
         File   file{};
         size_t bytesTotal{};
-        size_t bytesSent {};
+        size_t bytesSent{};
 
         void reset() {
             if (file) file.close();
@@ -94,7 +96,7 @@ class WebSrv {
         void reset() { *this = show_items{}; }
     };
     show_items m_show_items;
-// ************************************************************************************************************************************
+    // ************************************************************************************************************************************
     struct HttpRequest {
         enum class Method { Unknown, GET, POST, DELETE };
 
@@ -130,15 +132,23 @@ class WebSrv {
     void show(ps_ptr<char> pagename, ps_ptr<char> MIMEType, int16_t len = -1);
     void show_not_found();
     bool streamfile(fs::FS& fs, ps_ptr<char> path);
-    bool send(ps_ptr<char> cmd, uint8_t msg, uint8_t opcode = Text_Frame);
-    bool send(ps_ptr<char> cmd, ps_ptr<char> msg, uint8_t opcode = Text_Frame);
     void sendPing();
     void sendPong();
     bool uploadfile(fs::FS& fs, ps_ptr<char> path, uint32_t contentLength, ps_ptr<char> contentType);
     bool uploadB64image(fs::FS& fs, ps_ptr<char> path, uint32_t contentLength);
     void reply(ps_ptr<char> response, const char* MIMEType, bool header = true);
     void sendStatus(uint16_t HTTPstatusCode);
-
+    //------------------------------------------------------------------------------------------------------------------------------------------------------
+    bool                                                                             send(ps_ptr<char> cmd, const char* msg, uint8_t opcode = Text_Frame);
+    bool                                                                             send(ps_ptr<char> cmd, ps_ptr<char> msg, uint8_t opcode = Text_Frame);
+    template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>> bool send(ps_ptr<char> cmd, T msg, uint8_t opcode = Text_Frame) {
+        static char ret[24];
+        auto [ptr, ec] = std::to_chars(ret, ret + sizeof(ret) - 1, msg);
+        if (ec != std::errc{}) { return false; }
+        *ptr = '\0';
+        return send(cmd, ret, opcode);
+    }
+    //------------------------------------------------------------------------------------------------------------------------------------------------------
     const char JSON[17] = "application/json";
     const char TEXT[10] = "text/html";
     const char JS[23] = "application/javascript";
