@@ -1,5 +1,7 @@
 #include "common.h"
 #include "mwr_src/function.hpp"
+#include "mwr_src/function1.h"
+#include "mwr_src/classes.hpp"
 #include "mwr_src/graphical.hpp"
 #include "mwr_src/index.h"
 #include "mwr_src/index.js.h"
