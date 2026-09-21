@@ -174,52 +174,10 @@ uint32_t s_audioFileDuration = 0;
 uint64_t s_totalRuntime = 0; // total runtime in seconds since start
 
 std::deque<ps_ptr<char>> s_PLS_content;
-std::deque<ps_ptr<char>> s_logBuffer;
 
 ps_ptr<char> codecname[10] = {"unknown", "WAV", "MP3", "AAC", "M4A", "FLAC", "OPUS", "VORBIS", "OGG"};
 
-#ifdef TFT_MODE_SPI // ⏹⏹⏹⏹
-TFT_SPI  tft(spiBus, TFT_CS);
-TFT_SPI& getTFT() {
-    return tft;
-}
-#elif defined TFT_MODE_RGB
-TFT_RGB  tft;
-TFT_RGB& getTFT() {
-    return tft;
-}
-#elif defined TFT_MODE_DSI
-TFT_DSI  tft;
-TFT_DSI& getTFT() {
-    return tft;
-}
-#else
-    #error "wrong TFT_CONTROLLER"
-#endif
-
-#ifdef TP_MODE_XPT2046 // ⏹⏹⏹⏹
-TP_XPT2046  tp(spiBus, TP_CS);
-TP_XPT2046& getTP() {
-    return tp;
-}
-#elif defined TP_MODE_GT911
-TP_GT911  tp;
-TP_GT911& getTP() {
-    return tp;
-}
-#elif defined TP_MODE_FT6X63
-FT6x36  tp;
-FT6x36& getTP() {
-    return tp;
-}
-#else
-    #error "wrong TP_CONTROLLER"
-#endif
-
 stationManagement staMgnt(&s_cur_station);
-
-SemaphoreHandle_t mutex_rtc;
-SemaphoreHandle_t mutex_display;
 
 /*  ╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
     ║                                                     D E F A U L T S E T T I N G S                                                         ║
@@ -265,7 +223,7 @@ boolean defaultsettings() {
             pos3 = jO.index_of("\"", pos2 + 1) + 1;
         else
             pos3 = jO.index_of(",", pos2);
-        if (pos3 < 0) pos3 = find_first_of(jO.get(), "}\n", pos2);
+        if (pos3 < 0) pos3 = jO.index_of("}\n", pos2);
         if (jO[pos2] == '\"') {
             pos2++;
             pos3--;
@@ -466,9 +424,6 @@ void showStreamTitle(ps_ptr<char> streamtitle) {
     if (s_f_sleeping) return;
 
     streamtitle.trim();
-    // replacestr(st, " | ", "\n"); // some stations use pipe as \n or
-    // replacestr(st, "| ", "\n");
-    // replacestr(st, "|", "\n");
 
     txt_RA_sTitle.setTextColor(TFT_CORNSILK);
     txt_RA_sTitle.setText(streamtitle);
@@ -512,7 +467,7 @@ ps_ptr<char> getFlagPath(uint16_t station) {
         return flagPath;
     }
     flagPath.assign("/flags/");
-    flagPath.appendf(staMgnt.getStationCountry(station));
+    flagPath.appendf("{}", staMgnt.getStationCountry(station));
     flagPath.toLowerCase();
     flagPath.append(".jpg");
     return flagPath;
@@ -629,19 +584,6 @@ boolean drawImage(ps_ptr<char> path, uint16_t posX, uint16_t posY, uint16_t maxW
  *                                                   H A N D L E  A U D I O F I L E                                                                  *
  *****************************************************************************************************************************************************/
 
-boolean isAudio(File file) {
-    if (endsWith(file.name(), ".mp3") ||  //
-        endsWith(file.name(), ".aac") ||  //
-        endsWith(file.name(), ".m4a") ||  //
-        endsWith(file.name(), ".wav") ||  //
-        endsWith(file.name(), ".flac") || //
-        endsWith(file.name(), ".opus") || //
-        endsWith(file.name(), ".ogg")) {
-        return true;
-    }
-    return false;
-}
-
 boolean isAudio(ps_ptr<char> path) {
     if (path.ends_with(".mp3") ||  //
         path.ends_with(".aac") ||  //
@@ -652,11 +594,6 @@ boolean isAudio(ps_ptr<char> path) {
         path.ends_with(".ogg")) {
         return true;
     }
-    return false;
-}
-
-boolean isPlaylist(File file) {
-    if (endsWith(file.name(), ".m3u")) { return true; }
     return false;
 }
 
@@ -1186,6 +1123,8 @@ void setup() {
 
     s_stationURL = s_settings.lastconnectedhost;
     s_start_counter = 1;
+
+    setTFTbrightness(s_brightness);
 
     // ES8311 es;
     // es.begin(&i2cBusOne, 0x18);
@@ -1991,7 +1930,9 @@ void changeState(int8_t state, int8_t subState) {
                 pic_BR_logo.show();
                 sdr_BR_value.setValue(s_brightness);
                 sdr_BR_value.show();
-                txt_BR_value.setText(int2str(s_brightness));
+                ps_ptr<char>c;
+                c.assignf("{}", s_brightness);
+                txt_BR_value.setText(c);
                 txt_BR_value.show();
             } else {
                 sdr_BR_value.enable();
@@ -2153,7 +2094,7 @@ void loop() {
     if (s_start_counter == 50) { setRTC(s_TZString); }
     if (s_start_counter == 60) { meteo.send_request(); }
     if (s_start_counter == 70) { setStation(s_cur_station); }
-    if (s_start_counter == 80) { changeState(s_lastState, 0); }
+    if (s_start_counter == 80) { changeState(RADIO, 0); } // s_lastState
     if (s_start_counter == 90) { dlna.seekServer(); }
     if (s_start_counter == 95) { webSrv.begin(80, 81, "MiniWebRadio", s_version); }
     if (s_start_counter == 100) { s_start_counter = 0; }
@@ -2508,10 +2449,10 @@ void loop() {
             make_hardcopy_on_sd();
         }
         if (r.starts_with("rts")) { // run time stats
-            char* timeStatsBuffer = x_ps_calloc(2000, sizeof(char));
+            ps_ptr<char> timeStatsBuffer;
+            timeStatsBuffer.alloc(2000);
             GetRunTimeStats(timeStatsBuffer);
             { printfln(s_tag.terminal, ANSI_ESC_YELLOW "task statistics\n\n{}", timeStatsBuffer); }
-            x_ps_free(&timeStatsBuffer);
         }
         if (r.starts_with("lf")) { // local file
             const char* path = "/audiofiles/raw.mp3";
@@ -2670,58 +2611,59 @@ void loop() {
 
 // Events from audioI2S library
 void my_audio_info(Audio::msg_t m) {
+    ps_ptr<char> msg = m.msg;
     switch (m.e) {
         case Audio::evt_info:
-            if (endsWith(m.msg, "failed!")) {
-                printflnCut(s_tag.audio_info, "", ANSI_ESC_YELLOW, m.msg);
+            if (msg.ends_with("failed!")) {
+                printflnCut(s_tag.audio_info, "", ANSI_ESC_YELLOW, msg);
 
-                s_streamTitle.assignf(ANSI_ESC_ORANGE "{}", m.msg);
+                s_streamTitle.assignf(ANSI_ESC_ORANGE "{}", msg);
                 s_f_newStreamTitle = true;
                 s_f_webFailed = true;
                 return;
             }
-            if (startsWith(m.msg, "FLAC")) {
-                printflnCut(s_tag.audio_info, "", ANSI_ESC_GREEN, m.msg);
+            if (msg.starts_with("FLAC")) {
+                printflnCut(s_tag.audio_info, "", ANSI_ESC_GREEN, msg);
                 return;
             }
-            if (endsWith(m.msg, "Stream lost")) {
-                printflnCut(s_tag.audio_info, "", ANSI_ESC_YELLOW, m.msg);
+            if (msg.ends_with("Stream lost")) {
+                printflnCut(s_tag.audio_info, "", ANSI_ESC_YELLOW, msg);
                 return;
             }
-            if (startsWith(m.msg, "authent")) {
-                printflnCut(s_tag.audio_info, "", ANSI_ESC_GREEN, m.msg);
+            if (msg.starts_with("authent")) {
+                printflnCut(s_tag.audio_info, "", ANSI_ESC_GREEN, msg);
                 return;
             }
-            if (startsWith(m.msg, "StreamTitle=")) { return; }
-            if (startsWith(m.msg, "BitsPerSample")) {
+            if (msg.starts_with("StreamTitle=")) { return; }
+            if (msg.starts_with("BitsPerSample")) {
                 // es8311.setBitsPerSample(m.arg1);
             }
-            if (startsWith(m.msg, "SampleRate (Hz)")) {
+            if (msg.starts_with("SampleRate (Hz)")) {
                 // es8311.setSampleRate(m.arg1);
             }
-            if (startsWith(m.msg, "HTTP/") && m.msg[9] > '3') {
-                printflnCut(s_tag.audio_info, "", ANSI_ESC_RED, m.msg);
+            if (msg.starts_with("HTTP/") && msg[9] > '3') {
+                printflnCut(s_tag.audio_info, "", ANSI_ESC_RED, msg);
                 return;
             }
-            if (startsWith(m.msg, "ERROR:")) {
-                printflnCut(s_tag.audio_info, "", ANSI_ESC_RED, m.msg);
+            if (msg.starts_with("ERROR:")) {
+                printflnCut(s_tag.audio_info, "", ANSI_ESC_RED, msg);
                 return;
             }
             if (CORE_DEBUG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN) {
-                printfln(s_tag.audio_info, ANSI_ESC_GREEN "{}", m.msg);
+                printfln(s_tag.audio_info, ANSI_ESC_GREEN "{}", msg);
                 return;
             } // all other
             break;
 
         case Audio::evt_name:
-            s_stationName_air = m.msg; // set max length
-            printfln(s_tag.audio_info, "StationName: " ANSI_ESC_MAGENTA "{}", m.msg);
+            s_stationName_air = msg; // set max length
+            printfln(s_tag.audio_info, "StationName: " ANSI_ESC_MAGENTA "{}", msg);
             s_f_newStationName = true;
             break;
 
         case Audio::evt_streamtitle:
-            s_streamTitle = m.msg;
-            printfln(s_tag.audio_info, "StreamTitle: " ANSI_ESC_YELLOW "{}", m.msg);
+            s_streamTitle = msg;
+            printfln(s_tag.audio_info, "StreamTitle: " ANSI_ESC_YELLOW "{}", msg);
             s_f_newStreamTitle = true;
             break;
 
@@ -2729,7 +2671,7 @@ void my_audio_info(Audio::msg_t m) {
             s_f_isWebConnected = false;
             s_f_eof = true;
             s_f_isFSConnected = false;
-            printflnCut(s_tag.audio_info, "end of file: ", ANSI_ESC_YELLOW, m.msg);
+            printflnCut(s_tag.audio_info, "end of file: ", ANSI_ESC_YELLOW, msg);
             if (s_state == PLAYER) {
                 webSrv.send("SD_playFile=", "end of audiofile");
                 if (!s_f_playlistEnabled) {
@@ -2746,56 +2688,56 @@ void my_audio_info(Audio::msg_t m) {
                 btn_DL_pause.show();
             }
             if (s_state == RINGING) {
-                if (startsWith(m.msg, "alarm")) s_f_eof_alarm = true;
+                if (msg.starts_with("alarm")) s_f_eof_alarm = true;
             }
             s_f_eof = true;
             break;
 
         case Audio::evt_lasthost:
             if (s_f_playlistEnabled) return;
-            if (s_state == RADIO) s_settings.lastconnectedhost.assign(m.msg);
-            printflnCut(s_tag.audio_info, "lastURL: ", ANSI_ESC_YELLOW, m.msg);
-            webSrv.send("stationURL=", m.msg);
+            if (s_state == RADIO) s_settings.lastconnectedhost = msg;
+            printflnCut(s_tag.audio_info, "lastURL: ", ANSI_ESC_YELLOW, msg);
+            webSrv.send("stationURL=", msg);
             break;
 
         case Audio::evt_icyurl:
-            if (strlen(m.msg) > 5) {
-                printflnCut(s_tag.audio_info, "icy-url: ", ANSI_ESC_YELLOW, m.msg);
-                s_homepage = m.msg;
+            if (msg.strlen() > 5) {
+                printflnCut(s_tag.audio_info, "icy-url: ", ANSI_ESC_YELLOW, msg);
+                s_homepage = msg;
                 if (!s_homepage.starts_with("http")) s_homepage = "http://" + s_homepage;
             }
             break;
 
         case Audio::evt_icylogo:
-            if (strlen(m.msg) > 5) { printflnCut(s_tag.audio_info, "icy-logo: ", ANSI_ESC_RESET, m.msg); }
+            if (msg.strlen() > 5) { printflnCut(s_tag.audio_info, "icy-logo: ", ANSI_ESC_RESET, msg); }
             break;
 
-        case Audio::evt_id3data: printfln(s_tag.audio_info, "id3data: " ANSI_ESC_GREEN "{}", m.msg); break;
+        case Audio::evt_id3data: printfln(s_tag.audio_info, "id3data: " ANSI_ESC_GREEN "{}", msg); break;
 
         case Audio::evt_image:
             for (int i = 0; i < m.vec1.size(); i += 2) { printfln(s_tag.audio_info, "CoverImage: " ANSI_ESC_GREEN "segment {:02}, pos {:08}, len {:08}", i / 2, m.vec1[i], m.vec1[i + 1]); }
             break;
 
         case Audio::evt_icydescription:
-            s_icyDescription = m.msg;
+            s_icyDescription = msg;
             s_f_newIcyDescription = true;
-            if (strlen(m.msg)) printfln(s_tag.audio_info, "icy-descr: " ANSI_ESC_YELLOW "{}", m.msg);
+            if (msg.strlen()) printfln(s_tag.audio_info, "icy-descr: " ANSI_ESC_YELLOW "{}", msg);
             break;
 
         case Audio::evt_bitrate:
-            if (!strlen(m.msg)) return; // guard
-            s_icyBitRate = str2int(m.msg);
+            if (!msg.strlen()) return; // guard
+            s_icyBitRate = msg.to_uint32();
             s_f_newBitRate = true;
             printfln(s_tag.audio_info, "bitRate: " ANSI_ESC_CYAN "{}", s_icyBitRate);
             break;
 
         case Audio::evt_lyrics:
-            printfln(s_tag.audio_info, "sync lyrics: " ANSI_ESC_YELLOW "{}", m.msg);
-            s_lyrics = m.msg;
+            printfln(s_tag.audio_info, "sync lyrics: " ANSI_ESC_YELLOW "{}", msg);
+            s_lyrics = msg;
             s_f_newLyrics = true;
             break;
 
-        case Audio::evt_genre: printfln(s_tag.audio_info, "genre: " ANSI_ESC_YELLOW "{}", m.msg); break;
+        case Audio::evt_genre: printfln(s_tag.audio_info, "genre: " ANSI_ESC_YELLOW "{}", msg); break;
 
         case Audio::evt_vu: {
             if (s_state == RADIO && s_subState_radio == 0) { VUmeter_RA.update(m.vec1[0], m.vec1[1], m.vec1[2], m.vec1[3]); }
@@ -2808,9 +2750,9 @@ void my_audio_info(Audio::msg_t m) {
             }
             break;
 
-        case Audio::evt_log: printfln(m.s, "{}", m.msg); break;
+        case Audio::evt_log: printfln(m.s, "{}", msg); break;
 
-        default: printfln("message", "{}", m.msg); break;
+        default: printfln("message", "{}", msg); break;
     }
 }
 
@@ -2854,7 +2796,8 @@ void on_BH1750(uint16_t lux) { //-- AMBIENT LIGHT SENSOR BH1750 --
 }
 // ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void ftp_debug(const char* info) {
-    if (startsWith(info, "File Name")) return;
+    ps_ptr<char> i = info;
+    if (i.starts_with("File Name")) return;
     printfln(s_tag.ftp_server, "{}", info);
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -3550,7 +3493,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
     }
     #define CMD_EQUALS(x) if(cmd.equals(x) == true)
 
-    CMD_EQUALS("ping"){                 webSrv.send("pong"); return;}                                                                                     // via websocket
+    CMD_EQUALS("ping"){                 webSrv.send("pong", ""); return;}                                                                                     // via websocket
 
     CMD_EQUALS("index.html"){           printfln(s_tag.webserver, "Webpage: " ANSI_ESC_ORANGE "index.html");                                                     // via XMLHttpRequest
                                         webSrv.show(index_html, webSrv.TEXT);
@@ -3571,13 +3514,13 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
 
     CMD_EQUALS("get_mute"){             s_f_mute == true ? webSrv.send("mute=", "1") : webSrv.send("mute=", "0"); return;}
     CMD_EQUALS("set_mute"){             muteChanged(!s_f_mute); return;}
-    CMD_EQUALS("upvolume"){             webSrv.send("volume=", int2str(upvolume()));  return;}                                                            // via websocket
-    CMD_EQUALS("downvolume"){           webSrv.send("volume=", int2str(downvolume())); return;}                                                           // via websocket
-    CMD_EQUALS("get_volumeSteps"){      webSrv.send("volumeSteps=", int2str(s_volume.volumeSteps)); return;}
+    CMD_EQUALS("upvolume"){             webSrv.send("volume=", upvolume());  return;}                                                            // via websocket
+    CMD_EQUALS("downvolume"){           webSrv.send("volume=", downvolume()); return;}                                                           // via websocket
+    CMD_EQUALS("get_volumeSteps"){      webSrv.send("volumeSteps=", s_volume.volumeSteps); return;}
 
     CMD_EQUALS("set_volumeSteps"){      s_volume.cur_volume = map_l(s_volume.cur_volume, 0, s_volume.volumeSteps, 0, param.to_uint32());
-                                        s_volume.ringVolume = map_l(s_volume.ringVolume, 0, s_volume.volumeSteps, 0, param.to_uint32()); webSrv.send("ringVolume=", int2str(s_volume.ringVolume));
-                                        s_volume.volumeAfterAlarm = map_l(s_volume.volumeAfterAlarm, 0, s_volume.volumeSteps, 0, param.to_uint32()); webSrv.send("volAfterAlarm=", int2str(s_volume.volumeAfterAlarm));
+                                        s_volume.ringVolume = map_l(s_volume.ringVolume, 0, s_volume.volumeSteps, 0, param.to_uint32()); webSrv.send("ringVolume=", s_volume.ringVolume);
+                                        s_volume.volumeAfterAlarm = map_l(s_volume.volumeAfterAlarm, 0, s_volume.volumeSteps, 0, param.to_uint32()); webSrv.send("volAfterAlarm=", s_volume.volumeAfterAlarm);
                                         s_volume.volumeSteps = param.to_uint32(); webSrv.send("volumeSteps=", param); audio.setVolumeSteps(s_volume.volumeSteps);
                                         MWR_LOG_DEBUG("s_volumeSteps  {}", s_volume.volumeSteps);
                                         sdr_CL_volume.setMinMaxVal(0, s_volume.volumeSteps);
@@ -3589,12 +3532,12 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
                                         printfln(s_tag.webserver, "new volume steps: " ANSI_ESC_CYAN "{}", s_volume.volumeSteps);
                                         return;}
 
-    CMD_EQUALS("get_ringVolume"){       webSrv.send("ringVolume=", int2str(s_volume.ringVolume)); return;}
-    CMD_EQUALS("set_ringVolume"){       s_volume.ringVolume = param.to_int32(); webSrv.send("ringVolume=", int2str(s_volume.ringVolume));
+    CMD_EQUALS("get_ringVolume"){       webSrv.send("ringVolume=", s_volume.ringVolume); return;}
+    CMD_EQUALS("set_ringVolume"){       s_volume.ringVolume = param.to_int32(); webSrv.send("ringVolume=", s_volume.ringVolume);
                                         printfln(s_tag.webserver, "new ring volume: " ANSI_ESC_CYAN "{}", s_volume.ringVolume); return;}
 
-    CMD_EQUALS("get_volAfterAlarm"){    webSrv.send("volAfterAlarm=", int2str(s_volume.volumeAfterAlarm)); return;}
-    CMD_EQUALS("set_volAfterAlarm"){    s_volume.volumeAfterAlarm = param.to_int32(); webSrv.send("volAfterAlarm=", int2str(s_volume.volumeAfterAlarm));
+    CMD_EQUALS("get_volAfterAlarm"){    webSrv.send("volAfterAlarm=", s_volume.volumeAfterAlarm); return;}
+    CMD_EQUALS("set_volAfterAlarm"){    s_volume.volumeAfterAlarm = param.to_int32(); webSrv.send("volAfterAlarm=", s_volume.volumeAfterAlarm);
                                         printfln(s_tag.webserver, "new volume after alarm: " ANSI_ESC_CYAN "{}", s_volume.volumeAfterAlarm); return;}
     CMD_EQUALS("homepage"){             webSrv.send("homepage=", s_homepage); return;}
 
@@ -4178,7 +4121,7 @@ void graphicObjects_OnChange(ps_ptr<char> name, int32_t val) {
                                               s_tone.BAL = val; webSrv.send("settone=", getI2STone()); setI2STone(); txt_EQ_balance.setText(c); txt_EQ_balance.show(); goto exit; }
     if (name.equals("pgb_PL_progress"))     { goto exit; }
     if (name.equals("pgb_DL_progress"))     { goto exit; }
-    if (name.equals("sdr_BR_value"))        { s_brightness = val;  txt_BR_value.setText(int2str(val)); txt_BR_value.show();
+    if (name.equals("sdr_BR_value"))        { s_brightness = val; c.assignf("{}", val); txt_BR_value.setText(c); txt_BR_value.show();
                                               if(!s_i2c_items.bh1750_found) setTFTbrightness(s_brightness);
                                               goto exit;
                                             }

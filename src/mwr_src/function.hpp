@@ -2,14 +2,6 @@
 
 #pragma once
 
-#ifdef TFT_MODE_DSI
-TFT_DSI& getTFT();
-#elif defined(TFT_MODE_SPI)
-TFT_SPI& getTFT();
-#elif defined(TFT_MODE_RGB)
-TFT_RGB& getTFT();
-#endif
-
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void writeDirect(File& file, int32_t width, int32_t height) {
     uint16_t row[width];
@@ -107,38 +99,38 @@ void make_hardcopy_on_sd() {
     File hc = SD_MMC.open("/hardcopy.bmp", "w", true);
 #ifdef TFT_LAYOUT_S
     hc.write(bmp320x240, sizeof(bmp320x240));
-    if(TFT_ROTATION == 0) writeDirect(hc, 320, 240);
-    if(TFT_ROTATION == 1) writeRotated90(hc, 240, 320);
-    if(TFT_ROTATION == 2) writeRotated180(hc, 320, 240);
-    if(TFT_ROTATION == 3) writeRotated270(hc, 240, 320);
+    if (TFT_ROTATION == 0) writeDirect(hc, 320, 240);
+    if (TFT_ROTATION == 1) writeRotated90(hc, 240, 320);
+    if (TFT_ROTATION == 2) writeRotated180(hc, 320, 240);
+    if (TFT_ROTATION == 3) writeRotated270(hc, 240, 320);
     hc.close();
 #elifdef TFT_LAYOUT_M
     hc.write(bmp480x320, sizeof(bmp480x320));
-    if(TFT_ROTATION == 0) writeDirect(hc, 480, 320);
-    if(TFT_ROTATION == 1) writeRotated90(hc, 320, 480);
-    if(TFT_ROTATION == 2) writeRotated180(hc, 480, 320);
-    if(TFT_ROTATION == 3) writeRotated270(hc, 320, 480);
+    if (TFT_ROTATION == 0) writeDirect(hc, 480, 320);
+    if (TFT_ROTATION == 1) writeRotated90(hc, 320, 480);
+    if (TFT_ROTATION == 2) writeRotated180(hc, 480, 320);
+    if (TFT_ROTATION == 3) writeRotated270(hc, 320, 480);
     hc.close();
 #elifdef TFT_LAYOUT_L
     hc.write(bmp800x480, sizeof(bmp800x480));
-    if(TFT_ROTATION == 0) writeDirect(hc, 800, 480);
-    if(TFT_ROTATION == 1) writeRotated90(hc, 480, 800);
-    if(TFT_ROTATION == 2) writeRotated180(hc, 800, 480);
-    if(TFT_ROTATION == 3) writeRotated270(hc, 480, 800);
+    if (TFT_ROTATION == 0) writeDirect(hc, 800, 480);
+    if (TFT_ROTATION == 1) writeRotated90(hc, 480, 800);
+    if (TFT_ROTATION == 2) writeRotated180(hc, 800, 480);
+    if (TFT_ROTATION == 3) writeRotated270(hc, 480, 800);
     hc.close();
 #elifdef TFT_LAYOUT_XL
     hc.write(bmp1024x600, sizeof(bmp1024x600));
-    if(TFT_ROTATION == 0) writeDirect(hc, 1024, 600);
-    if(TFT_ROTATION == 1) writeRotated90(hc, 600, 1024);
-    if(TFT_ROTATION == 2) writeRotated180(hc, 1024, 600);
-    if(TFT_ROTATION == 3) writeRotated270(hc, 600, 1024);
+    if (TFT_ROTATION == 0) writeDirect(hc, 1024, 600);
+    if (TFT_ROTATION == 1) writeRotated90(hc, 600, 1024);
+    if (TFT_ROTATION == 2) writeRotated180(hc, 1024, 600);
+    if (TFT_ROTATION == 3) writeRotated270(hc, 600, 1024);
     hc.close();
 #else
 
 #endif
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void GetRunTimeStats(char* pcWriteBuffer) {
+void GetRunTimeStats(ps_ptr<char>& pcWriteBuffer) {
     //     TaskStatus_t* pxTaskStatusArray;
     //     UBaseType_t   uxArraySize;
     //     uint8_t       ulStatsAsPercentage;
@@ -622,15 +614,16 @@ class SD_content {
                     m_files.emplace_back(-1, slaveFile.name(), filePath);
                 }
             } else {
-                if (!audioFilesOnly ||                     //
-                    endsWith(slaveFile.name(), ".mp3") ||  //
-                    endsWith(slaveFile.name(), ".aac") ||  //
-                    endsWith(slaveFile.name(), ".m4a") ||  //
-                    endsWith(slaveFile.name(), ".wav") ||  //
-                    endsWith(slaveFile.name(), ".m3u") ||  //
-                    endsWith(slaveFile.name(), ".flac") || //
-                    endsWith(slaveFile.name(), ".opus") || //
-                    endsWith(slaveFile.name(), ".ogg")) {  //
+                ps_ptr<char> name = slaveFile.name();
+                if (!audioFilesOnly ||         //
+                    name.ends_with(".mp3") ||  //
+                    name.ends_with(".aac") ||  //
+                    name.ends_with(".m4a") ||  //
+                    name.ends_with(".wav") ||  //
+                    name.ends_with(".m3u") ||  //
+                    name.ends_with(".flac") || //
+                    name.ends_with(".opus") || //
+                    name.ends_with(".ogg")) {  //
 
                     m_files.emplace_back( //
                         slaveFile.size(), //
@@ -895,11 +888,11 @@ class SD_content {
 class stationManagement {
   private:
     struct sta {
-        std::vector<uint8_t>  fav;
-        std::vector<uint16_t> favStaNr;
-        std::vector<char*>    country;
-        std::vector<char*>    name;
-        std::vector<char*>    url;
+        std::vector<uint8_t>      fav;
+        std::vector<uint16_t>     favStaNr;
+        std::vector<ps_ptr<char>> country;
+        std::vector<ps_ptr<char>> name;
+        std::vector<ps_ptr<char>> url;
     } m_stations;
 
     uint16_t  m_staCnt = 0;
@@ -915,17 +908,17 @@ class stationManagement {
 
   private:
     void clearStations() {
-        vector_clear_and_shrink(m_stations.country);
-        vector_clear_and_shrink(m_stations.name);
-        vector_clear_and_shrink(m_stations.url);
+        m_stations.country.clear();
+        m_stations.name.clear();
+        m_stations.url.clear();
         m_stations.fav.clear();
         m_stations.fav.shrink_to_fit();
         m_stations.favStaNr.clear();
         m_stations.favStaNr.shrink_to_fit();
 
-        m_stations.country.push_back(x_ps_strdup("unknown"));
-        m_stations.name.push_back(x_ps_strdup("unknown"));
-        m_stations.url.push_back(x_ps_strdup("unknown"));
+        m_stations.country.push_back("unknown");
+        m_stations.name.push_back("unknown");
+        m_stations.url.push_back("unknown");
         m_stations.fav.push_back('0');
         m_stations.favStaNr.push_back(0);
     }
@@ -954,9 +947,9 @@ class stationManagement {
                         m_stations.favStaNr.push_back(m_staCnt);
                     }
                 }
-                if (item == 1) { m_stations.country.push_back(x_ps_strdup(buff)); }
-                if (item == 2) { m_stations.name.push_back(x_ps_strdup(buff)); }
-                if (item == 3) { m_stations.url.push_back(x_ps_strdup(buff)); }
+                if (item == 1) { m_stations.country.push_back(buff); }
+                if (item == 2) { m_stations.name.push_back(buff); }
+                if (item == 3) { m_stations.url.push_back(buff); }
                 item++;
                 if (item > 3) item = 0;
                 if (m_staCnt > 999) break;
@@ -1041,14 +1034,14 @@ class stationManagement {
         if (!m_stations.fav[staNr]) return '0';
         return m_stations.fav[staNr];
     }
-    const char* getStationUrl(uint16_t staNr) {
-        if (staNr > m_staCnt) return strdup("unknown");
-        if (!m_stations.url[staNr]) return strdup("unknown");
+    ps_ptr<char> getStationUrl(uint16_t staNr) {
+        if (staNr > m_staCnt) return "unknown";
+        if (!m_stations.url[staNr]) return "unknown";
         return m_stations.url[staNr];
     }
-    const char* getStationCountry(uint16_t staNr) {
+    ps_ptr<char> getStationCountry(uint16_t staNr) {
         if (staNr > m_staCnt) return strdup("unknown");
-        if (!m_stations.country[staNr]) return strdup("unknown");
+        if (!m_stations.country[staNr].valid()) return "unknown";
         return m_stations.country[staNr];
     }
 };
@@ -1078,16 +1071,14 @@ class Playlist {
         m_index = -1;
     }
 
-    boolean isAudio(File file) {
-        if (endsWith(file.name(), ".mp3") || endsWith(file.name(), ".aac") || endsWith(file.name(), ".m4a") || endsWith(file.name(), ".wav") || endsWith(file.name(), ".flac") ||
-            endsWith(file.name(), ".opus") || endsWith(file.name(), ".ogg")) {
-            return true;
-        }
-        return false;
-    }
-
     boolean isAudio(ps_ptr<char> file) {
-        if (file.ends_with(".mp3") || file.ends_with(".aac") || file.ends_with(".m4a") || file.ends_with(".wav") || file.ends_with(".flac") || file.ends_with(".opus") || file.ends_with(".ogg")) {
+        if (file.ends_with(".mp3") ||  //
+            file.ends_with(".aac") ||  //
+            file.ends_with(".m4a") ||  //
+            file.ends_with(".wav") ||  //
+            file.ends_with(".flac") || //
+            file.ends_with(".opus") || //
+            file.ends_with(".ogg")) {  //
             return true;
         }
         return false;
@@ -1140,7 +1131,7 @@ class Playlist {
             if (bytesRead < 1) continue;
 
             readBuff[bytesRead] = '\0';
-            trim(readBuff.get());
+            readBuff.trim();
 
             if (readBuff.empty()) continue;                // blank line
             if (readBuff.starts_with("#EXTM3U")) continue; // #EXTM3U
@@ -1224,7 +1215,7 @@ class Playlist {
             File file = folder.openNextFile();
             if (!file) break;
             if (file.isDirectory()) continue;
-            if (isAudio(file)) {
+            if (isAudio(file.name())) {
                 m_content_file.push_back(file.path());
                 ps_ptr<char> name;
                 name = file.name();

@@ -51,10 +51,10 @@
 #include "ESP32FtpServer.h"
 #include "IR.h"
 #include "SPIFFS.h"
+#include "TCA9554.h"
 #include "base64.h"
 #include "driver/ledc.h"
 #include "es8311.h"
-#include "TCA9554.h"
 #include "esp_log.h"
 #include "esp_psram.h"
 #include "kcx_bt_emitter.h"
@@ -90,25 +90,59 @@ TwoWire     i2cBusOne = TwoWire(0); // additional HW, sensors, buttons, encoder 
 TwoWire     i2cBusTwo = TwoWire(1); // external DAC, AC101 or ES8388
 SPIClass    spiBus(FSPI);
 
-#ifdef TFT_MODE_SPI
-    #include "tft_spi.h"
-#elifdef TFT_MODE_RGB
-    #include "tft_rgb.h"
-#elifdef TFT_MODE_DSI
-    #include "tft_dsi.h"
+SemaphoreHandle_t mutex_rtc;
+SemaphoreHandle_t mutex_display;
+std::deque<ps_ptr<char>> s_logBuffer;
+
+#include "tft_dsi.h"
+#include "tft_rgb.h"
+#include "tft_spi.h"
+#include "tp_ft6x36.h"
+#include "tp_gt911.h"
+#include "tp_xpt2046.h"
+
+#ifdef TFT_MODE_SPI // ⏹⏹⏹⏹
+TFT_SPI  tft(spiBus, TFT_CS);
+TFT_SPI& getTFT() {
+    return tft;
+}
+#elif defined TFT_MODE_RGB // ⏹⏹⏹⏹
+TFT_RGB  tft;
+TFT_RGB& getTFT() {
+    return tft;
+}
+#elif defined TFT_MODE_DSI // ⏹⏹⏹⏹
+TFT_DSI  tft;
+TFT_DSI& getTFT() {
+    return tft;
+}
 #else
-printf("unknown TFT_CONTROLLER\n")
+    #error "wrong TFT_CONTROLLER"
 #endif
 
-#ifdef TP_MODE_XPT2046
-    #include "tp_xpt2046.h"
-#elifdef TP_MODE_GT911
-    #include "tp_gt911.h"
-#elifdef TP_MODE_FT6X63
-    #include "tp_ft6x36.h"
+#ifdef TP_MODE_XPT2046 // ⏹⏹⏹⏹
+TP_XPT2046  tp(spiBus, TP_CS);
+TP_XPT2046& getTP() {
+    return tp;
+}
+#elif defined TP_MODE_GT911  // ⏹⏹⏹⏹
+TP_GT911  tp;
+TP_GT911& getTP() {
+    return tp;
+}
+#elif defined TP_MODE_FT6X63 // ⏹⏹⏹⏹
+FT6x36  tp;
+FT6x36& getTP() {
+    return tp;
+}
 #else
-    printf("unknown TP_CONTROLLER\n")
+    #error "wrong TP_CONTROLLER"
 #endif
+
+
+
+
+
 
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 //  output on serial terminal
@@ -239,11 +273,6 @@ status_items statusItems[20] = {
 
 std::mutex mutex_print;
 enum ir_shift { IR_RIGHT = +100, IR_LEFT = -100, IR_UP = +101, IR_DOWN = -101, IR_RESET = -127 };
-
-extern SemaphoreHandle_t        mutex_rtc;
-extern RTIME                    rtc;
-extern WebSrv                   webSrv;
-extern std::deque<ps_ptr<char>> s_logBuffer;
 
 struct dlnaHistory_s {
     ps_ptr<char> objId;
@@ -450,9 +479,7 @@ void         showPlsFileNumber();
 void         showAudioFileNumber();
 void         display_sleeptime(int8_t ud = 0);
 boolean      drawImage(ps_ptr<char> path, uint16_t posX, uint16_t posY, uint16_t maxWidth = 0, uint16_t maxHeigth = 0);
-boolean      isAudio(File file);
-boolean      isAudio(const char* path);
-boolean      isPlaylist(File file);
+boolean      isAudio(ps_ptr<char> path);
 bool         connectToWiFi();
 void         setWiFiCredentials(ps_ptr<char> ssid, ps_ptr<char> password);
 ps_ptr<char> scaleImage(ps_ptr<char> path);
@@ -522,97 +549,6 @@ inline uint32_t simpleHash(ps_ptr<char> str) {
     return hash;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-inline int32_t str2int(const char* str) {
-    int32_t len = strlen(str);
-    if (len > 0) {
-        for (int32_t i = 0; i < len; i++) {
-            if (!isdigit(str[i])) {
-                log_e("NaN");
-                return 0;
-            }
-        }
-        return std::stoi(str);
-    }
-    return 0;
-}
-
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-inline char* int2str(int32_t val) {
-    static char ret[12];
-    itoa(val, ret, 10);
-    return ret;
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-inline void trim(char* s) {
-    // fb   trim in place
-    char* pe;
-    char* p = s;
-    while (isspace(*p)) p++; // left
-    pe = p;                  // right
-    while (*pe != '\0') pe++;
-    do { pe--; } while ((pe > p) && isspace(*pe));
-    if (p == s) {
-        *++pe = '\0';
-    } else { // move
-        while (p <= pe) *s++ = *p++;
-        *s = '\0';
-    }
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-inline bool startsWith(const char* base, const char* searchString) {
-    if (base == NULL) {
-        log_e("base = NULL");
-        return false;
-    } // guard
-    if (searchString == NULL) {
-        log_e("searchString == NULL");
-        return false;
-    } // guard
-    if (strlen(searchString) > strlen(base)) return false;
-    char c;
-    while ((c = *searchString++) != '\0')
-        if (c != *base++) return false;
-    return true;
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-inline bool endsWith(const char* base, const char* searchString) {
-    if (base == NULL) {
-        log_e("base = NULL");
-        return false;
-    } // guard
-    if (searchString == NULL) {
-        log_e("searchString == NULL");
-        return false;
-    } // guard
-    int32_t slen = strlen(searchString);
-    if (slen == 0) return false;
-    const char* p = base + strlen(base);
-    //  while(p > base && isspace(*p)) p--;  // rtrim
-    p -= slen;
-    if (p < base) return false;
-    return (strncmp(p, searchString, slen) == 0);
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-inline int32_t indexOf(const char* haystack, const char* needle, int32_t startIndex) {
-    const char* p = haystack;
-    for (; startIndex > 0; startIndex--)
-        if (*p++ == '\0') return -1;
-    const char* pos = strstr(p, needle);
-    if (pos == nullptr) return -1;
-    return pos - haystack;
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-inline int32_t lastIndexOf(const char* haystack, const char needle) {
-    const char* p = strrchr(haystack, needle);
-    return (p ? p - haystack : -1);
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 inline int rfind(const char* str, char ch, int start = -1) { // same as indexof() burt from right to left
     if (!str) return -1;                                     // if str is NULL
     int len = strlen(str);
@@ -622,132 +558,6 @@ inline int rfind(const char* str, char ch, int start = -1) { // same as indexof(
         if (str[i] == ch) return i; // character found
     }
     return -1; // character not found
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-inline int replacestr(char* line, const char* search, const char* replace, int depth = 0) { /* returns number of strings replaced.*/
-    const int MAX_RECURSION_DEPTH = 100;                                                    // Prevent stack overflow from excessive recursion
-    if (depth > MAX_RECURSION_DEPTH) {
-        log_w("replacestr: max recursion depth reached");
-        return 0;
-    }
-    int   count = 0;
-    char* sp; // start of pattern
-    // printf("replacestr(%s, %s, %s)\n", line, search, replace);
-    if ((sp = strstr(line, search)) == NULL) { return (0); }
-    count = 1;
-    int sLen = strlen(search);
-    int rLen = strlen(replace);
-    if (sLen > rLen) {
-        // move from right to left
-        char* src = sp + sLen;
-        char* dst = sp + rLen;
-        while ((*dst = *src) != '\0') {
-            dst++;
-            src++;
-        }
-    } else if (sLen < rLen) {
-        // move from left to right
-        int   tLen = strlen(sp) - sLen;
-        char* stop = sp + rLen;
-        char* src = sp + sLen + tLen;
-        char* dst = sp + rLen + tLen;
-        while (dst >= stop) {
-            *dst = *src;
-            dst--;
-            src--;
-        }
-    }
-    memcpy(sp, replace, rLen);
-    count += replacestr(sp + rLen, search, replace, depth + 1);
-    return (count);
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-inline int32_t clamp_min_max(int32_t val, int32_t min, int32_t max) {
-    if (min >= max) {
-        log_e("min >= max, min: %i, max %i", min, max);
-        return val;
-    }
-    if (val < min) val = min;
-    if (val > max) val = max;
-    return val;
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-inline char* x_ps_malloc(uint16_t len) {
-    char* ps_str = NULL;
-    if (psramFound()) { ps_str = (char*)ps_malloc(len); }
-    if (!ps_str) { ps_str = (char*)malloc(len); }
-    if (!ps_str) { log_e("oom"); }
-    return ps_str;
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-inline char* x_ps_calloc(uint16_t len, uint8_t size) {
-    char* ps_str = NULL;
-    if (psramFound()) { ps_str = (char*)ps_calloc(len, size); }
-    if (!ps_str) { ps_str = (char*)calloc(len, size); }
-    if (!ps_str) { log_e("oom"); }
-    return ps_str;
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-inline char* x_ps_strdup(const char* str) {
-    if (!str) {
-        log_e("str is NULL");
-        return NULL;
-    }
-    char* ps_str = NULL;
-    if (psramFound()) { ps_str = (char*)ps_malloc(strlen(str) + 1); }
-    if (!ps_str) { ps_str = (char*)malloc(strlen(str) + 1); }
-    if (!ps_str) {
-        log_e("oom");
-        return NULL;
-    }
-    strcpy(ps_str, str);
-    return ps_str;
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-inline char* x_ps_strndup(const char* str, uint16_t n) { // with '\0' termination
-    if (!str) {
-        log_e("str is NULL");
-        return NULL;
-    }
-    char* ps_str = NULL;
-    if (psramFound()) { ps_str = (char*)ps_malloc(n + 1); }
-    if (!ps_str) { ps_str = (char*)malloc(n + 1); }
-    if (!ps_str) {
-        log_e("oom");
-        return NULL;
-    }
-    strncpy(ps_str, str, n);
-    ps_str[n] = '\0';
-    return ps_str;
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-int find_first_of(const char* source, const char* delimiters, int start = 0) {
-    for (int i = start; source[i] != '\0'; ++i) {     // search at start
-        for (int j = 0; delimiters[j] != '\0'; ++j) { // search delimiters
-            if (source[i] == delimiters[j]) {
-                return i; // position of first found delimiter
-            }
-        }
-    }
-    return -1; // not found
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-inline int16_t strlenUTF8(const char* str) { // returns only printable glyphs, all ASCII and UTF-8 until 0xDFBD
-    if (str == NULL) return -1;
-    uint16_t idx = 0;
-    uint16_t cnt = 0;
-    while (*(str + idx) != '\0') {
-        if ((*(str + idx) < 0xC0) && (*(str + idx) > 0x1F)) cnt++;
-        if ((*(str + idx) == 0xE2) && (*(str + idx + 1) == 0x80)) cnt++; // general punctuation
-        idx++;
-    }
-    return cnt;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
@@ -797,16 +607,6 @@ bool setupBacklight(int pin, uint32_t freq_hz) {
 }
 
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-#ifdef TFT_MODE_SPI // ⏹⏹⏹⏹
-extern TFT_SPI tft;
-#elif defined(TFT_MODE_RGB)
-extern TFT_RGB tft;
-#elif defined(TFT_MODE_DSI)
-extern TFT_DSI tft;
-#endif
-
 inline void x_ps_free(char** b) {
     if (*b) {
         free(*b);
