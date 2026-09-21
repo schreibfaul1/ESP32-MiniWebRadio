@@ -1124,6 +1124,8 @@ void setup() {
     s_stationURL = s_settings.lastconnectedhost;
     s_start_counter = 1;
 
+    setTFTbrightness(s_brightness);
+
     // ES8311 es;
     // es.begin(&i2cBusOne, 0x18);
     // es.setVolume(50);
