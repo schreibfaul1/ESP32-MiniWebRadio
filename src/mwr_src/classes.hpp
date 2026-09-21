@@ -1019,8 +1019,6 @@ class IR_buttons {
     }
     ~IR_buttons() {}
 
-    int16_t hexStringToInt16(ps_ptr<char> str) { return str.to_int16(); }
-
     const char* skipWhitespace(const char* str) { // Helper function: Skip spaces
         while (*str && isspace(*str)) { str++; }
         return str;
@@ -1042,8 +1040,8 @@ class IR_buttons {
         return ptr + 1;
     }
 
-    bool parseJSONString(const char* jsonString) { // Function to parse the JSON string
-        const char*  ptr = jsonString;
+    bool parseJSONString(ps_ptr<char> jsonString) { // Function to parse the JSON string
+        const char*  ptr = jsonString.get();
         uint8_t      buttonNr = 0;
         size_t       buttonIndex = 0;
         ps_ptr<char> v;
@@ -1069,11 +1067,12 @@ class IR_buttons {
 
             int16_t      val = -1;
             ps_ptr<char> label;
-            ps_ptr<char> value;
-            ps_ptr<char> key;
             bool         validObject = false;
 
             while (*ptr && *ptr != '}') {
+                ps_ptr<char> value;
+                ps_ptr<char> key;
+
                 ptr = skipWhitespace(ptr);
 
                 // Schlüssel extrahieren
@@ -1081,6 +1080,10 @@ class IR_buttons {
                     ptr++; // skip '"'
                     const char* keyStart = ptr;
                     while (*ptr && *ptr != '\"') { ptr++; }
+                    if (*ptr != '"') {
+                        Serial.println("Error: Unterminated key.");
+                        return false;
+                    }
                     key.assign(keyStart, ptr - keyStart);
                     ptr++; // skip '"'
                     ptr = skipWhitespace(ptr);
@@ -1092,20 +1095,20 @@ class IR_buttons {
                         if (key[0] == 'A') { // IR Address
                             buttonNr = 42;
                             ptr = extractString(ptr, value);
-                            if (!ptr) return false;      // error found
-                            val = hexStringToInt16(value); // Hex in uint8_t umwandeln
+                            if (!ptr) return false; // error found
+                            val = value.to_int16(); // Hex in uint8_t umwandeln
                             validObject = true;
                         } else if (key[0] == 'C') {
                             ; // IR command unused
                             buttonNr = 43;
                             ptr = extractString(ptr, value);
                             if (!ptr) return false; // error found
-                            val = value.to_int16();   // Hex in uint8_t umwandeln
+                            val = value.to_int16(); // Hex in uint8_t umwandeln
                             validObject = true;
                         } else if (isdigit(key[0])) { // Nummer, z.B. "0", "10"
                             buttonNr = key.to_uint8();
                             ptr = extractString(ptr, value);
-                            if (!ptr) return false;      // error found
+                            if (!ptr) return false; // error found
                             val = value.to_int16(); // Hex in uint8_t umwandeln
                             validObject = true;
                         } else if (key == "label") { // Label
@@ -1152,30 +1155,26 @@ class IR_buttons {
         return true; // JSON parsed successfully
     }
 
-    uint8_t loadButtonsFromJSON(const char* filename) { // Function to load the JSON data
+    uint8_t loadButtonsFromJSON(const char* filename) {
         File file = SD_MMC.open(filename);
         if (!file) {
             Serial.println("Failed to open file");
-            return false;
+            return 0;
         }
-        String jsonString;
-        while (file.available()) { jsonString += (char)file.read(); }
+        ps_ptr<char> jsonString;
+        while (file.available()) {
+            char c = file.read();
+            jsonString.append(&c, 1);
+        }
         file.close();
-        //    MWR_LOG_WARN("{}", jsonString.c_str());
         // JSON parsen
-        if (!parseJSONString(jsonString.c_str())) {
+        if (!parseJSONString(jsonString)) {
             Serial.println("Failed to parse JSON.");
-            return false;
+            return 0;
         }
-        // debug output
+        // Anzahl der IR-Buttons ermitteln
         m_numOfIrButtons = 0;
-        while (true) {
-            if (m_settings->irbuttons[m_numOfIrButtons].label == NULL) break;
-
-            // if(m_settings->irbuttons[m_numOfIrButtons].val == -1) MWR_LOG_WARN("IR_buttonNr {:02}, value -1,   label {}", m_numOfIrButtons, m_settings->irbuttons[m_numOfIrButtons].label);
-            //  else MWR_LOG_WARN("IR_buttonNr {:02}, value 0x{:02X}, label {}", m_numOfIrButtons, m_settings->irbuttons[m_numOfIrButtons].val, m_settings->irbuttons[m_numOfIrButtons].label);
-            m_numOfIrButtons++;
-        }
+        while (m_numOfIrButtons < 45 && !m_settings->irbuttons[m_numOfIrButtons].label.empty()) { ++m_numOfIrButtons; }
         m_settings->numOfIrButtons = m_numOfIrButtons;
         return m_numOfIrButtons;
     }

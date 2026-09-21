@@ -80,7 +80,7 @@
 #include <mbedtls/base64.h>
 #include <vector>
 #include <deque>
-#include "mwr_src/function1.h"
+
 
 Audio       audio;
 Preferences pref;
@@ -92,7 +92,7 @@ TwoWire     i2cBusOne = TwoWire(0); // additional HW, sensors, buttons, encoder 
 TwoWire     i2cBusTwo = TwoWire(1); // external DAC, AC101 or ES8388
 SPIClass    spiBus(FSPI);
 
-
+#include "mwr_src/function1.h"
 #include "tft_dsi.h"
 #include "tft_rgb.h"
 #include "tft_spi.h"
@@ -281,17 +281,7 @@ void         tp_pressed(uint16_t x, uint16_t y);
 void         tp_long_pressed(uint16_t x, uint16_t y);
 void         tp_moved(uint16_t x, uint16_t y);
 void         tp_released(uint16_t x, uint16_t y);
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-inline uint32_t simpleHash(ps_ptr<char> str) {
-    if (str == NULL) return 0;
-    uint32_t hash = 0;
-    for (int32_t i = 0; i < str.strlen(); i++) {
-        if (str[i] < 32) continue; // ignore control sign
-        hash += (str[i] - 31) * i * 32;
-    }
-    return hash;
-}
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 inline int rfind(const char* str, char ch, int start = -1) { // same as indexof() burt from right to left
     if (!str) return -1;                                     // if str is NULL

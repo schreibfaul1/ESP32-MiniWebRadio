@@ -1462,7 +1462,7 @@ void savefile(ps_ptr<char> fileName, uint32_t contentLength, ps_ptr<char> conten
 
     if (!fileName.starts_with("/")) { fileName = "/" + fileName; }
     if (webSrv.uploadfile(SD_MMC, fileName, contentLength, contentType)) {
-        printfln(s_tag.sd_card, "save file " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET " in progress", fileName);
+        printfln(s_tag.sd_card, "save file " ANSI_ESC_CYAN "{}", fileName);
         webSrv.sendStatus(200);
     } else {
         printfln(s_tag.sd_card, "save file " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET " to SD failed", fileName);
@@ -2452,7 +2452,7 @@ void loop() {
         }
         if (r.starts_with("rts")) { // run time stats
             ps_ptr<char> timeStatsBuffer;
-            timeStatsBuffer.alloc(2000);
+            timeStatsBuffer.set_name("timeStatsBuffer");
             GetRunTimeStats(timeStatsBuffer);
             { printfln(s_tag.terminal, ANSI_ESC_YELLOW "task statistics\n\n{}", timeStatsBuffer); }
         }
