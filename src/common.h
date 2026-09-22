@@ -76,6 +76,7 @@
 #include <WiFiClientSecure.h>
 #include <WiFiMulti.h>
 #include <Wire.h>
+#include <deque>
 #include <mbedtls/aes.h>
 #include <mbedtls/base64.h>
 #include <vector>
@@ -90,10 +91,7 @@ TwoWire     i2cBusOne = TwoWire(0); // additional HW, sensors, buttons, encoder 
 TwoWire     i2cBusTwo = TwoWire(1); // external DAC, AC101 or ES8388
 SPIClass    spiBus(FSPI);
 
-SemaphoreHandle_t mutex_rtc;
-SemaphoreHandle_t mutex_display;
-std::deque<ps_ptr<char>> s_logBuffer;
-
+#include "mwr_src/function.h"
 #include "tft_dsi.h"
 #include "tft_rgb.h"
 #include "tft_spi.h"
@@ -138,11 +136,6 @@ FT6x36& getTP() {
 #else
     #error "wrong TP_CONTROLLER"
 #endif
-
-
-
-
-
 
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 //  output on serial terminal
@@ -218,245 +211,149 @@ struct _emojis {
 } emoji;
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-enum {
-    UNDEFINED = -1,
-    NONE = 0,
-    RADIO = 1,
-    PLAYER = 2,
-    DLNA = 3,
-    CLOCK = 4,
-    BRIGHTNESS = 5,
-    ALARMCLOCK = 6,
-    SLEEPTIMER = 7,
-    STATIONSLIST = 8,
-    AUDIOFILESLIST = 9,
-    DLNAITEMSLIST = 10,
-    BLUETOOTH = 11,
-    EQUALIZER = 12,
-    SETTINGS = 13,
-    IR_SETTINGS = 14,
-    RINGING = 15,
-    WIFI_SETTINGS = 16,
-    SLEEP = 17,
-    WEATHER = 18,
-};
+SET_LOOP_TASK_STACK_SIZE(14 * 1024);
+constexpr uint16_t MAX_STATIONS = 1000;
 
-struct status_items {
-    ps_ptr<char> name;
-    ps_ptr<char> hl_name;
-    uint16_t     headline_color1;
-    uint16_t     headline_color2;
-};
+bool s_f_pauseResume = false;
+bool s_f_newStreamTitle = false;
+bool s_f_rtc = false; // true if time from ntp is received
+bool s_f_100ms = false;
+bool s_f_1sec = false;
+bool s_f_10sec = false;
+bool s_f_1min = false;
+bool s_f_1h = false;
+bool s_f_mute = false;
+bool s_f_muteIsPressed = false;
+bool s_f_recording = false;
+bool s_f_sleeping = false;
+bool s_f_isWebConnected = false;
+bool s_f_WiFi_lost = false;
+bool s_f_isFSConnected = false;
+bool s_f_eof = false;
+bool s_f_reconnect = false;
+bool s_f_eof_alarm = false;
+bool s_f_alarm = false;
+bool s_f_newIcyDescription = false;
+bool s_f_webFailed = false;
+bool s_f_newBitRate = false;
+bool s_f_newStationName = false;
+bool s_f_newLyrics = false;
+bool s_f_volBarVisible = false;
+bool s_f_switchToClock = false;   // jump into CLOCK mode at the next opportunity
+bool s_f_timeAnnouncement = true; // time announcement every full hour
+bool s_f_vu_meter_enabled = false;
+bool s_f_spectrum_enabled = false;
+bool s_f_playlistEnabled = false;
+bool s_f_playlistNextFile = false;
+bool s_f_logoUnknown = false;
+bool s_f_FFatFound = false;
+bool s_f_clearLogo = false;
+bool s_f_clearStationName = false;
+bool s_f_dlnaBrowseServer = false;
+bool s_f_dlnaWaitForResponse = false;
+bool s_f_dlnaMakePlaylistOTF = false; // notify callback that this browsing was to build a On-The_fly playlist
+bool s_f_dlna_browseReady = false;
+bool s_f_brightnessIsChangeable = false;
+bool s_f_connectToLastStation = false;
+bool s_f_msg_box = false;
+bool s_f_esp_restart = false;
+bool s_f_timeSpeech = false;
+bool s_f_update_meteo = false;
+bool s_f_stationsChanged = false;
+bool s_f_sd_card_found = false;
+bool s_f_isWiFiConnected = false;
+bool s_f_ok_from_ir = false;
 
-status_items statusItems[20] = {
-    {"NONE", "", TFT_BLACK, TFT_BLACK},
-    {"RADIO", "Internet Radio", TFT_RED, TFT_BLACK},
-    {"PLAYER", "Audio Player", TFT_DARKGREEN, TFT_BLACK},
-    {"DLNA", "DLNA", TFT_DARKYELLOW, TFT_BLACK},
-    {"CLOCK", "Clock", TFT_DARKBROWN, TFT_BLACK},
-    {"BRIGHTNESS", "Brightness", TFT_BLACK, TFT_BLACK},
-    {"ALARMCLOCK", "Alarm Clock (hh:mm)", TFT_BROWN, TFT_BROWN},
-    {"SLEEPTIMER", "Off Timer (h:mm)", TFT_DARKBLUE, TFT_DARKBLUE},
-    {"STATIONSLIST", "Stations List", TFT_BLACK, TFT_BLACK},
-    {"AUDIOFILESLIST", "Audio Files", TFT_BLACK, TFT_BLACK},
-    {"DLNAITEMSLIST", "DLNA List", TFT_BLACK, TFT_BLACK},
-    {"BLUETOOTH", "Bluetooth", TFT_BLACK, TFT_BLACK},
-    {"EQUALIZER", "Equalizer", TFT_BLACK, TFT_BLACK},
-    {"SETTINGS", "Settings", TFT_DARKMAGENTA, TFT_BLACK},
-    {"IR_SETTINGS", "IR Settings", TFT_BLACK, TFT_BLACK},
-    {"RINGING", "Ringing", TFT_BLACK, TFT_BLACK},
-    {"WIFI_SETTINGS", "WiFi Settings", TFT_BLACK, TFT_BLACK},
-    {"SLEEP", "", TFT_BLACK, TFT_BLACK},
-    {"WEATHER", "Weather Clock", TFT_BLACK, TFT_DARKBROWN},
-    {"UNDEFINED", "", TFT_BLACK, TFT_BLACK},
-};
+int8_t   s_state = NONE; // statemaschine
+int8_t   s_lastState = NONE;
+int8_t   s_subState = UNDEFINED;
+int8_t   s_subState_radio = UNDEFINED;
+int8_t   s_subState_player = UNDEFINED;
+int8_t   s_subState_clock = UNDEFINED;
+int8_t   s_subState_weather = UNDEFINED;
+int8_t   s_ir_btn_select = UNDEFINED; // IR menue item
+int8_t   s_currDLNAsrvNr = -1;
+int8_t   s_alarmSubMenue = -1;
+int8_t   s_sleepTimerSubMenue = -1;
+uint8_t  s_alarmdays = 0;
+uint8_t  s_cur_Codec = 0;
+uint8_t  s_numServers = 0; //
+uint8_t  s_level = 0;
+uint8_t  s_sleepMode = 1; // 0 display off, 1 show the clock
+uint8_t  s_staListPos = 0;
+uint8_t  s_cthFailCounter = 0; // connecttohost fail
+uint8_t  s_itemListPos = 0;    // DLNA items
+uint8_t  s_fileListPos = 0;
+uint8_t  s_ambientValue = 50;
+uint8_t  s_dlnaLevel = 0;
+uint8_t  s_resetReason = (esp_reset_reason_t)ESP_RST_UNKNOWN;
+uint8_t  s_brightness = UINT8_MAX / 2;
+uint8_t  s_start_counter = 0;
+int16_t  s_totalNumberReturned = -1;
+int16_t  s_dlnaMaxItems = -1;
+int16_t  s_dlnaMaXServers = -1;
+int16_t  s_alarmtime[7] = {0};  // in minutes (23:59 = 23 *60 + 59) [0] Sun, [1] Mon
+int16_t  s_cur_AudioFileNr = 0; // this is the position of the file within the (alpha ordered) folder starting with 0
+uint16_t s_staListNr = 0;
+uint16_t s_fileListNr = 0;
+uint16_t s_cur_station = 0; // current station(nr), will be set later
+uint16_t s_sleeptime = 0;   // time in min until MiniWebRadio goes to sleep
+uint16_t s_plsCurPos = 0;
+uint16_t s_dlnaItemNr = 0;
+uint16_t s_h_resolution = 320;
+uint16_t s_v_resolution = 240;
+uint32_t s_icyBitRate = 0;     // from http response header via event
+uint32_t s_decoderBitRate = 0; // from decoder via getBitRate(false)
+uint32_t s_playlistTime = 0;   // playlist start time millis() for timeout
+uint32_t s_settingsHash = 0;
+uint32_t s_audioFileSize = 0;
+uint32_t s_media_downloadPort = 0;
+uint32_t s_audioCurrentTime = 0;
+uint32_t s_timestamp = 0;
+uint32_t s_audioFileDuration = 0;
+uint64_t s_totalRuntime = 0; // total runtime in seconds since start
 
-std::mutex mutex_print;
-enum ir_shift { IR_RIGHT = +100, IR_LEFT = -100, IR_UP = +101, IR_DOWN = -101, IR_RESET = -127 };
+ps_ptr<char> s_streamTitle;
+ps_ptr<char> s_myIP = "000.000.000.000";
+ps_ptr<char> s_cur_AudioFolder = "/audiofiles/";
+ps_ptr<char> s_icyDescription;
+ps_ptr<char> s_cur_AudioFileName;
+ps_ptr<char> s_stationURL;
+ps_ptr<char> s_stationName_air;
+ps_ptr<char> s_homepage;
+ps_ptr<char> s_TZName = "Europe/Berlin";
+ps_ptr<char> s_TZString = "CET-1CEST,M3.5.0,M10.5.0/3";
+ps_ptr<char> s_timeSpeechLang = "en";
+ps_ptr<char> s_lyrics = "";
+ps_ptr<char> s_location = "Europe/Berlin";
+ps_ptr<char> s_latiitude = "52.52";
+ps_ptr<char> s_longitude = "13.41";
+ps_ptr<char> s_temperature_unit = "C";   // *C or °F
+ps_ptr<char> s_pressure_unit = "hPa";    // hPa or mmHg
+ps_ptr<char> s_wind_speed_unit = "km/h"; // km/h, m/s, bft
+ps_ptr<char> s_version;
 
-struct dlnaHistory_s {
-    ps_ptr<char> objId;
-    ps_ptr<char> name;
-    int16_t      maxItems = -1;
-    int16_t      childCount = -1;
-};
-struct releasedArg {
-    ps_ptr<char> arg1;
-    ps_ptr<char> arg2;
-    ps_ptr<char> arg3;
-    int16_t      val1 = 0;
-    int16_t      val2 = 0;
-};
-struct timecounter_s {
-    float timer = 0;
-    float factor = 0;
-};
-struct irButtons {
-    int16_t val;
-    char*   label;
-};
-struct settings_s {
-    irButtons    irbuttons[45];
-    uint8_t      numOfIrButtons = 0;
-    ps_ptr<char> lastconnectedhost = {};
-    ps_ptr<char> lastconnectedfile = {};
-} s_settings;
+#include "mwr_src/classes.hpp"
 
-struct volume_s {
-    uint8_t cur_volume = 21;
-    uint8_t ringVolume = 21;
-    uint8_t volumeAfterAlarm = 12;
-    uint8_t volumeSteps = 21;
-} s_volume;
+dlnaHistory_s  s_dlnaHistory[10];
+timecounter_s  s_timeCounter;
+SD_content     s_SD_content;
+Playlist       playlist;
+IR_buttons     irb(&s_settings);
+IR             ir(IR_PIN); // do not change the objectname, it must be "ir"
+File           audioFile;
+FtpServer      ftpSrv;
+DLNA_Client    dlna;
+KCX_BT_Emitter bt_emitter(BT_EMITTER_RX, BT_EMITTER_TX, BT_EMITTER_CONNECT, BT_EMITTER_MODE);
+hp_BH1750      BH1750; // create the sensor
+ES8311         es8311;
+METEO          meteo;
+RTIME::rtime   s_time;
+TCA9554        tca9554;
 
-struct bt_emitter_s {
-    bool         found = false;
-    bool         connect = false;
-    bool         enabled = false;
-    bool         play = true; // play: true, pause: false
-    uint8_t      volume = 0;
-    ps_ptr<char> mode = {};
-    ps_ptr<char> version = {};
-} s_bt_emitter;
-
-struct tone_s {
-    int16_t LP = 0;  // -40 ... +6 (dB)        audioI2S
-    int16_t BP = 0;  // -40 ... +6 (dB)        audioI2S
-    int16_t HP = 0;  // -40 ... +6 (dB)        audioI2S
-    int16_t BAL = 0; // -16...0....+16         audioI2S
-} s_tone;
-
-struct i2c_items_s {
-    bool es8311_found = false;
-    int  es8311_addr = -1;
-    bool es7210_found = false;
-    int  es7210_addr = -1;
-    bool gt911_found = false;
-    int  gt911_addr = -1;
-    bool ft6x36u_found = false;
-    int  ft6x36u_addr = -1;
-    bool bh1750_found = false;
-    int  bh1750_addr = -1;
-    bool tca9554_found = false;
-    int  tca9554_addr = -1;
-    bool ch422g_found = false;
-    int  ch422g_addr = -1;
-} s_i2c_items;
-
-struct tag_s {
-    ps_ptr<char> none = "";
-    ps_ptr<char> arduino = "Arduino:";
-    ps_ptr<char> audio_info = "Audio_Info:";
-    ps_ptr<char> wifi_info = "WiFi_Info:";
-    ps_ptr<char> setup = "Setup:";
-    ps_ptr<char> new_host = "New_Host:";
-    ps_ptr<char> playlist = "Playlist:";
-    ps_ptr<char> sd_card = "SD_Card:";
-    ps_ptr<char> file_name = "File_Name:";
-    ps_ptr<char> action = "Action:";
-    ps_ptr<char> country = "Country:";
-    ps_ptr<char> alarm_time = "Alarm_Time:";
-    ps_ptr<char> audio_codec = "Audio_Codec:";
-    ps_ptr<char> terminal = "Terminal:";
-    ps_ptr<char> ftp_server = "FTP_Server:";
-    ps_ptr<char> rtime_info = "RTIME_Info:";
-    ps_ptr<char> tft_info = "TFT_Info:";
-    ps_ptr<char> tp_info = "TP_Info:";
-    ps_ptr<char> ir_info = "IR_Info:";
-    ps_ptr<char> meteo_info = "Meteo_Info:";
-    ps_ptr<char> webserver = "Web_Server:";
-    ps_ptr<char> dlna_server = "DLNA_Server:";
-    ps_ptr<char> bt_emitter = "BT_Emitter:";
-    ps_ptr<char> sys_info = "System_Info:";
-    ps_ptr<char> recorder = "Recorder:";
-} s_tag;
-
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-template <typename... Args> void printfln(ps_ptr<char> tag, const char* fmt, Args&&... args) {
-    std::lock_guard<std::mutex> lock(mutex_print);
-    if (s_logBuffer.size() == 1024) s_logBuffer.pop_back();
-
-    ps_ptr<char> myLog;
-    myLog.reserve(200);
-    rtc.hasValidTime() ? myLog.append(rtc.gettime_s()) : myLog.append("00:00:00");
-    myLog.appendf(" {} ", tag);
-    while (myLog.strlen() < 25) { myLog.append("."); }
-    myLog.append(" ");
-    myLog.append(" \033[0m");
-    myLog.appendf(fmt, std::forward<Args>(args)...);
-    myLog.append("\033[0m\r\n");
-    printf("%s", myLog.c_get());
-    s_logBuffer.insert(s_logBuffer.begin(), std::move(myLog));
-    myLog.reset();
-}
-
-template <typename... Args> void printfcr(ps_ptr<char> tag, const char* fmt, Args&&... args) {
-    std::lock_guard<std::mutex> lock(mutex_print);
-    if (s_logBuffer.size() == 1024) s_logBuffer.pop_back();
-    ps_ptr<char> myLog;
-    myLog.reserve(200);
-    rtc.hasValidTime() ? myLog.assignf("{}", rtc.gettime_s()) : myLog.assign("00:00:00");
-    myLog.appendf(" {} ", tag);
-    while (myLog.strlen() < 25) { myLog.append("."); }
-    myLog.append(" ");
-    myLog.append(" \033[0m");
-    myLog.appendf(fmt, std::forward<Args>(args)...);
-    myLog.append("\033[0m                                                                                                                                                               \r");
-    printf("%s", myLog.c_get());
-    s_logBuffer.insert(s_logBuffer.begin(), std::move(myLog));
-    myLog.reset();
-}
-
-inline void printflnCut(ps_ptr<char> tag, ps_ptr<char> item, const char* color, ps_ptr<char> str) {
-    uint8_t maxLength = 100;
-    if (str.strlen() > maxLength) {
-        ps_ptr<char> tmp1 = str.substr(0, 70);
-        ps_ptr<char> tmp2 = str.substr(str.strlen() - 20);
-        str.assignf("{}...{}", tmp1, tmp2);
-    }
-    printfln(tag, "{}{}{}", item, color, str);
-}
-
-int log_redirect_handler(const char* format, va_list args) {
-    va_list args_len;
-    va_copy(args_len, args);
-    char probe[1];
-    int  len = vsnprintf(probe, sizeof(probe), format, args_len);
-    va_end(args_len);
-    if (len < 0) return 0;
-    len += 1;
-    // Puffer fuer die formatierte Nachricht
-    ps_ptr<char> log_buffer;
-    log_buffer.alloc(len);
-    char* log_dst = log_buffer.get();
-    if (!log_dst) return 0;
-    va_list args_msg;
-    va_copy(args_msg, args);
-    vsnprintf(log_dst, len, format, args_msg);
-    va_end(args_msg);
-    if (len > 0) {
-        // 0x1B 0x5B 0x30 0x3B 0x33 0x32 0x6D 0x49 0x20 0x28    0x31 0x35 0x33 0x37 0x29 0x20 0x41 0x52 0x44 0x55    0x49 0x4E 0x4F 0x3A 0x20
-        //  ESC  [    0    ;    3    2    m    I         (       1    5    3    7    )         A    R    D    U       I    N    O    :
-        int  idx = log_buffer.index_of("ARDUINO:");
-        char c = log_buffer[7]; // 0...7 is ANSI_ESC_CODE
-        if (idx > 0) {
-            idx += 9; // after "ARDUINO: "
-            log_buffer.remove_before(idx, true);
-            log_buffer.truncate_at(log_buffer.strlen() - 1); // remove '\n'
-            if (c == 'E') log_buffer.insert(ANSI_ESC_RED, 0);
-            if (c == 'W') log_buffer.insert(ANSI_ESC_YELLOW, 0);
-            if (c == 'I') log_buffer.insert(ANSI_ESC_GREEN, 0);
-            if (c == 'D') log_buffer.insert(ANSI_ESC_CYAN, 0);
-            if (c == 'V') log_buffer.insert(ANSI_ESC_GREY, 0);
-            printfln(s_tag.arduino, "{}", log_buffer);
-        } else {
-            printfln(s_tag.none, "{}", log_buffer);
-        }
-    }
-    return 0;
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+std::deque<ps_ptr<char>> s_PLS_content;
+ps_ptr<char>             codecname[10] = {"unknown", "WAV", "MP3", "AAC", "M4A", "FLAC", "OPUS", "VORBIS", "OGG"};
+stationManagement        staMgnt(&s_cur_station);
 
 // prototypes (main.cpp)
 boolean      defaultsettings();
@@ -474,7 +371,7 @@ ps_ptr<char> getLogoPath();
 void         webSrv_send_station_items();
 void         showFileLogo(int8_t state, int8_t subState);
 void         showPlayerFileName(ps_ptr<char> fname);
-void         show_DLNA_FileName(const char* fname);
+void         show_DLNA_FileName(ps_ptr<char> fname);
 void         showPlsFileNumber();
 void         showAudioFileNumber();
 void         display_sleeptime(int8_t ud = 0);
@@ -502,11 +399,11 @@ void         WEBSRV_onDelete(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> 
 void         savefile(ps_ptr<char> fileName, uint32_t contentLength, ps_ptr<char> contenttype);
 void         setI2STone();
 ps_ptr<char> getI2STone();
-void         SD_playFile(ps_ptr<char> pathWoFileName, const char* fileName);
+void         SD_playFile(ps_ptr<char> pathWoFileName, ps_ptr<char> fileName);
 void         SD_playFile(ps_ptr<char> path, uint32_t resumeFilePos = 0, bool showFN = true);
 bool         SD_rename(ps_ptr<char> src, ps_ptr<char> dest);
 bool         SD_newFolder(ps_ptr<char> folderPathName);
-bool         SD_delete(const char* itemPath);
+bool         SD_delete(ps_ptr<char> itemPath);
 void         processPlaylist();
 void         changeState(int8_t state, int8_t subState);
 void         connecttohost(ps_ptr<char> host);
@@ -526,58 +423,11 @@ void         tp_pressed(uint16_t x, uint16_t y);
 void         tp_long_pressed(uint16_t x, uint16_t y);
 void         tp_moved(uint16_t x, uint16_t y);
 void         tp_released(uint16_t x, uint16_t y);
+inline void  get_registered_names();
+inline void  clearLogo();
+inline void  clearStationName();
+void         timer100ms();
 
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-inline const char* byte_to_binary(int8_t x) { // e.g. alarmdays
-    static char b[9];
-    b[0] = '\0';
-
-    int32_t z;
-    for (z = 128; z > 0; z >>= 1) { strcat(b, ((x & z) == z) ? "1" : "0"); }
-    return b;
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-inline uint32_t simpleHash(ps_ptr<char> str) {
-    if (str == NULL) return 0;
-    uint32_t hash = 0;
-    for (int32_t i = 0; i < str.strlen(); i++) {
-        if (str[i] < 32) continue; // ignore control sign
-        hash += (str[i] - 31) * i * 32;
-    }
-    return hash;
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-inline int rfind(const char* str, char ch, int start = -1) { // same as indexof() burt from right to left
-    if (!str) return -1;                                     // if str is NULL
-    int len = strlen(str);
-    if (start == -1 || start >= len) start = len - 1; // Default: Search from the end of the string
-
-    for (int i = start; i >= 0; --i) {
-        if (str[i] == ch) return i; // character found
-    }
-    return -1; // character not found
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-inline int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max) {
-    // --- Clamp Input ---
-    if (x <= in_min) return out_min;
-    if (x >= in_max) return out_max;
-
-    // --- Normal map operation with 64-bit ---
-    const int64_t run = int64_t(in_max) - int64_t(in_min);
-    if (run == 0) {
-        log_e("map(): Invalid range, %li == %li (min == max)", in_min, in_max);
-        return out_min; // fallback
-    }
-
-    const int64_t rise = int64_t(out_max) - int64_t(out_min);
-    const int64_t delta = int64_t(x) - int64_t(in_min);
-
-    return int32_t((delta * rise) / run + out_min);
-}
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 bool setupBacklight(int pin, uint32_t freq_hz) {
@@ -607,30 +457,319 @@ bool setupBacklight(int pin, uint32_t freq_hz) {
 }
 
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-inline void x_ps_free(char** b) {
-    if (*b) {
-        free(*b);
-        *b = NULL;
-    }
-}
-inline void x_ps_free(unsigned char** b) {
-    if (*b) {
-        free(*b);
-        *b = NULL;
-    }
-}
+// 📌📌📌   H A R D C O P Y    📌📌📌
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-inline void vector_clear_and_shrink(vector<char*>& vec) {
-    uint size = vec.size();
-    for (int32_t i = 0; i < size; i++) { x_ps_free(&vec[i]); }
-    vec.clear();
-    vec.shrink_to_fit();
+void writeDirect(File& file, int32_t width, int32_t height) {
+    uint16_t row[width];
+    for (int32_t y = height - 1; y >= 0; y--) {
+        getTFT().readRect(0, y, width, 1, row);
+        file.write((uint8_t*)row, width * sizeof(uint16_t));
+    }
 }
 
+void writeRotated90(File& file, int32_t width, int32_t height) {
+    uint16_t column[height];
+    for (int32_t y = 0; y < width; y++) {
+        getTFT().readRect(y, 0, 1, height, column);
+        file.write((uint8_t*)column, height * sizeof(uint16_t));
+    }
+}
+
+void writeRotated180(File& file, int32_t width, int32_t height) {
+    uint16_t row[width];
+    for (int32_t y = 0; y < height; y++) {
+        getTFT().readRect(0, y, width, 1, row);
+        std::reverse(row, row + width);
+        file.write((uint8_t*)row, width * sizeof(uint16_t));
+    }
+}
+
+void writeRotated270(File& file, int32_t width, int32_t height) {
+    uint16_t column[height];
+    for (int32_t y = width - 1; y >= 0; y--) {
+        getTFT().readRect(y, 0, 1, height, column);
+        std::reverse(column, column + height);
+        file.write((uint8_t*)column, height * sizeof(uint16_t));
+    }
+}
+
+void make_hardcopy_on_sd() {
+    const uint8_t bmp320x240[70] = {
+        0x42, 0x4D, 0x46, 0x58, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46, 0x00, 0x00, 0x00, 0x38, 0x00, 0x00, 0x00, 0x40, 0x01, 0x00, 0x00, 0xF0, 0x00,
+        0x00, 0x00, 0x01, 0x00, 0x10, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x58, 0x02, 0x00, 0x23, 0x2E, 0x00, 0x00, 0x23, 0x2E, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF8, 0x00, 0x00, 0xE0, 0x07, 0x00, 0x00, 0x1F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    };
+    (void)bmp320x240;
+
+    const uint8_t bmp480x320[70] = {
+        0x42, 0x4D, 0x46, 0xB0, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46, 0x00, 0x00, 0x00, 0x38, 0x00, 0x00, 0x00, 0xE0, 0x01, 0x00, 0x00, 0x40, 0x01,
+        0x00, 0x00, 0x01, 0x00, 0x10, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0xB0, 0x04, 0x00, 0x23, 0x2E, 0x00, 0x00, 0x23, 0x2E, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF8, 0x00, 0x00, 0xE0, 0x07, 0x00, 0x00, 0x1F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    };
+    (void)bmp480x320;
+
+    const uint8_t bmp800x480[70] = {
+        0x42, 0x4D, 0x46, 0xC4, 0x0B, 0x00, 0x00, 0x00, 0x00, 0x00, // BM + File size 768070
+        0x46, 0x00, 0x00, 0x00,                                     // Pixel data offset (70 bytes)
+        0x28, 0x00, 0x00, 0x00,                                     // DIB header size
+        0x20, 0x03, 0x00, 0x00,                                     // Width: 800
+        0xE0, 0x01, 0x00, 0x00,                                     // Height: 480
+        0x01, 0x00,                                                 // Color planes
+        0x10, 0x00,                                                 // Bit count: 16 (RGB565)
+        0x03, 0x00, 0x00, 0x00,                                     // Compression: BI_BITFIELDS (3)
+        0x00, 0xB0, 0x04, 0x00,                                     // Image size (kept same, optional)
+        0x23, 0x2E, 0x00, 0x00,                                     // X pixels per meter
+        0x23, 0x2E, 0x00, 0x00,                                     // Y pixels per meter
+        0x00, 0x00, 0x00, 0x00,                                     // Colors used
+        0x00, 0x00, 0x00, 0x00,                                     // Important colors
+        0x00, 0xF8, 0x00, 0x00,                                     // Red mask
+        0xE0, 0x07, 0x00, 0x00,                                     // Green mask
+        0x1F, 0x00, 0x00, 0x00,                                     // Blue mask
+        0x00, 0x00, 0x00, 0x00                                      // Alpha mask (optional, empty)
+    };
+    (void)bmp800x480;
+
+    const uint8_t bmp1024x600[70] = {
+        0x42, 0x4D,             // 'BM'
+        0x46, 0xC0, 0x12, 0x00, // File size: 1,228,870
+        0x00, 0x00, 0x00, 0x00, // Reserved
+        0x46, 0x00, 0x00, 0x00, // Pixel data offset (70)
+        0x28, 0x00, 0x00, 0x00, // DIB header size (40)
+        0x00, 0x04, 0x00, 0x00, // Width: 1024
+        0x58, 0x02, 0x00, 0x00, // Height: 600
+        0x01, 0x00,             // Planes
+        0x10, 0x00,             // BitCount: 16 (RGB565)
+        0x03, 0x00, 0x00, 0x00, // Compression: BI_BITFIELDS
+        0x00, 0xC0, 0x12, 0x00, // Image size
+        0x23, 0x2E, 0x00, 0x00, // X pixels per meter
+        0x23, 0x2E, 0x00, 0x00, // Y pixels per meter
+        0x00, 0x00, 0x00, 0x00, // Colors used
+        0x00, 0x00, 0x00, 0x00, // Important colors
+        0x00, 0xF8, 0x00, 0x00, // Red mask
+        0xE0, 0x07, 0x00, 0x00, // Green mask
+        0x1F, 0x00, 0x00, 0x00, // Blue mask
+        0x00, 0x00, 0x00, 0x00  // Alpha mask
+    };
+    (void)bmp1024x600;
+
+    File hc = SD_MMC.open("/hardcopy.bmp", "w", true);
+#ifdef TFT_LAYOUT_S
+    hc.write(bmp320x240, sizeof(bmp320x240));
+    if (TFT_ROTATION == 0) writeDirect(hc, 320, 240);
+    if (TFT_ROTATION == 1) writeRotated90(hc, 240, 320);
+    if (TFT_ROTATION == 2) writeRotated180(hc, 320, 240);
+    if (TFT_ROTATION == 3) writeRotated270(hc, 240, 320);
+    hc.close();
+#elifdef TFT_LAYOUT_M
+    hc.write(bmp480x320, sizeof(bmp480x320));
+    if (TFT_ROTATION == 0) writeDirect(hc, 480, 320);
+    if (TFT_ROTATION == 1) writeRotated90(hc, 320, 480);
+    if (TFT_ROTATION == 2) writeRotated180(hc, 480, 320);
+    if (TFT_ROTATION == 3) writeRotated270(hc, 320, 480);
+    hc.close();
+#elifdef TFT_LAYOUT_L
+    hc.write(bmp800x480, sizeof(bmp800x480));
+    if (TFT_ROTATION == 0) writeDirect(hc, 800, 480);
+    if (TFT_ROTATION == 1) writeRotated90(hc, 480, 800);
+    if (TFT_ROTATION == 2) writeRotated180(hc, 800, 480);
+    if (TFT_ROTATION == 3) writeRotated270(hc, 480, 800);
+    hc.close();
+#elifdef TFT_LAYOUT_XL
+    hc.write(bmp1024x600, sizeof(bmp1024x600));
+    if (TFT_ROTATION == 0) writeDirect(hc, 1024, 600);
+    if (TFT_ROTATION == 1) writeRotated90(hc, 600, 1024);
+    if (TFT_ROTATION == 2) writeRotated180(hc, 1024, 600);
+    if (TFT_ROTATION == 3) writeRotated270(hc, 600, 1024);
+    hc.close();
+#else
+
+#endif
+}
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-// Macro for comfortable calls
-#define MWR_LOG_ERROR(fmt, ...)   Audio::AUDIO_LOG_IMPL(1, __FILE__, __LINE__, __func__, fmt, ##__VA_ARGS__)
-#define MWR_LOG_WARN(fmt, ...)    Audio::AUDIO_LOG_IMPL(2, __FILE__, __LINE__, __func__, fmt, ##__VA_ARGS__)
-#define MWR_LOG_INFO(fmt, ...)    Audio::AUDIO_LOG_IMPL(3, __FILE__, __LINE__, __func__, fmt, ##__VA_ARGS__)
-#define MWR_LOG_DEBUG(fmt, ...)   Audio::AUDIO_LOG_IMPL(4, __FILE__, __LINE__, __func__, fmt, ##__VA_ARGS__)
-#define MWR_LOG_VERBOSE(fmt, ...) Audio::AUDIO_LOG_IMPL(5, __FILE__, __LINE__, __func__, fmt, ##__VA_ARGS__)
+// 📌📌📌   U S E R   I N P U T    📌📌📌
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void ui_pause_resume() {
+    bool res = audio.pauseResume();
+    if (!res) { printfln(s_tag.terminal, ANSI_ESC_YELLOW "Pause-Resume not possible"); }
+    s_f_pauseResume = audio.isRunning();
+    if (s_f_pauseResume) {
+        printfln(s_tag.terminal, ANSI_ESC_YELLOW "Pause-Resume --> resume");
+    } else {
+        printfln(s_tag.terminal, ANSI_ESC_YELLOW "Pause-Resume --> pause");
+    }
+}
+void ui_runtimeStats() {
+    ps_ptr<char> timeStatsBuffer;
+    timeStatsBuffer.set_name("timeStatsBuffer");
+    GetRunTimeStats(timeStatsBuffer);
+    { printfln(s_tag.terminal, ANSI_ESC_YELLOW "task statistics\n\n{}", timeStatsBuffer); }
+}
+void ui_localFile(uint16_t s) {
+    const char* path = "/audiofiles/sample.mp3";
+    uint16_t    fileStart = s;
+    printfln(s_tag.terminal, ANSI_ESC_YELLOW "path: {}, fileStart {}s", path, fileStart);
+    connecttoFS("SD_MMC", path, fileStart);
+}
+void ui_connecttospeech() {
+    audio.connecttospeech("Hallo, wie geht es dir? Morgen scheint die Sonne und übermorgen regnet es.Aber wir nehmen den Regenschirm mit. Und auch den Rucksack. Dann lesen wir aus dem Buch "
+                          "Hier gibt es nur gutes Wetter.",
+                          "de");
+}
+void ui_bufferFilled() {
+    printfln(s_tag.terminal, "inBuffer filled {} bytes", audio.inBufferFilled());
+    printfln(s_tag.terminal, "inBuffer free   {} bytes", audio.inBufferFree());
+}
+void ui_fontTest(uint16_t s) {
+    if (s == 0) s_streamTitle = "We’re Going To Ibiza";
+    if (s == 1) s_streamTitle = "Á á É é Í í Ó ó Ő ő Ú ú Ű ű";
+    if (s == 2) s_streamTitle = "Č č Ć ć Š š Ž ž Đ đ Ł ł Ń ń Ś ś Ź ź Ż ż";
+    if (s == 3) s_streamTitle = "Ő ő Ű ű € – ← ’ “ ” …🔵🟥";
+    if (s == 4) s_streamTitle = "Ă ă Â â Î î Ș ș Ț ț Ş ş Ţ ţ Ş ş Ţ ţ";
+    if (s == 5) s_streamTitle = "A B C D E F G H I K L J M y O P Q R";
+    printfln(s_tag.terminal, "st: {}", s_streamTitle);
+    s_f_newStreamTitle = true;
+}
+void ui_setTimeOffset(int16_t s) {
+    printfln(s_tag.terminal, "setTimeOffset {}", s);
+    audio.setTimeOffset(s);
+}
+void ui_setPlayTime(int16_t s) {
+    printfln(s_tag.terminal, "setAudioPlayTime {}", s);
+    audio.setAudioPlayTime(s);
+}
+void ui_getAudioFilePosition() {
+    printfln(s_tag.terminal, "getAudioFilePosition {}", audio.getAudioFilePosition());
+}
+void ui_setAudioFilePos(uint32_t s) {
+    printfln(s_tag.terminal, "setAudioFilePosition {}", s);
+    audio.setAudioFilePosition(s);
+}
+void ui_getRegistredNames() {
+    get_registered_names();
+}
+void ui_forceMono() {
+    static bool f_mono = false;
+    f_mono = !f_mono;
+    audio.forceMono(f_mono);
+    if (f_mono)
+        printfln(s_tag.terminal, "mono");
+    else
+        printfln(s_tag.terminal, "stereo");
+}
+void ui_setMute() {
+    static bool f_mute = false;
+    f_mute = !f_mute;
+    audio.setMute(f_mute);
+    if (f_mute)
+        printfln(s_tag.terminal, "mute on");
+    else
+        printfln(s_tag.terminal, "mute off");
+}
+void ui_output48KHz() {
+    static bool f_o48 = false;
+    f_o48 = !f_o48;
+    if (f_o48) {
+        audio.setOutputSampleRate(Audio::SR_48000);
+        printfln(s_tag.terminal, "output 48KHz");
+    } else {
+        audio.setOutputSampleRate(Audio::SR_ORIGIN);
+        printfln(s_tag.terminal, "normal output {} Hz", audio.getSampleRate());
+    }
+}
+void ui_output44KHz() {
+    static bool f_o44 = false;
+    f_o44 = !f_o44;
+    if (f_o44) {
+        audio.setOutputSampleRate(Audio::SR_44100);
+        printfln(s_tag.terminal, "output 44.1KHz");
+    } else {
+        audio.setOutputSampleRate(Audio::SR_ORIGIN);
+        printfln(s_tag.terminal, "normal output {} Hz", audio.getSampleRate());
+    }
+}
+void ui_btProtocol() {
+    bt_emitter.list_protokol();
+}
+void ui_btCommand(ps_ptr<char> cmd) {
+    bt_emitter.userCommand(cmd);
+    printfln(s_tag.terminal, "btstr: {}", cmd);
+}
+void ui_meteoRequest() {
+    meteo.send_request();
+}
+void ui_meteoProtocol() {
+    meteo.protocol();
+}
+void ui_timeSpeech() {
+    s_f_timeSpeech = !s_f_timeSpeech;
+    if (s_f_timeSpeech) {
+        printfln(s_tag.terminal, "time speech is on");
+    } else {
+        printfln(s_tag.terminal, "time speech is off");
+    }
+}
+void ui_setWiFiPWD() {
+    changeState(WIFI_SETTINGS, 0);
+}
+void ui_openAIspeech() {
+    printfln(s_tag.terminal, "openAI speech");
+    audio.openai_speech("openAI-key", "tts-1", "Today is a wonderful day to build something people love!", "", "shimer", "mp3", "1");
+}
+uint32_t song_time = 0;
+void     ui_stopSong() {
+    song_time = audio.stopSong();
+    printfln(s_tag.terminal, "file {} stopped at time {}", s_cur_AudioFileName, song_time);
+}
+void ui_start_song() {
+    ps_ptr<char> path = "/audiofiles/" + s_cur_AudioFileName;
+    bool         ret = audio.connecttoFS(SD_MMC, path.c_get(), song_time);
+    printfln(s_tag.terminal, "file {} started at time {}, ret {}", s_cur_AudioFileName, song_time, ret);
+}
+void ui_get_bitRate() {
+    uint32_t br = audio.getBitRate();
+    printfln(s_tag.terminal, "bitrate: {}", br);
+}
+void ui_get_inbuffStatus() {
+    audio.inBufferStatus();
+}
+void ui_isRunning() {
+    printfln(s_tag.terminal, "is running: {}", audio.isRunning());
+}
+void ui_volFadingSpeed(float s) {
+    printfln(s_tag.terminal, "set volume fading speed {}, current: {}", s, audio.settings.VOL_FADING_SPEED);
+    audio.settings.VOL_FADING_SPEED = s;
+}
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void user_input(ps_ptr<char> input) {
+
+    printfln(s_tag.terminal, ANSI_ESC_YELLOW "{}", input);
+
+    if (input == "pr") ui_pause_resume();                                          // pause resume
+    if (input == "rts") ui_runtimeStats();                                         // get runtime stats
+    if (input.starts_with("lf")) ui_localFile(input.substr(2).to_uint16());        // file starts at 30s; lf30
+    if (input == "cts") ui_connecttospeech();                                      // connect to speech
+    if (input == "bfi") ui_bufferFilled();                                         // buffer filled
+    if (input.starts_with("ft")) ui_fontTest(input.substr(2).to_uint16());         // test some characters shown as streamTitle
+    if (input.starts_with("stoff")) ui_setTimeOffset(input.substr(5).to_int16());  // set offset +- x seconds; stoff-25
+    if (input.starts_with("sapt")) ui_setPlayTime(input.substr(4).to_int16());     // set audio playtime at x seconds
+    if (input == "gafp") ui_getAudioFilePosition();                                // getAudioFilePosition
+    if (input.starts_with("safp")) ui_setAudioFilePos(input.substr(4).to_int32()); // setAudioFilePosition
+    if (input == "grn") ui_getRegistredNames();                                    // list of all self registered objects
+    if (input == "fomo") ui_forceMono();                                           // force mono
+    if (input == "sem") ui_setMute();                                              // set mute
+    if (input == "o48") ui_output48KHz();                                          // output48KHz
+    if (input == "o44") ui_output44KHz();                                          // output44KHz
+    if (input == "btp") ui_btProtocol();                                           // blurtooth kcx protocol
+    if (input.starts_with("btcmd")) ui_btCommand(input.substr(6));                 // bluetooth command, send to bt emitter e.g. btstr:AT+
+    if (input == "meteor") ui_meteoRequest();                                      // open meteo update request
+    if (input == "meteop") ui_meteoProtocol();                                     // open meteo update protocol
+    if (input == "tsp") ui_timeSpeech();                                           // toogle time speech
+    if (input == "pwd") ui_setWiFiPWD();                                           // set password for WiFi
+    if (input == "oais") ui_openAIspeech();                                        // openAIspeech
+    if (input == "stops") ui_stopSong();                                           // stop song
+    if (input == "starts") ui_start_song();                                        // start song
+    if (input == "gbr") ui_get_bitRate();                                          // get bitrate
+    if (input == "gibs") ui_get_inbuffStatus();                                    //  // get inbuff status
+    if (input == "ir") ui_isRunning();                                             // is running?
+    if (input.starts_with("vfs")) ui_volFadingSpeed(input.substr(3).to_float());   // volume fading speed
+}
