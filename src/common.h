@@ -76,11 +76,10 @@
 #include <WiFiClientSecure.h>
 #include <WiFiMulti.h>
 #include <Wire.h>
+#include <deque>
 #include <mbedtls/aes.h>
 #include <mbedtls/base64.h>
 #include <vector>
-#include <deque>
-
 
 Audio       audio;
 Preferences pref;
@@ -212,6 +211,148 @@ struct _emojis {
 } emoji;
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
+SET_LOOP_TASK_STACK_SIZE(14 * 1024);
+constexpr uint16_t MAX_STATIONS = 1000;
+
+bool s_f_pauseResume = false;
+bool s_f_newStreamTitle = false;
+bool s_f_rtc = false; // true if time from ntp is received
+bool s_f_100ms = false;
+bool s_f_1sec = false;
+bool s_f_10sec = false;
+bool s_f_1min = false;
+bool s_f_1h = false;
+bool s_f_mute = false;
+bool s_f_muteIsPressed = false;
+bool s_f_recording = false;
+bool s_f_sleeping = false;
+bool s_f_isWebConnected = false;
+bool s_f_WiFi_lost = false;
+bool s_f_isFSConnected = false;
+bool s_f_eof = false;
+bool s_f_reconnect = false;
+bool s_f_eof_alarm = false;
+bool s_f_alarm = false;
+bool s_f_newIcyDescription = false;
+bool s_f_webFailed = false;
+bool s_f_newBitRate = false;
+bool s_f_newStationName = false;
+bool s_f_newLyrics = false;
+bool s_f_volBarVisible = false;
+bool s_f_switchToClock = false;   // jump into CLOCK mode at the next opportunity
+bool s_f_timeAnnouncement = true; // time announcement every full hour
+bool s_f_vu_meter_enabled = false;
+bool s_f_spectrum_enabled = false;
+bool s_f_playlistEnabled = false;
+bool s_f_playlistNextFile = false;
+bool s_f_logoUnknown = false;
+bool s_f_FFatFound = false;
+bool s_f_clearLogo = false;
+bool s_f_clearStationName = false;
+bool s_f_dlnaBrowseServer = false;
+bool s_f_dlnaWaitForResponse = false;
+bool s_f_dlnaMakePlaylistOTF = false; // notify callback that this browsing was to build a On-The_fly playlist
+bool s_f_dlna_browseReady = false;
+bool s_f_brightnessIsChangeable = false;
+bool s_f_connectToLastStation = false;
+bool s_f_msg_box = false;
+bool s_f_esp_restart = false;
+bool s_f_timeSpeech = false;
+bool s_f_update_meteo = false;
+bool s_f_stationsChanged = false;
+bool s_f_sd_card_found = false;
+bool s_f_isWiFiConnected = false;
+bool s_f_ok_from_ir = false;
+
+int8_t   s_state = NONE; // statemaschine
+int8_t   s_lastState = NONE;
+int8_t   s_subState = UNDEFINED;
+int8_t   s_subState_radio = UNDEFINED;
+int8_t   s_subState_player = UNDEFINED;
+int8_t   s_subState_clock = UNDEFINED;
+int8_t   s_subState_weather = UNDEFINED;
+int8_t   s_ir_btn_select = UNDEFINED; // IR menue item
+int8_t   s_currDLNAsrvNr = -1;
+int8_t   s_alarmSubMenue = -1;
+int8_t   s_sleepTimerSubMenue = -1;
+uint8_t  s_alarmdays = 0;
+uint8_t  s_cur_Codec = 0;
+uint8_t  s_numServers = 0; //
+uint8_t  s_level = 0;
+uint8_t  s_sleepMode = 1; // 0 display off, 1 show the clock
+uint8_t  s_staListPos = 0;
+uint8_t  s_cthFailCounter = 0; // connecttohost fail
+uint8_t  s_itemListPos = 0;    // DLNA items
+uint8_t  s_fileListPos = 0;
+uint8_t  s_ambientValue = 50;
+uint8_t  s_dlnaLevel = 0;
+uint8_t  s_resetReason = (esp_reset_reason_t)ESP_RST_UNKNOWN;
+uint8_t  s_brightness = UINT8_MAX / 2;
+uint8_t  s_start_counter = 0;
+int16_t  s_totalNumberReturned = -1;
+int16_t  s_dlnaMaxItems = -1;
+int16_t  s_dlnaMaXServers = -1;
+int16_t  s_alarmtime[7] = {0};  // in minutes (23:59 = 23 *60 + 59) [0] Sun, [1] Mon
+int16_t  s_cur_AudioFileNr = 0; // this is the position of the file within the (alpha ordered) folder starting with 0
+uint16_t s_staListNr = 0;
+uint16_t s_fileListNr = 0;
+uint16_t s_cur_station = 0; // current station(nr), will be set later
+uint16_t s_sleeptime = 0;   // time in min until MiniWebRadio goes to sleep
+uint16_t s_plsCurPos = 0;
+uint16_t s_dlnaItemNr = 0;
+uint16_t s_h_resolution = 320;
+uint16_t s_v_resolution = 240;
+uint32_t s_icyBitRate = 0;     // from http response header via event
+uint32_t s_decoderBitRate = 0; // from decoder via getBitRate(false)
+uint32_t s_playlistTime = 0;   // playlist start time millis() for timeout
+uint32_t s_settingsHash = 0;
+uint32_t s_audioFileSize = 0;
+uint32_t s_media_downloadPort = 0;
+uint32_t s_audioCurrentTime = 0;
+uint32_t s_timestamp = 0;
+uint32_t s_audioFileDuration = 0;
+uint64_t s_totalRuntime = 0; // total runtime in seconds since start
+
+ps_ptr<char> s_streamTitle;
+ps_ptr<char> s_myIP = "000.000.000.000";
+ps_ptr<char> s_cur_AudioFolder = "/audiofiles/";
+ps_ptr<char> s_icyDescription;
+ps_ptr<char> s_cur_AudioFileName;
+ps_ptr<char> s_stationURL;
+ps_ptr<char> s_stationName_air;
+ps_ptr<char> s_homepage;
+ps_ptr<char> s_TZName = "Europe/Berlin";
+ps_ptr<char> s_TZString = "CET-1CEST,M3.5.0,M10.5.0/3";
+ps_ptr<char> s_timeSpeechLang = "en";
+ps_ptr<char> s_lyrics = "";
+ps_ptr<char> s_location = "Europe/Berlin";
+ps_ptr<char> s_latiitude = "52.52";
+ps_ptr<char> s_longitude = "13.41";
+ps_ptr<char> s_temperature_unit = "C";   // *C or °F
+ps_ptr<char> s_pressure_unit = "hPa";    // hPa or mmHg
+ps_ptr<char> s_wind_speed_unit = "km/h"; // km/h, m/s, bft
+ps_ptr<char> s_version;
+
+#include "mwr_src/classes.hpp"
+dlnaHistory_s  s_dlnaHistory[10];
+timecounter_s  s_timeCounter;
+SD_content     s_SD_content;
+Playlist       playlist;
+IR_buttons     irb(&s_settings);
+IR             ir(IR_PIN); // do not change the objectname, it must be "ir"
+File           audioFile;
+FtpServer      ftpSrv;
+DLNA_Client    dlna;
+KCX_BT_Emitter bt_emitter(BT_EMITTER_RX, BT_EMITTER_TX, BT_EMITTER_CONNECT, BT_EMITTER_MODE);
+hp_BH1750      BH1750; // create the sensor
+ES8311         es8311;
+METEO          meteo;
+RTIME::rtime   s_time;
+TCA9554        tca9554;
+
+std::deque<ps_ptr<char>> s_PLS_content;
+ps_ptr<char>             codecname[10] = {"unknown", "WAV", "MP3", "AAC", "M4A", "FLAC", "OPUS", "VORBIS", "OGG"};
+stationManagement        staMgnt(&s_cur_station);
 
 // prototypes (main.cpp)
 boolean      defaultsettings();
@@ -281,7 +422,7 @@ void         tp_pressed(uint16_t x, uint16_t y);
 void         tp_long_pressed(uint16_t x, uint16_t y);
 void         tp_moved(uint16_t x, uint16_t y);
 void         tp_released(uint16_t x, uint16_t y);
-
+inline void  get_registered_names();
 
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
@@ -310,7 +451,6 @@ bool setupBacklight(int pin, uint32_t freq_hz) {
     ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1);
     return true;
 }
-
 
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // 📌📌📌   H A R D C O P Y    📌📌📌
@@ -442,3 +582,188 @@ void make_hardcopy_on_sd() {
 #endif
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void ui_pause_resume() {
+    bool res = audio.pauseResume();
+    if (!res) { printfln(s_tag.terminal, ANSI_ESC_YELLOW "Pause-Resume not possible"); }
+    s_f_pauseResume = audio.isRunning();
+    if (s_f_pauseResume) {
+        printfln(s_tag.terminal, ANSI_ESC_YELLOW "Pause-Resume --> resume");
+    } else {
+        printfln(s_tag.terminal, ANSI_ESC_YELLOW "Pause-Resume --> pause");
+    }
+}
+void ui_runtimeStats() {
+    ps_ptr<char> timeStatsBuffer;
+    timeStatsBuffer.set_name("timeStatsBuffer");
+    GetRunTimeStats(timeStatsBuffer);
+    { printfln(s_tag.terminal, ANSI_ESC_YELLOW "task statistics\n\n{}", timeStatsBuffer); }
+}
+void ui_localFile(uint16_t s) {
+    const char* path = "/audiofiles/sample.mp3";
+    uint16_t    fileStart = s;
+    printfln(s_tag.terminal, ANSI_ESC_YELLOW "path: {}, fileStart {}s", path, fileStart);
+    connecttoFS("SD_MMC", path, fileStart);
+}
+void ui_connecttospeech() {
+    audio.connecttospeech("Hallo, wie geht es dir? Morgen scheint die Sonne und übermorgen regnet es.Aber wir nehmen den Regenschirm mit. Und auch den Rucksack. Dann lesen wir aus dem Buch "
+                          "Hier gibt es nur gutes Wetter.",
+                          "de");
+}
+void ui_bufferFilled() {
+    printfln(s_tag.terminal, "inBuffer filled {} bytes", audio.inBufferFilled());
+    printfln(s_tag.terminal, "inBuffer free   {} bytes", audio.inBufferFree());
+}
+void ui_fontTest(uint16_t s) {
+    if (s == 0) s_streamTitle = "We’re Going To Ibiza";
+    if (s == 1) s_streamTitle = "Á á É é Í í Ó ó Ő ő Ú ú Ű ű";
+    if (s == 2) s_streamTitle = "Č č Ć ć Š š Ž ž Đ đ Ł ł Ń ń Ś ś Ź ź Ż ż";
+    if (s == 3) s_streamTitle = "Ő ő Ű ű € – ← ’ “ ” …🔵🟥";
+    if (s == 4) s_streamTitle = "Ă ă Â â Î î Ș ș Ț ț Ş ş Ţ ţ Ş ş Ţ ţ";
+    if (s == 5) s_streamTitle = "A B C D E F G H I K L J M y O P Q R";
+    printfln(s_tag.terminal, "st: {}", s_streamTitle);
+    s_f_newStreamTitle = true;
+}
+void ui_setTimeOffset(int16_t s) {
+    printfln(s_tag.terminal, "setTimeOffset {}", s);
+    audio.setTimeOffset(s);
+}
+void ui_setPlayTime(int16_t s) {
+    printfln(s_tag.terminal, "setAudioPlayTime {}", s);
+    audio.setAudioPlayTime(s);
+}
+void ui_getAudioFilePosition() {
+    printfln(s_tag.terminal, "getAudioFilePosition {}", audio.getAudioFilePosition());
+}
+void ui_setAudioFilePos(uint32_t s) {
+    printfln(s_tag.terminal, "setAudioFilePosition {}", s);
+    audio.setAudioFilePosition(s);
+}
+void ui_getRegistredNames() {
+    get_registered_names();
+}
+void ui_forceMono() {
+    static bool f_mono = false;
+    f_mono = !f_mono;
+    audio.forceMono(f_mono);
+    if (f_mono)
+        printfln(s_tag.terminal, "mono");
+    else
+        printfln(s_tag.terminal, "stereo");
+}
+void ui_setMute() {
+    static bool f_mute = false;
+    f_mute = !f_mute;
+    audio.setMute(f_mute);
+    if (f_mute)
+        printfln(s_tag.terminal, "mute on");
+    else
+        printfln(s_tag.terminal, "mute off");
+}
+void ui_output48KHz() {
+    static bool f_o48 = false;
+    f_o48 = !f_o48;
+    if (f_o48) {
+        audio.setOutputSampleRate(Audio::SR_48000);
+        printfln(s_tag.terminal, "output 48KHz");
+    } else {
+        audio.setOutputSampleRate(Audio::SR_ORIGIN);
+        printfln(s_tag.terminal, "normal output {} Hz", audio.getSampleRate());
+    }
+}
+void ui_output44KHz() {
+    static bool f_o44 = false;
+    f_o44 = !f_o44;
+    if (f_o44) {
+        audio.setOutputSampleRate(Audio::SR_44100);
+        printfln(s_tag.terminal, "output 44.1KHz");
+    } else {
+        audio.setOutputSampleRate(Audio::SR_ORIGIN);
+        printfln(s_tag.terminal, "normal output {} Hz", audio.getSampleRate());
+    }
+}
+void ui_btProtocol() {
+    bt_emitter.list_protokol();
+}
+void ui_btCommand(ps_ptr<char> cmd) {
+    bt_emitter.userCommand(cmd);
+    printfln(s_tag.terminal, "btstr: {}", cmd);
+}
+void ui_meteoRequest() {
+    meteo.send_request();
+}
+void ui_meteoProtocol() {
+    meteo.protocol();
+}
+void ui_timeSpeech() {
+    s_f_timeSpeech = !s_f_timeSpeech;
+    if (s_f_timeSpeech) {
+        printfln(s_tag.terminal, "time speech is on");
+    } else {
+        printfln(s_tag.terminal, "time speech is off");
+    }
+}
+void ui_setWiFiPWD() {
+    changeState(WIFI_SETTINGS, 0);
+}
+void ui_openAIspeech() {
+    printfln(s_tag.terminal, "openAI speech");
+    audio.openai_speech("openAI-key", "tts-1", "Today is a wonderful day to build something people love!", "", "shimer", "mp3", "1");
+}
+uint32_t song_time = 0;
+void     ui_stopSong() {
+    song_time = audio.stopSong();
+    printfln(s_tag.terminal, "file {} stopped at time {}", s_cur_AudioFileName, song_time);
+}
+void ui_start_song() {
+    ps_ptr<char> path = "/audiofiles/" + s_cur_AudioFileName;
+    bool         ret = audio.connecttoFS(SD_MMC, path.c_get(), song_time);
+    printfln(s_tag.terminal, "file {} started at time {}, ret {}", s_cur_AudioFileName, song_time, ret);
+}
+void ui_get_bitRate() {
+    uint32_t br = audio.getBitRate();
+    printfln(s_tag.terminal, "bitrate: {}", br);
+}
+void ui_get_inbuffStatus() {
+    audio.inBufferStatus();
+}
+void ui_isRunning() {
+    printfln(s_tag.terminal, "is running: {}", audio.isRunning());
+}
+void ui_volFadingSpeed(float s) {
+    printfln(s_tag.terminal, "set volume fading speed {}, current: {}", s, audio.settings.VOL_FADING_SPEED);
+    audio.settings.VOL_FADING_SPEED = s;
+}
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void user_input(ps_ptr<char> input) {
+
+    printfln(s_tag.terminal, ANSI_ESC_YELLOW "{}", input);
+
+    if (input == "pr") ui_pause_resume();                                          // pause resume
+    if (input == "rts") ui_runtimeStats();                                         // get runtime stats
+    if (input.starts_with("lf")) ui_localFile(input.substr(2).to_uint16());        // file starts at 30s; lf30
+    if (input == "cts") ui_connecttospeech();                                      // connect to speech
+    if (input == "bfi") ui_bufferFilled();                                         // buffer filled
+    if (input.starts_with("ft")) ui_fontTest(input.substr(2).to_uint16());         // test some characters shown as streamTitle
+    if (input.starts_with("stoff")) ui_setTimeOffset(input.substr(5).to_int16());  // set offset +- x seconds; stoff-25
+    if (input.starts_with("sapt")) ui_setPlayTime(input.substr(4).to_int16());     // set audio playtime at x seconds
+    if (input == "gafp") ui_getAudioFilePosition();                                // getAudioFilePosition
+    if (input.starts_with("safp")) ui_setAudioFilePos(input.substr(4).to_int32()); // setAudioFilePosition
+    if (input == "grn") ui_getRegistredNames();                                    // list of all self registered objects
+    if (input == "fomo") ui_forceMono();                                           // force mono
+    if (input == "sem") ui_setMute();                                              // set mute
+    if (input == "o48") ui_output48KHz();                                          // output48KHz
+    if (input == "o44") ui_output44KHz();                                          // output44KHz
+    if (input == "btp") ui_btProtocol();                                           // blurtooth kcx protocol
+    if (input.starts_with("btcmd")) ui_btCommand(input.substr(6));                 // bluetooth command, send to bt emitter e.g. btstr:AT+
+    if (input == "meteor") ui_meteoRequest();                                      // open meteo update request
+    if (input == "meteop") ui_meteoProtocol();                                     // open meteo update protocol
+    if (input == "tsp") ui_timeSpeech();                                           // toogle time speech
+    if (input == "pwd") ui_setWiFiPWD();                                           // set password for WiFi
+    if (input == "oais") ui_openAIspeech();                                        // openAIspeech
+    if (input == "stops") ui_stopSong();                                           // stop song
+    if (input == "starts") ui_start_song();                                        // start song
+    if (input == "gbr") ui_get_bitRate();                                          // get bitrate
+    if (input == "gibs") ui_get_inbuffStatus();                                    //  // get inbuff status
+    if (input == "ir") ui_isRunning();                                             // is running?
+    if (input.starts_with("vfs")) ui_volFadingSpeed(input.substr(3).to_float());   // volume fading speed
+}
