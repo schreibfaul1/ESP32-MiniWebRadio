@@ -10,7 +10,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.0z11 - Sep 20, 2026                                                                                                               ";
+    Version 4.2.0z12 - Sep 22, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -31,11 +31,555 @@
 
 // clang-format on
 
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// 📌📌📌  S E T U P  📌📌📌
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
+void setup() {
+    s_version = Version;
+    s_version.trim();
+    //---- BEGIN ---------
+    Serial.begin(MONITOR_SPEED);
+    vTaskDelay(1500); // wait for Serial to be ready
+    printf("\n\n");
+    printfln(s_tag.none, "");
+    printfln(s_tag.none, "             " ANSI_ESC_YELLOW " ***************************************************** ");
+    printfln(s_tag.none, "             " ANSI_ESC_YELLOW " *     MiniWebRadio {:29}    * " ANSI_ESC_RESET "      ", s_version);
+    printfln(s_tag.none, "             " ANSI_ESC_YELLOW " ***************************************************** ");
+    printfln(s_tag.none, "");
 
+    mutex_rtc = xSemaphoreCreateMutex();
+    mutex_display = xSemaphoreCreateMutex();
+    Audio::audio_info_callback = my_audio_info; // audio callback
+    dlna.dlna_client_callbak(on_dlna_client);   // dlna callback
+    bt_emitter.kcx_bt_emitter_callback(on_kcx_bt_emitter);
+    webSrv.websrv_callbak(on_websrv);
+    meteo.meteo_callback(on_meteo);
+    esp_log_level_set("*", ESP_LOG_DEBUG);
+    esp_log_set_vprintf(log_redirect_handler);
+    if (!get_esp_items(&s_resetReason, &s_f_FFatFound)) return;
 
+    s_f_brightnessIsChangeable = setupBacklight(TFT_BL, 512);
+    if (!s_f_brightnessIsChangeable) btn_SE_bright.set_active(false);
+    setTFTbrightness(s_brightness);
 
+    if (IR_PIN >= 0) {
+        pinMode(IR_PIN, INPUT_PULLUP); // if ir_pin is read only, have a external resistor (~10...40KOhm)
+    }
 
+    pref.begin("Pref", false); // instance of preferences from AccessPoint (SSID, PW ...)
+
+    if (!detect_i2_c_devices(&i2cBusOne, I2C_SDA, I2C_SCL, &s_i2c_items)) { printfln(s_tag.setup, "No i2c device found"); }
+
+    if (s_i2c_items.bh1750_found) {
+        BH1750.begin(&i2cBusOne, s_i2c_items.bh1750_addr); // init the sensor
+        BH1750.setResolutionMode(BH1750.ONE_TIME_H_RESOLUTION_MODE);
+        BH1750.setSensitivity(BH1750.SENSITIVITY_ADJ_MAX);
+    }
+
+    if (s_i2c_items.es8311_found) {
+        bool res = es8311.begin(&i2cBusOne, s_i2c_items.es8311_addr); // init the dac
+        if (res) es8311.setVolume(90);
+    }
+
+    if (s_i2c_items.tca9554_found) {
+        bool res = tca9554.begin(&i2cBusOne, s_i2c_items.tca9554_addr); // init the port expander
+        (void)res;
+    }
+
+    set_tft_items(); // TFT, Resolotion
+    set_tp_items();  // TP, Resolotion
+    if (!init_SD_card()) return;
+
+    defaultsettings();
+
+    if (ESP.getFlashChipSize() > 80000000) { FFat.begin(); }
+
+    drawImage("/common/MiniWebRadioV4.jpg", 0, 0); // Welcomescreen
+    updateSettings();
+
+    s_f_isWiFiConnected = connectToWiFi();
+
+    placingGraphicObjects();
+    sdr_BR_value.setValue(s_brightness);
+    sdr_EQ_lowPass.setValue(s_tone.LP);
+    sdr_EQ_bandPass.setValue(s_tone.BP);
+    sdr_EQ_highPass.setValue(s_tone.HP);
+    sdr_EQ_balance.setValue(s_tone.BAL);
+    sdr_DL_volume.setMinMaxVal(0, s_volume.volumeSteps);
+    sdr_DL_volume.setValue(s_volume.cur_volume);
+    sdr_PL_volume.setMinMaxVal(0, s_volume.volumeSteps);
+    sdr_PL_volume.setValue(s_volume.cur_volume);
+    sdr_RA_volume.setMinMaxVal(0, s_volume.volumeSteps);
+    sdr_RA_volume.setValue(s_volume.cur_volume);
+    sdr_CL_volume.setMinMaxVal(0, s_volume.volumeSteps);
+    sdr_CL_volume.setValue(s_volume.cur_volume);
+    sdr_WR_volume.setMinMaxVal(0, s_volume.volumeSteps);
+    sdr_WR_volume.setValue(s_volume.cur_volume);
+    btn_RA_mute.setValue(s_f_mute);
+    btn_CL_mute.setValue(s_f_mute);
+    btn_EQ_mute.setValue(s_f_mute);
+    btn_PL_mute.setValue(s_f_mute);
+    btn_DL_mute.setValue(s_f_mute);
+    btn_WR_mute.setValue(s_f_mute);
+    btn_BT_power.setValue(s_bt_emitter.enabled);
+    btn_SE_spectrum.setValue(s_f_spectrum_enabled);
+    btn_SE_vu_meter.setValue(s_f_vu_meter_enabled);
+    lst_DLNA.client_and_history(&dlna, &s_dlnaHistory[0], 10);
+    lst_RADIO.currentStationNr(&s_cur_station);
+    clk_AC_red.alarm_time_and_days(&s_alarmdays, s_alarmtime);
+
+    audio.settings.VU_LEVEL = true;
+    audio.settings.SPECTRUM = true;
+    audio.setAudioTaskCore(AUDIOTASK_CORE);
+    audio.setConnectionTimeout(CONN_TIMEOUT, CONN_TIMEOUT_SSL);
+    audio.setVolumeSteps(s_volume.volumeSteps);
+    audio.setVolume(0);
+    audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT, I2S_MCLK);
+    audio.setI2SCommFMT_LSB(I2S_COMM_FMT);
+
+    printfln(s_tag.setup, "number of saved stations: " ANSI_ESC_CYAN "{}", staMgnt.getSumStations());
+    printfln(s_tag.setup, "number of saved favourites: " ANSI_ESC_CYAN "{}", staMgnt.getSumFavStations());
+    printfln(s_tag.setup, "current station number: " ANSI_ESC_CYAN "{}", s_cur_station);
+    printfln(s_tag.setup, "current volume: " ANSI_ESC_CYAN "{}", s_volume.cur_volume);
+    printfln(s_tag.setup, "volume steps: " ANSI_ESC_CYAN "{}", s_volume.volumeSteps);
+    printfln(s_tag.setup, "volume after alarm: " ANSI_ESC_CYAN "{}", s_volume.volumeAfterAlarm);
+    printfln(s_tag.setup, "last connected host: " ANSI_ESC_YELLOW "{}", s_settings.lastconnectedhost);
+    printfln(s_tag.setup, "connection timeout: " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET " ms", CONN_TIMEOUT);
+    printfln(s_tag.setup, "connection timeout SSL: " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET " ms", CONN_TIMEOUT_SSL);
+
+    if (s_volume.volumeSteps < 21) s_volume.volumeSteps = 21;
+
+    ir.begin();    // Init InfraredDecoder
+    meteo.begin(); // Init Open-Meteo
+    meteo.set_coordinates(s_latiitude, s_longitude);
+    meteo.set_timeZone(s_TZName);
+    cls_weather.locale(&s_temperature_unit, &s_pressure_unit, &s_wind_speed_unit);
+
+    if (AMP_ENABLED >= 0) { // enable onboard amplifier
+        pinMode(AMP_ENABLED, OUTPUT);
+        digitalWrite(AMP_ENABLED, HIGH);
+        printfln(s_tag.setup, "On Board Amplifier pin is: " ANSI_ESC_CYAN "{}", AMP_ENABLED);
+    }
+
+    if (s_f_mute) { printfln(s_tag.setup, "volume is muted: (from " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET ")", s_volume.cur_volume); }
+    setI2STone();
+
+    ticker100ms.attach(0.1, timer100ms);
+
+    muteChanged(s_f_mute);
+    if (s_f_isWiFiConnected) {
+        if (s_resetReason == ESP_RST_POWERON ||   // Simply switch on the operating voltage
+            s_resetReason == ESP_RST_SW ||        // ESP.restart()
+            s_resetReason == ESP_RST_SDIO ||      // The boot button was pressed
+            s_resetReason == ESP_RST_DEEPSLEEP) { // Wake up
+            s_state = NONE;
+        }
+        ArduinoOTA.setHostname("MiniWebRadio");
+    } else {
+        s_state = NONE;
+        changeState(WIFI_SETTINGS, 0);
+        return;
+    }
+
+    if (BT_EMITTER_RX >= 0) bt_emitter.begin();
+
+    rec_buffer.alloc_array(REC_BUFFER_SIZE, "rec_buffer");                             // allocate in PSRAM
+    writeBuffer.alloc_array(WRITE_CHUNK_SIZE, "writeBuffer");                          // allocate in PSRAM
+    xTaskCreatePinnedToCore(wavWriterTask, "wavWriter", 4096, nullptr, 1, nullptr, 0); // start recorder task
+    printfln(s_tag.setup, "Recorder task started, free heap: " ANSI_ESC_CYAN "{}", ESP.getFreeHeap());
+
+    drawImage("/common/Wallpaper.jpg", 0, 0);                                                                     // Wallpaper
+    getTFT().copyFramebuffer(FB_VISIBLE, FB_BACKGROUND, 0, 0, displayConfig.dispWidth, displayConfig.dispHeight); // copy wallpaper to background
+
+    dispHeader.updateVolume(s_volume.cur_volume);
+    dispHeader.speakerOnOff(!s_f_mute);
+    dispHeader.updateTime(s_time, true);
+
+    dispFooter.setIpAddr(s_myIP);
+    dispFooter.updateStation(s_cur_station);
+    dispFooter.updateOffTime(s_sleeptime);
+
+    s_stationURL = s_settings.lastconnectedhost;
+    s_start_counter = 1;
+
+    setTFTbrightness(s_brightness);
+
+    // ES8311 es;
+    // es.begin(&i2cBusOne, 0x18);
+    // es.setVolume(50);
+    // es.setBitsPerSample(32);
+}
+
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// 📌📌📌  L O O P  📌📌📌
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
+void loop() {
+    vTaskDelay(1);
+    dlna.loop();
+    audio.loop();
+    webSrv.loop();
+    ftpSrv.handleFTP();
+    ir.loop();
+    meteo.loop();
+    getTP().loop();
+    ArduinoOTA.handle();
+    bt_emitter.loop();
+    getTFT().loop();
+    BH1750.loop();
+
+    if (s_start_counter) s_start_counter++;
+    if (s_start_counter == 10) { MDNS.begin("MiniWebRadio"); }
+    if (s_start_counter == 20) { MDNS.addService("esp32", "tcp", 80); }
+    if (s_start_counter == 30) { ArduinoOTA.begin(); }
+    if (s_start_counter == 40) { ftpSrv.begin(SD_MMC, FTP_USERNAME, FTP_PASSWORD); }
+    if (s_start_counter == 50) { setRTC(s_TZString); }
+    if (s_start_counter == 60) { meteo.send_request(); }
+    if (s_start_counter == 70) { setStation(s_cur_station); }
+    if (s_start_counter == 80) { changeState(RADIO, 0); } // s_lastState
+    if (s_start_counter == 90) { dlna.seekServer(); }
+    if (s_start_counter == 95) { webSrv.begin(80, 81, "MiniWebRadio", s_version); }
+    if (s_start_counter == 100) { s_start_counter = 0; }
+
+    // Cap lines drained per loop() call: sending every buffered line in one go blocks this core (shared with UI/touch/WiFi events)
+    // for the whole burst, e.g. during reconnects or verbose logging, causing UI/web sluggishness. Spreading it over several
+    // loop() iterations keeps each iteration short while still catching up quickly (loop runs many times per second).
+    uint8_t       logLinesThisLoop = 0;
+    const uint8_t maxLogLinesPerLoop = 10;
+    while (s_logBuffer.size() > 0 && logLinesThisLoop < maxLogLinesPerLoop) {
+        size_t i = s_logBuffer.size();
+        if (s_logBuffer[i - 1].strlen() > 0 && s_logBuffer[i - 1].strlen() < 1024) {
+            webSrv.send("serTerminal=", s_logBuffer[i - 1]);
+        } else
+            log_w("%s %i: log budder full, strlen %i", __FILE__, __LINE__, s_logBuffer[i - 1].strlen());
+        s_logBuffer.pop_back();
+        logLinesThisLoop++;
+    }
+
+    if (s_f_dlnaBrowseServer) {
+        s_f_dlnaBrowseServer = false;
+        dlna.browseServer(s_currDLNAsrvNr, s_dlnaHistory[s_dlnaLevel].objId, s_totalNumberReturned);
+    }
+    if (s_f_clearLogo) {
+        s_f_clearLogo = false;
+        clearLogo();
+    }
+    if (s_f_clearStationName) {
+        s_f_clearStationName = false;
+        clearStationName();
+    }
+
+    if (s_f_playlistEnabled) {
+        if (!audio.isRunning() && !s_f_pauseResume) { processPlaylist(); }
+    }
+    //-----------------------------------------------------0.1 SEC------------------------------------------------------------------------------------
+    if (s_f_100ms) { // calls every 0.1 second
+        s_f_100ms = false;
+
+        while (s_timeCounter.timer) {
+            s_timeCounter.timer -= s_timeCounter.factor;
+            s_timeCounter.timer = std::round(s_timeCounter.timer * 1000.0f) / 1000.0f;
+            if (s_timeCounter.timer < 0.0f) s_timeCounter.timer = 0.0f;
+            dispFooter.updateTC(s_timeCounter.timer);
+            if (s_timeCounter.timer != 0.0f) break;
+
+            if (volBox.is_enabled()) volBox.hide();
+            if (s_f_sleeping) return; // tc is active by pressing a button, but do nothing if "off"
+            if (s_state == RADIO) {
+                if (!txt_RA_staName.is_enabled()) { txt_RA_staName.show(); } // assume volBox is shown
+                if (s_subState_radio == 1) { changeState(RADIO, 0); }        // Mute, Vol+, Vol-, Sta+, Sta-, StaList
+                if (s_subState_radio == 2) { changeState(RADIO, 0); }        // Player, DLNA, Clock, SleepTime, Brightness, EQ, BT, Off
+            } else if (s_state == STATIONSLIST) {
+                changeState(RADIO, 0);
+            } else if (s_state == PLAYER) {
+                if (!txt_PL_fName.is_enabled()) { txt_PL_fName.show(); } // assume volBox is shown
+            } else if (s_state == AUDIOFILESLIST) {
+                changeState(PLAYER, 0);
+            } else if (s_state == DLNA) {
+                if (!txt_DL_fName.is_enabled()) { txt_DL_fName.show(); } // assume volBox is shown
+            } else if (s_state == DLNAITEMSLIST) {
+                changeState(DLNA, 0);
+            } else if (s_state == CLOCK) {
+                changeState(CLOCK, 0);
+            } else if (s_state == WEATHER) {
+                changeState(WEATHER, 0);
+            } else {
+                ;
+            } // all other, do nothing
+        }
+
+        if (!s_f_rtc) { s_f_rtc = rtc.hasValidTime(); }
+        // ------------------------------------------- volume / mute --------------------------------------------------------------------------------
+        if (!s_f_mute) {
+            if (audio.getVolume() != s_volume.cur_volume) { audio.setVolume(s_volume.cur_volume); }
+        } else {
+            if (audio.getVolume() != 0) { audio.setVolume(0); }
+        }
+
+        // ------------------------------------------- message box ----------------------------------------------------------------------------------
+        if (s_f_msg_box) {                // messagebox is visible?
+            if (s_timestamp < millis()) { // time to hide
+                s_f_msg_box = false;
+                msg_box.hide();
+                if (s_f_esp_restart) { // restart after time
+                    s_f_esp_restart = false;
+                    ESP.restart();
+                }
+            }
+        }
+    }
+    //----------------------------------------------------- 1 SEC ------------------------------------------------------------------------------------
+
+    if (s_f_1sec) { // calls every second
+        s_f_1sec = false;
+
+        s_time = rtc.get_rtime();
+        s_totalRuntime++;
+        uint16_t minuteOfTheDay = rtc.getMinuteOfTheDay();
+        uint8_t  weekDay = rtc.getweekday();
+        clk_CL_24.updateTime(minuteOfTheDay, weekDay);
+        if (s_state == WEATHER && s_subState_weather == 0) cls_weather.update_time(s_time);
+        if (s_state == RINGING) clk_RI_24small.updateTime(minuteOfTheDay, weekDay);
+        static uint8_t semaphore = 0;
+        if (!semaphore) { s_f_alarm = isAlarm(weekDay, s_alarmdays, minuteOfTheDay, s_alarmtime) && s_f_rtc; } // alarm if rtc and CL green
+        if (s_f_alarm) { semaphore++; }
+        if (semaphore) { semaphore++; }
+        if (semaphore >= 65) { semaphore = 0; }
+
+        //------------------------------------------ALARM MANAGEMENT----------------------------------------------------------------------------------
+        if (s_f_alarm) {
+            s_f_alarm = false;
+            if (s_f_sleeping)
+                wake_up(RINGING, 0);
+            else
+                changeState(RINGING, 0);
+        }
+        if (s_f_eof_alarm) { // AFTER RINGING
+            s_f_eof_alarm = false;
+            s_volume.cur_volume = s_volume.volumeAfterAlarm;
+            changeState(RADIO, 0);
+        }
+
+        if (s_f_stationsChanged) {
+            s_f_stationsChanged = false;
+            staMgnt.updateStationsList();
+        }
+        //------------------------------------------UPDATE DISPLAY------------------------------------------------------------------------------------
+        if (!s_f_sleeping || s_state == RINGING) {
+            if (s_time.minute == 59 && s_time.second == 53) s_f_timeSpeech = true;
+
+            dispHeader.updateTime(s_time, false);
+            if (s_f_newBitRate) {
+                s_f_newBitRate = false;
+                dispFooter.updateBitRate(s_icyBitRate);
+            }
+            if (s_f_newStationName) {
+                s_f_newStationName = false;
+                showStationName();
+            }
+        }
+        //------------------------------------------ UPDATE METEO ------------------------------------------------------------------------------------
+        if (s_f_update_meteo) {
+            meteo.send_request();
+            printfln(s_tag.meteo_info, ANSI_ESC_GREEN "Update Meteo");
+            s_f_update_meteo = false;
+        }
+        if (s_time.minute == 0 && s_time.second == 10) s_f_update_meteo = true;
+        //---------------------------------------------TIME SPEECH -----------------------------------------------------------------------------------
+        static bool f_resume = false;
+        if (s_f_timeSpeech) { // speech the time 7 sec before a new hour is arrived
+            s_f_timeSpeech = false;
+            uint8_t hour = s_time.hour + 1;
+            if (hour == 24) hour = 0; //  extract the hour
+            if (s_f_timeAnnouncement && !s_f_mute && !s_f_sleeping && s_state == RADIO) {
+                f_resume = true;
+                s_f_eof = false;
+                ps_ptr<char> p;
+                p.assignf("/voice_time/{}/{}_00.mp3", s_timeSpeechLang, hour);
+                connecttoFS("SD_MMC", p);
+            } else {
+                printfln(s_tag.action, "Time announcement at " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET " o'clock is silent", hour);
+            }
+        }
+        if (f_resume && s_f_eof) {
+            f_resume = false;
+            s_f_eof = false;
+            setStation(s_cur_station);
+            return;
+        }
+        //------------------------------------------AUDIO_CURRENT_TIME - DURATION---------------------------------------------------------------------
+        if (audio.isRunning()) {
+            s_audioFileDuration = audio.getAudioFileDuration();
+            if (s_audioFileDuration > 0) {
+                s_audioCurrentTime = audio.getAudioCurrentTime();
+                if (s_state == PLAYER && s_audioFileDuration) {
+                    pgb_PL_progress.setNewMinMaxVal(0, s_audioFileDuration);
+                    pgb_PL_progress.setValue(s_audioCurrentTime);
+                }
+                if (s_state == DLNA && s_audioFileDuration) {
+                    pgb_DL_progress.setNewMinMaxVal(0, s_audioFileDuration);
+                    pgb_DL_progress.setValue(s_audioCurrentTime);
+                }
+                if (s_audioFileDuration) {
+                    ps_ptr<char> act;
+                    act.set_name("act");
+                    act.assignf(ANSI_ESC_GREEN "AudioCurrentTime {}:{:02}s, ", s_audioCurrentTime / 60, s_audioCurrentTime % 60);
+                    act.appendf("AudioFileDuration {}:{:02}s", s_audioFileDuration / 60, s_audioFileDuration % 60);
+                    printfcr(s_tag.action, "{}", act);
+                }
+            }
+        }
+        //------------------------------------------NEW STREAMTITLE-----------------------------------------------------------------------------------
+        if (s_f_newStreamTitle && s_timeCounter.timer == 0) {
+            s_f_newStreamTitle = false;
+            if (s_state == RADIO) {
+                if (s_streamTitle.valid())
+                    showStreamTitle(s_streamTitle);
+                else if (s_icyDescription.valid()) {
+                    showStreamTitle(s_icyDescription);
+                    s_f_newIcyDescription = false;
+                    webSrv.send("icy_description=", s_icyDescription);
+                } else {
+                    txt_RA_sTitle.setText("");
+                    txt_RA_sTitle.show();
+                }
+            }
+            webSrv.send("streamtitle=", s_streamTitle);
+        }
+        if (s_f_newLyrics) {
+            s_f_newLyrics = false;
+            if (s_state == RADIO) showStreamTitle(s_lyrics);
+            if (s_state == PLAYER) showPlayerFileName(s_lyrics);
+            if (s_state == DLNA) show_DLNA_FileName(s_lyrics);
+        }
+        //------------------------------------------NEW ICY-DESCRIPTION-------------------------------------------------------------------------------
+        if (s_f_newIcyDescription && s_timeCounter.timer == 0) {
+            if (s_state == RADIO) {
+                if (!s_streamTitle.valid()) showStreamTitle(s_icyDescription);
+            }
+            webSrv.send("icy_description=", s_icyDescription);
+            s_f_newIcyDescription = false;
+        }
+        //------------------------------------------DETERMINE AUDIOCODEC------------------------------------------------------------------------------
+        if (s_cur_Codec == 0) {
+            uint8_t c = audio.getCodec();
+            if (c != 0 && c < 8) { // unknown or OGG, guard: c {1 ... 7, 9}
+                s_cur_Codec = c;
+                printfln(s_tag.audio_codec, ANSI_ESC_YELLOW "{}", codecname[c]);
+                if (s_state == PLAYER) showFileLogo(PLAYER, s_subState_player);
+            }
+        }
+        //------------------------------------------CONNECT TO LASTHOST-------------------------------------------------------------------------------
+        if (s_f_connectToLastStation) { // not used yet
+            s_f_connectToLastStation = false;
+            setStation(s_cur_station);
+        }
+        //----------------------------------------------SD RECORDER-----------------------------------------------------------------------------------
+        if (s_f_recording) {
+            // MWR_LOG_WARN("recording");
+            if (audio.isRunning()) {
+                if (!recorder.running) {
+                    recorder.startRequested = true;
+                    recorder.running = true;
+                    printfln(s_tag.action, "Start recording");
+                }
+            }
+        } else {
+            if (recorder.running) {
+                recorder.sampleRate = audio.getSampleRate();
+                printfln(s_tag.action, "Stop recording");
+                recorder.stopRequested = true;
+                recorder.running = false;
+            }
+        }
+        //------------------------------------------RECONNECT AFTER FAIL------------------------------------------------------------------------------
+        if (s_f_reconnect && !s_f_isWiFiConnected) { // not used yet
+            s_f_reconnect = false;
+            connecttohost(s_settings.lastconnectedhost.get());
+        }
+        //------------------------------------------CREATE DLNA PLAYLIST------------------------------------------------------------------------------
+        if (s_f_dlnaMakePlaylistOTF && s_f_dlna_browseReady) {
+            s_f_dlnaMakePlaylistOTF = false;
+            s_f_dlna_browseReady = false;
+            //    if( playlist.create_playlist_from_DLNA_folder()) s_f_playlistEnabled = true;
+        }
+        //------------------------------------------DLNA ITEMS RECEIVED-------------------------------------------------------------------------------
+        if (s_f_dlna_browseReady) { // unused
+            s_f_dlna_browseReady = false;
+        }
+        //-------------------------------------------WIFI DISCONNECTED?-------------------------------------------------------------------------------
+        if (WiFi.isConnected() == false) {
+            printfln(s_tag.wifi_info, ANSI_ESC_YELLOW "Reconnecting to WiFi...");
+            dispHeader.updateRSSI(-86);
+            s_f_WiFi_lost = true;
+        } else {
+            if (s_f_WiFi_lost) {
+                s_f_WiFi_lost = false;
+                if (s_state == RADIO) audio.connecttohost(s_settings.lastconnectedhost.get());
+            }
+        }
+        s_f_WiFi_lost == false ? dispHeader.updateRSSI(WiFi.RSSI()) : dispHeader.updateRSSI(-86);
+        dispFooter.updateAntenna(s_f_WiFi_lost);
+        //------------------------------------------GET AUDIO FILE ITEMS------------------------------------------------------------------------------
+        if (s_f_isFSConnected) {
+            //    uint32_t t = 0;
+            //    uint32_t fs = audioGetFileSize();
+            //    uint32_t br = audioGetBitRate();
+            //    if(br) t = (fs * 8)/ br;
+            //    MWR_LOG_DEBUG("Br {}, Dur {}s", br, t);
+        }
+        //--------------------------------------------- BT EMITTER ----------------------------------------------------------------------------------
+        if (s_bt_emitter.found) {
+            btn_RA_bt.set_active(true);
+            if (s_bt_emitter.enabled) {
+                if (!s_f_sleeping) {
+                    if (!bt_emitter.get_power_state()) bt_emitter.power_on(s_bt_emitter.mode);
+                } else {
+                    if (bt_emitter.get_power_state()) bt_emitter.power_off();
+                }
+            } else {
+                if (bt_emitter.get_power_state()) { bt_emitter.power_off(); }
+            }
+            if (bt_emitter.getMode().equals("NA")) {
+                ; // not ready yet
+            } else if (bt_emitter.get_power_state() && !bt_emitter.getMode().equals(s_bt_emitter.mode)) {
+                bt_emitter.setMode(s_bt_emitter.mode);
+            }
+        }
+    } //  END s_f_1sec
+    //------------------------------------------------------------------------------------------------------------------------------------------------
+    if (s_f_10sec == true) { // calls every 10 seconds
+        s_f_10sec = false;
+        updateSettings();
+    }
+
+    if (s_f_1min == true) { // calls every minute
+        s_f_1min = false;
+        if (s_sleeptime) {
+            s_sleeptime--;
+            if (!s_sleeptime) fall_asleep();
+            dispFooter.updateOffTime(s_sleeptime);
+        }
+
+        // static uint8_t btEmitterCnt = 0;
+        // if (!s_bt_emitter.found && btEmitterCnt < 1) {
+        //     btEmitterCnt++;
+        //     bt_emitter.begin(); // if the emitter has not yet responded
+        // }
+    }
+
+    if (s_f_1h == true) { // calls every hour
+        s_f_1h = false;
+    }
+
+    //-------------------------------------------------DEBUG / WIFI_SETTINGS ----------------------------------------------------------------------------------
+    if (Serial.available()) { // input: serial terminal
+        ps_ptr<char> r = Serial.readString().c_str();
+        r.replace("\n", "");
+        user_input(r);
+    }
+}
 
 /*  ╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
     ║                                                     D E F A U L T S E T T I N G S                                                         ║
@@ -810,185 +1354,6 @@ void stopSong() {
     s_f_playlistNextFile = false;
 }
 
-// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-// 📌📌📌  S E T U P  📌📌📌
-// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-void setup() {
-    s_version = Version;
-    s_version.trim();
-    //---- BEGIN ---------
-    Serial.begin(MONITOR_SPEED);
-    vTaskDelay(1500); // wait for Serial to be ready
-    printf("\n\n");
-    printfln(s_tag.none, "");
-    printfln(s_tag.none, "             " ANSI_ESC_YELLOW " ***************************************************** ");
-    printfln(s_tag.none, "             " ANSI_ESC_YELLOW " *     MiniWebRadio {:29}    * " ANSI_ESC_RESET "      ", s_version);
-    printfln(s_tag.none, "             " ANSI_ESC_YELLOW " ***************************************************** ");
-    printfln(s_tag.none, "");
-
-    mutex_rtc = xSemaphoreCreateMutex();
-    mutex_display = xSemaphoreCreateMutex();
-    Audio::audio_info_callback = my_audio_info; // audio callback
-    dlna.dlna_client_callbak(on_dlna_client);   // dlna callback
-    bt_emitter.kcx_bt_emitter_callback(on_kcx_bt_emitter);
-    webSrv.websrv_callbak(on_websrv);
-    meteo.meteo_callback(on_meteo);
-    esp_log_level_set("*", ESP_LOG_DEBUG);
-    esp_log_set_vprintf(log_redirect_handler);
-    if (!get_esp_items(&s_resetReason, &s_f_FFatFound)) return;
-
-    s_f_brightnessIsChangeable = setupBacklight(TFT_BL, 512);
-    if (!s_f_brightnessIsChangeable) btn_SE_bright.set_active(false);
-    setTFTbrightness(s_brightness);
-
-    if (IR_PIN >= 0) {
-        pinMode(IR_PIN, INPUT_PULLUP); // if ir_pin is read only, have a external resistor (~10...40KOhm)
-    }
-
-    pref.begin("Pref", false); // instance of preferences from AccessPoint (SSID, PW ...)
-
-    if (!detect_i2_c_devices(&i2cBusOne, I2C_SDA, I2C_SCL, &s_i2c_items)) { printfln(s_tag.setup, "No i2c device found"); }
-
-    if (s_i2c_items.bh1750_found) {
-        BH1750.begin(&i2cBusOne, s_i2c_items.bh1750_addr); // init the sensor
-        BH1750.setResolutionMode(BH1750.ONE_TIME_H_RESOLUTION_MODE);
-        BH1750.setSensitivity(BH1750.SENSITIVITY_ADJ_MAX);
-    }
-
-    if (s_i2c_items.es8311_found) {
-        bool res = es8311.begin(&i2cBusOne, s_i2c_items.es8311_addr); // init the dac
-        if (res) es8311.setVolume(90);
-    }
-
-    if (s_i2c_items.tca9554_found) {
-        bool res = tca9554.begin(&i2cBusOne, s_i2c_items.tca9554_addr); // init the port expander
-        (void)res;
-    }
-
-    set_tft_items(); // TFT, Resolotion
-    set_tp_items();  // TP, Resolotion
-    if (!init_SD_card()) return;
-
-    defaultsettings();
-
-    if (ESP.getFlashChipSize() > 80000000) { FFat.begin(); }
-
-    drawImage("/common/MiniWebRadioV4.jpg", 0, 0); // Welcomescreen
-    updateSettings();
-
-    s_f_isWiFiConnected = connectToWiFi();
-
-    placingGraphicObjects();
-    sdr_BR_value.setValue(s_brightness);
-    sdr_EQ_lowPass.setValue(s_tone.LP);
-    sdr_EQ_bandPass.setValue(s_tone.BP);
-    sdr_EQ_highPass.setValue(s_tone.HP);
-    sdr_EQ_balance.setValue(s_tone.BAL);
-    sdr_DL_volume.setMinMaxVal(0, s_volume.volumeSteps);
-    sdr_DL_volume.setValue(s_volume.cur_volume);
-    sdr_PL_volume.setMinMaxVal(0, s_volume.volumeSteps);
-    sdr_PL_volume.setValue(s_volume.cur_volume);
-    sdr_RA_volume.setMinMaxVal(0, s_volume.volumeSteps);
-    sdr_RA_volume.setValue(s_volume.cur_volume);
-    sdr_CL_volume.setMinMaxVal(0, s_volume.volumeSteps);
-    sdr_CL_volume.setValue(s_volume.cur_volume);
-    sdr_WR_volume.setMinMaxVal(0, s_volume.volumeSteps);
-    sdr_WR_volume.setValue(s_volume.cur_volume);
-    btn_RA_mute.setValue(s_f_mute);
-    btn_CL_mute.setValue(s_f_mute);
-    btn_EQ_mute.setValue(s_f_mute);
-    btn_PL_mute.setValue(s_f_mute);
-    btn_DL_mute.setValue(s_f_mute);
-    btn_WR_mute.setValue(s_f_mute);
-    btn_BT_power.setValue(s_bt_emitter.enabled);
-    btn_SE_spectrum.setValue(s_f_spectrum_enabled);
-    btn_SE_vu_meter.setValue(s_f_vu_meter_enabled);
-    lst_DLNA.client_and_history(&dlna, &s_dlnaHistory[0], 10);
-    lst_RADIO.currentStationNr(&s_cur_station);
-    clk_AC_red.alarm_time_and_days(&s_alarmdays, s_alarmtime);
-
-    audio.settings.VU_LEVEL = true;
-    audio.settings.SPECTRUM = true;
-    audio.setAudioTaskCore(AUDIOTASK_CORE);
-    audio.setConnectionTimeout(CONN_TIMEOUT, CONN_TIMEOUT_SSL);
-    audio.setVolumeSteps(s_volume.volumeSteps);
-    audio.setVolume(0);
-    audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT, I2S_MCLK);
-    audio.setI2SCommFMT_LSB(I2S_COMM_FMT);
-
-    printfln(s_tag.setup, "number of saved stations: " ANSI_ESC_CYAN "{}", staMgnt.getSumStations());
-    printfln(s_tag.setup, "number of saved favourites: " ANSI_ESC_CYAN "{}", staMgnt.getSumFavStations());
-    printfln(s_tag.setup, "current station number: " ANSI_ESC_CYAN "{}", s_cur_station);
-    printfln(s_tag.setup, "current volume: " ANSI_ESC_CYAN "{}", s_volume.cur_volume);
-    printfln(s_tag.setup, "volume steps: " ANSI_ESC_CYAN "{}", s_volume.volumeSteps);
-    printfln(s_tag.setup, "volume after alarm: " ANSI_ESC_CYAN "{}", s_volume.volumeAfterAlarm);
-    printfln(s_tag.setup, "last connected host: " ANSI_ESC_YELLOW "{}", s_settings.lastconnectedhost);
-    printfln(s_tag.setup, "connection timeout: " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET " ms", CONN_TIMEOUT);
-    printfln(s_tag.setup, "connection timeout SSL: " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET " ms", CONN_TIMEOUT_SSL);
-
-    if (s_volume.volumeSteps < 21) s_volume.volumeSteps = 21;
-
-    ir.begin();    // Init InfraredDecoder
-    meteo.begin(); // Init Open-Meteo
-    meteo.set_coordinates(s_latiitude, s_longitude);
-    meteo.set_timeZone(s_TZName);
-    cls_weather.locale(&s_temperature_unit, &s_pressure_unit, &s_wind_speed_unit);
-
-    if (AMP_ENABLED >= 0) { // enable onboard amplifier
-        pinMode(AMP_ENABLED, OUTPUT);
-        digitalWrite(AMP_ENABLED, HIGH);
-        printfln(s_tag.setup, "On Board Amplifier pin is: " ANSI_ESC_CYAN "{}", AMP_ENABLED);
-    }
-
-    if (s_f_mute) { printfln(s_tag.setup, "volume is muted: (from " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET ")", s_volume.cur_volume); }
-    setI2STone();
-
-    ticker100ms.attach(0.1, timer100ms);
-
-    muteChanged(s_f_mute);
-    if (s_f_isWiFiConnected) {
-        if (s_resetReason == ESP_RST_POWERON ||   // Simply switch on the operating voltage
-            s_resetReason == ESP_RST_SW ||        // ESP.restart()
-            s_resetReason == ESP_RST_SDIO ||      // The boot button was pressed
-            s_resetReason == ESP_RST_DEEPSLEEP) { // Wake up
-            s_state = NONE;
-        }
-        ArduinoOTA.setHostname("MiniWebRadio");
-    } else {
-        s_state = NONE;
-        changeState(WIFI_SETTINGS, 0);
-        return;
-    }
-
-    if (BT_EMITTER_RX >= 0) bt_emitter.begin();
-
-    rec_buffer.alloc_array(REC_BUFFER_SIZE, "rec_buffer");                             // allocate in PSRAM
-    writeBuffer.alloc_array(WRITE_CHUNK_SIZE, "writeBuffer");                          // allocate in PSRAM
-    xTaskCreatePinnedToCore(wavWriterTask, "wavWriter", 4096, nullptr, 1, nullptr, 0); // start recorder task
-    printfln(s_tag.setup, "Recorder task started, free heap: " ANSI_ESC_CYAN "{}", ESP.getFreeHeap());
-
-    drawImage("/common/Wallpaper.jpg", 0, 0);                                                                     // Wallpaper
-    getTFT().copyFramebuffer(FB_VISIBLE, FB_BACKGROUND, 0, 0, displayConfig.dispWidth, displayConfig.dispHeight); // copy wallpaper to background
-
-    dispHeader.updateVolume(s_volume.cur_volume);
-    dispHeader.speakerOnOff(!s_f_mute);
-    dispHeader.updateTime(s_time, true);
-
-    dispFooter.setIpAddr(s_myIP);
-    dispFooter.updateStation(s_cur_station);
-    dispFooter.updateOffTime(s_sleeptime);
-
-    s_stationURL = s_settings.lastconnectedhost;
-    s_start_counter = 1;
-
-    setTFTbrightness(s_brightness);
-
-    // ES8311 es;
-    // es.begin(&i2cBusOne, 0x18);
-    // es.setVolume(50);
-    // es.setBitsPerSample(32);
-}
 
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // 📌📌📌  C O M M O N  📌📌📌
@@ -1926,375 +2291,6 @@ ps_ptr<char> get_WiFi_PW(const char* ssid) {
     return password;
 }
 
-/*         ╔═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
-           ║                                                                                    L O O P                                                                                  ║
-           ╚═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝   */
-
-void loop() {
-    vTaskDelay(1);
-    dlna.loop();
-    audio.loop();
-    webSrv.loop();
-    ftpSrv.handleFTP();
-    ir.loop();
-    meteo.loop();
-    getTP().loop();
-    ArduinoOTA.handle();
-    bt_emitter.loop();
-    getTFT().loop();
-    BH1750.loop();
-
-    if (s_start_counter) s_start_counter++;
-    if (s_start_counter == 10) { MDNS.begin("MiniWebRadio"); }
-    if (s_start_counter == 20) { MDNS.addService("esp32", "tcp", 80); }
-    if (s_start_counter == 30) { ArduinoOTA.begin(); }
-    if (s_start_counter == 40) { ftpSrv.begin(SD_MMC, FTP_USERNAME, FTP_PASSWORD); }
-    if (s_start_counter == 50) { setRTC(s_TZString); }
-    if (s_start_counter == 60) { meteo.send_request(); }
-    if (s_start_counter == 70) { setStation(s_cur_station); }
-    if (s_start_counter == 80) { changeState(RADIO, 0); } // s_lastState
-    if (s_start_counter == 90) { dlna.seekServer(); }
-    if (s_start_counter == 95) { webSrv.begin(80, 81, "MiniWebRadio", s_version); }
-    if (s_start_counter == 100) { s_start_counter = 0; }
-
-    // Cap lines drained per loop() call: sending every buffered line in one go blocks this core (shared with UI/touch/WiFi events)
-    // for the whole burst, e.g. during reconnects or verbose logging, causing UI/web sluggishness. Spreading it over several
-    // loop() iterations keeps each iteration short while still catching up quickly (loop runs many times per second).
-    uint8_t       logLinesThisLoop = 0;
-    const uint8_t maxLogLinesPerLoop = 10;
-    while (s_logBuffer.size() > 0 && logLinesThisLoop < maxLogLinesPerLoop) {
-        size_t i = s_logBuffer.size();
-        if (s_logBuffer[i - 1].strlen() > 0 && s_logBuffer[i - 1].strlen() < 1024) {
-            webSrv.send("serTerminal=", s_logBuffer[i - 1]);
-        } else
-            log_w("%s %i: log budder full, strlen %i", __FILE__, __LINE__, s_logBuffer[i - 1].strlen());
-        s_logBuffer.pop_back();
-        logLinesThisLoop++;
-    }
-
-    if (s_f_dlnaBrowseServer) {
-        s_f_dlnaBrowseServer = false;
-        dlna.browseServer(s_currDLNAsrvNr, s_dlnaHistory[s_dlnaLevel].objId, s_totalNumberReturned);
-    }
-    if (s_f_clearLogo) {
-        s_f_clearLogo = false;
-        clearLogo();
-    }
-    if (s_f_clearStationName) {
-        s_f_clearStationName = false;
-        clearStationName();
-    }
-
-    if (s_f_playlistEnabled) {
-        if (!audio.isRunning() && !s_f_pauseResume) { processPlaylist(); }
-    }
-    //-----------------------------------------------------0.1 SEC------------------------------------------------------------------------------------
-    if (s_f_100ms) { // calls every 0.1 second
-        s_f_100ms = false;
-
-        while (s_timeCounter.timer) {
-            s_timeCounter.timer -= s_timeCounter.factor;
-            s_timeCounter.timer = std::round(s_timeCounter.timer * 1000.0f) / 1000.0f;
-            if (s_timeCounter.timer < 0.0f) s_timeCounter.timer = 0.0f;
-            dispFooter.updateTC(s_timeCounter.timer);
-            if (s_timeCounter.timer != 0.0f) break;
-
-            if (volBox.is_enabled()) volBox.hide();
-            if (s_f_sleeping) return; // tc is active by pressing a button, but do nothing if "off"
-            if (s_state == RADIO) {
-                if (!txt_RA_staName.is_enabled()) { txt_RA_staName.show(); } // assume volBox is shown
-                if (s_subState_radio == 1) { changeState(RADIO, 0); }        // Mute, Vol+, Vol-, Sta+, Sta-, StaList
-                if (s_subState_radio == 2) { changeState(RADIO, 0); }        // Player, DLNA, Clock, SleepTime, Brightness, EQ, BT, Off
-            } else if (s_state == STATIONSLIST) {
-                changeState(RADIO, 0);
-            } else if (s_state == PLAYER) {
-                if (!txt_PL_fName.is_enabled()) { txt_PL_fName.show(); } // assume volBox is shown
-            } else if (s_state == AUDIOFILESLIST) {
-                changeState(PLAYER, 0);
-            } else if (s_state == DLNA) {
-                if (!txt_DL_fName.is_enabled()) { txt_DL_fName.show(); } // assume volBox is shown
-            } else if (s_state == DLNAITEMSLIST) {
-                changeState(DLNA, 0);
-            } else if (s_state == CLOCK) {
-                changeState(CLOCK, 0);
-            } else if (s_state == WEATHER) {
-                changeState(WEATHER, 0);
-            } else {
-                ;
-            } // all other, do nothing
-        }
-
-        if (!s_f_rtc) { s_f_rtc = rtc.hasValidTime(); }
-        // ------------------------------------------- volume / mute --------------------------------------------------------------------------------
-        if (!s_f_mute) {
-            if (audio.getVolume() != s_volume.cur_volume) { audio.setVolume(s_volume.cur_volume); }
-        } else {
-            if (audio.getVolume() != 0) { audio.setVolume(0); }
-        }
-
-        // ------------------------------------------- message box ----------------------------------------------------------------------------------
-        if (s_f_msg_box) {                // messagebox is visible?
-            if (s_timestamp < millis()) { // time to hide
-                s_f_msg_box = false;
-                msg_box.hide();
-                if (s_f_esp_restart) { // restart after time
-                    s_f_esp_restart = false;
-                    ESP.restart();
-                }
-            }
-        }
-    }
-    //----------------------------------------------------- 1 SEC ------------------------------------------------------------------------------------
-
-    if (s_f_1sec) { // calls every second
-        s_f_1sec = false;
-
-        s_time = rtc.get_rtime();
-        s_totalRuntime++;
-        uint16_t minuteOfTheDay = rtc.getMinuteOfTheDay();
-        uint8_t  weekDay = rtc.getweekday();
-        clk_CL_24.updateTime(minuteOfTheDay, weekDay);
-        if (s_state == WEATHER && s_subState_weather == 0) cls_weather.update_time(s_time);
-        if (s_state == RINGING) clk_RI_24small.updateTime(minuteOfTheDay, weekDay);
-        static uint8_t semaphore = 0;
-        if (!semaphore) { s_f_alarm = isAlarm(weekDay, s_alarmdays, minuteOfTheDay, s_alarmtime) && s_f_rtc; } // alarm if rtc and CL green
-        if (s_f_alarm) { semaphore++; }
-        if (semaphore) { semaphore++; }
-        if (semaphore >= 65) { semaphore = 0; }
-
-        //------------------------------------------ALARM MANAGEMENT----------------------------------------------------------------------------------
-        if (s_f_alarm) {
-            s_f_alarm = false;
-            if (s_f_sleeping)
-                wake_up(RINGING, 0);
-            else
-                changeState(RINGING, 0);
-        }
-        if (s_f_eof_alarm) { // AFTER RINGING
-            s_f_eof_alarm = false;
-            s_volume.cur_volume = s_volume.volumeAfterAlarm;
-            changeState(RADIO, 0);
-        }
-
-        if (s_f_stationsChanged) {
-            s_f_stationsChanged = false;
-            staMgnt.updateStationsList();
-        }
-        //------------------------------------------UPDATE DISPLAY------------------------------------------------------------------------------------
-        if (!s_f_sleeping || s_state == RINGING) {
-            if (s_time.minute == 59 && s_time.second == 53) s_f_timeSpeech = true;
-
-            dispHeader.updateTime(s_time, false);
-            if (s_f_newBitRate) {
-                s_f_newBitRate = false;
-                dispFooter.updateBitRate(s_icyBitRate);
-            }
-            if (s_f_newStationName) {
-                s_f_newStationName = false;
-                showStationName();
-            }
-        }
-        //------------------------------------------ UPDATE METEO ------------------------------------------------------------------------------------
-        if (s_f_update_meteo) {
-            meteo.send_request();
-            printfln(s_tag.meteo_info, ANSI_ESC_GREEN "Update Meteo");
-            s_f_update_meteo = false;
-        }
-        if (s_time.minute == 0 && s_time.second == 10) s_f_update_meteo = true;
-        //---------------------------------------------TIME SPEECH -----------------------------------------------------------------------------------
-        static bool f_resume = false;
-        if (s_f_timeSpeech) { // speech the time 7 sec before a new hour is arrived
-            s_f_timeSpeech = false;
-            uint8_t hour = s_time.hour + 1;
-            if (hour == 24) hour = 0; //  extract the hour
-            if (s_f_timeAnnouncement && !s_f_mute && !s_f_sleeping && s_state == RADIO) {
-                f_resume = true;
-                s_f_eof = false;
-                ps_ptr<char> p;
-                p.assignf("/voice_time/{}/{}_00.mp3", s_timeSpeechLang, hour);
-                connecttoFS("SD_MMC", p);
-            } else {
-                printfln(s_tag.action, "Time announcement at " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET " o'clock is silent", hour);
-            }
-        }
-        if (f_resume && s_f_eof) {
-            f_resume = false;
-            s_f_eof = false;
-            setStation(s_cur_station);
-            return;
-        }
-        //------------------------------------------AUDIO_CURRENT_TIME - DURATION---------------------------------------------------------------------
-        if (audio.isRunning()) {
-            s_audioFileDuration = audio.getAudioFileDuration();
-            if (s_audioFileDuration > 0) {
-                s_audioCurrentTime = audio.getAudioCurrentTime();
-                if (s_state == PLAYER && s_audioFileDuration) {
-                    pgb_PL_progress.setNewMinMaxVal(0, s_audioFileDuration);
-                    pgb_PL_progress.setValue(s_audioCurrentTime);
-                }
-                if (s_state == DLNA && s_audioFileDuration) {
-                    pgb_DL_progress.setNewMinMaxVal(0, s_audioFileDuration);
-                    pgb_DL_progress.setValue(s_audioCurrentTime);
-                }
-                if (s_audioFileDuration) {
-                    ps_ptr<char> act;
-                    act.set_name("act");
-                    act.assignf(ANSI_ESC_GREEN "AudioCurrentTime {}:{:02}s, ", s_audioCurrentTime / 60, s_audioCurrentTime % 60);
-                    act.appendf("AudioFileDuration {}:{:02}s", s_audioFileDuration / 60, s_audioFileDuration % 60);
-                    printfcr(s_tag.action, "{}", act);
-                }
-            }
-        }
-        //------------------------------------------NEW STREAMTITLE-----------------------------------------------------------------------------------
-        if (s_f_newStreamTitle && s_timeCounter.timer == 0) {
-            s_f_newStreamTitle = false;
-            if (s_state == RADIO) {
-                if (s_streamTitle.valid())
-                    showStreamTitle(s_streamTitle);
-                else if (s_icyDescription.valid()) {
-                    showStreamTitle(s_icyDescription);
-                    s_f_newIcyDescription = false;
-                    webSrv.send("icy_description=", s_icyDescription);
-                } else {
-                    txt_RA_sTitle.setText("");
-                    txt_RA_sTitle.show();
-                }
-            }
-            webSrv.send("streamtitle=", s_streamTitle);
-        }
-        if (s_f_newLyrics) {
-            s_f_newLyrics = false;
-            if (s_state == RADIO) showStreamTitle(s_lyrics);
-            if (s_state == PLAYER) showPlayerFileName(s_lyrics);
-            if (s_state == DLNA) show_DLNA_FileName(s_lyrics);
-        }
-        //------------------------------------------NEW ICY-DESCRIPTION-------------------------------------------------------------------------------
-        if (s_f_newIcyDescription && s_timeCounter.timer == 0) {
-            if (s_state == RADIO) {
-                if (!s_streamTitle.valid()) showStreamTitle(s_icyDescription);
-            }
-            webSrv.send("icy_description=", s_icyDescription);
-            s_f_newIcyDescription = false;
-        }
-        //------------------------------------------DETERMINE AUDIOCODEC------------------------------------------------------------------------------
-        if (s_cur_Codec == 0) {
-            uint8_t c = audio.getCodec();
-            if (c != 0 && c < 8) { // unknown or OGG, guard: c {1 ... 7, 9}
-                s_cur_Codec = c;
-                printfln(s_tag.audio_codec, ANSI_ESC_YELLOW "{}", codecname[c]);
-                if (s_state == PLAYER) showFileLogo(PLAYER, s_subState_player);
-            }
-        }
-        //------------------------------------------CONNECT TO LASTHOST-------------------------------------------------------------------------------
-        if (s_f_connectToLastStation) { // not used yet
-            s_f_connectToLastStation = false;
-            setStation(s_cur_station);
-        }
-        //----------------------------------------------SD RECORDER-----------------------------------------------------------------------------------
-        if (s_f_recording) {
-            // MWR_LOG_WARN("recording");
-            if (audio.isRunning()) {
-                if (!recorder.running) {
-                    recorder.startRequested = true;
-                    recorder.running = true;
-                    printfln(s_tag.action, "Start recording");
-                }
-            }
-        } else {
-            if (recorder.running) {
-                recorder.sampleRate = audio.getSampleRate();
-                printfln(s_tag.action, "Stop recording");
-                recorder.stopRequested = true;
-                recorder.running = false;
-            }
-        }
-        //------------------------------------------RECONNECT AFTER FAIL------------------------------------------------------------------------------
-        if (s_f_reconnect && !s_f_isWiFiConnected) { // not used yet
-            s_f_reconnect = false;
-            connecttohost(s_settings.lastconnectedhost.get());
-        }
-        //------------------------------------------CREATE DLNA PLAYLIST------------------------------------------------------------------------------
-        if (s_f_dlnaMakePlaylistOTF && s_f_dlna_browseReady) {
-            s_f_dlnaMakePlaylistOTF = false;
-            s_f_dlna_browseReady = false;
-            //    if( playlist.create_playlist_from_DLNA_folder()) s_f_playlistEnabled = true;
-        }
-        //------------------------------------------DLNA ITEMS RECEIVED-------------------------------------------------------------------------------
-        if (s_f_dlna_browseReady) { // unused
-            s_f_dlna_browseReady = false;
-        }
-        //-------------------------------------------WIFI DISCONNECTED?-------------------------------------------------------------------------------
-        if (WiFi.isConnected() == false) {
-            printfln(s_tag.wifi_info, ANSI_ESC_YELLOW "Reconnecting to WiFi...");
-            dispHeader.updateRSSI(-86);
-            s_f_WiFi_lost = true;
-        } else {
-            if (s_f_WiFi_lost) {
-                s_f_WiFi_lost = false;
-                if (s_state == RADIO) audio.connecttohost(s_settings.lastconnectedhost.get());
-            }
-        }
-        s_f_WiFi_lost == false ? dispHeader.updateRSSI(WiFi.RSSI()) : dispHeader.updateRSSI(-86);
-        dispFooter.updateAntenna(s_f_WiFi_lost);
-        //------------------------------------------GET AUDIO FILE ITEMS------------------------------------------------------------------------------
-        if (s_f_isFSConnected) {
-            //    uint32_t t = 0;
-            //    uint32_t fs = audioGetFileSize();
-            //    uint32_t br = audioGetBitRate();
-            //    if(br) t = (fs * 8)/ br;
-            //    MWR_LOG_DEBUG("Br {}, Dur {}s", br, t);
-        }
-        //--------------------------------------------- BT EMITTER ----------------------------------------------------------------------------------
-        if (s_bt_emitter.found) {
-            btn_RA_bt.set_active(true);
-            if (s_bt_emitter.enabled) {
-                if (!s_f_sleeping) {
-                    if (!bt_emitter.get_power_state()) bt_emitter.power_on(s_bt_emitter.mode);
-                } else {
-                    if (bt_emitter.get_power_state()) bt_emitter.power_off();
-                }
-            } else {
-                if (bt_emitter.get_power_state()) { bt_emitter.power_off(); }
-            }
-            if (bt_emitter.getMode().equals("NA")) {
-                ; // not ready yet
-            } else if (bt_emitter.get_power_state() && !bt_emitter.getMode().equals(s_bt_emitter.mode)) {
-                bt_emitter.setMode(s_bt_emitter.mode);
-            }
-        }
-    } //  END s_f_1sec
-    //------------------------------------------------------------------------------------------------------------------------------------------------
-    if (s_f_10sec == true) { // calls every 10 seconds
-        s_f_10sec = false;
-        updateSettings();
-    }
-
-    if (s_f_1min == true) { // calls every minute
-        s_f_1min = false;
-        if (s_sleeptime) {
-            s_sleeptime--;
-            if (!s_sleeptime) fall_asleep();
-            dispFooter.updateOffTime(s_sleeptime);
-        }
-
-        // static uint8_t btEmitterCnt = 0;
-        // if (!s_bt_emitter.found && btEmitterCnt < 1) {
-        //     btEmitterCnt++;
-        //     bt_emitter.begin(); // if the emitter has not yet responded
-        // }
-    }
-
-    if (s_f_1h == true) { // calls every hour
-        s_f_1h = false;
-    }
-
-    //-------------------------------------------------DEBUG / WIFI_SETTINGS ----------------------------------------------------------------------------------
-    if (Serial.available()) { // input: serial terminal
-        ps_ptr<char> r = Serial.readString().c_str();
-        r.replace("\n", "");
-        user_input(r);
-    }
-}
 
 /*         ╔═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
            ║                                                                                  E V E N T S                                                                                ║

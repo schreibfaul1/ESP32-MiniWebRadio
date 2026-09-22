@@ -334,6 +334,7 @@ ps_ptr<char> s_wind_speed_unit = "km/h"; // km/h, m/s, bft
 ps_ptr<char> s_version;
 
 #include "mwr_src/classes.hpp"
+
 dlnaHistory_s  s_dlnaHistory[10];
 timecounter_s  s_timeCounter;
 SD_content     s_SD_content;
@@ -370,7 +371,7 @@ ps_ptr<char> getLogoPath();
 void         webSrv_send_station_items();
 void         showFileLogo(int8_t state, int8_t subState);
 void         showPlayerFileName(ps_ptr<char> fname);
-void         show_DLNA_FileName(const char* fname);
+void         show_DLNA_FileName(ps_ptr<char> fname);
 void         showPlsFileNumber();
 void         showAudioFileNumber();
 void         display_sleeptime(int8_t ud = 0);
@@ -423,6 +424,9 @@ void         tp_long_pressed(uint16_t x, uint16_t y);
 void         tp_moved(uint16_t x, uint16_t y);
 void         tp_released(uint16_t x, uint16_t y);
 inline void  get_registered_names();
+inline void  clearLogo();
+inline void  clearStationName();
+void         timer100ms();
 
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
@@ -581,6 +585,8 @@ void make_hardcopy_on_sd() {
 
 #endif
 }
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// 📌📌📌   U S E R   I N P U T    📌📌📌
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void ui_pause_resume() {
     bool res = audio.pauseResume();
