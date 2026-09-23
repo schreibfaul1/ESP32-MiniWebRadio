@@ -1105,12 +1105,30 @@ class Textbox : public RegisterTable {
         if (graphicObjects_OnRelease) graphicObjects_OnRelease(m_name, m_ra);
         return true;
     }
+
+    //------------------------------------------------------------------------------------------------------------------------------------------------
+    template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>> void setText(T txt) {
+        static char ret[24];
+        auto [ptr, ec] = std::to_chars(ret, ret + sizeof(ret) - 1, txt);
+        if (ec != std::errc{}) {
+            MWR_LOG_ERROR("is not mumeric: {}", txt);
+            return;
+        }
+        *ptr = '\0';
+        setText (ret);
+    }
+
+    void setText(const char* txt) {
+        setText(ps_ptr<char>(txt));
+    }
+
     void setText(ps_ptr<char> txt) { // prepare a text, wait of show() to write it
         if (m_text != txt) {
             m_content_has_changed = true;
             m_text = txt;
         }
     }
+    //------------------------------------------------------------------------------------------------------------------------------------------------
 
     void setNoWrap(bool noWrap) { m_noWrap = noWrap; }
 
