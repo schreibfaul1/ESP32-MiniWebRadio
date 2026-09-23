@@ -1588,6 +1588,7 @@ void setVolume(uint8_t vol) {
     sdr_DL_volume.setValue(s_volume.cur_volume);
     sdr_PL_volume.setValue(s_volume.cur_volume);
     sdr_RA_volume.setValue(s_volume.cur_volume);
+    sdr_WR_volume.setValue(s_volume.cur_volume);
     printfln(s_tag.action, "current volume is " ANSI_ESC_CYAN "{}", s_volume.cur_volume);
 }
 
@@ -3808,7 +3809,7 @@ void graphicObjects_OnChange(ps_ptr<char> name, int32_t val) {
                                               s_tone.BAL = val; webSrv.send("settone=", getI2STone()); setI2STone(); txt_EQ_balance.setText(c); txt_EQ_balance.show(); goto exit; }
     if (name.equals("pgb_PL_progress"))     { goto exit; }
     if (name.equals("pgb_DL_progress"))     { goto exit; }
-    if (name.equals("sdr_BR_value"))        { s_brightness = val; c.assignf("{}", val); txt_BR_value.setText(c); txt_BR_value.show();
+    if (name.equals("sdr_BR_value"))        { s_brightness = val; txt_BR_value.setText(s_brightness); txt_BR_value.show();
                                               if(!s_i2c_items.bh1750_found) setTFTbrightness(s_brightness);
                                               goto exit;
                                             }
