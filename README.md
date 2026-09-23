@@ -1,7 +1,7 @@
 
 # ESP32-S3-MiniWebRadio V4
 
-[radio.bmp](https://github.com/user-attachments/files/32575689/radio.bmp)
+![radio](docs/radio.bmp)
 
 MiniWebRadio Features:
 <ul>
