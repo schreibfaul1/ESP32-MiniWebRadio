@@ -147,7 +147,7 @@ If you see that, there are illegal characters in the WIFI access data. Sometimes
 ___________________________________________________________
 <br>
 
-![MWR](/docs/MWR.jpg)<br>
+![MWR](/docs/mwr.png)<br>
 <br>
 
 
