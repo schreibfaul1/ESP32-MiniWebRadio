@@ -58,7 +58,6 @@
 #include "esp_log.h"
 #include "esp_psram.h"
 #include "kcx_bt_emitter.h"
-#include "mbedtls/sha1.h"
 #include "meteo.h"
 #include "rtime.h"
 #include "tft_common_defs.h"
@@ -77,7 +76,6 @@
 #include <WiFiMulti.h>
 #include <Wire.h>
 #include <deque>
-#include <mbedtls/aes.h>
 #include <mbedtls/base64.h>
 #include <vector>
 
