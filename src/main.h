@@ -1,5 +1,5 @@
 // created: 10.02.2022
-// updated: 28.06.2026
+// updated: 24.09.2026
 
 #include "settings.h"
 #pragma once
