@@ -90,7 +90,7 @@ TwoWire     i2cBusOne = TwoWire(0); // additional HW, sensors, buttons, encoder 
 TwoWire     i2cBusTwo = TwoWire(1); // external DAC, AC101 or ES8388
 SPIClass    spiBus(FSPI);
 
-#include "mwr_src/function.h"
+#include "mwr_src/common.h"
 #include "tft_dsi.h"
 #include "tft_rgb.h"
 #include "tft_spi.h"
