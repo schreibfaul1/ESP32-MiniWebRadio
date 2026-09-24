@@ -173,7 +173,7 @@ void setup() {
             s_resetReason == ESP_RST_DEEPSLEEP) { // Wake up
             s_state = NONE;
         }
-        ArduinoOTA.setHostname("MiniWebRadio");
+        setupOTA();
     } else {
         s_state = NONE;
         changeState(WIFI_SETTINGS, 0);
@@ -215,6 +215,8 @@ void setup() {
 
 void loop() {
     vTaskDelay(1);
+    ArduinoOTA.handle();
+    if (s_f_otaRunning) return; // give the WiFi/TCP stack exclusive access to the core for the rest of the transfer
     dlna.loop();
     audio.loop();
     webSrv.loop();
@@ -222,7 +224,6 @@ void loop() {
     ir.loop();
     meteo.loop();
     getTP().loop();
-    ArduinoOTA.handle();
     bt_emitter.loop();
     getTFT().loop();
     BH1750.loop();
@@ -247,10 +248,10 @@ void loop() {
     const uint8_t maxLogLinesPerLoop = 10;
     while (s_logBuffer.size() > 0 && logLinesThisLoop < maxLogLinesPerLoop) {
         size_t i = s_logBuffer.size();
-        if (s_logBuffer[i - 1].strlen() > 0 && s_logBuffer[i - 1].strlen() < 1024) {
+        if (s_logBuffer[i - 1].strlen() > 0 && s_logBuffer[i - 1].strlen() < 2048) {
             webSrv.send("serTerminal=", s_logBuffer[i - 1]);
         } else
-            log_w("%s %i: log budder full, strlen %i", __FILE__, __LINE__, s_logBuffer[i - 1].strlen());
+            log_w("%s %i: log buffer full, strlen %i", __FILE__, __LINE__, s_logBuffer[i - 1].strlen());
         s_logBuffer.pop_back();
         logLinesThisLoop++;
     }
@@ -1155,6 +1156,35 @@ bool connectToWiFi() {
              WiFi.SSID().c_str(), s_myIP, WiFi.RSSI());
 
     return true; // can't connect to any network
+}
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// OTA updates fail intermittently ("timed out" after only a few KB) when loop() keeps servicing audio, FTP, DLNA, TFT,
+// meteo, IR etc. in between calls to ArduinoOTA.handle(). Any one of these can block for a while (SD_MMC access, SPI
+// draw, network I/O) and delay reading the incoming update stream past espota's per-chunk timeout. The callbacks below
+// pause all non-essential subsystems for the duration of the transfer so loop() can dedicate the core to OTA alone
+// (see s_f_otaRunning handling in loop()).
+void setupOTA() {
+    ArduinoOTA.setHostname("MiniWebRadio");
+    ArduinoOTA.onStart([]() {
+        s_f_otaRunning = true;
+        ticker100ms.detach();  // stop the 100ms ISR, it has no benefit during OTA and only adds jitter
+        audio.stopSong();      // release I2S/decoder and stop consuming WiFi/SD bandwidth
+        printfln(s_tag.setup, ANSI_ESC_YELLOW "OTA update started, pausing radio, FTP, DLNA and display" ANSI_ESC_RESET);
+    });
+    ArduinoOTA.onEnd([]() { printfln(s_tag.setup, ANSI_ESC_GREEN "OTA update finished, rebooting" ANSI_ESC_RESET); });
+    ArduinoOTA.onProgress([](uint32_t progress, uint32_t total) {
+        static uint8_t lastPercent = 255;
+        uint8_t        percent = total ? (progress * 100) / total : 0;
+        if (percent != lastPercent) {
+            lastPercent = percent;
+            printfln(s_tag.setup, "OTA progress: " ANSI_ESC_CYAN "{}%", percent);
+        }
+    });
+    ArduinoOTA.onError([](ota_error_t error) {
+        s_f_otaRunning = false;
+        ticker100ms.attach(0.1, timer100ms); // restore normal operation after a failed attempt
+        printfln(s_tag.setup, ANSI_ESC_RED "OTA error [{}], resuming normal operation", (int)error);
+    });
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void setWiFiCredentials(ps_ptr<char> ssid, ps_ptr<char> password) {

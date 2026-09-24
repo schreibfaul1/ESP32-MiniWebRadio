@@ -210,6 +210,7 @@ bool s_f_stationsChanged = false;
 bool s_f_sd_card_found = false;
 bool s_f_isWiFiConnected = false;
 bool s_f_ok_from_ir = false;
+bool s_f_otaRunning = false; // true while an OTA update is in progress, used to pause non-essential subsystems
 
 int8_t   s_state = NONE; // statemaschine
 int8_t   s_lastState = NONE;
@@ -325,6 +326,7 @@ void         display_sleeptime(int8_t ud = 0);
 boolean      drawImage(ps_ptr<char> path, uint16_t posX, uint16_t posY, uint16_t maxWidth = 0, uint16_t maxHeigth = 0);
 boolean      isAudio(ps_ptr<char> path);
 bool         connectToWiFi();
+void         setupOTA();
 void         setWiFiCredentials(ps_ptr<char> ssid, ps_ptr<char> password);
 ps_ptr<char> scaleImage(ps_ptr<char> path);
 bool         detect_i2_c_devices(TwoWire* twi, int8_t sda, int8_t scl, i2c_items_s* i2c_items);
