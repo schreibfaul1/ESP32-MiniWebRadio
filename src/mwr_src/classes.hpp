@@ -1,4 +1,5 @@
 #include "Audio.h"
+#include "Arduino.h"
 #include "function.h"
 
 #pragma once
