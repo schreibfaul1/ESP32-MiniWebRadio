@@ -1238,21 +1238,48 @@ std::string WebSrv::sanitize_utf8_replace(const char* input, size_t len) {
 ps_ptr<char> WebSrv::createWebSocketAccept(const ps_ptr<char>& wsSecKey) {
     constexpr char WS_GUID[] = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
-    uint8_t hash[20];
+    uint8_t hash[PSA_HASH_MAX_SIZE];
+    size_t  hashLen = 0;
 
-    mbedtls_sha1_context ctx;
-    mbedtls_sha1_init(&ctx);
-    mbedtls_sha1_starts(&ctx);
-    mbedtls_sha1_update(&ctx, reinterpret_cast<const unsigned char*>(wsSecKey.get()), wsSecKey.strlen());
-    mbedtls_sha1_update(&ctx, reinterpret_cast<const unsigned char*>(WS_GUID), sizeof(WS_GUID) - 1);
-    mbedtls_sha1_finish(&ctx, hash);
-    mbedtls_sha1_free(&ctx);
+    psa_status_t status = psa_crypto_init();
+    if (status != PSA_SUCCESS) { return {}; }
+
+    psa_hash_operation_t operation = PSA_HASH_OPERATION_INIT;
+
+    status = psa_hash_setup(&operation, PSA_ALG_SHA_1);
+    if (status != PSA_SUCCESS) {
+        psa_hash_abort(&operation);
+        return {};
+    }
+
+    status = psa_hash_update(&operation, reinterpret_cast<const uint8_t*>(wsSecKey.get()), wsSecKey.strlen());
+    if (status != PSA_SUCCESS) {
+        psa_hash_abort(&operation);
+        return {};
+    }
+
+    status = psa_hash_update(&operation, reinterpret_cast<const uint8_t*>(WS_GUID), sizeof(WS_GUID) - 1);
+    if (status != PSA_SUCCESS) {
+        psa_hash_abort(&operation);
+        return {};
+    }
+
+    status = psa_hash_finish(&operation, hash, sizeof(hash), &hashLen);
+    if (status != PSA_SUCCESS) {
+        psa_hash_abort(&operation);
+        return {};
+    }
 
     ps_ptr<char> responseKey;
-    responseKey.alloc(29);
+    responseKey.alloc(29); // 28 Zeichen Base64 + '\0'
 
     size_t outLen = 0;
-    mbedtls_base64_encode(reinterpret_cast<unsigned char*>(responseKey.get()), 29, &outLen, hash, sizeof(hash));
+
+    int ret = mbedtls_base64_encode(reinterpret_cast<unsigned char*>(responseKey.get()), 29, &outLen, hash, hashLen);
+
+    if (ret != 0) { return {}; }
+
     responseKey[outLen] = '\0';
+
     return responseKey;
 }

@@ -1,4 +1,5 @@
-#include "../common.h"
+#include "Audio.h"
+#include "graphical.hpp"
 
 #pragma once
 

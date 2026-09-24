@@ -10,8 +10,8 @@
 #define WEBSRV_H_
 #include "Audio.h"
 #include "base64.h"
+#include "psa/crypto.h"
 #include "mbedtls/base64.h"
-#include "mbedtls/sha1.h"
 #include <charconv>
 #include <type_traits>
 

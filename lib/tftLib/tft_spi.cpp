@@ -1,8 +1,6 @@
 // first release on 09/2019
 // updated on Jul 05 2026
 
-#include "common.h"
-
 #include "tft_spi.h"
 #include "Arduino.h"
 
