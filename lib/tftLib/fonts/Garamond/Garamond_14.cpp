@@ -2114,8 +2114,8 @@ static lv_font_fmt_txt_dsc_t font_dsc = {
 /*Initialize a public general font descriptor*/
 lv_font_t Garamond_14 = {
     .name = "Garamond_14",
-    .line_height = 20, /*The maximum line height required by the font*/
-    .base_line = 5,    /*Baseline measured from the bottom of the line*/
+    .line_height = 17, /*The maximum line height required by the font*/
+    .base_line = 3,    /*Baseline measured from the bottom of the line*/
     .dsc = &font_dsc,  /*The custom font data. Will be accessed by `get_glyph_bitmap/dsc` */
 };
 

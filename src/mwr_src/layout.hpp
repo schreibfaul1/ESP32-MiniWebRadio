@@ -153,15 +153,15 @@ inline constexpr uint8_t fonts[13] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66
 
 inline constexpr DisplayConfig config = {
     fonts,
-    15,                  // listFontSize
-    16,                  // headerFontSize, 0 -> autoSize
-    0,                   // footerFontSize, 0 -> autoSize
+    2 * h_area / 10,     // listFontSize
+    h_footer,            // headerFontSize, 0 -> autoSize
+    h_footer,            // footerFontSize, 0 -> autoSize
     156,                 // bigNumbersFontSize
     15,                  // fileNumberFontSize
     {5, 77, 129, 57, 0}, // sleeptimeXPos[5]
     48,                  // sleeptimeYPos
-    320,                 // width
-    240,                 // height
+    h_res,               // width
+    v_res,               // height
     0,                   // brightnessMin
     255,                 // brightnessMax
     "s"                  // size code
@@ -240,15 +240,15 @@ inline constexpr uint8_t fonts[13] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66
 
 inline constexpr DisplayConfig config = {
     fonts,
-    21,                   // listFontSize
-    25,                   // headerFontSize, 0 -> autoSize
-    0,                    // footerFontSize, 0 -> autoSize
+    2 * h_area / 10,      // listFontSize
+    h_footer,             // headerFontSize, 0 -> autoSize
+    h_footer,             // footerFontSize, 0 -> autoSize
     156,                  // bigNumbersFontSize
     21,                   // fileNumberFontSize
     {5, 107, 175, 73, 0}, // sleeptimeXPos[5]
     48,                   // sleeptimeYPos
-    480,                  // width
-    320,                  // height
+    h_res,                // width
+    v_res,                // height
     0,                    // brightnessMin
     255,                  // brightnessMax
     "m"                   // size code
@@ -327,15 +327,15 @@ inline constexpr uint8_t fonts[13] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66
 
 inline constexpr DisplayConfig config = {
     fonts,
-    27,                     // listFontSize
-    38,                     // headerFontSize
-    38,                     // footerFontSize
+    2 * h_area / 10,        // listFontSize
+    h_area,                 // headerFontSize
+    h_area,                 // footerFontSize
     156,                    // bigNumbersFontSize
     34,                     // fileNumberFontSize
     {20, 137, 223, 106, 0}, // sleeptimeXPos[5]
     112,                    // sleeptimeYPos
-    800,                    // width
-    480,                    // height
+    h_res,                  // width
+    v_res,                  // height
     0,                      // brightnessMin
     255,                    // brightnessMax
     "l"                     // size code
@@ -414,9 +414,9 @@ inline constexpr uint8_t fonts[13] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66
 
 inline constexpr DisplayConfig config = {
     fonts,
-    38,                     // listFontSize
-    38,                     // headerFontSize
-    38,                     // footerFontSize
+    2 * h_area / 10,        // listFontSize
+    h_footer,               // headerFontSize, 0 -> autoSize
+    h_footer,               // footerFontSize, 0 -> autoSize
     156,                    // bigNumbersFontSize
     34,                     // fileNumberFontSize
     {20, 137, 223, 106, 0}, // sleeptimeXPos[5]
