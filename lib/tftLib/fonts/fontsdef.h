@@ -57,7 +57,6 @@ typedef struct {
     const char* name;
     int32_t     line_height;
     int32_t     base_line;
-    uint8_t     glyph_bitmap;
     const void* dsc;
 } lv_font_t;
 
