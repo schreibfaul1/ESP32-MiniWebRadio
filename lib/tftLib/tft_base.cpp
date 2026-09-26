@@ -1,12 +1,6 @@
 #include "tft_base.h"
 #include "../../src/settings.h"
-#include "fonts/Arial.h"
-#include "fonts/BigNumbers.h"
-#include "fonts/FreeSerifItalic.h"
-#include "fonts/Garamond.h"
-#include "fonts/TimesNewRoman.h"
-#include "fonts/Z003.h"
-#include <utility>
+
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 uint16_t TFT_Base::logicalWidth() const {
     if (m_rotation & 1) return m_v_res;
@@ -2124,150 +2118,6 @@ uint8_t TFT_Base::JPEG_jd_decomp(JDEC* jd, uint8_t scale) {
     return rc;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-//  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫   F O N T S   ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-bool TFT_Base::setFontByIndex(uint16_t fontIndex) {
-    if (fontIndex > 12) return false;
-    const uint8_t fontSize[] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66, 81, 96};
-    setFontSize(fontSize[fontIndex]);
-    return true;
-}
-
-int8_t TFT_Base::getFontSizeByIndex(uint16_t fontIndex){
-    if (fontIndex > 12) return -1;
-    const uint8_t fontSize[] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66, 81, 96};
-    return fontSize[fontIndex];
-}
-
-uint8_t TFT_Base::getFontIndex() {
-    return m_current_font.font_index;
-}
-
-uint8_t TFT_Base::getMaxFontIndex() {
-    return m_current_font.max_font_index;
-}
-
-void TFT_Base::setFontSize(uint16_t font) {
-#define SET_FONT_DATA(CMAP, BITMAP, DSC)                  \
-    do {                                                  \
-        m_current_font.cmaps = CMAP;                      \
-        m_current_font.glyph_bitmap = BITMAP;             \
-        m_current_font.glyph_dsc = DSC;                   \
-        m_current_font.range_start = CMAP->range_start;   \
-        m_current_font.range_length = CMAP->range_length; \
-        m_current_font.line_height = CMAP->line_height;   \
-        m_current_font.font_height = CMAP->font_height;   \
-        m_current_font.base_line = CMAP->base_line;       \
-        m_current_font.lookup_table = CMAP->lookup_table; \
-    } while (0)
-
-    int8_t fontIndex = -1;
-    // clang-format off
-#ifdef TFT_TIMES_NEW_ROMAN
-    switch (font) {
-        case 15: SET_FONT_DATA(cmaps_Times15, glyph_bitmap_Times15, glyph_dsc_Times15); fontIndex = 0; break;
-        case 16: SET_FONT_DATA(cmaps_Times16, glyph_bitmap_Times16, glyph_dsc_Times16); fontIndex = 1; break;
-        case 18: SET_FONT_DATA(cmaps_Times18, glyph_bitmap_Times18, glyph_dsc_Times18); fontIndex = 2; break;
-        case 21: SET_FONT_DATA(cmaps_Times21, glyph_bitmap_Times21, glyph_dsc_Times21); fontIndex = 3; break;
-        case 25: SET_FONT_DATA(cmaps_Times25, glyph_bitmap_Times25, glyph_dsc_Times25); fontIndex = 4; break;
-        case 27: SET_FONT_DATA(cmaps_Times27, glyph_bitmap_Times27, glyph_dsc_Times27); fontIndex = 5; break;
-        case 34: SET_FONT_DATA(cmaps_Times34, glyph_bitmap_Times34, glyph_dsc_Times34); fontIndex = 6; break;
-        case 38: SET_FONT_DATA(cmaps_Times38, glyph_bitmap_Times38, glyph_dsc_Times38); fontIndex = 7; break;
-        case 43: SET_FONT_DATA(cmaps_Times43, glyph_bitmap_Times43, glyph_dsc_Times43); fontIndex = 8; break;
-        case 56: SET_FONT_DATA(cmaps_Times56, glyph_bitmap_Times56, glyph_dsc_Times56); fontIndex = 9; break;
-        case 66: SET_FONT_DATA(cmaps_Times66, glyph_bitmap_Times66, glyph_dsc_Times66); fontIndex = 10; break;
-        case 81: SET_FONT_DATA(cmaps_Times81, glyph_bitmap_Times81, glyph_dsc_Times81); fontIndex = 11; break;
-        case 96: SET_FONT_DATA(cmaps_Times96, glyph_bitmap_Times96, glyph_dsc_Times96); fontIndex = 12; break;
-        default: break;
-    }
-#endif
-
-#ifdef TFT_GARAMOND
-    switch (font) {
-        case 15: SET_FONT_DATA(cmaps_Garamond15, glyph_bitmap_Garamond15, glyph_dsc_Garamond15); fontIndex = 0; break;
-        case 16: SET_FONT_DATA(cmaps_Garamond16, glyph_bitmap_Garamond16, glyph_dsc_Garamond16); fontIndex = 1; break;
-        case 18: SET_FONT_DATA(cmaps_Garamond18, glyph_bitmap_Garamond18, glyph_dsc_Garamond18); fontIndex = 2; break;
-        case 21: SET_FONT_DATA(cmaps_Garamond21, glyph_bitmap_Garamond21, glyph_dsc_Garamond21); fontIndex = 3; break;
-        case 25: SET_FONT_DATA(cmaps_Garamond25, glyph_bitmap_Garamond25, glyph_dsc_Garamond25); fontIndex = 4; break;
-        case 27: SET_FONT_DATA(cmaps_Garamond27, glyph_bitmap_Garamond27, glyph_dsc_Garamond27); fontIndex = 5; break;
-        case 34: SET_FONT_DATA(cmaps_Garamond34, glyph_bitmap_Garamond34, glyph_dsc_Garamond34); fontIndex = 6; break;
-        case 38: SET_FONT_DATA(cmaps_Garamond38, glyph_bitmap_Garamond38, glyph_dsc_Garamond38); fontIndex = 7; break;
-        case 43: SET_FONT_DATA(cmaps_Garamond43, glyph_bitmap_Garamond43, glyph_dsc_Garamond43); fontIndex = 8; break;
-        case 56: SET_FONT_DATA(cmaps_Garamond56, glyph_bitmap_Garamond56, glyph_dsc_Garamond56); fontIndex = 9; break;
-        case 66: SET_FONT_DATA(cmaps_Garamond66, glyph_bitmap_Garamond66, glyph_dsc_Garamond66); fontIndex = 10; break;
-        case 81: SET_FONT_DATA(cmaps_Garamond81, glyph_bitmap_Garamond81, glyph_dsc_Garamond81); fontIndex = 11; break;
-        case 96: SET_FONT_DATA(cmaps_Garamond96, glyph_bitmap_Garamond96, glyph_dsc_Garamond96); fontIndex = 12; break;
-        default: break;
-    }
-#endif
-
-#ifdef TFT_FREE_SERIF_ITALIC
-    switch (font) {
-        case 15: SET_FONT_DATA(cmaps_FreeSerifItalic15, glyph_bitmap_FreeSerifItalic15, glyph_dsc_FreeSerifItalic15); fontIndex = 0; break;
-        case 16: SET_FONT_DATA(cmaps_FreeSerifItalic16, glyph_bitmap_FreeSerifItalic16, glyph_dsc_FreeSerifItalic16); fontIndex = 1; break;
-        case 18: SET_FONT_DATA(cmaps_FreeSerifItalic18, glyph_bitmap_FreeSerifItalic18, glyph_dsc_FreeSerifItalic18); fontIndex = 2; break;
-        case 21: SET_FONT_DATA(cmaps_FreeSerifItalic21, glyph_bitmap_FreeSerifItalic21, glyph_dsc_FreeSerifItalic21); fontIndex = 3; break;
-        case 25: SET_FONT_DATA(cmaps_FreeSerifItalic25, glyph_bitmap_FreeSerifItalic25, glyph_dsc_FreeSerifItalic25); fontIndex = 4; break;
-        case 27: SET_FONT_DATA(cmaps_FreeSerifItalic27, glyph_bitmap_FreeSerifItalic27, glyph_dsc_FreeSerifItalic27); fontIndex = 5; break;
-        case 34: SET_FONT_DATA(cmaps_FreeSerifItalic34, glyph_bitmap_FreeSerifItalic34, glyph_dsc_FreeSerifItalic34); fontIndex = 6; break;
-        case 38: SET_FONT_DATA(cmaps_FreeSerifItalic38, glyph_bitmap_FreeSerifItalic38, glyph_dsc_FreeSerifItalic38); fontIndex = 7; break;
-        case 43: SET_FONT_DATA(cmaps_FreeSerifItalic43, glyph_bitmap_FreeSerifItalic43, glyph_dsc_FreeSerifItalic43); fontIndex = 8; break;
-        case 56: SET_FONT_DATA(cmaps_FreeSerifItalic56, glyph_bitmap_FreeSerifItalic56, glyph_dsc_FreeSerifItalic56); fontIndex = 9; break;
-        case 66: SET_FONT_DATA(cmaps_FreeSerifItalic66, glyph_bitmap_FreeSerifItalic66, glyph_dsc_FreeSerifItalic66); fontIndex = 10; break;
-        case 81: SET_FONT_DATA(cmaps_FreeSerifItalic81, glyph_bitmap_FreeSerifItalic81, glyph_dsc_FreeSerifItalic81); fontIndex = 11; break;
-        case 96: SET_FONT_DATA(cmaps_FreeSerifItalic96, glyph_bitmap_FreeSerifItalic96, glyph_dsc_FreeSerifItalic96); fontIndex = 12; break;
-        default: break;
-    }
-#endif
-
-#ifdef TFT_ARIAL
-    switch (font) {
-        case 15: SET_FONT_DATA(cmaps_Arial15, glyph_bitmap_Arial15, glyph_dsc_Arial15); fontIndex = 0; break;
-        case 16: SET_FONT_DATA(cmaps_Arial16, glyph_bitmap_Arial16, glyph_dsc_Arial16); fontIndex = 1; break;
-        case 18: SET_FONT_DATA(cmaps_Arial18, glyph_bitmap_Arial18, glyph_dsc_Arial18); fontIndex = 2; break;
-        case 21: SET_FONT_DATA(cmaps_Arial21, glyph_bitmap_Arial21, glyph_dsc_Arial21); fontIndex = 3; break;
-        case 25: SET_FONT_DATA(cmaps_Arial25, glyph_bitmap_Arial25, glyph_dsc_Arial25); fontIndex = 4; break;
-        case 27: SET_FONT_DATA(cmaps_Arial27, glyph_bitmap_Arial27, glyph_dsc_Arial27); fontIndex = 5; break;
-        case 34: SET_FONT_DATA(cmaps_Arial34, glyph_bitmap_Arial34, glyph_dsc_Arial34); fontIndex = 6; break;
-        case 38: SET_FONT_DATA(cmaps_Arial38, glyph_bitmap_Arial38, glyph_dsc_Arial38); fontIndex = 7; break;
-        case 43: SET_FONT_DATA(cmaps_Arial43, glyph_bitmap_Arial43, glyph_dsc_Arial43); fontIndex = 8; break;
-        case 56: SET_FONT_DATA(cmaps_Arial56, glyph_bitmap_Arial56, glyph_dsc_Arial56); fontIndex = 9; break;
-        case 66: SET_FONT_DATA(cmaps_Arial66, glyph_bitmap_Arial66, glyph_dsc_Arial66); fontIndex = 10; break;
-        case 81: SET_FONT_DATA(cmaps_Arial81, glyph_bitmap_Arial81, glyph_dsc_Arial81); fontIndex = 11; break;
-        case 96: SET_FONT_DATA(cmaps_Arial96, glyph_bitmap_Arial96, glyph_dsc_Arial96); fontIndex = 12; break;
-        default: break;
-    }
-#endif
-
-#ifdef TFT_Z003
-    switch (font) {
-        case 15: SET_FONT_DATA(cmaps_Z003_15, glyph_bitmap_Z003_15, glyph_dsc_Z003_15); fontIndex = 0; break;
-        case 16: SET_FONT_DATA(cmaps_Z003_16, glyph_bitmap_Z003_16, glyph_dsc_Z003_16); fontIndex = 1; break;
-        case 18: SET_FONT_DATA(cmaps_Z003_18, glyph_bitmap_Z003_18, glyph_dsc_Z003_18); fontIndex = 2; break;
-        case 21: SET_FONT_DATA(cmaps_Z003_21, glyph_bitmap_Z003_21, glyph_dsc_Z003_21); fontIndex = 3; break;
-        case 25: SET_FONT_DATA(cmaps_Z003_25, glyph_bitmap_Z003_25, glyph_dsc_Z003_25); fontIndex = 4; break;
-        case 27: SET_FONT_DATA(cmaps_Z003_27, glyph_bitmap_Z003_27, glyph_dsc_Z003_27); fontIndex = 5; break;
-        case 34: SET_FONT_DATA(cmaps_Z003_34, glyph_bitmap_Z003_34, glyph_dsc_Z003_34); fontIndex = 6; break;
-        case 38: SET_FONT_DATA(cmaps_Z003_38, glyph_bitmap_Z003_38, glyph_dsc_Z003_38); fontIndex = 7; break;
-        case 43: SET_FONT_DATA(cmaps_Z003_43, glyph_bitmap_Z003_43, glyph_dsc_Z003_43); fontIndex = 8; break;
-        case 56: SET_FONT_DATA(cmaps_Z003_56, glyph_bitmap_Z003_56, glyph_dsc_Z003_56); fontIndex = 9; break;
-        case 66: SET_FONT_DATA(cmaps_Z003_66, glyph_bitmap_Z003_66, glyph_dsc_Z003_66); fontIndex = 10; break;
-        case 81: SET_FONT_DATA(cmaps_Z003_81, glyph_bitmap_Z003_81, glyph_dsc_Z003_81); fontIndex = 11; break;
-        case 96: SET_FONT_DATA(cmaps_Z003_96, glyph_bitmap_Z003_96, glyph_dsc_Z003_96); fontIndex = 12; break;
-        default: break;
-    }
-#endif
-    // clang-format on
-    if (font == 156) {
-        SET_FONT_DATA(cmaps_BigNumbers, glyph_bitmap_BiGNumbers, glyph_dsc_BigNumbers);
-        fontIndex = 13;
-    }
-    if (fontIndex == -1) { log_e("unknown fontsize %i", font); }
-    m_current_font.font_index = fontIndex;
-    m_current_font.max_font_index = 12;
-#undef SET_FONT_DATA
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool TFT_Base::renderRGB565(int16_t x, int16_t y, uint16_t w, uint16_t h, const uint16_t* rgb, const uint8_t* alpha) {
     if (!rgb || w == 0 || h == 0) return false;
 
@@ -3002,34 +2852,47 @@ void TFT_Base::writeTheFramebuffer(const uint8_t* bmi, uint16_t posX, uint16_t p
 //  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫   writeText   ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
 // ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-uint16_t TFT_Base::getGlyphHeight(char c){  // exact glyph height - is not line height
-    uint16_t glyphPos = m_current_font.lookup_table[(int32_t)c];
-    uint16_t height = m_current_font.glyph_dsc[glyphPos].box_h;
-    return height;
+uint16_t TFT_Base::getGlyphPos(uint32_t codepoint) {
+    for (uint8_t i = 0; i < m_current_font.cmap_num; i++) {
+        const auto& cmap = m_current_font.cmaps[i];
+        if (codepoint < cmap.range_start || codepoint >= cmap.range_start + cmap.range_length) { continue; }
+        uint32_t offset = codepoint - cmap.range_start;
+        // LV_FONT_FMT_TXT_CMAP_FORMAT0_TINY
+        if (cmap.unicode_list == nullptr) { return cmap.glyph_id_start + offset; }
+        // LV_FONT_FMT_TXT_CMAP_SPARSE_TINY
+        for (uint16_t j = 0; j < cmap.list_length; j++) {
+            if (cmap.unicode_list[j] == offset) { return cmap.glyph_id_start + j; }
+        }
+        return 0xFFFF;
+    }
+    return 0xFFFF;
 }
 
-uint16_t TFT_Base::getGlyphWidth(char c){
-    uint16_t glyphPos = m_current_font.lookup_table[(int32_t)c];
-    uint16_t width = m_current_font.glyph_dsc[glyphPos].adv_w / 16;
-    return width;
+uint16_t TFT_Base::getGlyphWidth(uint32_t codepoint) {
+    const uint16_t glyphPos = getGlyphPos(codepoint);
+
+    if (glyphPos == GLYPH_NOT_FOUND) { return 0; }
+
+    return m_current_font.glyph_dsc[glyphPos].adv_w / 16;
 }
 
-uint16_t TFT_Base::getCurrentFontLineHigh(){
+bool TFT_Base::hasGlyph(uint32_t cp) {
+    return getGlyphPos(cp) != GLYPH_NOT_FOUND;
+}
+
+uint16_t TFT_Base::getCurrentFontLineHigh() {
     return m_current_font.line_height;
 }
 
-uint8_t TFT_Base::getHighestFontIndex(char c, uint8_t h){
-    setFontByIndex(getMaxFontIndex());
-    int8_t idx = getFontIndex();
-    while (true) {
-        if(m_current_font.line_height <= h) break;
-        if (--idx < 0) {
-            MWR_LOG_ERROR("char '{}' does not fit in heigt {}", c, h);
-            return 0;
+uint16_t TFT_Base::setFontSize(uint16_t line_height) {
+    for (int i = fontCount - 1; i >= 0; --i) {
+        if (fontList[i].line_height <= line_height) {
+            m_current_font = fontList[i];
+            return fontList[i].line_height;
         }
-        setFontByIndex(idx);
     }
-    return idx;
+    printf("ERROR: No font fits into line_height %u\n", line_height);
+    return 0;
 }
 
 TFT_Base::Utf8Char TFT_Base::decodeUtf8(const char* s) {
@@ -3090,10 +2953,10 @@ void TFT_Base::txtToToken(const char* p) {
         Utf8Char ch = decodeUtf8(p);
         uint32_t cp = ch.codepoint;
 
-        if (cp >= m_current_font.range_length) {
+        if (!hasGlyph(cp)) {
             if (findEmoji(cp)) {
                 m_token.emplace_back(TokenType::Glyph, cp);
-                MWR_LOG_DEBUG("emoji cl len {}", ch.length);
+                //    MWR_LOG_DEBUG("emoji cl len {}", ch.length);
                 p += ch.length;
                 continue;
             }
@@ -3101,20 +2964,17 @@ void TFT_Base::txtToToken(const char* p) {
                 cp = 0x0084;    // „ --> „
                 m_token.emplace_back(TokenType::Glyph, cp);
                 p += ch.length;
-                MWR_LOG_INFO("character U+201E replaced by U+0084");
+                //    MWR_LOG_INFO("character U+201E replaced by U+0084");
                 continue;
             }
             if (cp == 0x201C) { // Left Double Quotation Mark
                 cp = 0x0022;    // " --> "
                 m_token.emplace_back(TokenType::Glyph, cp);
                 p += ch.length;
-                MWR_LOG_INFO("character U+201C replaced by U+0022");
+                //    MWR_LOG_INFO("character U+201C replaced by U+0022");
                 continue;
             }
-            MWR_LOG_WARN("character U+{:04X} outside font", cp);
-            cp = 0x20;
-        } else if (m_current_font.lookup_table[cp] == 0xFFFF) {
-            MWR_LOG_WARN("character U+{:04X} missing", cp);
+            //    MWR_LOG_WARN("character U+{:04X} outside font", cp);
             cp = 0x20;
         }
         m_token.emplace_back(TokenType::Glyph, cp);
@@ -3155,8 +3015,8 @@ void TFT_Base::tokenToWords() {
                     g.type = GlyphType::Font;
                     g.color = fgColor;
                     g.codepoint = token.value;
-                    g.glyphPos = m_current_font.lookup_table[g.codepoint];
-                    g.width = m_current_font.glyph_dsc[g.glyphPos].adv_w / 16;
+                    g.glyphPos = getGlyphPos(g.codepoint);
+                    g.width = getGlyphWidth(g.codepoint);
                 }
 
                 currentWord.width += g.width;
@@ -3417,8 +3277,8 @@ bool TFT_Base::wordToLines(int16_t win_W, int16_t win_H, bool noWrap, bool clipN
 }
 // ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_Base::prepareFontLayout() {
-    m_spaceWidth = m_current_font.glyph_dsc[m_current_font.lookup_table[' ']].adv_w / 16; // The width of the spaces in the selected font
-    tokenToWords();                                                                       // From this point onwards, `m_word` contains the words and their widths, which were formed from the tokens
+    m_spaceWidth = getGlyphWidth(0x20); // The width of the spaces in the selected font
+    tokenToWords();                     // From this point onwards, `m_word` contains the words and their widths, which were formed from the tokens
 }
 // ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool TFT_Base::layoutText(int16_t win_W, int16_t win_H, bool noWrap, bool clipNoWrap) {
@@ -3481,15 +3341,11 @@ void TFT_Base::drawGlyph(const Glyph glyph, int16_t x, int16_t y) {
     }
     if (glyph.type == GlyphType::Font) {
         setTextColor(glyph.color);
-        uint32_t bitmap_index = m_current_font.glyph_dsc[glyph.glyphPos].bitmap_index;
-        uint16_t box_w = m_current_font.glyph_dsc[glyph.glyphPos].box_w;
-        uint16_t box_h = m_current_font.glyph_dsc[glyph.glyphPos].box_h;
-        int16_t  ofs_x = m_current_font.glyph_dsc[glyph.glyphPos].ofs_x;
-        int16_t  ofs_y = m_current_font.glyph_dsc[glyph.glyphPos].ofs_y;
-        if (ofs_x < 0) ofs_x = 0;
-        x += ofs_x;
-        y = y + (m_current_font.line_height - m_current_font.base_line - 1) - box_h - ofs_y;
-        writeTheFramebuffer(m_current_font.glyph_bitmap + bitmap_index, x, y, box_w, box_h);
+        const auto& dsc = m_current_font.glyph_dsc[glyph.glyphPos];
+        int16_t xPos = x + dsc.ofs_x;
+        if (dsc.ofs_x < 0) xPos = x;
+        int16_t yPos = y + (m_current_font.line_height - m_current_font.font->base_line - 1) - dsc.box_h - dsc.ofs_y;
+        writeTheFramebuffer(m_current_font.glyph_bitmap + dsc.bitmap_index, xPos, yPos, dsc.box_w, dsc.box_h);
     }
 }
 // ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -3517,28 +3373,22 @@ size_t TFT_Base::writeText(ps_ptr<char> txt1, uint16_t win_X, uint16_t win_Y, in
     */
 
     txtToToken(txt.get());
-    int8_t idx = getFontIndex();
 
     if (autoSize) {
-        setFontByIndex(getMaxFontIndex());
-        idx = getFontIndex();
+        uint16_t line_height = setFontSize(win_H);
+
         while (true) {
             if (layoutText(win_W, win_H, noWrap)) {
                 // if (txt.strlen() > 40) { MWR_LOG_ERROR("idx: {}, max: {}, win_W: {}, win_H: {}, noWrap: {}\n {}", idx, getMaxFontIndex(), win_W, win_H, noWrap, txt); }
                 break;
             }
-            if (--idx < 0) {
-                if (noWrap == true) {
-                    noWrap = false;
-                    setFontByIndex(getMaxFontIndex()); // next round with wrap, starts with biggest font
-                    idx = getFontIndex();
-                    MWR_LOG_DEBUG("next round, idx {}", idx);
-                } else {
-                    MWR_LOG_ERROR("txt '{}', win_X: {}, win_Y: {}, win_H {}, win_W {} does not fit in window", txt, win_X, win_Y, win_H, win_W);
-                    return 0;
-                }
+            line_height = setFontSize(--line_height);
+            if (line_height == 0) {
+                noWrap = false;
+                layoutText(win_W, win_H, noWrap);
+                MWR_LOG_ERROR("txt '{}', win_X: {}, win_Y: {}, win_H {}, win_W {} does not fit in window", txt, win_X, win_Y, win_H, win_W);
+                return 0;
             }
-            setFontByIndex(idx);
         }
     } else {
         if (!layoutText(win_W, win_H, noWrap, noWrap)) {

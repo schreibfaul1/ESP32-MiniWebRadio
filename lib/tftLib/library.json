@@ -1,0 +1,6 @@
+{
+    "name": "tftLib",
+    "build": {
+        "srcFilter": ["+<*>", "+<fonts/**/*>", "-<fonts/**/*.c>"]
+    }
+}

@@ -2911,23 +2911,19 @@ class TimeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
         m_pt = pt;
         m_pb = pb;
 
-        int8_t best_font_size_index = getTFT().getHighestFontIndex('0', m_h);
-        getTFT().setFontByIndex(best_font_size_index);
+        uint16_t line_height = getTFT().setFontSize(m_h);
         while (true) {
             m_digits_w = getTFT().getGlyphWidth('0') + 1;
             m_colon_w = getTFT().getGlyphWidth(':') + 1;
             m_all_w = m_digits_w * 6 + m_colon_w * 2; // "00:00:00"
             if (m_all_w < m_w) break;
-            if (--best_font_size_index < 0) {
+            line_height = getTFT().setFontSize(--line_height);
+            if (line_height == 0) {
                 MWR_LOG_ERROR("timeString does not fit in width {}", m_w);
-                best_font_size_index = 0;
             }
-            getTFT().setFontByIndex(best_font_size_index);
         }
         MWR_LOG_DEBUG("timestringObject width: {}", m_all_w);
-        getTFT().getFontIndex();
-        if (getTFT().getFontSizeByIndex(best_font_size_index) >= 0) m_fontSize = getTFT().getFontSizeByIndex(best_font_size_index);
-        for (uint8_t i = 0; i < 8; i++) { txt_time[i].setFontSize(m_fontSize); }
+        for (uint8_t i = 0; i < 8; i++) { txt_time[i].setFontSize(line_height); }
     }
 
     ps_ptr<char> get_name() { return m_name; }

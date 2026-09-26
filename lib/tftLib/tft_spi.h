@@ -7,12 +7,6 @@
 #include "Arduino.h"
 #include "Audio.h"
 #include "driver/gpio.h"
-#include "fonts/Arial.h"
-#include "fonts/BigNumbers.h"
-#include "fonts/FreeSerifItalic.h"
-#include "fonts/Garamond.h"
-#include "fonts/TimesNewRoman.h"
-#include "fonts/Z003.h"
 #include "fonts/fontsdef.h"
 #include "tft_base.h"
 
