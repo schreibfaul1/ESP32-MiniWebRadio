@@ -3,8 +3,8 @@
 #include "tft_structures.h"
 
 //———————————— predifined displays —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-#define SPI_DISPLAY 1                  //                    SPI display  320x240, 2.8inch,        ILI9341             XPT2046, ESP32-S3 or ESP32-P4
-// #define SPI_DISPLAY 2                  //                    SPI display  480x320, 3.5" od 4"      ILI9488 or ST7796,  XPT2046, ESP32-S3 or ESP32-P4
+// #define SPI_DISPLAY 1                  //                    SPI display  320x240, 2.8inch,        ILI9341             XPT2046, ESP32-S3 or ESP32-P4
+#define SPI_DISPLAY 2                  //                    SPI display  480x320, 3.5" od 4"      ILI9488 or ST7796,  XPT2046, ESP32-S3 or ESP32-P4
 // #define SPI_DISPLAY 3                  //                    SPI display  480x320, 3.5" od 4"      ILI9488 or ST7796,  FT6x63,  ESP32-S3 or ESP32-P4
 // #define ESP32_8048S070                 // Sunton             RGB display  800x480, 7",                                 GT911,   ESP32-S3 N16R8
 // #define ESP32_S3_Touch_LCD7            // Waveshare          RGB display  800x480, 7",                                 GT911,   ESP32-S3 N8R8
