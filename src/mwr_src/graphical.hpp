@@ -2923,6 +2923,7 @@ class TimeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
             }
         }
         MWR_LOG_DEBUG("timestringObject width: {}", m_all_w);
+        m_fontSize = line_height;
         for (uint8_t i = 0; i < 8; i++) { txt_time[i].setFontSize(line_height); }
     }
 
