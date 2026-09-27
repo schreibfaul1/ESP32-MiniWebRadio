@@ -11,15 +11,15 @@ void registerFont(const lv_font_t* font) {
 
     uint8_t pos = 0;
 
-    while (pos < fontCount && fontList[pos].line_height < font->line_height) { ++pos; }
+    while (pos < fontCount && fontList[pos].line_height < font->line_height - 3) { ++pos; }
 
     for (uint8_t i = fontCount; i > pos; --i) { fontList[i] = fontList[i - 1]; }
 
-    fontList[pos] = {font->name, font, font->line_height, font->base_line - 1, dsc->glyph_bitmap, dsc->glyph_dsc, dsc->cmaps, dsc->cmap_num};
+    fontList[pos] = {font->name, font, font->line_height - 3, font->base_line - 1, dsc->glyph_bitmap, dsc->glyph_dsc, dsc->cmaps, dsc->cmap_num};
 
     ++fontCount;
 }
 
 void listFonts() {
-    for (int i = 0; i < fontCount; i++) { printf("name: %s, line-height %li, adv_w %i\n", fontList[i].name, fontList[i].line_height, fontList[i].glyph_dsc[6].adv_w); }
+    for (int i = 0; i < fontCount; i++) { printf("    name: %s, line-height %li, base_line %li\n", fontList[i].name, fontList[i].line_height, fontList[i].base_line); }
 }

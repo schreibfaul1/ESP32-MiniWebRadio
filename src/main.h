@@ -688,6 +688,11 @@ void ui_volFadingSpeed(float s) {
     printfln(s_tag.terminal, "set volume fading speed {}, current: {}", s, audio.settings.VOL_FADING_SPEED);
     audio.settings.VOL_FADING_SPEED = s;
 }
+void ui_listFonts(){
+    printfln(s_tag.terminal, "list fonts");
+    listFonts();
+}
+
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void user_input(ps_ptr<char> input) {
 
@@ -721,4 +726,5 @@ void user_input(ps_ptr<char> input) {
     if (input == "gibs") ui_get_inbuffStatus();                                    //  // get inbuff status
     if (input == "ir") ui_isRunning();                                             // is running?
     if (input.starts_with("vfs")) ui_volFadingSpeed(input.substr(3).to_float());   // volume fading speed
+    if (input == "lif") ui_listFonts();                                            // list all loaded fonts
 }

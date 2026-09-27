@@ -3375,7 +3375,19 @@ size_t TFT_Base::writeText(ps_ptr<char> txt1, uint16_t win_X, uint16_t win_Y, in
     txtToToken(txt.get());
 
     if (autoSize) {
-        uint16_t line_height = setFontSize(win_H);
+        uint16_t line_height = win_H;
+        int8_t count = txt.count_of('\n');
+        if(count > 0){ // preselect line_height
+            uint16_t height = win_H / (count + 1); // 2 * '\n' means 3 lines
+            line_height = setFontSize(height);
+            MWR_LOG_DEBUG("height {}, line_height {}, count {}", height, line_height, count);
+            if(line_height == 0){
+                MWR_LOG_ERROR("txt '{}', win_X: {}, win_Y: {}, win_H {}, win_W {} does not fit in window", txt, win_X, win_Y, win_H, win_W);
+            }
+        }
+        else {
+            line_height = setFontSize(win_H);
+        }
 
         while (true) {
             if (layoutText(win_W, win_H, noWrap)) {

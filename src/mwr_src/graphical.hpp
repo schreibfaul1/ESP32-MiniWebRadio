@@ -4229,7 +4229,8 @@ class AlarmClock : public RegisterTable { // draw a clock in 24h format
         digits_y = (3 * h4 - digits_h) / 2 + h4;
         digits_paddig_l = (w - (4 * digits_w + colon_w)) / 2;
         m_alarmdaysW = w / 8;
-        alarmdays_padding_l = m_alarmdaysW / 2;
+        alarmdays_padding_l = (m_alarmdaysW - 14) / 2;  // -14
+        m_alarmdaysW += 2;                              // + 7 * 2
         for (int i = 0; i < 7; i++) { m_alarmdaysXPos[i] = alarmdays_padding_l + i * m_alarmdaysW; }
         m_alarmdaysYoffset = 2;
         m_alarmdaysH = h4 / 2;
@@ -6959,25 +6960,25 @@ class LineChart : public RegisterTable {
         m_y = y;                // y pos
         m_w = w;                // width
         m_h = h;                // high
-        m_pl = m_pr = m_w / 20; // 5% of w
-        m_pt = m_pb = m_h / 10; // 10% of h
+        uint16_t plr = m_w / 40; // 2.5% of w
         m_enabled = false;
         uint8_t txt_h = m_h / 5;
-        txt_0->begin(m_x, m_y + m_h - txt_h, 2 * txt_h, txt_h, m_pl / 2, 0, 0, 1);
+        uint8_t txt_w = m_h * 2;
+        txt_0->begin(m_x + plr, m_y + m_h - txt_h, txt_w, txt_h, 0, 0, 0, 0);
         txt_0->setTextColor(TFT_LIGHTGREY);
         txt_0->set_bg_color(TFT_BG_IS_VISIBLE);
         txt_0->setText("0");
         txt_0->setFontSize(0);
         txt_0->setAlign(HAlign::Left, VAlign::Bottom);
 
-        txt_23->begin(m_x + m_w - 2 * txt_h, m_y + m_h - txt_h, 2 * txt_h, txt_h, 0, m_pr / 2, 0, 1);
+        txt_23->begin(m_x + m_w - txt_w - plr, m_y + m_h - txt_h, txt_w, txt_h, 0, 0, 0, 0);
         txt_23->setTextColor(TFT_LIGHTGREY);
         txt_23->set_bg_color(TFT_BG_IS_VISIBLE);
         txt_23->setText("23");
         txt_23->setFontSize(0);
         txt_23->setAlign(HAlign::Right, VAlign::Bottom);
 
-        txt_info->begin(m_x, m_y, m_w / 1.75f, m_h / 1.75f, 2, 0, 2, 0);
+        txt_info->begin(m_x + 2, m_y, m_w / 1.75f, m_h / 1.75f, 0, 0, 0, 0);
         txt_info->set_bg_color(TFT_BG_OVERWRITE);
         txt_info->setFontSize(0);
         txt_info->setAlign(HAlign::Left, VAlign::Top);
