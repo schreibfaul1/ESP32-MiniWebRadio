@@ -64,6 +64,7 @@ struct FontInfo {
     const char*                        name;
     const lv_font_t*                   font;
     int32_t                            line_height;
+    int32_t                            base_line;
     const uint8_t*                     glyph_bitmap;
     const lv_font_fmt_txt_glyph_dsc_t* glyph_dsc;
     const lv_font_fmt_txt_cmap_t*      cmaps;

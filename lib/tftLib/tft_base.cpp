@@ -3344,7 +3344,7 @@ void TFT_Base::drawGlyph(const Glyph glyph, int16_t x, int16_t y) {
         const auto& dsc = m_current_font.glyph_dsc[glyph.glyphPos];
         int16_t xPos = x + dsc.ofs_x;
         if (dsc.ofs_x < 0) xPos = x;
-        int16_t yPos = y + (m_current_font.line_height - m_current_font.font->base_line - 1) - dsc.box_h - dsc.ofs_y;
+        int16_t yPos = y + (m_current_font.line_height - m_current_font.base_line) - dsc.box_h - dsc.ofs_y;
         writeTheFramebuffer(m_current_font.glyph_bitmap + dsc.bitmap_index, xPos, yPos, dsc.box_w, dsc.box_h);
     }
 }

@@ -15,7 +15,7 @@ void registerFont(const lv_font_t* font) {
 
     for (uint8_t i = fontCount; i > pos; --i) { fontList[i] = fontList[i - 1]; }
 
-    fontList[pos] = {font->name, font, font->line_height, dsc->glyph_bitmap, dsc->glyph_dsc, dsc->cmaps, dsc->cmap_num};
+    fontList[pos] = {font->name, font, font->line_height, font->base_line - 1, dsc->glyph_bitmap, dsc->glyph_dsc, dsc->cmaps, dsc->cmap_num};
 
     ++fontCount;
 }
