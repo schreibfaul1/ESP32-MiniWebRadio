@@ -8,6 +8,9 @@
 #include <deque>
 #include <vector>
 
+extern FontInfo fontList[];
+extern uint8_t  fontCount;
+
 enum Framebuffer : uint8_t {
     FB_VISIBLE = 0,
     FB_BACKGROUND = 1,
@@ -16,6 +19,7 @@ class TFT_Base {
     std::mutex m_textLayoutMutex;
 
   public:
+    const uint16_t GLYPH_NOT_FOUND = UINT16_MAX;
     virtual ~TFT_Base() = default;
 
     uint16_t logicalWidth() const;
@@ -45,11 +49,11 @@ class TFT_Base {
     uint16_t getBackGroundColor() { return m_backGroundColor; }
     void     setTextColor(uint16_t FGcolor) { m_textColor = FGcolor; }
     uint16_t getTextColor() { return m_textColor; }
-    bool     setFontByIndex(uint16_t fontIndex);
-    int8_t   getFontSizeByIndex(uint16_t fontIndex);
-    uint8_t  getFontIndex();
-    uint8_t  getMaxFontIndex();
-    void     setFontSize(uint16_t font);
+    uint16_t getGlyphPos(uint32_t codepoint);
+    uint16_t getGlyphWidth(uint32_t codepoint);
+    bool     hasGlyph(uint32_t cp);
+    uint16_t getCurrentFontLineHigh();
+    uint16_t setFontSize(uint16_t line_height);
     void     setTextOrientation(uint16_t orientation = 0) { m_textorientation = orientation; }
     bool     drawBmpFile(fs::FS& fs, ps_ptr<char> path, uint16_t x, uint16_t y, uint16_t maxWidth = 0, uint16_t maxHeight = 0, float scale = 1.0f);
     bool     drawGifFile(fs::FS& fs, ps_ptr<char> path, uint16_t x, uint16_t y, uint8_t repeat);
@@ -57,9 +61,7 @@ class TFT_Base {
     bool     drawPngFile(fs::FS& fs, ps_ptr<char> path, uint16_t x, uint16_t y, uint16_t maxWidth = 0, uint16_t maxHeight = 0);
     size_t   writeText(ps_ptr<char> txt, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, HAlign h_align, VAlign v_align, bool noWrap, bool autoSize);
     uint16_t getGlyphHeight(char c);
-    uint16_t getGlyphWidth(char c);
     uint8_t  getHighestFontIndex(char c, uint8_t h);
-    uint16_t getCurrentFontLineHigh();
 
   private:
     struct Utf8Char {
@@ -268,7 +270,7 @@ class TFT_Base {
     uint16_t* m_framebuffer[3] = {nullptr, nullptr, nullptr};
     uint8_t   m_rotation = 0;
     uint8_t   fontSizes[13] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66, 81, 96};
-    fonts_t   m_current_font = {};
+    FontInfo  m_current_font = fontList[0];
     uint16_t  m_backGroundColor = TFT_WHITE;
     uint16_t  m_textColor = TFT_BLACK;
     uint8_t   m_textorientation = 0;
