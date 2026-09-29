@@ -1170,6 +1170,8 @@ void setupOTA() {
         ticker100ms.detach();  // stop the 100ms ISR, it has no benefit during OTA and only adds jitter
         audio.stopSong();      // release I2S/decoder and stop consuming WiFi/SD bandwidth
         printfln(s_tag.setup, ANSI_ESC_YELLOW "OTA update started, pausing radio, FTP, DLNA and display" ANSI_ESC_RESET);
+        vTaskDelay(300);
+        return;
     });
     ArduinoOTA.onEnd([]() { printfln(s_tag.setup, ANSI_ESC_GREEN "OTA update finished, rebooting" ANSI_ESC_RESET); });
     ArduinoOTA.onProgress([](uint32_t progress, uint32_t total) {
