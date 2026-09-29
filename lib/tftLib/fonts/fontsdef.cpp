@@ -8,14 +8,15 @@ void registerFont(const lv_font_t* font) {
     if (fontCount >= MAX_FONTS) { return; }
 
     const auto* dsc = static_cast<const lv_font_fmt_txt_dsc_t*>(font->dsc);
-
-    uint8_t pos = 0;
+    uint8_t     pos = 0;
 
     while (pos < fontCount && fontList[pos].line_height < font->line_height - 3) { ++pos; }
 
     for (uint8_t i = fontCount; i > pos; --i) { fontList[i] = fontList[i - 1]; }
 
-    fontList[pos] = {font->name, font, font->line_height - 3, font->base_line - 1, dsc->glyph_bitmap, dsc->glyph_dsc, dsc->cmaps, dsc->cmap_num};
+    const auto* kern = static_cast<const lv_font_fmt_txt_kern_pair_t*>(dsc->kern_dsc);
+
+    fontList[pos] = {font->name, font, font->line_height - 3, font->base_line - 1, dsc->glyph_bitmap, dsc->glyph_dsc, dsc->cmaps, dsc->cmap_num, kern};
 
     ++fontCount;
 }

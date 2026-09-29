@@ -49,7 +49,7 @@ typedef struct {
 typedef struct {
     const void*   glyph_ids;
     const int8_t* values;
-    uint32_t      pair_cnt;
+    uint32_t       pair_cnt;
     uint32_t      glyph_ids_size;
 } lv_font_fmt_txt_kern_pair_t;
 
@@ -69,6 +69,7 @@ struct FontInfo {
     const lv_font_fmt_txt_glyph_dsc_t* glyph_dsc;
     const lv_font_fmt_txt_cmap_t*      cmaps;
     uint16_t                           cmap_num;
+    const lv_font_fmt_txt_kern_pair_t* kern_pairs;
 };
 
 const uint8_t MAX_FONTS = 20;

@@ -2880,6 +2880,35 @@ bool TFT_Base::hasGlyph(uint32_t cp) {
     return getGlyphPos(cp) != GLYPH_NOT_FOUND;
 }
 
+int TFT_Base::getKerningValue(uint16_t leftGlyph, uint16_t rightGlyph) {
+    const auto* kern = m_current_font.kern_pairs;
+
+    if (!kern) { return 0; }
+
+    for (uint32_t i = 0; i < kern->pair_cnt; ++i) {
+        uint16_t left;
+        uint16_t right;
+
+        if (kern->glyph_ids_size == 0) {
+            const auto* ids = static_cast<const uint8_t*>(kern->glyph_ids);
+            left = ids[i * 2];
+            right = ids[i * 2 + 1];
+        } else {
+            const auto* ids = static_cast<const uint16_t*>(kern->glyph_ids);
+            left = ids[i * 2];
+            right = ids[i * 2 + 1];
+        }
+        if (left == leftGlyph && right == rightGlyph) {
+
+            const int value = kern->values[i];
+
+            if (kern->values[i] < -5 || kern->values[i] > 5) { log_d("Large kerning: %u -> %u: %i", leftGlyph, rightGlyph, value); }
+            return (value >= 0) ? (value + 8) / 16 : (value - 8) / 16;
+        }
+    }
+    return 0;
+}
+
 uint16_t TFT_Base::getCurrentFontLineHigh() {
     return m_current_font.line_height;
 }
@@ -2982,19 +3011,80 @@ void TFT_Base::txtToToken(const char* p) {
     }
 }
 // ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// void TFT_Base::tokenToWords() {
+//     m_word.clear();
+//     Word     currentWord;
+//     uint16_t fgColor = getTextColor();
+
+//     for (const auto& token : m_token) {
+//         switch (token.type) {
+
+//             case TokenType::Color:
+//                 if (token.arg == Arg::foreground) fgColor = token.value;
+//                 break;
+
+//             case TokenType::Glyph: {
+//                 if (token.value == ' ') {
+//                     if (!currentWord.glyphs.empty()) {
+//                         currentWord.trailingSpaces++;
+//                         m_word.push_back(std::move(currentWord));
+//                         currentWord = Word{};
+//                     }
+//                     break;
+//                 }
+
+//                 Glyph g;
+
+//                 if (const EmojiDef* emoji = findEmoji(token.value)) {
+//                     g.type = GlyphType::Emoji;
+//                     g.emojiShape = emoji->shape;
+//                     g.color = emoji->color;
+//                     g.width = m_current_font.line_height * 0.6;
+//                 } else {
+//                     g.type = GlyphType::Font;
+//                     g.color = fgColor;
+//                     g.codepoint = token.value;
+//                     g.glyphPos = getGlyphPos(g.codepoint);
+//                     g.width = getGlyphWidth(g.codepoint);
+//                 }
+
+//                 currentWord.width += g.width;
+//                 currentWord.glyphs.push_back(g);
+//                 break;
+//             }
+
+//             case TokenType::NewLine:
+//                 if (!currentWord.glyphs.empty()) {
+//                     m_word.push_back(std::move(currentWord));
+//                     currentWord = Word{};
+//                 }
+
+//                 currentWord.newLine = true;
+//                 m_word.push_back(std::move(currentWord));
+//                 currentWord = Word{};
+//                 break;
+//         }
+//     }
+
+//     if (!currentWord.glyphs.empty()) { m_word.push_back(std::move(currentWord)); }
+// }
+
 void TFT_Base::tokenToWords() {
     m_word.clear();
+
     Word     currentWord;
     uint16_t fgColor = getTextColor();
 
     for (const auto& token : m_token) {
+
         switch (token.type) {
 
             case TokenType::Color:
-                if (token.arg == Arg::foreground) fgColor = token.value;
+                if (token.arg == Arg::foreground) { fgColor = token.value; }
                 break;
 
             case TokenType::Glyph: {
+
                 if (token.value == ' ') {
                     if (!currentWord.glyphs.empty()) {
                         currentWord.trailingSpaces++;
@@ -3011,6 +3101,7 @@ void TFT_Base::tokenToWords() {
                     g.emojiShape = emoji->shape;
                     g.color = emoji->color;
                     g.width = m_current_font.line_height * 0.6;
+
                 } else {
                     g.type = GlyphType::Font;
                     g.color = fgColor;
@@ -3018,8 +3109,6 @@ void TFT_Base::tokenToWords() {
                     g.glyphPos = getGlyphPos(g.codepoint);
                     g.width = getGlyphWidth(g.codepoint);
                 }
-
-                currentWord.width += g.width;
                 currentWord.glyphs.push_back(g);
                 break;
             }
@@ -3029,7 +3118,6 @@ void TFT_Base::tokenToWords() {
                     m_word.push_back(std::move(currentWord));
                     currentWord = Word{};
                 }
-
                 currentWord.newLine = true;
                 m_word.push_back(std::move(currentWord));
                 currentWord = Word{};
@@ -3037,7 +3125,32 @@ void TFT_Base::tokenToWords() {
         }
     }
 
+    // letztes Wort übernehmen
     if (!currentWord.glyphs.empty()) { m_word.push_back(std::move(currentWord)); }
+
+    // ------------------------------------------------------------
+    // Kerning anwenden
+    // ------------------------------------------------------------
+
+    for (auto& word : m_word) {
+        if (word.glyphs.size() < 2) {
+            // Wortbreite trotzdem berechnen
+            word.width = 0;
+            for (const auto& glyph : word.glyphs) { word.width += glyph.width; }
+            continue;
+        }
+
+        word.width = 0;
+
+        for (size_t i = 0; i < word.glyphs.size(); ++i) {
+            Glyph& glyph = word.glyphs[i];
+            if (glyph.type == GlyphType::Font && i + 1 < word.glyphs.size()) {
+                const Glyph& next = word.glyphs[i + 1];
+                if (next.type == GlyphType::Font) { glyph.width += getKerningValue(glyph.glyphPos, next.glyphPos); }
+            }
+            word.width += glyph.width;
+        }
+    }
 }
 // ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool TFT_Base::isVowel(uint32_t cp) {
@@ -3342,7 +3455,7 @@ void TFT_Base::drawGlyph(const Glyph glyph, int16_t x, int16_t y) {
     if (glyph.type == GlyphType::Font) {
         setTextColor(glyph.color);
         const auto& dsc = m_current_font.glyph_dsc[glyph.glyphPos];
-        int16_t xPos = x + dsc.ofs_x;
+        int16_t     xPos = x + dsc.ofs_x;
         if (dsc.ofs_x < 0) xPos = x;
         int16_t yPos = y + (m_current_font.line_height - m_current_font.base_line) - dsc.box_h - dsc.ofs_y;
         writeTheFramebuffer(m_current_font.glyph_bitmap + dsc.bitmap_index, xPos, yPos, dsc.box_w, dsc.box_h);
@@ -3376,16 +3489,13 @@ size_t TFT_Base::writeText(ps_ptr<char> txt1, uint16_t win_X, uint16_t win_Y, in
 
     if (autoSize) {
         uint16_t line_height = win_H;
-        int8_t count = txt.count_of('\n');
-        if(count > 0){ // preselect line_height
+        int8_t   count = txt.count_of('\n');
+        if (count > 0) {                           // preselect line_height
             uint16_t height = win_H / (count + 1); // 2 * '\n' means 3 lines
             line_height = setFontSize(height);
             MWR_LOG_DEBUG("height {}, line_height {}, count {}", height, line_height, count);
-            if(line_height == 0){
-                MWR_LOG_ERROR("txt '{}', win_X: {}, win_Y: {}, win_H {}, win_W {} does not fit in window", txt, win_X, win_Y, win_H, win_W);
-            }
-        }
-        else {
+            if (line_height == 0) { MWR_LOG_ERROR("txt '{}', win_X: {}, win_Y: {}, win_H {}, win_W {} does not fit in window", txt, win_X, win_Y, win_H, win_W); }
+        } else {
             line_height = setFontSize(win_H);
         }
 
