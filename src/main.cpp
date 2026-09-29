@@ -214,9 +214,9 @@ void setup() {
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 void loop() {
-    vTaskDelay(1);
+
     ArduinoOTA.handle();
-    if (s_f_otaRunning) return; // give the WiFi/TCP stack exclusive access to the core for the rest of the transfer
+    if (s_f_otaRunning) {vTaskDelay(10); return;} // give the WiFi/TCP stack exclusive access to the core for the rest of the transfer
     dlna.loop();
     audio.loop();
     webSrv.loop();
