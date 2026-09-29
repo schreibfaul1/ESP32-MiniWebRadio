@@ -575,6 +575,7 @@ void ui_fontTest(uint16_t s) {
     if (s == 3) s_streamTitle = "Ő ő Ű ű € – ← ’ “ ” …🔵🟥";
     if (s == 4) s_streamTitle = "Ă ă Â â Î î Ș ș Ț ț Ş ş Ţ ţ Ş ş Ţ ţ";
     if (s == 5) s_streamTitle = "A B C D E F G H I K L J M y O P Q R";
+    if (s == 6) s_streamTitle = "Wir";
     printfln(s_tag.terminal, "st: {}", s_streamTitle);
     s_f_newStreamTitle = true;
 }
@@ -693,6 +694,15 @@ void ui_listFonts(){
     listFonts();
 }
 
+void ui_kernig(){
+    uint16_t a = getTFT().getGlyphPos('A');
+    uint16_t v = getTFT().getGlyphPos('V');
+    uint16_t b = getTFT().getGlyphPos('B');
+    int k1 = getTFT().getKerningValue(a, v);
+    int k2 = getTFT().getKerningValue(a, b);
+    printfln(s_tag.terminal, "kernig {}, {}", k1, k2);
+}
+
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void user_input(ps_ptr<char> input) {
 
@@ -726,5 +736,6 @@ void user_input(ps_ptr<char> input) {
     if (input == "gibs") ui_get_inbuffStatus();                                    //  // get inbuff status
     if (input == "ir") ui_isRunning();                                             // is running?
     if (input.starts_with("vfs")) ui_volFadingSpeed(input.substr(3).to_float());   // volume fading speed
-    if (input == "lif") ui_listFonts();                                            // list all loaded fonts
+    if (input == "lif") ui_listFonts();
+    if (input == "kern") ui_kernig();                                          // list all loaded fonts
 }

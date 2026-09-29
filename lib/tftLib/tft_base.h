@@ -49,20 +49,14 @@ class TFT_Base {
     uint16_t getBackGroundColor() { return m_backGroundColor; }
     void     setTextColor(uint16_t FGcolor) { m_textColor = FGcolor; }
     uint16_t getTextColor() { return m_textColor; }
-    uint16_t getGlyphPos(uint32_t codepoint);
-    uint16_t getGlyphWidth(uint32_t codepoint);
-    bool     hasGlyph(uint32_t cp);
-    uint16_t getCurrentFontLineHigh();
-    uint16_t setFontSize(uint16_t line_height);
     void     setTextOrientation(uint16_t orientation = 0) { m_textorientation = orientation; }
     bool     drawBmpFile(fs::FS& fs, ps_ptr<char> path, uint16_t x, uint16_t y, uint16_t maxWidth = 0, uint16_t maxHeight = 0, float scale = 1.0f);
     bool     drawGifFile(fs::FS& fs, ps_ptr<char> path, uint16_t x, uint16_t y, uint8_t repeat);
     bool     drawJpgFile(fs::FS& fs, ps_ptr<char> path, uint16_t x, uint16_t y, uint16_t maxWidth = 0, uint16_t maxHeight = 0);
     bool     drawPngFile(fs::FS& fs, ps_ptr<char> path, uint16_t x, uint16_t y, uint16_t maxWidth = 0, uint16_t maxHeight = 0);
-    size_t   writeText(ps_ptr<char> txt, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, HAlign h_align, VAlign v_align, bool noWrap, bool autoSize);
-    uint16_t getGlyphHeight(char c);
-    uint8_t  getHighestFontIndex(char c, uint8_t h);
 
+    // ————————————— text
+    // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
   private:
     struct Utf8Char {
         uint32_t codepoint;
@@ -205,19 +199,6 @@ class TFT_Base {
         {"\033[38;2;210;180;140m", 19, TFT_LIGHTBROWN, Arg::foreground},
     };
 
-    Utf8Char decodeUtf8(const char* s);
-    size_t   parseAnsi(const char*& p, uint32_t& color, Arg& arg);
-    void     txtToToken(const char* p);
-    void     tokenToWords();
-    bool     isVowel(uint32_t cp);
-    int      findBestBreak(const Word& word, size_t glyphStart, size_t breakPos);
-    bool     wordToLines(int16_t win_w, int16_t win_H, bool noWrap, bool clipNoWrap = false);
-    void     prepareFontLayout();
-    bool     layoutText(int16_t win_W, int16_t win_H, bool noWrap, bool clipNoWrap = false);
-    void     drawLines(int16_t win_X, int16_t win_Y, int16_t win_W, int16_t win_H, HAlign hAlign, VAlign vAlign);
-    void     drawGlyph(Glyph glyph, int16_t x, int16_t y);
-    void     drawWord(const Word* word, int16_t x, int16_t y);
-
   private:
     std::vector<Token> m_token;
     std::vector<Word>  m_word;
@@ -240,9 +221,39 @@ class TFT_Base {
         uint8_t                            max_font_index = 12;
     } fonts_t;
 
-    bool    renderRGB565(int16_t x, int16_t y, uint16_t w, uint16_t h, const uint16_t* rgb, const uint8_t* alpha);
-    void    mapRotation(uint8_t rot, int32_t srcX, int32_t srcY, int32_t& dstX, int32_t& dstY) const;
-    void    writeTheFramebuffer(const uint8_t* bmi, uint16_t posX, uint16_t posY, uint16_t width, uint16_t height);
+  public:
+    uint16_t getGlyphPos(uint32_t codepoint);
+    uint16_t getGlyphWidth(uint32_t codepoint);
+    bool     hasGlyph(uint32_t cp);
+    uint16_t getCurrentFontLineHigh();
+    uint16_t setFontSize(uint16_t line_height);
+    int      getKerningValue(uint16_t leftGlyph, uint16_t rightGlyph);
+  private:
+
+    Utf8Char decodeUtf8(const char* s);
+    size_t   parseAnsi(const char*& p, uint32_t& color, Arg& arg);
+    void     txtToToken(const char* p);
+    void     tokenToWords();
+    bool     isVowel(uint32_t cp);
+    int      findBestBreak(const Word& word, size_t glyphStart, size_t breakPos);
+    bool     wordToLines(int16_t win_w, int16_t win_H, bool noWrap, bool clipNoWrap = false);
+    void     prepareFontLayout();
+    bool     layoutText(int16_t win_W, int16_t win_H, bool noWrap, bool clipNoWrap = false);
+    void     drawLines(int16_t win_X, int16_t win_Y, int16_t win_W, int16_t win_H, HAlign hAlign, VAlign vAlign);
+    void     drawWord(const Word* word, int16_t x, int16_t y);
+    void     drawGlyph(Glyph glyph, int16_t x, int16_t y);
+
+  public:
+    size_t writeText(ps_ptr<char> txt, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, HAlign h_align, VAlign v_align, bool noWrap, bool autoSize);
+
+    // ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
+    bool renderRGB565(int16_t x, int16_t y, uint16_t w, uint16_t h, const uint16_t* rgb, const uint8_t* alpha);
+    void mapRotation(uint8_t rot, int32_t srcX, int32_t srcY, int32_t& dstX, int32_t& dstY) const;
+    void writeTheFramebuffer(const uint8_t* bmi, uint16_t posX, uint16_t posY, uint16_t width, uint16_t height);
+
+    // ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
     int32_t GIF_readGifItems();
     bool    GIF_decodeGif(uint16_t x, uint16_t y);
     bool    GIF_loop();
