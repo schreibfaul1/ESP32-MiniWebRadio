@@ -8,7 +8,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.0z14 - Sep 24, 2026                                                                                                               ";
+    Version 4.2.1 - Sep 30, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -935,15 +935,15 @@ void show_DLNA_FileName(ps_ptr<char> fname) {
 }
 
 void showPlsFileNumber() {
-    char buf[15];
-    sprintf(buf, "%03u/%03u", s_plsCurPos, s_PLS_content.size());
-    dispFooter.updateFileNr(buf);
+    ps_ptr<char> buff;
+    buff.assignf("{:03}/{:03}", s_plsCurPos, s_PLS_content.size());
+    dispFooter.updateFileNr(buff);
 }
 
 void showAudioFileNumber() {
-    char buf[15];
-    sprintf(buf, "%03u/%03u", s_cur_AudioFileNr + 1, s_SD_content.getSize());
-    dispFooter.updateFileNr(buf);
+    ps_ptr<char> buff;
+    buff.assignf("{:03}/{:03}", s_cur_AudioFileNr + 1, s_SD_content.getSize());
+    dispFooter.updateFileNr(buff);
 }
 
 void display_sleeptime(int8_t ud) { // set sleeptimer
@@ -2533,11 +2533,11 @@ void tp_info(const char* info) {
 // Events from IR Library
 void ir_code(uint8_t addr, uint8_t cmd) {
     printfln(s_tag.ir_info, "ir_code: " ANSI_ESC_YELLOW "IR address " ANSI_ESC_BLUE "0x{:02X}, " ANSI_ESC_YELLOW "IR command " ANSI_ESC_BLUE "0x{:02X}", addr, cmd);
-    char buf[20];
-    sprintf(buf, "0x%02x", addr);
-    webSrv.send("IR_address=", buf);
-    sprintf(buf, "0x%02x", cmd);
-    webSrv.send("IR_command=", buf);
+    ps_ptr<char> buff;
+    buff.assignf("0x{:02X}", addr);
+    webSrv.send("IR_address=", buff);
+    buff.assignf("0x{:02X}", cmd);
+    webSrv.send("IR_command=", buff);
 }
 
 void ir_res(uint32_t res) {
