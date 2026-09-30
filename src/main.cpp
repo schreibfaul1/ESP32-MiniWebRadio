@@ -2534,9 +2534,9 @@ void tp_info(const char* info) {
 void ir_code(uint8_t addr, uint8_t cmd) {
     printfln(s_tag.ir_info, "ir_code: " ANSI_ESC_YELLOW "IR address " ANSI_ESC_BLUE "0x{:02X}, " ANSI_ESC_YELLOW "IR command " ANSI_ESC_BLUE "0x{:02X}", addr, cmd);
     ps_ptr<char> buff;
-    buff.assignf("{:02X}", addr);
+    buff.assignf("0x{:02X}", addr);
     webSrv.send("IR_address=", buff);
-    buff.assignf("{:02X}", cmd);
+    buff.assignf("0x{:02X}", cmd);
     webSrv.send("IR_command=", buff);
 }
 
