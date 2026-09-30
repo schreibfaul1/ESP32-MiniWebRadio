@@ -6431,7 +6431,7 @@ class DisplayFooter : public RegisterTable {
     } const s_Hourglass; // Hourglass:   45 x 56 px
     struct w_o {
         uint16_t x = 360;
-        uint16_t w = 80;
+        uint16_t w = 90;
         uint8_t  pl = 0;
         uint8_t  pr = 0;
         uint8_t  pt = 0;

@@ -328,8 +328,8 @@ inline constexpr uint8_t fonts[13] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66
 inline constexpr DisplayConfig config = {
     fonts,
     2 * h_area / 10,        // listFontSize
-    h_area,                 // headerFontSize
-    h_area,                 // footerFontSize
+    0,                      // headerFontSize
+    0,                      // footerFontSize
     156,                    // bigNumbersFontSize
     34,                     // fileNumberFontSize
     {20, 137, 223, 106, 0}, // sleeptimeXPos[5]
