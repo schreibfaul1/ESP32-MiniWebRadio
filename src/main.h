@@ -695,8 +695,8 @@ void ui_listFonts(){
 }
 
 void ui_kernig(){
-    uint16_t a = getTFT().getGlyphPos('A');
-    uint16_t v = getTFT().getGlyphPos('V');
+    uint16_t a = getTFT().getGlyphPos('0');
+    uint16_t v = getTFT().getGlyphPos('0');
     uint16_t b = getTFT().getGlyphPos('B');
     int k1 = getTFT().getKerningValue(a, v);
     int k2 = getTFT().getKerningValue(a, b);

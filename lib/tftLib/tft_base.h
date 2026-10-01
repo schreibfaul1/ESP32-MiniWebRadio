@@ -224,6 +224,7 @@ class TFT_Base {
   public:
     uint16_t getGlyphPos(uint32_t codepoint);
     uint16_t getGlyphWidth(uint32_t codepoint);
+    uint16_t getTotalGlyphWidth(uint32_t codepoint);
     bool     hasGlyph(uint32_t cp);
     uint16_t getCurrentFontLineHigh();
     uint16_t setFontSize(uint16_t line_height);

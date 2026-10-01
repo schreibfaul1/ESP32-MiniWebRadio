@@ -2876,6 +2876,14 @@ uint16_t TFT_Base::getGlyphWidth(uint32_t codepoint) {
     return m_current_font.glyph_dsc[glyphPos].adv_w / 16;
 }
 
+uint16_t TFT_Base::getTotalGlyphWidth(uint32_t codepoint) { // ofs_x + box_w
+    const uint16_t glyphPos = getGlyphPos(codepoint);
+
+    if (glyphPos == GLYPH_NOT_FOUND) { return 0; }
+
+    return m_current_font.glyph_dsc[glyphPos].ofs_x + m_current_font.glyph_dsc[glyphPos].box_w;
+}
+
 bool TFT_Base::hasGlyph(uint32_t cp) {
     return getGlyphPos(cp) != GLYPH_NOT_FOUND;
 }
@@ -3011,64 +3019,6 @@ void TFT_Base::txtToToken(const char* p) {
     }
 }
 // ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-// void TFT_Base::tokenToWords() {
-//     m_word.clear();
-//     Word     currentWord;
-//     uint16_t fgColor = getTextColor();
-
-//     for (const auto& token : m_token) {
-//         switch (token.type) {
-
-//             case TokenType::Color:
-//                 if (token.arg == Arg::foreground) fgColor = token.value;
-//                 break;
-
-//             case TokenType::Glyph: {
-//                 if (token.value == ' ') {
-//                     if (!currentWord.glyphs.empty()) {
-//                         currentWord.trailingSpaces++;
-//                         m_word.push_back(std::move(currentWord));
-//                         currentWord = Word{};
-//                     }
-//                     break;
-//                 }
-
-//                 Glyph g;
-
-//                 if (const EmojiDef* emoji = findEmoji(token.value)) {
-//                     g.type = GlyphType::Emoji;
-//                     g.emojiShape = emoji->shape;
-//                     g.color = emoji->color;
-//                     g.width = m_current_font.line_height * 0.6;
-//                 } else {
-//                     g.type = GlyphType::Font;
-//                     g.color = fgColor;
-//                     g.codepoint = token.value;
-//                     g.glyphPos = getGlyphPos(g.codepoint);
-//                     g.width = getGlyphWidth(g.codepoint);
-//                 }
-
-//                 currentWord.width += g.width;
-//                 currentWord.glyphs.push_back(g);
-//                 break;
-//             }
-
-//             case TokenType::NewLine:
-//                 if (!currentWord.glyphs.empty()) {
-//                     m_word.push_back(std::move(currentWord));
-//                     currentWord = Word{};
-//                 }
-
-//                 currentWord.newLine = true;
-//                 m_word.push_back(std::move(currentWord));
-//                 currentWord = Word{};
-//                 break;
-//         }
-//     }
-
-//     if (!currentWord.glyphs.empty()) { m_word.push_back(std::move(currentWord)); }
-// }
-
 void TFT_Base::tokenToWords() {
     m_word.clear();
 
@@ -3129,12 +3079,12 @@ void TFT_Base::tokenToWords() {
     if (!currentWord.glyphs.empty()) { m_word.push_back(std::move(currentWord)); }
 
     // ------------------------------------------------------------
-    // Kerning anwenden
+    // Apply kerning
     // ------------------------------------------------------------
 
     for (auto& word : m_word) {
         if (word.glyphs.size() < 2) {
-            // Wortbreite trotzdem berechnen
+            // Calculate word width anyway
             word.width = 0;
             for (const auto& glyph : word.glyphs) { word.width += glyph.width; }
             continue;
@@ -3147,6 +3097,9 @@ void TFT_Base::tokenToWords() {
             if (glyph.type == GlyphType::Font && i + 1 < word.glyphs.size()) {
                 const Glyph& next = word.glyphs[i + 1];
                 if (next.type == GlyphType::Font) { glyph.width += getKerningValue(glyph.glyphPos, next.glyphPos); }
+            }
+            if (i == word.glyphs.size() - 1 && glyph.type == GlyphType::Font) {
+                word.width += getTotalGlyphWidth(glyph.codepoint) - getGlyphWidth(glyph.codepoint);
             }
             word.width += glyph.width;
         }
@@ -3225,7 +3178,6 @@ int TFT_Base::findBestBreak(const Word& word, size_t glyphStart, size_t breakPos
             bestPos = i;
         }
     }
-
     return bestPos;
 }
 // ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

@@ -1115,12 +1115,10 @@ class Textbox : public RegisterTable {
             return;
         }
         *ptr = '\0';
-        setText (ret);
+        setText(ret);
     }
 
-    void setText(const char* txt) {
-        setText(ps_ptr<char>(txt));
-    }
+    void setText(const char* txt) { setText(ps_ptr<char>(txt)); }
 
     void setText(ps_ptr<char> txt) { // prepare a text, wait of show() to write it
         if (m_text != txt) {
@@ -2910,21 +2908,6 @@ class TimeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
         m_pr = pr;
         m_pt = pt;
         m_pb = pb;
-
-        uint16_t line_height = getTFT().setFontSize(m_h);
-        while (true) {
-            m_digits_w = getTFT().getGlyphWidth('0') + 1;
-            m_colon_w = getTFT().getGlyphWidth(':') + 1;
-            m_all_w = m_digits_w * 6 + m_colon_w * 2; // "00:00:00"
-            if (m_all_w < m_w) break;
-            line_height = getTFT().setFontSize(--line_height);
-            if (line_height == 0) {
-                MWR_LOG_ERROR("timeString does not fit in width {}", m_w);
-            }
-        }
-        MWR_LOG_DEBUG("timestringObject width: {}", m_all_w);
-        m_fontSize = line_height;
-        for (uint8_t i = 0; i < 8; i++) { txt_time[i].setFontSize(line_height); }
     }
 
     ps_ptr<char> get_name() { return m_name; }
@@ -2946,7 +2929,6 @@ class TimeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
         }
         enable_all();
-
         uint16_t posX = m_x;
         if (m_h_align == HAlign::Left) { posX += m_pt; }
         if (m_h_align == HAlign::Center) { posX += (m_w / 2 - m_all_w / 2); }
@@ -2956,8 +2938,8 @@ class TimeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
         for (uint8_t i = 0; i < 8; i++) {
             txt_time[i].begin(posX, m_y + m_pt, width[i], m_h, 0, 0, 0, 0);
             posX += width[i];
-            txt_time[i].setAlign(HAlign::Center, m_v_align);
-            txt_time[i].setFontSize(m_fontSize);
+            txt_time[i].setAlign(HAlign::Left, m_v_align);
+            // txt_time[i].set_border(TFT_BLUE);
         }
         RTIME::rtime dummy{};
         updateTime(dummy, true);
@@ -2987,20 +2969,35 @@ class TimeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     }
 
     void setFontSize(uint8_t size) { // size 0 -> auto
-        if (size == 0) return;
-        getTFT().setFontSize(size);
-        if (getTFT().getCurrentFontLineHigh() > m_h) {
-            MWR_LOG_ERROR("Font doesn't fit in line, font high: {}px, line high: {}px", getTFT().getCurrentFontLineHigh(), m_h);
-            return;
+
+        if (size == 0) {
+            uint16_t line_height = getTFT().setFontSize(m_h);
+
+            while (true) {
+                m_digits_w = 0;
+                for(int i = 0; i < 10; i++){ m_digits_w = std::max(m_digits_w, getTFT().getTotalGlyphWidth('0' + i));
+                MWR_LOG_DEBUG("width {}, m_digits_w {}", getTFT().getTotalGlyphWidth('0' + i), m_digits_w);}
+                m_colon_w = getTFT().getTotalGlyphWidth(':');
+                m_all_w = m_digits_w * 6 + m_colon_w * 2; // "00:00:00"
+                if (m_all_w < m_w) break;
+                line_height = getTFT().setFontSize(--line_height);
+                if (line_height == 0) { MWR_LOG_ERROR("timeString does not fit in height {}", m_h); }
+            }
+            MWR_LOG_DEBUG("timestringObject width: {}", m_all_w);
+            m_fontSize = line_height;
         }
-        m_digits_w = getTFT().getGlyphWidth('0') + 1;
-        m_colon_w = getTFT().getGlyphWidth(':') + 1;
-        m_all_w = m_digits_w * 6 + m_colon_w * 2; // "00:00:00"
-        if (m_all_w > m_w) {
-            MWR_LOG_ERROR("Font doesn't fit in line, timeString width: {}px, line width: {}px", m_all_w, m_w);
-            return;
+        else{
+            m_fontSize = size;
+            getTFT().setFontSize(m_fontSize);
+            m_digits_w = 0;
+            for(int i = 0; i < 10; i++){ m_digits_w = std::max(m_digits_w, getTFT().getTotalGlyphWidth('5')); }
+            m_colon_w = getTFT().getTotalGlyphWidth(':');
+            m_all_w = m_digits_w * 6 + m_colon_w * 2; // "00:00:00"
+            if (m_all_w > m_w) {
+                MWR_LOG_ERROR("Font doesn't fit in line, timeString width: {}px, line width: {}px", m_all_w, m_w);
+            }
         }
-        m_fontSize = size;
+        for (uint8_t i = 0; i < 8; i++) { txt_time[i].setFontSize(m_fontSize); }
     }
 
     void setTextColor(int32_t color) {
@@ -4230,8 +4227,8 @@ class AlarmClock : public RegisterTable { // draw a clock in 24h format
         digits_y = (3 * h4 - digits_h) / 2 + h4;
         digits_paddig_l = (w - (4 * digits_w + colon_w)) / 2;
         m_alarmdaysW = w / 8;
-        alarmdays_padding_l = (m_alarmdaysW - 14) / 2;  // -14
-        m_alarmdaysW += 2;                              // + 7 * 2
+        alarmdays_padding_l = (m_alarmdaysW - 14) / 2; // -14
+        m_alarmdaysW += 2;                             // + 7 * 2
         for (int i = 0; i < 7; i++) { m_alarmdaysXPos[i] = alarmdays_padding_l + i * m_alarmdaysW; }
         m_alarmdaysYoffset = 2;
         m_alarmdaysH = h4 / 2;
@@ -6675,6 +6672,7 @@ class DisplayFooter : public RegisterTable {
         ipAddr.insert("IP:", 0);
         m_ipAddr = ipAddr;
         txt_IpAddr->setText(ipAddr);
+        txt_IpAddr->setNoWrap(true);
         txt_IpAddr->show();
     }
 
@@ -6957,10 +6955,10 @@ class LineChart : public RegisterTable {
     }
 
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
-        m_x = x;                // x pos
-        m_y = y;                // y pos
-        m_w = w;                // width
-        m_h = h;                // high
+        m_x = x;                 // x pos
+        m_y = y;                 // y pos
+        m_w = w;                 // width
+        m_h = h;                 // high
         uint16_t plr = m_w / 40; // 2.5% of w
         m_enabled = false;
         uint8_t txt_h = m_h / 5;

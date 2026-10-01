@@ -8,7 +8,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.1 - Sep 30, 2026                                                                                                               ";
+    Version 4.2.1a - Okt 01, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -214,7 +214,6 @@ void setup() {
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 void loop() {
-    vTaskDelay(1);
     ArduinoOTA.handle();
     if (s_f_otaRunning) return; // give the WiFi/TCP stack exclusive access to the core for the rest of the transfer
     dlna.loop();

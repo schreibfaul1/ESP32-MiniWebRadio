@@ -2488,7 +2488,7 @@ static const lv_font_fmt_txt_glyph_dsc_t glyph_dsc[] = {
     {.bitmap_index = 105, .adv_w = 81, .box_w = 3, .box_h = 1, .ofs_x = 2, .ofs_y = 3},
     {.bitmap_index = 106, .adv_w = 63, .box_w = 2, .box_h = 2, .ofs_x = 2, .ofs_y = 0},
     {.bitmap_index = 107, .adv_w = 98, .box_w = 10, .box_h = 16, .ofs_x = 0, .ofs_y = -3},
-    {.bitmap_index = 127, .adv_w = 127, .box_w = 7, .box_h = 11, .ofs_x = 2, .ofs_y = 0},
+    {.bitmap_index = 127, .adv_w = 127, .box_w = 7, .box_h = 11, .ofs_x = 2, .ofs_y = 0}, // 0
     {.bitmap_index = 137, .adv_w = 127, .box_w = 7, .box_h = 12, .ofs_x = 1, .ofs_y = 0},
     {.bitmap_index = 148, .adv_w = 127, .box_w = 7, .box_h = 11, .ofs_x = 1, .ofs_y = 0},
     {.bitmap_index = 158, .adv_w = 127, .box_w = 7, .box_h = 11, .ofs_x = 1, .ofs_y = 0},
