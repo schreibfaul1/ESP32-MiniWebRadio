@@ -60,11 +60,11 @@ void TFT_DSI::begin(const Timing& newTiming) {
     esp_lcd_dsi_bus_config_t dsi_cfg = {
         .bus_id = 0,
         .num_data_lanes = 2,
-        .phy_clk_src = MIPI_DSI_PHY_PLLREF_CLK_SRC_DEFAULT_LEGACY,
+    //  .phy_clk_src = MIPI_DSI_PHY_PLLREF_CLK_SRC_DEFAULT_LEGACY,
         .lane_bit_rate_mbps = m_timing.lane_bit_rate_mbps, // Anpassen für Dein Display!
     };
     m_err = esp_lcd_new_dsi_bus(&dsi_cfg, &dsi_bus);
-    if (m_err != 0) { log_e("con't create DSI Bus, err: %i\n", m_err); }
+    if (m_err != 0) { log_e("can't create DSI Bus, err: %i\n", m_err); }
 
     // --------------------------------------------------
     // 3. Create DBI-IO for Display-Commands

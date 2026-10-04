@@ -574,6 +574,7 @@ void loop() {
     //-------------------------------------------------DEBUG / WIFI_SETTINGS ----------------------------------------------------------------------------------
     if (Serial.available()) { // input: serial terminal
         ps_ptr<char> r = Serial.readString().c_str();
+        r.replace("\r", "");
         r.replace("\n", "");
         user_input(r);
     }
