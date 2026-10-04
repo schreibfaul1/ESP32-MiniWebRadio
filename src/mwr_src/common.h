@@ -398,7 +398,7 @@ void GetRunTimeStats(ps_ptr<char>& pcWriteBuffer) {
     TaskStatus_t* pxTaskStatusArray;
     UBaseType_t   uxArraySize;
     uint8_t       ulStatsAsPercentage;
-    uint64_t      ulTotalRunTime;
+    uint32_t      ulTotalRunTime;
 
     constexpr char leftSpace[] = "             |";
 
