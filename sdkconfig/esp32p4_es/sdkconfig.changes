@@ -10,13 +10,13 @@ CONFIG_ESP_REV_MAX_FULL=199
 #
 # Arduino Configuration
 #
+CONFIG_AUTOSTART_ARDUINO=y
 # ——————————————————————————————————————————————————————————————————————————————
 #
 # Serial flasher config
 #
 CONFIG_ESPTOOLPY_FLASHSIZE_16MB
 CONFIG_ESPTOOLPY_FLASHFREQ_120M=y
-CONFIG_AUTOSTART_ARDUINO=y
 # ——————————————————————————————————————————————————————————————————————————————
 #
 # ESP PSRAM, SPI RAM config
@@ -90,7 +90,7 @@ CONFIG_LCD_RGB_RESTART_IN_VSYNC=y
 #
 # ESP System Settings
 #
-CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_360=y
+CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_400=y
 # ——————————————————————————————————————————————————————————————————————————————
 #
 # FAT Filesystem support
