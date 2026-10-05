@@ -2566,16 +2566,14 @@ class WifiSettings : public RegisterTable {
         m_name = name;
         m_fgColor = TFT_LIGHTGREY;
         m_borderColor = TFT_LIGHTGREY;
-        setFontSize(fontSize);
+        m_fontSize = fontSize;
         m_in_password->setAlign(HAlign::Left, VAlign::Middle);
         m_in_password->setTextColor(m_fgColor);
         m_in_password->set_bg_color(m_bg_color);
         m_in_password->setBorderColor(m_borderColor);
-        m_in_password->setFontSize(0); // auto size
         m_sel_ssid->setTextColor(m_fgColor);
         m_sel_ssid->set_bg_color(m_bg_color);
         m_sel_ssid->setBorderColor(m_borderColor);
-        m_sel_ssid->setFontSize(0); // auto size
     }
     ~WifiSettings() {
         m_credentials.clear();
@@ -2697,8 +2695,9 @@ class WifiSettings : public RegisterTable {
             MWR_LOG_WARN("unsupported resolution width {} px", w);
             return;
         }
-
+        m_sel_ssid->setFontSize(0); // auto size
         m_sel_ssid->begin(m_winSelect.x, m_winSelect.y, m_winSelect.w, m_winSelect.h, m_winSelect.pl, m_winSelect.pr, m_winSelect.pt, m_winSelect.pb);
+        m_in_password->setFontSize(0); // auto size
         m_in_password->begin(m_winPWD.x, m_winPWD.y, m_winPWD.w, m_winPWD.h, m_winPWD.pl, m_winPWD.pr, m_winPWD.pt, m_winPWD.pb);
         m_keyboard->begin(m_winKeybrd.x, m_winKeybrd.y, m_winKeybrd.w, m_winKeybrd.h, m_winKeybrd.pl, m_winKeybrd.pr, m_winKeybrd.pt, m_winKeybrd.pb);
     }
