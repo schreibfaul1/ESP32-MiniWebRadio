@@ -1,5 +1,11 @@
 # default:
-
+CONFIG_IDF_EXPERIMENTAL_FEATURES=y
+CONFIG_ESP32P4_SELECTS_REV_LESS_V3=y
+CONFIG_ESP32P4_REV_MIN_0=y
+CONFIG_ESP32P4_REV_MIN_FULL=0
+CONFIG_ESP_REV_MIN_FULL=0
+CONFIG_ESP32P4_REV_MAX_FULL=199
+CONFIG_ESP_REV_MAX_FULL=199
 # ——————————————————————————————————————————————————————————————————————————————
 #
 # Arduino Configuration
@@ -84,7 +90,7 @@ CONFIG_LCD_RGB_RESTART_IN_VSYNC=y
 #
 # ESP System Settings
 #
-CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_240=y
+CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_360=y
 # ——————————————————————————————————————————————————————————————————————————————
 #
 # FAT Filesystem support
@@ -122,8 +128,4 @@ CONFIG_LOG_MAXIMUM_EQUALS_DEFAULT=y
 #
 CONFIG_LOG_COLORS=y
 # ——————————————————————————————————————————————————————————————————————————————
-#
-# Features here require specific hardware (READ DOCS FIRST!)
-#
-CONFIG_SPI_FLASH_UNDER_HIGH_FREQ is not set
-CONFIG_SPI_FLASH_HPM_AUTO=y
+
