@@ -214,6 +214,7 @@ void setup() {
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 void loop() {
+    vTaskDelay(1);
     ArduinoOTA.handle();
     if (s_f_otaRunning) return; // give the WiFi/TCP stack exclusive access to the core for the rest of the transfer
     dlna.loop();
@@ -574,6 +575,7 @@ void loop() {
     //-------------------------------------------------DEBUG / WIFI_SETTINGS ----------------------------------------------------------------------------------
     if (Serial.available()) { // input: serial terminal
         ps_ptr<char> r = Serial.readString().c_str();
+        r.replace("\r", "");
         r.replace("\n", "");
         user_input(r);
     }

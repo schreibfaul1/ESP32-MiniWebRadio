@@ -2881,7 +2881,9 @@ uint16_t TFT_Base::getTotalGlyphWidth(uint32_t codepoint) { // ofs_x + box_w
 
     if (glyphPos == GLYPH_NOT_FOUND) { return 0; }
 
-    return m_current_font.glyph_dsc[glyphPos].ofs_x + m_current_font.glyph_dsc[glyphPos].box_w;
+    uint16_t totalWidth = m_current_font.glyph_dsc[glyphPos].ofs_x + m_current_font.glyph_dsc[glyphPos].box_w;
+    uint16_t maxWidth = std::max(totalWidth, (uint16_t)(m_current_font.glyph_dsc[glyphPos].adv_w / 16));
+    return maxWidth;
 }
 
 bool TFT_Base::hasGlyph(uint32_t cp) {
@@ -2930,6 +2932,10 @@ uint16_t TFT_Base::setFontSize(uint16_t line_height) {
     }
     printf("ERROR: No font fits into line_height %u\n", line_height);
     return 0;
+}
+
+const char* TFT_Base::getCurrentFontName(){
+    return m_current_font.name.c_get();
 }
 
 TFT_Base::Utf8Char TFT_Base::decodeUtf8(const char* s) {

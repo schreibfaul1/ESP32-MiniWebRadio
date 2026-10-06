@@ -1,0 +1,123 @@
+# default:
+CONFIG_IDF_EXPERIMENTAL_FEATURES=y
+# ——————————————————————————————————————————————————————————————————————————————
+#
+# Arduino Configuration
+#
+# ——————————————————————————————————————————————————————————————————————————————
+#
+# Serial flasher config
+#
+CONFIG_ESPTOOLPY_FLASHSIZE_16MB
+CONFIG_ESPTOOLPY_FLASHFREQ_80M=y
+CONFIG_AUTOSTART_ARDUINO=y
+# ——————————————————————————————————————————————————————————————————————————————
+#
+# ESP PSRAM, SPI RAM config
+#
+CONFIG_SPIRAM=y
+CONFIG_SPIRAM_SPEED_250M=y
+CONFIG_SPIRAM_BOOT_HW_INIT=y
+CONFIG_SPIRAM_BOOT_INIT=y
+CONFIG_SPIRAM_MALLOC_ALWAYSINTERNAL=0
+CONFIG_SPIRAM_USE_MALLOC=y
+CONFIG_SPIRAM_MEMTEST=y
+CONFIG_SPIRAM_TRY_ALLOCATE_WIFI_LWIP=y
+CONFIG_SPIRAM_MALLOC_RESERVE_INTERNAL=0
+CONFIG_SPIRAM_ALLOW_BSS_SEG_EXTERNAL_MEMORY=y
+# ——————————————————————————————————————————————————————————————————————————————
+#
+# LWIP
+#
+CONFIG_LWIP_TCPIP_TASK_PRIO=20
+
+# ——————————————————————————————————————————————————————————————————————————————
+#
+# TCP
+#
+CONFIG_LWIP_MAX_ACTIVE_TCP=32
+CONFIG_LWIP_MAX_LISTENING_TCP=64
+CONFIG_LWIP_TCP_HIGH_SPEED_RETRANSMISSION=y
+CONFIG_LWIP_TCP_MAXRTX=12
+CONFIG_LWIP_TCP_SYNMAXRTX=6
+CONFIG_LWIP_TCP_MSS=1436
+CONFIG_LWIP_TCP_TMR_INTERVAL=200
+CONFIG_LWIP_TCP_MSL=1600
+CONFIG_LWIP_TCP_FIN_WAIT_TIMEOUT=1000
+CONFIG_LWIP_TCP_SND_BUF_DEFAULT=65534
+CONFIG_LWIP_TCP_WND_DEFAULT=65534
+CONFIG_LWIP_TCP_RECVMBOX_SIZE=64
+CONFIG_LWIP_TCP_ACCEPTMBOX_SIZE=12
+CONFIG_LWIP_TCP_QUEUE_OOSEQ=y
+CONFIG_LWIP_TCP_OOSEQ_TIMEOUT=4
+CONFIG_LWIP_TCP_OOSEQ_MAX_PBUFS=12
+CONFIG_LWIP_TCP_SACK_OUT=y
+CONFIG_LWIP_TCP_OVERSIZE_MSS=y
+CONFIG_LWIP_TCP_RCV_SCALE=6
+CONFIG_LWIP_TCP_RTO_TIME=1500
+# ——————————————————————————————————————————————————————————————————————————————
+# ICMP
+#
+CONFIG_LWIP_MULTICAST_PING=y
+CONFIG_LWIP_BROADCAST_PING=y
+# ——————————————————————————————————————————————————————————————————————————————
+#
+# mbedTLS
+#
+CONFIG_MBEDTLS_EXTERNAL_MEM_ALLOC=y
+CONFIG_MBEDTLS_SSL_MAX_CONTENT_LEN=16384
+# ——————————————————————————————————————————————————————————————————————————————
+#
+# Websocket
+#
+CONFIG_WS_TRANSPORT=y
+CONFIG_WS_BUFFER_SIZE=1024
+# ——————————————————————————————————————————————————————————————————————————————
+#
+# ESP-Driver:LCD Controller Configurations
+#
+CONFIG_LCD_RGB_RESTART_IN_VSYNC=y
+# ——————————————————————————————————————————————————————————————————————————————
+#
+# ESP System Settings
+#
+CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_360=y
+# ——————————————————————————————————————————————————————————————————————————————
+#
+# FAT Filesystem support
+#
+CONFIG_FATFS_LFN_HEAP=y
+CONFIG_FATFS_MAX_LFN=255
+CONFIG_FATFS_API_ENCODING_UTF_8=y
+# ——————————————————————————————————————————————————————————————————————————————
+#
+# Kernel
+#
+CONFIG_FREERTOS_HZ=1000
+CONFIG_FREERTOS_USE_TRACE_FACILITY=y
+CONFIG_FREERTOS_USE_STATS_FORMATTING_FUNCTIONS=y
+CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS=y
+CONFIG_FREERTOS_VTASKLIST_INCLUDE_COREID=y
+CONFIG_FREERTOS_RUN_TIME_COUNTER_TYPE_U32=CONFIG_SPI_FLASH_YIELD_DURING_ERASE
+CONFIG_FREERTOS_ENABLE_BACKWARD_COMPATIBILITY=y
+# ——————————————————————————————————————————————————————————————————————————————
+#
+# TLS Key Exchange Methods
+#
+CONFIG_MBEDTLS_PSK_MODES=y
+CONFIG_MBEDTLS_KEY_EXCHANGE_PSK=y
+CONFIG_MBEDTLS_KEY_EXCHANGE_ECDHE_PSK=y
+CONFIG_MBEDTLS_KEY_EXCHANGE_RSA_PSK=y
+# ——————————————————————————————————————————————————————————————————————————————
+#
+# Log Level
+#
+CONFIG_LOG_DEFAULT_LEVEL_ERROR=y
+CONFIG_LOG_MAXIMUM_EQUALS_DEFAULT=y
+# ——————————————————————————————————————————————————————————————————————————————
+#
+# Format
+#
+CONFIG_LOG_COLORS=y
+# ——————————————————————————————————————————————————————————————————————————————
+

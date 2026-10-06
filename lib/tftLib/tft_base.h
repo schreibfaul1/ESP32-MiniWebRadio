@@ -222,15 +222,16 @@ class TFT_Base {
     } fonts_t;
 
   public:
-    uint16_t getGlyphPos(uint32_t codepoint);
-    uint16_t getGlyphWidth(uint32_t codepoint);
-    uint16_t getTotalGlyphWidth(uint32_t codepoint);
-    bool     hasGlyph(uint32_t cp);
-    uint16_t getCurrentFontLineHigh();
-    uint16_t setFontSize(uint16_t line_height);
-    int      getKerningValue(uint16_t leftGlyph, uint16_t rightGlyph);
-  private:
+    uint16_t     getGlyphPos(uint32_t codepoint);
+    uint16_t     getGlyphWidth(uint32_t codepoint);
+    uint16_t     getTotalGlyphWidth(uint32_t codepoint);
+    bool         hasGlyph(uint32_t cp);
+    uint16_t     getCurrentFontLineHigh();
+    uint16_t     setFontSize(uint16_t line_height);
+    const char*  getCurrentFontName();
+    int          getKerningValue(uint16_t leftGlyph, uint16_t rightGlyph);
 
+  private:
     Utf8Char decodeUtf8(const char* s);
     size_t   parseAnsi(const char*& p, uint32_t& color, Arg& arg);
     void     txtToToken(const char* p);

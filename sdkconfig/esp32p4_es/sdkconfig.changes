@@ -1,0 +1,134 @@
+# default:
+CONFIG_IDF_EXPERIMENTAL_FEATURES=y
+CONFIG_ESP32P4_SELECTS_REV_LESS_V3=y
+CONFIG_ESP32P4_REV_MIN_0=y
+CONFIG_ESP32P4_REV_MIN_FULL=0
+CONFIG_ESP_REV_MIN_FULL=0
+CONFIG_ESP32P4_REV_MAX_FULL=199
+CONFIG_ESP_REV_MAX_FULL=199
+# ——————————————————————————————————————————————————————————————————————————————
+#
+# Arduino Configuration
+#
+CONFIG_AUTOSTART_ARDUINO=y
+# ——————————————————————————————————————————————————————————————————————————————
+#
+# Serial flasher config
+#
+CONFIG_BOOTLOADER_FLASH_32BIT_ADDR=y
+CONFIG_BOOTLOADER_FLASH_NEEDS_32BIT_FEAT=y
+CONFIG_BOOTLOADER_FLASH_NEEDS_32BIT_ADDR_QUAD_FLASH=y
+CONFIG_ESPTOOLPY_FLASHSIZE_32MB=y
+CONFIG_ESPTOOLPY_FLASHFREQ_120M=y
+# ——————————————————————————————————————————————————————————————————————————————
+#
+# ESP PSRAM, SPI RAM config
+#
+CONFIG_SPIRAM=y
+CONFIG_SPIRAM_MODE_OCT=y
+CONFIG_SPIRAM_CLK_IO=30
+CONFIG_SPIRAM_CS_IO=26
+CONFIG_SPIRAM_RODATA=y
+CONFIG_SPIRAM_SPEED_120M=y
+CONFIG_SPIRAM_BOOT_HW_INIT=y
+CONFIG_SPIRAM_BOOT_INIT=y
+CONFIG_SPIRAM_MALLOC_ALWAYSINTERNAL=0
+CONFIG_SPIRAM_USE_MALLOC=y
+CONFIG_SPIRAM_MEMTEST=y
+CONFIG_SPIRAM_TRY_ALLOCATE_WIFI_LWIP=y
+CONFIG_SPIRAM_MALLOC_RESERVE_INTERNAL=0
+CONFIG_SPIRAM_ALLOW_BSS_SEG_EXTERNAL_MEMORY=y
+# ——————————————————————————————————————————————————————————————————————————————
+#
+# LWIP
+#
+CONFIG_LWIP_TCPIP_TASK_PRIO=20
+
+# ——————————————————————————————————————————————————————————————————————————————
+#
+# TCP
+#
+CONFIG_LWIP_MAX_ACTIVE_TCP=32
+CONFIG_LWIP_MAX_LISTENING_TCP=32
+CONFIG_LWIP_TCP_HIGH_SPEED_RETRANSMISSION=y
+CONFIG_LWIP_TCP_MAXRTX=12
+CONFIG_LWIP_TCP_SYNMAXRTX=6
+CONFIG_LWIP_TCP_MSS=1436
+CONFIG_LWIP_TCP_TMR_INTERVAL=200
+CONFIG_LWIP_TCP_MSL=1600
+CONFIG_LWIP_TCP_FIN_WAIT_TIMEOUT=1000
+CONFIG_LWIP_TCP_SND_BUF_DEFAULT=8192
+CONFIG_LWIP_TCP_WND_DEFAULT=32768
+CONFIG_LWIP_TCP_RECVMBOX_SIZE=8
+CONFIG_LWIP_TCP_ACCEPTMBOX_SIZE=12
+CONFIG_LWIP_TCP_QUEUE_OOSEQ=y
+CONFIG_LWIP_TCP_OOSEQ_TIMEOUT=4
+CONFIG_LWIP_TCP_OOSEQ_MAX_PBUFS=12
+CONFIG_LWIP_TCP_SACK_OUT=y
+CONFIG_LWIP_TCP_OVERSIZE_MSS=y
+CONFIG_LWIP_WND_SCALE=y
+CONFIG_LWIP_TCP_RCV_SCALE=6
+CONFIG_LWIP_TCP_RTO_TIME=1500
+# ——————————————————————————————————————————————————————————————————————————————
+#
+# mbedTLS
+#
+CONFIG_MBEDTLS_EXTERNAL_MEM_ALLOC=y
+CONFIG_MBEDTLS_ASYMMETRIC_CONTENT_LEN=y
+CONFIG_MBEDTLS_SSL_IN_CONTENT_LEN=16384
+CONFIG_MBEDTLS_SSL_OUT_CONTENT_LEN=16348
+# ——————————————————————————————————————————————————————————————————————————————
+#
+# Websocket
+#
+CONFIG_WS_TRANSPORT=y
+CONFIG_WS_BUFFER_SIZE=2048
+CONFIG_WS_DYNAMIC_BUFFER=y
+# ——————————————————————————————————————————————————————————————————————————————
+#
+# ESP-Driver:LCD Controller Configurations
+#
+CONFIG_LCD_RGB_RESTART_IN_VSYNC=y
+# ——————————————————————————————————————————————————————————————————————————————
+#
+# ESP System Settings
+#
+CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_400=y
+# ——————————————————————————————————————————————————————————————————————————————
+#
+# FAT Filesystem support
+#
+CONFIG_FATFS_LFN_HEAP=y
+CONFIG_FATFS_MAX_LFN=255
+CONFIG_FATFS_API_ENCODING_UTF_8=y
+# ——————————————————————————————————————————————————————————————————————————————
+#
+# Kernel
+#
+CONFIG_FREERTOS_HZ=1000
+CONFIG_FREERTOS_USE_TRACE_FACILITY=y
+CONFIG_FREERTOS_USE_STATS_FORMATTING_FUNCTIONS=y
+CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS=y
+CONFIG_FREERTOS_VTASKLIST_INCLUDE_COREID=y
+CONFIG_FREERTOS_RUN_TIME_COUNTER_TYPE_U32=CONFIG_SPI_FLASH_YIELD_DURING_ERASE
+# ——————————————————————————————————————————————————————————————————————————————
+#
+# TLS Key Exchange Methods
+#
+CONFIG_MBEDTLS_PSK_MODES=y
+CONFIG_MBEDTLS_KEY_EXCHANGE_PSK=y
+CONFIG_MBEDTLS_KEY_EXCHANGE_ECDHE_PSK=y
+CONFIG_MBEDTLS_KEY_EXCHANGE_RSA_PSK=y
+# ——————————————————————————————————————————————————————————————————————————————
+#
+# Log Level
+#
+CONFIG_LOG_DEFAULT_LEVEL_ERROR=y
+CONFIG_LOG_MAXIMUM_EQUALS_DEFAULT=y
+# ——————————————————————————————————————————————————————————————————————————————
+#
+# Format
+#
+CONFIG_LOG_COLORS=y
+# ——————————————————————————————————————————————————————————————————————————————
+

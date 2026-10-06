@@ -2566,16 +2566,14 @@ class WifiSettings : public RegisterTable {
         m_name = name;
         m_fgColor = TFT_LIGHTGREY;
         m_borderColor = TFT_LIGHTGREY;
-        setFontSize(fontSize);
+        m_fontSize = fontSize;
         m_in_password->setAlign(HAlign::Left, VAlign::Middle);
         m_in_password->setTextColor(m_fgColor);
         m_in_password->set_bg_color(m_bg_color);
         m_in_password->setBorderColor(m_borderColor);
-        m_in_password->setFontSize(0); // auto size
         m_sel_ssid->setTextColor(m_fgColor);
         m_sel_ssid->set_bg_color(m_bg_color);
         m_sel_ssid->setBorderColor(m_borderColor);
-        m_sel_ssid->setFontSize(0); // auto size
     }
     ~WifiSettings() {
         m_credentials.clear();
@@ -2697,8 +2695,9 @@ class WifiSettings : public RegisterTable {
             MWR_LOG_WARN("unsupported resolution width {} px", w);
             return;
         }
-
+        m_sel_ssid->setFontSize(0); // auto size
         m_sel_ssid->begin(m_winSelect.x, m_winSelect.y, m_winSelect.w, m_winSelect.h, m_winSelect.pl, m_winSelect.pr, m_winSelect.pt, m_winSelect.pb);
+        m_in_password->setFontSize(0); // auto size
         m_in_password->begin(m_winPWD.x, m_winPWD.y, m_winPWD.w, m_winPWD.h, m_winPWD.pl, m_winPWD.pr, m_winPWD.pt, m_winPWD.pb);
         m_keyboard->begin(m_winKeybrd.x, m_winKeybrd.y, m_winKeybrd.w, m_winKeybrd.h, m_winKeybrd.pl, m_winKeybrd.pr, m_winKeybrd.pt, m_winKeybrd.pb);
     }
@@ -2871,7 +2870,7 @@ class TimeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     int16_t      m_pr = 0;
     int16_t      m_pt = 0;
     int16_t      m_pb = 0;
-    uint8_t      m_fontSize = 0;
+    uint16_t     m_fontSize = 0;
     uint16_t     m_digits_w;
     uint16_t     m_colon_w;
     uint16_t     m_all_w;
@@ -2968,36 +2967,32 @@ class TimeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
         m_v_align = v_align;
     }
 
-    void setFontSize(uint8_t size) { // size 0 -> auto
+    void setFontSize(uint8_t size) {
 
-        if (size == 0) {
-            uint16_t line_height = getTFT().setFontSize(m_h);
+        uint16_t line_height = getTFT().setFontSize(m_h);
+        MWR_LOG_WARN("name: {}", getTFT().getCurrentFontName());
 
-            while (true) {
-                m_digits_w = 0;
-                for(int i = 0; i < 10; i++){ m_digits_w = std::max(m_digits_w, getTFT().getTotalGlyphWidth('0' + i));
-                MWR_LOG_DEBUG("width {}, m_digits_w {}", getTFT().getTotalGlyphWidth('0' + i), m_digits_w);}
-                m_colon_w = getTFT().getTotalGlyphWidth(':');
-                m_all_w = m_digits_w * 6 + m_colon_w * 2; // "00:00:00"
-                if (m_all_w < m_w) break;
-                line_height = getTFT().setFontSize(--line_height);
-                if (line_height == 0) { MWR_LOG_ERROR("timeString does not fit in height {}", m_h); }
-            }
-            MWR_LOG_DEBUG("timestringObject width: {}", m_all_w);
-            m_fontSize = line_height;
-        }
-        else{
-            m_fontSize = size;
-            getTFT().setFontSize(m_fontSize);
+        while (true) {
             m_digits_w = 0;
-            for(int i = 0; i < 10; i++){ m_digits_w = std::max(m_digits_w, getTFT().getTotalGlyphWidth('5')); }
-            m_colon_w = getTFT().getTotalGlyphWidth(':');
-            m_all_w = m_digits_w * 6 + m_colon_w * 2; // "00:00:00"
-            if (m_all_w > m_w) {
-                MWR_LOG_ERROR("Font doesn't fit in line, timeString width: {}px, line width: {}px", m_all_w, m_w);
+            for (int i = 0; i < 10; i++) {
+                m_digits_w = std::max(m_digits_w, getTFT().getTotalGlyphWidth('0' + i));
+                MWR_LOG_DEBUG("width {}, m_digits_w {}", getTFT().getTotalGlyphWidth('0' + i), m_digits_w);
             }
+
+            m_colon_w = getTFT().getTotalGlyphWidth(':');
+            MWR_LOG_WARN("name: {}, m_colon_w: {}", getTFT().getCurrentFontName(), m_colon_w);
+
+            m_all_w = m_digits_w * 6 + m_colon_w * 2; // "00:00:00"
+            if (m_all_w < m_w) break;
+            line_height -= 1;
+            line_height = getTFT().setFontSize(line_height);
+            if (line_height == 0) { MWR_LOG_ERROR("timeString does not fit in height {}", m_h); }
         }
-        for (uint8_t i = 0; i < 8; i++) { txt_time[i].setFontSize(m_fontSize); }
+        MWR_LOG_DEBUG("timestringObject width: {}", m_all_w);
+        m_fontSize = line_height;
+        getTFT().setFontSize(m_fontSize);
+        MWR_LOG_WARN("name {}", getTFT().getCurrentFontName());
+        for (uint8_t i = 0; i < 8; i++) { txt_time[i].setFontSize(line_height); }
     }
 
     void setTextColor(int32_t color) {
@@ -3006,6 +3001,7 @@ class TimeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     }
 
     void setBorderColor(int32_t color) { m_borderColor = color; }
+
     void updateTime(RTIME::rtime hl_time, bool complete = true) {
         if (!m_enabled) return;
         m_time.assignf("{:02}:{:02}:{:02}", hl_time.hour, hl_time.minute, hl_time.second); // hhmmss
