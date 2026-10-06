@@ -25,8 +25,8 @@ MiniWebRadio Features:
 </ul><br>
 Required HW:
 <ul>
-<li>ESP32-S3 or -P4 board with <b>8MB of flash </b>or more, and at least <b> 4MB of PSRAM </b></li>
-<li>At least 16MB of flash is required for OTA</li>
+<li>ESP32-S3 or -P4 board with <b>8MB of flash</b> or more, and at least <b>4MB of PSRAM</b></li>
+<li>At least <b>16MB</b> of flash is required for OTA, <b>8MB</b> without OTA  </li>
 <li>DAC (e.g. PCM5102a)</li>
 <li>TFT Display with Touchpad (SPI), Display controller can be ILI9341 (320x240px), ILI9486 (480x320px), ILI9488 (480x320px), ST7796 (480x320px) or
 RGB Display (800x480) with Touchpad (I2C) or DSI Display (1024x600) with Touchpad (I2C)  </li>
