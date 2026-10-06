@@ -1,7 +1,5 @@
 # default:
 CONFIG_IDF_EXPERIMENTAL_FEATURES=y
-CONFIG_ESP32P4_REV_MIN_301=y
-CONFIG_ESP32P4_REV_MAX_FULL=399
 # ——————————————————————————————————————————————————————————————————————————————
 #
 # Arduino Configuration
@@ -11,7 +9,7 @@ CONFIG_ESP32P4_REV_MAX_FULL=399
 # Serial flasher config
 #
 CONFIG_ESPTOOLPY_FLASHSIZE_16MB
-CONFIG_ESPTOOLPY_FLASHFREQ_120M=y
+CONFIG_ESPTOOLPY_FLASHFREQ_80M=y
 CONFIG_AUTOSTART_ARDUINO=y
 # ——————————————————————————————————————————————————————————————————————————————
 #
