@@ -1,5 +1,7 @@
 # default:
 CONFIG_IDF_EXPERIMENTAL_FEATURES=y
+CONFIG_ESP32P4_REV_MIN_301=y
+CONFIG_ESP32P4_REV_MAX_FULL=399
 # ——————————————————————————————————————————————————————————————————————————————
 #
 # Arduino Configuration
@@ -98,6 +100,7 @@ CONFIG_FREERTOS_USE_STATS_FORMATTING_FUNCTIONS=y
 CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS=y
 CONFIG_FREERTOS_VTASKLIST_INCLUDE_COREID=y
 CONFIG_FREERTOS_RUN_TIME_COUNTER_TYPE_U32=CONFIG_SPI_FLASH_YIELD_DURING_ERASE
+CONFIG_FREERTOS_ENABLE_BACKWARD_COMPATIBILITY=y
 # ——————————————————————————————————————————————————————————————————————————————
 #
 # TLS Key Exchange Methods
