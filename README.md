@@ -37,7 +37,7 @@ RGB Display (800x480) with Touchpad (I2C) or DSI Display (1024x600) with Touchpa
 
 <li>Tested Displays</li>
 
-![Tested displays](docs/tested_displays.pdf)<br>
+![Tested displays](docs/tested_displays.jpg)<br>
 
 
 </ul>
