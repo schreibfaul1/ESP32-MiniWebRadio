@@ -31,11 +31,14 @@ Required HW:
 <li>TFT Display with Touchpad (SPI), Display controller can be ILI9341 (320x240px), ILI9486 (480x320px), ILI9488 (480x320px), ST7796 (480x320px) or
 RGB Display (800x480) with Touchpad (I2C) or DSI Display (1024x600) with Touchpad (I2C)  </li>
 <li>SD Card (FAT32) + SD adapter (can use SD slot on back of TFT display if available)</li>
+<li>Display Sizes</li>
 
-![Display sizes](docs/DisplaySizes.pdf)<br>
+![Display sizes](docs/DisplaySizes.jpg)<br>
+
+<li>Tested Displays</li>
+
 ![Tested displays](docs/tested_displays.pdf)<br>
 
-The display **"Crowpanel ESP32 P4-Advance HMI Display 7.0 V1.0 SKU:DHE04107D"** cannot be used due to a design error on the board!
 
 </ul>
 Optional HW:
