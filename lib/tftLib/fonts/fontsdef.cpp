@@ -22,5 +22,5 @@ void registerFont(const lv_font_t* font) {
 }
 
 void listFonts() {
-    for (int i = 0; i < fontCount; i++) { printf("    name: %s, line-height %li, base_line %li\n", fontList[i].name, fontList[i].line_height, fontList[i].base_line); }
+    for (int i = 0; i < fontCount; i++) { printf("    name: %s, line-height %li, base_line %li\n", fontList[i].name.c_get(), fontList[i].line_height, fontList[i].base_line); }
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Audio.h"
 #include <stdbool.h>
 #include <stdint-gcc.h>
 #include <stdio.h>
@@ -49,19 +50,19 @@ typedef struct {
 typedef struct {
     const void*   glyph_ids;
     const int8_t* values;
-    uint32_t       pair_cnt;
+    uint32_t      pair_cnt;
     uint32_t      glyph_ids_size;
 } lv_font_fmt_txt_kern_pair_t;
 
 typedef struct {
-    const char* name;
-    int32_t     line_height;
-    int32_t     base_line;
-    const void* dsc;
+    ps_ptr<char> name;
+    int32_t      line_height;
+    int32_t      base_line;
+    const void*  dsc;
 } lv_font_t;
 
 struct FontInfo {
-    const char*                        name;
+    ps_ptr<char>                       name;
     const lv_font_t*                   font;
     int32_t                            line_height;
     int32_t                            base_line;

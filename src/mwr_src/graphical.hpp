@@ -2870,7 +2870,7 @@ class TimeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     int16_t      m_pr = 0;
     int16_t      m_pt = 0;
     int16_t      m_pb = 0;
-    uint8_t      m_fontSize = 0;
+    uint16_t     m_fontSize = 0;
     uint16_t     m_digits_w;
     uint16_t     m_colon_w;
     uint16_t     m_all_w;
@@ -2967,36 +2967,32 @@ class TimeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
         m_v_align = v_align;
     }
 
-    void setFontSize(uint8_t size) { // size 0 -> auto
+    void setFontSize(uint8_t size) {
 
-        if (size == 0) {
-            uint16_t line_height = getTFT().setFontSize(m_h);
+        uint16_t line_height = getTFT().setFontSize(m_h);
+        MWR_LOG_WARN("name: {}", getTFT().getCurrentFontName());
 
-            while (true) {
-                m_digits_w = 0;
-                for(int i = 0; i < 10; i++){ m_digits_w = std::max(m_digits_w, getTFT().getTotalGlyphWidth('0' + i));
-                MWR_LOG_DEBUG("width {}, m_digits_w {}", getTFT().getTotalGlyphWidth('0' + i), m_digits_w);}
-                m_colon_w = getTFT().getTotalGlyphWidth(':');
-                m_all_w = m_digits_w * 6 + m_colon_w * 2; // "00:00:00"
-                if (m_all_w < m_w) break;
-                line_height = getTFT().setFontSize(--line_height);
-                if (line_height == 0) { MWR_LOG_ERROR("timeString does not fit in height {}", m_h); }
-            }
-            MWR_LOG_DEBUG("timestringObject width: {}", m_all_w);
-            m_fontSize = line_height;
-        }
-        else{
-            m_fontSize = size;
-            getTFT().setFontSize(m_fontSize);
+        while (true) {
             m_digits_w = 0;
-            for(int i = 0; i < 10; i++){ m_digits_w = std::max(m_digits_w, getTFT().getTotalGlyphWidth('5')); }
-            m_colon_w = getTFT().getTotalGlyphWidth(':');
-            m_all_w = m_digits_w * 6 + m_colon_w * 2; // "00:00:00"
-            if (m_all_w > m_w) {
-                MWR_LOG_ERROR("Font doesn't fit in line, timeString width: {}px, line width: {}px", m_all_w, m_w);
+            for (int i = 0; i < 10; i++) {
+                m_digits_w = std::max(m_digits_w, getTFT().getTotalGlyphWidth('0' + i));
+                MWR_LOG_DEBUG("width {}, m_digits_w {}", getTFT().getTotalGlyphWidth('0' + i), m_digits_w);
             }
+
+            m_colon_w = getTFT().getTotalGlyphWidth(':');
+            MWR_LOG_WARN("name: {}, m_colon_w: {}", getTFT().getCurrentFontName(), m_colon_w);
+
+            m_all_w = m_digits_w * 6 + m_colon_w * 2; // "00:00:00"
+            if (m_all_w < m_w) break;
+            line_height -= 1;
+            line_height = getTFT().setFontSize(line_height);
+            if (line_height == 0) { MWR_LOG_ERROR("timeString does not fit in height {}", m_h); }
         }
-        for (uint8_t i = 0; i < 8; i++) { txt_time[i].setFontSize(m_fontSize); }
+        MWR_LOG_DEBUG("timestringObject width: {}", m_all_w);
+        m_fontSize = line_height;
+        getTFT().setFontSize(m_fontSize);
+        MWR_LOG_WARN("name {}", getTFT().getCurrentFontName());
+        for (uint8_t i = 0; i < 8; i++) { txt_time[i].setFontSize(line_height); }
     }
 
     void setTextColor(int32_t color) {
@@ -3005,6 +3001,7 @@ class TimeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     }
 
     void setBorderColor(int32_t color) { m_borderColor = color; }
+
     void updateTime(RTIME::rtime hl_time, bool complete = true) {
         if (!m_enabled) return;
         m_time.assignf("{:02}:{:02}:{:02}", hl_time.hour, hl_time.minute, hl_time.second); // hhmmss
