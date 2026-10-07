@@ -2970,7 +2970,7 @@ class TimeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     void setFontSize(uint8_t size) {
 
         uint16_t line_height = getTFT().setFontSize(m_h);
-        MWR_LOG_WARN("name: {}", getTFT().getCurrentFontName());
+        MWR_LOG_DEBUG("name: {}", getTFT().getCurrentFontName());
 
         while (true) {
             m_digits_w = 0;
@@ -2980,7 +2980,7 @@ class TimeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
             }
 
             m_colon_w = getTFT().getTotalGlyphWidth(':');
-            MWR_LOG_WARN("name: {}, m_colon_w: {}", getTFT().getCurrentFontName(), m_colon_w);
+            MWR_LOG_DEBUG("name: {}, m_colon_w: {}", getTFT().getCurrentFontName(), m_colon_w);
 
             m_all_w = m_digits_w * 6 + m_colon_w * 2; // "00:00:00"
             if (m_all_w < m_w) break;
@@ -2991,7 +2991,7 @@ class TimeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
         MWR_LOG_DEBUG("timestringObject width: {}", m_all_w);
         m_fontSize = line_height;
         getTFT().setFontSize(m_fontSize);
-        MWR_LOG_WARN("name {}", getTFT().getCurrentFontName());
+        MWR_LOG_DEBUG("name {}", getTFT().getCurrentFontName());
         for (uint8_t i = 0; i < 8; i++) { txt_time[i].setFontSize(line_height); }
     }
 
