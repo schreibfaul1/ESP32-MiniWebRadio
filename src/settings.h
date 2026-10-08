@@ -4,11 +4,11 @@
 
 //———————————— predifined displays —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // #define SPI_DISPLAY 1                  //                    SPI display  320x240, 2.8inch,        ILI9341             XPT2046, ESP32-S3 or ESP32-P4
-#define SPI_DISPLAY 2                  //                    SPI display  480x320, 3.5" od 4"      ILI9488 or ST7796,  XPT2046, ESP32-S3 or ESP32-P4
+// #define SPI_DISPLAY 2                  //                    SPI display  480x320, 3.5" od 4"      ILI9488 or ST7796,  XPT2046, ESP32-S3 or ESP32-P4
 // #define SPI_DISPLAY 3                  //                    SPI display  480x320, 3.5" od 4"      ILI9488 or ST7796,  FT6x63,  ESP32-S3 or ESP32-P4
 // #define ESP32_8048S070                 // Sunton             RGB display  800x480, 7",                                 GT911,   ESP32-S3 N16R8
 // #define ESP32_S3_Touch_LCD7            // Waveshare          RGB display  800x480, 7",                                 GT911,   ESP32-S3 N8R8
-// #define ESP32_P4_WIFI6_TOUCH_LCD_43    // Waveshare          DSI display  800x480, 4.3",           ST7701,
+#define ESP32_P4_WIFI6_TOUCH_LCD_43    // Waveshare          DSI display  800x480, 4.3",           ST7701,
 // #define ESP32_P4_WIFI6_TOUCH_LCD7_7B   // Waveshare          DSI display 1024x600, 7",             EK97007,            GT911,   ESP32-P4 N32R32
 // #define JC1060P470                     // Guition            DSI display 1024x600, 7",             JD9165,             GT911,   ESP32-P4 N32R32
 // #define JC4880P443                     // Guition            DSI display  800x480, 4.3",           ST7701,             GT911,   ESP32-P4 N16R32
@@ -308,17 +308,17 @@ const Timing DSI_TIMING = {.h_res = 480, .v_res = 800, .pixel_clock_mhz = 30, .h
         #define SD_MMC_CMD          44
 
         // I2S ext. DAC
-        #define I2S_DOUT             2
-        #define I2S_BCLK             3
-        #define I2S_LRC              4
-        #define I2S_MCLK            -1
+    //    #define I2S_DOUT             2
+    //    #define I2S_BCLK             3
+    //    #define I2S_LRC              4
+    //    #define I2S_MCLK            -1
 
-    // I2S onboard DAC ES8311
-    // #define I2S_DOUT              9 // ES8311 DSDIN
-    // #define I2S_BCLK             12 // ES8311 SCLK
-    // #define I2S_LRC              10 // ES8311 LRCK
-    // #define I2S_MCLK             13 // ES8311 MCLK
-    // #define I2S_DIN              11 // ES8311 DOUT (microphone input)
+    //  I2S onboard DAC ES8311
+        #define I2S_DOUT              9 // ES8311 DSDIN
+        #define I2S_BCLK             12 // ES8311 SCLK
+        #define I2S_LRC              10 // ES8311 LRCK
+        #define I2S_MCLK             13 // ES8311 MCLK
+       // #define I2S_DIN              11 // ES8311 DOUT (microphone input)
 
         #define IR_PIN               5 // IR Receiver (if available)
         #define BT_EMITTER_RX       28

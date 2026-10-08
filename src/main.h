@@ -82,6 +82,7 @@
 
 Audio       audio;
 Preferences pref;
+ES8311      es;
 WebSrv      webSrv;
 WiFiMulti   wifiMulti;
 RTIME       rtc;

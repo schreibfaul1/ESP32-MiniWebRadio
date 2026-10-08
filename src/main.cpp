@@ -203,10 +203,12 @@ void setup() {
 
     setTFTbrightness(s_brightness);
 
-    // ES8311 es;
-    // es.begin(&i2cBusOne, 0x18);
-    // es.setVolume(50);
-    // es.setBitsPerSample(32);
+    if(s_i2c_items.es8311_found){
+        es.begin(&i2cBusOne, 0x18);
+        es.setBitsPerSample(32);
+        es.setVolume(100);
+        audio.forceMono(true);
+    }
 }
 
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
