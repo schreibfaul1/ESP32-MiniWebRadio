@@ -234,12 +234,8 @@ class Button : public RegisterTable {
 
     void show() {
         if (m_bg_color == TFT_BG_IS_VISIBLE) {
-            if (m_first_call) {
-                m_cache_bg.alloc_array(m_w * m_h, m_name.c_get());
-                getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
-            } else {
-                getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
-            }
+            if (m_first_call) { m_cache_bg.alloc_array(m_w * m_h, m_name.c_get()); }
+            getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
         } else if (m_bg_color == TFT_BG_IS_WALLPAPER) { //
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else { // e.g. m_bg_color == TFT_BLACK
@@ -433,12 +429,8 @@ class PictureBox : public RegisterTable {
 
     bool show() {
         if (m_bg_color == TFT_BG_IS_VISIBLE) {
-            if (m_init_bg_cache) {
-                m_cache_bg.alloc_array(m_w * m_h, m_name.c_get());
-                getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
-            } else {
-                if (m_content_has_changed) getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
-            }
+            if (m_init_bg_cache) { m_cache_bg.alloc_array(m_w * m_h, m_name.c_get()); }
+            getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
         } else if (m_bg_color == TFT_BG_IS_WALLPAPER) { //
             if (m_content_has_changed) getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else { // e.g. m_bg_color == TFT_BLACK
@@ -608,12 +600,8 @@ class Slider : public RegisterTable {
 
     void show() {
         if (m_bg_color == TFT_BG_IS_VISIBLE) {
-            if (m_first_call) {
-                m_cache_bg.alloc_array(m_w * m_h, m_name.c_get());
-                getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
-            } else {
-                getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
-            }
+            if (m_first_call) { m_cache_bg.alloc_array(m_w * m_h, m_name.c_get()); }
+            getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
         } else if (m_bg_color == TFT_BG_IS_WALLPAPER) { //
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else { // e.g. m_bg_color == TFT_BLACK
@@ -1003,12 +991,8 @@ class Textbox : public RegisterTable {
 
     void show() {
         if (m_bg_color == TFT_BG_IS_VISIBLE) {
-            if (m_init_bg_cache) {
-                m_cache_bg.alloc_array(m_w * m_h, m_name.c_get());
-                getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
-            } else {
-                if (m_content_has_changed) getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
-            }
+            if (m_init_bg_cache) { m_cache_bg.alloc_array(m_w * m_h, m_name.c_get()); }
+            getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
         } else if (m_bg_color == TFT_BG_IS_WALLPAPER) { //
             if (m_content_has_changed) getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else if (m_bg_color == TFT_BG_OVERWRITE) {
@@ -1622,12 +1606,8 @@ class VU_Meter : public RegisterTable {
 
     void show() {
         if (m_bg_color == TFT_BG_IS_VISIBLE) {
-            if (m_first_call) {
-                m_cache_bg.alloc_array(m_w * m_h, m_name.c_get());
-                getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
-            } else {
-                getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
-            }
+            if (m_first_call) { m_cache_bg.alloc_array(m_w * m_h, m_name.c_get()); }
+            getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
         } else if (m_bg_color == TFT_BG_IS_WALLPAPER) { //
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else { // e.g. m_bg_color == TFT_BLACK
@@ -1847,12 +1827,8 @@ class Spectrum : public RegisterTable {
 
     void show() {
         if (m_bg_color == TFT_BG_IS_VISIBLE) {
-            if (m_first_call) {
-                m_cache_bg.alloc_array(m_w * m_h, m_name.c_get());
-                getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
-            } else {
-                getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
-            }
+            if (m_first_call) { m_cache_bg.alloc_array(m_w * m_h, m_name.c_get()); }
+            getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
         } else if (m_bg_color == TFT_BG_IS_WALLPAPER) { //
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else { // e.g. m_bg_color == TFT_BLACK
@@ -6907,8 +6883,10 @@ class LineChart : public RegisterTable {
     int16_t               m_h = 0;
     int16_t               m_pl = 0;
     int16_t               m_pr = 0;
-    int16_t               m_pt = 0;
-    int16_t               m_pb = 0;
+    int16_t               m_pt = 2;
+    int16_t               m_pb = 2;
+    uint8_t               m_day = 0;
+    uint8_t               m_hour = 0;
     int32_t               m_bg_color = TFT_BG_IS_WALLPAPER;
     bool                  m_enabled = false;
     bool                  m_active = true;
@@ -6921,16 +6899,19 @@ class LineChart : public RegisterTable {
     bool                  m_data_valid = false;
     std::vector<float>    m_hourly_temperature;
     std::vector<uint8_t>  m_hourly_precipitationProbability;
+    std::vector<uint8_t>  m_hourly_sunshineDuration_min;
     float                 m_temp_min = 0.0f;
     float                 m_temp_max = 0.0f;
     float                 m_precipitationSum = 0.0f;
     uint8_t               m_preProb_max = 0;
+    uint16_t              m_sunShine_max = 0;
     ps_ptr<char>          m_name;
     ps_ptr<char>          m_info;
     ps_ptr<char>*         m_temp_unit;
     ps_ptr<uint16_t>      m_cache_bg = {};
     releasedArg           m_ra;
     Textbox*              txt_0 = new Textbox("txt_0");
+    Textbox*              txt_12 = new Textbox("txt_12");
     Textbox*              txt_23 = new Textbox("txt_23");
     Textbox*              txt_info = new Textbox("txt_info");
 
@@ -6955,32 +6936,40 @@ class LineChart : public RegisterTable {
         m_y = y;                 // y pos
         m_w = w;                 // width
         m_h = h;                 // high
-        uint16_t plr = m_w / 40; // 2.5% of w
         m_enabled = false;
-        uint8_t txt_h = m_h / 5;
-        uint8_t txt_w = m_h * 2;
-        txt_0->begin(m_x + plr, m_y + m_h - txt_h, txt_w, txt_h, 0, 0, 0, 0);
+        uint8_t txt_h = m_h / 5.0f;
+        uint8_t txt_w = txt_h;
+        txt_0->begin(m_x, m_y + m_h - txt_h, txt_w, txt_h, 1, 0, 0, 2);
         txt_0->setTextColor(TFT_LIGHTGREY);
         txt_0->set_bg_color(TFT_BG_IS_VISIBLE);
         txt_0->setText("0");
         txt_0->setFontSize(0);
         txt_0->setAlign(HAlign::Left, VAlign::Bottom);
 
-        txt_23->begin(m_x + m_w - txt_w - plr, m_y + m_h - txt_h, txt_w, txt_h, 0, 0, 0, 0);
+        txt_12->begin(m_x + m_w / 2, m_y + m_h - txt_h, txt_w, txt_h, 0, 0, 0, 2);
+        txt_12->setTextColor(TFT_LIGHTGREY);
+        txt_12->set_bg_color(TFT_BG_IS_VISIBLE);
+        txt_12->setText("12");
+        txt_12->setFontSize(0);
+        txt_12->setAlign(HAlign::Left, VAlign::Bottom);
+
+        txt_23->begin(m_x + m_w - txt_w, m_y + m_h - txt_h, txt_w, txt_h, 0, 2, 0, 2);
         txt_23->setTextColor(TFT_LIGHTGREY);
         txt_23->set_bg_color(TFT_BG_IS_VISIBLE);
         txt_23->setText("23");
         txt_23->setFontSize(0);
-        txt_23->setAlign(HAlign::Right, VAlign::Bottom);
+        txt_23->setAlign(HAlign::Center, VAlign::Bottom);
 
-        txt_info->begin(m_x + 2, m_y, m_w / 1.75f, m_h / 1.75f, 0, 0, 0, 0);
+        uint16_t txt_info_w = m_w / 1.75f;
+        uint16_t txt_info_h = m_h / 1.3f;
+        txt_info->begin(m_x + (m_w - txt_info_w), m_y, txt_info_w, txt_info_h, 0, 0, 2, 0);
         txt_info->set_bg_color(TFT_BG_OVERWRITE);
         txt_info->setFontSize(0);
-        txt_info->setAlign(HAlign::Left, VAlign::Top);
+        txt_info->setAlign(HAlign::Right, VAlign::Top);
 
         m_pos_x.clear();
-        float dist = (m_w - m_pl - m_pr) / (float)(HOURS - 1);
-        for (size_t i = 0; i < HOURS; i++) { m_pos_x.push_back(m_pl + i * dist); }
+        float dist = (m_w - m_pl - m_pr) / (float)(HOURS);
+        for (size_t i = 0; i < HOURS; i++) { m_pos_x.push_back(m_pl + i * dist + dist / 2); }
     }
 
     ps_ptr<char> get_name() { return m_name; }
@@ -7012,7 +7001,20 @@ class LineChart : public RegisterTable {
         m_first_call = false;
         m_enabled = true;
         m_clicked = false;
-        getTFT().drawRect(m_x, m_y, m_w, m_h, TFT_RED);
+
+        for(int i = 0; i < HOURS; i++){
+            m_temp_min = std::min(m_temp_min, m_hourly_temperature[i + m_hour]);
+            m_temp_max = std::max(m_temp_max, m_hourly_temperature[i + m_hour]);
+            m_preProb_max = std::max(m_preProb_max, m_hourly_precipitationProbability[i + m_hour]);
+        }
+
+        int i = 0;
+        m_sunShine_max = 0;
+        while(true){
+            if(i + m_hour >= 24) break;
+            m_sunShine_max += m_hourly_sunshineDuration_min[i + m_hour];
+            i++;
+        }
 
         uint16_t y_max = m_y + m_pt;
         uint16_t y_min = m_y + m_h - m_pb;
@@ -7024,14 +7026,26 @@ class LineChart : public RegisterTable {
         uint16_t bar_w = m_pos_x[1] - m_pos_x[0] - 1; // Width of a column
         uint16_t rain_top = y_min - (y_min - y_max) * 0.75;
         for (uint8_t i = 0; i < HOURS; i++) {
-            uint8_t  probability = m_hourly_precipitationProbability[i];
+            uint8_t  probability = m_hourly_precipitationProbability[i + m_hour];
             uint16_t y = map(probability, 0, 100, y_min, rain_top);
-            uint16_t x = m_x + m_pos_x[i] - bar_w / 2;
-            getTFT().fillRect(x, y, bar_w, y_min - y, TFT_DARKBLUE);
+            uint16_t x = m_pos_x[i] - (bar_w - 2) / 2;
+            getTFT().fillRect(m_x + x + 1, y, bar_w - 2, y_min - y, TFT_DARKBLUE);
         }
 
         // ----------------------------------------------------
-        // Temperature / RAIN
+        // Sunshine (minutes)
+        // ----------------------------------------------------
+
+        uint16_t sun_top = y_min - (y_min - y_max) * 0.75;
+        for (uint8_t i = 0; i < HOURS; i++) {
+            uint8_t  sunDuration = m_hourly_sunshineDuration_min[i + m_hour];
+            uint16_t y = map(sunDuration, 0, 60, y_min, sun_top) - 1;
+            getTFT().fillCircle(m_x + m_pos_x[i], y, 3, TFT_DARKYELLOW);
+            getTFT().drawLine(m_x + m_pos_x[i], y, m_x + m_pos_x[i] ,y_min, TFT_DARKYELLOW);
+        }
+
+        // ----------------------------------------------------
+        // Temperature
         // ----------------------------------------------------
         float    y_scale = 0.0f;
         uint16_t y_prev = 0;
@@ -7041,14 +7055,27 @@ class LineChart : public RegisterTable {
             if (m_temp_max == m_temp_min) {
                 y = (y_min + y_max) / 2;
             } else {
-                y = y_min - (m_hourly_temperature[i] - m_temp_min) * y_scale;
+                y = y_min - (m_hourly_temperature[i + m_hour] - m_temp_min) * y_scale;
             }
             if (i > 0) { getTFT().drawLine(m_x + m_pos_x[i - 1], y_prev, m_x + m_pos_x[i], y, TFT_RED); }
             getTFT().fillCircle(m_x + m_pos_x[i], y, 2, TFT_DARKRED);
             y_prev = y;
         }
+
         ps_ptr<char> tmp;
+        uint8_t hour = m_hour;
+        tmp.assignf("{:02}", hour);
+        txt_0->setText(tmp);
         txt_0->show();
+        hour += 12;
+        if(hour > 23) hour -= 24;
+        tmp.assignf("{:02}", hour);
+        txt_12->setText(tmp);
+        txt_12->show();
+        hour += 11;
+        if(hour > 23) hour -= 24;
+        tmp.assignf("{:02}", hour);
+        txt_23->setText(tmp);
         txt_23->show();
         m_info.assign(ANSI_ESC_LIGHTRED);
         if (*m_temp_unit == "C") {
@@ -7060,9 +7087,13 @@ class LineChart : public RegisterTable {
             m_info.appendf("Tmin: {:4.1}°F\n", m_temp_min * (9 / 5) + 32);
         }
         m_info.append(ANSI_ESC_LIGHTBLUE);
-        m_info.appendf("Rain: {}%, Σ {:3.1}mm", m_preProb_max, m_precipitationSum);
+        m_info.appendf("Rain: {}%, Σ {:3.1}mm\n", m_preProb_max, m_precipitationSum);
+        m_info.append(ANSI_ESC_YELLOW);
+        m_info.appendf("Sun: today Σ {}:{:02}h", m_sunShine_max / 60, m_sunShine_max % 60);
         txt_info->setText(m_info);
         txt_info->show();
+
+        getTFT().drawRect(m_x, m_y, m_w, m_h, TFT_RED);
     }
 
     void hide() {
@@ -7119,6 +7150,7 @@ class LineChart : public RegisterTable {
         m_temp_unit = temp_unit;
         m_hourly_temperature.clear();
         m_hourly_precipitationProbability.clear();
+        m_hourly_sunshineDuration_min.clear();
         m_temp_min = hourly[0].temperature;
         m_temp_max = hourly[0].temperature;
         m_preProb_max = hourly[0].precipitationProbability;
@@ -7126,16 +7158,19 @@ class LineChart : public RegisterTable {
         m_preProb_max = daily[0].precipitationProbabilityMax;
         m_precipitationSum = daily[0].precipitationSum;
 
-        for (size_t i = 0; i < HOURS; i++) {
+        for (size_t i = 0; i < 2 * HOURS; i++) {
             m_hourly_temperature.push_back(hourly[i].temperature);
             m_hourly_precipitationProbability.push_back(hourly[i].precipitationProbability);
-
-            m_temp_min = std::min(m_temp_min, m_hourly_temperature[i]);
-            m_temp_max = std::max(m_temp_max, m_hourly_temperature[i]);
-            m_preProb_max = std::max(m_preProb_max, m_hourly_precipitationProbability[i]);
+            m_hourly_sunshineDuration_min.push_back(hourly[i].sunshineDuration);
         }
 
         m_data_valid = true;
+        if(m_enabled) show();
+    }
+
+    void update_time(RTIME::rtime time) {
+        m_day = time.day;
+        m_hour = time.hour;
     }
 };
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -7180,6 +7215,8 @@ class WeatherClock : public RegisterTable {
     int16_t          m_y = 0;
     int16_t          m_w = 0;
     int16_t          m_h = 0;
+    uint8_t          m_hour = 0;
+    uint8_t          m_day = 0;
 
     int32_t       m_bg_color = TFT_BG_IS_WALLPAPER;
     bool          m_enabled = false;
@@ -7195,7 +7232,7 @@ class WeatherClock : public RegisterTable {
     ps_ptr<char>* m_temp_unit;
     ps_ptr<char>* m_press_unit;
     ps_ptr<char>* m_wind_speed_unit;
-    uint8_t       m_min = 0, m_hour = 0, m_weekday = 0;
+    RTIME::rtime  m_rtime;
     releasedArg   m_ra;
 
     static constexpr float beaufortMax[] = {
@@ -7237,7 +7274,7 @@ class WeatherClock : public RegisterTable {
         pic_weather_code->setAlign(HAlign::Center, VAlign::Middle);
         pic_weather_code->set_bg_color(TFT_BG_IS_BLACK);
         pic_weather_code->begin(m_x, m_y, s_Icon.w, s_Icon.h);
-        crt_temperature_rain->begin(x + s_Icon.w, m_y, m_w - s_Icon.w, s_Icon.h);
+        crt_temperature_rain->begin(m_x + s_Icon.w, m_y, m_w - s_Icon.w, s_Icon.h);
         crt_temperature_rain->set_bg_color(TFT_BG_IS_BLACK);
         clk_24s->set_bg_color(TFT_BG_IS_BLACK);
         clk_24s->begin(m_x, m_y + s_Icon.h, clock_w, s_Icon.h);
@@ -7350,10 +7387,9 @@ class WeatherClock : public RegisterTable {
     }
 
     void update_time(RTIME::rtime time) {
+        crt_temperature_rain->update_time(time);
         if (!m_enabled) return;
-        uint8_t minute = time.minute;
-        uint8_t hour = time.hour;
-        clk_24s->writeTime(hour, minute);
+        clk_24s->writeTime(time.hour, time.minute);
     }
 
     void locale(ps_ptr<char>* temp_unit, ps_ptr<char>* press_unit, ps_ptr<char>* wind_speed_unit) {

@@ -338,8 +338,8 @@ void loop() {
         uint16_t minuteOfTheDay = rtc.getMinuteOfTheDay();
         uint8_t  weekDay = rtc.getweekday();
         clk_CL_24.updateTime(minuteOfTheDay, weekDay);
-        if (s_state == WEATHER && s_subState_weather == 0) cls_weather.update_time(s_time);
-        if (s_state == RINGING) clk_RI_24small.updateTime(minuteOfTheDay, weekDay);
+        cls_weather.update_time(s_time);
+        clk_RI_24small.updateTime(minuteOfTheDay, weekDay);
         static uint8_t semaphore = 0;
         if (!semaphore) { s_f_alarm = isAlarm(weekDay, s_alarmdays, minuteOfTheDay, s_alarmtime) && s_f_rtc; } // alarm if rtc and CL green
         if (s_f_alarm) { semaphore++; }
@@ -1168,8 +1168,8 @@ void setupOTA() {
     ArduinoOTA.setHostname("MiniWebRadio");
     ArduinoOTA.onStart([]() {
         s_f_otaRunning = true;
-        ticker100ms.detach();  // stop the 100ms ISR, it has no benefit during OTA and only adds jitter
-        audio.stopSong();      // release I2S/decoder and stop consuming WiFi/SD bandwidth
+        ticker100ms.detach(); // stop the 100ms ISR, it has no benefit during OTA and only adds jitter
+        audio.stopSong();     // release I2S/decoder and stop consuming WiFi/SD bandwidth
         printfln(s_tag.setup, ANSI_ESC_YELLOW "OTA update started, pausing radio, FTP, DLNA and display" ANSI_ESC_RESET);
     });
     ArduinoOTA.onEnd([]() { printfln(s_tag.setup, ANSI_ESC_GREEN "OTA update finished, rebooting" ANSI_ESC_RESET); });
@@ -1382,7 +1382,6 @@ void stopSong() {
     s_f_pauseResume = false;
     s_f_playlistNextFile = false;
 }
-
 
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // 📌📌📌  C O M M O N  📌📌📌
@@ -1820,11 +1819,10 @@ void fall_asleep() {
     s_f_isFSConnected = false;
     s_f_isWebConnected = false;
     audio.stopSong();
-    if (s_sleepMode == 0) {
-        changeState(SLEEP, 0);
-    } else {
-        changeState(SLEEP, 1);
-    }
+    if (s_sleepMode == 0) { changeState(SLEEP, 0); }
+    if (s_sleepMode == 1) { changeState(SLEEP, 1); }
+    if (s_sleepMode == 2) { changeState(SLEEP, 2); }
+
     if (s_bt_emitter.found) bt_emitter.power_off();
     printfln(s_tag.action, "falling asleep");
 }
@@ -2272,6 +2270,9 @@ void changeState(int8_t state, int8_t subState) {
             if (subState == 1) {
                 clk_CL_24.show();
             }
+            if (subState == 2) {
+                cls_weather.show();
+            }
             break;
         }
         case WEATHER: {
@@ -2320,7 +2321,6 @@ ps_ptr<char> get_WiFi_PW(const char* ssid) {
     }
     return password;
 }
-
 
 /*         ╔═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
            ║                                                                                  E V E N T S                                                                                ║
@@ -3442,6 +3442,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
     CMD_EQUALS("set_sleepMode"){        s_sleepMode = param.to_uint32();
                                         if(s_sleepMode == 0) printfln(s_tag.webserver, "SleepMode: " ANSI_ESC_YELLOW "Display off");
                                         if(s_sleepMode == 1) printfln(s_tag.webserver, "SleepMode: " ANSI_ESC_YELLOW "Show the time");
+                                        if(s_sleepMode == 2) printfln(s_tag.webserver, "SleepMode: " ANSI_ESC_YELLOW "Weather Clock");
                                         return;}
 
     CMD_EQUALS("KCX_BT_connected") {    if(!bt_emitter.get_power_state()) webSrv.send("KCX_BT_connected=", "-1");

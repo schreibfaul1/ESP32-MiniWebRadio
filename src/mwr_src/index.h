@@ -3270,7 +3270,6 @@ function appendToTerminal(text) {
                     </div>
                 </td>
                 <td style="padding: 10px; min-width: 350px; margin-left: 0px;">
-                    <br>
                     <fieldset>
                         <legend> sleep mode </legend>
                         <div>
@@ -3280,6 +3279,10 @@ function appendToTerminal(text) {
                         <div>
                             <input type="radio" id="sleepMode1" name="sleepMode" value="show the time" checked onclick="socket.send('set_sleepMode=1');">
                             <label for="sleepMode1">show the time</label>
+                        </div>
+                        <div>
+                            <input type="radio" id="sleepMode2" name="sleepMode" value="display off" onclick="socket.send('set_sleepMode=2');">
+                            <label for="sleepMode0">weather clock</label>
                         </div>
                     </fieldset>
                     <br>
