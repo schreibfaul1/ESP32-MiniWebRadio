@@ -338,9 +338,8 @@ void loop() {
         uint16_t minuteOfTheDay = rtc.getMinuteOfTheDay();
         uint8_t  weekDay = rtc.getweekday();
         clk_CL_24.updateTime(minuteOfTheDay, weekDay);
-        if (s_state == WEATHER && s_subState_weather == 0) cls_weather.update_time(s_time);
-        if (s_state == SLEEP && s_sleepMode == 2) cls_weather.update_time(s_time);
-        if (s_state == RINGING) clk_RI_24small.updateTime(minuteOfTheDay, weekDay);
+        cls_weather.update_time(s_time);
+        clk_RI_24small.updateTime(minuteOfTheDay, weekDay);
         static uint8_t semaphore = 0;
         if (!semaphore) { s_f_alarm = isAlarm(weekDay, s_alarmdays, minuteOfTheDay, s_alarmtime) && s_f_rtc; } // alarm if rtc and CL green
         if (s_f_alarm) { semaphore++; }
