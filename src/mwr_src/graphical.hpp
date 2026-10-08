@@ -3669,6 +3669,7 @@ class ImgClock24small : public RegisterTable { // draw a clock in 24h format
         if (m_enabled) writeTime(m_hour, m_min);
     }
     void writeTime(uint8_t m_hour, uint8_t m_min) {
+        if(!m_enabled) return;
         static uint8_t oldTime[4];
         static bool    k = false;
         uint8_t        time[5];
@@ -6932,10 +6933,10 @@ class LineChart : public RegisterTable {
     }
 
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
-        m_x = x;                 // x pos
-        m_y = y;                 // y pos
-        m_w = w;                 // width
-        m_h = h;                 // high
+        m_x = x; // x pos
+        m_y = y; // y pos
+        m_w = w; // width
+        m_h = h; // high
         m_enabled = false;
         uint8_t txt_h = m_h / 5.0f;
         uint8_t txt_w = txt_h;
@@ -7002,7 +7003,7 @@ class LineChart : public RegisterTable {
         m_enabled = true;
         m_clicked = false;
 
-        for(int i = 0; i < HOURS; i++){
+        for (int i = 0; i < HOURS; i++) {
             m_temp_min = std::min(m_temp_min, m_hourly_temperature[i + m_hour]);
             m_temp_max = std::max(m_temp_max, m_hourly_temperature[i + m_hour]);
             m_preProb_max = std::max(m_preProb_max, m_hourly_precipitationProbability[i + m_hour]);
@@ -7010,8 +7011,8 @@ class LineChart : public RegisterTable {
 
         int i = 0;
         m_sunShine_max = 0;
-        while(true){
-            if(i + m_hour >= 24) break;
+        while (true) {
+            if (i + m_hour >= 24) break;
             m_sunShine_max += m_hourly_sunshineDuration_min[i + m_hour];
             i++;
         }
@@ -7041,7 +7042,7 @@ class LineChart : public RegisterTable {
             uint8_t  sunDuration = m_hourly_sunshineDuration_min[i + m_hour];
             uint16_t y = map(sunDuration, 0, 60, y_min, sun_top) - 1;
             getTFT().fillCircle(m_x + m_pos_x[i], y, 3, TFT_DARKYELLOW);
-            getTFT().drawLine(m_x + m_pos_x[i], y, m_x + m_pos_x[i] ,y_min, TFT_DARKYELLOW);
+            getTFT().drawLine(m_x + m_pos_x[i], y, m_x + m_pos_x[i], y_min, TFT_DARKYELLOW);
         }
 
         // ----------------------------------------------------
@@ -7063,17 +7064,17 @@ class LineChart : public RegisterTable {
         }
 
         ps_ptr<char> tmp;
-        uint8_t hour = m_hour;
+        uint8_t      hour = m_hour;
         tmp.assignf("{:02}", hour);
         txt_0->setText(tmp);
         txt_0->show();
         hour += 12;
-        if(hour > 23) hour -= 24;
+        if (hour > 23) hour -= 24;
         tmp.assignf("{:02}", hour);
         txt_12->setText(tmp);
         txt_12->show();
         hour += 11;
-        if(hour > 23) hour -= 24;
+        if (hour > 23) hour -= 24;
         tmp.assignf("{:02}", hour);
         txt_23->setText(tmp);
         txt_23->show();
@@ -7165,7 +7166,7 @@ class LineChart : public RegisterTable {
         }
 
         m_data_valid = true;
-        if(m_enabled) show();
+        if (m_enabled) show();
     }
 
     void update_time(RTIME::rtime time) {
@@ -7398,7 +7399,12 @@ class WeatherClock : public RegisterTable {
         m_wind_speed_unit = wind_speed_unit;
     }
 
-    void restore_clock() { clk_24s->show_all(); }
+    void restore_clock() {
+        clk_24s->enable();
+        clk_24s->show_all();
+    }
+
+    void disable_clock() { clk_24s->disable(); }
 
   private:
     void enable_all() { m_enabled = true; }

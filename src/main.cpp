@@ -8,7 +8,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.1a1 - Okt 07, 2026                                                                                                               ";
+    Version 4.2.1a2 - Okt 08, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -1974,7 +1974,7 @@ void changeState(int8_t state, int8_t subState) {
     if (state == IR_SETTINGS    && s_state != IR_SETTINGS)    { dispHeader.set_bg_color(TFT_BG_IS_WALLPAPER); dispFooter.set_bg_color(TFT_BG_IS_WALLPAPER); clearWithOutHeaderFooter(TFT_BG_IS_WALLPAPER); newState = true;}
     if (state == RINGING        && s_state != RINGING)        { dispHeader.set_bg_color(TFT_BG_IS_BLACK);     dispFooter.set_bg_color(TFT_BG_IS_BLACK);     clearWithOutHeaderFooter(TFT_BG_IS_BLACK);     newState = true;}
     if (state == WIFI_SETTINGS  && s_state != WIFI_SETTINGS)  { dispHeader.set_bg_color(TFT_BG_IS_WALLPAPER); dispFooter.set_bg_color(TFT_BG_IS_WALLPAPER); clearWithOutHeaderFooter(TFT_BG_IS_WALLPAPER); newState = true;}
-    if (state == WEATHER        && s_state != WEATHER)        { dispHeader.set_bg_color(TFT_BG_IS_BLACK);     dispFooter.set_bg_color(TFT_BG_IS_BLACK);     clearWithOutHeaderFooter(TFT_BG_IS_WALLPAPER); newState = true;}
+    if (state == WEATHER        && s_state != WEATHER)        { dispHeader.set_bg_color(TFT_BG_IS_BLACK);     dispFooter.set_bg_color(TFT_BG_IS_BLACK);     clearWithOutHeaderFooter(TFT_BG_IS_BLACK);     newState = true;}
     if (state == SLEEP          && s_state != SLEEP)          { dispHeader.set_bg_color(TFT_BG_IS_BLACK);     dispFooter.set_bg_color(TFT_BG_IS_BLACK);     clearAll(TFT_BG_IS_BLACK);                     newState = true;}
 
     if (state == RADIO          && s_subState_radio   != subState) { newSubState = true;  }
@@ -2276,12 +2276,15 @@ void changeState(int8_t state, int8_t subState) {
             break;
         }
         case WEATHER: {
-            if(newState) cls_weather.show();
+            if(newState) {
+                cls_weather.show();
+            }
             if (subState == 0) {
                 btn_WR_alarm.hide(); btn_WR_sleep.hide(); btn_WR_radio.hide(); btn_WR_mute.hide(); btn_WR_off.hide(); sdr_WR_volume.hide();
                 cls_weather.restore_clock();
             }
             if (subState == 1) {
+                cls_weather.disable_clock();
                 setTimeCounter(2);
                 sdr_WR_volume.show();
                 btn_WR_mute.show(); btn_WR_alarm.show(); btn_WR_radio.show(); btn_WR_off.show(); btn_WR_sleep.show();
