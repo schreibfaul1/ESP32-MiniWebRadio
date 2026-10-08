@@ -234,12 +234,8 @@ class Button : public RegisterTable {
 
     void show() {
         if (m_bg_color == TFT_BG_IS_VISIBLE) {
-            if (m_first_call) {
-                m_cache_bg.alloc_array(m_w * m_h, m_name.c_get());
-                getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
-            } else {
-                getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
-            }
+            if (m_first_call) { m_cache_bg.alloc_array(m_w * m_h, m_name.c_get()); }
+            getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
         } else if (m_bg_color == TFT_BG_IS_WALLPAPER) { //
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else { // e.g. m_bg_color == TFT_BLACK
@@ -433,12 +429,8 @@ class PictureBox : public RegisterTable {
 
     bool show() {
         if (m_bg_color == TFT_BG_IS_VISIBLE) {
-            if (m_init_bg_cache) {
-                m_cache_bg.alloc_array(m_w * m_h, m_name.c_get());
-                getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
-            } else {
-                if (m_content_has_changed) getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
-            }
+            if (m_init_bg_cache) { m_cache_bg.alloc_array(m_w * m_h, m_name.c_get()); }
+            getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
         } else if (m_bg_color == TFT_BG_IS_WALLPAPER) { //
             if (m_content_has_changed) getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else { // e.g. m_bg_color == TFT_BLACK
@@ -608,12 +600,8 @@ class Slider : public RegisterTable {
 
     void show() {
         if (m_bg_color == TFT_BG_IS_VISIBLE) {
-            if (m_first_call) {
-                m_cache_bg.alloc_array(m_w * m_h, m_name.c_get());
-                getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
-            } else {
-                getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
-            }
+            if (m_first_call) { m_cache_bg.alloc_array(m_w * m_h, m_name.c_get()); }
+            getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
         } else if (m_bg_color == TFT_BG_IS_WALLPAPER) { //
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else { // e.g. m_bg_color == TFT_BLACK
@@ -1003,12 +991,8 @@ class Textbox : public RegisterTable {
 
     void show() {
         if (m_bg_color == TFT_BG_IS_VISIBLE) {
-            if (m_init_bg_cache) {
-                m_cache_bg.alloc_array(m_w * m_h, m_name.c_get());
-                getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
-            } else {
-                if (m_content_has_changed) getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
-            }
+            if (m_init_bg_cache) { m_cache_bg.alloc_array(m_w * m_h, m_name.c_get()); }
+            getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
         } else if (m_bg_color == TFT_BG_IS_WALLPAPER) { //
             if (m_content_has_changed) getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else if (m_bg_color == TFT_BG_OVERWRITE) {
@@ -1622,12 +1606,8 @@ class VU_Meter : public RegisterTable {
 
     void show() {
         if (m_bg_color == TFT_BG_IS_VISIBLE) {
-            if (m_first_call) {
-                m_cache_bg.alloc_array(m_w * m_h, m_name.c_get());
-                getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
-            } else {
-                getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
-            }
+            if (m_first_call) { m_cache_bg.alloc_array(m_w * m_h, m_name.c_get()); }
+            getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
         } else if (m_bg_color == TFT_BG_IS_WALLPAPER) { //
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else { // e.g. m_bg_color == TFT_BLACK
@@ -1847,12 +1827,8 @@ class Spectrum : public RegisterTable {
 
     void show() {
         if (m_bg_color == TFT_BG_IS_VISIBLE) {
-            if (m_first_call) {
-                m_cache_bg.alloc_array(m_w * m_h, m_name.c_get());
-                getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
-            } else {
-                getTFT().copyFramebuffer(m_cache_bg.get(), FB_VISIBLE, m_x, m_y, m_w, m_h);
-            }
+            if (m_first_call) { m_cache_bg.alloc_array(m_w * m_h, m_name.c_get()); }
+            getTFT().copyFramebuffer(FB_VISIBLE, m_cache_bg.get(), m_x, m_y, m_w, m_h);
         } else if (m_bg_color == TFT_BG_IS_WALLPAPER) { //
             getTFT().copyFramebuffer(FB_BACKGROUND, FB_VISIBLE, m_x, m_y, m_w, m_h);
         } else { // e.g. m_bg_color == TFT_BLACK
