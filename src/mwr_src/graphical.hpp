@@ -7089,7 +7089,7 @@ class LineChart : public RegisterTable {
         m_info.append(ANSI_ESC_LIGHTBLUE);
         m_info.appendf("Rain: {}%, Σ {:3.1}mm\n", m_preProb_max, m_precipitationSum);
         m_info.append(ANSI_ESC_YELLOW);
-        m_info.appendf("Sun: today Σ {}min", m_sunShine_max);
+        m_info.appendf("Sun: today Σ {}:{:02}h", m_sunShine_max / 60, m_sunShine_max % 60);
         txt_info->setText(m_info);
         txt_info->show();
 
