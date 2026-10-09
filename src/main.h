@@ -646,7 +646,7 @@ void ui_btCommand(ps_ptr<char> cmd) {
     printfln(s_tag.terminal, "btstr: {}", cmd);
 }
 void ui_meteoRequest() {
-    meteo.send_request();
+    s_f_update_meteo = true;
 }
 void ui_meteoProtocol() {
     meteo.protocol();

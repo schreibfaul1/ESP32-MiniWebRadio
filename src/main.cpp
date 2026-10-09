@@ -386,7 +386,7 @@ void loop() {
             printfln(s_tag.meteo_info, ANSI_ESC_GREEN "Update Meteo");
             s_f_update_meteo = false;
         }
-        if (s_time.minute == 0 && s_time.second == 10) s_f_update_meteo = true;
+        if (s_time.minute == 0 && s_time.second == 45) s_f_update_meteo = true;
         //---------------------------------------------TIME SPEECH -----------------------------------------------------------------------------------
         static bool f_resume = false;
         if (s_f_timeSpeech) { // speech the time 7 sec before a new hour is arrived

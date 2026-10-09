@@ -7233,7 +7233,7 @@ class WeatherClock : public RegisterTable {
     ps_ptr<char>* m_temp_unit;
     ps_ptr<char>* m_press_unit;
     ps_ptr<char>* m_wind_speed_unit;
-    RTIME::rtime  m_rtime;
+    RTIME::rtime  m_time;
     releasedArg   m_ra;
 
     static constexpr float beaufortMax[] = {
@@ -7365,7 +7365,7 @@ class WeatherClock : public RegisterTable {
         if (!m_press_unit->valid()) return;
 
         crt_temperature_rain->update(hourly, daily, m_temp_unit);
-        m_weather_code_path.assignf("/meteo/{}.png", daily[0].weatherCode);
+        m_weather_code_path.assignf("/meteo/{}.png", hourly[0 + m_time.hour].weatherCode);
         // log_i("sunrise %u:%02u", daily[0].sunrise.hour, daily[0].sunrise.minute);
         m_weather_daily.assignf(ANSI_ESC_LIGHTGREY "{:02}.{:02}.{}\n", daily[0].date.day, daily[0].date.month, daily[0].date.year);
         m_weather_daily.appendf(ANSI_ESC_YELLOW "sunrise:" ANSI_ESC_LIGHTGREY " {:02}:{:02}\n", daily[0].sunrise.hour, daily[0].sunrise.minute);
@@ -7388,7 +7388,8 @@ class WeatherClock : public RegisterTable {
     }
 
     void update_time(RTIME::rtime time) {
-        crt_temperature_rain->update_time(time);
+        m_time = time;
+        crt_temperature_rain->update_time(m_time);
         if (!m_enabled) return;
         clk_24s->writeTime(time.hour, time.minute);
     }
