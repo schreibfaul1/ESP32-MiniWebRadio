@@ -206,7 +206,8 @@ bool s_f_connectToLastStation = false;
 bool s_f_msg_box = false;
 bool s_f_esp_restart = false;
 bool s_f_timeSpeech = false;
-bool s_f_update_meteo = false;
+bool s_f_update_meteo_data = false;
+bool s_f_update_meteo_display = false;
 bool s_f_stationsChanged = false;
 bool s_f_sd_card_found = false;
 bool s_f_isWiFiConnected = false;
@@ -646,7 +647,7 @@ void ui_btCommand(ps_ptr<char> cmd) {
     printfln(s_tag.terminal, "btstr: {}", cmd);
 }
 void ui_meteoRequest() {
-    meteo.send_request();
+    s_f_update_meteo_data = true;
 }
 void ui_meteoProtocol() {
     meteo.protocol();

@@ -7360,7 +7360,7 @@ class WeatherClock : public RegisterTable {
     }
 
   public:
-    void update(const std::vector<METEO::METEO_HOURLY>& hourly, const std::vector<METEO::METEO_DAILY>& daily) {
+    void update_meteo_data(const std::vector<METEO::METEO_HOURLY>& hourly, const std::vector<METEO::METEO_DAILY>& daily) {
         if (!m_wind_speed_unit->valid()) return;
         if (!m_press_unit->valid()) return;
 
@@ -7378,6 +7378,10 @@ class WeatherClock : public RegisterTable {
             uint8_t beaufort = windSpeedToBeaufort(daily[0].windSpeedMax);
             m_weather_daily.appendf(ANSI_ESC_LIGHTBLUE "gusts:" ANSI_ESC_LIGHTGREY " {} bft", beaufort);
         }
+
+    }
+
+    void update(){
         if (m_enabled) {
             crt_temperature_rain->show();
             txt_info->setText(m_weather_daily);

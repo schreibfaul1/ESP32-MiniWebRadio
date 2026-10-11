@@ -47,6 +47,9 @@ class METEO {
         MeteoTime sunset;
         float     windSpeedMax;
         float     meanSurfacePressure;
+        MeteoTime moonrise;
+        MeteoTime moonset;
+        float     moonphase;
     };
 
     // callbacks ---------------------------------------------------------

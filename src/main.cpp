@@ -8,7 +8,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.1a2 - Okt 08, 2026                                                                                                               ";
+    Version 4.2.1a3 - Okt 11, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -236,7 +236,7 @@ void loop() {
     if (s_start_counter == 30) { ArduinoOTA.begin(); }
     if (s_start_counter == 40) { ftpSrv.begin(SD_MMC, FTP_USERNAME, FTP_PASSWORD); }
     if (s_start_counter == 50) { setRTC(s_TZString); }
-    if (s_start_counter == 60) { meteo.send_request(); }
+    if (s_start_counter == 60) { s_f_update_meteo_data = true; } // meteo send_request
     if (s_start_counter == 70) { setStation(s_cur_station); }
     if (s_start_counter == 80) { changeState(RADIO, 0); } // s_lastState
     if (s_start_counter == 90) { dlna.seekServer(); }
@@ -381,12 +381,20 @@ void loop() {
             }
         }
         //------------------------------------------ UPDATE METEO ------------------------------------------------------------------------------------
-        if (s_f_update_meteo) {
+        if (s_f_update_meteo_data) {
             meteo.send_request();
-            printfln(s_tag.meteo_info, ANSI_ESC_GREEN "Update Meteo");
-            s_f_update_meteo = false;
+            printfln(s_tag.meteo_info, ANSI_ESC_GREEN "Update Meteo Data");
+            s_f_update_meteo_data = false;
         }
-        if (s_time.minute == 0 && s_time.second == 10) s_f_update_meteo = true;
+        if(s_f_update_meteo_display){
+            cls_weather.update();
+            printfln(s_tag.meteo_info, ANSI_ESC_GREEN "Update Meteo Display");
+            s_f_update_meteo_display = false;
+
+        }
+
+        if (s_time.minute == 55 && s_time.second == 0) s_f_update_meteo_data = true;
+        if (s_time.minute == 00 && s_time.second == 30) s_f_update_meteo_display = true;
         //---------------------------------------------TIME SPEECH -----------------------------------------------------------------------------------
         static bool f_resume = false;
         if (s_f_timeSpeech) { // speech the time 7 sec before a new hour is arrived
@@ -3557,7 +3565,7 @@ void on_dlna_client(const DLNA_Client::msg_s& msg) {
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 //  Events from METEO
 void on_meteo(const METEO::msg_s& msg) {
-    cls_weather.update(msg.hourly, msg.daily);
+    cls_weather.update_meteo_data(msg.hourly, msg.daily);
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg) {
