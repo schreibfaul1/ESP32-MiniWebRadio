@@ -4,13 +4,13 @@ CONFIG_IDF_EXPERIMENTAL_FEATURES=y
 #
 # Arduino Configuration
 #
+CONFIG_AUTOSTART_ARDUINO=y
 # ——————————————————————————————————————————————————————————————————————————————
 #
 # Serial flasher config
 #
 CONFIG_ESPTOOLPY_FLASHSIZE_16MB
 CONFIG_ESPTOOLPY_FLASHFREQ_80M=y
-CONFIG_AUTOSTART_ARDUINO=y
 # ——————————————————————————————————————————————————————————————————————————————
 #
 # ESP PSRAM, SPI RAM config

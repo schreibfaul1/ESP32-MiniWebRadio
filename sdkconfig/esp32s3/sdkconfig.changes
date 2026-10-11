@@ -4,6 +4,7 @@ CONFIG_IDF_EXPERIMENTAL_FEATURES=y
 #
 # Arduino Configuration
 #
+CONFIG_AUTOSTART_ARDUINO=y
 CONFIG_ARDUINO_VARIANT="esp32s3"
 # ——————————————————————————————————————————————————————————————————————————————
 #
