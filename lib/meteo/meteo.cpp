@@ -372,6 +372,13 @@ const char* METEO::findJsonArray(const char* json, const char* object, const cha
 bool METEO::readJsonFloat(const char*& p, float& value) {
     if (!p) return false;
 
+    // JSON null -> "-1"
+    if (strncmp(p, "null", 4) == 0) {
+        value = -1.0f;
+        p += 4;
+        return true;
+    }
+
     while (*p == ' ' || *p == '\t' || *p == '\r' || *p == '\n') { p++; }
     if (*p == ']') return false;
     char* endPtr = nullptr;
@@ -386,6 +393,18 @@ bool METEO::readJsonFloat(const char*& p, float& value) {
 bool METEO::readJsonString(const char*& p, MeteoTime& dest) {
     if (!p) return false;
     while (*p == ' ' || *p == '\t' || *p == '\r' || *p == '\n') { p++; }
+
+    // JSON null -> "-1"
+    if (strncmp(p, "null", 4) == 0) {
+        dest.year = 0;
+        dest.month = 0;
+        dest.day = 0;
+        dest.hour = -1;
+        dest.minute = -1;
+        p += 4;
+        return true;
+    }
+
     if (*p != '"') return false;
     p++; // "
 
@@ -475,12 +494,12 @@ bool METEO::parseDaily(const char* json) {
     const char* pSunrise = findJsonArray(json, "daily", "sunrise");
     const char* pSunset = findJsonArray(json, "daily", "sunset");
     const char* pWind = findJsonArray(json, "daily", "wind_speed_10m_max");
-    const char* pPressure= findJsonArray(json, "daily", "surface_pressure_mean");
-    const char* pMoonRise= findJsonArray(json, "daily", "moonrise");
-    const char* pMoonSet= findJsonArray(json, "daily", "moonset");
-    const char* pMoonPhase= findJsonArray(json, "daily", "moon_phase");
+    const char* pPressure = findJsonArray(json, "daily", "surface_pressure_mean");
+    const char* pMoonRise = findJsonArray(json, "daily", "moonrise");
+    const char* pMoonSet = findJsonArray(json, "daily", "moonset");
+    const char* pMoonPhase = findJsonArray(json, "daily", "moon_phase");
 
-    if (!pDate || !pMax || !pMin || !pCode || !pPrec || !pProb || !pSunrise || !pSunset || !pWind || !pPressure || !pMoonRise || !pMoonSet ||!pMoonPhase) {
+    if (!pDate || !pMax || !pMin || !pCode || !pPrec || !pProb || !pSunrise || !pSunset || !pWind || !pPressure || !pMoonRise || !pMoonSet || !pMoonPhase) {
         if (!pDate) log_e("\"time\" not found");
         if (!pMax) log_e("\"temperature_2m_max\" not found");
         if (!pMin) log_e("\"temperature_2m_min\" not found");
@@ -535,11 +554,20 @@ bool METEO::parseDaily(const char* json) {
         if (!readJsonFloat(pPressure, value)) { return false; }
         item.meanSurfacePressure = value;
         // moonrise
-        if (!readJsonString(pMoonRise, item.moonrise)) { return false; }
-          // moonset
-        if (!readJsonString(pMoonSet, item.moonset)) { return false; }
+        if (!readJsonString(pMoonRise, item.moonrise)) {
+            log_e("readJson moonrise failed %s", pMoonRise);
+            return false;
+        }
+        // moonset
+        if (!readJsonString(pMoonSet, item.moonset)) {
+            log_e("readJson moonset failed %s", pMoonSet);
+            return false;
+        }
         // moonphase
-        if (!readJsonFloat(pMoonPhase, value)) { return false; }
+        if (!readJsonFloat(pMoonPhase, value)) {
+            log_e("readJson moonphase failed: %s", pMoonPhase);
+            return false;
+        }
         item.moonphase = value;
 
         m_daily.push_back(item);
@@ -569,16 +597,16 @@ void METEO::protocol() {
     printf(ANSI_ESC_CYAN "\n date       sunrise  sunset   t-max(°C)  t-min(°C)  prec(%%)  prec-sum(mm)  wind-max(km/h)  w-code, press(hPa) moonrise  moonset  moonphase\n");
     for (int i = 0; i < m_daily.size(); i++) {
         printf(ANSI_ESC_GREEN);
-        printf("%04u-%02u-%02u  ", m_daily[i].date.year, m_daily[i].date.month, m_daily[i].date.day);
-        printf("%2u:%02u    ", m_daily[i].sunrise.hour, m_daily[i].sunrise.minute);
-        printf("%2u:%02u      ", m_daily[i].sunset.hour, m_daily[i].sunset.minute);
+        printf("%04i-%02i-%02i  ", m_daily[i].date.year, m_daily[i].date.month, m_daily[i].date.day);
+        printf("%2i:%02i    ", m_daily[i].sunrise.hour, m_daily[i].sunrise.minute);
+        printf("%2i:%02i      ", m_daily[i].sunset.hour, m_daily[i].sunset.minute);
         printf("%5.1f     %5.1f      ", m_daily[i].temperatureMax, m_daily[i].temperatureMin);
         printf("%3u       %5.2f          ", m_daily[i].precipitationProbabilityMax, m_daily[i].precipitationSum);
         printf("%4.1f           %2u     ", m_daily[i].windSpeedMax, m_daily[i].weatherCode);
         printf("%6.1f     ", m_daily[i].meanSurfacePressure);
-        printf("%2u:%02u     ", m_daily[i].moonrise.hour, m_daily[i].moonrise.minute);
-        printf("%2u:%02u      ", m_daily[i].moonset.hour, m_daily[i].moonset.minute);
-        printf("%1.1f         ", m_daily[i].moonphase);
+        printf("%2i:%02i     ", m_daily[i].moonrise.hour, m_daily[i].moonrise.minute);
+        printf("%2i:%02i      ", m_daily[i].moonset.hour, m_daily[i].moonset.minute);
+        printf("%1.3f         ", m_daily[i].moonphase);
         printf("\n");
     };
     printf(ANSI_ESC_RESET);

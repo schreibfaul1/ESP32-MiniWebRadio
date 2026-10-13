@@ -4,7 +4,7 @@
  * meteo.h
  *
  *  Created on: 30.08.2026
- *  Updated on: 30.08.2026
+ *  Updated on: 13.10.2026
  *      Author: Wolle
  */
 
@@ -18,11 +18,11 @@ class METEO {
 
   public:
     struct MeteoTime {
-        uint16_t year;
-        uint8_t  month;
-        uint8_t  day;
-        uint8_t  hour;
-        uint8_t  minute;
+        int16_t year;
+        int8_t  month;
+        int8_t  day;
+        int8_t  hour;
+        int8_t  minute;
     };
 
     struct METEO_HOURLY {

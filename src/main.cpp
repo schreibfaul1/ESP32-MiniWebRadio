@@ -8,7 +8,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.1a3 - Okt 11, 2026                                                                                                               ";
+    Version 4.2.1a4 - Okt 13, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -387,7 +387,7 @@ void loop() {
             s_f_update_meteo_data = false;
         }
         if(s_f_update_meteo_display){
-            cls_weather.update();
+            cls_weather.update_display();
             printfln(s_tag.meteo_info, ANSI_ESC_GREEN "Update Meteo Display");
             s_f_update_meteo_display = false;
 

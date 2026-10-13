@@ -7208,16 +7208,22 @@ class WeatherClock : public RegisterTable {
     uint16_t clock_w = 526; // hh:mm   4 * 121px + 42px
 #endif
 
-    PictureBox*      pic_weather_code = new PictureBox("pic_weather_code"); // digits hour   * 10
-    LineChart*       crt_temperature_rain = new LineChart("crt_temperature_rain");
-    ImgClock24small* clk_24s = new ImgClock24small("ImgClock24small");
-    Textbox*         txt_info = new Textbox("txt_info");
-    int16_t          m_x = 0;
-    int16_t          m_y = 0;
-    int16_t          m_w = 0;
-    int16_t          m_h = 0;
-    uint8_t          m_hour = 0;
-    uint8_t          m_day = 0;
+    std::array<PictureBox, 4> pic_weather_layer = {PictureBox("pic_weather_code0"), PictureBox("pic_weather_code1"), PictureBox("pic_weather_code2"), PictureBox("pic_weather_code3")};
+    LineChart*                crt_temperature_rain = new LineChart("crt_temperature_rain");
+    ImgClock24small*          clk_24s = new ImgClock24small("ImgClock24small");
+    Textbox*                  txt_info = new Textbox("txt_info");
+    int16_t                   m_x = 0;
+    int16_t                   m_y = 0;
+    int16_t                   m_w = 0;
+    int16_t                   m_h = 0;
+    uint8_t                   m_hour = 0;
+    uint8_t                   m_day = 0;
+    uint8_t                   m_weatherCode_hourly[24] = {0};
+    uint16_t                  m_sunrise = 0;
+    uint16_t                  m_sunset = 0;
+    uint16_t                  m_moonrise = 0;
+    uint16_t                  m_moonset = 0;
+    float                     m_moonphase = 0.0f;
 
     int32_t       m_bg_color = TFT_BG_IS_WALLPAPER;
     bool          m_enabled = false;
@@ -7225,15 +7231,16 @@ class WeatherClock : public RegisterTable {
     bool          m_focus = false;
     bool          m_clicked = false;
     bool          m_state = false;
-    bool          m_showAll = false;
     bool          m_first_call = true;
+    bool          m_isNight = false;
+    bool          m_moonVisible = false;
     ps_ptr<char>  m_name;
     ps_ptr<char>  m_weather_code_path;
     ps_ptr<char>  m_weather_daily = "no data yet";
     ps_ptr<char>* m_temp_unit;
     ps_ptr<char>* m_press_unit;
     ps_ptr<char>* m_wind_speed_unit;
-    RTIME::rtime  m_rtime;
+    RTIME::rtime  m_time;
     releasedArg   m_ra;
 
     static constexpr float beaufortMax[] = {
@@ -7261,7 +7268,6 @@ class WeatherClock : public RegisterTable {
         m_state = false;
     }
     ~WeatherClock() {
-        delete pic_weather_code;
         delete crt_temperature_rain;
         delete clk_24s;
     }
@@ -7272,9 +7278,18 @@ class WeatherClock : public RegisterTable {
         m_w = w; // width
         m_h = h; // high
         m_enabled = false;
-        pic_weather_code->setAlign(HAlign::Center, VAlign::Middle);
-        pic_weather_code->set_bg_color(TFT_BG_IS_BLACK);
-        pic_weather_code->begin(m_x, m_y, s_Icon.w, s_Icon.h);
+        pic_weather_layer[0].setAlign(HAlign::Center, VAlign::Middle);
+        pic_weather_layer[1].setAlign(HAlign::Center, VAlign::Middle);
+        pic_weather_layer[2].setAlign(HAlign::Center, VAlign::Middle);
+        pic_weather_layer[3].setAlign(HAlign::Center, VAlign::Middle);
+        pic_weather_layer[0].set_bg_color(TFT_BG_IS_BLACK);
+        pic_weather_layer[1].set_bg_color(TFT_BG_IS_VISIBLE);
+        pic_weather_layer[2].set_bg_color(TFT_BG_IS_VISIBLE);
+        pic_weather_layer[3].set_bg_color(TFT_BG_IS_VISIBLE);
+        pic_weather_layer[0].begin(m_x, m_y, s_Icon.w, s_Icon.h);
+        pic_weather_layer[1].begin(m_x, m_y, s_Icon.w, s_Icon.h);
+        pic_weather_layer[2].begin(m_x, m_y, s_Icon.w, s_Icon.h);
+        pic_weather_layer[3].begin(m_x, m_y, s_Icon.w, s_Icon.h);
         crt_temperature_rain->begin(m_x + s_Icon.w, m_y, m_w - s_Icon.w, s_Icon.h);
         crt_temperature_rain->set_bg_color(TFT_BG_IS_BLACK);
         clk_24s->set_bg_color(TFT_BG_IS_BLACK);
@@ -7304,14 +7319,9 @@ class WeatherClock : public RegisterTable {
             getTFT().fillRect(m_x, m_y, m_w, m_h, m_bg_color);
         }
         m_clicked = false;
-        pic_weather_code->setPicturePath(m_weather_code_path);
-        pic_weather_code->show();
         m_enabled = true;
-        m_showAll = true;
-        crt_temperature_rain->show();
         clk_24s->show();
-        txt_info->setText(m_weather_daily);
-        txt_info->show();
+        update_display();
     }
 
     void hide() {
@@ -7364,9 +7374,15 @@ class WeatherClock : public RegisterTable {
         if (!m_wind_speed_unit->valid()) return;
         if (!m_press_unit->valid()) return;
 
+        for (int i = 0; i < 24; i++) { m_weatherCode_hourly[i] = hourly[i].weatherCode; }
         crt_temperature_rain->update(hourly, daily, m_temp_unit);
-        m_weather_code_path.assignf("/meteo/{}.png", daily[0].weatherCode);
+
         // log_i("sunrise %u:%02u", daily[0].sunrise.hour, daily[0].sunrise.minute);
+        m_sunrise = daily[0].sunrise.hour * 60 + daily[0].sunrise.minute;
+        m_sunset = daily[0].sunset.hour * 60 + daily[0].sunset.minute;
+        m_moonrise = daily[0].moonrise.hour * 60 + daily[0].moonrise.minute;
+        m_moonset = daily[0].moonset.hour * 60 + daily[0].moonset.minute;
+        m_moonphase = daily[0].moonphase;
         m_weather_daily.assignf(ANSI_ESC_LIGHTGREY "{:02}.{:02}.{}\n", daily[0].date.day, daily[0].date.month, daily[0].date.year);
         m_weather_daily.appendf(ANSI_ESC_YELLOW "sunrise:" ANSI_ESC_LIGHTGREY " {:02}:{:02}\n", daily[0].sunrise.hour, daily[0].sunrise.minute);
         m_weather_daily.appendf(ANSI_ESC_YELLOW "sunset:" ANSI_ESC_LIGHTGREY " {:02}:{:02}\n", daily[0].sunset.hour, daily[0].sunset.minute);
@@ -7378,23 +7394,35 @@ class WeatherClock : public RegisterTable {
             uint8_t beaufort = windSpeedToBeaufort(daily[0].windSpeedMax);
             m_weather_daily.appendf(ANSI_ESC_LIGHTBLUE "gusts:" ANSI_ESC_LIGHTGREY " {} bft", beaufort);
         }
-
+        update_display();
     }
 
-    void update(){
+    void update_display() {
         if (m_enabled) {
             crt_temperature_rain->show();
             txt_info->setText(m_weather_daily);
             txt_info->show();
-            pic_weather_code->setPicturePath(m_weather_code_path);
-            pic_weather_code->show();
+            MWR_LOG_INFO("Hourly Weather Code Descr.: {}", get_weather_code_descriptions(m_weatherCode_hourly[m_time.hour]));
+            showWeatherIcon(m_weatherCode_hourly[m_time.hour]);
         }
     }
 
     void update_time(RTIME::rtime time) {
-        crt_temperature_rain->update_time(time);
+        m_time = time;
+        crt_temperature_rain->update_time(m_time);
         if (!m_enabled) return;
         clk_24s->writeTime(time.hour, time.minute);
+        uint16_t t = m_time.hour * 60 + m_time.minute;
+        if (t > m_sunrise && t < m_sunset) {
+            m_isNight = false;
+        } else {
+            m_isNight = true;
+        }
+        if (t > m_moonrise && t < m_moonset) {
+            m_moonVisible = false;
+        } else {
+            m_moonVisible = true;
+        }
     }
 
     void locale(ps_ptr<char>* temp_unit, ps_ptr<char>* press_unit, ps_ptr<char>* wind_speed_unit) {
@@ -7418,9 +7446,222 @@ class WeatherClock : public RegisterTable {
   private:
     void set_bg_color_all(int32_t color) {
         m_bg_color = color;
-        pic_weather_code->set_bg_color(m_bg_color);
+        pic_weather_layer[0].set_bg_color(m_bg_color);
         crt_temperature_rain->set_bg_color(m_bg_color);
         clk_24s->set_bg_color(m_bg_color);
         txt_info->set_bg_color(m_bg_color);
+    }
+
+    const char* get_weather_code_descriptions(uint8_t weatherCode) {
+        const char* ret;
+        switch (weatherCode) {
+            case 0: ret = "Clear sky"; break;
+            case 1: ret = "Mainly clear"; break;
+            case 2: ret = "Partly cloudy"; break;
+            case 3: ret = "Overcast"; break;
+            case 45: ret = "Fog"; break;
+            case 48: ret = "Depositing rime fog"; break;
+            case 51: ret = "Light drizzle"; break;
+            case 53: ret = "Moderate drizzle"; break;
+            case 55: ret = "Dense drizzle"; break;
+            case 56: ret = "Light freezing drizzle"; break;
+            case 57: ret = "Dense freezing drizzle"; break;
+            case 61: ret = "Slight rain"; break;
+            case 63: ret = "Moderate rain"; break;
+            case 65: ret = "Heavy rain"; break;
+            case 66: ret = "Light freezing rain"; break;
+            case 67: ret = "Heavy freezing rain"; break;
+            case 71: ret = "Slight snowfall"; break;
+            case 73: ret = "Moderate snowfall"; break;
+            case 75: ret = "Heavy snowfall"; break;
+            case 77: ret = "Snow grains"; break;
+            case 80: ret = "Slight rain showers"; break;
+            case 81: ret = "Moderate rain showers"; break;
+            case 82: ret = "Violent rain showers"; break;
+            case 85: ret = "Slight snow showers"; break;
+            case 86: ret = "Heavy snow showers"; break;
+            case 95: ret = "Thunderstorm"; break;
+            case 96: ret = "Thunderstorm with slight hail"; break;
+            case 97: ret = "Heavy thunderstorm"; break;
+            case 99: ret = "Thunderstorm with heavy hail"; break;
+            default: ret = "NA";
+        }
+        return ret;
+    }
+
+    ps_ptr<char> getMoonPhase(float moonphase) {
+        static constexpr const char* phases[] = {"new_moon", "waxing_crescent", "first_quarter", "waxing_gibbous", "full_moon", "waning_gibbous", "last_quarter", "waning_crescent"};
+
+        int index = static_cast<int>(moonphase * 8.0f);
+
+        if (index > 7) index = 0; // 1.0 = New Moon
+
+        return phases[index];
+    }
+
+    void showWeatherIcon(uint8_t weatherCode) {
+        MWR_LOG_INFO("weatherCode_hourly: {}", weatherCode);
+    //    const char* path[4] = {nullptr};
+
+        m_weather_code_path.assignf("/meteo/{}.png", weatherCode);
+        pic_weather_layer[0].setPicturePath(m_weather_code_path);
+        pic_weather_layer[0].show();
+
+
+
+        // m_isNight = true;
+        // weatherCode = 0;
+        // m_moonVisible = true;
+        // m_moonphase = 0.3f;
+
+        // switch (weatherCode) {
+        //     case 0: // Clear sky
+        //         if (m_isNight) {
+        //             path[0] = "stars";
+        //             if(m_moonVisible) path[1] = (getMoonPhase(m_moonphase) + "top").c_get();
+        //         } else {
+        //             path[0] = "sun";
+        //         }
+        //         break;
+        //     case 1: // Mainly clear
+        //         if (m_isNight) {
+        //             path[0] = "moon";
+        //         } else {
+        //             path[0] = "sun";
+        //         }
+        //         path[1] = "white_clouds_small";
+        //         break;
+        //     case 2: // Partly cloudy
+        //         if (m_isNight) {
+        //             path[0] = "moon";
+        //         } else {
+        //             path[0] = "sun";
+        //         }
+        //         path[1] = "white_cloud_center";
+        //         break;
+        //     case 3: // Overcast
+        //         path[0] = "overcast";
+        //         break;
+        //     case 45: // Fog
+        //         path[0] = "fog";
+        //         break;
+        //     case 48: // Depositing rime fog
+        //         path[0] = "depositing_rime_fog";
+        //         path[1] = "moderate_snow";
+        //         path[2] = "dark_cloud_top";
+        //         break;
+        //     case 51: // Light drizzle
+        //         path[0] = "light_drizzle";
+        //         path[1] = "dark_cloud_top";
+        //         break;
+        //     case 53: // Moderate drizzle
+        //         path[0] = "moderate_drizzle";
+        //         path[1] = "dark_cloud_top";
+        //         break;
+        //     case 55: // Dense drizzle
+        //         path[0] = "dense_drizzle";
+        //         path[1] = "dark_cloud_top";
+        //         break;
+        //     case 56: // Light freezing drizzle
+        //         path[0] = "light_drizzle";
+        //         path[1] = "slight_snow";
+        //         path[2] = "white_cloud_top";
+        //         break;
+        //     case 57: // Dense freezing drizzle
+        //         path[0] = "dense_drizzle";
+        //         path[1] = "heavy_snow";
+        //         path[2] = "dark_cloud_top";
+        //         break;
+        //     case 61: // Slight rain
+        //         path[0] = "slight_rain";
+        //         path[1] = "white_cloud_top";
+        //         break;
+        //     case 63: // Moderate rain
+        //         path[0] = "moderate_rain";
+        //         path[1] = "white_cloud_top";
+        //         break;
+        //     case 65: // Heavy rain
+        //         path[0] = "heavy_rain";
+        //         path[1] = "dark_cloud_top";
+        //         break;
+        //     case 66: // Light freezing rain
+        //         path[0] = "slight_rain";
+        //         path[1] = "slight_snow";
+        //         path[2] = "white_cloud_top";
+        //         break;
+        //     case 67: // Heavy freezing rain
+        //         path[0] = "heavy_rain";
+        //         path[1] = "heavy_snow";
+        //         path[2] = "dark_cloud_top";
+        //         break;
+        //     case 71: // Slight snowfall
+        //         path[0] = "slight_snow";
+        //         path[1] = "white_cloud_top";
+        //         break;
+        //     case 73: // Moderate snowfall
+        //         path[0] = "moderate_snow";
+        //         path[1] = "white_cloud_top";
+        //         break;
+        //     case 75: // Heavy snowfall
+        //         path[0] = "heavy_snow";
+        //         path[1] = "dark_cloud_top";
+        //         break;
+        //     case 77: // Snow grains
+        //         path[0] = "snow_grains";
+        //         path[1] = "dark_cloud_top";
+        //         break;
+        //     case 80: // Slight rain showers, day
+        //         path[0] = "sun_top_right";
+        //         path[1] = "slight_rain";
+        //         path[2] = "white_cloud_center";
+        //         break;
+        //     case 81: // Moderate rain showers, day
+        //         path[0] = "sun_top_right";
+        //         path[1] = "moderate_rain";
+        //         path[2] = "white_cloud_center";
+        //         break;
+        //     case 82: // Violent rain showers, day
+        //         path[0] = "sun_top_right";
+        //         path[1] = "heavy_rain";
+        //         path[2] = "dark_cloud_center";
+        //         break;
+        //     case 85: // Slight snow showers, day
+        //         path[0] = "sun_top_right";
+        //         path[1] = "slight_snow";
+        //         path[2] = "white_cloud_center";
+        //         break;
+        //     case 86: // Heavy snow showers, day
+        //         path[0] = "sun_top_right";
+        //         path[1] = "heavy_snow";
+        //         path[2] = "dark_cloud_center";
+        //         break;
+        //     case 95: // Thunderstorm
+        //         path[0] = "moderate_rain";
+        //         path[1] = "thunder_cloud";
+        //         break;
+        //     case 96: // Thunderstorm with slight hail
+        //         path[0] = "slight_rain";
+        //         path[1] = "slight_snow";
+        //         path[2] = "thunder_cloud";
+        //         break;
+        //     case 97: // Heavy thunderstorm"
+        //         path[0] = "heavy_rain";
+        //         path[1] = "thunder_cloud";
+        //         break;
+        //     case 99: // Heavy thunderstorm"
+        //         path[0] = "heavy_rain";
+        //         path[1] = "heavy_snow";
+        //         path[2] = "thunder_cloud";
+        //         break;
+        // }
+
+        // pic_weather_layer[0].setPicturePath(""); // draw always black BG
+        // for (int i = 0; i < 4; i++) {
+        //     if (path[i]) {
+        //         m_weather_code_path.assignf("/meteo/{}.png", path[i]);
+        //         pic_weather_layer[i].setPicturePath(m_weather_code_path);
+        //         pic_weather_layer[i].show();
+        //     }
+        // }
     }
 };
