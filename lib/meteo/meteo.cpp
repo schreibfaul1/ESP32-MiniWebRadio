@@ -376,6 +376,8 @@ bool METEO::readJsonFloat(const char*& p, float& value) {
     if (strncmp(p, "null", 4) == 0) {
         value = -1.0f;
         p += 4;
+        while (*p == ' ' || *p == '\t' || *p == '\r' || *p == '\n') { p++; }
+        if (*p == ',') { p++; }
         return true;
     }
 
@@ -402,6 +404,8 @@ bool METEO::readJsonString(const char*& p, MeteoTime& dest) {
         dest.hour = -1;
         dest.minute = -1;
         p += 4;
+        while (*p == ' ' || *p == '\t' || *p == '\r' || *p == '\n') { p++; }
+        if (*p == ',') { p++; }
         return true;
     }
 
@@ -561,6 +565,7 @@ bool METEO::parseDaily(const char* json) {
         // moonset
         if (!readJsonString(pMoonSet, item.moonset)) {
             log_e("readJson moonset failed %s", pMoonSet);
+            log_w("%s", json);
             return false;
         }
         // moonphase
