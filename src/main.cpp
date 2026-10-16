@@ -8,7 +8,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.1a5 - Okt 14, 2026                                                                                                               ";
+    Version 4.2.1a6 - Okt 16, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -236,12 +236,12 @@ void loop() {
     if (s_start_counter == 30) { ArduinoOTA.begin(); }
     if (s_start_counter == 40) { ftpSrv.begin(SD_MMC, FTP_USERNAME, FTP_PASSWORD); }
     if (s_start_counter == 50) { setRTC(s_TZString); }
-    if (s_start_counter == 60) { s_f_update_meteo_data = true; } // meteo send_request
-    if (s_start_counter == 70) { setStation(s_cur_station); }
-    if (s_start_counter == 80) { changeState(RADIO, 0); } // s_lastState
-    if (s_start_counter == 90) { dlna.seekServer(); }
-    if (s_start_counter == 95) { webSrv.begin(80, 81, "MiniWebRadio", s_version); }
-    if (s_start_counter == 100) { s_start_counter = 0; }
+    if (s_start_counter == 60) { setStation(s_cur_station); }
+    if (s_start_counter == 70) { changeState(RADIO, 0); } // s_lastState
+    if (s_start_counter == 80) { dlna.seekServer(); }
+    if (s_start_counter == 90) { webSrv.begin(80, 81, "MiniWebRadio", s_version); }
+    if (s_start_counter == 100) { s_f_update_meteo_data = true; } // meteo send_request
+    if (s_start_counter == 110) { s_start_counter = 0; }
 
     // Cap lines drained per loop() call: sending every buffered line in one go blocks this core (shared with UI/touch/WiFi events)
     // for the whole burst, e.g. during reconnects or verbose logging, causing UI/web sluggishness. Spreading it over several

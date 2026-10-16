@@ -63,5 +63,5 @@ class TP_XPT2046 {
     const cal m_cal_35_40 = {.xMax = 1959, .xMin = 140, .yMax = 1923, .yMin = 114}; // 3.5 or 4.0 inch
     // const cal m_cal_40 = {.xMax = 1946, .xMin = 110, .yMax = 1907, .yMin = 108}; // 4.0 inch
 
-    cal m_cal = {0};
+    cal m_cal = {0, 0, 0, 0};
 };

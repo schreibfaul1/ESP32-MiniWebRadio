@@ -139,7 +139,6 @@ FT6x36& getTP() {
 
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 struct _emojis {
     const char greenCircle[5] = {0xF0, 0x9F, 0x9F, 0xA2, 0x00};  // UTF-8: "🟢"
@@ -384,8 +383,20 @@ void         timer100ms();
 bool setupBacklight(int pin, uint32_t freq_hz) {
     if (pin < 0) return false;
 
-    ledc_channel_config_t ch =
-        {.gpio_num = (gpio_num_t)pin, .speed_mode = LEDC_LOW_SPEED_MODE, .channel = LEDC_CHANNEL_1, .intr_type = LEDC_INTR_DISABLE, .timer_sel = LEDC_TIMER_3, .duty = 0, .hpoint = 0};
+    ledc_channel_config_t ch = {
+        .gpio_num = pin,
+        .speed_mode = LEDC_LOW_SPEED_MODE,
+        .channel = LEDC_CHANNEL_1,
+        .intr_type = LEDC_INTR_DISABLE,
+        .timer_sel = LEDC_TIMER_3,
+        .duty = 0,
+        .hpoint = 0,
+        .sleep_mode = LEDC_SLEEP_MODE_NO_ALIVE_NO_PD,
+        .flags =
+            {
+                .output_invert = 0,
+            },
+    };
 
     ledc_timer_config_t tmr = {
         .speed_mode = LEDC_LOW_SPEED_MODE,
@@ -393,6 +404,7 @@ bool setupBacklight(int pin, uint32_t freq_hz) {
         .timer_num = LEDC_TIMER_3,
         .freq_hz = freq_hz,
         .clk_cfg = LEDC_AUTO_CLK,
+        .deconfigure = false,
     };
 
     // Timer zuerst initialisieren
@@ -691,17 +703,17 @@ void ui_volFadingSpeed(float s) {
     printfln(s_tag.terminal, "set volume fading speed {}, current: {}", s, audio.settings.VOL_FADING_SPEED);
     audio.settings.VOL_FADING_SPEED = s;
 }
-void ui_listFonts(){
+void ui_listFonts() {
     printfln(s_tag.terminal, "list fonts");
     listFonts();
 }
 
-void ui_kernig(){
+void ui_kernig() {
     uint16_t a = getTFT().getGlyphPos('0');
     uint16_t v = getTFT().getGlyphPos('0');
     uint16_t b = getTFT().getGlyphPos('B');
-    int k1 = getTFT().getKerningValue(a, v);
-    int k2 = getTFT().getKerningValue(a, b);
+    int      k1 = getTFT().getKerningValue(a, v);
+    int      k2 = getTFT().getKerningValue(a, b);
     printfln(s_tag.terminal, "kernig {}, {}", k1, k2);
 }
 
@@ -739,5 +751,5 @@ void user_input(ps_ptr<char> input) {
     if (input == "ir") ui_isRunning();                                             // is running?
     if (input.starts_with("vfs")) ui_volFadingSpeed(input.substr(3).to_float());   // volume fading speed
     if (input == "lif") ui_listFonts();
-    if (input == "kern") ui_kernig();                                          // list all loaded fonts
+    if (input == "kern") ui_kernig(); // list all loaded fonts
 }
