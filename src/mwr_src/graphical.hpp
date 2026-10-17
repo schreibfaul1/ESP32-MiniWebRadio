@@ -3669,7 +3669,7 @@ class ImgClock24small : public RegisterTable { // draw a clock in 24h format
         if (m_enabled) writeTime(m_hour, m_min);
     }
     void writeTime(uint8_t m_hour, uint8_t m_min) {
-        if(!m_enabled) return;
+        if (!m_enabled) return;
         static uint8_t oldTime[4];
         static bool    k = false;
         uint8_t        time[5];
@@ -7219,10 +7219,10 @@ class WeatherClock : public RegisterTable {
     uint8_t                   m_hour = 0;
     uint8_t                   m_day = 0;
     uint8_t                   m_weatherCode_hourly[24] = {0};
-    uint16_t                  m_sunrise = 0;
-    uint16_t                  m_sunset = 0;
-    uint16_t                  m_moonrise = 0;
-    uint16_t                  m_moonset = 0;
+    int16_t                   m_sunrise = 0;
+    int16_t                   m_sunset = 0;
+    int16_t                   m_moonrise = 0;
+    int16_t                   m_moonset = 0;
     float                     m_moonphase = 0.0f;
 
     int32_t       m_bg_color = TFT_BG_IS_WALLPAPER;
@@ -7232,8 +7232,8 @@ class WeatherClock : public RegisterTable {
     bool          m_clicked = false;
     bool          m_state = false;
     bool          m_first_call = true;
-    bool          m_isNight = false;
     bool          m_moonVisible = false;
+    bool          m_sunVisible = false;
     ps_ptr<char>  m_name;
     ps_ptr<char>  m_weather_code_path;
     ps_ptr<char>  m_weather_daily = "no data yet";
@@ -7378,10 +7378,10 @@ class WeatherClock : public RegisterTable {
         crt_temperature_rain->update(hourly, daily, m_temp_unit);
 
         // log_i("sunrise %u:%02u", daily[0].sunrise.hour, daily[0].sunrise.minute);
-        m_sunrise = daily[0].sunrise.hour * 60 + daily[0].sunrise.minute;
-        m_sunset = daily[0].sunset.hour * 60 + daily[0].sunset.minute;
-        m_moonrise = daily[0].moonrise.hour * 60 + daily[0].moonrise.minute;
-        m_moonset = daily[0].moonset.hour * 60 + daily[0].moonset.minute;
+        m_sunrise = daily[0].sunrise.hour == -1 ? -1 : daily[0].sunrise.hour * 60 + daily[0].sunrise.minute;
+        m_sunset = daily[0].sunset.hour == -1 ? -1 : daily[0].sunset.hour * 60 + daily[0].sunset.minute;
+        m_moonrise = daily[0].moonrise.hour == -1 ? -1 : daily[0].moonrise.hour * 60 + daily[0].moonrise.minute;
+        m_moonset = daily[0].moonset.hour == -1 ? -1 : daily[0].moonset.hour * 60 + daily[0].moonset.minute;
         m_moonphase = daily[0].moonphase;
         m_weather_daily.assignf(ANSI_ESC_LIGHTGREY "{:02}.{:02}.{}\n", daily[0].date.day, daily[0].date.month, daily[0].date.year);
         m_weather_daily.appendf(ANSI_ESC_YELLOW "sunrise:" ANSI_ESC_LIGHTGREY " {:02}:{:02}\n", daily[0].sunrise.hour, daily[0].sunrise.minute);
@@ -7402,7 +7402,9 @@ class WeatherClock : public RegisterTable {
             crt_temperature_rain->show();
             txt_info->setText(m_weather_daily);
             txt_info->show();
-            MWR_LOG_INFO("Hourly Weather Code Descr.: {}", get_weather_code_descriptions(m_weatherCode_hourly[m_time.hour]));
+            printfln(s_tag.meteo_info, "Hourly Weather Code Descr.: " ANSI_ESC_GREEN " {}", get_weather_code_descriptions(m_weatherCode_hourly[m_time.hour]));
+            m_sunVisible = isVisible(m_time.hour, m_sunrise, m_sunset);
+            m_moonVisible = isVisible(m_time.hour, m_moonrise, m_moonset);
             showWeatherIcon(m_weatherCode_hourly[m_time.hour]);
         }
     }
@@ -7412,17 +7414,6 @@ class WeatherClock : public RegisterTable {
         crt_temperature_rain->update_time(m_time);
         if (!m_enabled) return;
         clk_24s->writeTime(time.hour, time.minute);
-        uint16_t t = m_time.hour * 60 + m_time.minute;
-        if (t > m_sunrise && t < m_sunset) {
-            m_isNight = false;
-        } else {
-            m_isNight = true;
-        }
-        if (t > m_moonrise && t < m_moonset) {
-            m_moonVisible = false;
-        } else {
-            m_moonVisible = true;
-        }
     }
 
     void locale(ps_ptr<char>* temp_unit, ps_ptr<char>* press_unit, ps_ptr<char>* wind_speed_unit) {
@@ -7500,14 +7491,10 @@ class WeatherClock : public RegisterTable {
     }
 
     void showWeatherIcon(uint8_t weatherCode) {
-        MWR_LOG_INFO("weatherCode_hourly: {}", weatherCode);
-    //    const char* path[4] = {nullptr};
-
+        //    const char* path[4] = {nullptr};
         m_weather_code_path.assignf("/meteo/{}.png", weatherCode);
         pic_weather_layer[0].setPicturePath(m_weather_code_path);
         pic_weather_layer[0].show();
-
-
 
         // m_isNight = true;
         // weatherCode = 0;
@@ -7663,5 +7650,15 @@ class WeatherClock : public RegisterTable {
         //         pic_weather_layer[i].show();
         //     }
         // }
+    }
+
+    bool isVisible(int16_t time, int16_t rise, int16_t set) {
+        if (rise == 0 && set == 0) return true;
+        if (rise == -1 && set == -1) return false;
+        if (set == -1 && time >= rise) return true;
+        if (rise == -1 && time <= set) return true;
+        if (rise < set && time >= rise) return true;
+        if (rise > set && (time <= set || time >= rise)) return true;
+        return false;
     }
 };
