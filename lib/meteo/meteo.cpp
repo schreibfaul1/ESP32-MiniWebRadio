@@ -32,7 +32,7 @@ bool METEO::send_request() {
     hourly.append("cloud_cover,");
     hourly.append("wind_speed_10m,");
     hourly.append("sunshine_duration,");
-    hourly.append("weather_code");
+    hourly.append("weather_code,");
 
     ps_ptr<char> daily;
     daily.assign("temperature_2m_max,temperature_2m_min,");
@@ -41,15 +41,18 @@ bool METEO::send_request() {
     daily.append("sunrise,sunset,");
     daily.append("moonrise,moonset,moon_phase,");
     daily.append("wind_speed_10m_max,");
-    daily.append("surface_pressure_mean");
+    daily.append("surface_pressure_mean,");
 
     ps_ptr<char> user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36";
 
     rqh.assign("GET /v1/forecast?");
     rqh.appendf("latitude={}&longitude={}", m_latitude, m_longitude);
-    rqh.appendf("&timezone={}", m_timeZone);
-    rqh.appendf("&hourly={}", hourly);
     rqh.appendf("&daily={}", daily);
+    rqh.appendf("&hourly={}", hourly);
+    rqh.appendf("&models=best_match");
+    rqh.appendf("&timezone={}", m_timeZone);
+    rqh.appendf("&forecast_days=3");
+    rqh.appendf("&format=json");
     rqh.append(" HTTP/1.1\r\n");
     rqh.append("Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8\r\n");
     rqh.append("Accept-Encoding: identity;q=1,*;q=0\r\n");
@@ -60,12 +63,16 @@ bool METEO::send_request() {
     rqh.append("\r\n");
 
     bool res = m_client.connect("api.open-meteo.com", port);
+
     if (res) {
         // rqh.println();
         m_client.print(rqh.get());
+        m_status = RESPONSE_HEADER;
+    }
+    else{
+        m_status = IDLE;
     }
 
-    m_status = RESPONSE_HEADER;
     return res;
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -136,7 +143,7 @@ std::vector<ps_ptr<char>> METEO::readHeader() {
         if (c < 0) {
             vTaskDelay(10);
             if (t < millis()) {
-                log_e("timeout");
+                log_w("[%s:%i] timeout", __FILE__, __LINE__);
                 hdr_lines.clear();
                 return hdr_lines;
             }

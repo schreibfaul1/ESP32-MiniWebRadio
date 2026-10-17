@@ -6917,7 +6917,7 @@ class LineChart : public RegisterTable {
     Textbox*              txt_info = new Textbox("txt_info");
 
     static constexpr size_t HOURS = 24;
-    static constexpr size_t DAYS = 7;
+    static constexpr size_t DAYS = 3;
 
   public:
     LineChart(ps_ptr<char> name) {
@@ -7500,7 +7500,7 @@ class WeatherClock : public RegisterTable {
     }
 
     void showWeatherIcon(uint8_t weatherCode) {
-        MWR_LOG_INFO("weatherCode_hourly: {}", weatherCode);
+    //    MWR_LOG_INFO("weatherCode_hourly: {}", weatherCode);
     //    const char* path[4] = {nullptr};
 
         m_weather_code_path.assignf("/meteo/{}.png", weatherCode);

@@ -8,7 +8,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.1a6 - Okt 16, 2026                                                                                                               ";
+    Version 4.2.1a7 - Okt 17, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -203,7 +203,7 @@ void setup() {
 
     setTFTbrightness(s_brightness);
 
-    if(s_i2c_items.es8311_found){
+    if (s_i2c_items.es8311_found) {
         es.begin(&i2cBusOne, 0x18);
         es.setBitsPerSample(32);
         es.setVolume(100);
@@ -381,16 +381,29 @@ void loop() {
             }
         }
         //------------------------------------------ UPDATE METEO ------------------------------------------------------------------------------------
-        if (s_f_update_meteo_data) {
-            meteo.send_request();
-            printfln(s_tag.meteo_info, ANSI_ESC_GREEN "Update Meteo Data");
-            s_f_update_meteo_data = false;
+        if (s_f_update_meteo_data && (!s_repeat.next_attempt || (int32_t)(millis() - s_repeat.next_attempt) >= 0)) {
+            if (!s_repeat.repeats_yet) printfln(s_tag.meteo_info, ANSI_ESC_GREEN "Start update Open-Meteo data");
+            bool res = meteo.send_request();
+            if (!res) { // only one repeat after 60 seconds
+                printfln(s_tag.meteo_info, ANSI_ESC_YELLOW "Open-Meteo request failed, try again in 60s");
+                if (!s_repeat.repeats_yet) {
+                    s_repeat.repeats_yet = true;
+                    s_repeat.next_attempt = millis() + 60000;
+                } else {
+                    s_f_update_meteo_data = false;
+                    s_repeat.reset();
+                    printfln(s_tag.meteo_info, ANSI_ESC_RED "Open-Meteo request failed");
+                }
+            } else {
+                s_f_update_meteo_data = false;
+                s_repeat.reset();
+            }
         }
-        if(s_f_update_meteo_display){
-            cls_weather.update_display();
-            printfln(s_tag.meteo_info, ANSI_ESC_GREEN "Update Meteo Display");
-            s_f_update_meteo_display = false;
 
+        if (s_f_update_meteo_display) {
+            cls_weather.update_display();
+            printfln(s_tag.meteo_info, ANSI_ESC_GREEN "Update Open-Meteo display");
+            s_f_update_meteo_display = false;
         }
 
         if (s_time.minute == 55 && s_time.second == 0) s_f_update_meteo_data = true;
@@ -3566,6 +3579,7 @@ void on_dlna_client(const DLNA_Client::msg_s& msg) {
 //  Events from METEO
 void on_meteo(const METEO::msg_s& msg) {
     cls_weather.update_meteo_data(msg.hourly, msg.daily);
+    printfln(s_tag.meteo_info, ANSI_ESC_GREEN "Meteo data updated");
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg) {

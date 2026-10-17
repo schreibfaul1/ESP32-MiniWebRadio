@@ -304,6 +304,13 @@ std::deque<ps_ptr<char>> s_PLS_content;
 ps_ptr<char>             codecname[10] = {"unknown", "WAV", "MP3", "AAC", "M4A", "FLAC", "OPUS", "VORBIS", "OGG"};
 stationManagement        staMgnt(&s_cur_station);
 
+struct repeat {
+    uint32_t next_attempt = 0;
+    bool repeats_yet = false;
+
+    void reset() { *this = repeat{}; }
+} s_repeat;
+
 // prototypes (main.cpp)
 boolean      defaultsettings();
 void         updateSettings();
