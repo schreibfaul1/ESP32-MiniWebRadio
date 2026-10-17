@@ -157,7 +157,7 @@ bool ES8311::begin(TwoWire* twi, int8_t address) {
     m_TwoWireInstance->beginTransmission(m_addr);
     ok = (m_TwoWireInstance->endTransmission() == 0);
     if (!ok) {
-        log_e("ES8311 not found");
+        log_e("[%s:%i] ES8311 not found", __FILE__, __LINE__);
         return false;
     }
 
@@ -215,7 +215,7 @@ bool ES8311::setSampleRate(uint32_t sample_rate) {
     if (sample_rate > 64000) _mclk_hz /= 2;
     int coeff = get_coeff(_mclk_hz, sample_rate);
     if (coeff < 0) {
-        log_e("Invalid sample rate %i", sample_rate);
+        log_e("[%s:%i] Invalid sample rate %i", __FILE__, __LINE__, sample_rate);
         return false;
     }
     const struct _coeff_div* const selected_coeff = &coeff_div[coeff];

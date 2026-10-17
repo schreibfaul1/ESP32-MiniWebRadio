@@ -86,7 +86,7 @@ uint8_t TFT_SPI::getRotation(void) const { return m_rotation; }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool TFT_SPI::panelDrawBitmap(int16_t x0, int16_t y0, int16_t x1, int16_t y1, const void* bitmap) {
     bool res = false;
-    if(x0 >= x1 || y0 >= y1) {log_w("%s %i: x0 %i, y0 %i, x1 %i, y1 %i", __FILE__, __LINE__, x0, y0, x1, y1); return false;}
+    if(x0 >= x1 || y0 >= y1) {log_w("[%s:%i] x0 %i, y0 %i, x1 %i, y1 %i", __FILE__, __LINE__, x0, y0, x1, y1); return false;}
 
     int16_t w = abs(x1 - x0);
     int16_t h = abs(y1 - y0);

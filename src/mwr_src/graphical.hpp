@@ -2773,10 +2773,10 @@ class WifiSettings : public RegisterTable {
             }
             ret = true;
         }
-        if (m_in_password->released()) { /*log_e("m_txt_password released")*/
+        if (m_in_password->released()) { /*log_i("m_txt_password released")*/
             ;
         }
-        if (m_keyboard->released()) { /*log_e("keyboard released")*/
+        if (m_keyboard->released()) { /*log_i("keyboard released")*/
             ;
         }
         if (m_keyboard->getVal() == 0x0D) {                        // enter

@@ -201,12 +201,12 @@ boolean FtpServer::userPassword() {
     millisDelay = millis() + 100; // delay of 100 ms
     if (strcmp(command, "PASS") != 0) {
         client.println("500 Syntax error");
-        log_e("wrong command");
+        log_e("[%s:%i] wrong command", __FILE__, __LINE__);
         return false;
     }
     if (strcmp(parameters, _FTP_PASS.c_str()) != 0) {
         client.println("530 ");
-        log_e("wrong password");
+        log_e("[%s:%i] wrong password", __FILE__, __LINE__);
         return false;
     }
 

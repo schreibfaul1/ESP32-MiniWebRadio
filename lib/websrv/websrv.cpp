@@ -1027,7 +1027,7 @@ void WebSrv::parseWsMessage(uint32_t len) {
     uint16_t msgBuffPtr = 0;
     msgBuff.calloc(paylodLen + 1);
     if (!msgBuff.valid()) {
-        log_e("oom");
+        log_e("[%s:%i] oom", __FILE__, __LINE__);
         goto exit;
     }
 

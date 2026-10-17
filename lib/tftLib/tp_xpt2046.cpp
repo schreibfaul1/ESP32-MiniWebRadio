@@ -64,8 +64,8 @@ void TP_XPT2046::loop() {
         if (!read_TP(x, y)) { return; }
 
         if (x < 0 || y < 0) log_w("x %i, y %i", x, y);
-        if (x > m_h_res) log_w("%s%i: x %i, m_h_resolution %i", __FILE__, __LINE__, x, m_h_res);
-        if (y > m_v_res) log_w("%s%i: y %i, m_v_resolution %i", __FILE__, __LINE__, y, m_v_res);
+        if (x > m_h_res) log_w("[%s:%i] x %i, m_h_resolution %i", __FILE__, __LINE__, x, m_h_res);
+        if (y > m_v_res) log_w("[%s:%i] y %i, m_v_resolution %i", __FILE__, __LINE__, y, m_v_res);
 
         if (x != x1 && y != y1) { tp_moved(x, y); }
 

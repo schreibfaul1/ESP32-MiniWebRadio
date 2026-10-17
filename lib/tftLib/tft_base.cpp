@@ -3501,14 +3501,14 @@ bool TFT_Base::drawPngFile(fs::FS& fs, ps_ptr<char> path, uint16_t x, uint16_t y
     }
     png_file = fs.open(path.c_get(), "r");
     if (!png_file) {
-        log_e(ANSI_ESC_RED "[%s:%s] Failed to open file for reading" ANSI_ESC_RESET, __FILE__, __LINE__);
+        log_e(ANSI_ESC_RED "[%s:%i] Failed to open file for reading" ANSI_ESC_RESET, __FILE__, __LINE__);
         return NULL;
     }
     int file_size = png_file.size(); /* get filesize */
     png_buffer = (char*)ps_malloc(file_size);
     png_size = file_size;
     if (!png_buffer) {
-        log_e(ANSI_ESC_RED "[%s:%s] Failed to allocate %i bytes for file %s" ANSI_ESC_RESET, __FILE__, __LINE__, png_file.size(), png_file.name());
+        log_e(ANSI_ESC_RED "[%s:%i] Failed to allocate %i bytes for file %s" ANSI_ESC_RESET, __FILE__, __LINE__, png_file.size(), png_file.name());
         png_file.close();
         return NULL;
     }

@@ -253,7 +253,7 @@ void loop() {
         if (s_logBuffer[i - 1].strlen() > 0 && s_logBuffer[i - 1].strlen() < 2048) {
             webSrv.send("serTerminal=", s_logBuffer[i - 1]);
         } else
-            log_w("%s %i: log buffer full, strlen %i", __FILE__, __LINE__, s_logBuffer[i - 1].strlen());
+            log_w("[%s:%i] log buffer full, strlen %i", __FILE__, __LINE__, s_logBuffer[i - 1].strlen());
         s_logBuffer.pop_back();
         logLinesThisLoop++;
     }

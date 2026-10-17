@@ -136,7 +136,7 @@ void TFT_RGB::reset() {
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool TFT_RGB::panelDrawBitmap(int16_t x0, int16_t y0, int16_t x1, int16_t y1, const void *bitmap) {
     bool res = false;
-    if(x0 >= x1 || y0 >= y1) {log_w("%s %i: x0 %i, y0 %i, x1 %i, y1 %i", __FILE__, __LINE__, x0, y0, x1, y1); return false;}
+    if(x0 >= x1 || y0 >= y1) {log_w("[%s:%i] x0 %i, y0 %i, x1 %i, y1 %i", __FILE__, __LINE__, x0, y0, x1, y1); return false;}
     xSemaphoreTake(m_vsync_semaphore, 0.3 * configTICK_RATE_HZ);
     res = esp_lcd_panel_draw_bitmap(m_panel, x0, y0, x1, y1, (const uint16_t*)bitmap);
     xSemaphoreGive(m_vsync_semaphore);
