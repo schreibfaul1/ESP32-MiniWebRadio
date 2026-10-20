@@ -2,6 +2,11 @@
 CONFIG_IDF_EXPERIMENTAL_FEATURES=y
 # ——————————————————————————————————————————————————————————————————————————————
 #
+# Compiler options
+#
+CONFIG_COMPILER_OPTIMIZATION_PERF=y
+# ——————————————————————————————————————————————————————————————————————————————
+#
 # Arduino Configuration
 #
 CONFIG_AUTOSTART_ARDUINO=y

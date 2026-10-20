@@ -8,6 +8,11 @@ CONFIG_ESP32P4_REV_MAX_FULL=199
 CONFIG_ESP_REV_MAX_FULL=199
 # ——————————————————————————————————————————————————————————————————————————————
 #
+# Compiler options
+#
+CONFIG_COMPILER_OPTIMIZATION_PERF=y
+# ——————————————————————————————————————————————————————————————————————————————
+#
 # Arduino Configuration
 #
 CONFIG_AUTOSTART_ARDUINO=y

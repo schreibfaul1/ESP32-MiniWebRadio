@@ -7234,6 +7234,7 @@ class WeatherClock : public RegisterTable {
     bool          m_first_call = true;
     bool          m_isNight = false;
     bool          m_moonVisible = false;
+    bool          m_sunVisible = false;
     ps_ptr<char>  m_name;
     ps_ptr<char>  m_weather_code_path;
     ps_ptr<char>  m_weather_daily = "no data yet";
@@ -7402,7 +7403,9 @@ class WeatherClock : public RegisterTable {
             crt_temperature_rain->show();
             txt_info->setText(m_weather_daily);
             txt_info->show();
-            MWR_LOG_INFO("Hourly Weather Code Descr.: {}", get_weather_code_descriptions(m_weatherCode_hourly[m_time.hour]));
+            printfln(s_tag.meteo_info, "Hourly Weather Code Descr.: " ANSI_ESC_GREEN " {}", get_weather_code_descriptions(m_weatherCode_hourly[m_time.hour]));
+            m_sunVisible = isVisible(m_time.hour, m_sunrise, m_sunset);
+            m_moonVisible = isVisible(m_time.hour, m_moonrise, m_moonset);
             showWeatherIcon(m_weatherCode_hourly[m_time.hour]);
         }
     }
@@ -7491,177 +7494,187 @@ class WeatherClock : public RegisterTable {
 
     ps_ptr<char> getMoonPhase(float moonphase) {
         static constexpr const char* phases[] = {"new_moon", "waxing_crescent", "first_quarter", "waxing_gibbous", "full_moon", "waning_gibbous", "last_quarter", "waning_crescent"};
-
         int index = static_cast<int>(moonphase * 8.0f);
-
         if (index > 7) index = 0; // 1.0 = New Moon
-
         return phases[index];
     }
 
     void showWeatherIcon(uint8_t weatherCode) {
-    //    MWR_LOG_INFO("weatherCode_hourly: {}", weatherCode);
-    //    const char* path[4] = {nullptr};
-
+        //    const char* path[4] = {nullptr};
         m_weather_code_path.assignf("/meteo/{}.png", weatherCode);
         pic_weather_layer[0].setPicturePath(m_weather_code_path);
         pic_weather_layer[0].show();
+    }
 
+    // void showWeatherIcon(uint8_t weatherCode) {
+    //     const char* path[4] = {nullptr};
+    //     m_weather_code_path.assignf("/meteo/{}.png", weatherCode);
+    //     pic_weather_layer[0].setPicturePath(m_weather_code_path);
+    //     pic_weather_layer[0].show();
 
+    //     m_isNight = true;
+    //     weatherCode = 0;
+    //     m_moonVisible = true;
+    //     m_moonphase = 0.3f;
 
-        // m_isNight = true;
-        // weatherCode = 0;
-        // m_moonVisible = true;
-        // m_moonphase = 0.3f;
+    //     switch (weatherCode) {
+    //         case 0: // Clear sky
+    //             if (m_isNight) {
+    //                 path[0] = "stars";
+    //                 if(m_moonVisible) path[1] = (getMoonPhase(m_moonphase) + "top").c_get();
+    //             } else {
+    //                 path[0] = "sun";
+    //             }
+    //             break;
+    //         case 1: // Mainly clear
+    //             // if (m_isNight) {
+    //             //     path[0] = "moon";
+    //             // } else {
+    //             //     path[0] = "sun";
+    //             // }
+    //             path[1] = "white_clouds_small";
+    //             break;
+    //         case 2: // Partly cloudy
+    //             if (m_isNight) {
+    //                 path[0] = "moon";
+    //             } else {
+    //                 path[0] = "sun";
+    //             }
+    //             path[1] = "white_cloud_center";
+    //             break;
+    //         case 3: // Overcast
+    //             path[0] = "overcast";
+    //             break;
+    //         case 45: // Fog
+    //             path[0] = "fog";
+    //             break;
+    //         case 48: // Depositing rime fog
+    //             path[0] = "depositing_rime_fog";
+    //             path[1] = "moderate_snow";
+    //             path[2] = "dark_cloud_top";
+    //             break;
+    //         case 51: // Light drizzle
+    //             path[0] = "light_drizzle";
+    //             path[1] = "dark_cloud_top";
+    //             break;
+    //         case 53: // Moderate drizzle
+    //             path[0] = "moderate_drizzle";
+    //             path[1] = "dark_cloud_top";
+    //             break;
+    //         case 55: // Dense drizzle
+    //             path[0] = "dense_drizzle";
+    //             path[1] = "dark_cloud_top";
+    //             break;
+    //         case 56: // Light freezing drizzle
+    //             path[0] = "light_drizzle";
+    //             path[1] = "slight_snow";
+    //             path[2] = "white_cloud_top";
+    //             break;
+    //         case 57: // Dense freezing drizzle
+    //             path[0] = "dense_drizzle";
+    //             path[1] = "heavy_snow";
+    //             path[2] = "dark_cloud_top";
+    //             break;
+    //         case 61: // Slight rain
+    //             path[0] = "slight_rain";
+    //             path[1] = "white_cloud_top";
+    //             break;
+    //         case 63: // Moderate rain
+    //             path[0] = "moderate_rain";
+    //             path[1] = "white_cloud_top";
+    //             break;
+    //         case 65: // Heavy rain
+    //             path[0] = "heavy_rain";
+    //             path[1] = "dark_cloud_top";
+    //             break;
+    //         case 66: // Light freezing rain
+    //             path[0] = "slight_rain";
+    //             path[1] = "slight_snow";
+    //             path[2] = "white_cloud_top";
+    //             break;
+    //         case 67: // Heavy freezing rain
+    //             path[0] = "heavy_rain";
+    //             path[1] = "heavy_snow";
+    //             path[2] = "dark_cloud_top";
+    //             break;
+    //         case 71: // Slight snowfall
+    //             path[0] = "slight_snow";
+    //             path[1] = "white_cloud_top";
+    //             break;
+    //         case 73: // Moderate snowfall
+    //             path[0] = "moderate_snow";
+    //             path[1] = "white_cloud_top";
+    //             break;
+    //         case 75: // Heavy snowfall
+    //             path[0] = "heavy_snow";
+    //             path[1] = "dark_cloud_top";
+    //             break;
+    //         case 77: // Snow grains
+    //             path[0] = "snow_grains";
+    //             path[1] = "dark_cloud_top";
+    //             break;
+    //         case 80: // Slight rain showers, day
+    //             path[0] = "sun_top_right";
+    //             path[1] = "slight_rain";
+    //             path[2] = "white_cloud_center";
+    //             break;
+    //         case 81: // Moderate rain showers, day
+    //             path[0] = "sun_top_right";
+    //             path[1] = "moderate_rain";
+    //             path[2] = "white_cloud_center";
+    //             break;
+    //         case 82: // Violent rain showers, day
+    //             path[0] = "sun_top_right";
+    //             path[1] = "heavy_rain";
+    //             path[2] = "dark_cloud_center";
+    //             break;
+    //         case 85: // Slight snow showers, day
+    //             path[0] = "sun_top_right";
+    //             path[1] = "slight_snow";
+    //             path[2] = "white_cloud_center";
+    //             break;
+    //         case 86: // Heavy snow showers, day
+    //             path[0] = "sun_top_right";
+    //             path[1] = "heavy_snow";
+    //             path[2] = "dark_cloud_center";
+    //             break;
+    //         case 95: // Thunderstorm
+    //             path[0] = "moderate_rain";
+    //             path[1] = "thunder_cloud";
+    //             break;
+    //         case 96: // Thunderstorm with slight hail
+    //             path[0] = "slight_rain";
+    //             path[1] = "slight_snow";
+    //             path[2] = "thunder_cloud";
+    //             break;
+    //         case 97: // Heavy thunderstorm"
+    //             path[0] = "heavy_rain";
+    //             path[1] = "thunder_cloud";
+    //             break;
+    //         case 99: // Heavy thunderstorm"
+    //             path[0] = "heavy_rain";
+    //             path[1] = "heavy_snow";
+    //             path[2] = "thunder_cloud";
+    //             break;
+    //     }
 
-        // switch (weatherCode) {
-        //     case 0: // Clear sky
-        //         if (m_isNight) {
-        //             path[0] = "stars";
-        //             if(m_moonVisible) path[1] = (getMoonPhase(m_moonphase) + "top").c_get();
-        //         } else {
-        //             path[0] = "sun";
-        //         }
-        //         break;
-        //     case 1: // Mainly clear
-        //         if (m_isNight) {
-        //             path[0] = "moon";
-        //         } else {
-        //             path[0] = "sun";
-        //         }
-        //         path[1] = "white_clouds_small";
-        //         break;
-        //     case 2: // Partly cloudy
-        //         if (m_isNight) {
-        //             path[0] = "moon";
-        //         } else {
-        //             path[0] = "sun";
-        //         }
-        //         path[1] = "white_cloud_center";
-        //         break;
-        //     case 3: // Overcast
-        //         path[0] = "overcast";
-        //         break;
-        //     case 45: // Fog
-        //         path[0] = "fog";
-        //         break;
-        //     case 48: // Depositing rime fog
-        //         path[0] = "depositing_rime_fog";
-        //         path[1] = "moderate_snow";
-        //         path[2] = "dark_cloud_top";
-        //         break;
-        //     case 51: // Light drizzle
-        //         path[0] = "light_drizzle";
-        //         path[1] = "dark_cloud_top";
-        //         break;
-        //     case 53: // Moderate drizzle
-        //         path[0] = "moderate_drizzle";
-        //         path[1] = "dark_cloud_top";
-        //         break;
-        //     case 55: // Dense drizzle
-        //         path[0] = "dense_drizzle";
-        //         path[1] = "dark_cloud_top";
-        //         break;
-        //     case 56: // Light freezing drizzle
-        //         path[0] = "light_drizzle";
-        //         path[1] = "slight_snow";
-        //         path[2] = "white_cloud_top";
-        //         break;
-        //     case 57: // Dense freezing drizzle
-        //         path[0] = "dense_drizzle";
-        //         path[1] = "heavy_snow";
-        //         path[2] = "dark_cloud_top";
-        //         break;
-        //     case 61: // Slight rain
-        //         path[0] = "slight_rain";
-        //         path[1] = "white_cloud_top";
-        //         break;
-        //     case 63: // Moderate rain
-        //         path[0] = "moderate_rain";
-        //         path[1] = "white_cloud_top";
-        //         break;
-        //     case 65: // Heavy rain
-        //         path[0] = "heavy_rain";
-        //         path[1] = "dark_cloud_top";
-        //         break;
-        //     case 66: // Light freezing rain
-        //         path[0] = "slight_rain";
-        //         path[1] = "slight_snow";
-        //         path[2] = "white_cloud_top";
-        //         break;
-        //     case 67: // Heavy freezing rain
-        //         path[0] = "heavy_rain";
-        //         path[1] = "heavy_snow";
-        //         path[2] = "dark_cloud_top";
-        //         break;
-        //     case 71: // Slight snowfall
-        //         path[0] = "slight_snow";
-        //         path[1] = "white_cloud_top";
-        //         break;
-        //     case 73: // Moderate snowfall
-        //         path[0] = "moderate_snow";
-        //         path[1] = "white_cloud_top";
-        //         break;
-        //     case 75: // Heavy snowfall
-        //         path[0] = "heavy_snow";
-        //         path[1] = "dark_cloud_top";
-        //         break;
-        //     case 77: // Snow grains
-        //         path[0] = "snow_grains";
-        //         path[1] = "dark_cloud_top";
-        //         break;
-        //     case 80: // Slight rain showers, day
-        //         path[0] = "sun_top_right";
-        //         path[1] = "slight_rain";
-        //         path[2] = "white_cloud_center";
-        //         break;
-        //     case 81: // Moderate rain showers, day
-        //         path[0] = "sun_top_right";
-        //         path[1] = "moderate_rain";
-        //         path[2] = "white_cloud_center";
-        //         break;
-        //     case 82: // Violent rain showers, day
-        //         path[0] = "sun_top_right";
-        //         path[1] = "heavy_rain";
-        //         path[2] = "dark_cloud_center";
-        //         break;
-        //     case 85: // Slight snow showers, day
-        //         path[0] = "sun_top_right";
-        //         path[1] = "slight_snow";
-        //         path[2] = "white_cloud_center";
-        //         break;
-        //     case 86: // Heavy snow showers, day
-        //         path[0] = "sun_top_right";
-        //         path[1] = "heavy_snow";
-        //         path[2] = "dark_cloud_center";
-        //         break;
-        //     case 95: // Thunderstorm
-        //         path[0] = "moderate_rain";
-        //         path[1] = "thunder_cloud";
-        //         break;
-        //     case 96: // Thunderstorm with slight hail
-        //         path[0] = "slight_rain";
-        //         path[1] = "slight_snow";
-        //         path[2] = "thunder_cloud";
-        //         break;
-        //     case 97: // Heavy thunderstorm"
-        //         path[0] = "heavy_rain";
-        //         path[1] = "thunder_cloud";
-        //         break;
-        //     case 99: // Heavy thunderstorm"
-        //         path[0] = "heavy_rain";
-        //         path[1] = "heavy_snow";
-        //         path[2] = "thunder_cloud";
-        //         break;
-        // }
+    //     pic_weather_layer[0].setPicturePath(""); // draw always black BG
+    //     for (int i = 0; i < 4; i++) {
+    //         if (path[i]) {
+    //             m_weather_code_path.assignf("/meteo/{}.png", path[i]);
+    //             pic_weather_layer[i].setPicturePath(m_weather_code_path);
+    //             pic_weather_layer[i].show();
+    //         }
+    //     }
+    // }
 
-        // pic_weather_layer[0].setPicturePath(""); // draw always black BG
-        // for (int i = 0; i < 4; i++) {
-        //     if (path[i]) {
-        //         m_weather_code_path.assignf("/meteo/{}.png", path[i]);
-        //         pic_weather_layer[i].setPicturePath(m_weather_code_path);
-        //         pic_weather_layer[i].show();
-        //     }
-        // }
+    bool isVisible(int16_t time, int16_t rise, int16_t set) {
+        if (rise == 0 && set == 0) return true;
+        if (rise == -1 && set == -1) return false;
+        if (set == -1 && time >= rise) return true;
+        if (rise == -1 && time <= set) return true;
+        if (rise < set && time >= rise) return true;
+        if (rise > set && (time <= set || time >= rise)) return true;
+        return false;
     }
 };

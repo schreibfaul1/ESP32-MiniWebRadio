@@ -175,6 +175,7 @@ std::vector<ps_ptr<char>> METEO::readHeader() {
 bool METEO::readContent() {
 
     ps_ptr<char> buff;
+    buff.set_name("json_buffer");
 
     //-------------------------------------------------------------------------------------------------
     // HTTP chunked transfer
@@ -592,10 +593,12 @@ bool METEO::parseForecast(ps_ptr<char>& buff) {
     if (!json) return false;
     if (!parseHourly(json)) {
         log_e("Hourly parsing failed");
+        buff.println();
         return false;
     }
     if (!parseDaily(json)) {
         log_e("Daily parsing failed");
+        buff.println();
         return false;
     }
     return true;
