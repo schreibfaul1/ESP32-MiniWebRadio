@@ -8,7 +8,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.1a9 - Okt 23, 2026                                                                                                               ";
+    Version 4.2.1a10 - Okt 23, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -532,9 +532,11 @@ void loop() {
         }
         //-------------------------------------------WIFI DISCONNECTED?-------------------------------------------------------------------------------
         if (WiFi.isConnected() == false) {
-            printfln(s_tag.wifi_info, ANSI_ESC_YELLOW "Reconnecting to WiFi...");
-            dispHeader.updateRSSI(-86);
-            s_f_WiFi_lost = true;
+            if(s_f_WiFi_lost == false) {
+                printfln(s_tag.wifi_info, ANSI_ESC_YELLOW "Reconnecting to WiFi...");
+                if (s_state == RADIO) audio.stopSong();
+                s_f_WiFi_lost = true;
+            }
         } else {
             if (s_f_WiFi_lost) {
                 s_f_WiFi_lost = false;

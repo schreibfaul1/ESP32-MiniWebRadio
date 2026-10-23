@@ -39,7 +39,6 @@ CONFIG_SPIRAM_ALLOW_BSS_SEG_EXTERNAL_MEMORY=y
 # LWIP
 #
 CONFIG_LWIP_TCPIP_TASK_PRIO=20
-
 # ——————————————————————————————————————————————————————————————————————————————
 #
 # TCP
