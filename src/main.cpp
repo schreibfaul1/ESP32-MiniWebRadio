@@ -8,7 +8,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.1a8 - Okt 20, 2026                                                                                                               ";
+    Version 4.2.1a9 - Okt 23, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -1154,7 +1154,7 @@ bool connectToWiFi() {
     }
 
     // These options can help when you need ANY kind of wifi connection to get a config file, report errors, etc.
-    wifiMulti.setStrictMode(false); // Allow opportunistic connections while maintaining known APs in priority
+    wifiMulti.setStrictMode(true); // Default is true.  Library will disconnect and forget currently connected AP if it's not in the AP list.
     printfln(s_tag.wifi_info, ANSI_ESC_GREEN "Connecting WiFi...");
 
     wifiMulti.run();

@@ -1,8 +1,11 @@
 .pio
 .vscode
 .env
+.cache
 platformio_override.ini
 build
+build_log.txt
+build_log_full.txt
 logs
 managed_components
 dependencies.lock
