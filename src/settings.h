@@ -3,15 +3,16 @@
 #include "tft_structures.h"
 
 //———————————— predifined displays —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-#define SPI_DISPLAY 1                  //                    SPI display  320x240, 2.8inch,        ILI9341             XPT2046, ESP32-S3 or ESP32-P4
-// #define SPI_DISPLAY 2                  //                    SPI display  480x320, 3.5" od 4"      ILI9488 or ST7796,  XPT2046, ESP32-S3 or ESP32-P4
-// #define SPI_DISPLAY 3                  //                    SPI display  480x320, 3.5" od 4"      ILI9488 or ST7796,  FT6x63,  ESP32-S3 or ESP32-P4
-// #define ESP32_8048S070                 // Sunton             RGB display  800x480, 7",                                 GT911,   ESP32-S3 N16R8
-// #define ESP32_S3_Touch_LCD7            // Waveshare          RGB display  800x480, 7",                                 GT911,   ESP32-S3 N8R8
-// #define ESP32_P4_WIFI6_TOUCH_LCD_43    // Waveshare          DSI display  800x480, 4.3",           ST7701,
-// #define ESP32_P4_WIFI6_TOUCH_LCD7_7B   // Waveshare          DSI display 1024x600, 7",             EK97007,            GT911,   ESP32-P4 N32R32
-// #define JC1060P470                     // Guition            DSI display 1024x600, 7",             JD9165,             GT911,   ESP32-P4 N32R32
-// #define JC4880P443                     // Guition            DSI display  800x480, 4.3",           ST7701,             GT911,   ESP32-P4 N16R32
+#define SPI_DISPLAY 1                  //                    SPI display  320x240, 2.8inch,        ILI9341             XPT2046, ESP32-S3 or ESP32p4
+// #define SPI_DISPLAY 2                  //                    SPI display  480x320, 3.5" od 4"      ILI9488 or ST7796,  XPT2046, ESP32s3 or ESP32p4
+// #define SPI_DISPLAY 3                  //                    SPI display  480x320, 3.5" od 4"      ILI9488 or ST7796,  FT6x63,  ESP32s3 or ESP32p4
+// #define LCD_DISPLAY_ESP32_S3_40        // Hosyond            SPI display  480x320, 4"              ST7796,             FT6x63,  ESP32s3 N16R8
+// #define ESP32_8048S070                 // Sunton             RGB display  800x480, 7",                                 GT911,   ESP32s3 N16R8
+// #define ESP32_S3_Touch_LCD7            // Waveshare          RGB display  800x480, 7",                                 GT911,   ESP32s3 N8R8
+// #define ESP32_P4_WIFI6_TOUCH_LCD_43    // Waveshare          DSI display  800x480, 4.3",           ST7701,             GT911,   ESP32p4 N32R32
+// #define ESP32_P4_WIFI6_TOUCH_LCD7_7B   // Waveshare          DSI display 1024x600, 7",             EK97007,            GT911,   ESP32p4_es N32R32
+// #define JC1060P470                     // Guition            DSI display 1024x600, 7",             JD9165,             GT911,   ESP32p4_es N32R32
+// #define JC4880P443                     // Guition            DSI display  800x480, 4.3",           ST7701,             GT911,   ESP32p4_es N16R32
 // #define USER_DEFINED_DISPLAY           // Self configurated ESP32-S3 or ESP32-P4 devBoard with SPI display
 
 //———————————— common ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -39,6 +40,7 @@
     #define DISPLAY_INVERSION       0 // (0) off (1) on
     #define BRIGHTNESS_INVERSION    0 // (0) off (1) on, bg-led
     #define BRIGHTNESS_MIN          5 // you can’t see anything underneath
+    #define AMP_EN_INVERSION        0 // (0) HIGH - amp is enabled, (1) LOW - amp is enabled
 
     #if CONFIG_IDF_TARGET_ESP32S3  // Digital I/O used
         #define TFT_CS              8
@@ -113,6 +115,7 @@
         #define DISPLAY_INVERSION    0 // (0) off (1) on
         #define BRIGHTNESS_INVERSION 0 // (0) off (1) on, bg-led
         #define BRIGHTNESS_MIN       5 // you can’t see anything underneath
+        #define AMP_EN_INVERSION     0 // (0) HIGH - amp is enabled, (1) LOW - amp is enabled
     #endif
     #if (SPI_DISPLAY == 2)
         #define TFT_FREQUENCY 40000000 // only SPI displays, 80000000, 40000000, 27000000, 20000000, 10000000
@@ -125,6 +128,7 @@
         #define DISPLAY_INVERSION    0 // (0) off (1) on
         #define BRIGHTNESS_INVERSION 0 // (0) off (1) on, bg-led
         #define BRIGHTNESS_MIN       5 // you can’t see anything underneath
+        #define AMP_EN_INVERSION     0 // (0) HIGH - amp is enabled, (1) LOW - amp is enabled
     #endif
     #if (SPI_DISPLAY == 3)
         #define TFT_FREQUENCY 40000000 // only SPI displays, 80000000, 40000000, 27000000, 20000000, 10000000
@@ -137,6 +141,7 @@
         #define DISPLAY_INVERSION    1 // (0) off (1) on
         #define BRIGHTNESS_INVERSION 0 // (0) off (1) on, bg-led
         #define BRIGHTNESS_MIN       5 // you can’t see anything underneath
+        #define AMP_EN_INVERSION     0 // (0) HIGH - amp is enabled, (1) LOW - amp is enabled
     #endif
     #if CONFIG_IDF_TARGET_ESP32S3
     // Digital I/O used
@@ -196,6 +201,51 @@
     #endif // CONFIG_IDF_TARGET_ESP32P4
 #endif
 
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// 📌📌📌  DISPLAY [480x320] ESP32-S3 Hosyond 4"   📌📌📌
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+#if (CONFIG_IDF_TARGET_ESP32S3 == 1)
+    #ifdef LCD_DISPLAY_ESP32_S3_40
+        #define TFT_FREQUENCY 40000000 // only SPI displays, 80000000, 40000000, 27000000, 20000000, 10000000
+        #define TFT_CONTROLLER       5 // (5) ST7796[480x320]
+        #define TFT_ROTATION         0 // (0) none, (1) 90°CW, (2) 180°CW, (3) 270°CW
+        #define TP_CONTROLLER        8 // FT6x63
+        #define TP_ROTATION          1 // (0) none, (1) 90°CW, (2) 180°CW, (3) 270°CW
+        #define TP_H_MIRROR          0 // (0) default, (1) mirror left <-> right
+        #define TP_V_MIRROR          0 // (0) default, (1) mirror up <-> down
+        #define DISPLAY_INVERSION    1 // (0) off (1) on
+        #define BRIGHTNESS_INVERSION 0 // (0) off (1) on, bg-led
+        #define BRIGHTNESS_MIN       5 // you can’t see anything underneath
+        #define AMP_EN_INVERSION     1 // (0) HIGH - amp is enabled, (1) LOW - amp is enabled
+
+    // Digital I/O used
+        #define TFT_CS              10
+        #define TFT_DC              46
+        #define TFT_BL              45 // at -1 the brightness menu is not displayed
+        #define TP_IRQ              10
+        #define TP_CS               -1
+        #define SD_MMC_D0           39
+        #define SD_MMC_CLK          38
+        #define SD_MMC_CMD          40
+        #define IR_PIN               2 // IR Receiver (if available)
+        #define TFT_MOSI            11 // TFT and TP (FSPI)
+        #define TFT_MISO            13 // TFT and TP (FSPI)
+        #define TFT_SCK             12 // TFT and TP (FSPI)
+        #define I2S_DIN             -1  // 6
+        #define I2S_DOUT             8
+        #define I2S_BCLK             5
+        #define I2S_LRC              7
+        #define I2S_MCLK             4
+        #define BT_EMITTER_RX       -1 // TX pin - KCX Bluetooth Transmitter    (-1 if not available)
+        #define BT_EMITTER_TX       -1 // RX pin - KCX Bluetooth Transmitter    (-1 if not available)
+        #define BT_EMITTER_MODE     -1 // high transmit - low receive           (-1 if not available)
+        #define BT_EMITTER_CONNECT  -1 // high impulse -> awake after POWER_OFF (-1 if not available)
+        #define I2C_SDA             16 // I2C, dala line for capacitive touchpadand and light sensor (-1 if not available)
+        #define I2C_SCL             15 // I2C, clock line for capacitive touchpadand and light sensor (-1 if not available)
+        #define AMP_ENABLED          1 // onboard amplifier (-1 if not available)
+    #endif                             // CONFIG_IDF_TARGET_ESP32S3
+#endif // CONFIG_IDF_TARGET_ESP32S3
+
 // // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // 📌📌📌  DISPLAY [800x480] ESP32-S3 SUNTON   📌📌📌
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -210,6 +260,7 @@
         #define DISPLAY_INVERSION    0 // (0) off (1) on
         #define BRIGHTNESS_INVERSION 0 // (0) off (1) on, bg-led
         #define BRIGHTNESS_MIN      25 // you can’t see anything underneath
+        #define AMP_EN_INVERSION     0 // (0) HIGH - amp is enabled, (1) LOW - amp is enabled
 
 const Pins RGB_PINS = { // SUNTON 7"
     .b0 = 15, .b1 = 7, .b2 = 6, .b3 = 5, .b4 = 4, .g0 = 9, .g1 = 46, .g2 = 3, .g3 = 8, .g4 = 16, .g5 = 1, .r0 = 14, .r1 = 21, .r2 = 47, .r3 = 48, .r4 = 45, .hsync = 39, .vsync = 40, .de = 41, .pclk = 42, .bl = -1};
@@ -235,6 +286,7 @@ const Timing RGB_TIMING = {.h_res = 800, .v_res = 480, .pixel_clock_hz = 8600000
         #define AMP_ENABLED         -1 // onboard amplifier (-1 if not available)
     #endif
 #endif // CONFIG_IDF_TARGET_ESP32S3
+
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // 📌📌📌  DISPLAY [800x480] ESP32-S3 WAVESHARE 7"   📌📌📌
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -249,6 +301,7 @@ const Timing RGB_TIMING = {.h_res = 800, .v_res = 480, .pixel_clock_hz = 8600000
         #define DISPLAY_INVERSION    0 // (0) off (1) on
         #define BRIGHTNESS_INVERSION 0 // (0) off (1) on, bg-led
         #define BRIGHTNESS_MIN       0 // not used
+        #define AMP_EN_INVERSION     0 // (0) HIGH - amp is enabled, (1) LOW - amp is enabled
 const Pins RGB_PINS = { // WAVESHARE
     .b0 = 14, .b1 = 38, .b2 = 18, .b3 = 17, .b4 = 10, .g0 = 39, .g1 = 0, .g2 = 45, .g3 = 48, .g4 = 47, .g5 = 21, .r0 = 1, .r1 = 2, .r2 = 42, .r3 = 41, .r4 = 40, .hsync = 46, .vsync = 3, .de = 5, .pclk = 7, .bl = -1};
 
@@ -283,7 +336,6 @@ const Timing RGB_TIMING = {.h_res = 800, .v_res = 480, .pixel_clock_hz = 1300000
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // 📌📌📌  DSI-DISPLAY [800x480] ESP32-P4 WAVESHARE 4.3"   📌📌📌
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
 #if (CONFIG_IDF_TARGET_ESP32P4 == 1)
     #ifdef ESP32_P4_WIFI6_TOUCH_LCD_43
         #define TFT_CONTROLLER      10 // (10)ST7701[480x800]
@@ -295,6 +347,7 @@ const Timing RGB_TIMING = {.h_res = 800, .v_res = 480, .pixel_clock_hz = 1300000
         #define DISPLAY_INVERSION    0 // (0) off (1) on
         #define BRIGHTNESS_INVERSION 1 // (0) off (1) on, bg-led
         #define BRIGHTNESS_MIN       5 // you can’t see anything underneath
+        #define AMP_EN_INVERSION     0 // (0) HIGH - amp is enabled, (1) LOW - amp is enabled
 
 const Timing DSI_TIMING = {.h_res = 480, .v_res = 800, .pixel_clock_mhz = 30, .hsync_pulse_width = 12, .hsync_back_porch = 42, .hsync_front_porch = 42, .vsync_pulse_width = 8, .vsync_back_porch = 2, .vsync_front_porch = 60, .lane_bit_rate_mbps = 500};
 
@@ -350,6 +403,7 @@ const Timing DSI_TIMING = {.h_res = 480, .v_res = 800, .pixel_clock_mhz = 30, .h
         #define DISPLAY_INVERSION    0   // (0) off (1) on
         #define BRIGHTNESS_INVERSION 1   // (0) off (1) on, bg-led
         #define BRIGHTNESS_MIN       5 // you can’t see anything underneath
+        #define AMP_EN_INVERSION     0 // (0) HIGH - amp is enabled, (1) LOW - amp is enabled
 
 const Timing DSI_TIMING = {.h_res = 1024, .v_res = 600, .pixel_clock_mhz = 52, .hsync_pulse_width = 10, .hsync_back_porch = 160, .hsync_front_porch = 160, .vsync_pulse_width = 1, .vsync_back_porch = 23, .vsync_front_porch = 22, .lane_bit_rate_mbps = 900};
 
@@ -405,6 +459,7 @@ const Timing DSI_TIMING = {.h_res = 1024, .v_res = 600, .pixel_clock_mhz = 52, .
         #define DISPLAY_INVERSION    0 // (0) off (1) on
         #define BRIGHTNESS_INVERSION 0 // (0) off (1) on, bg-led
         #define BRIGHTNESS_MIN       5 // you can’t see anything underneath
+        #define AMP_EN_INVERSION     0 // (0) HIGH - amp is enabled, (1) LOW - amp is enabled
 
 const Timing DSI_TIMING = {.h_res = 1024, .v_res = 600, .pixel_clock_mhz = 52, .hsync_pulse_width = 40, .hsync_back_porch = 160, .hsync_front_porch = 160, .vsync_pulse_width = 10, .vsync_back_porch = 23, .vsync_front_porch = 12, .lane_bit_rate_mbps = 750};
 
@@ -459,6 +514,7 @@ const Timing DSI_TIMING = {.h_res = 1024, .v_res = 600, .pixel_clock_mhz = 52, .
         #define DISPLAY_INVERSION    0  // (0) off (1) on
         #define BRIGHTNESS_INVERSION 0  // (0) off (1) on, bg-led
         #define BRIGHTNESS_MIN       5 // you can’t see anything underneath
+        #define AMP_EN_INVERSION     0 // (0) HIGH - amp is enabled, (1) LOW - amp is enabled
 
 const Timing DSI_TIMING = {.h_res = 480, .v_res = 800, .pixel_clock_mhz = 34, .hsync_pulse_width = 12, .hsync_back_porch = 42, .hsync_front_porch = 42, .vsync_pulse_width = 2, .vsync_back_porch = 8, .vsync_front_porch = 166, .lane_bit_rate_mbps = 500};
 

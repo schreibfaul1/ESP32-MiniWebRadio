@@ -8,7 +8,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.1a11 - Okt 24, 2026                                                                                                               ";
+    Version 4.2.1a12 - Okt 24, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -157,7 +157,11 @@ void setup() {
 
     if (AMP_ENABLED >= 0) { // enable onboard amplifier
         pinMode(AMP_ENABLED, OUTPUT);
-        digitalWrite(AMP_ENABLED, HIGH);
+        if (AMP_EN_INVERSION == 0) {
+            digitalWrite(AMP_ENABLED, HIGH);
+        } else {
+            digitalWrite(AMP_ENABLED, LOW);
+        }
         printfln(s_tag.setup, "On Board Amplifier pin is: " ANSI_ESC_CYAN "{}", AMP_ENABLED);
     }
 
@@ -533,7 +537,7 @@ void loop() {
         }
         //-------------------------------------------WIFI DISCONNECTED?-------------------------------------------------------------------------------
         if (WiFi.isConnected() == false) {
-            if(s_f_WiFi_lost == false) {
+            if (s_f_WiFi_lost == false) {
                 printfln(s_tag.wifi_info, ANSI_ESC_YELLOW "Reconnecting to WiFi...");
                 if (s_state == RADIO) audio.stopSong();
                 s_f_WiFi_lost = true;
@@ -703,7 +707,7 @@ boolean defaultsettings() {
     s_tone.HP = parseJson("\"toneHP\":").to_int16();
     s_tone.BAL = parseJson("\"balance\":").to_int16();
     s_TZName = parseJson("\"Timezone_Name\":");
-  //  s_TZString = parseJson("\"Timezone_String\":");
+    //  s_TZString = parseJson("\"Timezone_String\":");
     s_settings.lastconnectedhost = parseJson("\"lastconnectedhost\":");
     s_settings.lastconnectedfile = parseJson("\"lastconnectedfile\":");
     s_sleepMode = parseJson("\"sleepMode\":").to_uint8();
@@ -766,7 +770,7 @@ void updateSettings() {
     jO.appendf(",\n  \"lastconnectedfile\":\"{}\"", s_settings.lastconnectedfile);
     jO.appendf(",\n  \"station\":{}", s_cur_station);
     jO.appendf(",\n  \"Timezone_Name\":\"{}\"", s_TZName);
-  //  jO.appendf(",\n  \"Timezone_String\":\"{}\"", s_TZString);
+    //  jO.appendf(",\n  \"Timezone_String\":\"{}\"", s_TZString);
     jO.appendf(",\n  \"toneLP\":{}", s_tone.LP);
     jO.appendf(",\n  \"toneBP\":{}", s_tone.BP);
     jO.appendf(",\n  \"toneHP\":{}", s_tone.HP);
@@ -1932,14 +1936,22 @@ void muteChanged(bool m) {
     if (m) {
         s_f_mute = true;
         if (AMP_ENABLED != -1) {
-            digitalWrite(AMP_ENABLED, LOW);
+            if (AMP_EN_INVERSION == 0) {
+                digitalWrite(AMP_ENABLED, LOW);
+            } else {
+                digitalWrite(AMP_ENABLED, HIGH);
+            }
             printfln(s_tag.action, "mute, On Board Amplifier is off");
         }
         webSrv.send("mute=", "1");
     } else {
         s_f_mute = false;
         if (AMP_ENABLED != -1) {
-            digitalWrite(AMP_ENABLED, HIGH);
+            if (AMP_EN_INVERSION == 0) {
+                digitalWrite(AMP_ENABLED, HIGH);
+            } else {
+                digitalWrite(AMP_ENABLED, LOW);
+            }
             printfln(s_tag.action, "unmute, On Board Amplifier is on");
         }
         webSrv.send("mute=", "0");
