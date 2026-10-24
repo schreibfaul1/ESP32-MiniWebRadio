@@ -549,6 +549,7 @@ const char voice_time_de[24][50] = {"Beim dritten Ton ist es genau Mitternacht",
                                     "Beim dritten Ton ist es genau achtzehn Uhr",       "Beim dritten Ton ist es genau neunzehn Uhr",
                                     "Beim dritten Ton ist es genau zwanzig Uhr",        "Beim dritten Ton ist es genau einundzwanzig Uhr",
                                     "Beim dritten Ton ist es genau zweiundzwanzig Uhr", "Beim dritten Ton ist es genau dreiundzwanzig Uhr"};
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 const char timezones_json[] = "[[\"Africa/Accra\",\"GMT0\"],"
                               "[\"Africa/Addis_Ababa\",\"EAT-3\"],"
                               "[\"Africa/Algiers\",\"CET-1\"],"

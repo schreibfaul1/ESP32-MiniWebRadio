@@ -8,7 +8,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.1a10 - Okt 23, 2026                                                                                                               ";
+    Version 4.2.1a11 - Okt 24, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -136,6 +136,7 @@ void setup() {
     audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT, I2S_MCLK);
     audio.setI2SCommFMT_LSB(I2S_COMM_FMT);
 
+    printfln(s_tag.setup, "time zone: " ANSI_ESC_YELLOW "{}, {}", s_TZName, s_TZString);
     printfln(s_tag.setup, "number of saved stations: " ANSI_ESC_CYAN "{}", staMgnt.getSumStations());
     printfln(s_tag.setup, "number of saved favourites: " ANSI_ESC_CYAN "{}", staMgnt.getSumFavStations());
     printfln(s_tag.setup, "current station number: " ANSI_ESC_CYAN "{}", s_cur_station);
@@ -702,8 +703,7 @@ boolean defaultsettings() {
     s_tone.HP = parseJson("\"toneHP\":").to_int16();
     s_tone.BAL = parseJson("\"balance\":").to_int16();
     s_TZName = parseJson("\"Timezone_Name\":");
-    s_TZString = parseJson("\"Timezone_String\":");
-    refreshTZString();
+  //  s_TZString = parseJson("\"Timezone_String\":");
     s_settings.lastconnectedhost = parseJson("\"lastconnectedhost\":");
     s_settings.lastconnectedfile = parseJson("\"lastconnectedfile\":");
     s_sleepMode = parseJson("\"sleepMode\":").to_uint8();
@@ -722,6 +722,7 @@ boolean defaultsettings() {
     s_cur_AudioFileName = s_SD_content.getLastConnectedFileName();
     s_cur_AudioFileNr = s_SD_content.getPosByFileName(s_cur_AudioFileName);
     if (s_cur_AudioFileNr == -1) s_cur_AudioFileNr = 0; // not found
+    s_TZString = getTZString(s_TZName);
     // ------------------------------------------------------------------------------------------------------------
 
     if (!SD_MMC.exists("/stations.json")) { // if not found create one
@@ -765,7 +766,7 @@ void updateSettings() {
     jO.appendf(",\n  \"lastconnectedfile\":\"{}\"", s_settings.lastconnectedfile);
     jO.appendf(",\n  \"station\":{}", s_cur_station);
     jO.appendf(",\n  \"Timezone_Name\":\"{}\"", s_TZName);
-    jO.appendf(",\n  \"Timezone_String\":\"{}\"", s_TZString);
+  //  jO.appendf(",\n  \"Timezone_String\":\"{}\"", s_TZString);
     jO.appendf(",\n  \"toneLP\":{}", s_tone.LP);
     jO.appendf(",\n  \"toneBP\":{}", s_tone.BP);
     jO.appendf(",\n  \"toneHP\":{}", s_tone.HP);
@@ -1873,15 +1874,17 @@ void setRTC(ps_ptr<char> TZString) {
     rtc.begin(TZString);
 }
 
-void refreshTZString() { // the settings keep the TZ string of the day the zone was selected, take the current one from timezones_json
+ps_ptr<char> getTZString(ps_ptr<char> s_TZName) { // the settings keep the TZ string of the day the zone was selected, take the current one from timezones_json
     ps_ptr<char> key;
+    ps_ptr<char> tzString = "CET-1CEST,M3.5.0,M10.5.0/3";
     key.assignf("[\"{}\",\"", s_TZName);
     const char* p = strstr(timezones_json, key.c_get());
-    if (!p) return; // zone not in the list, keep the saved string
+    if (!p) return tzString; // zone not in the list, return default
     p += key.strlen();
     const char* e = strchr(p, '"');
-    if (!e || e == p) return;
-    s_TZString.assign(p, e - p);
+    if (!e || e == p) return tzString; // return default
+    tzString.assign(p, e - p);
+    return tzString;
 }
 
 boolean isAlarm(uint8_t weekDay, uint8_t alarmDays, uint16_t minuteOfTheDay, int16_t* alarmTime) {
