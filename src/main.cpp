@@ -703,6 +703,7 @@ boolean defaultsettings() {
     s_tone.BAL = parseJson("\"balance\":").to_int16();
     s_TZName = parseJson("\"Timezone_Name\":");
     s_TZString = parseJson("\"Timezone_String\":");
+    refreshTZString();
     s_settings.lastconnectedhost = parseJson("\"lastconnectedhost\":");
     s_settings.lastconnectedfile = parseJson("\"lastconnectedfile\":");
     s_sleepMode = parseJson("\"sleepMode\":").to_uint8();
@@ -1870,6 +1871,17 @@ void wake_up(int8_t state, int8_t subState) {
 void setRTC(ps_ptr<char> TZString) {
     rtc.stop();
     rtc.begin(TZString);
+}
+
+void refreshTZString() { // the settings keep the TZ string of the day the zone was selected, take the current one from timezones_json
+    ps_ptr<char> key;
+    key.assignf("[\"{}\",\"", s_TZName);
+    const char* p = strstr(timezones_json, key.c_get());
+    if (!p) return; // zone not in the list, keep the saved string
+    p += key.strlen();
+    const char* e = strchr(p, '"');
+    if (!e || e == p) return;
+    s_TZString.assign(p, e - p);
 }
 
 boolean isAlarm(uint8_t weekDay, uint8_t alarmDays, uint16_t minuteOfTheDay, int16_t* alarmTime) {
