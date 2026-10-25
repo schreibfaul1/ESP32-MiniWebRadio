@@ -206,7 +206,7 @@
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 #if (CONFIG_IDF_TARGET_ESP32S3 == 1)
     #ifdef LCD_DISPLAY_ESP32_S3_40
-        #define TFT_FREQUENCY 40000000 // only SPI displays, 80000000, 40000000, 27000000, 20000000, 10000000
+        #define TFT_FREQUENCY 80000000 // only SPI displays, 80000000, 40000000, 27000000, 20000000, 10000000
         #define TFT_CONTROLLER       5 // (5) ST7796[480x320]
         #define TFT_ROTATION         0 // (0) none, (1) 90°CW, (2) 180°CW, (3) 270°CW
         #define TP_CONTROLLER        8 // FT6x63
@@ -305,7 +305,7 @@ const Timing RGB_TIMING = {.h_res = 800, .v_res = 480, .pixel_clock_hz = 8600000
 const Pins RGB_PINS = { // WAVESHARE
     .b0 = 14, .b1 = 38, .b2 = 18, .b3 = 17, .b4 = 10, .g0 = 39, .g1 = 0, .g2 = 45, .g3 = 48, .g4 = 47, .g5 = 21, .r0 = 1, .r1 = 2, .r2 = 42, .r3 = 41, .r4 = 40, .hsync = 46, .vsync = 3, .de = 5, .pclk = 7, .bl = -1};
 
-const Timing RGB_TIMING = {.h_res = 800, .v_res = 480, .pixel_clock_hz = 13000000, .hsync_pulse_width = 1, .hsync_back_porch = 1, .hsync_front_porch = 1, .vsync_pulse_width = 4, .vsync_back_porch = 4, .vsync_front_porch = 4};
+const Timing RGB_TIMING = {.h_res = 800, .v_res = 480, .pixel_clock_hz = 13000000, .hsync_pulse_width = 4, .hsync_back_porch = 8, .hsync_front_porch = 8, .vsync_pulse_width = 4, .vsync_back_porch = 8, .vsync_front_porch = 8};
 
         #define TP_IRQ              -1
 

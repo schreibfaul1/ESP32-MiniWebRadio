@@ -28,8 +28,8 @@ Required HW:
 <li>ESP32-S3 or -P4 board with <b>8MB of flash</b> or more, and at least <b>4MB of PSRAM</b></li>
 <li>At least <b>16MB</b> of flash is required for OTA, <b>8MB</b> without OTA  </li>
 <li>DAC (e.g. PCM5102a)</li>
-<li>TFT Display with Touchpad (SPI), Display controller can be ILI9341 (320x240px), ILI9486 (480x320px), ILI9488 (480x320px), ST7796 (480x320px) or
-RGB Display (800x480) with Touchpad (I2C) or DSI Display (1024x600) with Touchpad (I2C)  </li>
+<li>SPI Display with Display controller ILI9341 (320x240px), ILI9486 (480x320px), ILI9488 (480x320px) or ST7796 (480x320px) with TP Controller XPT2046 or FT6x36  </li>
+<li>DSI Display with Display controller ST7701 (800x480), EK97007(1024x600) or JD9165 (1024x600) with Touchpad GT911 </li>
 <li>SD Card (FAT32) + SD adapter (can use SD slot on back of TFT display if available)</li>
 <li>Display Sizes</li>
 
