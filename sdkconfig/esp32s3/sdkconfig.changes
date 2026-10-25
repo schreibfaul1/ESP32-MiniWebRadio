@@ -1,3 +1,5 @@
+# 💥💥💥💥💥 💥💥💥💥💥   esp32s3/sdkconfig.changes   💥💥💥💥💥 💥💥💥💥💥
+#
 # default:
 CONFIG_IDF_EXPERIMENTAL_FEATURES=y
 # ——————————————————————————————————————————————————————————————————————————————

@@ -1,3 +1,5 @@
+# 💥💥💥💥💥 💥💥💥💥💥   esp32p4_es/sdkconfig.changes   💥💥💥💥💥 💥💥💥💥💥
+#
 # default:
 CONFIG_IDF_EXPERIMENTAL_FEATURES=y
 CONFIG_ESP32P4_SELECTS_REV_LESS_V3=y
