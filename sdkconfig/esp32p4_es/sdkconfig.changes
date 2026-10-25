@@ -98,7 +98,7 @@ CONFIG_LCD_RGB_RESTART_IN_VSYNC=y
 #
 # ESP System Settings
 #
-CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_400=y
+CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_360=y
 # ——————————————————————————————————————————————————————————————————————————————
 #
 # FAT Filesystem support
