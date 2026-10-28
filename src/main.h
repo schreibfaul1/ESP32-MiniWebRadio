@@ -306,7 +306,7 @@ stationManagement        staMgnt(&s_cur_station);
 
 struct repeat {
     uint32_t next_attempt = 0;
-    bool repeats_yet = false;
+    bool     repeats_yet = false;
 
     void reset() { *this = repeat{}; }
 } s_repeat;
@@ -659,12 +659,12 @@ void ui_output44KHz() {
         printfln(s_tag.terminal, "normal output {} Hz", audio.getSampleRate());
     }
 }
-void ui_btProtocol() {
+void ui_kcxProtocol() {
     bt_emitter.list_protokol();
 }
-void ui_btCommand(ps_ptr<char> cmd) {
+void ui_kcxCommand(ps_ptr<char> cmd) {
     bt_emitter.userCommand(cmd);
-    printfln(s_tag.terminal, "btstr: {}", cmd);
+    printfln(s_tag.terminal, "kcx_cmd: {}", cmd);
 }
 void ui_meteoRequest() {
     s_f_update_meteo_data = true;
@@ -725,6 +725,18 @@ void ui_kernig() {
     printfln(s_tag.terminal, "kernig {}, {}", k1, k2);
 }
 
+void ui_btSource(ps_ptr<char> name) {
+    if (name.strlen() == 0) {
+        audio.settings.BT_SOURCE = false;
+        audio.settings.BT_DEV_NANE = "";
+        printfln(s_tag.terminal, "bt_source off");
+    } else {
+        audio.settings.BT_SOURCE = true;
+        audio.settings.BT_DEV_NANE = name;
+        printfln(s_tag.terminal, "bt_source on, dev name: {}", name);
+    }
+}
+
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void user_input(ps_ptr<char> input) {
 
@@ -745,8 +757,8 @@ void user_input(ps_ptr<char> input) {
     if (input == "sem") ui_setMute();                                              // set mute
     if (input == "o48") ui_output48KHz();                                          // output48KHz
     if (input == "o44") ui_output44KHz();                                          // output44KHz
-    if (input == "btp") ui_btProtocol();                                           // blurtooth kcx protocol
-    if (input.starts_with("btcmd")) ui_btCommand(input.substr(6));                 // bluetooth command, send to bt emitter e.g. btstr:AT+
+    if (input == "btp") ui_kcxProtocol();                                          // blurtooth kcx protocol
+    if (input.starts_with("kcxcmd")) ui_kcxCommand(input.substr(7));               // bluetooth command, send to bt emitter e.g. btstr:AT+
     if (input == "meteor") ui_meteoRequest();                                      // open meteo update request
     if (input == "meteop") ui_meteoProtocol();                                     // open meteo update protocol
     if (input == "tsp") ui_timeSpeech();                                           // toogle time speech
@@ -758,6 +770,8 @@ void user_input(ps_ptr<char> input) {
     if (input == "gibs") ui_get_inbuffStatus();                                    //  // get inbuff status
     if (input == "ir") ui_isRunning();                                             // is running?
     if (input.starts_with("vfs")) ui_volFadingSpeed(input.substr(3).to_float());   // volume fading speed
-    if (input == "lif") ui_listFonts();
-    if (input == "kern") ui_kernig(); // list all loaded fonts
+    if (input == "lif") ui_listFonts();                                            // list all loaded fonts
+    if (input == "kern") ui_kernig();                                              // shows the space between charavters "AV"
+    if (input.starts_with("bt_on")) ui_btSource(input.substr(5));                  // bluetooth on + devName
+    if (input == "bt_off") ui_btSource("");                                        // bt sourve off
 }
