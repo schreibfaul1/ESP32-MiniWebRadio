@@ -3,48 +3,41 @@
 
 #include "Arduino.h"
 #ifdef CONFIG_IDF_TARGET_ESP32S3
-#include "tft_rgb.h"
+    #include "tft_rgb.h"
 
-#define __malloc_heap_psram(size) heap_caps_malloc_prefer(size, 2, MALLOC_CAP_DEFAULT | MALLOC_CAP_SPIRAM, MALLOC_CAP_DEFAULT | MALLOC_CAP_INTERNAL)
+    #define __malloc_heap_psram(size) heap_caps_malloc_prefer(size, 2, MALLOC_CAP_DEFAULT | MALLOC_CAP_SPIRAM, MALLOC_CAP_DEFAULT | MALLOC_CAP_INTERNAL)
 
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 TFT_RGB::TFT_RGB() { // Constructor
     m_panel = NULL;
     m_h_res = 0;
     m_v_res = 0;
     m_framebuffer[0] = NULL;
     m_framebuffer[1] = NULL;
-    m_vsync_semaphore = xSemaphoreCreateBinary();
-    m_vsyncCounter = 0;
-    xSemaphoreGive(m_vsync_semaphore);
 }
-void TFT_RGB::loop(){
-    if(!m_refresh) handle_vsync_event(m_panel, nullptr);
+void TFT_RGB::loop() {
+    if (!m_refresh) handle_vsync_event(m_panel, nullptr);
     GIF_loop();
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-bool TFT_RGB::on_vsync_event(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *edata, void *user_ctx) { // static callback function
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+bool IRAM_ATTR TFT_RGB::on_vsync_event(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t* edata, void* user_ctx) { // static callback function
     if (user_ctx) {
         TFT_RGB* instance = static_cast<TFT_RGB*>(user_ctx);
         return instance->handle_vsync_event(panel, edata);
     }
     return false;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-bool TFT_RGB::handle_vsync_event(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *edata) {
- //   if (xSemaphoreTake(m_vsync_semaphore, 0) == pdTRUE) {
-        int res = esp_lcd_rgb_panel_refresh(m_panel);
- //       xSemaphoreGive(m_vsync_semaphore);
-        if(res == ESP_OK){
-            m_refresh = true;
-            m_vsyncCounter++;
-            return true;
-        }
- //   }
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+bool IRAM_ATTR TFT_RGB::handle_vsync_event(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t* edata) {
+    int res = esp_lcd_rgb_panel_refresh(m_panel);
+    if (res == ESP_OK) {
+        m_refresh = true;
+        return true;
+    }
     m_refresh = false;
     return false;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_RGB::begin(const Pins& newPins, const Timing& newTiming) {
 
     m_pins = newPins;
@@ -79,11 +72,9 @@ void TFT_RGB::begin(const Pins& newPins, const Timing& newTiming) {
     panel_config.pclk_gpio_num = (gpio_num_t)m_pins.pclk;
     panel_config.disp_gpio_num = (gpio_num_t)m_pins.bl;
 
-    int8_t pinArr[16] = {               // Daten-Pins für RGB565
-        m_pins.b0, m_pins.b1, m_pins.b2, m_pins.b3, m_pins.b4,
-        m_pins.g0, m_pins.g1, m_pins.g2, m_pins.g3, m_pins.g4, m_pins.g5,
-        m_pins.r0, m_pins.r1, m_pins.r2, m_pins.r3, m_pins.r4
-    };
+    int8_t pinArr[16] = {// Daten-Pins für RGB565
+                         m_pins.b0, m_pins.b1, m_pins.b2, m_pins.b3, m_pins.b4, m_pins.g0, m_pins.g1, m_pins.g2,
+                         m_pins.g3, m_pins.g4, m_pins.g5, m_pins.r0, m_pins.r1, m_pins.r2, m_pins.r3, m_pins.r4};
 
     for (int i = 0; i < 16; ++i) {
         //  log_i("i %i. pin %i", i, pinArr[i]);
@@ -99,10 +90,10 @@ void TFT_RGB::begin(const Pins& newPins, const Timing& newTiming) {
     ESP_ERROR_CHECK(esp_lcd_new_rgb_panel(&panel_config, &m_panel));
     ESP_ERROR_CHECK(esp_lcd_panel_reset(m_panel));
     ESP_ERROR_CHECK(esp_lcd_panel_init(m_panel));
-    if(tft_info) tft_info("Display initialisiert.");
+    if (tft_info) tft_info("Display initialisiert.");
 
     // Hintergrundbeleuchtung einschalten
-    if(m_pins.bl >= 0){
+    if (m_pins.bl >= 0) {
         gpio_set_direction((gpio_num_t)m_pins.bl, GPIO_MODE_OUTPUT);
         gpio_set_level((gpio_num_t)m_pins.bl, 1); // Hintergrundbeleuchtung aktivieren
     }
@@ -119,34 +110,36 @@ void TFT_RGB::begin(const Pins& newPins, const Timing& newTiming) {
     // log_w("m_h_res: %d, m_v_res: %d, m_framebuffer[1] %i", m_h_res, m_v_res, m_framebuffer[1]);
     memset(m_framebuffer[1], 0xFF, m_h_res * m_v_res * 2);
 
-    esp_lcd_rgb_panel_event_callbacks_t cbs = { // if not used, set to nullptr
+    esp_lcd_rgb_panel_event_callbacks_t cbs = {
+        // if not used, set to nullptr
         .on_color_trans_done = nullptr,
         .on_vsync = TFT_RGB::on_vsync_event,
-        .on_bounce_empty = nullptr,           /*!< Bounce buffer empty callback. */
-        .on_frame_buf_complete = nullptr,      /*!< A whole frame buffer was just sent to the LCD DMA */
+        .on_bounce_empty = nullptr,       /*!< Bounce buffer empty callback. */
+        .on_frame_buf_complete = nullptr, /*!< A whole frame buffer was just sent to the LCD DMA */
     };
     esp_lcd_rgb_panel_register_event_callbacks(m_panel, &cbs, this);
     esp_lcd_rgb_panel_refresh(m_panel);
     m_rowBuffer = (uint8_t*)ps_malloc(m_rowBufferSize);
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_RGB::reset() {
     ESP_ERROR_CHECK(esp_lcd_panel_reset(m_panel));
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-bool TFT_RGB::panelDrawBitmap(int16_t x0, int16_t y0, int16_t x1, int16_t y1, const void *bitmap) {
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+bool TFT_RGB::panelDrawBitmap(int16_t x0, int16_t y0, int16_t x1, int16_t y1, const void* bitmap) {
     bool res = false;
-    if(x0 >= x1 || y0 >= y1) {log_w("[%s:%i] x0 %i, y0 %i, x1 %i, y1 %i", __FILE__, __LINE__, x0, y0, x1, y1); return false;}
-    xSemaphoreTake(m_vsync_semaphore, 0.3 * configTICK_RATE_HZ);
+    if (x0 >= x1 || y0 >= y1) {
+        log_w("[%s:%i] x0 %i, y0 %i, x1 %i, y1 %i", __FILE__, __LINE__, x0, y0, x1, y1);
+        return false;
+    }
     res = esp_lcd_panel_draw_bitmap(m_panel, x0, y0, x1, y1, (const uint16_t*)bitmap);
-    xSemaphoreGive(m_vsync_semaphore);
     return res;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_RGB::setDisplayInversion(bool invert) {
     esp_lcd_panel_invert_color(m_panel, invert);
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_RGB::setRotation(uint8_t r) {
     if (r >= 4) return;
     m_rotation = r;

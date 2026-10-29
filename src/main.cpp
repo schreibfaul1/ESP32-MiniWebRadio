@@ -1554,7 +1554,6 @@ void set_tft_items() {
     vTaskDelay(100 / portTICK_PERIOD_MS); // wait for TFT to be ready
     getTFT().reset();
     vTaskDelay(100 / portTICK_PERIOD_MS); // wait for TFT to be ready
-    getTFT().clearVsyncCounter();         // clear the vsync counter and start them
 #elifdef TFT_MODE_DSI
     getTFT().begin(DSI_TIMING);
     getTFT().setRotation(TFT_ROTATION);

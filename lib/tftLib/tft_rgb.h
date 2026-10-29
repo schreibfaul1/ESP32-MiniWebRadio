@@ -37,8 +37,6 @@ class TFT_RGB : public TFT_Base {
   public:
     void     loop();
     void     reset();
-    uint64_t getVsyncCounter() { return m_vsyncCounter; }
-    void     clearVsyncCounter() { m_vsyncCounter = 0; }
     void     begin(const Pins& newPins, const Timing& newTiming);
     void     setDisplayInversion(bool i);
     void     setRotation(uint8_t r);
@@ -48,15 +46,12 @@ class TFT_RGB : public TFT_Base {
     Pins                   m_pins;
     Timing                 m_timing;
     esp_lcd_panel_handle_t m_panel;
-    SemaphoreHandle_t      m_vsync_semaphore;
     TaskHandle_t           m_refresh_task_handle = NULL;
     bool                   m_refresh = false;
 
   private:
     bool        panelDrawBitmap(int16_t x0, int16_t y0, int16_t x1, int16_t y1, const void* bitmap) override;
 
-  private:
-    uint64_t       m_vsyncCounter = 0;
 };
 
 #endif // CONFIG_IDF_TARGET_ESP32S3
