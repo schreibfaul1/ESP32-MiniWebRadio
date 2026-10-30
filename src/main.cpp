@@ -8,7 +8,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.1a16 - Okt 29, 2026                                                                                                               ";
+    Version 4.2.1a17 - Okt 29, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -581,6 +581,7 @@ void loop() {
     if (s_f_10sec == true) { // calls every 10 seconds
         s_f_10sec = false;
         updateSettings();
+        wifiMulti.run();
     }
 
     if (s_f_1min == true) { // calls every minute
@@ -1165,23 +1166,30 @@ bool connectToWiFi() {
     wifiMulti.setStrictMode(true); // Default is true.  Library will disconnect and forget currently connected AP if it's not in the AP list.
     printfln(s_tag.wifi_info, ANSI_ESC_GREEN "Connecting WiFi...");
 
-    wifiMulti.run();
-    int i = 0;
-    while (WiFi.status() != WL_CONNECTED) {
-        vTaskDelay(1000);
-        i++;
-        if (i > 10) break; // max 20s
+    // Configure before connecting to avoid timing issues during the handshake:
+    WiFi.setSleep(false); // disable modem power-save, reduces latency/jitter for audio streaming and web/websocket responsiveness
+    if (WIFI_TX_POWER >= 2 && WIFI_TX_POWER <= 21) {
+        WiFi.setTxPower((wifi_power_t)(WIFI_TX_POWER * 4));
     }
+
+    wifiMulti.run();
+
+    if (wifiMulti.run() != WL_CONNECTED) {
+        int i = 0;
+        while (WiFi.status() != WL_CONNECTED) {
+            vTaskDelay(1000);
+            i++;
+            if (i > 25) break; // Timeout to 25 seconds for multi-AP scans
+        }
+    }
+
     if (WiFi.status() != WL_CONNECTED) {
         printfln(s_tag.wifi_info, ANSI_ESC_RED "WiFi credentials are not correct");
         return false;
     }
     printfln(s_tag.wifi_info, ANSI_ESC_GREEN "WiFi connected");
+
     vTaskDelay(1000);
-    WiFi.setAutoReconnect(true);
-    WiFi.setSleep(false); // disable modem power-save, reduces latency/jitter for audio streaming and web/websocket responsiveness
-    if (WIFI_TX_POWER >= 2 && WIFI_TX_POWER <= 21) WiFi.setTxPower((wifi_power_t)(WIFI_TX_POWER * 4));
-    s_myIP = WiFi.localIP().toString().c_str();
 
     printfln(s_tag.wifi_info,
              "connected to " ANSI_ESC_YELLOW "{}" ANSI_ESC_RESET ", IP address is " ANSI_ESC_ORANGE "{}" ANSI_ESC_RESET ", Received Signal Strength " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET " dB",
