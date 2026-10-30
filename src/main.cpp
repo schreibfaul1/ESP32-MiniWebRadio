@@ -8,7 +8,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.1a17 - Okt 29, 2026                                                                                                               ";
+    Version 4.2.1a18 - Okt 30, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -1188,6 +1188,7 @@ bool connectToWiFi() {
         return false;
     }
     printfln(s_tag.wifi_info, ANSI_ESC_GREEN "WiFi connected");
+    s_myIP = WiFi.localIP().toString().c_str();
 
     vTaskDelay(1000);
 

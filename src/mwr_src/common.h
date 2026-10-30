@@ -374,6 +374,8 @@ bool get_esp_items(uint8_t* s_resetReason, bool* s_f_FFatFound) {
     } // ...  okay
     else if (chipModel.equals("ESP32-P4")) {
     } // ...  okay
+    else if (chipModel.equals("UNKNOWN")) { // instead ESP32-S31
+    } // ...  okay
     else if (chipModel.equals("ESP32-S31")) {
     } // ...  okay
     else {

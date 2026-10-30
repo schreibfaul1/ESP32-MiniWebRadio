@@ -179,9 +179,9 @@
         #define TP_IRQ              47
         #define TP_CS               48
         #define SD_MMC_D0           20
-        #define SD_MMC_D1           -1 // 21
-        #define SD_MMC_D2           -1 // 22
-        #define SD_MMC_D3           -1 // 23
+        #define SD_MMC_D1           21
+        #define SD_MMC_D2           22
+        #define SD_MMC_D3           23
         #define SD_MMC_CLK          24
         #define SD_MMC_CMD          25
         #define IR_PIN               4 // IR Receiver (if available)
