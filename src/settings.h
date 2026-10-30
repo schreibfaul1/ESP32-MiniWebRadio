@@ -173,32 +173,32 @@
 
     #if CONFIG_IDF_TARGET_ESP32S31
     // Digital I/O used
-        #define TFT_CS               8
-        #define TFT_DC              12
-        #define TFT_BL              10 // at -1 the brightness menu is not displayed
-        #define TP_IRQ              39
-        #define TP_CS               15
-        #define SD_MMC_D0           11
-        #define SD_MMC_D1           -1
-        #define SD_MMC_D2           -1
-        #define SD_MMC_D3           -1
-        #define SD_MMC_CLK          13
-        #define SD_MMC_CMD          14
-        #define IR_PIN              -1 // IR Receiver (if available)
-        #define TFT_MOSI            18 // TFT and TP (FSPI)
+        #define TFT_CS              44
+        #define TFT_DC              45
+        #define TFT_BL              46 // at -1 the brightness menu is not displayed
+        #define TP_IRQ              47
+        #define TP_CS               48
+        #define SD_MMC_D0           20
+        #define SD_MMC_D1           -1 // 21
+        #define SD_MMC_D2           -1 // 22
+        #define SD_MMC_D3           -1 // 23
+        #define SD_MMC_CLK          24
+        #define SD_MMC_CMD          25
+        #define IR_PIN               4 // IR Receiver (if available)
+        #define TFT_MOSI             1 // TFT and TP (FSPI)
         #define TFT_MISO             2 // TFT and TP (FSPI)
-        #define TFT_SCK             17 // TFT and TP (FSPI)
-        #define I2S_DOUT             9
-        #define I2S_BCLK             3
-        #define I2S_LRC              1
-        #define I2S_MCLK             0
+        #define TFT_SCK              3 // TFT and TP (FSPI)
+        #define I2S_DOUT            56 // ES8311
+        #define I2S_BCLK            53 // ES8311
+        #define I2S_LRC             55 // ES8311
+        #define I2S_MCLK            52 // ES8311
         #define BT_EMITTER_RX       -1 // not used, has internal BT-HW
         #define BT_EMITTER_TX       -1 // not used, has internal BT-HW
         #define BT_EMITTER_MODE     -1 // not used, has internal BT-HW
         #define BT_EMITTER_CONNECT  -1 // not used, has internal BT-HW
-        #define I2C_SDA             -1 // I2C, dala line for capacitive touchpadand and light sensor (-1 if not available)
-        #define I2C_SCL             -1 // I2C, clock line for capacitive touchpadand and light sensor (-1 if not available)
-        #define AMP_ENABLED         -1 // onboard amplifier (-1 if not available)
+        #define I2C_SDA             51 // I2C, dala line for capacitive touchpadand and light sensor (-1 if not available)
+        #define I2C_SCL             50 // I2C, clock line for capacitive touchpadand and light sensor (-1 if not available)
+        #define AMP_ENABLED         57 // onboard amplifier (-1 if not available)
     #endif
 
     #if CONFIG_IDF_TARGET_ESP32P4
