@@ -10,8 +10,10 @@ logs
 managed_components
 dependencies.lock
 sdkconfig.esp32s3
-sdkconfig.esp32p4
-sdkconfig.esp32p4_es
 sdkconfig.esp32s3_OTA
+sdkconfig.esp32s31
+sdkconfig.esp32s31_OTA
+sdkconfig.esp32p4
 sdkconfig.esp32p4_OTA
+sdkconfig.esp32p4_es
 sdkconfig.esp32p4_es_OTA
