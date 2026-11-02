@@ -745,7 +745,7 @@ void user_input(ps_ptr<char> input) {
     if (input == "sem") ui_setMute();                                              // set mute
     if (input == "o48") ui_output48KHz();                                          // output48KHz
     if (input == "o44") ui_output44KHz();                                          // output44KHz
-    if (input == "btp") ui_btProtocol();                                           // blurtooth kcx protocol
+    if (input == "btp") ui_btProtocol();                                           // bluetooth kcx protocol
     if (input.starts_with("btcmd")) ui_btCommand(input.substr(6));                 // bluetooth command, send to bt emitter e.g. btstr:AT+
     if (input == "meteor") ui_meteoRequest();                                      // open meteo update request
     if (input == "meteop") ui_meteoProtocol();                                     // open meteo update protocol
@@ -755,7 +755,7 @@ void user_input(ps_ptr<char> input) {
     if (input == "stops") ui_stopSong();                                           // stop song
     if (input == "starts") ui_start_song();                                        // start song
     if (input == "gbr") ui_get_bitRate();                                          // get bitrate
-    if (input == "gibs") ui_get_inbuffStatus();                                    //  // get inbuff status
+    if (input == "gibs") ui_get_inbuffStatus();                                    // get inbuff status
     if (input == "ir") ui_isRunning();                                             // is running?
     if (input.starts_with("vfs")) ui_volFadingSpeed(input.substr(3).to_float());   // volume fading speed
     if (input == "lif") ui_listFonts();

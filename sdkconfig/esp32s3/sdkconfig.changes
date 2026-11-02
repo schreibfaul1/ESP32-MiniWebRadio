@@ -135,3 +135,4 @@ CONFIG_LOG_MAXIMUM_EQUALS_DEFAULT=y
 # Format
 #
 CONFIG_LOG_COLORS=y
+# ——————————————————————————————————————————————————————————————————————————————

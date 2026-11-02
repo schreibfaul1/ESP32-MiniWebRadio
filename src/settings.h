@@ -1,5 +1,6 @@
 #pragma once
 #include "Arduino.h"
+#undef I2S_DOUT
 #include "tft_structures.h"
 
 //———————————— predifined displays —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -132,7 +133,7 @@
         #define AMP_EN_INVERSION     0 // (0) HIGH - amp is enabled, (1) LOW - amp is enabled
     #endif
     #if (SPI_DISPLAY == 3)
-        #define TFT_FREQUENCY 40000000 // only SPI displays, 80000000, 40000000, 27000000, 20000000, 10000000
+        #define TFT_FREQUENCY 80000000 // only SPI displays, 80000000, 40000000, 27000000, 20000000, 10000000
         #define TFT_CONTROLLER       5 // (5)SPI-ILI9488 or ST7796[480x320]
         #define TFT_ROTATION         0 // (0) none, (1) 90°CW, (2) 180°CW, (3) 270°CW
         #define TP_CONTROLLER        8 // FT6x63
@@ -196,8 +197,8 @@
         #define BT_EMITTER_TX       -1 // not used, has internal BT-HW
         #define BT_EMITTER_MODE     -1 // not used, has internal BT-HW
         #define BT_EMITTER_CONNECT  -1 // not used, has internal BT-HW
-        #define I2C_SDA             51 // I2C, dala line for capacitive touchpadand and light sensor (-1 if not available)
-        #define I2C_SCL             50 // I2C, clock line for capacitive touchpadand and light sensor (-1 if not available)
+        #define I2C_SDA             36 // 51 // I2C, dala line for capacitive touchpadand and light sensor (-1 if not available)
+        #define I2C_SCL             37 // 50 // I2C, clock line for capacitive touchpadand and light sensor (-1 if not available)
         #define AMP_ENABLED         57 // onboard amplifier (-1 if not available)
     #endif
 
