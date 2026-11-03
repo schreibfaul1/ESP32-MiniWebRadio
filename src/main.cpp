@@ -129,6 +129,8 @@ void setup() {
 
     audio.settings.VU_LEVEL = true;
     audio.settings.SPECTRUM = true;
+    audio.settings.BT_DEV_NANE = " Pebble V3";
+    audio.settings.BT_SOURCE = true;
     audio.setAudioTaskCore(AUDIOTASK_CORE);
     audio.setConnectionTimeout(CONN_TIMEOUT, CONN_TIMEOUT_SSL);
     audio.setVolumeSteps(s_volume.volumeSteps);
@@ -2535,6 +2537,10 @@ void my_audio_info(Audio::msg_t m) {
                 //    PROFILE_SCOPE_N(1000);
                 spectrum_RA.update(m.vec1, m.vec2);
             }
+            break;
+
+        case Audio::evt_bt:
+            printfln(s_tag.audio_info, "bt_source: " ANSI_ESC_GREEN "{}", msg);
             break;
 
         case Audio::evt_log: printfln(m.s, "{}", msg); break;

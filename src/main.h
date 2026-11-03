@@ -306,7 +306,7 @@ stationManagement        staMgnt(&s_cur_station);
 
 struct repeat {
     uint32_t next_attempt = 0;
-    bool repeats_yet = false;
+    bool     repeats_yet = false;
 
     void reset() { *this = repeat{}; }
 } s_repeat;
@@ -725,6 +725,13 @@ void ui_kernig() {
     printfln(s_tag.terminal, "kernig {}, {}", k1, k2);
 }
 
+void ui_btoo() {
+    bool b = audio.settings.BT_SOURCE;
+    b = !b;
+    audio.settings.BT_SOURCE = b;
+    b? printfln(s_tag.terminal, "bt_source off"): printfln(s_tag.terminal, "bt source on");
+}
+
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void user_input(ps_ptr<char> input) {
 
@@ -745,8 +752,8 @@ void user_input(ps_ptr<char> input) {
     if (input == "sem") ui_setMute();                                              // set mute
     if (input == "o48") ui_output48KHz();                                          // output48KHz
     if (input == "o44") ui_output44KHz();                                          // output44KHz
-    if (input == "btp") ui_btProtocol();                                           // bluetooth kcx protocol
-    if (input.starts_with("btcmd")) ui_btCommand(input.substr(6));                 // bluetooth command, send to bt emitter e.g. btstr:AT+
+    if (input == "kcxp") ui_btProtocol();                                          // bluetooth kcx protocol
+    if (input.starts_with("kcxcmd")) ui_btCommand(input.substr(7));                // bluetooth command, send to bt emitter e.g. btstr:AT+
     if (input == "meteor") ui_meteoRequest();                                      // open meteo update request
     if (input == "meteop") ui_meteoProtocol();                                     // open meteo update protocol
     if (input == "tsp") ui_timeSpeech();                                           // toogle time speech
@@ -758,6 +765,7 @@ void user_input(ps_ptr<char> input) {
     if (input == "gibs") ui_get_inbuffStatus();                                    // get inbuff status
     if (input == "ir") ui_isRunning();                                             // is running?
     if (input.starts_with("vfs")) ui_volFadingSpeed(input.substr(3).to_float());   // volume fading speed
-    if (input == "lif") ui_listFonts();
-    if (input == "kern") ui_kernig(); // list all loaded fonts
+    if (input == "lif") ui_listFonts();                                            // list all loaded fonts
+    if (input == "kern") ui_kernig();                                              //
+    if (input == "btoo") ui_btoo();                                                // bt classic source on/off
 }
