@@ -57,7 +57,7 @@ void setup() {
     esp_log_set_vprintf(log_redirect_handler);
     if (!get_esp_items(&s_resetReason, &s_f_FFatFound)) return;
 
-    s_f_brightnessIsChangeable = setupBacklight(TFT_BL, 512);
+    s_f_brightnessIsChangeable = setupBacklight(TFT_BL, 100);
     if (!s_f_brightnessIsChangeable) btn_SE_bright.set_active(false);
     setTFTbrightness(s_brightness);
 
