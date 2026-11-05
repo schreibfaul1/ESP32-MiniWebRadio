@@ -3514,13 +3514,13 @@ function appendToTerminal(text) {
 
                         <a class="settings-action" href="#" onclick="showTab9(); return false;">
                             <img src="SD/png/Button_BT_Blue.png"
-                                 alt="KCX_BT Settings"
-                                 title="KCX_BT_Emitter Settings"
+                                 alt="KCX BT Settings"
+                                 title="KCX BT Emitter Settings"
                                  onmousedown="this.src='SD/png/Button_BT_Yellow.png'"
                                  ontouchstart="this.src='SD/png/Button_BT_Yellow.png'"
                                  onmouseup="this.src='SD/png/Button_BT_Blue.png'"
                                  ontouchend="this.src='SD/png/Button_BT_Blue.png'">
-                            <span>KCX_BT_Emitter Settings</span>
+                            <span></span>
                         </a>
                     </div>
 
