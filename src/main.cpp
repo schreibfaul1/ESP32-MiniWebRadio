@@ -8,7 +8,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.1a18 - Okt 30, 2026                                                                                                               ";
+    Version 4.2.1b - Nov 05, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -129,8 +129,8 @@ void setup() {
 
     audio.settings.VU_LEVEL = true;
     audio.settings.SPECTRUM = true;
-    audio.settings.BT_DEV_NANE = " Pebble V3";
-    audio.settings.BT_SOURCE = true;
+    audio.settings.BT_DEV_NANE = s_BTName;
+    audio.settings.BT_SOURCE = s_f_bt_power;
     audio.setAudioTaskCore(AUDIOTASK_CORE);
     audio.setConnectionTimeout(CONN_TIMEOUT, CONN_TIMEOUT_SSL);
     audio.setVolumeSteps(s_volume.volumeSteps);
@@ -686,9 +686,11 @@ boolean defaultsettings() {
     s_volume.volumeSteps = parseJson("\"volumeSteps\":").to_uint8();
     s_volume.ringVolume = parseJson("\"ringVolume\":").to_uint8();
     s_volume.volumeAfterAlarm = parseJson("\"volumeAfterAlarm\":").to_uint8();
-    s_bt_emitter.volume = parseJson("\"BTvolume\":").to_uint8();
-    s_bt_emitter.enabled = parseJson("\"BTpower\":").equals("true") ? true : false;
-    s_bt_emitter.mode = parseJson("\"BTmode\":").equals("TX") ? "TX" : "RX";
+    s_bt_emitter.volume = parseJson("\"KCX_BTvolume\":").to_uint8();
+    s_bt_emitter.enabled = parseJson("\"KCX_BTpower\":").equals("true") ? true : false;
+    s_bt_emitter.mode = parseJson("\"KCX_BTmode\":").equals("TX") ? "TX" : "RX";
+    s_BTName = parseJson("\"BT_Sink_Name\":");
+    s_f_bt_power = parseJson("\"BT_Power\":").equals("true") ? true : false;
     s_alarmtime[0] = computeMinuteOfTheDay(parseJson("\"alarmtime_sun\":"));
     s_alarmtime[1] = computeMinuteOfTheDay(parseJson("\"alarmtime_mon\":"));
     s_alarmtime[2] = computeMinuteOfTheDay(parseJson("\"alarmtime_tue\":"));
@@ -751,9 +753,11 @@ void updateSettings() {
     jO.appendf(",\n  \"volumeSteps\":{}", s_volume.volumeSteps);
     jO.appendf(",\n  \"ringVolume\":{}", s_volume.ringVolume);
     jO.appendf(",\n  \"volumeAfterAlarm\":{}", s_volume.volumeAfterAlarm);
-    jO.appendf(",\n  \"BTvolume\":{}", s_bt_emitter.volume);
-    jO.appendf(",\n  \"BTpower\":\"{}\"", s_bt_emitter.enabled);
-    jO.appendf(",\n  \"BTmode\":\"{}\"", bt_emitter.getMode());
+    jO.appendf(",\n  \"KCX_BTvolume\":{}", s_bt_emitter.volume);
+    jO.appendf(",\n  \"KCX_BTpower\":\"{}\"", s_bt_emitter.enabled);
+    jO.appendf(",\n  \"KCX_BTmode\":\"{}\"", bt_emitter.getMode());
+    jO.appendf(",\n  \"BT_Sink_Name\":\"{}\"", s_BTName);
+    jO.appendf(",\n  \"BT_Power\":\"{}\"", s_f_bt_power);
     jO.appendf(",\n  \"alarmtime_sun\":\"{:02}:{:02}\"", s_alarmtime[0] / 60, s_alarmtime[0] % 60);
     jO.appendf(",\n  \"alarmtime_mon\":\"{:02}:{:02}\"", s_alarmtime[1] / 60, s_alarmtime[1] % 60);
     jO.appendf(",\n  \"alarmtime_tue\":\"{:02}:{:02}\"", s_alarmtime[2] / 60, s_alarmtime[2] % 60);
@@ -3537,6 +3541,11 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
     CMD_EQUALS("KCX_BT_upvolume"){      bt_emitter.upvolume();   return;}
     CMD_EQUALS("KCX_BT_getPower"){      bt_emitter.get_power_state() ? webSrv.send("KCX_BT_power=", "1") : webSrv.send("KCX_BT_power=", "0"); return;}
     CMD_EQUALS("KCX_BT_power"){         s_bt_emitter.enabled = !s_bt_emitter.enabled ; return;}
+
+    CMD_EQUALS("set_bt_power"){         if(param == "true") s_f_bt_power = true; else s_f_bt_power = false; audio.settings.BT_SOURCE = s_f_bt_power; return;}
+    CMD_EQUALS("get_bt_power"){         s_BTName ? webSrv.send("BT_power=", "1") : webSrv.send("BT_power=", "0"); return;}
+    CMD_EQUALS("set_BTname"){           s_BTName = param; audio.settings.BT_DEV_NANE=s_BTName; printfln(s_tag.webserver, "BT dev name is: " ANSI_ESC_CYAN "'{}'", s_BTName); return;}
+    CMD_EQUALS("get_BTname"){           webSrv.send("BTname=", s_BTName); return;}
 
     CMD_EQUALS("hardcopy"){             printfln(s_tag.webserver, "Webpage: " ANSI_ESC_YELLOW "create a display hardcopy"); make_hardcopy_on_sd(); webSrv.send("hardcopy=", "/hardcopy.bmp"); return;}
 

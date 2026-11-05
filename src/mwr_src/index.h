@@ -448,6 +448,284 @@ const char index_html[] PROGMEM = R"=====(
             display: none; /* Anfangs versteckt */
             z-index: 1000; /* Sicherstellen, dass es über anderen Elementen liegt */
         }
+
+        /* ---------- Settings layout ---------- */
+        #tab-content6 {
+            --settings-text: #315762;
+            --settings-border: rgba(49, 87, 98, 0.30);
+            --settings-card: rgba(255, 255, 255, 0.22);
+            --settings-card-hover: rgba(255, 255, 255, 0.30);
+            --settings-input-bg: #ffffff;
+            --settings-radius: 10px;
+
+            box-sizing: border-box;
+            width: 100%;
+            padding: 16px;
+            color: var(--settings-text);
+            font-size: 16px;
+            line-height: 1.4;
+        }
+
+        #tab-content6 *,
+        #tab-content6 *::before,
+        #tab-content6 *::after {
+            box-sizing: border-box;
+        }
+
+        #tab-content6 .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+            width: calc(100% - 32px);
+            max-width: 1200px;
+            margin-left: 0;
+            margin-right: 32px;
+            align-items: start;
+        }
+
+        #tab-content6 .settings-card {
+            min-width: 0;
+            padding: 18px;
+            border: 1px solid var(--settings-border);
+            border-radius: var(--settings-radius);
+            background: var(--settings-card);
+            box-shadow: 0 2px 7px rgba(30, 65, 75, 0.07);
+        }
+
+        #tab-content6 .settings-card h3 {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            margin: 0 0 16px;
+            padding: 0 0 10px;
+            border-bottom: 1px solid var(--settings-border);
+            color: inherit;
+            font-size: 1.08rem;
+            font-weight: 700;
+        }
+
+        #tab-content6 .settings-card h3 .icon {
+            font-size: 1.15em;
+        }
+
+        #tab-content6 .settings-card-wide {
+            grid-column: 1 / -1;
+        }
+
+        #tab-content6 .settings-stack {
+            display: grid;
+            gap: 14px;
+        }
+
+        #tab-content6 .settings-divider {
+            height: 1px;
+            margin: 2px 0;
+            border: 0;
+            background: var(--settings-border);
+        }
+
+        #tab-content6 .settings-row {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px 12px;
+            min-height: 34px;
+        }
+
+        #tab-content6 .settings-row > label:first-child {
+            flex: 0 0 145px;
+            max-width: 100%;
+        }
+
+        #tab-content6 .settings-row .settings-control {
+            flex: 1 1 180px;
+            min-width: 0;
+        }
+
+        #tab-content6 label {
+            color: inherit;
+        }
+
+        #tab-content6 input[type="text"],
+        #tab-content6 select {
+            min-height: 34px;
+            max-width: 100%;
+            padding: 5px 9px;
+            border: 1px solid rgba(49, 87, 98, 0.35);
+            border-radius: 6px;
+            background: var(--settings-input-bg);
+            color: #222;
+            font: inherit;
+        }
+
+        #tab-content6 input[type="text"]:focus,
+        #tab-content6 select:focus,
+        #tab-content6 button:focus-visible {
+            outline: 2px solid rgba(0, 105, 180, 0.65);
+            outline-offset: 2px;
+        }
+
+        #tab-content6 input[type="checkbox"],
+        #tab-content6 input[type="radio"] {
+            accent-color: #087fd1;
+            cursor: pointer;
+        }
+
+        #tab-content6 input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin: 0 3px;
+            vertical-align: middle;
+        }
+
+        #tab-content6 input[type="radio"] {
+            width: 16px;
+            height: 16px;
+            margin: 0 7px 0 2px;
+            vertical-align: -2px;
+        }
+
+        #tab-content6 button {
+            min-height: 32px;
+            padding: 5px 12px;
+            border: 1px solid rgba(49, 87, 98, 0.4);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.8);
+            color: var(--settings-text);
+            font: inherit;
+            cursor: pointer;
+            transition: background 120ms ease, box-shadow 120ms ease;
+        }
+
+        #tab-content6 button:hover {
+            background: #ffffff;
+            box-shadow: 0 2px 5px rgba(30, 65, 75, 0.12);
+        }
+
+        #tab-content6 .settings-short-select {
+            width: 76px;
+            flex: 0 0 76px;
+        }
+
+        #tab-content6 .settings-inline-value {
+            display: inline-block;
+            min-width: 20px;
+            margin-left: 4px;
+            font-weight: 600;
+        }
+
+        #tab-content6 .settings-action-list {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        #tab-content6 .settings-action {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+            padding: 8px;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            color: inherit;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background 120ms ease, border-color 120ms ease;
+        }
+
+        #tab-content6 .settings-action:hover {
+            border-color: var(--settings-border);
+            background: var(--settings-card-hover);
+        }
+
+        #tab-content6 .settings-action img {
+            display: block;
+            flex: 0 0 64px;
+            width: 64px;
+            height: 64px;
+            object-fit: contain;
+        }
+
+        #tab-content6 .settings-action span {
+            font-size: 1.05rem;
+            font-weight: 700;
+        }
+
+        #tab-content6 .settings-radio-list {
+            display: grid;
+            gap: 7px;
+        }
+
+        #tab-content6 .settings-radio-list label {
+            cursor: pointer;
+        }
+
+        #tab-content6 .settings-weather-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.2fr) minmax(260px, 0.8fr);
+            gap: 24px;
+            align-items: start;
+        }
+
+        #tab-content6 .settings-weather-units {
+            display: grid;
+            gap: 10px;
+            padding-left: 20px;
+            border-left: 1px solid var(--settings-border);
+        }
+
+        #tab-content6 .settings-weather-units .settings-row > label:first-child {
+            flex-basis: 155px;
+        }
+
+        #tab-content6 #TimeZoneSelect {
+            width: min(100%, 300px);
+        }
+
+        #tab-content6 #CitySelect {
+            width: min(100%, 300px);
+        }
+
+        #tab-content6 #BTname {
+            width: min(100%, 220px);
+        }
+
+        #tab-content6 #CityLong,
+        #tab-content6 #CityLat {
+            width: 110px;
+        }
+
+        #tab-content6 #timeSpeechLang {
+            width: 76px;
+        }
+
+        @media (max-width: 760px) {
+            #tab-content6 .settings-grid {
+                width: 100%;
+                margin: 0 auto;
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
+
+        @media (max-width: 420px) {
+            #tab-content6 .settings-card {
+                padding: 14px;
+            }
+
+            #tab-content6 .settings-action-list {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            #tab-content6 .settings-row > label:first-child {
+                flex-basis: 100%;
+            }
+
+            #tab-content6 .settings-row .settings-control {
+                flex-basis: 100%;
+            }
+        }
+
     </style>
 </head>
 
@@ -778,6 +1056,13 @@ function connect() {
                                             bt_RxTx = 'RX'
                                         }
                                         break;
+            case "BT_power":            console.log("BT_power=" + val)
+                                        if(val == '0') document.getElementById('chk_bt').checked = false;
+                                        if(val == '1') document.getElementById('chk_bt').checked = true;
+                                        break;
+            case "BTname":              console.log("BTnane=" + val)
+                                        document.getElementById('BTname').value = val;
+                                        break
             case "timezones":           console.log(msg, val)
                                         fillTimeZoneSelect(val)
                                         break;
@@ -1004,6 +1289,8 @@ function showTab6 () {
     socket.send("get_temperature_unit")
     socket.send("get_pressure_unit")
     socket.send("get_wind_speed_unit")
+    socket.send("get_bt_power")
+    socket.send("get_BTname")
 }
 
 function showTab7 () {
@@ -2249,6 +2536,10 @@ function setOwnLocation() {
     socket.send("set_location=Own location" + "&" + lat + "|" + long);
 }
 
+function set_BTname(){
+    var name = document.getElementById("BTname").value;
+    socket.send("set_BTname=" + name);
+}
 
 function loadRingVolume(){
     const selectRingVolume = document.getElementById('selRingVolume');
@@ -3201,148 +3492,216 @@ function appendToTerminal(text) {
         </div>
     </div>
 <!--===============================================================================================================================================-->
-    <div id="tab-content6">   <!-- Settings -->
-        <table style="width: 100%;">
-            <tr>
-                <td style="padding: 10px; margin-right: 0px; vertical-align: top; border-right: 3px double #999999; min-width: 365px;">
+    <div id="tab-content6">
+        <div class="settings-grid">
 
-                    <div style="display: flex;">
-                        <div style="width=64px; height=64px;">
-                            <img src="SD/png/Remote_Control_Blue.png" alt="IR Settings" title="Remote Control Settings" onmousedown="this.src='SD/png/Remote_Control_Yellow.png'" ontouchstart="this.src='SD/png/Remote_Control_Yellow.png'" onmouseup="this.src='SD/png/Remote_Control_Blue.png'" ontouchend="this.src='SD/png/Remote_Control_Blue.png'" onclick="showTab8()">
-                        </div>
-                        <div style="font-size: 1.17em; font-weight: bold; padding-left: 10px;">
-                            <p> IR Settings </p>
-                        </div>
+            <!-- General settings -->
+            <section class="settings-card">
+                <h3><span class="icon">⚙</span> General settings</h3>
+
+                <div class="settings-stack">
+                    <div class="settings-action-list">
+                        <a class="settings-action" href="#" onclick="showTab8(); return false;">
+                            <img src="SD/png/Remote_Control_Blue.png"
+                                 alt="IR Settings"
+                                 title="Remote Control Settings"
+                                 onmousedown="this.src='SD/png/Remote_Control_Yellow.png'"
+                                 ontouchstart="this.src='SD/png/Remote_Control_Yellow.png'"
+                                 onmouseup="this.src='SD/png/Remote_Control_Blue.png'"
+                                 ontouchend="this.src='SD/png/Remote_Control_Blue.png'">
+                            <span>IR Settings</span>
+                        </a>
+
+                        <a class="settings-action" href="#" onclick="showTab9(); return false;">
+                            <img src="SD/png/Button_BT_Blue.png"
+                                 alt="KCX_BT Settings"
+                                 title="KCX_BT_Emitter Settings"
+                                 onmousedown="this.src='SD/png/Button_BT_Yellow.png'"
+                                 ontouchstart="this.src='SD/png/Button_BT_Yellow.png'"
+                                 onmouseup="this.src='SD/png/Button_BT_Blue.png'"
+                                 ontouchend="this.src='SD/png/Button_BT_Blue.png'">
+                            <span>KCX_BT_Emitter Settings</span>
+                        </a>
                     </div>
-                    <br>
-                    <div style="display: flex; padding-bottom: 20px; border-bottom: 3px double #999999;">
-                        <div style="width=64px; height=64px;">
-                            <img src="SD/png/Button_BT_Blue.png" alt="KCX_BT Settings" title="KCX_BT_Emitter Settings" onmousedown="this.src='SD/png/Button_BT_Yellow.png'" ontouchstart="this.src='SD/png/Button_BT_Yellow.png'" onmouseup="this.src='SD/png/Button_BT_Blue.png'" ontouchend="this.src='SD/png/Button_BT_Blue.png'" onclick="showTab9()">
-                        </div>
-                        <div style="font-size: 1.17em; font-weight: bold; padding-left: 10px;">
-                            <p> KCX_BT_Emitter Settings </p>
-                        </div>
+
+                    <hr class="settings-divider">
+
+                    <div class="settings-row">
+                        <label for="TimeZoneSelect"><strong>Timezone</strong></label>
+                        <select id="TimeZoneSelect" class="settings-control"
+                                onchange="setTimeZone(this)"></select>
                     </div>
-                    <div style="margin-top: 0px;  border-bottom: 3px double #999999;">
-                        <h3>
-                            Timezone
-                            <select class="boxstyle" onchange="setTimeZone(this)" id="TimeZoneSelect"></select>
-                        </h3>
+
+                    <hr class="settings-divider">
+
+                    <div class="settings-row">
+                        <label for="chk_timeSpeech">Time announcement on the hour</label>
+                        <input type="checkbox" id="chk_timeSpeech"
+                               onclick="socket.send('set_timeAnnouncement=' + document.getElementById('chk_timeSpeech').checked);">
+                        <select id="timeSpeechLang" name="timeSpeechLang"
+                                onchange="socket.send('set_timeSpeechLang=' + this.value)">
+                            <option value="fr">fr</option>
+                            <option value="en">en</option>
+                            <option value="ru">ru</option>
+                        </select>
                     </div>
+                </div>
+            </section>
+
+            <!-- Bluetooth settings -->
+            <section class="settings-card">
+                <h3><span class="icon">ᛒ</span> Bluetooth (ESP32-S31)</h3>
+
+                <div class="settings-stack">
+                    <div class="settings-row">
+                        <label for="chk_bt">BT Power</label>
+                        <input type="checkbox" id="chk_bt"
+                               onclick="socket.send('set_bt_power=' + document.getElementById('chk_bt').checked);">
+                    </div>
+
+                    <div class="settings-row">
+                        <label for="BTname">BT sink name</label>
+                        <input id="BTname" type="text" inputmode="text"
+                               class="settings-control"
+                               onchange="this.value=this.value.replace(',', '.');">
+                        <button id="btnBTnameOK" type="button" onclick="set_BTname();">OK</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Display and alarm -->
+            <section class="settings-card">
+                <h3><span class="icon">▣</span> Display &amp; alarm</h3>
+
+                <div class="settings-stack">
                     <div>
-                        <h3>
-                            Time announcement on the hour
-                            <input style="transform: scale(1.8); margin: 10px;" type="checkbox" id="chk_timeSpeech"
-                                    onclick="socket.send('set_timeAnnouncement=' + document.getElementById('chk_timeSpeech').checked);">
-                            <select class="boxstyle" onchange="socket.send('set_timeSpeechLang=' + this.value)" id="timeSpeechLang" name="timeSpeechLang">
-                                <option value="fr">fr</option>
-                                <option value="en">en</option>
-                                <option value="ru">ru</option>
-                            </select>
-                        </h3>
+                        <div class="settings-subtitle"><strong>Sleep mode</strong></div>
+                        <div class="settings-radio-list">
+                            <label for="sleepMode0">
+                                <input type="radio" id="sleepMode0" name="sleepMode"
+                                       value="display off"
+                                       onclick="socket.send('set_sleepMode=0');">
+                                Display off
+                            </label>
+                            <label for="sleepMode1">
+                                <input type="radio" id="sleepMode1" name="sleepMode"
+                                       value="show the time" checked
+                                       onclick="socket.send('set_sleepMode=1');">
+                                Show the time
+                            </label>
+                            <label for="sleepMode2">
+                                <input type="radio" id="sleepMode2" name="sleepMode"
+                                       value="weather clock"
+                                       onclick="socket.send('set_sleepMode=2');">
+                                Weather clock
+                            </label>
+                        </div>
                     </div>
-                    <div style="margin-top: 0px; border-bottom: 3px double #999999;">
-                        <div style="display: grid; grid-template-columns: 170px 60px; align-items: center; margin-bottom: 10px; font-size: 1.17em;">
-                            <label for="selTempUnit">Unit of temperature:</label>
+
+                    <hr class="settings-divider">
+
+                    <div>
+                        <div class="settings-subtitle"><strong>Alarm</strong></div>
+                        <div class="settings-stack">
+                            <div class="settings-row">
+                                <label for="selRingVolume">Ring Volume</label>
+                                <select id="selRingVolume" class="settings-short-select"
+                                        onchange="socket.send('set_ringVolume=' + this.value);"
+                                        title="This is the volume at which the ringtone sounds in the event of an alarm. A value of 0 skips the ringtone sequence and immediately turns on the radio.">
+                                </select>
+                                <span class="txtRingVolume settings-inline-value" id="txtRingVolume"></span>
+                            </div>
+
+                            <div class="settings-row">
+                                <label for="selVolumeAfterAlarm">Radio Volume After Alarm</label>
+                                <select id="selVolumeAfterAlarm" class="settings-short-select"
+                                        onchange="socket.send('set_volAfterAlarm=' + this.value);"
+                                        title="This is the volume at which the radio plays. This volume is maintained as long as it is not manually changed.">
+                                </select>
+                                <span class="txtVolumeAfterAlarm settings-inline-value" id="txtVolumeAfterAlarm"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Audio settings -->
+            <section class="settings-card">
+                <h3><span class="icon">♫</span> Audio</h3>
+
+                <div class="settings-row">
+                    <label for="selVolumeSteps">Volume steps</label>
+                    <select id="selVolumeSteps" class="settings-short-select"
+                            onchange="socket.send('set_volumeSteps=' + this.value);"
+                            title="Specifies the number of volume levels to choose from. 21 is the lowest value. A change adjusts all other volume values to the new default.">
+                    </select>
+                    <span class="settings-inline-value">Current: <span class="txtVolumeSteps" id="txtVolumeSteps"></span></span>
+                </div>
+            </section>
+
+            <!-- Weather settings -->
+            <section class="settings-card settings-card-wide">
+                <h3><span class="icon">☀</span> Weather</h3>
+
+                <div class="settings-weather-grid">
+                    <div class="settings-stack">
+                        <div class="settings-row">
+                            <label for="CitySelect">City</label>
+                            <select id="CitySelect" class="settings-control"
+                                    onchange="selectCity(this)"></select>
+                        </div>
+
+                        <div class="settings-row">
+                            <label for="CityLong">Longitude</label>
+                            <input id="CityLong" type="text" inputmode="decimal"
+                                   onchange="this.value=this.value.replace(',', '.');">
+                        </div>
+
+                        <div class="settings-row">
+                            <label for="CityLat">Latitude</label>
+                            <input id="CityLat" type="text" inputmode="decimal"
+                                   onchange="this.value=this.value.replace(',', '.');">
+                        </div>
+
+                        <div class="settings-row">
+                            <label></label>
+                            <button id="btnCityOK" type="button" onclick="setOwnLocation();">Apply location</button>
+                        </div>
+                    </div>
+
+                    <div class="settings-weather-units">
+                        <div class="settings-row">
+                            <label for="selTempUnit">Unit of temperature</label>
                             <select id="selTempUnit"
                                     onchange="socket.send('set_temperature_unit=' + this.value);">
                                 <option value="C">°C</option>
                                 <option value="F">°F</option>
                             </select>
                         </div>
-                        <div style="display: grid; grid-template-columns: 170px 60px; align-items: center; margin-bottom: 10px; font-size: 1.17em;">
-                            <label for="selPressUnit">Unit of pressure:</label>
+
+                        <div class="settings-row">
+                            <label for="selPressUnit">Unit of pressure</label>
                             <select id="selPressUnit"
-                                onchange="socket.send('set_pressure_unit=' + this.value);">
+                                    onchange="socket.send('set_pressure_unit=' + this.value);">
                                 <option value="hPa">hPa</option>
                                 <option value="mmHg">mmHg</option>
                             </select>
                         </div>
-                        <div style="display: grid; grid-template-columns: 170px 60px; align-items: center; margin-bottom: 10px; font-size: 1.17em;">
-                            <label for="selWindUnit">Unit of wind speed:</label>
+
+                        <div class="settings-row">
+                            <label for="selWindUnit">Unit of wind speed</label>
                             <select id="selWindUnit"
-                                onchange="socket.send('set_wind_speed_unit=' + this.value);">
+                                    onchange="socket.send('set_wind_speed_unit=' + this.value);">
                                 <option value="km/h">km/h</option>
                                 <option value="m/s">m/s</option>
                                 <option value="bft">bft</option>
                             </select>
                         </div>
                     </div>
-                </td>
-                <td style="padding: 10px; min-width: 350px; margin-left: 0px;">
-                    <fieldset>
-                        <legend> sleep mode </legend>
-                        <div>
-                            <input type="radio" id="sleepMode0" name="sleepMode" value="display off" onclick="socket.send('set_sleepMode=0');">
-                            <label for="sleepMode0">display off</label>
-                        </div>
-                        <div>
-                            <input type="radio" id="sleepMode1" name="sleepMode" value="show the time" checked onclick="socket.send('set_sleepMode=1');">
-                            <label for="sleepMode1">show the time</label>
-                        </div>
-                        <div>
-                            <input type="radio" id="sleepMode2" name="sleepMode" value="display off" onclick="socket.send('set_sleepMode=2');">
-                            <label for="sleepMode0">weather clock</label>
-                        </div>
-                    </fieldset>
-                    <br>
-                    <fieldset>
-                        <legend> alarm </legend>
-                        <div>
-                            <div style="margin-bottom: 10px;">
-                                <select id="selRingVolume" style="width: 50px;" onchange="socket.send('set_ringVolume=' + this.value);"
-                                    title="This is the volume at which the ringtone sounds in the event of an alarm. A value of 0 skips the ringtone
-                                    sequence and immediately turns on the radio.">
-                                </select>
-                                <label for="selRingVolume">Ring Volume: </label>
-                                <span class="txtRingVolume" id="txtRingVolume">
-                                </span>
-                            </div>
-                            <div>
-                                <select id="selVolumeAfterAlarm" style="width: 50px;" onchange="socket.send('set_volAfterAlarm=' + this.value);"
-                                    title="This is the volume at which the radio plays. This volume is maintained as long as it is not manually changed.">
-                                </select>
-                                <label for="selVolumeAfterAlarm">Radio Volume After Alarm: </label>
-                                <span class="txtVolumeAfterAlarm" id="txtVolumeAfterAlarm"></span>
-                            </div>
-                        </div>
-                    </fieldset>
-                    <br>
-                    <fieldset>
-                        <legend> volume steps </legend>
-                        <div>
-                            <select id="selVolumeSteps" style="width: 50px;" onchange="socket.send('set_volumeSteps=' + this.value);"
-                                title= "Specifies the number of volume levels to choose from. 21 is the lowest value.
-                                A change adjusts all other volume values to the new default.">
-                            </select>
-                            <label for="selVolumeSteps">Current Volume Steps: </label>
-                            <span class="txtVolumeSteps" id="txtVolumeSteps"></span>
-                        </div>
-                    </fieldset>
-                    <br>
-                    <fieldset>
-                        <legend> location </legend>
-                        <div>
-                            <label for="CitySelect" style="display: inline-block; width: 45px;">City</label>
-                            <select id="CitySelect" class="boxstyle" onchange="selectCity(this)">
-                            </select>
-                        </div>
-                        <div style="margin-top: 10px;">
-                            <label for="CityLong" style="display: inline-block; width: 45px;">Long</label>
-                            <input id="CityLong" type="text" inputmode="decimal" style="width: 90px;" onchange="this.value=this.value.replace(',', '.');">
-                        </div>
-                        <div style="margin-top: 10px;">
-                            <label for="CityLat" style="display: inline-block; width: 45px;">Lat</label>
-                            <input id="CityLat" type="text" inputmode="decimal" style="width: 90px;" onchange="this.value=this.value.replace(',', '.');">
-                        </div>
-                        <div style="margin-top: 10px;">
-                            <label style="display: inline-block; width: 45px;"></label>
-                            <button id="btnCityOK" onclick="setOwnLocation()">OK</button>
-                        </div>
-                    </fieldset>
-                </td>
-            </tr>
-        </table>
+                </div>
+            </section>
+
+        </div>
     </div>
 <!--===============================================================================================================================================-->
     <div id="tab-content7">  <!-- Info / About -->

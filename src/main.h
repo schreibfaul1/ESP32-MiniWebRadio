@@ -212,6 +212,7 @@ bool s_f_sd_card_found = false;
 bool s_f_isWiFiConnected = false;
 bool s_f_ok_from_ir = false;
 bool s_f_otaRunning = false; // true while an OTA update is in progress, used to pause non-essential subsystems
+bool s_f_bt_power = false;   // ESP32-S31
 
 int8_t   s_state = NONE; // statemaschine
 int8_t   s_lastState = NONE;
@@ -281,6 +282,7 @@ ps_ptr<char> s_temperature_unit = "C";   // *C or °F
 ps_ptr<char> s_pressure_unit = "hPa";    // hPa or mmHg
 ps_ptr<char> s_wind_speed_unit = "km/h"; // km/h, m/s, bft
 ps_ptr<char> s_version;
+ps_ptr<char> s_BTName = "BT Sink";
 
 #include "mwr_src/classes.hpp"
 
@@ -729,7 +731,7 @@ void ui_btoo() {
     bool b = audio.settings.BT_SOURCE;
     b = !b;
     audio.settings.BT_SOURCE = b;
-    b? printfln(s_tag.terminal, "bt_source off"): printfln(s_tag.terminal, "bt source on");
+    b ? printfln(s_tag.terminal, "bt_source off") : printfln(s_tag.terminal, "bt source on");
 }
 
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
