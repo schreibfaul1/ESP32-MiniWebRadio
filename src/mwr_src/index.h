@@ -778,6 +778,13 @@ function connect() {
                                             bt_RxTx = 'RX'
                                         }
                                         break;
+            case "BT_power":            console.log("BT_power=" + val)
+                                        if(val == '0') document.getElementById('chk_bt').checked = false;
+                                        if(val == '1') document.getElementById('chk_bt').checked = true;
+                                        break;
+            case "BTname":              console.log("BTnane=" + val)
+                                        document.getElementById('BTname').value = val;
+                                        break
             case "timezones":           console.log(msg, val)
                                         fillTimeZoneSelect(val)
                                         break;
@@ -1004,6 +1011,8 @@ function showTab6 () {
     socket.send("get_temperature_unit")
     socket.send("get_pressure_unit")
     socket.send("get_wind_speed_unit")
+    socket.send("get_bt_power")
+    socket.send("get_BTname")
 }
 
 function showTab7 () {
@@ -2249,6 +2258,10 @@ function setOwnLocation() {
     socket.send("set_location=Own location" + "&" + lat + "|" + long);
 }
 
+function set_BTname(){
+    var name = document.getElementById("BTname").value;
+    socket.send("set_BTname=" + name);
+}
 
 function loadRingVolume(){
     const selectRingVolume = document.getElementById('selRingVolume');
@@ -3230,44 +3243,29 @@ function appendToTerminal(text) {
                         </h3>
                     </div>
                     <div>
-                        <h3>
-                            Time announcement on the hour
-                            <input style="transform: scale(1.8); margin: 10px;" type="checkbox" id="chk_timeSpeech"
-                                    onclick="socket.send('set_timeAnnouncement=' + document.getElementById('chk_timeSpeech').checked);">
-                            <select class="boxstyle" onchange="socket.send('set_timeSpeechLang=' + this.value)" id="timeSpeechLang" name="timeSpeechLang">
-                                <option value="fr">fr</option>
-                                <option value="en">en</option>
-                                <option value="ru">ru</option>
-                            </select>
-                        </h3>
+                        Time announcement on the hour
+                        <input style="transform: scale(1.8); margin: 10px;" type="checkbox" id="chk_timeSpeech"
+                                onclick="socket.send('set_timeAnnouncement=' + document.getElementById('chk_timeSpeech').checked);">
+                        <select class="boxstyle" onchange="socket.send('set_timeSpeechLang=' + this.value)" id="timeSpeechLang" name="timeSpeechLang">
+                            <option value="fr">fr</option>
+                            <option value="en">en</option>
+                            <option value="ru">ru</option>
+                        </select>
                     </div>
-                    <div style="margin-top: 0px; border-bottom: 3px double #999999;">
-                        <div style="display: grid; grid-template-columns: 170px 60px; align-items: center; margin-bottom: 10px; font-size: 1.17em;">
-                            <label for="selTempUnit">Unit of temperature:</label>
-                            <select id="selTempUnit"
-                                    onchange="socket.send('set_temperature_unit=' + this.value);">
-                                <option value="C">°C</option>
-                                <option value="F">°F</option>
-                            </select>
+
+                    <fieldset>
+                        <legend> Bluetooth (ESP32-S31) </legend>
+                        <div>
+                            BT Power
+                            <input style="transform: scale(1.8); margin: 10px;" type="checkbox" id="chk_bt"
+                                onclick="socket.send('set_bt_power=' + document.getElementById('chk_bt').checked);">
                         </div>
-                        <div style="display: grid; grid-template-columns: 170px 60px; align-items: center; margin-bottom: 10px; font-size: 1.17em;">
-                            <label for="selPressUnit">Unit of pressure:</label>
-                            <select id="selPressUnit"
-                                onchange="socket.send('set_pressure_unit=' + this.value);">
-                                <option value="hPa">hPa</option>
-                                <option value="mmHg">mmHg</option>
-                            </select>
+                        <div style="margin-top: 10px;">
+                            <label for="BTname" style="display: inline-block; width: 120px;">BT sink name</label>
+                            <input id="BTname" type="text" inputmode="text" style="width: 150px;" onchange="this.value=this.value.replace(',', '.');">
+                            <button id="btnBTnameOK" onclick="set_BTname();">OK</button>
                         </div>
-                        <div style="display: grid; grid-template-columns: 170px 60px; align-items: center; margin-bottom: 10px; font-size: 1.17em;">
-                            <label for="selWindUnit">Unit of wind speed:</label>
-                            <select id="selWindUnit"
-                                onchange="socket.send('set_wind_speed_unit=' + this.value);">
-                                <option value="km/h">km/h</option>
-                                <option value="m/s">m/s</option>
-                                <option value="bft">bft</option>
-                            </select>
-                        </div>
-                    </div>
+                    </fieldset>
                 </td>
                 <td style="padding: 10px; min-width: 350px; margin-left: 0px;">
                     <fieldset>
@@ -3321,7 +3319,7 @@ function appendToTerminal(text) {
                     </fieldset>
                     <br>
                     <fieldset>
-                        <legend> location </legend>
+                        <legend> weather </legend>
                         <div>
                             <label for="CitySelect" style="display: inline-block; width: 45px;">City</label>
                             <select id="CitySelect" class="boxstyle" onchange="selectCity(this)">
@@ -3338,6 +3336,33 @@ function appendToTerminal(text) {
                         <div style="margin-top: 10px;">
                             <label style="display: inline-block; width: 45px;"></label>
                             <button id="btnCityOK" onclick="setOwnLocation()">OK</button>
+                        </div>
+                        <div style="margin-top: 0px; border-bottom: 3px double #999999;">
+                            <div style="display: grid; grid-template-columns: 170px 60px; align-items: center; margin-bottom: 10px; font-size: 1.17em;">
+                                <label for="selTempUnit">Unit of temperature:</label>
+                                <select id="selTempUnit"
+                                        onchange="socket.send('set_temperature_unit=' + this.value);">
+                                    <option value="C">°C</option>
+                                    <option value="F">°F</option>
+                                </select>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 170px 60px; align-items: center; margin-bottom: 10px; font-size: 1.17em;">
+                                <label for="selPressUnit">Unit of pressure:</label>
+                                <select id="selPressUnit"
+                                    onchange="socket.send('set_pressure_unit=' + this.value);">
+                                    <option value="hPa">hPa</option>
+                                    <option value="mmHg">mmHg</option>
+                                </select>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 170px 60px; align-items: center; margin-bottom: 10px; font-size: 1.17em;">
+                                <label for="selWindUnit">Unit of wind speed:</label>
+                                <select id="selWindUnit"
+                                    onchange="socket.send('set_wind_speed_unit=' + this.value);">
+                                    <option value="km/h">km/h</option>
+                                    <option value="m/s">m/s</option>
+                                    <option value="bft">bft</option>
+                                </select>
+                            </div>
                         </div>
                     </fieldset>
                 </td>
