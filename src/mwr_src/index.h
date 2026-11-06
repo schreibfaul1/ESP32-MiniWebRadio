@@ -759,10 +759,10 @@ const char index_html[] PROGMEM = R"=====(
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 16px;
-            width: calc(100% - 32px);
+            width: calc(100% - 16px);
             max-width: 1200px;
             margin-left: 0;
-            margin-right: 32px;
+            margin-right: 16px;
             align-items: start;
         }
 
@@ -3849,13 +3849,13 @@ function appendToTerminal(text) {
 
                         <a class="settings-action" href="#" onclick="showTab9(); return false;">
                             <img src="SD/png/Button_BT_Blue.png"
-                                 alt="KCX BT Settings"
+                                 alt="KCX BT Emitter Settings"
                                  title="KCX BT Emitter Settings"
                                  onmousedown="this.src='SD/png/Button_BT_Yellow.png'"
                                  ontouchstart="this.src='SD/png/Button_BT_Yellow.png'"
                                  onmouseup="this.src='SD/png/Button_BT_Blue.png'"
                                  ontouchend="this.src='SD/png/Button_BT_Blue.png'">
-                            <span></span>
+                            <span>KCX BT Emitter Settings</span>
                         </a>
                     </div>
 

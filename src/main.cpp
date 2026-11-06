@@ -57,7 +57,7 @@ void setup() {
     esp_log_set_vprintf(log_redirect_handler);
     if (!get_esp_items(&s_resetReason, &s_f_FFatFound)) return;
 
-    s_f_brightnessIsChangeable = setupBacklight(TFT_BL, 100);
+    s_f_brightnessIsChangeable = setupBacklight(TFT_BL, 88);
     if (!s_f_brightnessIsChangeable) btn_SE_bright.set_active(false);
     setTFTbrightness(s_brightness);
 
@@ -2012,8 +2012,8 @@ void setTFTbrightness(uint8_t brightness) {
     if (s_f_sleeping && s_sleepMode == 0) { duty = 0; }
 
     if (TFT_BL >= 0) {
-        ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1, duty);
-        ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1);
+        ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_5, duty);
+        ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_5);
     }
 }
 

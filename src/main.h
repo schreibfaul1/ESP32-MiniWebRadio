@@ -396,7 +396,7 @@ bool setupBacklight(int pin, uint32_t freq_hz) {
     ledc_channel_config_t ch = {
         .gpio_num = pin,
         .speed_mode = LEDC_LOW_SPEED_MODE,
-        .channel = LEDC_CHANNEL_1,
+        .channel = LEDC_CHANNEL_5,
         .intr_type = LEDC_INTR_DISABLE,
         .timer_sel = LEDC_TIMER_3,
         .duty = 0,
@@ -424,8 +424,8 @@ bool setupBacklight(int pin, uint32_t freq_hz) {
     ledc_channel_config(&ch);
 
     // Optional Helligkeit setzen
-    ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1, 127);
-    ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1);
+    ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_5, 127);
+    ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_5);
     return true;
 }
 
