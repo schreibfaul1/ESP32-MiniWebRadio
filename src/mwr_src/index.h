@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 12.12.2025
+ *  Updated on: 06.11.2026
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -79,16 +79,10 @@ const char index_html[] PROGMEM = R"=====(
             margin : 0;
             padding : 5px;
         }
-        #tab-content1 {
-            font-size: 15px;
-            display : block;
-            padding : 5px 0;
-            max-width: 100%;
-            height: 440px;
-        }
+
         #tab-content2 {
             display : none;
-            margin : 20px 20px 0px 20px;
+            margin : 20px;
         }
         #tab-content3 {
             display : none;
@@ -99,10 +93,6 @@ const char index_html[] PROGMEM = R"=====(
             margin : 20px;
         }
         #tab-content5 {
-            display : none;
-            margin : 20px;
-        }
-        #tab-content6 {
             display : none;
             margin : 20px;
         }
@@ -156,16 +146,6 @@ const char index_html[] PROGMEM = R"=====(
         }
         .buttonred {
             background-color : red;
-        }
-        #label-logo {
-            margin-left : 40px;
-            border-color: black;
-            border-style: solid;
-            border-width: 2px;
-            display : inline-block;
-            width : 128px;
-            height : 128px;
-            margin-top: 5px;
         }
         #label-bt-logo {
             margin-left : 4px;
@@ -449,7 +429,308 @@ const char index_html[] PROGMEM = R"=====(
             z-index: 1000; /* Sicherstellen, dass es über anderen Elementen liegt */
         }
 
-        /* ---------- Settings layout ---------- */
+/* -------------------------------------------------------- Main radio tab: blue card layout ------------------------------------------------------ */
+/* ------------------------------------------------------------------ Radio layout ---------------------------------------------------------------- */
+        #tab-content1 {
+            --radio-text: #315762;
+            --radio-border: rgba(49, 87, 98, 0.30);
+            --radio-card: rgba(255, 255, 255, 0.22);
+            --radio-card-hover: rgba(255, 255, 255, 0.30);
+            --radio-input-bg: #ffffff;
+
+            display : block;
+            margin : 10px;
+            box-sizing: border-box;
+            width: 100%;
+            padding: 16px;
+            color: var(--radio-text);
+            font-size: 16px;
+            line-height: 1.4;
+        }
+
+        #tab-content1 *,
+        #tab-content1 *::before,
+        #tab-content1 *::after {
+            box-sizing: border-box;
+        }
+
+        #tab-content1 .radio-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+            width: calc(100% - 32px);
+            max-width: 1200px;
+            margin-left: 0;
+            margin-right: 32px;
+            align-items: start;
+        }
+
+        #tab-content1 .radio-card {
+            min-width: 0;
+            padding: 18px;
+            border: 1px solid var(--radio-border);
+            border-radius: 10px;
+            background: var(--radio-card);
+            box-shadow: 0 2px 7px rgba(30, 65, 75, 0.07);
+        }
+
+        #tab-content1 .radio-card h3 {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            margin: 0 0 16px;
+            padding: 0 0 10px;
+            border-bottom: 1px solid var(--radio-border);
+            color: inherit;
+            font-size: 1.08rem;
+            font-weight: 700;
+        }
+
+        #tab-content1 .radio-card h3 .radio-heading-icon {
+            font-size: 1.15em;
+        }
+
+        #tab-content1 .radio-card-wide {
+            grid-column: 1 / -1;
+        }
+
+        #tab-content1 .radio-stack {
+            display: grid;
+            gap: 14px;
+        }
+
+        #tab-content1 .radio-divider {
+            height: 1px;
+            margin: 2px 0;
+            border: 0;
+            background: var(--radio-border);
+        }
+
+        #tab-content1 .radio-station-select {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr);
+            gap: 16px;
+            align-items: center;
+        }
+
+        #tab-content1 .radio-nav-buttons,
+        #tab-content1 .radio-volume-buttons {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #tab-content1 .radio-nav-buttons img,
+        #tab-content1 .radio-volume-buttons img,
+        #tab-content1 .radio-image-button img {
+            display: block;
+            width: 64px;
+            height: 64px;
+            object-fit: contain;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        #tab-content1 select,
+        #tab-content1 input[type="text"] {
+            min-height: 38px;
+            max-width: 100%;
+            padding: 6px 10px;
+            border: 1px solid rgba(49, 87, 98, 0.35);
+            border-radius: 6px;
+            background: var(--radio-input-bg);
+            color: #222;
+            font: inherit;
+        }
+
+        #tab-content1 select:focus,
+        #tab-content1 input[type="text"]:focus {
+            outline: 2px solid rgba(0, 105, 180, 0.65);
+            outline-offset: 2px;
+        }
+
+        #tab-content1 #preset {
+            width: 100%;
+        }
+
+        #tab-content1 .radio-station-content {
+            display: grid;
+            grid-template-columns: minmax(130px, 210px) minmax(0, 1fr);
+            gap: 20px;
+            align-items: center;
+        }
+
+        #tab-content1 #div-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 0;
+            min-height: 150px;
+        }
+
+        #tab-content1 #label-logo {
+            border-color: black;
+            border-style: solid;
+            border-width: 2px;
+            display: block;
+            object-fit: contain;
+            cursor: pointer;
+        }
+
+        #tab-content1 #div-tone-s {
+            min-width: 0;
+        }
+
+        #tab-content1 .radio-equalizer {
+            display: grid;
+            grid-template-columns: 76px minmax(100px, 1fr) 58px 30px;
+            gap: 10px 12px;
+            column-gap: 40px;
+            align-items: center;
+            max-width: 570px;
+            margin: 0 auto;
+        }
+
+        #tab-content1 .radio-equalizer label {
+            white-space: nowrap;
+        }
+
+        #tab-content1 .radio-equalizer .sdr_lbl_left {
+            text-align: right;
+        }
+
+        #tab-content1 .radio-equalizer .sdr_lbl_right {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        #tab-content1 .radio-equalizer .sdr_lbl_measure {
+            text-align: left;
+        }
+
+        #tab-content1 .radio-equalizer .slidecontainer {
+            width: 100% !important;
+            min-width: 0;
+            height: auto !important;
+            float: none !important;
+            margin: 0 0 15px;
+        }
+
+        #tab-content1 .radio-equalizer input[type="range"] {
+            display: block;
+            width: 100%;
+            margin: 0;
+            accent-color: #087fd1;
+            cursor: pointer;
+        }
+
+        #tab-content1 .radio-volume-row {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr);
+            gap: 16px;
+            align-items: center;
+        }
+
+        #tab-content1 #cmd,
+        #tab-content1 #station,
+        #tab-content1 #resultstr1 {
+            width: 100%;
+            min-width: 0;
+            min-height: 42px;
+        }
+
+        #tab-content1 .radio-input-action {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 64px;
+            gap: 10px;
+            align-items: center;
+        }
+
+        #tab-content1 .radio-image-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #tab-content1 .radio-footer {
+            grid-column: 1 / -1;
+            padding: 12px 8px 4px;
+            border-top: 1px solid var(--radio-border);
+            text-align: center;
+        }
+
+        #tab-content1 .radio-footer a {
+            color: #0645ad;
+        }
+
+        @media (max-width: 760px) {
+            #tab-content1 {
+                padding: 10px;
+            }
+
+            #tab-content1 .radio-grid {
+                width: 100%;
+                grid-template-columns: minmax(0, 1fr);
+                gap: 12px;
+            }
+
+            #tab-content1 .radio-card-wide,
+            #tab-content1 .radio-footer {
+                grid-column: auto;
+            }
+        }
+
+        @media (max-width: 520px) {
+            #tab-content1 .radio-card {
+                padding: 14px;
+            }
+
+            #tab-content1 .radio-station-select {
+                grid-template-columns: minmax(0, 1fr);
+                gap: 8px;
+            }
+
+            #tab-content1 .radio-nav-buttons img {
+                width: 54px;
+                height: 54px;
+            }
+
+            #tab-content1 .radio-station-content {
+                grid-template-columns: minmax(0, 1fr);
+                gap: 12px;
+            }
+
+            #tab-content1 #div-logo {
+                min-height: 0;
+            }
+
+            #tab-content1 #label-logo {
+                max-height: 130px;
+            }
+
+            #tab-content1 .radio-equalizer {
+                grid-template-columns: 66px minmax(70px, 1fr) 48px 25px;
+                gap: 10px 7px;
+                font-size: 0.92rem;
+            }
+
+            #tab-content1 .radio-volume-row {
+                grid-template-columns: minmax(0, 1fr);
+                gap: 10px;
+            }
+
+            #tab-content1 .radio-volume-buttons {
+                justify-content: flex-start;
+            }
+
+            #tab-content1 .radio-volume-buttons img {
+                width: 56px;
+                height: 56px;
+            }
+        }
+
+/* ----------------------------------------------------------------- Settings layout -------------------------------------------------------------- */
         #tab-content6 {
             --settings-text: #315762;
             --settings-border: rgba(49, 87, 98, 0.30);
@@ -458,6 +739,8 @@ const char index_html[] PROGMEM = R"=====(
             --settings-input-bg: #ffffff;
             --settings-radius: 10px;
 
+            display : none;
+            margin : 10px;
             box-sizing: border-box;
             width: 100%;
             padding: 16px;
@@ -916,7 +1199,7 @@ function connect() {
                                         break
             case "stationURL":          station.value = val
                                         break
-            case "stationLogo":         showLogo('label-logo', val)
+            case "stationLogo":         showScaledLogo('label-logo', val)
                                         break
             case "hardcopy":            showLogo('label-infopic', val)
             case "streamtitle":         cmd.value = val
@@ -1456,6 +1739,16 @@ async function showLogo(id, src, timeoutMs = 15000) {
     } finally {
         clearTimeout(timer);
     }
+}
+
+async function showScaledLogo(id, src, size = 200, timeoutMs = 15000) {
+    const img = document.getElementById(id);
+
+    img.style.width = size + "px";
+    img.style.height = size + "px";
+    img.style.objectFit = "contain";
+
+    await showLogo(id, src, timeoutMs);
 }
 
 
@@ -3059,7 +3352,7 @@ function appendToTerminal(text) {
     <!-- ~~~~~~~~~~~~~~~~~~~~ hidden div end ~~~~~~~~~~~~~~~~~~~~~~-->
 
 <!--===============================================================================================================================================-->
-    <div style="height: 66px; display: flex; padding-right: 0;">
+    <div style="height: 66px; display: flex; padding-right: 0; margin-left: 25px;">
         <div style="flex: 0 0 480px;">
             <img id="btn1" src="SD/png/Radio_Yellow.png" alt="radio" onclick="showTab1()">
             <img id="btn2" src="SD/png/Station_Green.png" alt="station" onclick="showTab2()">
@@ -3077,139 +3370,179 @@ function appendToTerminal(text) {
 <!--===============================================================================================================================================-->
 <!--=================================================================== R A D I O =================================================================-->
 <!--===============================================================================================================================================-->
-    <div id="tab-content1">
-        <div style="height: 66px; display: flex;">
-            <div style="flex: 0 0 210px;">
-                <img src="SD/png/Button_Previous_Green.png" alt="previous"
-                        onmousedown="this.src='SD/png/Button_Previous_Yellow.png'"
-                        ontouchstart="this.src='SD/png/Button_Previous_Yellow.png'"
-                        onmouseup="this.src='SD/png/Button_Previous_Green.png';"
-                        ontouchend="this.src='SD/png/Button_Previous_Green.png';"
-                        onclick="socket.send('prev_station')">
-                <img src="SD/png/Button_Next_Green.png" alt="next"
-                        onmousedown="this.src='SD/png/Button_Next_Yellow.png'"
-                        ontouchstart="this.src='SD/png/Button_Next_Yellow.png'"
-                        onmouseup="this.src='SD/png/Button_Next_Green.png';"
-                        ontouchend="this.src='SD/png/Button_Next_Green.png';"
-                        onclick="socket.send('next_station')">
-            </div>
-            <div style="flex:1;">
-                <select class="boxstyle" style="width:100%; margin-top: 14px;" onchange="handleStation(this)" id="preset">
+<div id="tab-content1">
+    <div class="radio-grid">
+
+        <!-- Station selection -->
+        <section class="radio-card radio-card-wide">
+            <h3><span class="radio-heading-icon">♫</span> Radio station</h3>
+
+            <div class="radio-station-select">
+                <div class="radio-nav-buttons">
+                    <img src="SD/png/Button_Previous_Green.png" alt="previous"
+                         onmousedown="this.src='SD/png/Button_Previous_Yellow.png'"
+                         ontouchstart="this.src='SD/png/Button_Previous_Yellow.png'"
+                         onmouseup="this.src='SD/png/Button_Previous_Green.png'"
+                         ontouchend="this.src='SD/png/Button_Previous_Green.png'"
+                         onmouseleave="this.src='SD/png/Button_Previous_Green.png'"
+                         onclick="socket.send('prev_station')">
+
+                    <img src="SD/png/Button_Next_Green.png" alt="next"
+                         onmousedown="this.src='SD/png/Button_Next_Yellow.png'"
+                         ontouchstart="this.src='SD/png/Button_Next_Yellow.png'"
+                         onmouseup="this.src='SD/png/Button_Next_Green.png'"
+                         ontouchend="this.src='SD/png/Button_Next_Green.png'"
+                         onmouseleave="this.src='SD/png/Button_Next_Green.png'"
+                         onclick="socket.send('next_station')">
+                </div>
+
+                <select class="boxstyle" onchange="handleStation(this)" id="preset">
                     <option value="-1">Select a station here</option>
                 </select>
             </div>
-        </div>
-        <div style="display: flex;">
-            <div id="div-logo" style="flex: 0 0 210px;">
-                <img id="label-logo" src="SD/common/unknown.png" alt="img" onclick="socket.send('homepage')"    >
-            </div>
-            <div id="div-tone-s" style="flex:1; justify-content: center;">
-                <div style="width: 380px; height:130px;">
+        </section>
 
-                    <label class="sdr_lbl_left">High:</label>
-                    <div class="slidecontainer" style="float: left; width: 180px; height: 40px;">
-                        <input type="range" min="0" max="24" value="12" id="HighPass"
-                        onmouseup="slider_HP_mouseUp()"
-                        ontouchend="slider_HP_mouseUp()"
-                        oninput="slider_HP_change()">
+        <!-- Station logo and equalizer -->
+        <section class="radio-card radio-card-wide">
+            <h3><span class="radio-heading-icon">♫</span> Station &amp; sound</h3>
+
+            <div class="radio-station-content">
+                <div id="div-logo">
+                    <img id="label-logo" src="SD/common/unknown.png" alt="Station logo"
+                         onclick="socket.send('homepage')">
+                </div>
+
+                <div id="div-tone-s">
+                    <div class="radio-equalizer">
+                        <label class="sdr_lbl_left" for="HighPass">High:</label>
+                        <div class="slidecontainer">
+                            <input type="range" min="0" max="24" value="12" id="HighPass"
+                                   onmouseup="slider_HP_mouseUp()"
+                                   ontouchend="slider_HP_mouseUp()"
+                                   oninput="slider_HP_change()">
+                        </div>
+                        <label id="label_HP_value" class="sdr_lbl_right">0</label>
+                        <label class="sdr_lbl_measure">dB</label>
+
+                        <label class="sdr_lbl_left" for="BandPass">Band:</label>
+                        <div class="slidecontainer">
+                            <input type="range" min="0" max="24" value="12" id="BandPass"
+                                   onmouseup="slider_BP_mouseUp()"
+                                   ontouchend="slider_BP_mouseUp()"
+                                   oninput="slider_BP_change()">
+                        </div>
+                        <label id="label_BP_value" class="sdr_lbl_right">0</label>
+                        <label class="sdr_lbl_measure">dB</label>
+
+                        <label class="sdr_lbl_left" for="LowPass">Low:</label>
+                        <div class="slidecontainer">
+                            <input type="range" min="0" max="24" value="12" id="LowPass"
+                                   onmouseup="slider_LP_mouseUp()"
+                                   ontouchend="slider_LP_mouseUp()"
+                                   oninput="slider_LP_change()">
+                        </div>
+                        <label id="label_LP_value" class="sdr_lbl_right">0</label>
+                        <label class="sdr_lbl_measure">dB</label>
+
+                        <label class="sdr_lbl_left" for="Balance">Balance:</label>
+                        <div class="slidecontainer">
+                            <input type="range" min="-16" max="16" value="0" id="Balance"
+                                   onmouseup="slider_BAL_mouseUp()"
+                                   ontouchend="slider_BAL_mouseUp()"
+                                   oninput="slider_BAL_change()">
+                        </div>
+                        <label id="label_BAL_value" class="sdr_lbl_right">0 / 0</label>
+                        <label class="sdr_lbl_measure">dB</label>
                     </div>
-                    <label id="label_HP_value" class="sdr_lbl_right">0</label>
-                    <label class="sdr_lbl_measure">dB</label>
-
-                    <label class="sdr_lbl_left">Band:</label>
-                    <div class="slidecontainer" style="float: left; width: 180px; height: 40px;">
-                        <input type="range" min="0" max="24" value="12" id="BandPass"
-                        onmouseup="slider_BP_mouseUp()"
-                        ontouchend="slider_BP_mouseUp()"
-                        oninput="slider_BP_change()">
-                    </div>
-                    <label id="label_BP_value" class="sdr_lbl_right">0</label>
-                    <label class="sdr_lbl_measure">dB</label>
-
-                    <label class="sdr_lbl_left">Low:</label>
-                    <div class="slidecontainer" style="float: left; width: 180px; height: 40px;">
-                        <input type="range" min="0" max="24" value="12" id="LowPass"
-                        onmouseup="slider_LP_mouseUp()"
-                        ontouchend="slider_LP_mouseUp()"
-                        oninput="slider_LP_change()">
-                    </div>
-                    <label id="label_LP_value" class="sdr_lbl_right">0</label>
-                    <label class="sdr_lbl_measure">dB</label>
-
-                    <label class="sdr_lbl_left">Balance:</label>
-                    <div class="slidecontainer" style="float: left; width: 180px; height: 40px;">
-                        <input type="range" min="-16" max="16" value="0" id="Balance"
-                        onmouseup="slider_BAL_mouseUp()"
-                        ontouchend="slider_BAL_mouseUp()"
-                        oninput="slider_BAL_change()">
-                    </div>
-                    <label id="label_BAL_value" class="sdr_lbl_right">0 / 0</label>
-                    <label class="sdr_lbl_measure">dB</label>
-
-
                 </div>
             </div>
-        </div>
-        <div style="height: 66px; display: flex;">
-            <div style="flex: 0 0 210px;">
-                <img src="SD/png/Button_Volume_Down_Blue.png" alt="Vol_down"
-                    onmousedown="this.src='SD/png/Button_Volume_Down_Yellow.png'"
-                    ontouchstart="this.src='SD/png/Button_Volume_Down_Yellow.png'"
-                    onmouseup="this.src='SD/png/Button_Volume_Down_Blue.png'"
-                    ontouchend="this.src='SD/png/Button_Volume_Down_Blue.png'"
-                    onclick="socket.send('downvolume')">
-                <img src="SD/png/Button_Volume_Up_Blue.png" alt="Vol_up"
-                    onmousedown="this.src='SD/png/Button_Volume_Up_Yellow.png'"
-                    ontouchstart="this.src='SD/png/Button_Volume_Up_Yellow.png'"
-                    onmouseup="this.src='SD/png/Button_Volume_Up_Blue.png'"
-                    ontouchend="this.src='SD/png/Button_Volume_Up_Blue.png'"
-                    onclick="socket.send('upvolume')">
-                <img id="Mute" src="SD/png/Button_Mute_Green.png" alt="Mute"
-                    onmousedown="this.src='SD/png/Button_Mute_Yellow.png'"
-                    ontouchstart="this.src='SD/png/Button_Mute_Yellow.png'"
-                    onclick="socket.send('set_mute')">
+        </section>
+
+        <!-- Volume and current track / status -->
+        <section class="radio-card radio-card-wide">
+            <h3><span class="radio-heading-icon">🔊</span> Playback</h3>
+
+            <div class="radio-volume-row">
+                <div class="radio-volume-buttons">
+                    <img src="SD/png/Button_Volume_Down_Blue.png" alt="Vol_down"
+                         onmousedown="this.src='SD/png/Button_Volume_Down_Yellow.png'"
+                         ontouchstart="this.src='SD/png/Button_Volume_Down_Yellow.png'"
+                         onmouseup="this.src='SD/png/Button_Volume_Down_Blue.png'"
+                         ontouchend="this.src='SD/png/Button_Volume_Down_Blue.png'"
+                         onmouseleave="this.src='SD/png/Button_Volume_Down_Blue.png'"
+                         onclick="socket.send('downvolume')">
+
+                    <img src="SD/png/Button_Volume_Up_Blue.png" alt="Vol_up"
+                         onmousedown="this.src='SD/png/Button_Volume_Up_Yellow.png'"
+                         ontouchstart="this.src='SD/png/Button_Volume_Up_Yellow.png'"
+                         onmouseup="this.src='SD/png/Button_Volume_Up_Blue.png'"
+                         ontouchend="this.src='SD/png/Button_Volume_Up_Blue.png'"
+                         onmouseleave="this.src='SD/png/Button_Volume_Up_Blue.png'"
+                         onclick="socket.send('upvolume')">
+
+                    <img id="Mute" src="SD/png/Button_Mute_Green.png" alt="Mute"
+                         onmousedown="this.src='SD/png/Button_Mute_Yellow.png'"
+                         ontouchstart="this.src='SD/png/Button_Mute_Yellow.png'"
+                         onmouseup="this.src='SD/png/Button_Mute_Green.png'"
+                         ontouchend="this.src='SD/png/Button_Mute_Green.png'"
+                         onmouseleave="this.src='SD/png/Button_Mute_Green.png'"
+                         onclick="socket.send('set_mute')">
+                </div>
+
+                <input type="text" class="boxstyle" id="cmd" placeholder="Waiting....">
             </div>
-            <div style="flex:1;">
-                <input type="text" class="boxstyle" style="width: calc(100% - 8px); margin-top: 14px; padding-left:7px 0;" id="cmd"
-                                   placeholder=" Waiting....">
+        </section>
+
+        <!-- Stream URL -->
+        <section class="radio-card radio-card-wide">
+            <h3><span class="radio-heading-icon">🌐</span> Add radio stream</h3>
+
+            <div class="radio-input-action">
+                <input type="text" class="boxstyle" id="station"
+                       placeholder="Enter a stream URL here.... , for authentication streamURL|username|password">
+
+                <div class="radio-image-button">
+                    <img src="SD/png/Button_Ready_Blue.png" alt="Apply station"
+                         onmousedown="this.src='SD/png/Button_Ready_Yellow.png'"
+                         ontouchstart="this.src='SD/png/Button_Ready_Yellow.png'"
+                         onmouseup="this.src='SD/png/Button_Ready_Blue.png'"
+                         ontouchend="this.src='SD/png/Button_Ready_Blue.png'"
+                         onmouseleave="this.src='SD/png/Button_Ready_Blue.png'"
+                         onclick="setstation()">
+                </div>
             </div>
-        </div>
-        <div style="height: 66px; display: flex;">
-            <div style="flex:1;">
-                <input type="text" class="boxstyle" style="width: calc(100% - 8px); margin-top: 14px; padding-left:7px 0;" id="station"
-                    placeholder=" Enter a streamURL here.... , for authentication streamURL|username|password">
+        </section>
+
+        <!-- Test / result -->
+        <section class="radio-card radio-card-wide">
+            <h3><span class="radio-heading-icon">ⓘ</span> Stream test / information</h3>
+
+            <div class="radio-input-action">
+                <input type="text" class="boxstyle" id="resultstr1" placeholder="Test....">
+
+                <div class="radio-image-button">
+                    <img src="SD/png/Button_Test_Green.png" alt="Test"
+                         onmousedown="this.src='SD/png/Button_Test_Yellow.png'"
+                         ontouchstart="this.src='SD/png/Button_Test_Yellow.png'"
+                         onmouseup="this.src='SD/png/Button_Test_Green.png'"
+                         ontouchend="this.src='SD/png/Button_Test_Green.png'"
+                         onmouseleave="this.src='SD/png/Button_Test_Green.png'"
+                         onclick="test()">
+                </div>
             </div>
-            <div style="flex: 0 0 66px;">
-                <img src="SD/png/Button_Ready_Blue.png" alt="Vol_up"
-                    onmousedown="this.src='SD/png/Button_Ready_Yellow.png'"
-                    ontouchstart="this.src='SD/png/Button_Ready_Yellow.png'"
-                    onmouseup="this.src='SD/png/Button_Ready_Blue.png'"
-                    ontouchend='SD/png/Button_Ready_Blue.png'"
-                    onclick="setstation()">
-            </div>
-        </div>
-        <div style="height: 66px; display: flex;">
-            <div style="flex:1;">
-                <input type="text" class="boxstyle" style="width: calc(100% - 8px); margin-top: 14px; padding-left:7px 0;" id="resultstr1"
-                                   placeholder=" Test....">
-            </div>
-            <div style="flex: 0 0 66px;">
-                <img src="SD/png/Button_Test_Green.png" alt="Test"
-                    onmousedown="this.src='SD/png/Button_Test_Yellow.png'"
-                    ontouchstart="this.src='SD/png/Button_Test_Yellow.png'"
-                    onmouseup="this.src='SD/png/Button_Test_Green.png'"
-                    ontouchend="this.src='SD/png/Button_Test_Green.png'"
-                    onclick="test()">
-            </div>
-        </div>
-        <hr>
-        <div style="height: 46px; padding: 0; text-align:center;">
+        </section>
+
+        <footer class="radio-footer">
             Find new radio stations at
-            <a target="_blank" href="https://radiolise.gitlab.io">Radiolise</a>
+            <a target="_blank" rel="noopener noreferrer" href="https://radiolise.gitlab.io">Radiolise</a>
             or
-            <a target="_blank" href="http://streamstat.net/main.cgi?mode=all"> StreamStat.NET </a>
-        </div>
+            <a target="_blank" rel="noopener noreferrer" href="http://streamstat.net/main.cgi?mode=all">StreamStat.NET</a>
+        </footer>
+
     </div>
+</div>
+<!--===============================================================================================================================================-->
+<!--============================================================= S T A T I O N S =================================================================-->
 <!--===============================================================================================================================================-->
     <div id="tab-content2">
             <div id="notification1" class="notification1"></div>
@@ -3491,6 +3824,8 @@ function appendToTerminal(text) {
             </form>
         </div>
     </div>
+<!--===============================================================================================================================================-->
+<!--=====================================================  S E T T I N G S  =======================================================================-->
 <!--===============================================================================================================================================-->
     <div id="tab-content6">
         <div class="settings-grid">
