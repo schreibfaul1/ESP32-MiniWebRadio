@@ -79,13 +79,10 @@ const char index_html[] PROGMEM = R"=====(
             margin : 0;
             padding : 5px;
         }
-        #tab-content1 {
-            display : block;
-            margin : 20px;
-        }
+
         #tab-content2 {
             display : none;
-            margin : 20px 20px 0px 20px;
+            margin : 20px;
         }
         #tab-content3 {
             display : none;
@@ -96,10 +93,6 @@ const char index_html[] PROGMEM = R"=====(
             margin : 20px;
         }
         #tab-content5 {
-            display : none;
-            margin : 20px;
-        }
-        #tab-content6 {
             display : none;
             margin : 20px;
         }
@@ -446,7 +439,307 @@ const char index_html[] PROGMEM = R"=====(
             z-index: 1000; /* Sicherstellen, dass es über anderen Elementen liegt */
         }
 
-        /* ---------- Settings layout ---------- */
+/* -------------------------------------------------------- Main radio tab: blue card layout ------------------------------------------------------ */
+/* ------------------------------------------------------------------ Radio layout ---------------------------------------------------------------- */
+        #tab-content1 {
+            --radio-text: #315762;
+            --radio-border: rgba(49, 87, 98, 0.30);
+            --radio-card: rgba(255, 255, 255, 0.22);
+            --radio-card-hover: rgba(255, 255, 255, 0.30);
+            --radio-input-bg: #ffffff;
+
+            display : block;
+            margin : 20px;
+            box-sizing: border-box;
+            width: 100%;
+            padding: 16px;
+            color: var(--radio-text);
+            font-size: 16px;
+            line-height: 1.4;
+        }
+
+        #tab-content1 *,
+        #tab-content1 *::before,
+        #tab-content1 *::after {
+            box-sizing: border-box;
+        }
+
+        #tab-content1 .radio-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+            width: calc(100% - 32px);
+            max-width: 1200px;
+            margin-left: 0;
+            margin-right: 32px;
+            align-items: start;
+        }
+
+        #tab-content1 .radio-card {
+            min-width: 0;
+            padding: 18px;
+            border: 1px solid var(--radio-border);
+            border-radius: 10px;
+            background: var(--radio-card);
+            box-shadow: 0 2px 7px rgba(30, 65, 75, 0.07);
+        }
+
+        #tab-content1 .radio-card h3 {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            margin: 0 0 16px;
+            padding: 0 0 10px;
+            border-bottom: 1px solid var(--radio-border);
+            color: inherit;
+            font-size: 1.08rem;
+            font-weight: 700;
+        }
+
+        #tab-content1 .radio-card h3 .radio-heading-icon {
+            font-size: 1.15em;
+        }
+
+        #tab-content1 .radio-card-wide {
+            grid-column: 1 / -1;
+        }
+
+        #tab-content1 .radio-stack {
+            display: grid;
+            gap: 14px;
+        }
+
+        #tab-content1 .radio-divider {
+            height: 1px;
+            margin: 2px 0;
+            border: 0;
+            background: var(--radio-border);
+        }
+
+        #tab-content1 .radio-station-select {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr);
+            gap: 16px;
+            align-items: center;
+        }
+
+        #tab-content1 .radio-nav-buttons,
+        #tab-content1 .radio-volume-buttons {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #tab-content1 .radio-nav-buttons img,
+        #tab-content1 .radio-volume-buttons img,
+        #tab-content1 .radio-image-button img {
+            display: block;
+            width: 64px;
+            height: 64px;
+            object-fit: contain;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        #tab-content1 select,
+        #tab-content1 input[type="text"] {
+            min-height: 38px;
+            max-width: 100%;
+            padding: 6px 10px;
+            border: 1px solid rgba(49, 87, 98, 0.35);
+            border-radius: 6px;
+            background: var(--radio-input-bg);
+            color: #222;
+            font: inherit;
+        }
+
+        #tab-content1 select:focus,
+        #tab-content1 input[type="text"]:focus {
+            outline: 2px solid rgba(0, 105, 180, 0.65);
+            outline-offset: 2px;
+        }
+
+        #tab-content1 #preset {
+            width: 100%;
+        }
+
+        #tab-content1 .radio-station-content {
+            display: grid;
+            grid-template-columns: minmax(130px, 210px) minmax(0, 1fr);
+            gap: 20px;
+            align-items: center;
+        }
+
+        #tab-content1 #div-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 0;
+            min-height: 130px;
+        }
+
+        #tab-content1 #label-logo {
+            display: block;
+            max-width: 100%;
+            max-height: 150px;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            cursor: pointer;
+        }
+
+        #tab-content1 #div-tone-s {
+            min-width: 0;
+        }
+
+        #tab-content1 .radio-equalizer {
+            display: grid;
+            grid-template-columns: 76px minmax(100px, 1fr) 58px 30px;
+            gap: 10px 12px;
+            align-items: center;
+            max-width: 570px;
+            margin: 0 auto;
+        }
+
+        #tab-content1 .radio-equalizer label {
+            white-space: nowrap;
+        }
+
+        #tab-content1 .radio-equalizer .sdr_lbl_left {
+            text-align: right;
+        }
+
+        #tab-content1 .radio-equalizer .sdr_lbl_right {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        #tab-content1 .radio-equalizer .sdr_lbl_measure {
+            text-align: left;
+        }
+
+        #tab-content1 .radio-equalizer .slidecontainer {
+            width: 100% !important;
+            min-width: 0;
+            height: auto !important;
+            float: none !important;
+        }
+
+        #tab-content1 .radio-equalizer input[type="range"] {
+            display: block;
+            width: 100%;
+            margin: 0;
+            accent-color: #087fd1;
+            cursor: pointer;
+        }
+
+        #tab-content1 .radio-volume-row {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr);
+            gap: 16px;
+            align-items: center;
+        }
+
+        #tab-content1 #cmd,
+        #tab-content1 #station,
+        #tab-content1 #resultstr1 {
+            width: 100%;
+            min-width: 0;
+            min-height: 42px;
+        }
+
+        #tab-content1 .radio-input-action {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 64px;
+            gap: 10px;
+            align-items: center;
+        }
+
+        #tab-content1 .radio-image-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #tab-content1 .radio-footer {
+            grid-column: 1 / -1;
+            padding: 12px 8px 4px;
+            border-top: 1px solid var(--radio-border);
+            text-align: center;
+        }
+
+        #tab-content1 .radio-footer a {
+            color: #0645ad;
+        }
+
+        @media (max-width: 760px) {
+            #tab-content1 {
+                padding: 10px;
+            }
+
+            #tab-content1 .radio-grid {
+                width: 100%;
+                grid-template-columns: minmax(0, 1fr);
+                gap: 12px;
+            }
+
+            #tab-content1 .radio-card-wide,
+            #tab-content1 .radio-footer {
+                grid-column: auto;
+            }
+        }
+
+        @media (max-width: 520px) {
+            #tab-content1 .radio-card {
+                padding: 14px;
+            }
+
+            #tab-content1 .radio-station-select {
+                grid-template-columns: minmax(0, 1fr);
+                gap: 8px;
+            }
+
+            #tab-content1 .radio-nav-buttons img {
+                width: 54px;
+                height: 54px;
+            }
+
+            #tab-content1 .radio-station-content {
+                grid-template-columns: minmax(0, 1fr);
+                gap: 12px;
+            }
+
+            #tab-content1 #div-logo {
+                min-height: 0;
+            }
+
+            #tab-content1 #label-logo {
+                max-height: 130px;
+            }
+
+            #tab-content1 .radio-equalizer {
+                grid-template-columns: 66px minmax(70px, 1fr) 48px 25px;
+                gap: 10px 7px;
+                font-size: 0.92rem;
+            }
+
+            #tab-content1 .radio-volume-row {
+                grid-template-columns: minmax(0, 1fr);
+                gap: 10px;
+            }
+
+            #tab-content1 .radio-volume-buttons {
+                justify-content: flex-start;
+            }
+
+            #tab-content1 .radio-volume-buttons img {
+                width: 56px;
+                height: 56px;
+            }
+        }
+
+/* ----------------------------------------------------------------- Settings layout -------------------------------------------------------------- */
         #tab-content6 {
             --settings-text: #315762;
             --settings-border: rgba(49, 87, 98, 0.30);
@@ -455,6 +748,8 @@ const char index_html[] PROGMEM = R"=====(
             --settings-input-bg: #ffffff;
             --settings-radius: 10px;
 
+            display : none;
+            margin : 20px;
             box-sizing: border-box;
             width: 100%;
             padding: 16px;
