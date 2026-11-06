@@ -147,16 +147,6 @@ const char index_html[] PROGMEM = R"=====(
         .buttonred {
             background-color : red;
         }
-        #label-logo {
-            margin-left : 40px;
-            border-color: black;
-            border-style: solid;
-            border-width: 2px;
-            display : inline-block;
-            width : 128px;
-            height : 128px;
-            margin-top: 5px;
-        }
         #label-bt-logo {
             margin-left : 4px;
             border-color: #99ccff;
@@ -449,7 +439,7 @@ const char index_html[] PROGMEM = R"=====(
             --radio-input-bg: #ffffff;
 
             display : block;
-            margin : 20px;
+            margin : 10px;
             box-sizing: border-box;
             width: 100%;
             padding: 16px;
@@ -576,13 +566,16 @@ const char index_html[] PROGMEM = R"=====(
             align-items: center;
             justify-content: center;
             min-width: 0;
-            min-height: 130px;
+            min-height: 150px;
         }
 
         #tab-content1 #label-logo {
+            border-color: black;
+            border-style: solid;
+            border-width: 2px;
             display: block;
             max-width: 100%;
-            max-height: 150px;
+            max-height: 200px;
             width: auto;
             height: auto;
             object-fit: contain;
@@ -597,6 +590,7 @@ const char index_html[] PROGMEM = R"=====(
             display: grid;
             grid-template-columns: 76px minmax(100px, 1fr) 58px 30px;
             gap: 10px 12px;
+            column-gap: 40px;
             align-items: center;
             max-width: 570px;
             margin: 0 auto;
@@ -749,7 +743,7 @@ const char index_html[] PROGMEM = R"=====(
             --settings-radius: 10px;
 
             display : none;
-            margin : 20px;
+            margin : 10px;
             box-sizing: border-box;
             width: 100%;
             padding: 16px;
@@ -3823,6 +3817,8 @@ function appendToTerminal(text) {
             </form>
         </div>
     </div>
+<!--===============================================================================================================================================-->
+<!--=====================================================  S E T T I N G S  =======================================================================-->
 <!--===============================================================================================================================================-->
     <div id="tab-content6">
         <div class="settings-grid">
