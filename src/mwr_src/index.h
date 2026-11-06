@@ -3352,7 +3352,7 @@ function appendToTerminal(text) {
     <!-- ~~~~~~~~~~~~~~~~~~~~ hidden div end ~~~~~~~~~~~~~~~~~~~~~~-->
 
 <!--===============================================================================================================================================-->
-    <div style="height: 66px; display: flex; padding-right: 0;">
+    <div style="height: 66px; display: flex; padding-right: 0; margin-left: 25px;">
         <div style="flex: 0 0 480px;">
             <img id="btn1" src="SD/png/Radio_Yellow.png" alt="radio" onclick="showTab1()">
             <img id="btn2" src="SD/png/Station_Green.png" alt="station" onclick="showTab2()">
