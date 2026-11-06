@@ -574,10 +574,6 @@ const char index_html[] PROGMEM = R"=====(
             border-style: solid;
             border-width: 2px;
             display: block;
-            max-width: 100%;
-            max-height: 200px;
-            width: auto;
-            height: auto;
             object-fit: contain;
             cursor: pointer;
         }
@@ -1202,7 +1198,7 @@ function connect() {
                                         break
             case "stationURL":          station.value = val
                                         break
-            case "stationLogo":         showLogo('label-logo', val)
+            case "stationLogo":         showScaledLogo('label-logo', val)
                                         break
             case "hardcopy":            showLogo('label-infopic', val)
             case "streamtitle":         cmd.value = val
@@ -1742,6 +1738,16 @@ async function showLogo(id, src, timeoutMs = 15000) {
     } finally {
         clearTimeout(timer);
     }
+}
+
+async function showScaledLogo(id, src, size = 200, timeoutMs = 15000) {
+    const img = document.getElementById(id);
+
+    img.style.width = size + "px";
+    img.style.height = size + "px";
+    img.style.objectFit = "contain";
+
+    await showLogo(id, src, timeoutMs);
 }
 
 
