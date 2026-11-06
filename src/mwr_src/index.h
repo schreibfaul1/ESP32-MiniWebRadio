@@ -614,6 +614,7 @@ const char index_html[] PROGMEM = R"=====(
             min-width: 0;
             height: auto !important;
             float: none !important;
+            margin: 0 0 15px;
         }
 
         #tab-content1 .radio-equalizer input[type="range"] {
