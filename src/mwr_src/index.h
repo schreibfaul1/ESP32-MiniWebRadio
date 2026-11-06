@@ -80,11 +80,8 @@ const char index_html[] PROGMEM = R"=====(
             padding : 5px;
         }
         #tab-content1 {
-            font-size: 15px;
             display : block;
-            padding : 5px 0;
-            max-width: 100%;
-            height: 440px;
+            margin : 20px;
         }
         #tab-content2 {
             display : none;
@@ -3077,139 +3074,179 @@ function appendToTerminal(text) {
 <!--===============================================================================================================================================-->
 <!--=================================================================== R A D I O =================================================================-->
 <!--===============================================================================================================================================-->
-    <div id="tab-content1">
-        <div style="height: 66px; display: flex;">
-            <div style="flex: 0 0 210px;">
-                <img src="SD/png/Button_Previous_Green.png" alt="previous"
-                        onmousedown="this.src='SD/png/Button_Previous_Yellow.png'"
-                        ontouchstart="this.src='SD/png/Button_Previous_Yellow.png'"
-                        onmouseup="this.src='SD/png/Button_Previous_Green.png';"
-                        ontouchend="this.src='SD/png/Button_Previous_Green.png';"
-                        onclick="socket.send('prev_station')">
-                <img src="SD/png/Button_Next_Green.png" alt="next"
-                        onmousedown="this.src='SD/png/Button_Next_Yellow.png'"
-                        ontouchstart="this.src='SD/png/Button_Next_Yellow.png'"
-                        onmouseup="this.src='SD/png/Button_Next_Green.png';"
-                        ontouchend="this.src='SD/png/Button_Next_Green.png';"
-                        onclick="socket.send('next_station')">
-            </div>
-            <div style="flex:1;">
-                <select class="boxstyle" style="width:100%; margin-top: 14px;" onchange="handleStation(this)" id="preset">
+<div id="tab-content1">
+    <div class="radio-grid">
+
+        <!-- Station selection -->
+        <section class="radio-card radio-card-wide">
+            <h3><span class="radio-heading-icon">♫</span> Radio station</h3>
+
+            <div class="radio-station-select">
+                <div class="radio-nav-buttons">
+                    <img src="SD/png/Button_Previous_Green.png" alt="previous"
+                         onmousedown="this.src='SD/png/Button_Previous_Yellow.png'"
+                         ontouchstart="this.src='SD/png/Button_Previous_Yellow.png'"
+                         onmouseup="this.src='SD/png/Button_Previous_Green.png'"
+                         ontouchend="this.src='SD/png/Button_Previous_Green.png'"
+                         onmouseleave="this.src='SD/png/Button_Previous_Green.png'"
+                         onclick="socket.send('prev_station')">
+
+                    <img src="SD/png/Button_Next_Green.png" alt="next"
+                         onmousedown="this.src='SD/png/Button_Next_Yellow.png'"
+                         ontouchstart="this.src='SD/png/Button_Next_Yellow.png'"
+                         onmouseup="this.src='SD/png/Button_Next_Green.png'"
+                         ontouchend="this.src='SD/png/Button_Next_Green.png'"
+                         onmouseleave="this.src='SD/png/Button_Next_Green.png'"
+                         onclick="socket.send('next_station')">
+                </div>
+
+                <select class="boxstyle" onchange="handleStation(this)" id="preset">
                     <option value="-1">Select a station here</option>
                 </select>
             </div>
-        </div>
-        <div style="display: flex;">
-            <div id="div-logo" style="flex: 0 0 210px;">
-                <img id="label-logo" src="SD/common/unknown.png" alt="img" onclick="socket.send('homepage')"    >
-            </div>
-            <div id="div-tone-s" style="flex:1; justify-content: center;">
-                <div style="width: 380px; height:130px;">
+        </section>
 
-                    <label class="sdr_lbl_left">High:</label>
-                    <div class="slidecontainer" style="float: left; width: 180px; height: 40px;">
-                        <input type="range" min="0" max="24" value="12" id="HighPass"
-                        onmouseup="slider_HP_mouseUp()"
-                        ontouchend="slider_HP_mouseUp()"
-                        oninput="slider_HP_change()">
+        <!-- Station logo and equalizer -->
+        <section class="radio-card radio-card-wide">
+            <h3><span class="radio-heading-icon">♫</span> Station &amp; sound</h3>
+
+            <div class="radio-station-content">
+                <div id="div-logo">
+                    <img id="label-logo" src="SD/common/unknown.png" alt="Station logo"
+                         onclick="socket.send('homepage')">
+                </div>
+
+                <div id="div-tone-s">
+                    <div class="radio-equalizer">
+                        <label class="sdr_lbl_left" for="HighPass">High:</label>
+                        <div class="slidecontainer">
+                            <input type="range" min="0" max="24" value="12" id="HighPass"
+                                   onmouseup="slider_HP_mouseUp()"
+                                   ontouchend="slider_HP_mouseUp()"
+                                   oninput="slider_HP_change()">
+                        </div>
+                        <label id="label_HP_value" class="sdr_lbl_right">0</label>
+                        <label class="sdr_lbl_measure">dB</label>
+
+                        <label class="sdr_lbl_left" for="BandPass">Band:</label>
+                        <div class="slidecontainer">
+                            <input type="range" min="0" max="24" value="12" id="BandPass"
+                                   onmouseup="slider_BP_mouseUp()"
+                                   ontouchend="slider_BP_mouseUp()"
+                                   oninput="slider_BP_change()">
+                        </div>
+                        <label id="label_BP_value" class="sdr_lbl_right">0</label>
+                        <label class="sdr_lbl_measure">dB</label>
+
+                        <label class="sdr_lbl_left" for="LowPass">Low:</label>
+                        <div class="slidecontainer">
+                            <input type="range" min="0" max="24" value="12" id="LowPass"
+                                   onmouseup="slider_LP_mouseUp()"
+                                   ontouchend="slider_LP_mouseUp()"
+                                   oninput="slider_LP_change()">
+                        </div>
+                        <label id="label_LP_value" class="sdr_lbl_right">0</label>
+                        <label class="sdr_lbl_measure">dB</label>
+
+                        <label class="sdr_lbl_left" for="Balance">Balance:</label>
+                        <div class="slidecontainer">
+                            <input type="range" min="-16" max="16" value="0" id="Balance"
+                                   onmouseup="slider_BAL_mouseUp()"
+                                   ontouchend="slider_BAL_mouseUp()"
+                                   oninput="slider_BAL_change()">
+                        </div>
+                        <label id="label_BAL_value" class="sdr_lbl_right">0 / 0</label>
+                        <label class="sdr_lbl_measure">dB</label>
                     </div>
-                    <label id="label_HP_value" class="sdr_lbl_right">0</label>
-                    <label class="sdr_lbl_measure">dB</label>
-
-                    <label class="sdr_lbl_left">Band:</label>
-                    <div class="slidecontainer" style="float: left; width: 180px; height: 40px;">
-                        <input type="range" min="0" max="24" value="12" id="BandPass"
-                        onmouseup="slider_BP_mouseUp()"
-                        ontouchend="slider_BP_mouseUp()"
-                        oninput="slider_BP_change()">
-                    </div>
-                    <label id="label_BP_value" class="sdr_lbl_right">0</label>
-                    <label class="sdr_lbl_measure">dB</label>
-
-                    <label class="sdr_lbl_left">Low:</label>
-                    <div class="slidecontainer" style="float: left; width: 180px; height: 40px;">
-                        <input type="range" min="0" max="24" value="12" id="LowPass"
-                        onmouseup="slider_LP_mouseUp()"
-                        ontouchend="slider_LP_mouseUp()"
-                        oninput="slider_LP_change()">
-                    </div>
-                    <label id="label_LP_value" class="sdr_lbl_right">0</label>
-                    <label class="sdr_lbl_measure">dB</label>
-
-                    <label class="sdr_lbl_left">Balance:</label>
-                    <div class="slidecontainer" style="float: left; width: 180px; height: 40px;">
-                        <input type="range" min="-16" max="16" value="0" id="Balance"
-                        onmouseup="slider_BAL_mouseUp()"
-                        ontouchend="slider_BAL_mouseUp()"
-                        oninput="slider_BAL_change()">
-                    </div>
-                    <label id="label_BAL_value" class="sdr_lbl_right">0 / 0</label>
-                    <label class="sdr_lbl_measure">dB</label>
-
-
                 </div>
             </div>
-        </div>
-        <div style="height: 66px; display: flex;">
-            <div style="flex: 0 0 210px;">
-                <img src="SD/png/Button_Volume_Down_Blue.png" alt="Vol_down"
-                    onmousedown="this.src='SD/png/Button_Volume_Down_Yellow.png'"
-                    ontouchstart="this.src='SD/png/Button_Volume_Down_Yellow.png'"
-                    onmouseup="this.src='SD/png/Button_Volume_Down_Blue.png'"
-                    ontouchend="this.src='SD/png/Button_Volume_Down_Blue.png'"
-                    onclick="socket.send('downvolume')">
-                <img src="SD/png/Button_Volume_Up_Blue.png" alt="Vol_up"
-                    onmousedown="this.src='SD/png/Button_Volume_Up_Yellow.png'"
-                    ontouchstart="this.src='SD/png/Button_Volume_Up_Yellow.png'"
-                    onmouseup="this.src='SD/png/Button_Volume_Up_Blue.png'"
-                    ontouchend="this.src='SD/png/Button_Volume_Up_Blue.png'"
-                    onclick="socket.send('upvolume')">
-                <img id="Mute" src="SD/png/Button_Mute_Green.png" alt="Mute"
-                    onmousedown="this.src='SD/png/Button_Mute_Yellow.png'"
-                    ontouchstart="this.src='SD/png/Button_Mute_Yellow.png'"
-                    onclick="socket.send('set_mute')">
+        </section>
+
+        <!-- Volume and current track / status -->
+        <section class="radio-card radio-card-wide">
+            <h3><span class="radio-heading-icon">🔊</span> Playback</h3>
+
+            <div class="radio-volume-row">
+                <div class="radio-volume-buttons">
+                    <img src="SD/png/Button_Volume_Down_Blue.png" alt="Vol_down"
+                         onmousedown="this.src='SD/png/Button_Volume_Down_Yellow.png'"
+                         ontouchstart="this.src='SD/png/Button_Volume_Down_Yellow.png'"
+                         onmouseup="this.src='SD/png/Button_Volume_Down_Blue.png'"
+                         ontouchend="this.src='SD/png/Button_Volume_Down_Blue.png'"
+                         onmouseleave="this.src='SD/png/Button_Volume_Down_Blue.png'"
+                         onclick="socket.send('downvolume')">
+
+                    <img src="SD/png/Button_Volume_Up_Blue.png" alt="Vol_up"
+                         onmousedown="this.src='SD/png/Button_Volume_Up_Yellow.png'"
+                         ontouchstart="this.src='SD/png/Button_Volume_Up_Yellow.png'"
+                         onmouseup="this.src='SD/png/Button_Volume_Up_Blue.png'"
+                         ontouchend="this.src='SD/png/Button_Volume_Up_Blue.png'"
+                         onmouseleave="this.src='SD/png/Button_Volume_Up_Blue.png'"
+                         onclick="socket.send('upvolume')">
+
+                    <img id="Mute" src="SD/png/Button_Mute_Green.png" alt="Mute"
+                         onmousedown="this.src='SD/png/Button_Mute_Yellow.png'"
+                         ontouchstart="this.src='SD/png/Button_Mute_Yellow.png'"
+                         onmouseup="this.src='SD/png/Button_Mute_Green.png'"
+                         ontouchend="this.src='SD/png/Button_Mute_Green.png'"
+                         onmouseleave="this.src='SD/png/Button_Mute_Green.png'"
+                         onclick="socket.send('set_mute')">
+                </div>
+
+                <input type="text" class="boxstyle" id="cmd" placeholder="Waiting....">
             </div>
-            <div style="flex:1;">
-                <input type="text" class="boxstyle" style="width: calc(100% - 8px); margin-top: 14px; padding-left:7px 0;" id="cmd"
-                                   placeholder=" Waiting....">
+        </section>
+
+        <!-- Stream URL -->
+        <section class="radio-card radio-card-wide">
+            <h3><span class="radio-heading-icon">🌐</span> Add radio stream</h3>
+
+            <div class="radio-input-action">
+                <input type="text" class="boxstyle" id="station"
+                       placeholder="Enter a stream URL here.... , for authentication streamURL|username|password">
+
+                <div class="radio-image-button">
+                    <img src="SD/png/Button_Ready_Blue.png" alt="Apply station"
+                         onmousedown="this.src='SD/png/Button_Ready_Yellow.png'"
+                         ontouchstart="this.src='SD/png/Button_Ready_Yellow.png'"
+                         onmouseup="this.src='SD/png/Button_Ready_Blue.png'"
+                         ontouchend="this.src='SD/png/Button_Ready_Blue.png'"
+                         onmouseleave="this.src='SD/png/Button_Ready_Blue.png'"
+                         onclick="setstation()">
+                </div>
             </div>
-        </div>
-        <div style="height: 66px; display: flex;">
-            <div style="flex:1;">
-                <input type="text" class="boxstyle" style="width: calc(100% - 8px); margin-top: 14px; padding-left:7px 0;" id="station"
-                    placeholder=" Enter a streamURL here.... , for authentication streamURL|username|password">
+        </section>
+
+        <!-- Test / result -->
+        <section class="radio-card radio-card-wide">
+            <h3><span class="radio-heading-icon">ⓘ</span> Stream test / information</h3>
+
+            <div class="radio-input-action">
+                <input type="text" class="boxstyle" id="resultstr1" placeholder="Test....">
+
+                <div class="radio-image-button">
+                    <img src="SD/png/Button_Test_Green.png" alt="Test"
+                         onmousedown="this.src='SD/png/Button_Test_Yellow.png'"
+                         ontouchstart="this.src='SD/png/Button_Test_Yellow.png'"
+                         onmouseup="this.src='SD/png/Button_Test_Green.png'"
+                         ontouchend="this.src='SD/png/Button_Test_Green.png'"
+                         onmouseleave="this.src='SD/png/Button_Test_Green.png'"
+                         onclick="test()">
+                </div>
             </div>
-            <div style="flex: 0 0 66px;">
-                <img src="SD/png/Button_Ready_Blue.png" alt="Vol_up"
-                    onmousedown="this.src='SD/png/Button_Ready_Yellow.png'"
-                    ontouchstart="this.src='SD/png/Button_Ready_Yellow.png'"
-                    onmouseup="this.src='SD/png/Button_Ready_Blue.png'"
-                    ontouchend='SD/png/Button_Ready_Blue.png'"
-                    onclick="setstation()">
-            </div>
-        </div>
-        <div style="height: 66px; display: flex;">
-            <div style="flex:1;">
-                <input type="text" class="boxstyle" style="width: calc(100% - 8px); margin-top: 14px; padding-left:7px 0;" id="resultstr1"
-                                   placeholder=" Test....">
-            </div>
-            <div style="flex: 0 0 66px;">
-                <img src="SD/png/Button_Test_Green.png" alt="Test"
-                    onmousedown="this.src='SD/png/Button_Test_Yellow.png'"
-                    ontouchstart="this.src='SD/png/Button_Test_Yellow.png'"
-                    onmouseup="this.src='SD/png/Button_Test_Green.png'"
-                    ontouchend="this.src='SD/png/Button_Test_Green.png'"
-                    onclick="test()">
-            </div>
-        </div>
-        <hr>
-        <div style="height: 46px; padding: 0; text-align:center;">
+        </section>
+
+        <footer class="radio-footer">
             Find new radio stations at
-            <a target="_blank" href="https://radiolise.gitlab.io">Radiolise</a>
+            <a target="_blank" rel="noopener noreferrer" href="https://radiolise.gitlab.io">Radiolise</a>
             or
-            <a target="_blank" href="http://streamstat.net/main.cgi?mode=all"> StreamStat.NET </a>
-        </div>
+            <a target="_blank" rel="noopener noreferrer" href="http://streamstat.net/main.cgi?mode=all">StreamStat.NET</a>
+        </footer>
+
     </div>
+</div>
+<!--===============================================================================================================================================-->
+<!--============================================================= S T A T I O N S =================================================================-->
 <!--===============================================================================================================================================-->
     <div id="tab-content2">
             <div id="notification1" class="notification1"></div>
