@@ -3,7 +3,7 @@
 
 #include "tp_ft6x36.h"
 
-__attribute__((weak)) void tp_info(const char* info){
+__attribute__((weak)) void tp_info(const char* info) {
     // Default: do nothing. User can provide their own implementation to process audio data.
 }
 
@@ -89,11 +89,19 @@ bool FT6x36::probe() {
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool FT6x36::get_FT6x36_items() {
     if (!m_isInit) return false;
+    bool     ret = false;
     char     buff[256] = {0};
-    uint8_t  chipID = read(FT6X36_ADDR_CHIP_ID);
-    uint16_t Library_Vers = read(FT6X36_ADDR_LIBRARY_VERSION_H) << 8;
-    Library_Vers += read(FT6X36_ADDR_LIBRARY_VERSION_L);
-    uint8_t FW_ID = read(FT6X36_ADDR_FIRMARE_ID);
+    uint8_t  chipID = 0, lv_l = 0, lv_h = 0, FW_ID = 0;
+    uint16_t Library_Vers = 0;
+    ret = read(FT6X36_ADDR_CHIP_ID, chipID);
+    if(!ret) {log_e("error while read FT6X36_ADDR_CHIP_ID"); return false;}
+    ret = read(FT6X36_ADDR_LIBRARY_VERSION_H, lv_h);
+    if(!ret) {log_e("error while read FT6X36_ADDR_LIBRARY_VERSION_H"); return false;}
+    ret = read(FT6X36_ADDR_LIBRARY_VERSION_L, lv_l);
+    if(!ret) {log_e("error while read FT6X36_ADDR_LIBRARY_VERSION_L"); return false;}
+    Library_Vers = (lv_h << 8) + lv_l;
+    ret = read(FT6X36_ADDR_FIRMARE_ID, FW_ID);
+    if(!ret) {log_e("error while read FT6X36_ADDR_FIRMARE_ID"); return false;}
     sprintf(buff, "FT6x36 Chip ID: " ANSI_ESC_CYAN "%i" ANSI_ESC_RESET ", Library Version: " ANSI_ESC_CYAN "%i" ANSI_ESC_RESET ", Firmware Version: " ANSI_ESC_CYAN "%i" ANSI_ESC_RESET, chipID,
             Library_Vers, FW_ID);
     tp_info(buff);
@@ -153,19 +161,46 @@ void FT6x36::setMirror(bool h, bool v) {
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 uint8_t FT6x36::touched() {
     if (!m_isInit) return 0;
-    return read(FT6X36_ADDR_TOUCH_STATUS); // return 0, 1 or 2
+    uint8_t s = 0;
+    read(FT6X36_ADDR_TOUCH_STATUS, s); // return 0, 1 or 2
+    return s;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 FT6x36::T_Point FT6x36::getPoint(uint8_t num) {
     T_Point points;
+    bool    ret = false;
+    uint8_t id = 0, x_h = 0, x_l = 0, y_h = 0, y_l = 0;
     if (!m_isInit) return {0, 0, 0};
     if (num != 1) return {0, 0, 0};
     if (num == 1) {
-        points.id = ((read(FT6X36_ADDR_TOUCH1_WEIGHT)) >> 4);
-        points.x = (read(FT6X36_ADDR_TOUCH1_XH) & 0x0F) << 8;
-        points.x += (read(FT6X36_ADDR_TOUCH1_XL));
-        points.y = (read(FT6X36_ADDR_TOUCH1_YH) & 0x0F) << 8;
-        points.y += (read(FT6X36_ADDR_TOUCH1_YL));
+        ret = read(FT6X36_ADDR_TOUCH1_WEIGHT, id);
+        if (!ret) {
+            log_e("error while reading FT6X36_ADDR_TOUCH1_WEIGHT");
+            return points;
+        }
+        ret = read(FT6X36_ADDR_TOUCH1_XH, x_h);
+        if (!ret) {
+            log_e("error while reading FT6X36_ADDR_TOUCH1_XH");
+            return points;
+        }
+        ret = read(FT6X36_ADDR_TOUCH1_XL, x_l);
+        if (!ret) {
+            log_e("error while reading FT6X36_ADDR_TOUCH1_XL");
+            return points;
+        }
+        ret = read(FT6X36_ADDR_TOUCH1_YH, y_h);
+        if (!ret) {
+            log_e("error while reading FT6X36_ADDR_TOUCH1_YH");
+            return points;
+        }
+        ret = read(FT6X36_ADDR_TOUCH1_YL, y_l);
+        if (!ret) {
+            log_e("error while reading FT6X36_ADDR_TOUCH1_YL");
+            return points;
+        }
+        points.id = id >> 4;
+        points.x = ((x_h & 0x0F) << 8) + x_l;
+        points.y = ((y_h & 0x0F) << 8) + y_l;
     }
 
     if (m_rotation == 0) { // 0°
@@ -210,20 +245,29 @@ FT6x36::T_Point FT6x36::getPoint(uint8_t num) {
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool FT6x36::write(uint8_t reg, uint8_t data) {
     if (!m_isInit) return false;
+    if(!m_wire->availableForWrite()) log_e("not available for write");
+    bool ret = false;
     m_wire->beginTransmission(m_addr);
-    m_wire->write(reg);
+    ret = m_wire->write(reg);
+    if(!ret) log_e("write register error");
     m_wire->write(data);
+    if(!ret) log_e("write data error");
     return m_wire->endTransmission(true) == 0;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-uint8_t FT6x36::read(uint8_t reg) {
-    if (!m_isInit) return 0;
+bool FT6x36::read(uint8_t reg, uint8_t& value) {
+    if (!m_isInit) return false;
+    bool ret = false;
+
     m_wire->beginTransmission(m_addr);
-    m_wire->write((uint8_t)reg);
-    m_wire->endTransmission();
-    m_wire->requestFrom(m_addr, (uint8_t)1);
-    uint8_t ret = m_wire->read();
-//    m_wire->endTransmission(true);
-    return ret;
+    ret = m_wire->write(reg);
+
+    if(!ret) log_e("write register error in fkt. read");
+
+    if (m_wire->endTransmission(false) != 0) { log_e("transmission error"); return false; }
+
+    if (m_wire->requestFrom(m_addr, (uint8_t)1) != 1) { log_e("request error, reg %i", reg); return false; }
+    value = m_wire->read();
+    return true;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
