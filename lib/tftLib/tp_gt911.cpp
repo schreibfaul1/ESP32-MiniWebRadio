@@ -1,5 +1,5 @@
 // first release on 01/2025
-// updated on Nov 23 2025
+// updated on Nov 09 2026
 
 #include "tp_gt911.h"
 
@@ -82,7 +82,8 @@ void TP_GT911::loop() {
     static GTPoint  p, p1;
     static uint32_t ts = 0;
 
-    uint8_t t = touched(); // number of touch points
+    int8_t t = touched(); // number of touch points
+    if(t == -1) return;   // tp not ready
 
     if (t == 1 && !m_f_isTouch) {
         p = getPoint(0);
@@ -105,7 +106,6 @@ void TP_GT911::loop() {
     if (t == 1 && m_f_isTouch && (millis() > ts + 2000) && !m_f_isLongPressed) {
         m_f_isLongPressed = true;
         tp_long_pressed(p.x, p.y);
-        ts = millis() + 10000;
         return;
     }
     if (t == 0 && m_f_isTouch && !m_f_isLongPressed) {
@@ -210,17 +210,12 @@ uint8_t TP_GT911::readChecksum() {
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 int8_t TP_GT911::readTouches() {
-    uint32_t timeout = millis() + 20;
-    do {
-        uint8_t flag = read(GT911_REG_COORD_ADDR);
-        if ((flag & 0x80) && ((flag & 0x0F) < GT911_MAX_CONTACTS)) {
-            write(GT911_REG_COORD_ADDR, 0);
-            return flag & 0x0F;
-        }
-        delay(5);
-    } while (millis() < timeout);
-
-    return 0;
+    uint8_t flag = read(GT911_REG_COORD_ADDR);
+    if ((flag & 0x80) && ((flag & 0x0F) < GT911_MAX_CONTACTS)) {
+        write(GT911_REG_COORD_ADDR, 0);
+        return flag & 0x0F;
+    }
+    return -1;
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 bool TP_GT911::readTouchPoints() {
@@ -237,10 +232,11 @@ TP_GT911::GTInfo* TP_GT911::readInfo() {
     return &m_info;
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
-uint8_t TP_GT911::touched() {
-    uint8_t contacts = 0;
+int8_t TP_GT911::touched() {
+    int8_t contacts = 0;
     contacts = readTouches();
-    if (contacts > 0) { readTouchPoints(); }
+    if(contacts == -1) return -1;
+    if (contacts > 0) { readTouchPoints();}
     return contacts;
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
