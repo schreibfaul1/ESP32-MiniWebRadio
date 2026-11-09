@@ -46,7 +46,7 @@ class TP_GT911 {
     void     setMirror(bool h, bool v);
     uint16_t readXResolution();
     uint16_t readYResolution();
-    uint8_t  touched();
+    int8_t   touched();
     void     transform(uint16_t& x, uint16_t& y);
     GTPoint  getPoint(uint8_t num);
     GTPoint* getPoints();

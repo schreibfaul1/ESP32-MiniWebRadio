@@ -390,15 +390,22 @@ void         timer100ms();
 
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-bool setupBacklight(int pin, uint32_t freq_hz) {
+bool setupBacklight(int pin) {
     if (pin < 0) return false;
+    uint32_t freq_hz = 512;
+    #if defined(CONFIG_IDF_TARGET_ESP32S3) || defined(CONFIG_IDF_TARGET_ESP32S31)
+        freq_hz = 100000;
+    #endif
+    #if defined(CONFIG_IDF_TARGET_ESP32P4)
+        freq_hz = 300000;
+    #endif
 
     ledc_channel_config_t ch = {
         .gpio_num = pin,
         .speed_mode = LEDC_LOW_SPEED_MODE,
-        .channel = LEDC_CHANNEL_5,
+        .channel = LEDC_CHANNEL_0,
         .intr_type = LEDC_INTR_DISABLE,
-        .timer_sel = LEDC_TIMER_3,
+        .timer_sel = LEDC_TIMER_0,
         .duty = 0,
         .hpoint = 0,
         .sleep_mode = LEDC_SLEEP_MODE_NO_ALIVE_NO_PD,
@@ -411,7 +418,7 @@ bool setupBacklight(int pin, uint32_t freq_hz) {
     ledc_timer_config_t tmr = {
         .speed_mode = LEDC_LOW_SPEED_MODE,
         .duty_resolution = LEDC_TIMER_8_BIT,
-        .timer_num = LEDC_TIMER_3,
+        .timer_num = LEDC_TIMER_0,
         .freq_hz = freq_hz,
         .clk_cfg = LEDC_AUTO_CLK,
         .deconfigure = false,
@@ -424,8 +431,8 @@ bool setupBacklight(int pin, uint32_t freq_hz) {
     ledc_channel_config(&ch);
 
     // Optional Helligkeit setzen
-    ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_5, 127);
-    ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_5);
+    ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, 127);
+    ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0);
     return true;
 }
 
