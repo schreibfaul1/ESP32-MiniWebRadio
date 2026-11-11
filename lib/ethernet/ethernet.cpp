@@ -67,7 +67,7 @@ void ETH_IDF::ipEventHandler(void* arg, esp_event_base_t event_base, int32_t eve
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool ETH_IDF::begin() {
-    log_w("begin");
+
     if (m_eth_handle) {
         log_e("[%s:%i] eth_handle is not NULL", __FILE__, __LINE__);
         return false;
@@ -152,15 +152,22 @@ bool ETH_IDF::begin() {
     return ESP_OK;
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-esp_err_t ETH_IDF::end() {
+void ETH_IDF::end() {
 
-    esp_err_t result = ESP_OK;
     esp_err_t err;
 
     if (m_eth_handle && m_started) {
         err = esp_eth_stop(m_eth_handle);
 
-        if (err != ESP_OK && result == ESP_OK) result = err;
+        if (err != ESP_OK) {
+            if (err == ESP_ERR_INVALID_ARG) {
+                log_e("[%s:%i] stop esp_eth driver failed because of some invalid argument", __FILE__, __LINE__);
+            } else if (err == ESP_ERR_INVALID_STATE) {
+                log_e("[%s:%i] stop esp_eth driver failed because driver  ", __FILE__, __LINE__);
+            } else {
+                log_e("[%s:%i] stop esp_eth driver failed because some other error ", __FILE__, __LINE__);
+            }
+        }
 
         m_started = false;
     }
@@ -180,10 +187,7 @@ esp_err_t ETH_IDF::end() {
 
     // Delete netif glue
     if (m_eth_glue) {
-        err = esp_eth_del_netif_glue(m_eth_glue);
-
-        if (err != ESP_OK && result == ESP_OK) result = err;
-
+        esp_eth_del_netif_glue(m_eth_glue);
         m_eth_glue = nullptr;
     }
 
@@ -197,17 +201,21 @@ esp_err_t ETH_IDF::end() {
     if (m_eth_handle) {
         err = esp_eth_driver_uninstall(m_eth_handle);
 
-        if (err == ESP_OK) {
-            m_eth_handle = nullptr;
-        } else if (result == ESP_OK) {
-            result = err;
+        if (err != ESP_OK) {
+            if (err == ESP_ERR_INVALID_ARG) {
+                log_e("[%s:%i] uninstall esp_eth driver failed because of some invalid argument", __FILE__, __LINE__);
+            } else if (err == ESP_ERR_INVALID_STATE) {
+                log_e("[%s:%i] uninstall esp_eth driver failed because it has more than one reference", __FILE__, __LINE__);
+            } else {
+                log_e("[%s:%i] uninstall esp_eth driver failed because some other error occurred", __FILE__, __LINE__);
+            }
         }
     }
 
     m_link_up = false;
     m_has_ip = false;
 
-    return result;
+    return;
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 esp_err_t ETH_IDF::initYT8531() {

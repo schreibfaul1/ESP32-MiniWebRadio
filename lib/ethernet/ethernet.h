@@ -46,11 +46,11 @@ class ETH_IDF {
     // Public API
     // --------------------------------------------------
 
-    bool      begin();
-    esp_err_t end();
-    bool      isStarted() const { return m_started; }
-    bool      linkUp() const { return m_link_up; }
-    bool      hasIP() const { return m_has_ip; }
+    bool begin();
+    void end();
+    bool isStarted() const { return m_started; }
+    bool linkUp() const { return m_link_up; }
+    bool hasIP() const { return m_has_ip; }
 
     // --------------------------------------------------
     // Network information
