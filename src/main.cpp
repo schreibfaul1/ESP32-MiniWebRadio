@@ -3655,7 +3655,8 @@ void on_ethernet(const ETH_IDF::msg_s& msg) {
         case (ETH_IDF::Event::Connected): printfln(s_tag.ethernet, ANSI_ESC_GREEN "connected, Ethernet link up, {}", msg.txt); break;
         case (ETH_IDF::Event::Disconnected): printfln(s_tag.ethernet, ANSI_ESC_GREEN "disconnected, Ethernet link down"); break;
         case (ETH_IDF::Event::Stopped): printfln(s_tag.ethernet, ANSI_ESC_GREEN "stopped"); break;
-        default: printfln(s_tag.ethernet, ANSI_ESC_GREEN "unknown event {}",  msg.event); break;
+        case (ETH_IDF::Event::Info): printfln(s_tag.ethernet, ANSI_ESC_GREEN "{}", msg.txt); break;
+        default: printfln(s_tag.ethernet, ANSI_ESC_GREEN "unknown event {}", msg.event); break;
     }
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

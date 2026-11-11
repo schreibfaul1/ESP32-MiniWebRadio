@@ -218,11 +218,15 @@ void ETH_IDF::end() {
     return;
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-esp_err_t ETH_IDF::initYT8531() {
+bool ETH_IDF::initYT8531() {
+    esp_err_t err;
+    bool      auto_nego = true;
 
-    bool auto_nego = true;
-
-    ESP_RETURN_ON_ERROR(esp_eth_ioctl(m_eth_handle, ETH_CMD_S_AUTONEGO, &auto_nego), "[%s:%i] Auto negotiation failed", __FILE__, __LINE__);
+    err = esp_eth_ioctl(m_eth_handle, ETH_CMD_S_AUTONEGO, &auto_nego);
+    if (err != ESP_OK) {
+        log_e("[%s:%i] Auto negotiation failed", __FILE__, __LINE__);
+        return false;
+    }
 
     esp_eth_phy_reg_rw_data_t reg = {};
     uint32_t                  value = 0;
@@ -233,31 +237,57 @@ esp_err_t ETH_IDF::initYT8531() {
     value = 0xA001;
     reg.reg_addr = 0x1E;
 
-    ESP_RETURN_ON_ERROR(esp_eth_ioctl(m_eth_handle, ETH_CMD_WRITE_PHY_REG, &reg), "[%s:%i] Write RX delay address failed", __FILE__, __LINE__);
+    err = esp_eth_ioctl(m_eth_handle, ETH_CMD_WRITE_PHY_REG, &reg);
+    if (err != ESP_OK) {
+        log_e("[%s:%i] Write RX delay address failed", __FILE__, __LINE__);
+        return false;
+    }
 
     reg.reg_addr = 0x1F;
 
-    ESP_RETURN_ON_ERROR(esp_eth_ioctl(m_eth_handle, ETH_CMD_READ_PHY_REG, &reg), "[%s:%i] Read RX delay failed", __FILE__, __LINE__);
+    err = esp_eth_ioctl(m_eth_handle, ETH_CMD_READ_PHY_REG, &reg);
+    if (err != ESP_OK) {
+        log_e("[%s:%i] Read RX delay failed", __FILE__, __LINE__);
+        return false;
+    }
 
     value |= (1U << 8);
 
-    ESP_RETURN_ON_ERROR(esp_eth_ioctl(m_eth_handle, ETH_CMD_WRITE_PHY_REG, &reg), "[%s:%i] Write RX delay failed", __FILE__, __LINE__);
+    err = esp_eth_ioctl(m_eth_handle, ETH_CMD_WRITE_PHY_REG, &reg);
+    if (err != ESP_OK) {
+        log_e("[%s:%i] Write RX delay failed", __FILE__, __LINE__);
+        return false;
+    }
 
     // Configure TX clock delay
     value = 0xA003;
     reg.reg_addr = 0x1E;
 
-    ESP_RETURN_ON_ERROR(esp_eth_ioctl(m_eth_handle, ETH_CMD_WRITE_PHY_REG, &reg), "[%s:%i] Write TX delay address failed", __FILE__, __LINE__);
+    err = esp_eth_ioctl(m_eth_handle, ETH_CMD_WRITE_PHY_REG, &reg);
+    if (err != ESP_OK) {
+        log_e("[%s:%i] Write TX delay address failed", __FILE__, __LINE__);
+        return false;
+    }
 
     reg.reg_addr = 0x1F;
 
-    ESP_RETURN_ON_ERROR(esp_eth_ioctl(m_eth_handle, ETH_CMD_READ_PHY_REG, &reg), "[%s:%i] Read TX delay failed", __FILE__, __LINE__);
+    err = esp_eth_ioctl(m_eth_handle, ETH_CMD_READ_PHY_REG, &reg);
+    if (err != ESP_OK) {
+        log_e("[%s:%i] Read TX delay failed", __FILE__, __LINE__);
+        return false;
+    }
 
     value = (value & ~0x00FFU) | (13U << 4) | 13U;
 
-    ESP_RETURN_ON_ERROR(esp_eth_ioctl(m_eth_handle, ETH_CMD_WRITE_PHY_REG, &reg), "[%s:%i] Write TX delay failed", __FILE__, __LINE__);
+    err = esp_eth_ioctl(m_eth_handle, ETH_CMD_WRITE_PHY_REG, &reg);
+    if (err != ESP_OK) {
+        log_e("[%s:%i] Write TX delay failed", __FILE__, __LINE__);
+        return false;
+    }
 
-    log_i("[%s:%i] YT8531 initialized", __FILE__, __LINE__);
+    m_msg.event = Event::Info;
+    m_msg.txt = "YT8531 initialized";
+    if (m_ethernet_callback) m_ethernet_callback(m_msg);
 
     return ESP_OK;
 }

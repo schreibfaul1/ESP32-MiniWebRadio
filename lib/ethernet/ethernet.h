@@ -19,7 +19,8 @@ class ETH_IDF {
         Connected,
         Disconnected,
         Stopped,
-        GotIP
+        GotIP,
+        Info
     };
 
     // callbacks ---------------------------------------------------------
@@ -114,7 +115,7 @@ class ETH_IDF {
     // YT8531 initialization
     // --------------------------------------------------
 
-    esp_err_t initYT8531();
+    bool initYT8531();
     // --------------------------------------------------
     // MAC / PHY initialization
     // --------------------------------------------------
