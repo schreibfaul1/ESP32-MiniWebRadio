@@ -61,6 +61,7 @@
 #include "kcx_bt_emitter.h"
 #include "meteo.h"
 #include "rtime.h"
+#include "../ethernet/ethernet.hpp"
 #include "tft_common_defs.h"
 #include "websrv.h"
 #include <Arduino.h>
@@ -379,6 +380,7 @@ void         on_dlna_client(const DLNA_Client::msg_s& msg);
 void         on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg);
 void         on_websrv(const WebSrv::msg_s& msg);
 void         on_meteo(const METEO::msg_s& msg);
+void         on_ethernet(const ETH_IDF::msg_s& msg);
 void         tp_pressed(uint16_t x, uint16_t y);
 void         tp_long_pressed(uint16_t x, uint16_t y);
 void         tp_moved(uint16_t x, uint16_t y);
@@ -741,6 +743,13 @@ void ui_btoo() {
     b ? printfln(s_tag.terminal, "bt_source off") : printfln(s_tag.terminal, "bt source on");
 }
 
+void ui_aam(){
+    bool aam = audio.settings.ANTI_AUTOMUTE;
+    aam = ! aam;
+    audio.settings.ANTI_AUTOMUTE = aam;
+    aam ? printfln(s_tag.terminal, "anti automute is on") : printfln(s_tag.terminal, "anti automute is off");
+}
+
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void user_input(ps_ptr<char> input) {
 
@@ -775,6 +784,7 @@ void user_input(ps_ptr<char> input) {
     if (input == "ir") ui_isRunning();                                             // is running?
     if (input.starts_with("vfs")) ui_volFadingSpeed(input.substr(3).to_float());   // volume fading speed
     if (input == "lif") ui_listFonts();                                            // list all loaded fonts
-    if (input == "kern") ui_kernig();                                              //
+    if (input == "kern") ui_kernig();                                              // distance between two letters that can be moved closer together
     if (input == "btoo") ui_btoo();                                                // bt classic source on/off
+    if (input == "aam") ui_aam();                                                  // anti automute for some dacs after 1024 LRCK with zero I2S
 }

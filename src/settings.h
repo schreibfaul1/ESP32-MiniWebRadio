@@ -1,18 +1,18 @@
 #pragma once
 #include "Arduino.h"
 #undef I2S_DOUT
-#include "tft_structures.h"
+#include "../lib/tftLib/tft_structures.h"
 
 //———————————— predifined displays —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // #define SPI_DISPLAY 1                  //                    SPI display  320x240, 2.8inch,        ILI9341             XPT2046, ESP32s3 or ESP32p4
-// #define SPI_DISPLAY 2                  //                    SPI display  480x320, 3.5" od 4"      ILI9488 or ST7796,  XPT2046, ESP32s3 or ESP32p4
+#define SPI_DISPLAY 2                  //                    SPI display  480x320, 3.5" od 4"      ILI9488 or ST7796,  XPT2046, ESP32s3 or ESP32p4
 // #define SPI_DISPLAY 3                  //                    SPI display  480x320, 3.5" od 4"      ILI9488 or ST7796,  FT6x63,  ESP32s3 or ESP32p4
 // #define LCD_DISPLAY_ESP32_S3_28        // Hosyond            SPI display  320x240, 2.8inch,        ILI9341             FT6x63,  ESP32s3 N16R8
 // #define LCD_DISPLAY_ESP32_S3_40        // Hosyond            SPI display  480x320, 4"              ST7796,             FT6x63,  ESP32s3 N16R8
 // #define ESP32_8048S070                 // Sunton             RGB display  800x480, 7",                                 GT911,   ESP32s3 N16R8
 // #define ESP32_S3_Touch_LCD7            // Waveshare          RGB display  800x480, 7",                                 GT911,   ESP32s3 N8R8
 // #define ESP32_P4_WIFI6_TOUCH_LCD_43    // Waveshare          DSI display  800x480, 4.3",           ST7701,             GT911,   ESP32p4 N32R32
-#define ESP32_P4_WIFI6_TOUCH_LCD7_7B   // Waveshare          DSI display 1024x600, 7",             EK97007,            GT911,   ESP32p4_es N32R32
+// #define ESP32_P4_WIFI6_TOUCH_LCD7_7B   // Waveshare          DSI display 1024x600, 7",             EK97007,            GT911,   ESP32p4_es N32R32
 // #define JC1060P470                     // Guition            DSI display 1024x600, 7",             JD9165,             GT911,   ESP32p4_es N32R32
 // #define JC4880P443                     // Guition            DSI display  800x480, 4.3",           ST7701,             GT911,   ESP32p4_es N16R32
 // #define USER_DEFINED_DISPLAY           // Self configurated ESP32-S3 or ESP32-P4 devBoard with SPI display
@@ -200,6 +200,23 @@
         #define I2C_SDA             36 // 51 // I2C, dala line for capacitive touchpadand and light sensor (-1 if not available)
         #define I2C_SCL             37 // 50 // I2C, clock line for capacitive touchpadand and light sensor (-1 if not available)
         #define AMP_ENABLED         57 // onboard amplifier (-1 if not available)
+
+        #define ETH_PHY_MDC          5 // Ethernet YT8531DC-CA
+        #define ETH_PHY_MDIO         6 // Ethernet YT8531DC-CA
+        #define ETH_PHY_RST          7 // Ethernet YT8531DC-CA
+        #define ETH_RMII_TX0         8 // Ethernet YT8531DC-CA
+        #define ETH_RMII_TX1         9 // Ethernet YT8531DC-CA
+        #define ETH_RMII_TX2        10 // Ethernet YT8531DC-CA
+        #define ETH_RMII_TX3        11 // Ethernet YT8531DC-CA
+        #define ETH_RMII_TX_CTL     12 // Ethernet YT8531DC-CA
+        #define ETH_RMII_TX_CLK     13 // Ethernet YT8531DC-CA
+        #define ETH_RMII_RX_CLK     14 // Ethernet YT8531DC-CA
+        #define ETH_RMII_RX_CTL     15 // Ethernet YT8531DC-CA
+        #define ETH_RMII_RX3        16 // Ethernet YT8531DC-CA
+        #define ETH_RMII_RX2        17 // Ethernet YT8531DC-CA
+        #define ETH_RMII_RX1        18 // Ethernet YT8531DC-CA
+        #define ETH_RMII_RX0        19 // Ethernet YT8531DC-CA
+
     #endif
 
     #if CONFIG_IDF_TARGET_ESP32P4
