@@ -69,6 +69,69 @@ void setup() {
 
     if (!detect_i2_c_devices(&i2cBusOne, I2C_SDA, I2C_SCL, &s_i2c_items)) { printfln(s_tag.setup, "No i2c device found"); }
 
+
+        // --- RaspyPlay4 PCM5122 Initialization Jumper ---
+        if (s_i2c_items.pcm5122_found) {
+        // ─────────────────────────────────────────────────────────────
+        // RaspyPlay4 / PCM5122 initialization
+        // ─────────────────────────────────────────────────────────────
+
+        printfln(s_tag.setup, "Initializing RaspyPlay4 PCM5122 from working test config...");
+
+        // Page Tracking Lambda mapping your working I2C routing to i2cBusOne
+        static uint8_t currentPcmPage = 0xFF; 
+        auto writePcmRegister = [](uint8_t page, uint8_t reg, uint8_t value) {
+            if (currentPcmPage != page) {
+                i2cBusOne.beginTransmission(0x4C);
+                i2cBusOne.write(0x00); // REG_PAGE_SELECT
+                i2cBusOne.write(page);
+                if (i2cBusOne.endTransmission() != 0) return false;
+                currentPcmPage = page;
+            }
+            i2cBusOne.beginTransmission(0x4C);
+            i2cBusOne.write(reg);
+            i2cBusOne.write(value);
+            return (i2cBusOne.endTransmission() == 0);
+        };
+
+        // 1. Initial Handshake & Reset Verification
+        if (!writePcmRegister(0, 0x00, 0x00)) {
+            printfln(s_tag.setup, ANSI_ESC_RED "Error: RaspyPlay4 hardware not responding on I2C!");
+        }
+
+        writePcmRegister(0, 0x01, 0x11); // Hard reset
+        vTaskDelay(20);                  // Let the digital hardware registers clear
+
+        // 2. Apply verified clock routing & PLL settings for grounded SCK configurations
+        writePcmRegister(0, 0x01, 0x00); // Wake from standby
+        writePcmRegister(0, 0x04, 0x01); // Enable internal PLL
+        writePcmRegister(0, 0x0D, 0x10); // Reference BCLK
+        writePcmRegister(0, 0x0E, 0x08); // Route BCLK down clock tree
+        writePcmRegister(0, 0x25, 0x08); // Ignore missing external MCLK
+        writePcmRegister(0, 0x08, 0x3F); // Configure output GPIO lines
+        writePcmRegister(0, 0x09, 0x00); 
+        writePcmRegister(0, 0x54, 0x11); // Unmute analog backend components
+        writePcmRegister(0, 0x55, 0x11); 
+        writePcmRegister(0, 0x41, 0x00); // Disable chip auto-mute gate
+
+        // 3. Audio Stream Interface Configurations
+        // Set standard Philips format matching the output of your web radio software
+        writePcmRegister(0, 0x28, 0x00); 
+
+        // 4. Volume Mapping Allocation
+        // Evaluated at 0x40 to protect speakers while establishing initial web link signals
+        writePcmRegister(0, 0x3D, 0x40); // Left Digital Volume Register 
+        writePcmRegister(0, 0x3E, 0x40); // Right Digital Volume Register
+
+        // 5. Release main muting lines
+        writePcmRegister(0, 0x02, 0x00); // Unmute system core
+
+        printfln(s_tag.setup, "PCM5122 Initialization Complete.");
+        // ────────────────────────────────────────────────────────────────────────
+    }
+
+
+
     if (s_i2c_items.bh1750_found) {
         BH1750.begin(&i2cBusOne, s_i2c_items.bh1750_addr); // init the sensor
         BH1750.setResolutionMode(BH1750.ONE_TIME_H_RESOLUTION_MODE);
@@ -1527,6 +1590,13 @@ bool detect_i2_c_devices(TwoWire* twi, int8_t sda, int8_t scl, i2c_items_s* i2c_
                 i2c_items->tca9554_found = true;
                 i2c_items->tca9554_addr = addr;
                 printfln(s_tag.setup, "TCA9554 (8 Channel Port Expander) found at " ANSI_ESC_CYAN "0x{:X}", addr);
+                continue;
+            }
+            //-- PCM5122 DAC (RaspyPlay4) --------------------------------------------------------------------------------------------------
+            if (addr == 0x4C) {
+                i2c_items->pcm5122_found = true; 
+                i2c_items->pcm5122_addr = 0x4C;  
+                printfln(s_tag.setup, "PCM5122 (RaspyPlay4 DAC) found at " ANSI_ESC_CYAN "0x{:X}", addr);
                 continue;
             }
             //-- Unknown Device  ------------------------------------------------------------------------------------------------------------------
