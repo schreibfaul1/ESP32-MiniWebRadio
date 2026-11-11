@@ -2,6 +2,69 @@
 
 ETH_IDF* ETH_IDF::s_instance = nullptr;
 
+void ETH_IDF::ethEventHandler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
+    auto* self = static_cast<ETH_IDF*>(arg);
+
+    switch (event_id) {
+
+        case ETHERNET_EVENT_START:
+            s_instance->m_msg.event = Event::Started;
+            if (s_instance->m_ethernet_callback) s_instance->m_ethernet_callback(s_instance->m_msg);
+            ESP_LOGD(TAG, "Ethernet started");
+            break;
+
+        case ETHERNET_EVENT_CONNECTED: {
+
+            self->m_link_up = true;
+
+            eth_speed_t  speed;
+            eth_duplex_t duplex;
+
+            self->getSpeed(speed);
+            self->getDuplex(duplex);
+
+            s_instance->m_msg.event = Event::Connected;
+            s_instance->m_msg.txt.assignf("Speed: {} Mbps, {} duplex", speed == ETH_SPEED_1000M ? 1000 : speed == ETH_SPEED_100M ? 100 : 10, duplex == ETH_DUPLEX_FULL ? "full" : "half");
+            if (s_instance->m_ethernet_callback) s_instance->m_ethernet_callback(s_instance->m_msg);
+            break;
+        }
+
+        case ETHERNET_EVENT_DISCONNECTED:
+            self->m_link_up = false;
+            self->m_has_ip = false;
+
+            ESP_LOGI(TAG, "Ethernet link down");
+
+            s_instance->m_msg.event = Event::Disconnected;
+            if (s_instance->m_ethernet_callback) s_instance->m_ethernet_callback(s_instance->m_msg);
+            break;
+
+            break;
+
+        case ETHERNET_EVENT_STOP:
+            ESP_LOGI(TAG, "Ethernet stopped");
+            self->notify(Event::Stopped);
+            break;
+    }
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void ETH_IDF::ipEventHandler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
+    auto* self = static_cast<ETH_IDF*>(arg);
+
+    auto* event = static_cast<ip_event_got_ip_t*>(event_data);
+
+    self->m_has_ip = true;
+
+    ESP_LOGI(TAG, "Got IP address");
+
+    ESP_LOGI(TAG, "IP: " IPSTR, IP2STR(&event->ip_info.ip));
+
+    ESP_LOGI(TAG, "Mask: " IPSTR, IP2STR(&event->ip_info.netmask));
+
+    ESP_LOGI(TAG, "Gateway: " IPSTR, IP2STR(&event->ip_info.gw));
+
+    self->notify(Event::GotIP);
+}
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 esp_err_t ETH_IDF::begin() {
     if (m_eth_handle) return ESP_ERR_INVALID_STATE;
@@ -119,47 +182,47 @@ esp_err_t ETH_IDF::end() {
     return result;
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
- esp_err_t ETH_IDF::initYT8531() {
+esp_err_t ETH_IDF::initYT8531() {
 
-        bool auto_nego = true;
+    bool auto_nego = true;
 
-        ESP_RETURN_ON_ERROR(esp_eth_ioctl(m_eth_handle, ETH_CMD_S_AUTONEGO, &auto_nego), TAG, "Auto negotiation failed");
+    ESP_RETURN_ON_ERROR(esp_eth_ioctl(m_eth_handle, ETH_CMD_S_AUTONEGO, &auto_nego), TAG, "Auto negotiation failed");
 
-        esp_eth_phy_reg_rw_data_t reg = {};
-        uint32_t                  value = 0;
+    esp_eth_phy_reg_rw_data_t reg = {};
+    uint32_t                  value = 0;
 
-        reg.reg_value_p = &value;
+    reg.reg_value_p = &value;
 
-        // Enable RX clock delay
-        value = 0xA001;
-        reg.reg_addr = 0x1E;
+    // Enable RX clock delay
+    value = 0xA001;
+    reg.reg_addr = 0x1E;
 
-        ESP_RETURN_ON_ERROR(esp_eth_ioctl(m_eth_handle, ETH_CMD_WRITE_PHY_REG, &reg), TAG, "Write RX delay address failed");
+    ESP_RETURN_ON_ERROR(esp_eth_ioctl(m_eth_handle, ETH_CMD_WRITE_PHY_REG, &reg), TAG, "Write RX delay address failed");
 
-        reg.reg_addr = 0x1F;
+    reg.reg_addr = 0x1F;
 
-        ESP_RETURN_ON_ERROR(esp_eth_ioctl(m_eth_handle, ETH_CMD_READ_PHY_REG, &reg), TAG, "Read RX delay failed");
+    ESP_RETURN_ON_ERROR(esp_eth_ioctl(m_eth_handle, ETH_CMD_READ_PHY_REG, &reg), TAG, "Read RX delay failed");
 
-        value |= (1U << 8);
+    value |= (1U << 8);
 
-        ESP_RETURN_ON_ERROR(esp_eth_ioctl(m_eth_handle, ETH_CMD_WRITE_PHY_REG, &reg), TAG, "Write RX delay failed");
+    ESP_RETURN_ON_ERROR(esp_eth_ioctl(m_eth_handle, ETH_CMD_WRITE_PHY_REG, &reg), TAG, "Write RX delay failed");
 
-        // Configure TX clock delay
-        value = 0xA003;
-        reg.reg_addr = 0x1E;
+    // Configure TX clock delay
+    value = 0xA003;
+    reg.reg_addr = 0x1E;
 
-        ESP_RETURN_ON_ERROR(esp_eth_ioctl(m_eth_handle, ETH_CMD_WRITE_PHY_REG, &reg), TAG, "Write TX delay address failed");
+    ESP_RETURN_ON_ERROR(esp_eth_ioctl(m_eth_handle, ETH_CMD_WRITE_PHY_REG, &reg), TAG, "Write TX delay address failed");
 
-        reg.reg_addr = 0x1F;
+    reg.reg_addr = 0x1F;
 
-        ESP_RETURN_ON_ERROR(esp_eth_ioctl(m_eth_handle, ETH_CMD_READ_PHY_REG, &reg), TAG, "Read TX delay failed");
+    ESP_RETURN_ON_ERROR(esp_eth_ioctl(m_eth_handle, ETH_CMD_READ_PHY_REG, &reg), TAG, "Read TX delay failed");
 
-        value = (value & ~0x00FFU) | (13U << 4) | 13U;
+    value = (value & ~0x00FFU) | (13U << 4) | 13U;
 
-        ESP_RETURN_ON_ERROR(esp_eth_ioctl(m_eth_handle, ETH_CMD_WRITE_PHY_REG, &reg), TAG, "Write TX delay failed");
+    ESP_RETURN_ON_ERROR(esp_eth_ioctl(m_eth_handle, ETH_CMD_WRITE_PHY_REG, &reg), TAG, "Write TX delay failed");
 
-        ESP_LOGI(TAG, "YT8531 initialized");
+    ESP_LOGI(TAG, "YT8531 initialized");
 
-        return ESP_OK;
-    }
-    // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+    return ESP_OK;
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

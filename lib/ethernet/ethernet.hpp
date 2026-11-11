@@ -193,70 +193,9 @@ class ETH_IDF {
         if (m_ethernet_callback) m_ethernet_callback(msg);
     }
 
-    static void ethEventHandler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
-        auto* self = static_cast<ETH_IDF*>(arg);
-
-        switch (event_id) {
-
-            case ETHERNET_EVENT_START:
-                s_instance->m_msg.event = Event::Started;
-                if(s_instance->m_ethernet_callback)s_instance->m_ethernet_callback(s_instance->m_msg);
-                ESP_LOGD(TAG, "Ethernet started");
-                break;
-
-            case ETHERNET_EVENT_CONNECTED: {
-
-                self->m_link_up = true;
-
-                eth_speed_t  speed;
-                eth_duplex_t duplex;
-
-                self->getSpeed(speed);
-                self->getDuplex(duplex);
-
-                s_instance->m_msg.event = Event::Connected;
-                s_instance->m_msg.txt.assignf("Speed: {} Mbps, {} duplex", speed == ETH_SPEED_1000M ? 1000 : speed == ETH_SPEED_100M ? 100 : 10, duplex == ETH_DUPLEX_FULL ? "full" : "half");
-                if(s_instance->m_ethernet_callback)s_instance->m_ethernet_callback(s_instance->m_msg);
-                break;
-            }
-
-            case ETHERNET_EVENT_DISCONNECTED:
-                self->m_link_up = false;
-                self->m_has_ip = false;
-
-                ESP_LOGI(TAG, "Ethernet link down");
-
-                s_instance->m_msg.event = Event::Disconnected;
-                if(s_instance->m_ethernet_callback)s_instance->m_ethernet_callback(s_instance->m_msg);
-                break;
-
-
-                break;
-
-            case ETHERNET_EVENT_STOP:
-                ESP_LOGI(TAG, "Ethernet stopped");
-                self->notify(Event::Stopped);
-                break;
-        }
-    }
-
+    static void ethEventHandler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
+static void ipEventHandler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
     // --------------------------------------------------
 
-    static void ipEventHandler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
-        auto* self = static_cast<ETH_IDF*>(arg);
 
-        auto* event = static_cast<ip_event_got_ip_t*>(event_data);
-
-        self->m_has_ip = true;
-
-        ESP_LOGI(TAG, "Got IP address");
-
-        ESP_LOGI(TAG, "IP: " IPSTR, IP2STR(&event->ip_info.ip));
-
-        ESP_LOGI(TAG, "Mask: " IPSTR, IP2STR(&event->ip_info.netmask));
-
-        ESP_LOGI(TAG, "Gateway: " IPSTR, IP2STR(&event->ip_info.gw));
-
-        self->notify(Event::GotIP);
-    }
 };
