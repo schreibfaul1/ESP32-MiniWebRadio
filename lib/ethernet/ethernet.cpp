@@ -1,4 +1,4 @@
-#include "ethernet.hpp"
+#include "ethernet.h"
 
 ETH_IDF* ETH_IDF::s_instance = nullptr;
 
@@ -10,7 +10,7 @@ void ETH_IDF::ethEventHandler(void* arg, esp_event_base_t event_base, int32_t ev
         case ETHERNET_EVENT_START:
             s_instance->m_msg.event = Event::Started;
             if (s_instance->m_ethernet_callback) s_instance->m_ethernet_callback(s_instance->m_msg);
-            ESP_LOGD(TAG, "Ethernet started");
+            log_d("[%s:%i] Ethernet started", __FILE__, __LINE__);
             break;
 
         case ETHERNET_EVENT_CONNECTED: {
@@ -33,7 +33,7 @@ void ETH_IDF::ethEventHandler(void* arg, esp_event_base_t event_base, int32_t ev
             self->m_link_up = false;
             self->m_has_ip = false;
 
-            ESP_LOGI(TAG, "Ethernet link down");
+            log_i("[%s:%i] Ethernet link down", __FILE__, __LINE__);
 
             s_instance->m_msg.event = Event::Disconnected;
             if (s_instance->m_ethernet_callback) s_instance->m_ethernet_callback(s_instance->m_msg);
@@ -42,7 +42,7 @@ void ETH_IDF::ethEventHandler(void* arg, esp_event_base_t event_base, int32_t ev
             break;
 
         case ETHERNET_EVENT_STOP:
-            ESP_LOGI(TAG, "Ethernet stopped");
+            log_i("[%s:%i] Ethernet stopped", __FILE__, __LINE__);
             self->notify(Event::Stopped);
             break;
     }
@@ -55,30 +55,46 @@ void ETH_IDF::ipEventHandler(void* arg, esp_event_base_t event_base, int32_t eve
 
     self->m_has_ip = true;
 
-    ESP_LOGI(TAG, "Got IP address");
+    log_i("[%s:%i] Got IP address", __FILE__, __LINE__);
 
-    ESP_LOGI(TAG, "IP: " IPSTR, IP2STR(&event->ip_info.ip));
+    log_i("[%s:%i] IP: ", __FILE__, __LINE__, IPSTR, IP2STR(&event->ip_info.ip));
 
-    ESP_LOGI(TAG, "Mask: " IPSTR, IP2STR(&event->ip_info.netmask));
+    log_i("[%s:%i] Mask: ", __FILE__, __LINE__, IPSTR, IP2STR(&event->ip_info.netmask));
 
-    ESP_LOGI(TAG, "Gateway: " IPSTR, IP2STR(&event->ip_info.gw));
+    log_i("[%s:%i] Gateway: ", __FILE__, __LINE__, IPSTR, IP2STR(&event->ip_info.gw));
 
     self->notify(Event::GotIP);
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-esp_err_t ETH_IDF::begin() {
-    if (m_eth_handle) return ESP_ERR_INVALID_STATE;
+bool ETH_IDF::begin() {
+    log_w("begin");
+    if (m_eth_handle) {
+        log_e("[%s:%i] eth_handle is not NULL", __FILE__, __LINE__);
+        return false;
+    }
 
     esp_err_t err = esp_netif_init(); // Initialize TCP/IP stack
-    if (err != ESP_OK && err != ESP_ERR_INVALID_STATE) return err;
+    if (err != ESP_OK) {
+        log_e("[%s:%i] netif initializing failed", __FILE__, __LINE__);
+        return false;
+    }
 
     err = esp_event_loop_create_default(); // Initialize default event loop
-    if (err != ESP_OK && err != ESP_ERR_INVALID_STATE) return err;
+    if (err != ESP_OK) {
+        if (err == ESP_ERR_NO_MEM) {
+            log_e("[%s:%i] Cannot allocate memory for event loops list", __FILE__, __LINE__);
+        } else if (err == ESP_ERR_INVALID_STATE) {
+            log_e("[%s:%i] Default event loop has already been created", __FILE__, __LINE__);
+        } else {
+            log_e("[%s:%i] Failed to create task loop", __FILE__, __LINE__);
+        }
+        return false;
+    };
 
     err = initEthernet(); // Initialize MAC and PHY
     if (err != ESP_OK) {
         end();
-        return err;
+        return false;
     }
 
     esp_netif_config_t netif_config = ESP_NETIF_DEFAULT_ETH(); // Create network interface
@@ -86,37 +102,49 @@ esp_err_t ETH_IDF::begin() {
     m_eth_netif = esp_netif_new(&netif_config);
     if (!m_eth_netif) {
         end();
-        return ESP_ERR_NO_MEM;
+        log_e("[%s:%i] no esp-netif object created", __FILE__, __LINE__);
+        return false;
     }
 
     m_eth_glue = esp_eth_new_netif_glue(m_eth_handle); // Connect Ethernet driver to TCP/IP stack
     if (!m_eth_glue) {
         end();
-        return ESP_ERR_NO_MEM;
+        log_e("[%s:%i] no new netif_glue object created", __FILE__, __LINE__);
+        return false;
     }
 
     err = esp_netif_attach(m_eth_netif, m_eth_glue);
     if (err != ESP_OK) {
         end();
-        return err;
+        log_e("[%s:%i] driver's pot_attach callback failed", __FILE__, __LINE__);
+        return false;
     }
 
-    err = esp_event_handler_instance_register(ETH_EVENT, ESP_EVENT_ANY_ID, ethEventHandler, this, &m_eth_event_instance); // Register events
+    err = esp_event_handler_instance_register(ETH_EVENT, ESP_EVENT_ANY_ID, ethEventHandler, this, &m_eth_event_instance); // Register ethEventHandler
     if (err != ESP_OK) {
         end();
-        return err;
+        log_e("[%s:%i] Register ethEventHandler failed", __FILE__, __LINE__);
+        return false;
     }
 
-    err = esp_event_handler_instance_register(IP_EVENT, IP_EVENT_ETH_GOT_IP, ipEventHandler, this, &m_ip_event_instance);
+    err = esp_event_handler_instance_register(IP_EVENT, IP_EVENT_ETH_GOT_IP, ipEventHandler, this, &m_ip_event_instance); // Register ipEventHandler
     if (err != ESP_OK) {
         end();
-        return err;
+        log_e("[%s:%i] Register ipEventHandler failed", __FILE__, __LINE__);
+        return false;
     }
 
     err = esp_eth_start(m_eth_handle); // Start Ethernet
     if (err != ESP_OK) {
         end();
-        return err;
+        if (err == ESP_ERR_INVALID_ARG) {
+            log_e("[%s:%i] start esp_eth driver failed because of some invalid argument", __FILE__, __LINE__);
+        } else if (err == ESP_ERR_INVALID_STATE) {
+            log_e("[%s:%i] start esp_eth driver failed because driver has started already", __FILE__, __LINE__);
+        } else {
+            log_e("[%s:%i] start esp_eth driver failed because some other error occurred", __FILE__, __LINE__);
+        }
+        return false;
     }
 
     m_started = true;
@@ -186,7 +214,7 @@ esp_err_t ETH_IDF::initYT8531() {
 
     bool auto_nego = true;
 
-    ESP_RETURN_ON_ERROR(esp_eth_ioctl(m_eth_handle, ETH_CMD_S_AUTONEGO, &auto_nego), TAG, "Auto negotiation failed");
+    ESP_RETURN_ON_ERROR(esp_eth_ioctl(m_eth_handle, ETH_CMD_S_AUTONEGO, &auto_nego), "[%s:%i] Auto negotiation failed", __FILE__, __LINE__);
 
     esp_eth_phy_reg_rw_data_t reg = {};
     uint32_t                  value = 0;
@@ -197,32 +225,97 @@ esp_err_t ETH_IDF::initYT8531() {
     value = 0xA001;
     reg.reg_addr = 0x1E;
 
-    ESP_RETURN_ON_ERROR(esp_eth_ioctl(m_eth_handle, ETH_CMD_WRITE_PHY_REG, &reg), TAG, "Write RX delay address failed");
+    ESP_RETURN_ON_ERROR(esp_eth_ioctl(m_eth_handle, ETH_CMD_WRITE_PHY_REG, &reg), "[%s:%i] Write RX delay address failed", __FILE__, __LINE__);
 
     reg.reg_addr = 0x1F;
 
-    ESP_RETURN_ON_ERROR(esp_eth_ioctl(m_eth_handle, ETH_CMD_READ_PHY_REG, &reg), TAG, "Read RX delay failed");
+    ESP_RETURN_ON_ERROR(esp_eth_ioctl(m_eth_handle, ETH_CMD_READ_PHY_REG, &reg), "[%s:%i] Read RX delay failed", __FILE__, __LINE__);
 
     value |= (1U << 8);
 
-    ESP_RETURN_ON_ERROR(esp_eth_ioctl(m_eth_handle, ETH_CMD_WRITE_PHY_REG, &reg), TAG, "Write RX delay failed");
+    ESP_RETURN_ON_ERROR(esp_eth_ioctl(m_eth_handle, ETH_CMD_WRITE_PHY_REG, &reg), "[%s:%i] Write RX delay failed", __FILE__, __LINE__);
 
     // Configure TX clock delay
     value = 0xA003;
     reg.reg_addr = 0x1E;
 
-    ESP_RETURN_ON_ERROR(esp_eth_ioctl(m_eth_handle, ETH_CMD_WRITE_PHY_REG, &reg), TAG, "Write TX delay address failed");
+    ESP_RETURN_ON_ERROR(esp_eth_ioctl(m_eth_handle, ETH_CMD_WRITE_PHY_REG, &reg), "[%s:%i] Write TX delay address failed", __FILE__, __LINE__);
 
     reg.reg_addr = 0x1F;
 
-    ESP_RETURN_ON_ERROR(esp_eth_ioctl(m_eth_handle, ETH_CMD_READ_PHY_REG, &reg), TAG, "Read TX delay failed");
+    ESP_RETURN_ON_ERROR(esp_eth_ioctl(m_eth_handle, ETH_CMD_READ_PHY_REG, &reg), "[%s:%i] Read TX delay failed", __FILE__, __LINE__);
 
     value = (value & ~0x00FFU) | (13U << 4) | 13U;
 
-    ESP_RETURN_ON_ERROR(esp_eth_ioctl(m_eth_handle, ETH_CMD_WRITE_PHY_REG, &reg), TAG, "Write TX delay failed");
+    ESP_RETURN_ON_ERROR(esp_eth_ioctl(m_eth_handle, ETH_CMD_WRITE_PHY_REG, &reg), "[%s:%i] Write TX delay failed", __FILE__, __LINE__);
 
-    ESP_LOGI(TAG, "YT8531 initialized");
+    log_i("[%s:%i] YT8531 initialized", __FILE__, __LINE__);
 
     return ESP_OK;
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+esp_err_t ETH_IDF::initEthernet() {
+
+    eth_mac_config_t mac_config = ETH_MAC_DEFAULT_CONFIG();
+    eth_phy_config_t phy_config = ETH_PHY_DEFAULT_CONFIG();
+
+    phy_config.phy_addr = -1;
+    phy_config.reset_gpio_num = ETH_PHY_RST;
+
+    eth_esp32_emac_config_t emac_config = ETH_ESP32_EMAC_DEFAULT_CONFIG();
+
+    emac_config.interface = EMAC_DATA_INTERFACE_RGMII;
+
+    emac_config.smi_gpio.mdc_num = ETH_PHY_MDC;
+    emac_config.smi_gpio.mdio_num = ETH_PHY_MDIO;
+
+    emac_config.clock_config.rgmii.clock_rx_gpio = ETH_RMII_RX_CLK;
+    emac_config.clock_config.rgmii.clock_tx_gpio = ETH_RMII_TX_CLK;
+    emac_config.clock_config.rgmii.clock_phy_ref_gpio = -1;
+
+    emac_config.emac_dataif_gpio.rgmii.tx_ctl_num = ETH_RMII_TX_CTL;
+
+    emac_config.emac_dataif_gpio.rgmii.txd0_num = ETH_RMII_TX0;
+    emac_config.emac_dataif_gpio.rgmii.txd1_num = ETH_RMII_TX1;
+    emac_config.emac_dataif_gpio.rgmii.txd2_num = ETH_RMII_TX2;
+    emac_config.emac_dataif_gpio.rgmii.txd3_num = ETH_RMII_TX3;
+
+    emac_config.emac_dataif_gpio.rgmii.rx_ctl_num = ETH_RMII_RX_CTL;
+
+    emac_config.emac_dataif_gpio.rgmii.rxd0_num = ETH_RMII_RX0;
+    emac_config.emac_dataif_gpio.rgmii.rxd1_num = ETH_RMII_RX1;
+    emac_config.emac_dataif_gpio.rgmii.rxd2_num = ETH_RMII_RX2;
+    emac_config.emac_dataif_gpio.rgmii.rxd3_num = ETH_RMII_RX3;
+
+    // Create MAC
+    esp_eth_mac_t* mac = esp_eth_mac_new_esp32(&emac_config, &mac_config);
+
+    if (!mac) {
+        log_e("[%s:%i] MAC creation failed", __FILE__, __LINE__);
+        return ESP_FAIL;
+    }
+
+    // Create PHY
+    esp_eth_phy_t* phy = esp_eth_phy_new_generic(&phy_config);
+
+    if (!phy) {
+        mac->del(mac);
+        log_e("[%s:%i] PHY creation failed", __FILE__, __LINE__);
+        return ESP_FAIL;
+    }
+
+    // Install driver
+    esp_eth_config_t config = ETH_DEFAULT_CONFIG(mac, phy);
+
+    esp_err_t err = esp_eth_driver_install(&config, &m_eth_handle);
+
+    if (err != ESP_OK) {
+        mac->del(mac);
+        phy->del(phy);
+        return err;
+    }
+
+    // Configure YT8531
+    return initYT8531();
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

@@ -61,8 +61,8 @@
 #include "kcx_bt_emitter.h"
 #include "meteo.h"
 #include "rtime.h"
-#include "../ethernet/ethernet.hpp"
-#include "tft_common_defs.h"
+#include "../ethernet/ethernet.h"
+#include "../tftLib/tft_common_defs.h"
 #include "websrv.h"
 #include <Arduino.h>
 #include <ArduinoOTA.h>

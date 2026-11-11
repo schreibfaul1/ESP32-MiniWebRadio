@@ -61,13 +61,11 @@ void setup() {
     //    Network.onEvent(on_network);
 
     esp_err_t err = ethernet.begin();
-
     if (err != ESP_OK) { Serial.printf("Ethernet error: %s\n", esp_err_to_name(err)); }
 
     esp_log_level_set("*", ESP_LOG_DEBUG);
     esp_log_set_vprintf(log_redirect_handler);
     if (!get_esp_items(&s_resetReason, &s_f_FFatFound)) return;
-    ethernet.begin();
 
     s_f_brightnessIsChangeable = setupBacklight(TFT_BL);
     if (!s_f_brightnessIsChangeable) btn_SE_bright.set_active(false);
