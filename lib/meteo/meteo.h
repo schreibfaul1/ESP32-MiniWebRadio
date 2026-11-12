@@ -58,7 +58,7 @@ class METEO {
         const std::vector<METEO_HOURLY>& hourly;
         const std::vector<METEO_DAILY>&  daily;
     };
-    using BrowseCallback = std::function<void(const msg_s&)>;
+    using BrowseCallback = std::function<void(const msg_s)>;
     void meteo_callback(BrowseCallback cb) { m_meteo_callback = std::move(cb); }
 
   private:

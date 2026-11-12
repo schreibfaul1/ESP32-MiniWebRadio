@@ -75,7 +75,7 @@ class KCX_BT_Emitter {
         int32_t     val = 0;
         const char* arg = nullptr;
     };
-    using BT_Callback = std::function<void(const msg_s&)>;
+    using BT_Callback = std::function<void(const msg_s)>;
     void kcx_bt_emitter_callback(BT_Callback cb) { m_bt_callback = std::move(cb); }
 
   private:

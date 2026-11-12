@@ -58,7 +58,7 @@ class DLNA_Client {
         const char*             IP_addr = nullptr;
         const char*             friendlyName = nullptr;
     };
-    using BrowseCallback = std::function<void(const msg_s&)>;
+    using BrowseCallback = std::function<void(const msg_s)>;
     void dlna_client_callbak(BrowseCallback cb) { m_dlna_callback = std::move(cb); }
 
   private:

@@ -26,30 +26,33 @@ class ETH_IDF {
     // callbacks ---------------------------------------------------------
   public:
     struct msg_s {
-        Event        event;
-        ps_ptr<char> txt;
+        Event        event = {};
+        ps_ptr<char> txt = {};
+        void reset() { *this = msg_s{}; }
     };
-    using EthernetCallback = std::function<void(const msg_s&)>;
+    using EthernetCallback = std::function<void(const msg_s)>;
     void ethernet_callback(EthernetCallback cb) { m_ethernet_callback = std::move(cb); }
 
   private:
     EthernetCallback m_ethernet_callback;
-    static ETH_IDF*  s_instance;
+
     // -------------------------------------------------------------------
 
   public:
-    ETH_IDF() { s_instance = this; };
-    ~ETH_IDF() { s_instance = nullptr; };
+    ETH_IDF() { ; }
+    ETH_IDF(const ETH_IDF&) = delete;
+    ETH_IDF& operator=(const ETH_IDF&) = delete;
+    ~ETH_IDF() { end(); }
 
     // --------------------------------------------------
     // Public API
     // --------------------------------------------------
 
-    bool begin();
-    void end();
-    bool isStarted() const { return m_started; }
-    bool linkUp() const { return m_link_up; }
-    bool hasIP() const { return m_has_ip; }
+    bool        begin();
+    void        end();
+    bool        isStarted() const { return m_started; }
+    bool        linkUp() const { return m_link_up; }
+    bool        hasIP() const { return m_has_ip; }
     const char* getMacAddress();
     const char* getIPaddress() { return m_ip.c_get(); }
     const char* getNetmask() { return m_mask.c_get(); }
@@ -66,7 +69,7 @@ class ETH_IDF {
     ps_ptr<char>                 m_mask;
     ps_ptr<char>                 m_gateway;
     ps_ptr<char>                 m_duplex;
-    uint16_t                     m_speed;
+    uint16_t                     m_speed = 0;
     esp_eth_handle_t             m_eth_handle = nullptr;
     esp_netif_t*                 m_eth_netif = nullptr;
     esp_eth_netif_glue_handle_t  m_eth_glue = nullptr;

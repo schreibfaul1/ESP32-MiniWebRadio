@@ -1,69 +1,78 @@
 #include "ethernet.h"
 
-ETH_IDF* ETH_IDF::s_instance = nullptr;
-
 void ETH_IDF::ethEventHandler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
     auto* self = static_cast<ETH_IDF*>(arg);
 
     switch (event_id) {
 
         case ETHERNET_EVENT_START:
-            s_instance->m_msg.event = Event::Started;
-            if (s_instance->m_ethernet_callback) s_instance->m_ethernet_callback(s_instance->m_msg);
-            log_d("[%s:%i] Ethernet started", __FILE__, __LINE__);
+            self->m_msg.reset();
+            self->m_msg.event = Event::Started;
+            if (self->m_ethernet_callback) self->m_ethernet_callback(self->m_msg);
+            log_w("[%s:%i] Ethernet started", __FILE__, __LINE__);
             break;
 
         case ETHERNET_EVENT_CONNECTED: {
-
+            self->m_msg.reset();
             self->m_link_up = true;
 
             self->fetchSpeed();
             self->fetchDuplex();
 
-            s_instance->m_msg.event = Event::Connected;
+            self->m_msg.event = Event::Connected;
 
-            if (s_instance->m_ethernet_callback) s_instance->m_ethernet_callback(s_instance->m_msg);
+            if (self->m_ethernet_callback) self->m_ethernet_callback(self->m_msg);
             break;
         }
 
         case ETHERNET_EVENT_DISCONNECTED:
+            self->m_msg.reset();
             self->m_link_up = false;
             self->m_has_ip = false;
+            self->m_speed = 0;
+            self->m_duplex = "?";
 
-            s_instance->m_msg.event = Event::Info;
-            s_instance->m_msg.txt = "Ethernet link down";
-            if (s_instance->m_ethernet_callback) s_instance->m_ethernet_callback(s_instance->m_msg);
+            self->m_msg.event = Event::Info;
+            self->m_msg.txt = "Ethernet link down";
+            if (self->m_ethernet_callback) self->m_ethernet_callback(self->m_msg);
 
-            s_instance->m_msg.event = Event::Disconnected;
-            if (s_instance->m_ethernet_callback) s_instance->m_ethernet_callback(s_instance->m_msg);
+            self->m_msg.event = Event::Disconnected;
+            if (self->m_ethernet_callback) self->m_ethernet_callback(self->m_msg);
             break;
 
         case ETHERNET_EVENT_STOP:
-            s_instance->m_msg.event = Event::Stopped;
-            if (s_instance->m_ethernet_callback) s_instance->m_ethernet_callback(s_instance->m_msg);
+            self->m_msg.reset();
+            self->m_msg.event = Event::Stopped;
+            if (self->m_ethernet_callback) self->m_ethernet_callback(self->m_msg);
             break;
     }
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void ETH_IDF::ipEventHandler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
     auto* self = static_cast<ETH_IDF*>(arg);
+    self->m_msg.reset();
 
     auto* event = static_cast<ip_event_got_ip_t*>(event_data);
 
     self->m_has_ip = true;
-    s_instance->m_ip.assignf("{}.{}.{}.{}", IP2STR(&event->ip_info.ip));
-    s_instance->m_mask.assignf("{}.{}.{}.{}", IP2STR(&event->ip_info.netmask));
-    s_instance->m_gateway.assignf("{}.{}.{}.{}", IP2STR(&event->ip_info.gw));
+    self->m_ip.assignf("{}.{}.{}.{}", IP2STR(&event->ip_info.ip));
+    self->m_mask.assignf("{}.{}.{}.{}", IP2STR(&event->ip_info.netmask));
+    self->m_gateway.assignf("{}.{}.{}.{}", IP2STR(&event->ip_info.gw));
 
-    s_instance->m_msg.event = Event::GotIP;
-    if (s_instance->m_ethernet_callback) s_instance->m_ethernet_callback(s_instance->m_msg);
+    self->m_msg.event = Event::GotIP;
+    if (self->m_ethernet_callback) self->m_ethernet_callback(self->m_msg);
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool ETH_IDF::begin() {
 
     if (m_eth_handle) {
-        log_e("[%s:%i] eth_handle is not NULL", __FILE__, __LINE__);
-        return false;
+        esp_err_t err = esp_eth_driver_uninstall(m_eth_handle);
+
+        if (err == ESP_OK) {
+            m_eth_handle = nullptr;
+        } else {
+            log_e("[%s:%i] uninstall esp_eth driver failed: %s", __FILE__, __LINE__, esp_err_to_name(err));
+        }
     }
 
     esp_err_t err = esp_netif_init(); // Initialize TCP/IP stack
@@ -214,6 +223,7 @@ void ETH_IDF::end() {
 bool ETH_IDF::initYT8531() {
     esp_err_t err;
     bool      auto_nego = true;
+    m_msg.reset();
 
     err = esp_eth_ioctl(m_eth_handle, ETH_CMD_S_AUTONEGO, &auto_nego);
     if (err != ESP_OK) {
@@ -282,7 +292,7 @@ bool ETH_IDF::initYT8531() {
     m_msg.txt = "YT8531 initialized";
     if (m_ethernet_callback) m_ethernet_callback(m_msg);
 
-    return ESP_OK;
+    return true;
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 esp_err_t ETH_IDF::initEthernet() {
@@ -347,7 +357,9 @@ esp_err_t ETH_IDF::initEthernet() {
     }
 
     // Configure YT8531
-    return initYT8531();
+    bool res = initYT8531();
+    if(res == true) return ESP_OK;
+    return ESP_FAIL;
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 const char* ETH_IDF::getMacAddress() {
