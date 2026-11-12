@@ -204,18 +204,18 @@
         #define ETH_PHY_MDC          5 // Ethernet YT8531DC-CA
         #define ETH_PHY_MDIO         6 // Ethernet YT8531DC-CA
         #define ETH_PHY_RST          7 // Ethernet YT8531DC-CA
-        #define ETH_RMII_TX0         8 // Ethernet YT8531DC-CA
-        #define ETH_RMII_TX1         9 // Ethernet YT8531DC-CA
-        #define ETH_RMII_TX2        10 // Ethernet YT8531DC-CA
-        #define ETH_RMII_TX3        11 // Ethernet YT8531DC-CA
-        #define ETH_RMII_TX_CTL     12 // Ethernet YT8531DC-CA
-        #define ETH_RMII_TX_CLK     13 // Ethernet YT8531DC-CA
-        #define ETH_RMII_RX_CLK     14 // Ethernet YT8531DC-CA
-        #define ETH_RMII_RX_CTL     15 // Ethernet YT8531DC-CA
-        #define ETH_RMII_RX3        16 // Ethernet YT8531DC-CA
-        #define ETH_RMII_RX2        17 // Ethernet YT8531DC-CA
-        #define ETH_RMII_RX1        18 // Ethernet YT8531DC-CA
-        #define ETH_RMII_RX0        19 // Ethernet YT8531DC-CA
+        #define ETH_RGMII_TX0        8 // Ethernet YT8531DC-CA
+        #define ETH_RGMII_TX1        9 // Ethernet YT8531DC-CA
+        #define ETH_RGMII_TX2       10 // Ethernet YT8531DC-CA
+        #define ETH_RGMII_TX3       11 // Ethernet YT8531DC-CA
+        #define ETH_RGMII_TX_CTL    12 // Ethernet YT8531DC-CA
+        #define ETH_RGMII_TX_CLK    13 // Ethernet YT8531DC-CA
+        #define ETH_RGMII_RX_CLK    14 // Ethernet YT8531DC-CA
+        #define ETH_RGMII_RX_CTL    15 // Ethernet YT8531DC-CA
+        #define ETH_RGMII_RX3       16 // Ethernet YT8531DC-CA
+        #define ETH_RGMII_RX2       17 // Ethernet YT8531DC-CA
+        #define ETH_RGMII_RX1       18 // Ethernet YT8531DC-CA
+        #define ETH_RGMII_RX0       19 // Ethernet YT8531DC-CA
 
     #endif
 

@@ -139,13 +139,7 @@ bool ETH_IDF::begin() {
     err = esp_eth_start(m_eth_handle); // Start Ethernet
     if (err != ESP_OK) {
         end();
-        if (err == ESP_ERR_INVALID_ARG) {
-            log_e("[%s:%i] start esp_eth driver failed because of some invalid argument", __FILE__, __LINE__);
-        } else if (err == ESP_ERR_INVALID_STATE) {
-            log_e("[%s:%i] start esp_eth driver failed because driver has started already", __FILE__, __LINE__);
-        } else {
-            log_e("[%s:%i] start esp_eth driver failed because some other error occurred", __FILE__, __LINE__);
-        }
+        log_e("[%s:%i] Ethernet stop failed: %s", __FILE__, __LINE__, esp_err_to_name(err));
         return false;
     }
 
@@ -161,17 +155,11 @@ void ETH_IDF::end() {
     if (m_eth_handle && m_started) {
         err = esp_eth_stop(m_eth_handle);
 
-        if (err != ESP_OK) {
-            if (err == ESP_ERR_INVALID_ARG) {
-                log_e("[%s:%i] stop esp_eth driver failed because of some invalid argument", __FILE__, __LINE__);
-            } else if (err == ESP_ERR_INVALID_STATE) {
-                log_e("[%s:%i] stop esp_eth driver failed because driver  ", __FILE__, __LINE__);
-            } else {
-                log_e("[%s:%i] stop esp_eth driver failed because some other error ", __FILE__, __LINE__);
-            }
+        if (err == ESP_OK) {
+            m_started = false;
+        } else {
+            log_e("[%s:%i] Ethernet stop failed: %s", __FILE__, __LINE__, esp_err_to_name(err));
         }
-
-        m_started = false;
     }
 
     // Unregister event handlers
@@ -203,15 +191,7 @@ void ETH_IDF::end() {
     if (m_eth_handle) {
         err = esp_eth_driver_uninstall(m_eth_handle);
 
-        if (err != ESP_OK) {
-            if (err == ESP_ERR_INVALID_ARG) {
-                log_e("[%s:%i] uninstall esp_eth driver failed because of some invalid argument", __FILE__, __LINE__);
-            } else if (err == ESP_ERR_INVALID_STATE) {
-                log_e("[%s:%i] uninstall esp_eth driver failed because it has more than one reference", __FILE__, __LINE__);
-            } else {
-                log_e("[%s:%i] uninstall esp_eth driver failed because some other error occurred", __FILE__, __LINE__);
-            }
-        }
+        if (err != ESP_OK) { log_e("[%s:%i] Ethernet stop failed: %s", __FILE__, __LINE__, esp_err_to_name(err)); }
     }
 
     m_link_up = false;
@@ -310,23 +290,23 @@ esp_err_t ETH_IDF::initEthernet() {
     emac_config.smi_gpio.mdc_num = ETH_PHY_MDC;
     emac_config.smi_gpio.mdio_num = ETH_PHY_MDIO;
 
-    emac_config.clock_config.rgmii.clock_rx_gpio = ETH_RMII_RX_CLK;
-    emac_config.clock_config.rgmii.clock_tx_gpio = ETH_RMII_TX_CLK;
+    emac_config.clock_config.rgmii.clock_rx_gpio = ETH_RGMII_RX_CLK;
+    emac_config.clock_config.rgmii.clock_tx_gpio = ETH_RGMII_TX_CLK;
     emac_config.clock_config.rgmii.clock_phy_ref_gpio = -1;
 
-    emac_config.emac_dataif_gpio.rgmii.tx_ctl_num = ETH_RMII_TX_CTL;
+    emac_config.emac_dataif_gpio.rgmii.tx_ctl_num = ETH_RGMII_TX_CTL;
 
-    emac_config.emac_dataif_gpio.rgmii.txd0_num = ETH_RMII_TX0;
-    emac_config.emac_dataif_gpio.rgmii.txd1_num = ETH_RMII_TX1;
-    emac_config.emac_dataif_gpio.rgmii.txd2_num = ETH_RMII_TX2;
-    emac_config.emac_dataif_gpio.rgmii.txd3_num = ETH_RMII_TX3;
+    emac_config.emac_dataif_gpio.rgmii.txd0_num = ETH_RGMII_TX0;
+    emac_config.emac_dataif_gpio.rgmii.txd1_num = ETH_RGMII_TX1;
+    emac_config.emac_dataif_gpio.rgmii.txd2_num = ETH_RGMII_TX2;
+    emac_config.emac_dataif_gpio.rgmii.txd3_num = ETH_RGMII_TX3;
 
-    emac_config.emac_dataif_gpio.rgmii.rx_ctl_num = ETH_RMII_RX_CTL;
+    emac_config.emac_dataif_gpio.rgmii.rx_ctl_num = ETH_RGMII_RX_CTL;
 
-    emac_config.emac_dataif_gpio.rgmii.rxd0_num = ETH_RMII_RX0;
-    emac_config.emac_dataif_gpio.rgmii.rxd1_num = ETH_RMII_RX1;
-    emac_config.emac_dataif_gpio.rgmii.rxd2_num = ETH_RMII_RX2;
-    emac_config.emac_dataif_gpio.rgmii.rxd3_num = ETH_RMII_RX3;
+    emac_config.emac_dataif_gpio.rgmii.rxd0_num = ETH_RGMII_RX0;
+    emac_config.emac_dataif_gpio.rgmii.rxd1_num = ETH_RGMII_RX1;
+    emac_config.emac_dataif_gpio.rgmii.rxd2_num = ETH_RGMII_RX2;
+    emac_config.emac_dataif_gpio.rgmii.rxd3_num = ETH_RGMII_RX3;
 
     // Create MAC
     esp_eth_mac_t* mac = esp_eth_mac_new_esp32(&emac_config, &mac_config);
@@ -358,7 +338,7 @@ esp_err_t ETH_IDF::initEthernet() {
 
     // Configure YT8531
     bool res = initYT8531();
-    if(res == true) return ESP_OK;
+    if (res == true) return ESP_OK;
     return ESP_FAIL;
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
