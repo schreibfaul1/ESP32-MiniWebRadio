@@ -8,7 +8,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.1d - Nov 09, 2026                                                                                                               ";
+    Version 4.2.1e - Nov 12, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -721,7 +721,6 @@ boolean defaultsettings() {
     s_tone.HP = parseJson("\"toneHP\":").to_int16();
     s_tone.BAL = parseJson("\"balance\":").to_int16();
     s_TZName = parseJson("\"Timezone_Name\":");
-    //  s_TZString = parseJson("\"Timezone_String\":");
     s_settings.lastconnectedhost = parseJson("\"lastconnectedhost\":");
     s_settings.lastconnectedfile = parseJson("\"lastconnectedfile\":");
     s_sleepMode = parseJson("\"sleepMode\":").to_uint8();
@@ -732,6 +731,7 @@ boolean defaultsettings() {
     s_temperature_unit = parseJson("\"temp_unit\":");
     s_pressure_unit = parseJson("\"press_unit\":");
     s_wind_speed_unit = parseJson("\"wind_speed_unit\":");
+    s_f_sleeping = parseJson("\"isSleeping\":").equals("true") ? true : false;
 
     // set some items ---------------------------------------------------------------------------------------------
     if (!s_settings.lastconnectedfile.starts_with("/")) { s_settings.lastconnectedfile.assign("/audiofiles/"); } // guard
@@ -786,7 +786,6 @@ void updateSettings() {
     jO.appendf(",\n  \"lastconnectedfile\":\"{}\"", s_settings.lastconnectedfile);
     jO.appendf(",\n  \"station\":{}", s_cur_station);
     jO.appendf(",\n  \"Timezone_Name\":\"{}\"", s_TZName);
-    //  jO.appendf(",\n  \"Timezone_String\":\"{}\"", s_TZString);
     jO.appendf(",\n  \"toneLP\":{}", s_tone.LP);
     jO.appendf(",\n  \"toneBP\":{}", s_tone.BP);
     jO.appendf(",\n  \"toneHP\":{}", s_tone.HP);
@@ -799,6 +798,7 @@ void updateSettings() {
     jO.appendf(",\n  \"temp_unit\":\"{}\"", s_temperature_unit);
     jO.appendf(",\n  \"press_unit\":\"{}\"", s_pressure_unit);
     jO.appendf(",\n  \"wind_speed_unit\":\"{}\"", s_wind_speed_unit);
+    jO.appendf(",\n  \"isSleeping\":\"{}\"", s_f_sleeping);
     jO.append("\n}");
 
     if (s_settingsHash != simpleHash(jO)) {
@@ -1899,6 +1899,10 @@ void wake_up(int8_t state, int8_t subState) {
     dispHeader.show();
     dispFooter.show();
     changeState(state, subState);
+    if(state == RADIO) {
+        showLogoAndStationName();
+        s_f_newStreamTitle = true;
+    }
 }
 
 void setRTC(ps_ptr<char> TZString) {
