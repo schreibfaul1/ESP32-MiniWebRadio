@@ -33,14 +33,12 @@
 // 📌📌📌  S E T U P  📌📌📌
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-ETH_IDF ethernet;
-
 void setup() {
     s_version = Version;
     s_version.trim();
     //---- BEGIN ---------
     Serial.begin(MONITOR_SPEED);
-    vTaskDelay(1500); // wait for Serial to be ready
+
     printf("\n\n");
     printfln(s_tag.none, "");
     printfln(s_tag.none, "             " ANSI_ESC_YELLOW " ***************************************************** ");
@@ -59,11 +57,11 @@ void setup() {
     meteo.meteo_callback(on_meteo);
     ethernet.ethernet_callback(on_ethernet);
 
-    // if(!ethernet.begin()) Serial.printf("Ethernet error");
-
     esp_log_level_set("*", ESP_LOG_DEBUG);
     esp_log_set_vprintf(log_redirect_handler);
     if (!get_esp_items(&s_resetReason, &s_f_FFatFound)) return;
+
+//  s_f_eternet_controller_found = ethernet.begin();
 
     s_f_brightnessIsChangeable = setupBacklight(TFT_BL);
     if (!s_f_brightnessIsChangeable) btn_SE_bright.set_active(false);
@@ -104,7 +102,7 @@ void setup() {
     drawImage("/common/MiniWebRadioV4.jpg", 0, 0); // Welcomescreen
     updateSettings();
 
-    if (!s_f_isEthernetConnected) s_f_isWiFiConnected = connectToWiFi();
+    if (!s_f_eternet_controller_found) s_f_isWiFiConnected = connectToWiFi();
 
     placingGraphicObjects();
     sdr_BR_value.setValue(s_brightness);
@@ -190,7 +188,7 @@ void setup() {
         }
         setupOTA();
     }
-    if(!s_f_isEthernetConnected && !s_f_isWiFiConnected) {
+    if (!s_f_eternet_controller_found && !s_f_isWiFiConnected) {
         s_state = NONE;
         changeState(WIFI_SETTINGS, 0);
         return;
@@ -1899,7 +1897,7 @@ void wake_up(int8_t state, int8_t subState) {
     dispHeader.show();
     dispFooter.show();
     changeState(state, subState);
-    if(state == RADIO) {
+    if (state == RADIO) {
         showLogoAndStationName();
         s_f_newStreamTitle = true;
     }
@@ -3661,7 +3659,10 @@ void on_ethernet(const ETH_IDF::msg_s& msg) {
         case (ETH_IDF::Event::Connected):
             printfln(s_tag.ethernet, ANSI_ESC_GREEN "connected, Ethernet link up, {}, speed: {} Mbps, duplex: {}", msg.txt, ethernet.getSpeed(), ethernet.getDuplex());
             break;
-        case (ETH_IDF::Event::Disconnected): printfln(s_tag.ethernet, ANSI_ESC_GREEN "disconnected, Ethernet link down"); break;
+        case (ETH_IDF::Event::Disconnected):
+            printfln(s_tag.ethernet, ANSI_ESC_GREEN "disconnected, Ethernet link down");
+            s_f_isEthernetConnected = false;
+            break;
         case (ETH_IDF::Event::Stopped):
             printfln(s_tag.ethernet, ANSI_ESC_GREEN "stopped");
             s_f_isEthernetConnected = false;

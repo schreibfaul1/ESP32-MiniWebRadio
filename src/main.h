@@ -91,6 +91,7 @@ Ticker      ticker100ms;
 TwoWire     i2cBusOne = TwoWire(0); // additional HW, sensors, buttons, encoder etc
 TwoWire     i2cBusTwo = TwoWire(1); // external DAC, AC101 or ES8388
 SPIClass    spiBus(FSPI);
+ETH_IDF     ethernet;
 
 #include "mwr_src/common.h"
 #include "tft_dsi.h"
@@ -212,6 +213,7 @@ bool s_f_stationsChanged = false;
 bool s_f_sd_card_found = false;
 bool s_f_isWiFiConnected = false;
 bool s_f_isEthernetConnected = false;
+bool s_f_eternet_controller_found = false;
 bool s_f_ok_from_ir = false;
 bool s_f_otaRunning = false; // true while an OTA update is in progress, used to pause non-essential subsystems
 bool s_f_bt_power = false;   // ESP32-S31

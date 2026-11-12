@@ -2,6 +2,7 @@
 #pragma once
 #include "../../src/settings.h"
 #include "Audio.h"
+#include "driver/gpio.h"
 #include "esp_check.h"
 #include "esp_eth.h"
 #include "esp_eth_mac_esp.h"
@@ -9,12 +10,20 @@
 #include "esp_event.h"
 #include "esp_log.h"
 #include "esp_netif.h"
+#include "esp_rom_sys.h"
 #include <Arduino.h>
 #include <atomic>
 #include <functional>
 #include <utility>
 
 class ETH_IDF {
+
+#define YT8531_PHY_ID1 0x4F51
+#define YT8531_PHY_ID2 0xE91B
+#define MDIO_DELAY_US  1
+#define ANSI_ESC_RED   "\033[31m"
+#define ANSI_ESC_GREEN "\033[32m"
+#define ANSI_ESC_RESET "\033[0m"
 
   public:
     enum class Event : uint8_t {
@@ -67,6 +76,7 @@ class ETH_IDF {
 
   private:
     msg_s                        m_msg;
+    int8_t                       m_phy_addr = -1;
     ps_ptr<char>                 m_mac;
     ps_ptr<char>                 m_ip;
     ps_ptr<char>                 m_mask;
@@ -84,6 +94,10 @@ class ETH_IDF {
     std::atomic<bool> m_link_up = false;
     std::atomic<bool> m_has_ip = false;
 
+    bool        mdioInit();
+    void        mdioDeinit();
+    bool        mdioRead(uint8_t phyAddr, uint8_t regAddr, uint16_t& value);
+    bool        detectYT8531();
     bool        initYT8531();   // YT8531 initialization
     esp_err_t   initEthernet(); // MAC / PHY initialization
     int16_t     fetchSpeed();
