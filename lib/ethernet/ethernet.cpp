@@ -33,17 +33,17 @@ void ETH_IDF::ethEventHandler(void* arg, esp_event_base_t event_base, int32_t ev
             self->m_link_up = false;
             self->m_has_ip = false;
 
-            log_i("[%s:%i] Ethernet link down", __FILE__, __LINE__);
+            s_instance->m_msg.event = Event::Info;
+            s_instance->m_msg.txt = "Ethernet link down";
+            if (s_instance->m_ethernet_callback) s_instance->m_ethernet_callback(s_instance->m_msg);
 
             s_instance->m_msg.event = Event::Disconnected;
             if (s_instance->m_ethernet_callback) s_instance->m_ethernet_callback(s_instance->m_msg);
             break;
 
-            break;
-
         case ETHERNET_EVENT_STOP:
-            log_i("[%s:%i] Ethernet stopped", __FILE__, __LINE__);
-            self->notify(Event::Stopped);
+            s_instance->m_msg.event = Event::Stopped;
+            if (s_instance->m_ethernet_callback) s_instance->m_ethernet_callback(s_instance->m_msg);
             break;
     }
 }
@@ -55,15 +55,11 @@ void ETH_IDF::ipEventHandler(void* arg, esp_event_base_t event_base, int32_t eve
 
     self->m_has_ip = true;
 
-    log_i("[%s:%i] Got IP address", __FILE__, __LINE__);
-
-    log_i("[%s:%i] IP: ", __FILE__, __LINE__, IPSTR, IP2STR(&event->ip_info.ip));
-
-    log_i("[%s:%i] Mask: ", __FILE__, __LINE__, IPSTR, IP2STR(&event->ip_info.netmask));
-
-    log_i("[%s:%i] Gateway: ", __FILE__, __LINE__, IPSTR, IP2STR(&event->ip_info.gw));
-
-    self->notify(Event::GotIP);
+    s_instance->m_msg.event = Event::Info;
+    s_instance->m_msg.txt.assignf("Got IP: {}.{}.{}.{} ", IP2STR(&event->ip_info.ip));
+    s_instance->m_msg.txt.appendf("Mask: {}.{}.{}.{} ", IP2STR(&event->ip_info.netmask));
+    s_instance->m_msg.txt.appendf("Gateway: {}.{}.{}.{}", IP2STR(&event->ip_info.gw));
+    if (s_instance->m_ethernet_callback) s_instance->m_ethernet_callback(s_instance->m_msg);
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool ETH_IDF::begin() {
