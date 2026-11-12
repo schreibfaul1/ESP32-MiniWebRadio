@@ -42,7 +42,7 @@ class WebSrv {
         event_t      e = (event_t)0; // event type
     };
 
-    using BrowseCallback = std::function<void(const msg_s&)>;
+    using BrowseCallback = std::function<void(const msg_s)>;
     void websrv_callbak(BrowseCallback cb) { m_websrv_callback = std::move(cb); }
 
   private:

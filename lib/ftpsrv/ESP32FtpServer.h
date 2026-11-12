@@ -38,7 +38,7 @@
 #include "Arduino.h"
 #include "SPI.h"
 #include <WiFi.h>
-#include <WiFiClient.h>
+#include <NetworkClient.h>
 
 #include "SD.h"
 #include "SD_MMC.h"
@@ -88,8 +88,8 @@ private:
     int16_t readChar();
 
     IPAddress dataIp;              // IP address of client for data
-    WiFiClient client;
-    WiFiClient data;
+    NetworkClient client;
+    NetworkClient data;
     File file;
     fs::FS *_fs;
 

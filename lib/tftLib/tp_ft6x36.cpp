@@ -245,7 +245,6 @@ FT6x36::T_Point FT6x36::getPoint(uint8_t num) {
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool FT6x36::write(uint8_t reg, uint8_t data) {
     if (!m_isInit) return false;
-    if(!m_wire->availableForWrite()) log_e("not available for write");
     bool ret = false;
     m_wire->beginTransmission(m_addr);
     ret = m_wire->write(reg);

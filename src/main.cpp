@@ -33,6 +33,8 @@
 // 📌📌📌  S E T U P  📌📌📌
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
+ETH_IDF ethernet;
+
 void setup() {
     s_version = Version;
     s_version.trim();
@@ -48,11 +50,18 @@ void setup() {
 
     mutex_rtc = xSemaphoreCreateMutex();
     mutex_display = xSemaphoreCreateMutex();
+
+    // Callbacks
     Audio::audio_info_callback = my_audio_info; // audio callback
     dlna.dlna_client_callbak(on_dlna_client);   // dlna callback
     bt_emitter.kcx_bt_emitter_callback(on_kcx_bt_emitter);
     webSrv.websrv_callbak(on_websrv);
     meteo.meteo_callback(on_meteo);
+    ethernet.ethernet_callback(on_ethernet);
+
+    esp_err_t err = ethernet.begin();
+    if (err != ESP_OK) { Serial.printf("Ethernet error: %s\n", esp_err_to_name(err)); }
+
     esp_log_level_set("*", ESP_LOG_DEBUG);
     esp_log_set_vprintf(log_redirect_handler);
     if (!get_esp_items(&s_resetReason, &s_f_FFatFound)) return;
@@ -96,7 +105,7 @@ void setup() {
     drawImage("/common/MiniWebRadioV4.jpg", 0, 0); // Welcomescreen
     updateSettings();
 
-    s_f_isWiFiConnected = connectToWiFi();
+    if (!s_f_isEthernetConnected) s_f_isWiFiConnected = connectToWiFi();
 
     placingGraphicObjects();
     sdr_BR_value.setValue(s_brightness);
@@ -181,7 +190,8 @@ void setup() {
             s_state = NONE;
         }
         setupOTA();
-    } else {
+    }
+    if(!s_f_isEthernetConnected && !s_f_isWiFiConnected) {
         s_state = NONE;
         changeState(WIFI_SETTINGS, 0);
         return;
@@ -1174,9 +1184,7 @@ bool connectToWiFi() {
 
     // Configure before connecting to avoid timing issues during the handshake:
     WiFi.setSleep(false); // disable modem power-save, reduces latency/jitter for audio streaming and web/websocket responsiveness
-    if (WIFI_TX_POWER >= 2 && WIFI_TX_POWER <= 21) {
-        WiFi.setTxPower((wifi_power_t)(WIFI_TX_POWER * 4));
-    }
+    if (WIFI_TX_POWER >= 2 && WIFI_TX_POWER <= 21) { WiFi.setTxPower((wifi_power_t)(WIFI_TX_POWER * 4)); }
 
     wifiMulti.run();
 
@@ -1606,7 +1614,7 @@ bool init_SD_card() {
     s_f_sd_card_found = SD_MMC.begin("/sdcard", true, false, sdmmc_frequency);
 #elifdef CONFIG_IDF_TARGET_ESP32S31
     if (SD_MMC_D1 == -1) {
-        SD_MMC.setPins(SD_MMC_CLK, SD_MMC_CMD, SD_MMC_D0); // pins are not changeable
+        SD_MMC.setPins(SD_MMC_CLK, SD_MMC_CMD, SD_MMC_D0);                         // pins are not changeable
         s_f_sd_card_found = SD_MMC.begin("/sdcard", true, false, sdmmc_frequency); // mode1bit
     } else {
         SD_MMC.setPins(SD_MMC_CLK, SD_MMC_CMD, SD_MMC_D0, SD_MMC_D1, SD_MMC_D2, SD_MMC_D3);
@@ -1631,7 +1639,7 @@ bool init_SD_card() {
     }
     float cardSize = ((float)SD_MMC.cardSize()) / (1024 * 1024);
     float freeSize = ((float)SD_MMC.cardSize() - SD_MMC.usedBytes()) / (1024 * 1024);
-    printfln(s_tag.sd_card, "SD card found, " ANSI_ESC_CYAN "{:.1}" ANSI_ESC_RESET " MB by " ANSI_ESC_CYAN "{:.1} MB free", freeSize, cardSize);
+    printfln(s_tag.sd_card, "SD card found, " ANSI_ESC_CYAN "{:.1}" ANSI_ESC_RESET " MB by " ANSI_ESC_CYAN "{:.1} " ANSI_ESC_RESET "MB free", freeSize, cardSize);
     return true;
 }
 
@@ -2543,9 +2551,7 @@ void my_audio_info(Audio::msg_t m) {
             }
             break;
 
-        case Audio::evt_bt:
-            printfln(s_tag.audio_info, "bt_source: " ANSI_ESC_GREEN "{}", msg);
-            break;
+        case Audio::evt_bt: printfln(s_tag.audio_info, "bt_source: " ANSI_ESC_GREEN "{}", msg); break;
 
         case Audio::evt_log: printfln(m.s, "{}", msg); break;
 
@@ -3639,6 +3645,27 @@ void on_dlna_client(const DLNA_Client::msg_s& msg) {
 void on_meteo(const METEO::msg_s& msg) {
     cls_weather.update_meteo_data(msg.hourly, msg.daily);
     printfln(s_tag.meteo_info, ANSI_ESC_GREEN "Meteo data updated");
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// Events from Ethermet
+void on_ethernet(const ETH_IDF::msg_s& msg) {
+    switch (msg.event) {
+        case (ETH_IDF::Event::Started): printfln(s_tag.ethernet, ANSI_ESC_GREEN "started"); break;
+        case (ETH_IDF::Event::GotIP):
+            printfln(s_tag.ethernet, ANSI_ESC_RESET "got ip: " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET ", mac: " ANSI_ESC_CYAN "{}", ethernet.getIPaddress(), ethernet.getMacAddress());
+            s_f_isEthernetConnected = true;
+            break;
+        case (ETH_IDF::Event::Connected):
+            printfln(s_tag.ethernet, ANSI_ESC_GREEN "connected, Ethernet link up, {}, speed: {} Mbps, duplex: {}", msg.txt, ethernet.getSpeed(), ethernet.getDuplex());
+            break;
+        case (ETH_IDF::Event::Disconnected): printfln(s_tag.ethernet, ANSI_ESC_GREEN "disconnected, Ethernet link down"); break;
+        case (ETH_IDF::Event::Stopped):
+            printfln(s_tag.ethernet, ANSI_ESC_GREEN "stopped");
+            s_f_isEthernetConnected = false;
+            break;
+        case (ETH_IDF::Event::Info): printfln(s_tag.ethernet, ANSI_ESC_GREEN "{}", msg.txt); break;
+        default: printfln(s_tag.ethernet, ANSI_ESC_GREEN "unknown event {}", msg.event); break;
+    }
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg) {

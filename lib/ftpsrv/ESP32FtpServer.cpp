@@ -22,11 +22,12 @@
 //  2021: modified by @schreibfaul1 add PSRAM and callbacks
 //  2023: modified by @schreibfaul1 SDFAT removed
 //  2025: modified by @schreibfaul1 no loop before begin
+//  2026: modified by @schreibfaul1 use NetworkClient instead WiFiClient
 
 #include "ESP32FtpServer.h"
 
-WiFiServer ftpServer(FTP_CTRL_PORT, 1);
-WiFiServer dataServer(FTP_DATA_PORT_PASV, 1);
+NetworkServer ftpServer(FTP_CTRL_PORT, 1);
+NetworkServer dataServer(FTP_DATA_PORT_PASV, 1);
 
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 FtpServer::FtpServer() {

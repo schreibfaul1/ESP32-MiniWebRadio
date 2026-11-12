@@ -61,7 +61,8 @@
 #include "kcx_bt_emitter.h"
 #include "meteo.h"
 #include "rtime.h"
-#include "tft_common_defs.h"
+#include "../ethernet/ethernet.h"
+#include "../tftLib/tft_common_defs.h"
 #include "websrv.h"
 #include <Arduino.h>
 #include <ArduinoOTA.h>
@@ -210,6 +211,7 @@ bool s_f_update_meteo_display = false;
 bool s_f_stationsChanged = false;
 bool s_f_sd_card_found = false;
 bool s_f_isWiFiConnected = false;
+bool s_f_isEthernetConnected = false;
 bool s_f_ok_from_ir = false;
 bool s_f_otaRunning = false; // true while an OTA update is in progress, used to pause non-essential subsystems
 bool s_f_bt_power = false;   // ESP32-S31
@@ -379,6 +381,7 @@ void         on_dlna_client(const DLNA_Client::msg_s& msg);
 void         on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg);
 void         on_websrv(const WebSrv::msg_s& msg);
 void         on_meteo(const METEO::msg_s& msg);
+void         on_ethernet(const ETH_IDF::msg_s& msg);
 void         tp_pressed(uint16_t x, uint16_t y);
 void         tp_long_pressed(uint16_t x, uint16_t y);
 void         tp_moved(uint16_t x, uint16_t y);
@@ -741,6 +744,13 @@ void ui_btoo() {
     b ? printfln(s_tag.terminal, "bt_source off") : printfln(s_tag.terminal, "bt source on");
 }
 
+void ui_aam(){
+    bool aam = audio.settings.ANTI_AUTOMUTE;
+    aam = ! aam;
+    audio.settings.ANTI_AUTOMUTE = aam;
+    aam ? printfln(s_tag.terminal, "anti automute is on") : printfln(s_tag.terminal, "anti automute is off");
+}
+
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void user_input(ps_ptr<char> input) {
 
@@ -775,6 +785,7 @@ void user_input(ps_ptr<char> input) {
     if (input == "ir") ui_isRunning();                                             // is running?
     if (input.starts_with("vfs")) ui_volFadingSpeed(input.substr(3).to_float());   // volume fading speed
     if (input == "lif") ui_listFonts();                                            // list all loaded fonts
-    if (input == "kern") ui_kernig();                                              //
+    if (input == "kern") ui_kernig();                                              // distance between two letters that can be moved closer together
     if (input == "btoo") ui_btoo();                                                // bt classic source on/off
+    if (input == "aam") ui_aam();                                                  // anti automute for some dacs after 1024 LRCK with zero I2S
 }
