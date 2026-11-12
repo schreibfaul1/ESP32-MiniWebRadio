@@ -211,6 +211,7 @@ bool s_f_update_meteo_display = false;
 bool s_f_stationsChanged = false;
 bool s_f_sd_card_found = false;
 bool s_f_isWiFiConnected = false;
+bool s_f_isEthernetConnected = false;
 bool s_f_ok_from_ir = false;
 bool s_f_otaRunning = false; // true while an OTA update is in progress, used to pause non-essential subsystems
 bool s_f_bt_power = false;   // ESP32-S31

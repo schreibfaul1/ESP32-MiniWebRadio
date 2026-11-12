@@ -58,7 +58,6 @@ void setup() {
     webSrv.websrv_callbak(on_websrv);
     meteo.meteo_callback(on_meteo);
     ethernet.ethernet_callback(on_ethernet);
-    //    Network.onEvent(on_network);
 
     esp_err_t err = ethernet.begin();
     if (err != ESP_OK) { Serial.printf("Ethernet error: %s\n", esp_err_to_name(err)); }
@@ -106,7 +105,7 @@ void setup() {
     drawImage("/common/MiniWebRadioV4.jpg", 0, 0); // Welcomescreen
     updateSettings();
 
-    s_f_isWiFiConnected = connectToWiFi();
+    if (!s_f_isEthernetConnected) s_f_isWiFiConnected = connectToWiFi();
 
     placingGraphicObjects();
     sdr_BR_value.setValue(s_brightness);
@@ -191,7 +190,8 @@ void setup() {
             s_state = NONE;
         }
         setupOTA();
-    } else {
+    }
+    if(!s_f_isEthernetConnected && !s_f_isWiFiConnected) {
         s_state = NONE;
         changeState(WIFI_SETTINGS, 0);
         return;
@@ -3653,10 +3653,16 @@ void on_ethernet(const ETH_IDF::msg_s& msg) {
         case (ETH_IDF::Event::Started): printfln(s_tag.ethernet, ANSI_ESC_GREEN "started"); break;
         case (ETH_IDF::Event::GotIP):
             printfln(s_tag.ethernet, ANSI_ESC_RESET "got ip: " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET ", mac: " ANSI_ESC_CYAN "{}", ethernet.getIPaddress(), ethernet.getMacAddress());
+            s_f_isEthernetConnected = true;
             break;
-        case (ETH_IDF::Event::Connected): printfln(s_tag.ethernet, ANSI_ESC_GREEN "connected, Ethernet link up, {}, speed: {} Mbps, duplex: {}", msg.txt, ethernet.getSpeed(), ethernet.getDuplex()); break;
+        case (ETH_IDF::Event::Connected):
+            printfln(s_tag.ethernet, ANSI_ESC_GREEN "connected, Ethernet link up, {}, speed: {} Mbps, duplex: {}", msg.txt, ethernet.getSpeed(), ethernet.getDuplex());
+            break;
         case (ETH_IDF::Event::Disconnected): printfln(s_tag.ethernet, ANSI_ESC_GREEN "disconnected, Ethernet link down"); break;
-        case (ETH_IDF::Event::Stopped): printfln(s_tag.ethernet, ANSI_ESC_GREEN "stopped"); break;
+        case (ETH_IDF::Event::Stopped):
+            printfln(s_tag.ethernet, ANSI_ESC_GREEN "stopped");
+            s_f_isEthernetConnected = false;
+            break;
         case (ETH_IDF::Event::Info): printfln(s_tag.ethernet, ANSI_ESC_GREEN "{}", msg.txt); break;
         default: printfln(s_tag.ethernet, ANSI_ESC_GREEN "unknown event {}", msg.event); break;
     }
