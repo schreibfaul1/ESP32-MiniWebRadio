@@ -1639,7 +1639,7 @@ bool init_SD_card() {
     }
     float cardSize = ((float)SD_MMC.cardSize()) / (1024 * 1024);
     float freeSize = ((float)SD_MMC.cardSize() - SD_MMC.usedBytes()) / (1024 * 1024);
-    printfln(s_tag.sd_card, "SD card found, " ANSI_ESC_CYAN "{:.1}" ANSI_ESC_RESET " MB by " ANSI_ESC_CYAN "{:.1} MB free", freeSize, cardSize);
+    printfln(s_tag.sd_card, "SD card found, " ANSI_ESC_CYAN "{:.1}" ANSI_ESC_RESET " MB by " ANSI_ESC_CYAN "{:.1} " ANSI_ESC_RESET "MB free", freeSize, cardSize);
     return true;
 }
 
@@ -3651,8 +3651,10 @@ void on_meteo(const METEO::msg_s& msg) {
 void on_ethernet(const ETH_IDF::msg_s& msg) {
     switch (msg.event) {
         case (ETH_IDF::Event::Started): printfln(s_tag.ethernet, ANSI_ESC_GREEN "started"); break;
-        case (ETH_IDF::Event::GotIP): printfln(s_tag.ethernet, ANSI_ESC_GREEN "got ip"); break;
-        case (ETH_IDF::Event::Connected): printfln(s_tag.ethernet, ANSI_ESC_GREEN "connected, Ethernet link up, {}", msg.txt); break;
+        case (ETH_IDF::Event::GotIP):
+            printfln(s_tag.ethernet, ANSI_ESC_RESET "got ip: " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET ", mac: " ANSI_ESC_CYAN "{}", ethernet.getIPaddress(), ethernet.getMacAddress());
+            break;
+        case (ETH_IDF::Event::Connected): printfln(s_tag.ethernet, ANSI_ESC_GREEN "connected, Ethernet link up, {}, speed: {} Mbps, duplex: {}", msg.txt, ethernet.getSpeed(), ethernet.getDuplex()); break;
         case (ETH_IDF::Event::Disconnected): printfln(s_tag.ethernet, ANSI_ESC_GREEN "disconnected, Ethernet link down"); break;
         case (ETH_IDF::Event::Stopped): printfln(s_tag.ethernet, ANSI_ESC_GREEN "stopped"); break;
         case (ETH_IDF::Event::Info): printfln(s_tag.ethernet, ANSI_ESC_GREEN "{}", msg.txt); break;

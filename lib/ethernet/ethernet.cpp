@@ -17,14 +17,11 @@ void ETH_IDF::ethEventHandler(void* arg, esp_event_base_t event_base, int32_t ev
 
             self->m_link_up = true;
 
-            eth_speed_t  speed;
-            eth_duplex_t duplex;
-
-            self->getSpeed(speed);
-            self->getDuplex(duplex);
+            self->fetchSpeed();
+            self->fetchDuplex();
 
             s_instance->m_msg.event = Event::Connected;
-            s_instance->m_msg.txt.assignf("Speed: {} Mbps, {} duplex", speed == ETH_SPEED_1000M ? 1000 : speed == ETH_SPEED_100M ? 100 : 10, duplex == ETH_DUPLEX_FULL ? "full" : "half");
+
             if (s_instance->m_ethernet_callback) s_instance->m_ethernet_callback(s_instance->m_msg);
             break;
         }
@@ -54,11 +51,11 @@ void ETH_IDF::ipEventHandler(void* arg, esp_event_base_t event_base, int32_t eve
     auto* event = static_cast<ip_event_got_ip_t*>(event_data);
 
     self->m_has_ip = true;
+    s_instance->m_ip.assignf("{}.{}.{}.{}", IP2STR(&event->ip_info.ip));
+    s_instance->m_mask.assignf("{}.{}.{}.{}", IP2STR(&event->ip_info.netmask));
+    s_instance->m_gateway.assignf("{}.{}.{}.{}", IP2STR(&event->ip_info.gw));
 
-    s_instance->m_msg.event = Event::Info;
-    s_instance->m_msg.txt.assignf("Got IP: {}.{}.{}.{} ", IP2STR(&event->ip_info.ip));
-    s_instance->m_msg.txt.appendf("Mask: {}.{}.{}.{} ", IP2STR(&event->ip_info.netmask));
-    s_instance->m_msg.txt.appendf("Gateway: {}.{}.{}.{}", IP2STR(&event->ip_info.gw));
+    s_instance->m_msg.event = Event::GotIP;
     if (s_instance->m_ethernet_callback) s_instance->m_ethernet_callback(s_instance->m_msg);
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -351,5 +348,45 @@ esp_err_t ETH_IDF::initEthernet() {
 
     // Configure YT8531
     return initYT8531();
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+const char* ETH_IDF::getMacAddress() {
+    uint8_t mac[6];
+    if (!m_eth_handle) return "";
+    esp_err_t err = esp_eth_ioctl(m_eth_handle, ETH_CMD_G_MAC_ADDR, mac);
+    if (err == ESP_OK) {
+        m_mac.assignf("{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+        return m_mac.c_get();
+    } else {
+        return "";
+    }
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+int16_t ETH_IDF::fetchSpeed() {
+    eth_speed_t speed;
+    if (!m_eth_handle) return -1;
+    esp_err_t err = esp_eth_ioctl(m_eth_handle, ETH_CMD_G_SPEED, &speed);
+    if (err == ESP_OK) {
+        m_speed = 0;
+        if (speed == ETH_SPEED_10M) m_speed = 10;     /*!< Ethernet speed is 10Mbps */
+        if (speed == ETH_SPEED_100M) m_speed = 100;   /*!< Ethernet speed is 100Mbps */
+        if (speed == ETH_SPEED_1000M) m_speed = 1000; /*!< Ethernet speed is 1000Mbps */
+        if (speed == ETH_SPEED_MAX) { ; }             /*!< Max speed mode (for checking purpose) */
+        return m_speed;
+    } else {
+        return -1;
+    }
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+const char* ETH_IDF::fetchDuplex() {
+    eth_duplex_t duplex;
+    if (!m_eth_handle) return "";
+    m_duplex = "?";
+    esp_err_t err = esp_eth_ioctl(m_eth_handle, ETH_CMD_G_DUPLEX_MODE, &duplex);
+    if (err == ESP_OK) {
+        if (duplex == ETH_DUPLEX_FULL) m_duplex = "full";
+        if (duplex == ETH_DUPLEX_HALF) m_duplex = "half";
+    }
+    return m_duplex.c_get();
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

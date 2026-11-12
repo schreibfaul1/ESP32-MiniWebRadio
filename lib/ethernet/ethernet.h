@@ -50,40 +50,23 @@ class ETH_IDF {
     bool isStarted() const { return m_started; }
     bool linkUp() const { return m_link_up; }
     bool hasIP() const { return m_has_ip; }
+    const char* getMacAddress();
+    const char* getIPaddress() { return m_ip.c_get(); }
+    const char* getNetmask() { return m_mask.c_get(); }
+    const char* getGateway() { return m_gateway.c_get(); }
+    uint16_t    getSpeed() { return m_speed; }
+    const char* getDuplex() { return m_duplex.c_get(); }
 
     // --------------------------------------------------
-    // Network information
-    // --------------------------------------------------
-
-    esp_netif_ip_info_t ipInfo() const {
-        esp_netif_ip_info_t info = {};
-        if (m_eth_netif) esp_netif_get_ip_info(m_eth_netif, &info);
-        return info;
-    }
-
-    // --------------------------------------------------
-
-    esp_err_t getMacAddress(uint8_t mac[6]) const {
-        if (!m_eth_handle || !mac) return ESP_ERR_INVALID_STATE;
-        return esp_eth_ioctl(m_eth_handle, ETH_CMD_G_MAC_ADDR, mac);
-    }
-
-    // --------------------------------------------------
-
-    esp_err_t getSpeed(eth_speed_t& speed) const {
-        if (!m_eth_handle) return ESP_ERR_INVALID_STATE;
-        return esp_eth_ioctl(m_eth_handle, ETH_CMD_G_SPEED, &speed);
-    }
-
-    // --------------------------------------------------
-
-    esp_err_t getDuplex(eth_duplex_t& duplex) const {
-        if (!m_eth_handle) return ESP_ERR_INVALID_STATE;
-        return esp_eth_ioctl(m_eth_handle, ETH_CMD_G_DUPLEX_MODE, &duplex);
-    }
 
   private:
     msg_s                        m_msg;
+    ps_ptr<char>                 m_mac;
+    ps_ptr<char>                 m_ip;
+    ps_ptr<char>                 m_mask;
+    ps_ptr<char>                 m_gateway;
+    ps_ptr<char>                 m_duplex;
+    uint16_t                     m_speed;
     esp_eth_handle_t             m_eth_handle = nullptr;
     esp_netif_t*                 m_eth_netif = nullptr;
     esp_eth_netif_glue_handle_t  m_eth_glue = nullptr;
@@ -96,20 +79,11 @@ class ETH_IDF {
     volatile bool m_link_up = false;
     volatile bool m_has_ip = false;
 
-    // --------------------------------------------------
-    // YT8531 initialization
-    // --------------------------------------------------
+    bool        initYT8531();   // YT8531 initialization
+    esp_err_t   initEthernet(); // MAC / PHY initialization
+    int16_t     fetchSpeed();
+    const char* fetchDuplex();
 
-    bool initYT8531();
-    // --------------------------------------------------
-    // MAC / PHY initialization
-    // --------------------------------------------------
-
-    esp_err_t initEthernet();
-
-    // --------------------------------------------------
-    // Event handlers
-    // --------------------------------------------------
     static void ethEventHandler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
     static void ipEventHandler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
     // --------------------------------------------------
