@@ -359,11 +359,12 @@ int16_t ETH_IDF::fetchSpeed() {
     if (!m_eth_handle) return -1;
     esp_err_t err = esp_eth_ioctl(m_eth_handle, ETH_CMD_G_SPEED, &speed);
     if (err == ESP_OK) {
-        m_speed = 0;
-        if (speed == ETH_SPEED_10M) m_speed = 10;     /*!< Ethernet speed is 10Mbps */
-        if (speed == ETH_SPEED_100M) m_speed = 100;   /*!< Ethernet speed is 100Mbps */
-        if (speed == ETH_SPEED_1000M) m_speed = 1000; /*!< Ethernet speed is 1000Mbps */
-        if (speed == ETH_SPEED_MAX) { ; }             /*!< Max speed mode (for checking purpose) */
+        switch (speed) {
+            case ETH_SPEED_10M: m_speed = 10; break;
+            case ETH_SPEED_100M: m_speed = 100; break;
+            case ETH_SPEED_1000M: m_speed = 1000; break;
+            default: m_speed = 0; break;
+        }
         return m_speed;
     } else {
         return -1;
