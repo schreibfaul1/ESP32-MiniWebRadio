@@ -59,8 +59,7 @@ void setup() {
     meteo.meteo_callback(on_meteo);
     ethernet.ethernet_callback(on_ethernet);
 
-    esp_err_t err = ethernet.begin();
-    if (err != ESP_OK) { Serial.printf("Ethernet error: %s\n", esp_err_to_name(err)); }
+    // if(!ethernet.begin()) Serial.printf("Ethernet error");
 
     esp_log_level_set("*", ESP_LOG_DEBUG);
     esp_log_set_vprintf(log_redirect_handler);
