@@ -3,7 +3,7 @@
 // Created on: 11.11.2026
 // Updated on: 13.11.2026
 
-#ifdef ETH_PHY_MDC
+
 
 void ETH_IDF::ethEventHandler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
     auto* self = static_cast<ETH_IDF*>(arg);
@@ -542,44 +542,3 @@ void ETH_IDF::mdioDeinit() {
     gpio_reset_pin((gpio_num_t)ETH_PHY_MDIO);
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-#else  // dummy class, board has no ETH-HW
-void ETH_IDF::ethEventHandler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
-    return;
-}
-void ETH_IDF::ipEventHandler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
-    return;
-}
-bool ETH_IDF::begin() {
-    return false;
-}
-void ETH_IDF::end(){
-    return;
-}
-bool ETH_IDF::initYT8531(){
-    return false;
-}
-esp_err_t ETH_IDF::initEthernet() {
-    return ESP_FAIL;
-}
-const char* ETH_IDF::getMacAddress() {
-    return "";
-}
-int16_t ETH_IDF::fetchSpeed() {
-    return 0;
-}
-const char* ETH_IDF::fetchDuplex() {
-    return "";
-}
-bool ETH_IDF::mdioInit() {
-    return false;
-}
-bool ETH_IDF::mdioRead(uint8_t phyAddr, uint8_t regAddr, uint16_t& value) {
-    return false;
-}
-bool ETH_IDF::detectYT8531() {
-    return false;
-}
-void ETH_IDF::mdioDeinit() {
-    return;
-}
-#endif
