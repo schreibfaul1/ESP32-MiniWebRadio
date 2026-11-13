@@ -3,8 +3,6 @@
 // Created on: 11.11.2026
 // Updated on: 13.11.2026
 
-
-
 void ETH_IDF::ethEventHandler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
     auto* self = static_cast<ETH_IDF*>(arg);
 
@@ -84,9 +82,7 @@ bool ETH_IDF::begin() {
     }
 
     // Detect YT8531 before initializing the EMAC
-    if (!detectYT8531()) {
-        return false;
-    }
+    if (!detectYT8531()) { return false; }
 
     esp_err_t err = esp_netif_init(); // Initialize TCP/IP stack
     if (err != ESP_OK) {
@@ -298,28 +294,57 @@ esp_err_t ETH_IDF::initEthernet() {
 
     eth_esp32_emac_config_t emac_config = ETH_ESP32_EMAC_DEFAULT_CONFIG();
 
-    emac_config.interface = EMAC_DATA_INTERFACE_RGMII;
-
+    // Common SMI configuration
     emac_config.smi_gpio.mdc_num = ETH_PHY_MDC;
     emac_config.smi_gpio.mdio_num = ETH_PHY_MDIO;
 
-    emac_config.clock_config.rgmii.clock_rx_gpio = ETH_RGMII_RX_CLK;
-    emac_config.clock_config.rgmii.clock_tx_gpio = ETH_RGMII_TX_CLK;
-    emac_config.clock_config.rgmii.clock_phy_ref_gpio = -1;
+    // Configure MAC interface depending on PHY
+    switch (m_phy_type) {
 
-    emac_config.emac_dataif_gpio.rgmii.tx_ctl_num = ETH_RGMII_TX_CTL;
+        case ETH_PHY_TYPE::YT8531:
 
-    emac_config.emac_dataif_gpio.rgmii.txd0_num = ETH_RGMII_TX0;
-    emac_config.emac_dataif_gpio.rgmii.txd1_num = ETH_RGMII_TX1;
-    emac_config.emac_dataif_gpio.rgmii.txd2_num = ETH_RGMII_TX2;
-    emac_config.emac_dataif_gpio.rgmii.txd3_num = ETH_RGMII_TX3;
+            emac_config.interface = EMAC_DATA_INTERFACE_RGMII;
 
-    emac_config.emac_dataif_gpio.rgmii.rx_ctl_num = ETH_RGMII_RX_CTL;
+            emac_config.clock_config.rgmii.clock_rx_gpio = ETH_RGMII_RX_CLK;
+            emac_config.clock_config.rgmii.clock_tx_gpio = ETH_RGMII_TX_CLK;
+            emac_config.clock_config.rgmii.clock_phy_ref_gpio = -1;
 
-    emac_config.emac_dataif_gpio.rgmii.rxd0_num = ETH_RGMII_RX0;
-    emac_config.emac_dataif_gpio.rgmii.rxd1_num = ETH_RGMII_RX1;
-    emac_config.emac_dataif_gpio.rgmii.rxd2_num = ETH_RGMII_RX2;
-    emac_config.emac_dataif_gpio.rgmii.rxd3_num = ETH_RGMII_RX3;
+            emac_config.emac_dataif_gpio.rgmii.tx_ctl_num = ETH_RGMII_TX_CTL;
+
+            emac_config.emac_dataif_gpio.rgmii.txd0_num = ETH_RGMII_TX0;
+            emac_config.emac_dataif_gpio.rgmii.txd1_num = ETH_RGMII_TX1;
+            emac_config.emac_dataif_gpio.rgmii.txd2_num = ETH_RGMII_TX2;
+            emac_config.emac_dataif_gpio.rgmii.txd3_num = ETH_RGMII_TX3;
+
+            emac_config.emac_dataif_gpio.rgmii.rx_ctl_num = ETH_RGMII_RX_CTL;
+
+            emac_config.emac_dataif_gpio.rgmii.rxd0_num = ETH_RGMII_RX0;
+            emac_config.emac_dataif_gpio.rgmii.rxd1_num = ETH_RGMII_RX1;
+            emac_config.emac_dataif_gpio.rgmii.rxd2_num = ETH_RGMII_RX2;
+            emac_config.emac_dataif_gpio.rgmii.rxd3_num = ETH_RGMII_RX3;
+
+            break;
+
+        case ETH_PHY_TYPE::IP101:
+
+            emac_config.interface = EMAC_DATA_INTERFACE_RMII;
+
+            // External 50 MHz REF_CLK from PHY
+            emac_config.clock_config.rmii.clock_mode = EMAC_CLK_EXT_IN;
+            emac_config.clock_config.rmii.clock_gpio = ETH_RMII_REF_CLK;
+
+            emac_config.emac_dataif_gpio.rmii.tx_en_num = ETH_RMII_TX_EN;
+            emac_config.emac_dataif_gpio.rmii.txd0_num = ETH_RMII_TX0;
+            emac_config.emac_dataif_gpio.rmii.txd1_num = ETH_RMII_TX1;
+
+            emac_config.emac_dataif_gpio.rmii.crs_dv_num = ETH_RMII_CRS_DV;
+            emac_config.emac_dataif_gpio.rmii.rxd0_num = ETH_RMII_RX0;
+            emac_config.emac_dataif_gpio.rmii.rxd1_num = ETH_RMII_RX1;
+
+            break;
+
+        default: printf(ANSI_ESC_RED "[%s:%i] Unknown PHY type\n" ANSI_ESC_RESET, __FILE__, __LINE__); return ESP_FAIL;
+    }
 
     // Create MAC
     esp_eth_mac_t* mac = esp_eth_mac_new_esp32(&emac_config, &mac_config);
@@ -330,7 +355,16 @@ esp_err_t ETH_IDF::initEthernet() {
     }
 
     // Create PHY
-    esp_eth_phy_t* phy = esp_eth_phy_new_generic(&phy_config);
+    esp_eth_phy_t* phy = nullptr;
+
+    switch (m_phy_type) {
+
+        case ETH_PHY_TYPE::YT8531: phy = esp_eth_phy_new_generic(&phy_config); break;
+
+        case ETH_PHY_TYPE::IP101: phy = esp_eth_phy_new_ip101(&phy_config); break;
+
+        default: break;
+    }
 
     if (!phy) {
         mac->del(mac);
@@ -349,10 +383,12 @@ esp_err_t ETH_IDF::initEthernet() {
         return err;
     }
 
-    // Configure YT8531
-    bool res = initYT8531();
-    if (res == true) return ESP_OK;
-    return ESP_FAIL;
+    // PHY-specific initialization
+    if (m_phy_type == ETH_PHY_TYPE::YT8531) {
+        if (!initYT8531()) { return ESP_FAIL; }
+    }
+
+    return ESP_OK;
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 const char* ETH_IDF::getMacAddress() {

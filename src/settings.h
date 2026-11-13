@@ -201,7 +201,7 @@
         #define I2C_SCL             37 // 50 // I2C, clock line for capacitive touchpadand and light sensor (-1 if not available)
         #define AMP_ENABLED         57 // onboard amplifier (-1 if not available)
 
-        #define ETH_PHY_TYPE        ETH_PHY_YT8531
+        // #define ETH_PHY_TYPE        ETH_PHY_YT8531
         #define ETH_PHY_MDC          5 // Ethernet YT8531 pin
         #define ETH_PHY_MDIO         6 // Ethernet YT8531 pin
         #define ETH_PHY_RST          7 // Ethernet YT8531 pin
@@ -248,17 +248,17 @@
         #define I2C_SCL              8 // I2C, clock line for capacitive touchpad and light sensor (-1 if not available)
         #define AMP_ENABLED         33 // onboard amplifier (-1 if not available)
 
-        #define ETH_PHY_TYPE        ETH_PHY_IP101
+        // #define ETH_PHY_TYPE        ETH_PHY_IP101
         #define ETH_PHY_MDC         31 // Ethernet IP101 pin
         #define ETH_PHY_MDIO        52 // Ethernet IP101 pin
         #define ETH_PHY_RST         51 // Ethernet IP101 pin
         #define ETH_RMII_REF_CLK    50 // Ethernet IP101 pin
         #define ETH_RMII_TX_EN      49 // Ethernet IP101 pin
-        #define ETH_RMII_TXD0       34 // Ethernet IP101 pin
-        #define ETH_RMII_TXD1       35 // Ethernet IP101 pin
+        #define ETH_RMII_TX0        34 // Ethernet IP101 pin
+        #define ETH_RMII_TX1        35 // Ethernet IP101 pin
         #define ETH_RMII_CRS_DV     28 // Ethernet IP101 pin
-        #define ETH_RMII_RXD0       29 // Ethernet IP101 pin
-        #define ETH_RMII_RXD1       30 // Ethernet IP101 pin
+        #define ETH_RMII_RX0        29 // Ethernet IP101 pin
+        #define ETH_RMII_RX1        30 // Ethernet IP101 pin
 
 
 

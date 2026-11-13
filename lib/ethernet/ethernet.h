@@ -7,6 +7,7 @@
 #include "esp_eth.h"
 #include "esp_eth_mac_esp.h"
 #include "esp_eth_netif_glue.h"
+// #include "esp_eth_phy_ip101.h"
 #include "esp_event.h"
 #include "esp_log.h"
 #include "esp_netif.h"
@@ -16,14 +17,104 @@
 #include <functional>
 #include <utility>
 
+
+// ETH_PHY_IP101
+#ifndef ETH_PHY_MDC
+#define ETH_PHY_MDC 31
+#endif
+#ifndef ETH_PHY_MDIO
+#define ETH_PHY_MDIO 52
+#endif
+#ifndef ETH_PHY_RST
+#define ETH_PHY_RST 51
+#endif
+#ifndef ETH_RMII_REF_CLK
+#define ETH_RMII_REF_CLK 50
+#endif
+#ifndef ETH_RMII_TX_EN
+#define ETH_RMII_TX_EN 49
+#endif
+#ifndef ETH_RMII_TXD0
+#define ETH_RMII_TXD0 34
+#endif
+#ifndef ETH_RMII_TXD1
+#define ETH_RMII_TXD1 35
+#endif
+#ifndef ETH_RMII_RX0
+#define ETH_RMII_RX0 29
+#endif
+#ifndef ETH_RMII_RX1
+#define ETH_RMII_RX1 30
+#endif
+#ifndef ETH_RMII_CRS_DV
+#define ETH_RMII_CRS_DV 28
+#endif
+
+
+
+// ETH_PHY_YT8531
+#ifndef ETH_PHY_MDC
+#define ETH_PHY_MDC 5
+#endif
+#ifndef ETH_PHY_MDIO
+#define ETH_PHY_MDIO 6
+#endif
+#ifndef ETH_PHY_RST
+#define ETH_PHY_RST 7
+#endif
+#ifndef ETH_RGMII_TX0
+#define ETH_RGMII_TX0 8
+#endif
+#ifndef ETH_RGMII_TX1
+#define ETH_RGMII_TX1 9
+#endif
+#ifndef ETH_RGMII_TX2
+#define ETH_RGMII_TX2 10
+#endif
+#ifndef ETH_RGMII_TX3
+#define ETH_RGMII_TX3 11
+#endif
+#ifndef ETH_RGMII_TX_CTL
+#define ETH_RGMII_TX_CTL 12
+#endif
+#ifndef ETH_RGMII_TX_CLK
+#define ETH_RGMII_TX_CLK 13
+#endif
+#ifndef ETH_RGMII_RX_CLK
+#define ETH_RGMII_RX_CLK 14
+#endif
+#ifndef ETH_RGMII_RX_CTL
+#define ETH_RGMII_RX_CTL 15
+#endif
+#ifndef ETH_RGMII_RX3
+#define ETH_RGMII_RX3 16
+#endif
+#ifndef ETH_RGMII_RX2
+#define ETH_RGMII_RX2 17
+#endif
+#ifndef ETH_RGMII_RX1
+#define ETH_RGMII_RX1 18
+#endif
+#ifndef ETH_RGMII_RX0
+#define ETH_RGMII_RX0 19
+#endif
+
 class ETH_IDF {
 
+  private:
 #define YT8531_PHY_ID1 0x4F51
 #define YT8531_PHY_ID2 0xE91B
+#define IP101_PHY_ID1  0x0243
 #define MDIO_DELAY_US  1
 #define ANSI_ESC_RED   "\033[31m"
 #define ANSI_ESC_GREEN "\033[32m"
 #define ANSI_ESC_RESET "\033[0m"
+
+    enum class ETH_PHY_TYPE : uint8_t {
+        NONE, //
+        YT8531,
+        IP101
+    };
 
   public:
     enum class Event : uint8_t {
@@ -90,6 +181,7 @@ class ETH_IDF {
     esp_eth_netif_glue_handle_t  m_eth_glue = nullptr;
     esp_event_handler_instance_t m_eth_event_instance = nullptr;
     esp_event_handler_instance_t m_ip_event_instance = nullptr;
+    ETH_PHY_TYPE                 m_phy_type = ETH_PHY_TYPE::NONE;
 
     //   event_callback_t m_callback = nullptr;
     std::atomic<bool> m_started = false;
