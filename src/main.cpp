@@ -61,7 +61,7 @@ void setup() {
     esp_log_set_vprintf(log_redirect_handler);
     if (!get_esp_items(&s_resetReason, &s_f_FFatFound)) return;
 
-//  s_f_eternet_controller_found = ethernet.begin();
+    ethernet.begin();
 
     s_f_brightnessIsChangeable = setupBacklight(TFT_BL);
     if (!s_f_brightnessIsChangeable) btn_SE_bright.set_active(false);
@@ -102,7 +102,7 @@ void setup() {
     drawImage("/common/MiniWebRadioV4.jpg", 0, 0); // Welcomescreen
     updateSettings();
 
-    if (!s_f_eternet_controller_found) s_f_isWiFiConnected = connectToWiFi();
+    if (!ethernet.isConnected()) connectToWiFi();
 
     placingGraphicObjects();
     sdr_BR_value.setValue(s_brightness);
@@ -179,7 +179,7 @@ void setup() {
     ticker100ms.attach(0.1, timer100ms);
 
     muteChanged(s_f_mute);
-    if (s_f_isWiFiConnected) {
+    if (WiFi.isConnected()) {
         if (s_resetReason == ESP_RST_POWERON ||   // Simply switch on the operating voltage
             s_resetReason == ESP_RST_SW ||        // ESP.restart()
             s_resetReason == ESP_RST_SDIO ||      // The boot button was pressed
@@ -187,8 +187,7 @@ void setup() {
             s_state = NONE;
         }
         setupOTA();
-    }
-    if (!s_f_eternet_controller_found && !s_f_isWiFiConnected) {
+    } else if (!ethernet.isConnected()) {
         s_state = NONE;
         changeState(WIFI_SETTINGS, 0);
         return;
@@ -231,7 +230,7 @@ void setup() {
 
 void loop() {
     vTaskDelay(1);
-    ArduinoOTA.handle();
+    if (WiFi.isConnected()) ArduinoOTA.handle();
     if (s_f_otaRunning) return; // give the WiFi/TCP stack exclusive access to the core for the rest of the transfer
     dlna.loop();
     audio.loop();
@@ -247,7 +246,9 @@ void loop() {
     if (s_start_counter) s_start_counter++;
     if (s_start_counter == 10) { MDNS.begin("MiniWebRadio"); }
     if (s_start_counter == 20) { MDNS.addService("esp32", "tcp", 80); }
-    if (s_start_counter == 30) { ArduinoOTA.begin(); }
+    if (s_start_counter == 30) {
+        if (WiFi.isConnected()) ArduinoOTA.begin();
+    }
     if (s_start_counter == 40) { ftpSrv.begin(SD_MMC, FTP_USERNAME, FTP_PASSWORD); }
     if (s_start_counter == 50) { setRTC(s_TZString); }
     if (s_start_counter == 60) { setStation(s_cur_station); }
@@ -530,7 +531,7 @@ void loop() {
             }
         }
         //------------------------------------------RECONNECT AFTER FAIL------------------------------------------------------------------------------
-        if (s_f_reconnect && !s_f_isWiFiConnected) { // not used yet
+        if (s_f_reconnect && !WiFi.isConnected()) { // not used yet
             s_f_reconnect = false;
             connecttohost(s_settings.lastconnectedhost.get());
         }
@@ -545,7 +546,7 @@ void loop() {
             s_f_dlna_browseReady = false;
         }
         //-------------------------------------------WIFI DISCONNECTED?-------------------------------------------------------------------------------
-        if (WiFi.isConnected() == false) {
+        if (s_f_wifi_credentials_fits && !WiFi.isConnected()) {
             if (s_f_WiFi_lost == false) {
                 printfln(s_tag.wifi_info, ANSI_ESC_YELLOW "Reconnecting to WiFi...");
                 if (s_state == RADIO) audio.stopSong();
@@ -559,6 +560,20 @@ void loop() {
         }
         s_f_WiFi_lost == false ? dispHeader.updateRSSI(WiFi.RSSI()) : dispHeader.updateRSSI(-86);
         dispFooter.updateAntenna(s_f_WiFi_lost);
+        //-------------------------------------------ETHERNET DISCONNECTED?-------------------------------------------------------------------------------
+        if (s_f_ethernet_link_found && !ethernet.isConnected()) {
+            if (s_f_ethernet_lost == false) {
+                printfln(s_tag.wifi_info, ANSI_ESC_YELLOW "Reconnecting to Ethernet...");
+                if (s_state == RADIO) audio.stopSong();
+                s_f_ethernet_lost = true;
+            }
+        } else {
+            if (s_f_ethernet_lost) {
+                s_f_ethernet_lost = false;
+                if (s_state == RADIO) audio.connecttohost(s_settings.lastconnectedhost.get());
+            }
+        }
+
         //------------------------------------------GET AUDIO FILE ITEMS------------------------------------------------------------------------------
         if (s_f_isFSConnected) {
             //    uint32_t t = 0;
@@ -590,7 +605,7 @@ void loop() {
     if (s_f_10sec == true) { // calls every 10 seconds
         s_f_10sec = false;
         updateSettings();
-        wifiMulti.run();
+        //    if (s_f_wifi_credentials_fits) wifiMulti.run();
     }
 
     if (s_f_1min == true) { // calls every minute
@@ -1200,6 +1215,7 @@ bool connectToWiFi() {
     }
     printfln(s_tag.wifi_info, ANSI_ESC_GREEN "WiFi connected");
     s_myIP = WiFi.localIP().toString().c_str();
+    s_f_wifi_credentials_fits = true;
 
     vTaskDelay(1000);
 
@@ -3654,19 +3670,13 @@ void on_ethernet(const ETH_IDF::msg_s& msg) {
         case (ETH_IDF::Event::Started): printfln(s_tag.ethernet, ANSI_ESC_GREEN "started"); break;
         case (ETH_IDF::Event::GotIP):
             printfln(s_tag.ethernet, ANSI_ESC_RESET "got ip: " ANSI_ESC_CYAN "{}" ANSI_ESC_RESET ", mac: " ANSI_ESC_CYAN "{}", ethernet.getIPaddress(), ethernet.getMacAddress());
-            s_f_isEthernetConnected = true;
+            s_f_ethernet_link_found = true;
             break;
         case (ETH_IDF::Event::Connected):
             printfln(s_tag.ethernet, ANSI_ESC_GREEN "connected, Ethernet link up, {}, speed: {} Mbps, duplex: {}", msg.txt, ethernet.getSpeed(), ethernet.getDuplex());
             break;
-        case (ETH_IDF::Event::Disconnected):
-            printfln(s_tag.ethernet, ANSI_ESC_GREEN "disconnected, Ethernet link down");
-            s_f_isEthernetConnected = false;
-            break;
-        case (ETH_IDF::Event::Stopped):
-            printfln(s_tag.ethernet, ANSI_ESC_GREEN "stopped");
-            s_f_isEthernetConnected = false;
-            break;
+        case (ETH_IDF::Event::Disconnected): printfln(s_tag.ethernet, ANSI_ESC_GREEN "disconnected, Ethernet link down"); break;
+        case (ETH_IDF::Event::Stopped): printfln(s_tag.ethernet, ANSI_ESC_GREEN "stopped"); break;
         case (ETH_IDF::Event::Info): printfln(s_tag.ethernet, ANSI_ESC_GREEN "{}", msg.txt); break;
         default: printfln(s_tag.ethernet, ANSI_ESC_GREEN "unknown event {}", msg.event); break;
     }

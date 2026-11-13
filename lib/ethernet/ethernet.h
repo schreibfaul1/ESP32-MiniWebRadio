@@ -71,6 +71,7 @@ class ETH_IDF {
     const char* getGateway() { return m_gateway.c_get(); }
     uint16_t    getSpeed() { return m_speed; }
     const char* getDuplex() { return m_duplex.c_get(); }
+    bool        isConnected() { return m_isConnected; }
 
     // --------------------------------------------------
 
@@ -83,6 +84,7 @@ class ETH_IDF {
     ps_ptr<char>                 m_gateway;
     ps_ptr<char>                 m_duplex;
     uint16_t                     m_speed = 0;
+    bool                         m_isConnected = false;
     esp_eth_handle_t             m_eth_handle = nullptr;
     esp_netif_t*                 m_eth_netif = nullptr;
     esp_eth_netif_glue_handle_t  m_eth_glue = nullptr;

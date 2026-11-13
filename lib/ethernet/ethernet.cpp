@@ -1,5 +1,7 @@
 #include "ethernet.h"
-#include "stdio.h"
+
+// Created on: 11.11.2026
+// Updated on: 13.11.2026
 
 void ETH_IDF::ethEventHandler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
     auto* self = static_cast<ETH_IDF*>(arg);
@@ -35,6 +37,7 @@ void ETH_IDF::ethEventHandler(void* arg, esp_event_base_t event_base, int32_t ev
 
             self->m_msg.event = Event::Info;
             self->m_msg.txt = "Ethernet link down";
+            self->m_isConnected = false;
             if (self->m_ethernet_callback) self->m_ethernet_callback(self->m_msg);
 
             self->m_msg.event = Event::Disconnected;
@@ -44,6 +47,7 @@ void ETH_IDF::ethEventHandler(void* arg, esp_event_base_t event_base, int32_t ev
         case ETHERNET_EVENT_STOP:
             self->m_msg.reset();
             self->m_msg.event = Event::Stopped;
+            self->m_isConnected = false;
             if (self->m_ethernet_callback) self->m_ethernet_callback(self->m_msg);
             break;
     }
@@ -61,6 +65,7 @@ void ETH_IDF::ipEventHandler(void* arg, esp_event_base_t event_base, int32_t eve
     self->m_gateway.assignf("{}.{}.{}.{}", IP2STR(&event->ip_info.gw));
 
     self->m_msg.event = Event::GotIP;
+    self->m_isConnected = true;
     if (self->m_ethernet_callback) self->m_ethernet_callback(self->m_msg);
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
