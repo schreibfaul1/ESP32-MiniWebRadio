@@ -7,7 +7,7 @@
 #include "esp_eth.h"
 #include "esp_eth_mac_esp.h"
 #include "esp_eth_netif_glue.h"
-// #include "esp_eth_phy_ip101.h"
+#include "esp_eth_phy_ip101.h"
 #include "esp_event.h"
 #include "esp_log.h"
 #include "esp_netif.h"
@@ -34,11 +34,11 @@
 #ifndef ETH_RMII_TX_EN
 #define ETH_RMII_TX_EN 49
 #endif
-#ifndef ETH_RMII_TXD0
-#define ETH_RMII_TXD0 34
+#ifndef ETH_RMII_TX0
+#define ETH_RMII_TX0 34
 #endif
-#ifndef ETH_RMII_TXD1
-#define ETH_RMII_TXD1 35
+#ifndef ETH_RMII_TX1
+#define ETH_RMII_TX1 35
 #endif
 #ifndef ETH_RMII_RX0
 #define ETH_RMII_RX0 29
