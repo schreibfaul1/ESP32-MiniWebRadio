@@ -2,6 +2,7 @@
 #pragma once
 #include "../../src/settings.h"
 #include "Audio.h"
+#include "driver/gpio.h"
 #include "esp_check.h"
 #include "esp_eth.h"
 #include "esp_eth_mac_esp.h"
@@ -9,9 +10,20 @@
 #include "esp_event.h"
 #include "esp_log.h"
 #include "esp_netif.h"
+#include "esp_rom_sys.h"
 #include <Arduino.h>
+#include <atomic>
+#include <functional>
+#include <utility>
 
 class ETH_IDF {
+
+#define YT8531_PHY_ID1 0x4F51
+#define YT8531_PHY_ID2 0xE91B
+#define MDIO_DELAY_US  1
+#define ANSI_ESC_RED   "\033[31m"
+#define ANSI_ESC_GREEN "\033[32m"
+#define ANSI_ESC_RESET "\033[0m"
 
   public:
     enum class Event : uint8_t {
@@ -28,7 +40,7 @@ class ETH_IDF {
     struct msg_s {
         Event        event = {};
         ps_ptr<char> txt = {};
-        void reset() { *this = msg_s{}; }
+        void         reset() { *this = msg_s{}; }
     };
     using EthernetCallback = std::function<void(const msg_s)>;
     void ethernet_callback(EthernetCallback cb) { m_ethernet_callback = std::move(cb); }
@@ -50,26 +62,29 @@ class ETH_IDF {
 
     bool        begin();
     void        end();
-    bool        isStarted() const { return m_started; }
-    bool        linkUp() const { return m_link_up; }
-    bool        hasIP() const { return m_has_ip; }
+    bool        isStarted() const { return m_started.load(); }
+    bool        linkUp() const { return m_link_up.load(); }
+    bool        hasIP() const { return m_has_ip.load(); }
     const char* getMacAddress();
     const char* getIPaddress() { return m_ip.c_get(); }
     const char* getNetmask() { return m_mask.c_get(); }
     const char* getGateway() { return m_gateway.c_get(); }
     uint16_t    getSpeed() { return m_speed; }
     const char* getDuplex() { return m_duplex.c_get(); }
+    bool        isConnected() { return m_isConnected; }
 
     // --------------------------------------------------
 
   private:
     msg_s                        m_msg;
+    int8_t                       m_phy_addr = -1;
     ps_ptr<char>                 m_mac;
     ps_ptr<char>                 m_ip;
     ps_ptr<char>                 m_mask;
     ps_ptr<char>                 m_gateway;
     ps_ptr<char>                 m_duplex;
     uint16_t                     m_speed = 0;
+    bool                         m_isConnected = false;
     esp_eth_handle_t             m_eth_handle = nullptr;
     esp_netif_t*                 m_eth_netif = nullptr;
     esp_eth_netif_glue_handle_t  m_eth_glue = nullptr;
@@ -77,11 +92,14 @@ class ETH_IDF {
     esp_event_handler_instance_t m_ip_event_instance = nullptr;
 
     //   event_callback_t m_callback = nullptr;
-    void*         m_context = nullptr;
-    bool          m_started = false;
-    volatile bool m_link_up = false;
-    volatile bool m_has_ip = false;
+    std::atomic<bool> m_started = false;
+    std::atomic<bool> m_link_up = false;
+    std::atomic<bool> m_has_ip = false;
 
+    bool        mdioInit();
+    void        mdioDeinit();
+    bool        mdioRead(uint8_t phyAddr, uint8_t regAddr, uint16_t& value);
+    bool        detectYT8531();
     bool        initYT8531();   // YT8531 initialization
     esp_err_t   initEthernet(); // MAC / PHY initialization
     int16_t     fetchSpeed();
