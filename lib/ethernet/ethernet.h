@@ -13,7 +13,6 @@
 #include "esp_netif.h"
 #include "esp_rom_sys.h"
 #include <Arduino.h>
-#include "stdio_ext.h"
 #include <atomic>
 #include <functional>
 #include <utility>
