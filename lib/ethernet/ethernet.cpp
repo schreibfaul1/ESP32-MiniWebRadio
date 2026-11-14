@@ -290,6 +290,8 @@ bool ETH_IDF::initYT8531() {
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 esp_err_t ETH_IDF::initEthernet() {
 
+#ifdef CONFIG_ETH_USE_ESP32_EMAC
+
     eth_mac_config_t mac_config = ETH_MAC_DEFAULT_CONFIG();
     eth_phy_config_t phy_config = ETH_PHY_DEFAULT_CONFIG();
 
@@ -396,6 +398,10 @@ esp_err_t ETH_IDF::initEthernet() {
     }
 
     return ESP_OK;
+
+#else
+    return ESP_FAIL;
+#endif
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 const char* ETH_IDF::getMacAddress() {
