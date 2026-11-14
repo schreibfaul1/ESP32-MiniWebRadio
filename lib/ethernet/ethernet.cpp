@@ -568,7 +568,10 @@ bool ETH_IDF::detectPHY() {
             m_phy_addr = addr;
             found = true;
 
-            log_i("YT8531 detected at PHY address %u", addr);
+            m_msg.event = Event::Info;
+            m_msg.txt.assignf("YT8531 detected at PHY address {}", addr);
+            if (m_ethernet_callback) m_ethernet_callback(m_msg);
+
             break;
         }
 
@@ -579,7 +582,10 @@ bool ETH_IDF::detectPHY() {
             m_phy_addr = addr;
             found = true;
 
-            log_i("IP101GR detected at PHY address %u", addr);
+            m_msg.event = Event::Info;
+            m_msg.txt.assignf("IP101GR detected at PHY address {}", addr);
+            if (m_ethernet_callback) m_ethernet_callback(m_msg);
+
             break;
         }
     }
@@ -591,7 +597,7 @@ bool ETH_IDF::detectPHY() {
         m_phy_type = ETH_PHY_TYPE::NONE;
         m_phy_addr = -1;
 
-        log_w("No supported Ethernet PHY detected");
+        // log_w("No supported Ethernet PHY detected");
     }
 
     return found;

@@ -201,7 +201,6 @@
         #define I2C_SCL             37 // 50 // I2C, clock line for capacitive touchpadand and light sensor (-1 if not available)
         #define AMP_ENABLED         57 // onboard amplifier (-1 if not available)
 
-        // #define ETH_PHY_TYPE        ETH_PHY_YT8531
         #define ETH_PHY_MDC          5 // Ethernet YT8531 pin
         #define ETH_PHY_MDIO         6 // Ethernet YT8531 pin
         #define ETH_PHY_RST          7 // Ethernet YT8531 pin
@@ -248,7 +247,6 @@
         #define I2C_SCL              8 // I2C, clock line for capacitive touchpad and light sensor (-1 if not available)
         #define AMP_ENABLED         33 // onboard amplifier (-1 if not available)
 
-        // #define ETH_PHY_TYPE        ETH_PHY_IP101
         #define ETH_PHY_MDC         31 // Ethernet IP101 pin
         #define ETH_PHY_MDIO        52 // Ethernet IP101 pin
         #define ETH_PHY_RST         51 // Ethernet IP101 pin
@@ -260,10 +258,6 @@
         #define ETH_RMII_RX0        29 // Ethernet IP101 pin
         #define ETH_RMII_RX1        30 // Ethernet IP101 pin
 
-
-
-
-    // free pins 46, 47, 48, 49, 50, 51, 52
     #endif // CONFIG_IDF_TARGET_ESP32P4
 #endif
 

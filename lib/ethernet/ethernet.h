@@ -202,7 +202,7 @@ class ETH_IDF {
 
 
 /*
-FOR IP101GR CHANGES:
+FOR IP101GR HAS TO CHANGE:
 in //.platformio/packages/framework-espidf/components/esp_eth/src/mac/esp_eth_mac_esp_gpio.c
 
 case GPIO_MODE_INPUT_OUTPUT:
