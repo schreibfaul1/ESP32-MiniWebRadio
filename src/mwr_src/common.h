@@ -66,8 +66,6 @@
 #define ANSI_ESC_INVERT       "\033[7m"
 #define ANSI_ESC_STRIKE       "\033[9m"
 
-
-
 SemaphoreHandle_t        mutex_rtc;
 SemaphoreHandle_t        mutex_display;
 std::mutex               mutex_print;
@@ -171,6 +169,8 @@ struct i2c_items_s {
     int  tca9554_addr = -1;
     bool ch422g_found = false;
     int  ch422g_addr = -1;
+    bool pcm5122_found = false;
+    int  pcm5122_addr = -1;
 } s_i2c_items;
 
 struct tag_s {

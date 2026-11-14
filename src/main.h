@@ -56,6 +56,7 @@
 #include "base64.h"
 #include "driver/ledc.h"
 #include "es8311.h"
+#include "PCM5122.h"
 #include "esp_log.h"
 #include "esp_psram.h"
 #include "kcx_bt_emitter.h"
@@ -84,6 +85,7 @@
 Audio       audio;
 Preferences pref;
 ES8311      es;
+PCM5122     pcm5122;
 WebSrv      webSrv;
 WiFiMulti   wifiMulti;
 RTIME       rtc;

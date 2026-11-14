@@ -216,10 +216,16 @@ void setup() {
     setTFTbrightness(s_brightness);
 
     if (s_i2c_items.es8311_found) {
-        es.begin(&i2cBusOne, 0x18);
+        es.begin(&i2cBusOne, s_i2c_items.es8311_addr);
         es.setBitsPerSample(32);
         es.setVolume(100);
         audio.forceMono(true);
+    }
+
+    if (s_i2c_items.pcm5122_found) {
+        pcm5122.begin(&i2cBusOne, s_i2c_items.pcm5122_addr);
+      //  pcm5122.setBitsPerSample(32);
+        pcm5122.setVolume(100);
     }
 }
 
@@ -255,7 +261,9 @@ void loop() {
     if (s_start_counter == 80) { dlna.seekServer(); }
     if (s_start_counter == 90) { webSrv.begin(80, 81, "MiniWebRadio", s_version); }
     if (s_start_counter == 100) { s_f_update_meteo_data = true; } // meteo send_request
-    if (s_start_counter == 110) { s_start_counter = 0; }
+    if (s_start_counter == 255) { s_start_counter = 0; }
+
+    if (s_start_counter == 250) { pcm5122.dumpRegisters();}
 
     // Cap lines drained per loop() call: sending every buffered line in one go blocks this core (shared with UI/touch/WiFi events)
     // for the whole burst, e.g. during reconnects or verbose logging, causing UI/web sluggishness. Spreading it over several
@@ -1549,6 +1557,13 @@ bool detect_i2_c_devices(TwoWire* twi, int8_t sda, int8_t scl, i2c_items_s* i2c_
                 printfln(s_tag.setup, "TCA9554 (8 Channel Port Expander) found at " ANSI_ESC_CYAN "0x{:X}", addr);
                 continue;
             }
+            //-- PCM5122 DAC -----------------------------------------------------------------------------------------------------------
+            if (addr == 0x4C) {
+                i2c_items->pcm5122_found = true;
+                i2c_items->pcm5122_addr = addr;
+                printfln(s_tag.setup, "PCM5122 (I2S DAC) found at " ANSI_ESC_CYAN "0x{:X}", addr);
+                continue;
+            }
             //-- Unknown Device  ------------------------------------------------------------------------------------------------------------------
             MWR_LOG_WARN("unknown i2c device at 0x{:X} found", addr);
         }
@@ -2456,6 +2471,8 @@ void my_audio_info(Audio::msg_t m) {
                 // es8311.setBitsPerSample(m.arg1);
             }
             if (msg.starts_with("SampleRate (Hz)")) {
+                uint32_t sampleRate = static_cast<uint32_t>(m.arg1);
+                pcm5122.setSampleRate(sampleRate);
                 // es8311.setSampleRate(m.arg1);
             }
             if (msg.starts_with("HTTP/") && msg[9] > '3') {
