@@ -82,7 +82,7 @@ bool ETH_IDF::begin() {
     }
 
     // Detect YT8531 before initializing the EMAC
-    if (!detectYT8531()) { return false; }
+    if (!detectPHY()) { return false; }
 
     esp_err_t err = esp_netif_init(); // Initialize TCP/IP stack
     if (err != ESP_OK) {
@@ -200,7 +200,11 @@ void ETH_IDF::end() {
     if (m_eth_handle) {
         err = esp_eth_driver_uninstall(m_eth_handle);
 
-        if (err != ESP_OK) { printf(ANSI_ESC_RED "[%s:%i] Ethernet stop failed: %s\n" ANSI_ESC_RESET, __FILE__, __LINE__, esp_err_to_name(err)); }
+        if (err == ESP_OK) {
+            m_eth_handle = nullptr;
+        } else {
+            printf(ANSI_ESC_RED "[%s:%i] Ethernet uninstall failed: %s\n" ANSI_ESC_RESET, __FILE__, __LINE__, esp_err_to_name(err));
+        }
     }
 
     m_link_up = false;
@@ -290,6 +294,7 @@ esp_err_t ETH_IDF::initEthernet() {
     eth_phy_config_t phy_config = ETH_PHY_DEFAULT_CONFIG();
 
     phy_config.phy_addr = m_phy_addr;
+
     phy_config.reset_gpio_num = ETH_PHY_RST;
 
     eth_esp32_emac_config_t emac_config = ETH_ESP32_EMAC_DEFAULT_CONFIG();
@@ -360,9 +365,7 @@ esp_err_t ETH_IDF::initEthernet() {
     switch (m_phy_type) {
 
         case ETH_PHY_TYPE::YT8531: phy = esp_eth_phy_new_generic(&phy_config); break;
-
         case ETH_PHY_TYPE::IP101: phy = esp_eth_phy_new_ip101(&phy_config); break;
-
         default: break;
     }
 
@@ -385,7 +388,11 @@ esp_err_t ETH_IDF::initEthernet() {
 
     // PHY-specific initialization
     if (m_phy_type == ETH_PHY_TYPE::YT8531) {
-        if (!initYT8531()) { return ESP_FAIL; }
+        if (!initYT8531()) {
+            esp_eth_driver_uninstall(m_eth_handle);
+            m_eth_handle = nullptr;
+            return ESP_FAIL;
+        }
     }
 
     return ESP_OK;
@@ -533,7 +540,10 @@ bool ETH_IDF::mdioRead(uint8_t phyAddr, uint8_t regAddr, uint16_t& value) {
     return (ta2 == 0);
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-bool ETH_IDF::detectYT8531() {
+bool ETH_IDF::detectPHY() {
+
+    m_phy_type = ETH_PHY_TYPE::NONE;
+    m_phy_addr = -1;
 
     if (!mdioInit()) {
         printf(ANSI_ESC_RED "[%s:%i] MDIO initialization failed\n" ANSI_ESC_RESET, __FILE__, __LINE__);
@@ -551,12 +561,25 @@ bool ETH_IDF::detectYT8531() {
         if (!mdioRead(addr, 2, id1)) continue;
         if (!mdioRead(addr, 3, id2)) continue;
 
+        // Detect YT8531
         if (id1 == YT8531_PHY_ID1 && id2 == YT8531_PHY_ID2) {
 
+            m_phy_type = ETH_PHY_TYPE::YT8531;
             m_phy_addr = addr;
             found = true;
 
             log_i("YT8531 detected at PHY address %u", addr);
+            break;
+        }
+
+        // Detect IP101GR
+        if (id1 == IP101_PHY_ID1 && (id2 & 0xFFF0) == (IP101_PHY_ID2 & 0xFFF0)) {
+
+            m_phy_type = ETH_PHY_TYPE::IP101;
+            m_phy_addr = addr;
+            found = true;
+
+            log_i("IP101GR detected at PHY address %u", addr);
             break;
         }
     }
@@ -565,8 +588,10 @@ bool ETH_IDF::detectYT8531() {
     mdioDeinit();
 
     if (!found) {
+        m_phy_type = ETH_PHY_TYPE::NONE;
         m_phy_addr = -1;
-        // log_w("No YT8531 detected");
+
+        log_w("No supported Ethernet PHY detected");
     }
 
     return found;

@@ -60,7 +60,7 @@ void setup() {
     esp_log_level_set("*", ESP_LOG_DEBUG);
     esp_log_set_vprintf(log_redirect_handler);
     if (!get_esp_items(&s_resetReason, &s_f_FFatFound)) return;
-
+vTaskDelay(3000);
     ethernet.begin();
 
     s_f_brightnessIsChangeable = setupBacklight(TFT_BL);

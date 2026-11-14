@@ -13,90 +13,88 @@
 #include "esp_netif.h"
 #include "esp_rom_sys.h"
 #include <Arduino.h>
+#include "stdio_ext.h"
 #include <atomic>
 #include <functional>
 #include <utility>
 
-
 // ETH_PHY_IP101
 #ifndef ETH_PHY_MDC
-#define ETH_PHY_MDC 31
+    #define ETH_PHY_MDC 31
 #endif
 #ifndef ETH_PHY_MDIO
-#define ETH_PHY_MDIO 52
+    #define ETH_PHY_MDIO 52
 #endif
 #ifndef ETH_PHY_RST
-#define ETH_PHY_RST 51
+    #define ETH_PHY_RST 51
 #endif
 #ifndef ETH_RMII_REF_CLK
-#define ETH_RMII_REF_CLK 50
+    #define ETH_RMII_REF_CLK 50
 #endif
 #ifndef ETH_RMII_TX_EN
-#define ETH_RMII_TX_EN 49
+    #define ETH_RMII_TX_EN 49
 #endif
 #ifndef ETH_RMII_TX0
-#define ETH_RMII_TX0 34
+    #define ETH_RMII_TX0 34
 #endif
 #ifndef ETH_RMII_TX1
-#define ETH_RMII_TX1 35
+    #define ETH_RMII_TX1 35
 #endif
 #ifndef ETH_RMII_RX0
-#define ETH_RMII_RX0 29
+    #define ETH_RMII_RX0 29
 #endif
 #ifndef ETH_RMII_RX1
-#define ETH_RMII_RX1 30
+    #define ETH_RMII_RX1 30
 #endif
 #ifndef ETH_RMII_CRS_DV
-#define ETH_RMII_CRS_DV 28
+    #define ETH_RMII_CRS_DV 28
 #endif
-
-
 
 // ETH_PHY_YT8531
 #ifndef ETH_PHY_MDC
-#define ETH_PHY_MDC 5
+    #define ETH_PHY_MDC 5
 #endif
 #ifndef ETH_PHY_MDIO
-#define ETH_PHY_MDIO 6
+    #define ETH_PHY_MDIO 6
 #endif
 #ifndef ETH_PHY_RST
-#define ETH_PHY_RST 7
+    #define ETH_PHY_RST 7
 #endif
 #ifndef ETH_RGMII_TX0
-#define ETH_RGMII_TX0 8
+    #define ETH_RGMII_TX0 8
 #endif
 #ifndef ETH_RGMII_TX1
-#define ETH_RGMII_TX1 9
+    #define ETH_RGMII_TX1 9
 #endif
 #ifndef ETH_RGMII_TX2
-#define ETH_RGMII_TX2 10
+    #define ETH_RGMII_TX2 10
 #endif
 #ifndef ETH_RGMII_TX3
-#define ETH_RGMII_TX3 11
+    #define ETH_RGMII_TX3 11
 #endif
 #ifndef ETH_RGMII_TX_CTL
-#define ETH_RGMII_TX_CTL 12
+    #define ETH_RGMII_TX_CTL 12
 #endif
 #ifndef ETH_RGMII_TX_CLK
-#define ETH_RGMII_TX_CLK 13
+    #define ETH_RGMII_TX_CLK 13
 #endif
 #ifndef ETH_RGMII_RX_CLK
-#define ETH_RGMII_RX_CLK 14
+    #define ETH_RGMII_RX_CLK 14
 #endif
 #ifndef ETH_RGMII_RX_CTL
-#define ETH_RGMII_RX_CTL 15
+    #define ETH_RGMII_RX_CTL 15
 #endif
 #ifndef ETH_RGMII_RX3
-#define ETH_RGMII_RX3 16
+    #define ETH_RGMII_RX3 16
 #endif
 #ifndef ETH_RGMII_RX2
-#define ETH_RGMII_RX2 17
+    #define ETH_RGMII_RX2 17
 #endif
 #ifndef ETH_RGMII_RX1
-#define ETH_RGMII_RX1 18
+    #define ETH_RGMII_RX1 18
 #endif
 #ifndef ETH_RGMII_RX0
-#define ETH_RGMII_RX0 19
+    #define ETH_RGMII_RX0 19
 #endif
 
 class ETH_IDF {
@@ -105,6 +103,7 @@ class ETH_IDF {
 #define YT8531_PHY_ID1 0x4F51
 #define YT8531_PHY_ID2 0xE91B
 #define IP101_PHY_ID1  0x0243
+#define IP101_PHY_ID2  0x0C54
 #define MDIO_DELAY_US  1
 #define ANSI_ESC_RED   "\033[31m"
 #define ANSI_ESC_GREEN "\033[32m"
@@ -191,7 +190,7 @@ class ETH_IDF {
     bool        mdioInit();
     void        mdioDeinit();
     bool        mdioRead(uint8_t phyAddr, uint8_t regAddr, uint16_t& value);
-    bool        detectYT8531();
+    bool        detectPHY();
     bool        initYT8531();   // YT8531 initialization
     esp_err_t   initEthernet(); // MAC / PHY initialization
     int16_t     fetchSpeed();
@@ -201,3 +200,25 @@ class ETH_IDF {
     static void ipEventHandler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
     // --------------------------------------------------
 };
+
+
+/*
+FOR IP101GR CHANGES:
+in //.platformio/packages/framework-espidf/components/esp_eth/src/mac/esp_eth_mac_esp_gpio.c
+
+case GPIO_MODE_INPUT_OUTPUT:
+    ESP_RETURN_ON_FALSE(signal_in_idx != SIG_GPIO_OUT_IDX, ESP_ERR_NOT_SUPPORTED,
+                        TAG, "requested periph signal cannot be connect via GPIO Matrix");
+    ESP_RETURN_ON_FALSE(signal_out_idx != SIG_GPIO_OUT_IDX, ESP_ERR_NOT_SUPPORTED,
+                        TAG, "requested periph signal cannot be connect via GPIO Matrix");
+    ESP_RETURN_ON_FALSE((esp_gpio_reserve(BIT64(gpio_num)) & BIT64(gpio_num)) == 0,
+                        ESP_ERR_INVALID_STATE, TAG, "GPIO %i is already reserved", gpio_num);
+
+    gpio_input_enable(gpio_num);
+    gpio_od_disable(gpio_num);  // TEST: OpenDrain explizit deaktivieren
+
+    esp_rom_gpio_connect_out_signal(gpio_num, signal_out_idx, false, false);
+    esp_rom_gpio_connect_in_signal(gpio_num, signal_in_idx, false);
+    break;
+
+*/
