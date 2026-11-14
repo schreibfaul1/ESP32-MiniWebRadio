@@ -3,8 +3,6 @@
 // Created on: 11.11.2026
 // Updated on: 13.11.2026
 
-#ifdef ETH_PHY_MDC
-
 void ETH_IDF::ethEventHandler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
     auto* self = static_cast<ETH_IDF*>(arg);
 
@@ -72,7 +70,7 @@ void ETH_IDF::ipEventHandler(void* arg, esp_event_base_t event_base, int32_t eve
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool ETH_IDF::begin() {
-
+#ifdef CONFIG_ETH_USE_ESP32_EMAC
     if (m_eth_handle) {
         esp_err_t err = esp_eth_driver_uninstall(m_eth_handle);
 
@@ -84,9 +82,7 @@ bool ETH_IDF::begin() {
     }
 
     // Detect YT8531 before initializing the EMAC
-    if (!detectYT8531()) {
-        return false;
-    }
+    if (!detectPHY()) { return false; }
 
     esp_err_t err = esp_netif_init(); // Initialize TCP/IP stack
     if (err != ESP_OK) {
@@ -159,6 +155,9 @@ bool ETH_IDF::begin() {
     m_started = true;
 
     return true;
+#else
+    return false;
+#endif
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void ETH_IDF::end() {
@@ -204,7 +203,11 @@ void ETH_IDF::end() {
     if (m_eth_handle) {
         err = esp_eth_driver_uninstall(m_eth_handle);
 
-        if (err != ESP_OK) { printf(ANSI_ESC_RED "[%s:%i] Ethernet stop failed: %s\n" ANSI_ESC_RESET, __FILE__, __LINE__, esp_err_to_name(err)); }
+        if (err == ESP_OK) {
+            m_eth_handle = nullptr;
+        } else {
+            printf(ANSI_ESC_RED "[%s:%i] Ethernet uninstall failed: %s\n" ANSI_ESC_RESET, __FILE__, __LINE__, esp_err_to_name(err));
+        }
     }
 
     m_link_up = false;
@@ -290,36 +293,68 @@ bool ETH_IDF::initYT8531() {
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 esp_err_t ETH_IDF::initEthernet() {
 
+#ifdef CONFIG_ETH_USE_ESP32_EMAC
+
     eth_mac_config_t mac_config = ETH_MAC_DEFAULT_CONFIG();
     eth_phy_config_t phy_config = ETH_PHY_DEFAULT_CONFIG();
 
     phy_config.phy_addr = m_phy_addr;
+
     phy_config.reset_gpio_num = ETH_PHY_RST;
 
     eth_esp32_emac_config_t emac_config = ETH_ESP32_EMAC_DEFAULT_CONFIG();
 
-    emac_config.interface = EMAC_DATA_INTERFACE_RGMII;
-
+    // Common SMI configuration
     emac_config.smi_gpio.mdc_num = ETH_PHY_MDC;
     emac_config.smi_gpio.mdio_num = ETH_PHY_MDIO;
 
-    emac_config.clock_config.rgmii.clock_rx_gpio = ETH_RGMII_RX_CLK;
-    emac_config.clock_config.rgmii.clock_tx_gpio = ETH_RGMII_TX_CLK;
-    emac_config.clock_config.rgmii.clock_phy_ref_gpio = -1;
+    // Configure MAC interface depending on PHY
+    switch (m_phy_type) {
 
-    emac_config.emac_dataif_gpio.rgmii.tx_ctl_num = ETH_RGMII_TX_CTL;
+        case ETH_PHY_TYPE::YT8531:
 
-    emac_config.emac_dataif_gpio.rgmii.txd0_num = ETH_RGMII_TX0;
-    emac_config.emac_dataif_gpio.rgmii.txd1_num = ETH_RGMII_TX1;
-    emac_config.emac_dataif_gpio.rgmii.txd2_num = ETH_RGMII_TX2;
-    emac_config.emac_dataif_gpio.rgmii.txd3_num = ETH_RGMII_TX3;
+            emac_config.interface = EMAC_DATA_INTERFACE_RGMII;
 
-    emac_config.emac_dataif_gpio.rgmii.rx_ctl_num = ETH_RGMII_RX_CTL;
+            emac_config.clock_config.rgmii.clock_rx_gpio = ETH_RGMII_RX_CLK;
+            emac_config.clock_config.rgmii.clock_tx_gpio = ETH_RGMII_TX_CLK;
+            emac_config.clock_config.rgmii.clock_phy_ref_gpio = -1;
 
-    emac_config.emac_dataif_gpio.rgmii.rxd0_num = ETH_RGMII_RX0;
-    emac_config.emac_dataif_gpio.rgmii.rxd1_num = ETH_RGMII_RX1;
-    emac_config.emac_dataif_gpio.rgmii.rxd2_num = ETH_RGMII_RX2;
-    emac_config.emac_dataif_gpio.rgmii.rxd3_num = ETH_RGMII_RX3;
+            emac_config.emac_dataif_gpio.rgmii.tx_ctl_num = ETH_RGMII_TX_CTL;
+
+            emac_config.emac_dataif_gpio.rgmii.txd0_num = ETH_RGMII_TX0;
+            emac_config.emac_dataif_gpio.rgmii.txd1_num = ETH_RGMII_TX1;
+            emac_config.emac_dataif_gpio.rgmii.txd2_num = ETH_RGMII_TX2;
+            emac_config.emac_dataif_gpio.rgmii.txd3_num = ETH_RGMII_TX3;
+
+            emac_config.emac_dataif_gpio.rgmii.rx_ctl_num = ETH_RGMII_RX_CTL;
+
+            emac_config.emac_dataif_gpio.rgmii.rxd0_num = ETH_RGMII_RX0;
+            emac_config.emac_dataif_gpio.rgmii.rxd1_num = ETH_RGMII_RX1;
+            emac_config.emac_dataif_gpio.rgmii.rxd2_num = ETH_RGMII_RX2;
+            emac_config.emac_dataif_gpio.rgmii.rxd3_num = ETH_RGMII_RX3;
+
+            break;
+
+        case ETH_PHY_TYPE::IP101:
+
+            emac_config.interface = EMAC_DATA_INTERFACE_RMII;
+
+            // External 50 MHz REF_CLK from PHY
+            emac_config.clock_config.rmii.clock_mode = EMAC_CLK_EXT_IN;
+            emac_config.clock_config.rmii.clock_gpio = ETH_RMII_REF_CLK;
+
+            emac_config.emac_dataif_gpio.rmii.tx_en_num = ETH_RMII_TX_EN;
+            emac_config.emac_dataif_gpio.rmii.txd0_num = ETH_RMII_TX0;
+            emac_config.emac_dataif_gpio.rmii.txd1_num = ETH_RMII_TX1;
+
+            emac_config.emac_dataif_gpio.rmii.crs_dv_num = ETH_RMII_CRS_DV;
+            emac_config.emac_dataif_gpio.rmii.rxd0_num = ETH_RMII_RX0;
+            emac_config.emac_dataif_gpio.rmii.rxd1_num = ETH_RMII_RX1;
+
+            break;
+
+        default: printf(ANSI_ESC_RED "[%s:%i] Unknown PHY type\n" ANSI_ESC_RESET, __FILE__, __LINE__); return ESP_FAIL;
+    }
 
     // Create MAC
     esp_eth_mac_t* mac = esp_eth_mac_new_esp32(&emac_config, &mac_config);
@@ -330,7 +365,14 @@ esp_err_t ETH_IDF::initEthernet() {
     }
 
     // Create PHY
-    esp_eth_phy_t* phy = esp_eth_phy_new_generic(&phy_config);
+    esp_eth_phy_t* phy = nullptr;
+
+    switch (m_phy_type) {
+
+        case ETH_PHY_TYPE::YT8531: phy = esp_eth_phy_new_generic(&phy_config); break;
+        case ETH_PHY_TYPE::IP101: phy = esp_eth_phy_new_ip101(&phy_config); break;
+        default: break;
+    }
 
     if (!phy) {
         mac->del(mac);
@@ -349,10 +391,20 @@ esp_err_t ETH_IDF::initEthernet() {
         return err;
     }
 
-    // Configure YT8531
-    bool res = initYT8531();
-    if (res == true) return ESP_OK;
+    // PHY-specific initialization
+    if (m_phy_type == ETH_PHY_TYPE::YT8531) {
+        if (!initYT8531()) {
+            esp_eth_driver_uninstall(m_eth_handle);
+            m_eth_handle = nullptr;
+            return ESP_FAIL;
+        }
+    }
+
+    return ESP_OK;
+
+#else
     return ESP_FAIL;
+#endif
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 const char* ETH_IDF::getMacAddress() {
@@ -497,7 +549,10 @@ bool ETH_IDF::mdioRead(uint8_t phyAddr, uint8_t regAddr, uint16_t& value) {
     return (ta2 == 0);
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-bool ETH_IDF::detectYT8531() {
+bool ETH_IDF::detectPHY() {
+
+    m_phy_type = ETH_PHY_TYPE::NONE;
+    m_phy_addr = -1;
 
     if (!mdioInit()) {
         printf(ANSI_ESC_RED "[%s:%i] MDIO initialization failed\n" ANSI_ESC_RESET, __FILE__, __LINE__);
@@ -515,12 +570,31 @@ bool ETH_IDF::detectYT8531() {
         if (!mdioRead(addr, 2, id1)) continue;
         if (!mdioRead(addr, 3, id2)) continue;
 
+        // Detect YT8531
         if (id1 == YT8531_PHY_ID1 && id2 == YT8531_PHY_ID2) {
 
+            m_phy_type = ETH_PHY_TYPE::YT8531;
             m_phy_addr = addr;
             found = true;
 
-            log_i("YT8531 detected at PHY address %u", addr);
+            m_msg.event = Event::Info;
+            m_msg.txt.assignf("YT8531 detected at PHY address {}", addr);
+            if (m_ethernet_callback) m_ethernet_callback(m_msg);
+
+            break;
+        }
+
+        // Detect IP101GR
+        if (id1 == IP101_PHY_ID1 && (id2 & 0xFFF0) == (IP101_PHY_ID2 & 0xFFF0)) {
+
+            m_phy_type = ETH_PHY_TYPE::IP101;
+            m_phy_addr = addr;
+            found = true;
+
+            m_msg.event = Event::Info;
+            m_msg.txt.assignf("IP101GR detected at PHY address {}", addr);
+            if (m_ethernet_callback) m_ethernet_callback(m_msg);
+
             break;
         }
     }
@@ -529,8 +603,10 @@ bool ETH_IDF::detectYT8531() {
     mdioDeinit();
 
     if (!found) {
+        m_phy_type = ETH_PHY_TYPE::NONE;
         m_phy_addr = -1;
-        // log_w("No YT8531 detected");
+
+        // log_w("No supported Ethernet PHY detected");
     }
 
     return found;
@@ -542,44 +618,3 @@ void ETH_IDF::mdioDeinit() {
     gpio_reset_pin((gpio_num_t)ETH_PHY_MDIO);
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-#else  // dummy class, board has no ETH-HW
-void ETH_IDF::ethEventHandler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
-    return;
-}
-void ETH_IDF::ipEventHandler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
-    return;
-}
-bool ETH_IDF::begin() {
-    return false;
-}
-void ETH_IDF::end(){
-    return;
-}
-bool ETH_IDF::initYT8531(){
-    return false;
-}
-esp_err_t ETH_IDF::initEthernet() {
-    return ESP_FAIL;
-}
-const char* ETH_IDF::getMacAddress() {
-    return "";
-}
-int16_t ETH_IDF::fetchSpeed() {
-    return 0;
-}
-const char* ETH_IDF::fetchDuplex() {
-    return "";
-}
-bool ETH_IDF::mdioInit() {
-    return false;
-}
-bool ETH_IDF::mdioRead(uint8_t phyAddr, uint8_t regAddr, uint16_t& value) {
-    return false;
-}
-bool ETH_IDF::detectYT8531() {
-    return false;
-}
-void ETH_IDF::mdioDeinit() {
-    return;
-}
-#endif

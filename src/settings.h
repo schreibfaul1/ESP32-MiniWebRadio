@@ -4,8 +4,8 @@
 #include "../lib/tftLib/tft_structures.h"
 
 //———————————— predifined displays —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-#define SPI_DISPLAY 1                  //                    SPI display  320x240, 2.8inch,        ILI9341             XPT2046, ESP32s3 or ESP32p4
-// #define SPI_DISPLAY 2                  //                    SPI display  480x320, 3.5" od 4"      ILI9488 or ST7796,  XPT2046, ESP32s3 or ESP32p4
+// #define SPI_DISPLAY 1                  //                    SPI display  320x240, 2.8inch,        ILI9341             XPT2046, ESP32s3 or ESP32p4
+#define SPI_DISPLAY 2                  //                    SPI display  480x320, 3.5" od 4"      ILI9488 or ST7796,  XPT2046, ESP32s3 or ESP32p4
 // #define SPI_DISPLAY 3                  //                    SPI display  480x320, 3.5" od 4"      ILI9488 or ST7796,  FT6x63,  ESP32s3 or ESP32p4
 // #define LCD_DISPLAY_ESP32_S3_28        // Hosyond            SPI display  320x240, 2.8inch,        ILI9341             FT6x63,  ESP32s3 N16R8
 // #define LCD_DISPLAY_ESP32_S3_40        // Hosyond            SPI display  480x320, 4"              ST7796,             FT6x63,  ESP32s3 N16R8
@@ -201,21 +201,21 @@
         #define I2C_SCL             37 // 50 // I2C, clock line for capacitive touchpadand and light sensor (-1 if not available)
         #define AMP_ENABLED         57 // onboard amplifier (-1 if not available)
 
-        #define ETH_PHY_MDC          5 // Ethernet YT8531DC-CA pin
-        #define ETH_PHY_MDIO         6 // Ethernet YT8531DC-CA pin
-        #define ETH_PHY_RST          7 // Ethernet YT8531DC-CA pin
-        #define ETH_RGMII_TX0        8 // Ethernet YT8531DC-CA pin
-        #define ETH_RGMII_TX1        9 // Ethernet YT8531DC-CA pin
-        #define ETH_RGMII_TX2       10 // Ethernet YT8531DC-CA pin
-        #define ETH_RGMII_TX3       11 // Ethernet YT8531DC-CA pin
-        #define ETH_RGMII_TX_CTL    12 // Ethernet YT8531DC-CA pin
-        #define ETH_RGMII_TX_CLK    13 // Ethernet YT8531DC-CA pin
-        #define ETH_RGMII_RX_CLK    14 // Ethernet YT8531DC-CA pin
-        #define ETH_RGMII_RX_CTL    15 // Ethernet YT8531DC-CA pin
-        #define ETH_RGMII_RX3       16 // Ethernet YT8531DC-CA pin
-        #define ETH_RGMII_RX2       17 // Ethernet YT8531DC-CA pin
-        #define ETH_RGMII_RX1       18 // Ethernet YT8531DC-CA pin
-        #define ETH_RGMII_RX0       19 // Ethernet YT8531DC-CA pin
+        #define ETH_PHY_MDC          5 // Ethernet YT8531 pin
+        #define ETH_PHY_MDIO         6 // Ethernet YT8531 pin
+        #define ETH_PHY_RST          7 // Ethernet YT8531 pin
+        #define ETH_RGMII_TX0        8 // Ethernet YT8531 pin
+        #define ETH_RGMII_TX1        9 // Ethernet YT8531 pin
+        #define ETH_RGMII_TX2       10 // Ethernet YT8531 pin
+        #define ETH_RGMII_TX3       11 // Ethernet YT8531 pin
+        #define ETH_RGMII_TX_CTL    12 // Ethernet YT8531 pin
+        #define ETH_RGMII_TX_CLK    13 // Ethernet YT8531 pin
+        #define ETH_RGMII_RX_CLK    14 // Ethernet YT8531 pin
+        #define ETH_RGMII_RX_CTL    15 // Ethernet YT8531 pin
+        #define ETH_RGMII_RX3       16 // Ethernet YT8531 pin
+        #define ETH_RGMII_RX2       17 // Ethernet YT8531 pin
+        #define ETH_RGMII_RX1       18 // Ethernet YT8531 pin
+        #define ETH_RGMII_RX0       19 // Ethernet YT8531 pin
 
     #endif
 
@@ -240,13 +240,24 @@
         #define I2S_LRC             25
         #define I2S_MCLK            -1
         #define BT_EMITTER_RX       27 // TX pin - KCX Bluetooth Transmitter    (-1 if not available)
-        #define BT_EMITTER_TX       28 // RX pin - KCX Bluetooth Transmitter    (-1 if not available)
-        #define BT_EMITTER_MODE     29 // high transmit - low receive           (-1 if not available)
-        #define BT_EMITTER_CONNECT  30 // high impulse -> awake after POWER_OFF (-1 if not available)
+        #define BT_EMITTER_TX       46  // 28 // RX pin - KCX Bluetooth Transmitter    (-1 if not available)
+        #define BT_EMITTER_MODE     47  // 29 // high transmit - low receive           (-1 if not available)
+        #define BT_EMITTER_CONNECT  48  // 30 // high impulse -> awake after POWER_OFF (-1 if not available)
         #define I2C_SDA              7 // I2C, dala line for capacitive touchpad and light sensor (-1 if not available)
         #define I2C_SCL              8 // I2C, clock line for capacitive touchpad and light sensor (-1 if not available)
         #define AMP_ENABLED         33 // onboard amplifier (-1 if not available)
-    // free pins 46, 47, 48, 49, 50, 51, 52
+
+        #define ETH_PHY_MDC         31 // Ethernet IP101 pin
+        #define ETH_PHY_MDIO        52 // Ethernet IP101 pin
+        #define ETH_PHY_RST         51 // Ethernet IP101 pin
+        #define ETH_RMII_REF_CLK    50 // Ethernet IP101 pin
+        #define ETH_RMII_TX_EN      49 // Ethernet IP101 pin
+        #define ETH_RMII_TX0        34 // Ethernet IP101 pin
+        #define ETH_RMII_TX1        35 // Ethernet IP101 pin
+        #define ETH_RMII_CRS_DV     28 // Ethernet IP101 pin
+        #define ETH_RMII_RX0        29 // Ethernet IP101 pin
+        #define ETH_RMII_RX1        30 // Ethernet IP101 pin
+
     #endif // CONFIG_IDF_TARGET_ESP32P4
 #endif
 
