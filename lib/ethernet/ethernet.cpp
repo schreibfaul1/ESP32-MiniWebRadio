@@ -70,7 +70,7 @@ void ETH_IDF::ipEventHandler(void* arg, esp_event_base_t event_base, int32_t eve
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool ETH_IDF::begin() {
-
+#ifdef CONFIG_ETH_USE_ESP32_EMAC
     if (m_eth_handle) {
         esp_err_t err = esp_eth_driver_uninstall(m_eth_handle);
 
@@ -155,6 +155,9 @@ bool ETH_IDF::begin() {
     m_started = true;
 
     return true;
+#else
+    return false;
+#endif
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void ETH_IDF::end() {

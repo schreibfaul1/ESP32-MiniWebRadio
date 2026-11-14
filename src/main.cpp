@@ -8,7 +8,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.1e - Nov 12, 2026                                                                                                               ";
+    Version 4.2.1f - Nov 14, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -60,8 +60,7 @@ void setup() {
     esp_log_level_set("*", ESP_LOG_DEBUG);
     esp_log_set_vprintf(log_redirect_handler);
     if (!get_esp_items(&s_resetReason, &s_f_FFatFound)) return;
-vTaskDelay(3000);
-    ethernet.begin();
+    if(ethernet.begin()) vTaskDelay(1000); // wait for 'got IP'
 
     s_f_brightnessIsChangeable = setupBacklight(TFT_BL);
     if (!s_f_brightnessIsChangeable) btn_SE_bright.set_active(false);
