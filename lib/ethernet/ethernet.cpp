@@ -302,6 +302,18 @@ esp_err_t ETH_IDF::initEthernet() {
 
     phy_config.reset_gpio_num = ETH_PHY_RST;
 
+    // PHY detection uses software MDIO.
+    // mdioDeinit() resets the GPIO configuration afterwards.
+
+    // Clear any remaining Open-Drain configuration
+    esp_err_t gpio_err;
+
+    gpio_err = gpio_od_disable((gpio_num_t)ETH_PHY_MDC);
+    if (gpio_err != ESP_OK) { return gpio_err; }
+
+    gpio_err = gpio_od_disable((gpio_num_t)ETH_PHY_MDIO);
+    if (gpio_err != ESP_OK) { return gpio_err; }
+
     eth_esp32_emac_config_t emac_config = ETH_ESP32_EMAC_DEFAULT_CONFIG();
 
     // Common SMI configuration
