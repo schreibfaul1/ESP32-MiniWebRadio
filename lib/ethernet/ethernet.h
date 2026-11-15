@@ -199,25 +199,3 @@ class ETH_IDF {
     static void ipEventHandler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
     // --------------------------------------------------
 };
-
-
-/*
-FOR IP101GR HAS TO CHANGE:
-in //.platformio/packages/framework-espidf/components/esp_eth/src/mac/esp_eth_mac_esp_gpio.c
-
-case GPIO_MODE_INPUT_OUTPUT:
-    ESP_RETURN_ON_FALSE(signal_in_idx != SIG_GPIO_OUT_IDX, ESP_ERR_NOT_SUPPORTED,
-                        TAG, "requested periph signal cannot be connect via GPIO Matrix");
-    ESP_RETURN_ON_FALSE(signal_out_idx != SIG_GPIO_OUT_IDX, ESP_ERR_NOT_SUPPORTED,
-                        TAG, "requested periph signal cannot be connect via GPIO Matrix");
-    ESP_RETURN_ON_FALSE((esp_gpio_reserve(BIT64(gpio_num)) & BIT64(gpio_num)) == 0,
-                        ESP_ERR_INVALID_STATE, TAG, "GPIO %i is already reserved", gpio_num);
-
-    gpio_input_enable(gpio_num);
-    gpio_od_disable(gpio_num);  // TEST: OpenDrain explizit deaktivieren
-
-    esp_rom_gpio_connect_out_signal(gpio_num, signal_out_idx, false, false);
-    esp_rom_gpio_connect_in_signal(gpio_num, signal_in_idx, false);
-    break;
-
-*/
