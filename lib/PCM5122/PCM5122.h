@@ -27,6 +27,10 @@ class PCM5122 {
     static constexpr uint8_t REG_IDAC_LSB = 0x24;
     static constexpr uint8_t REG_CLOCK_CFG = 0x25;
 
+#define ANSI_ESC_RED   "\033[31m"
+#define ANSI_ESC_GREEN "\033[32m"
+#define ANSI_ESC_RESET "\033[0m"
+
     TwoWire* m_TwoWireInstance = NULL; // TwoWire Instance
     int8_t   m_addr = -1;
     uint32_t m_sampleRate = 0;

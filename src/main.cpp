@@ -60,7 +60,7 @@ void setup() {
     esp_log_level_set("*", ESP_LOG_DEBUG);
     esp_log_set_vprintf(log_redirect_handler);
     if (!get_esp_items(&s_resetReason, &s_f_FFatFound)) return;
-    if(ethernet.begin()) vTaskDelay(1000); // wait for 'got IP'
+    if (ethernet.begin()) vTaskDelay(1000); // wait for 'got IP'
 
     s_f_brightnessIsChangeable = setupBacklight(TFT_BL);
     if (!s_f_brightnessIsChangeable) btn_SE_bright.set_active(false);
@@ -224,7 +224,7 @@ void setup() {
 
     if (s_i2c_items.pcm5122_found) {
         pcm5122.begin(&i2cBusOne, s_i2c_items.pcm5122_addr);
-      //  pcm5122.setBitsPerSample(32);
+        //  pcm5122.setBitsPerSample(32);
         pcm5122.setVolume(100);
     }
 }
@@ -263,7 +263,7 @@ void loop() {
     if (s_start_counter == 100) { s_f_update_meteo_data = true; } // meteo send_request
     if (s_start_counter == 255) { s_start_counter = 0; }
 
-    if (s_start_counter == 250) { pcm5122.dumpRegisters();}
+    if (s_start_counter == 250) { pcm5122.dumpRegisters(); }
 
     // Cap lines drained per loop() call: sending every buffered line in one go blocks this core (shared with UI/touch/WiFi events)
     // for the whole burst, e.g. during reconnects or verbose logging, causing UI/web sluggishness. Spreading it over several
@@ -299,38 +299,7 @@ void loop() {
     //-----------------------------------------------------0.1 SEC------------------------------------------------------------------------------------
     if (s_f_100ms) { // calls every 0.1 second
         s_f_100ms = false;
-
-        while (s_timeCounter.timer) {
-            s_timeCounter.timer -= s_timeCounter.factor;
-            s_timeCounter.timer = std::round(s_timeCounter.timer * 1000.0f) / 1000.0f;
-            if (s_timeCounter.timer < 0.0f) s_timeCounter.timer = 0.0f;
-            dispFooter.updateTC(s_timeCounter.timer);
-            if (s_timeCounter.timer != 0.0f) break;
-
-            if (volBox.is_enabled()) volBox.hide();
-            if (s_f_sleeping) return; // tc is active by pressing a button, but do nothing if "off"
-            if (s_state == RADIO) {
-                if (!txt_RA_staName.is_enabled()) { txt_RA_staName.show(); } // assume volBox is shown
-                if (s_subState_radio == 1) { changeState(RADIO, 0); }        // Mute, Vol+, Vol-, Sta+, Sta-, StaList
-                if (s_subState_radio == 2) { changeState(RADIO, 0); }        // Player, DLNA, Clock, SleepTime, Brightness, EQ, BT, Off
-            } else if (s_state == STATIONSLIST) {
-                changeState(RADIO, 0);
-            } else if (s_state == PLAYER) {
-                if (!txt_PL_fName.is_enabled()) { txt_PL_fName.show(); } // assume volBox is shown
-            } else if (s_state == AUDIOFILESLIST) {
-                changeState(PLAYER, 0);
-            } else if (s_state == DLNA) {
-                if (!txt_DL_fName.is_enabled()) { txt_DL_fName.show(); } // assume volBox is shown
-            } else if (s_state == DLNAITEMSLIST) {
-                changeState(DLNA, 0);
-            } else if (s_state == CLOCK) {
-                changeState(CLOCK, 0);
-            } else if (s_state == WEATHER) {
-                changeState(WEATHER, 0);
-            } else {
-                ;
-            } // all other, do nothing
-        }
+        handleTimeCounter();
 
         if (!s_f_rtc) { s_f_rtc = rtc.hasValidTime(); }
         // ------------------------------------------- volume / mute --------------------------------------------------------------------------------
@@ -475,7 +444,7 @@ void loop() {
             }
         }
         //------------------------------------------NEW STREAMTITLE-----------------------------------------------------------------------------------
-        if (s_f_newStreamTitle && s_timeCounter.timer == 0) {
+        if (s_f_newStreamTitle && !s_timeCounter.active) {
             s_f_newStreamTitle = false;
             if (s_state == RADIO) {
                 if (s_streamTitle.valid())
@@ -498,7 +467,7 @@ void loop() {
             if (s_state == DLNA) show_DLNA_FileName(s_lyrics);
         }
         //------------------------------------------NEW ICY-DESCRIPTION-------------------------------------------------------------------------------
-        if (s_f_newIcyDescription && s_timeCounter.timer == 0) {
+        if (s_f_newIcyDescription && !s_timeCounter.active) {
             if (s_state == RADIO) {
                 if (!s_streamTitle.valid()) showStreamTitle(s_icyDescription);
             }
@@ -2035,14 +2004,68 @@ void logAlarmItems() {
 }
 
 void setTimeCounter(uint8_t sec) {
+
     if (sec == 0) {
+        s_timeCounter.active = false;
         dispFooter.updateTC(0.0f);
         s_f_newBitRate = true;
-    } else if (sec < 11) {
-        s_timeCounter.timer = 1.0f;
-        dispFooter.updateTC(s_timeCounter.timer);
-        s_timeCounter.factor = 1.0f / (10.0f * sec);
+        return;
     }
+
+    if (sec > 10) return;
+
+    s_timeCounter.startTime = millis();
+    s_timeCounter.duration = sec * 1000UL;
+    s_timeCounter.active = true;
+
+    dispFooter.updateTC(1.0f);
+}
+
+void handleTimeCounter() {
+
+    if (!s_timeCounter.active) return;
+
+    uint32_t elapsed = millis() - s_timeCounter.startTime;
+    float val = 0.0f;
+
+    if (elapsed >= s_timeCounter.duration) {
+        s_timeCounter.active = false;
+        dispFooter.updateTC(0.0f);
+    } else {
+        val = 1.0f - (float)elapsed / s_timeCounter.duration;
+         dispFooter.updateTC(val);
+    }
+
+    if (!s_timeCounter.active) {
+
+        if (volBox.is_enabled()) volBox.hide();
+        if (s_f_sleeping) return; // tc is active by pressing a button, but do nothing if "off"
+        if (s_state == RADIO) {
+            if (!txt_RA_staName.is_enabled()) { txt_RA_staName.show(); } // assume volBox is shown
+            if (s_subState_radio == 1) { changeState(RADIO, 0); }        // Mute, Vol+, Vol-, Sta+, Sta-, StaList
+            if (s_subState_radio == 2) { changeState(RADIO, 0); }        // Player, DLNA, Clock, SleepTime, Brightness, EQ, BT, Off
+        } else if (s_state == STATIONSLIST) {
+            changeState(RADIO, 0);
+        } else if (s_state == PLAYER) {
+            if (!txt_PL_fName.is_enabled()) { txt_PL_fName.show(); } // assume volBox is shown
+        } else if (s_state == AUDIOFILESLIST) {
+            changeState(PLAYER, 0);
+        } else if (s_state == DLNA) {
+            if (!txt_DL_fName.is_enabled()) { txt_DL_fName.show(); } // assume volBox is shown
+        } else if (s_state == DLNAITEMSLIST) {
+            changeState(DLNA, 0);
+        } else if (s_state == CLOCK) {
+            changeState(CLOCK, 0);
+        } else if (s_state == WEATHER) {
+            changeState(WEATHER, 0);
+        } else {
+            ;
+        } // all other, do nothing
+    }
+
+    float remaining = 1.0f - (float)elapsed / (float)s_timeCounter.duration;
+
+    dispFooter.updateTC(remaining);
 }
 
 void setTFTbrightness(uint8_t brightness) {

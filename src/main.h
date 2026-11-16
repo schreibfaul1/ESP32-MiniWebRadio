@@ -379,6 +379,7 @@ void         stopSong();
 void         placingGraphicObjects();
 void         muteChanged(bool m);
 void         setTimeCounter(uint8_t sec);
+void         handleTimeCounter();
 void         setTFTbrightness(uint8_t brightness);
 ps_ptr<char> get_WiFi_PW(const char* ssid);
 void         my_audio_info(Audio::msg_t m);
