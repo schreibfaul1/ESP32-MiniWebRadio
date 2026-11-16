@@ -8,7 +8,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.1h - Nov 16, 2026                                                                                                               ";
+    Version 4.2.1h1 - Nov 16, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -247,21 +247,21 @@ void loop() {
     bt_emitter.loop();
     getTFT().loop();
     BH1750.loop();
-
+// clang-format off
     if (s_start_counter) s_start_counter++;
-    if (s_start_counter == 10) { MDNS.begin("MiniWebRadio"); }
-    if (s_start_counter == 20) { MDNS.addService("esp32", "tcp", 80); }
-    if (s_start_counter == 30) {
-        if (WiFi.isConnected()) ArduinoOTA.begin();
-    }
-    if (s_start_counter == 40) { ftpSrv.begin(SD_MMC, FTP_USERNAME, FTP_PASSWORD); }
-    if (s_start_counter == 50) { setRTC(s_TZString); }
-    if (s_start_counter == 60) { setStation(s_cur_station); }
-    if (s_start_counter == 70) { changeState(RADIO, 0); } // s_lastState
-    if (s_start_counter == 80) { dlna.seekServer(); }
-    if (s_start_counter == 90) { webSrv.begin(80, 81, "MiniWebRadio", s_version); }
-    if (s_start_counter == 100) { s_f_update_meteo_data = true; } // meteo send_request
-    if (s_start_counter == 255) { s_start_counter = 0; }
+    if (s_start_counter == 10)                       { MDNS.begin("MiniWebRadio"); }
+    if (s_start_counter == 20)                       { MDNS.addService("esp32", "tcp", 80); }
+    if (s_start_counter == 30 && WiFi.isConnected()) { ArduinoOTA.begin(); }
+    if (s_start_counter == 40)                       { ftpSrv.begin(SD_MMC, FTP_USERNAME, FTP_PASSWORD); }
+    if (s_start_counter == 50)                       { setRTC(s_TZString); }
+    if (s_start_counter == 80)                       { dlna.seekServer(); }
+    if (s_start_counter == 90)                       { webSrv.begin(80, 81, "MiniWebRadio", s_version); }
+    if (s_start_counter == 100)                      { s_f_update_meteo_data = true; } // meteo send_request
+    if (s_start_counter == 110 && s_f_sleeping)      { fall_asleep(); s_start_counter = 255;} // skip setStation() and changsState()
+    if (s_start_counter == 130)                      { setStation(s_cur_station); }
+    if (s_start_counter == 140)                      { changeState(RADIO, 0); } // s_lastState
+    if (s_start_counter == 255)                      { s_start_counter = 0; }
+// clang-format on
 
     // Cap lines drained per loop() call: sending every buffered line in one go blocks this core (shared with UI/touch/WiFi events)
     // for the whole burst, e.g. during reconnects or verbose logging, causing UI/web sluggishness. Spreading it over several
@@ -2024,14 +2024,14 @@ void handleTimeCounter() {
     if (!s_timeCounter.active) return;
 
     uint32_t elapsed = millis() - s_timeCounter.startTime;
-    float val = 0.0f;
+    float    val = 0.0f;
 
     if (elapsed >= s_timeCounter.duration) {
         s_timeCounter.active = false;
         dispFooter.updateTC(0.0f);
     } else {
         val = 1.0f - (float)elapsed / s_timeCounter.duration;
-         dispFooter.updateTC(val);
+        dispFooter.updateTC(val);
     }
 
     if (!s_timeCounter.active) {
