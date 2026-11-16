@@ -8,7 +8,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.1g - Nov 15, 2026                                                                                                               ";
+    Version 4.2.1h - Nov 16, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -262,8 +262,6 @@ void loop() {
     if (s_start_counter == 90) { webSrv.begin(80, 81, "MiniWebRadio", s_version); }
     if (s_start_counter == 100) { s_f_update_meteo_data = true; } // meteo send_request
     if (s_start_counter == 255) { s_start_counter = 0; }
-
-    if (s_start_counter == 250) { pcm5122.dumpRegisters(); }
 
     // Cap lines drained per loop() call: sending every buffered line in one go blocks this core (shared with UI/touch/WiFi events)
     // for the whole burst, e.g. during reconnects or verbose logging, causing UI/web sluggishness. Spreading it over several
@@ -2012,7 +2010,7 @@ void setTimeCounter(uint8_t sec) {
         return;
     }
 
-    if (sec > 10) return;
+    if (sec > 20) return;
 
     s_timeCounter.startTime = millis();
     s_timeCounter.duration = sec * 1000UL;
