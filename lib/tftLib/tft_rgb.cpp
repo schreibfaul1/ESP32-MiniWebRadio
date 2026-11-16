@@ -1,8 +1,8 @@
 // first release on 01/2025
-// updated on Jul 05 2026
+// updated on Nov 16 2026
 
 #include "Arduino.h"
-#ifdef CONFIG_IDF_TARGET_ESP32S3
+#if(defined(CONFIG_IDF_TARGET_ESP32S3) || defined(CONFIG_IDF_TARGET_ESP32S31))
     #include "tft_rgb.h"
 
     #define __malloc_heap_psram(size) heap_caps_malloc_prefer(size, 2, MALLOC_CAP_DEFAULT | MALLOC_CAP_SPIRAM, MALLOC_CAP_DEFAULT | MALLOC_CAP_INTERNAL)

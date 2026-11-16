@@ -1,8 +1,8 @@
 // first release on 01/2025
-// updated on Mar 01 2026
+// updated on Nov 16 2026
 
 #include "Arduino.h"
-#ifdef CONFIG_IDF_TARGET_ESP32S3
+#if(defined(CONFIG_IDF_TARGET_ESP32S3) || defined(CONFIG_IDF_TARGET_ESP32S31))
     #pragma once
     #include "../../src/settings.h"
     #include "FS.h"
