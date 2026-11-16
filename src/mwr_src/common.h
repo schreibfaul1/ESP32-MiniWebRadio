@@ -114,8 +114,9 @@ struct releasedArg {
 };
 
 struct timecounter_s {
-    float timer = 0;
-    float factor = 0;
+    uint32_t startTime = 0;
+    uint32_t duration = 0;
+    bool     active = false;
 };
 
 struct irButtons {
