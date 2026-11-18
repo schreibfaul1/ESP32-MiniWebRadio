@@ -25,23 +25,56 @@ MiniWebRadio Features:
 </ul><br>
 Required HW:
 <ul>
-<li>ESP32-S3 or -P4 board with <b>8MB of flash</b> or more, and at least <b>4MB of PSRAM</b></li>
+<li>ESP32-S3, -S31 or -P4 board with <b>8MB of flash</b> or more, and at least <b>8MB of PSRAM</b></li>
 <li>At least <b>16MB</b> of flash is required for OTA, <b>8MB</b> without OTA  </li>
-<li>DAC (e.g. PCM5102a)</li>
+<li>DAC (e.g. PCM5102a, PCM5122 etc.)</li>
 <li>SPI Display with Display controller ILI9341 (320x240px), ILI9486 (480x320px), ILI9488 (480x320px) or ST7796 (480x320px) with TP Controller XPT2046 or FT6x36  </li>
+<li>RGB Display (800x480) </li>
 <li>DSI Display with Display controller ST7701 (800x480), EK97007(1024x600) or JD9165 (1024x600) with Touchpad GT911 </li>
-<li>SD Card (FAT32) + SD adapter (can use SD slot on back of TFT display if available)</li>
-<li>Display Sizes</li>
+<li>SD Card (FAT32) + SD card adapter </li>
+
+
+
+
+
+<li>SD Card</li>
+The SD card was always operated in SD_MMC mode. Both 1-wire and 4-wire operation are possible.
+In 1-wire mode, D1, D2 and D3 are set to -1.
+
+![SD_MMC](docs/SD_MMC.jpg)<br>
+
+<li>Display</li>
+Only the resolutions listed here are supported. Displays with other resolutions (including square and round displays) cannot be used!
 
 ![Display sizes](docs/DisplaySizes.jpg)<br>
+
+SPI displays (320x240 or 480x320) with the Tp controllers XPT2046 or FT6x36 are suitable.
+However, the SD card adaptors fitted to SPI displays are often connected to MISO/MOSI/SCK and cannot be used as SD_MMC!
+
+![SPI_Displays](docs/SPI_Displays.jpg)<br>
+
+Boards with an integrated display are almost always suitable. Important: 4MB of flash memory is not enough!
+With RGB displays using the ESP32-S3, a fair bit of tinkering is required to make the GPIOs available for the DAC and the IR remote control.
 
 <li>Tested Displays</li>
 
 ![Tested displays](docs/tested_displays.jpg)<br>
 
+<li>DAC</li>
+If there is an ES8311 on the board, it will be detected via I2C and initialised during setup.
+It is better to use an external DAC
+
+![DAC](docs/DACs.jpg)<br>
+
 </ul>
 Optional HW:
 <ul>
+
+<li>Ethernet</li>
+If the board has an Ethernet port, this can be used. It is important to distinguish between RGMII and RMII. If the pins are configured correctly, the controller will be initialised automatically. If the Ethernet controller is assigned an IP address during setup, Wi-Fi will be ignored.
+
+![Ethernet](docs/Ethernet.jpg)<br>
+
 <li>IR receiver + IR remote controller according to the NFC protocol</li>
 <li>KCX_BT_EMITTER V1.7, for connecting external Bluetooth devices, needs sufficient free GPIOs</li>
 <li>BH1750 light sensor: The BH1750 has a wide range of values, which is still sufficiently sensitive at average room brightness. On the display, you can set the desired brightness when the sensor is darkened. Then the display is dimmed to this value 'at night', needs sufficient free GPIOs.</li>
