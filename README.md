@@ -75,7 +75,20 @@ If the board has an Ethernet port, this can be used. It is important to distingu
 
 ![Ethernet](docs/Ethernet.jpg)<br>
 
-<li>IR receiver + IR remote controller according to the NFC protocol</li>
+<li>IR receiver</li>
+Various 38KHz IR receivers can be used. While the TSOP4838 can be used without any problems, the VS1838B is very sensitive to high frequency fields despite its metal shielding. The VS1838B should not be installed near the WiFi antenna. The HS0038A2D is also suitable. HS0038 - HS0038A2 can be used with Vcc 5V.
+
+![IR_TSOP4838](docs/IR_TSOP4838.jpg)<br>
+
+<li>IR remote controller</li>
+The remote control must support the NEC protocol. If several remote controls are operated in one room, they must have different address codes to avoid mutual interference. The "Android X96" remote control is well suited for this purpose.
+
+![Android_X96](docs/Android_X96.jpg)<br>
+
+
+
+
+
 <li>KCX_BT_EMITTER V1.7, for connecting external Bluetooth devices, needs sufficient free GPIOs</li>
 <li>BH1750 light sensor: The BH1750 has a wide range of values, which is still sufficiently sensitive at average room brightness. On the display, you can set the desired brightness when the sensor is darkened. Then the display is dimmed to this value 'at night', needs sufficient free GPIOs.</li>
 </ul><br>
