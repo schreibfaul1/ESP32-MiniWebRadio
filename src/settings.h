@@ -4,9 +4,10 @@
 #include "../lib/tftLib/tft_structures.h"
 
 //———————————— predifined displays —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-// #define SPI_DISPLAY 1                  //                    SPI display  320x240, 2.8inch,        ILI9341             XPT2046, ESP32s3 or ESP32p4
-// #define SPI_DISPLAY 2                  //                    SPI display  480x320, 3.5" od 4"      ILI9488 or ST7796,  XPT2046, ESP32s3 or ESP32p4
-#define SPI_DISPLAY 3                  //                    SPI display  480x320, 3.5" od 4"      ILI9488 or ST7796,  FT6x63,  ESP32s3 or ESP32p4
+// #define SPI_DISPLAY 1                  //                    SPI display  320x240, 2.8inch,        ILI9341             XPT2046  /*.------*/
+// #define SPI_DISPLAY 2                  //                    SPI display  320x240, 3.2inch,        ILI9341             FT6x63   /*.------*/
+// #define SPI_DISPLAY 3                  //                    SPI display  480x320, 3.5" od 4"      ILI9488 or ST7796,  XPT2046  /*.------*/
+#define SPI_DISPLAY 4                  //                    SPI display  480x320, 3.5" od 4"      ILI9488 or ST7796,  FT6x63    /*.------*/
 // #define LCD_DISPLAY_ESP32_S3_28        // Hosyond            SPI display  320x240, 2.8inch,        ILI9341             FT6x63,  ESP32s3 N16R8
 // #define LCD_DISPLAY_ESP32_S3_40        // Hosyond            SPI display  480x320, 4"              ST7796,             FT6x63,  ESP32s3 N16R8
 // #define ESP32_8048S070                 // Sunton             RGB display  800x480, 7",                                 GT911,   ESP32s3 N16R8
@@ -119,7 +120,22 @@
         #define BRIGHTNESS_MIN       5 // you can’t see anything underneath
         #define AMP_EN_INVERSION     0 // (0) HIGH - amp is enabled, (1) LOW - amp is enabled
     #endif
+
     #if (SPI_DISPLAY == 2)
+        #define TFT_FREQUENCY 80000000 // only SPI displays, 80000000, 40000000, 27000000, 20000000, 10000000
+        #define TFT_CONTROLLER       0 // (0)SPI-ILI9341[320x240]
+        #define TFT_ROTATION         0 // (0) none, (1) 90°CW, (2) 180°CW, (3) 270°CW
+        #define TP_CONTROLLER        8 // FT6x63
+        #define TP_ROTATION          1 // (0) none, (1) 90°CW, (2) 180°CW, (3) 270°CW
+        #define TP_H_MIRROR          0 // (0) default, (1) mirror left <-> right
+        #define TP_V_MIRROR          0 // (0) default, (1) mirror up <-> down
+        #define DISPLAY_INVERSION    1 // (0) off (1) on
+        #define BRIGHTNESS_INVERSION 0 // (0) off (1) on, bg-led
+        #define BRIGHTNESS_MIN       5 // you can’t see anything underneath
+        #define AMP_EN_INVERSION     0 // (0) HIGH - amp is enabled, (1) LOW - amp is enabled
+    #endif
+
+    #if (SPI_DISPLAY == 3)
         #define TFT_FREQUENCY 40000000 // only SPI displays, 80000000, 40000000, 27000000, 20000000, 10000000
         #define TFT_CONTROLLER       5 // (5)SPI-ILI9488 or ST7796[480x320]
         #define TFT_ROTATION         0 // (0) none, (1) 90°CW, (2) 180°CW, (3) 270°CW
@@ -132,7 +148,8 @@
         #define BRIGHTNESS_MIN       5 // you can’t see anything underneath
         #define AMP_EN_INVERSION     0 // (0) HIGH - amp is enabled, (1) LOW - amp is enabled
     #endif
-    #if (SPI_DISPLAY == 3)
+
+    #if (SPI_DISPLAY == 4)
         #define TFT_FREQUENCY 80000000 // only SPI displays, 80000000, 40000000, 27000000, 20000000, 10000000
         #define TFT_CONTROLLER       5 // (5)SPI-ILI9488 or ST7796[480x320]
         #define TFT_ROTATION         0 // (0) none, (1) 90°CW, (2) 180°CW, (3) 270°CW
@@ -145,6 +162,7 @@
         #define BRIGHTNESS_MIN       5 // you can’t see anything underneath
         #define AMP_EN_INVERSION     0 // (0) HIGH - amp is enabled, (1) LOW - amp is enabled
     #endif
+
     #if CONFIG_IDF_TARGET_ESP32S3
     // Digital I/O used
         #define TFT_CS               8

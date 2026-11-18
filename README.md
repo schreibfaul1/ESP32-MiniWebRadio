@@ -1,5 +1,5 @@
 
-# ESP32-S3-MiniWebRadio V4
+# ESP32-S3/-S31/-P4-MiniWebRadio V4
 
 ![radio](docs/radio.bmp)
 
@@ -25,38 +25,82 @@ MiniWebRadio Features:
 </ul><br>
 Required HW:
 <ul>
-<li>ESP32-S3 or -P4 board with <b>8MB of flash</b> or more, and at least <b>4MB of PSRAM</b></li>
+<li>ESP32-S3, -S31 or -P4 board with <b>8MB of flash</b> or more, and at least <b>8MB of PSRAM</b></li>
 <li>At least <b>16MB</b> of flash is required for OTA, <b>8MB</b> without OTA  </li>
-<li>DAC (e.g. PCM5102a)</li>
+<li>DAC (e.g. PCM5102a, PCM5122 etc.)</li>
 <li>SPI Display with Display controller ILI9341 (320x240px), ILI9486 (480x320px), ILI9488 (480x320px) or ST7796 (480x320px) with TP Controller XPT2046 or FT6x36  </li>
+<li>RGB Display (800x480) </li>
 <li>DSI Display with Display controller ST7701 (800x480), EK97007(1024x600) or JD9165 (1024x600) with Touchpad GT911 </li>
-<li>SD Card (FAT32) + SD adapter (can use SD slot on back of TFT display if available)</li>
-<li>Display Sizes</li>
+<li>SD Card (FAT32) + SD card adapter </li>
+
+
+
+
+
+<li>SD Card</li>
+The SD card was always operated in SD_MMC mode. Both 1-wire and 4-wire operation are possible.
+In 1-wire mode, D1, D2 and D3 are set to -1.
+
+![SD_MMC](docs/SD_MMC.jpg)<br>
+
+<li>Display</li>
+Only the resolutions listed here are supported. Displays with other resolutions (including square and round displays) cannot be used!
 
 ![Display sizes](docs/DisplaySizes.jpg)<br>
+
+SPI displays (320x240 or 480x320) with the Tp controllers XPT2046 or FT6x36 are suitable.
+However, the SD card adaptors fitted to SPI displays are often connected to MISO/MOSI/SCK and cannot be used as SD_MMC!
+
+![SPI_Displays](docs/SPI_Displays.jpg)<br>
+
+Boards with an integrated display are almost always suitable. Important: 4MB of flash memory is not enough!
+With RGB displays using the ESP32-S3, a fair bit of tinkering is required to make the GPIOs available for the DAC and the IR remote control.
 
 <li>Tested Displays</li>
 
 ![Tested displays](docs/tested_displays.jpg)<br>
 
+<li>DAC</li>
+If there is an ES8311 on the board, it will be detected via I2C and initialised during setup.
+It is better to use an external DAC
+
+![DAC](docs/DACs.jpg)<br>
+
 </ul>
 Optional HW:
 <ul>
-<li>IR receiver + IR remote controller according to the NFC protocol</li>
-<li>KCX_BT_EMITTER V1.7, for connecting external Bluetooth devices, needs sufficient free GPIOs</li>
-<li>BH1750 light sensor: The BH1750 has a wide range of values, which is still sufficiently sensitive at average room brightness. On the display, you can set the desired brightness when the sensor is darkened. Then the display is dimmed to this value 'at night', needs sufficient free GPIOs.</li>
+
+<li>Ethernet</li>
+If the board has an Ethernet port, this can be used. It is important to distinguish between RGMII and RMII. If the pins are configured correctly, the controller will be initialised automatically. If the Ethernet controller is assigned an IP address during setup, Wi-Fi will be ignored.
+
+![Ethernet](docs/Ethernet.jpg)<br>
+
+<li>IR receiver</li>
+Various 38KHz IR receivers can be used. While the TSOP4838 can be used without any problems, the VS1838B is very sensitive to high frequency fields despite its metal shielding. The VS1838B should not be installed near the WiFi antenna. The HS0038A2D is also suitable. HS0038 - HS0038A2 can be used with Vcc 5V.
+
+![IR_TSOP4838](docs/IR_TSOP4838.jpg)<br>
+
+<li>IR remote controller</li>
+The remote control must support the NEC protocol. If several remote controls are operated in one room, they must have different address codes to avoid mutual interference. The "Android X96" remote control is well suited for this purpose.
+
+![Android_X96](docs/Android_X96.jpg)<br>
+
+<li>Bluetooth</li>
+Whilst the internal Bluetooth hardware is initialised automatically on the ESP32-S31, the ESP32-S3 and ESP32-P4
+require external hardware for Bluetooth.<br>
+KCX_BT_EMITTER V1.7: for connecting external Bluetooth devices, needs sufficient free GPIOs.
+
+![bt_emitter](docs/bt_emitter.jpg)<br>
+
+<li>BH1750 light sensor</li>
+The BH1750 has a wide range of values, which is still sufficiently sensitive at average room brightness. On the display, you can set the desired brightness when the sensor is darkened. Then the display is dimmed to this value 'at night', needs sufficient free GPIOs.
+
+![BH1750](docs/BH1750.jpg)<br>
+
 </ul><br>
 
 Control is via the display touchscreen or a web page in a browser, no additional components such as switches, rotary encoders, capacitors or resistors are required.
 
-Schematic<br>SPI Display
-![Schematic ESP32-S3 with external DAC](docs/MWR_S3_SPI_Display_schematic.jpg)<br>
-![Schematic ESP32-P4 with external DAC](docs/MWR_P4_SPI_Display_schematic.jpg)<br>
-<br>RGB Display
-![Schematic ESP32-S3 with RGB Display](docs/MWR_V4_RGB_Display_schematic.jpg)<br>
-<br>DSI Display
-![Schematic ESP32-P4 with DSI Display](docs/MWR_P4_DSI_Display_schematic.jpg)<br>
-<br>
 
 [Display Layout](docs/MiniWebRadio%20V3.4%20Layout.pdf)<br>
 
@@ -67,18 +111,13 @@ Schematic<br>SPI Display
 #### Some features:
 
 - The audioprocess works in its own task and is decoupled. This prevents dropouts when drawing on the display or when the website is loading.
-- The SD card is wired as SD_MMC to improve stability and increase speed. This means that the GPIOs cannot be chosen freely. The [SD card adapter](docs/SD_Card_Adapter_for_SD_MMC_.jpg) must not have any resistors in series. For best display update speed, use 40MHz frequency for SD card if possible (SDMMC_FREQUENCY 40000000 in common.h).
 - Audio can be decoded using software. Possible formats are mp3, aac, mp4, opus, vorbis and flac.
-- External DACs (e.g. UDA13348, MAX98357A, PCM5102A) are connected via I2S, ES8388 and AC101 also require an I2C connection
-- 480x320px display supported. The ILI9486 (SPI display from the Raspberry PI) is also supported
+- External DACs (e.g. UDA13348, MAX98357A, PCM5102A) are connected via I2S, ES8388 and PCM5122 also require an I2C connection
 - The SD card files can be accessed via FTP. See settings for [Filezilla](docs/Filezilla.pdf). The username and password are 'esp32' (this can be changed in 'common.h')
-- Access Point SSID/password can be set using mobile phone browser - no need to modify source code or networks.csv file on SD card
-- Stations URLs support entry of username and password if the server expects access data, "URL|user|pwd"
 - Can process local playlists in m3u format
-- Either the ESP32 or the ESP32-S3 can be used (PSRAM is highly recommended)
 - IR remote button codes can be changed by user using web UI
 - Improved web UI reliability
-- VU meter added to display
+- VU meter ans spectrum added to display
 - Timezone can be set using web UI
 - Play media files on home network DLNA (uPNP/DLNA app on smart phone, router, etc.)
 - Prevent clicks when changing radio stations
@@ -93,7 +132,6 @@ Schematic<br>SPI Display
 | wav        | y                                                     |
 | flac       | y (blocksize max 16KB)                                |
 | vorbis     | y <=256Kbit/s                                         |
-| m4a        | y                                                     |
 | opus       | y (except hybrid mode)                                |
 
 
@@ -104,46 +142,6 @@ Schematic<br>SPI Display
 
 ***
 
-## Known problems
-### SD Card
-In the simplest case, the SD card is connected directly to the ESP32
-<br>
-![SD Card Pinout](docs/SD_Card_Pinout.jpg)<br>
-Some SD card adapters for displays use series resistors. These are useless and in many cases harmful. Therefore, it is better to remove them and replace them with solder bridges.<br>
-![Display Resistors](docs/Display_resistors.jpg)<br>
-If an ESP32 is used, any existing pull-up resistor at pin D0 must be removed (ESP32 - bootstrap pin). This will be added again later via SW. This is not necessary with the ESP32-S3.
-(Photo from the <a href="https://forum.espuino.de/"> ESPuino </a>forum)![SD Card Adapter ESP32](docs/ESP32_SD_Card_PullUp.jpg)<br>
-
-### Display
-Many displays can be used without any problems. If the touchpad does not work, it may be that the TFT controller does not enable the SPI bus. This is the case with my ILI9488 display. Then MISO of the TFT controller must not be connected.<br>
-![ILI9488 Display](docs/ILI9488_pins.jpg)
-The values ​​of the PLCK frequency specified for RGB displays are not fully achieved. The reason for this is the high load of PSRAM for audio processing.
-<br>
-
-### DAC
-On some PCM5102 boards the solder bridges are missing on the back.<br>
-![PCM5102A Board](docs/PCM5102A.png)<br>
-This is how the DAC CS4344 is connected:<br>
-![CS4344 Board](docs/DAC_CS4344.jpg)<br>
-This is how the DAC CS4344 is connected:<br>
-![PT8211 Board](docs/PT8211.png)<br>
-If the DAC PT8211 is used, the *I2S_COMM_FMT* must be changed in common.h. This DAC requires Japanese LSBJ (Least Significant Bit Justified) format
-
-### IR Receíver
-Various 38KHz IR receivers can be used. While the TSOP4838 can be used without any problems, the VS1838B is very sensitive to high frequency fields despite its metal shielding. The VS1838B should not be installed near the WiFi antenna. The HS0038A2D is also suitable. HS0038 - HS0038A2 can be used with Vcc 5V.<br>
-![IR Receiver](docs/IR_Receiver.jpg)<br>
-
-### IR Remote Control
-The remote control must support the NEC protocol. If several remote controls are operated in one room, they must have different address codes to avoid mutual interference. The "Arduino" remote control on the left in the picture uses the address code 0x00FF and the "Android X96" remote control (right) uses the address code 0x01FE.<br>
-![IR Transmitter](docs/IR_Transmitter.jpg)<br>
-
-### KCX_BT_EMITTER
-The RT pin is not part of the soldering strip, but is located in the middle of the right side.<br>
-![PCM5102A Board](docs/KCX_BT_EMITTER_pins.jpg)<br>
-
-### WiFi Credentials
-If you see that, there are illegal characters in the WIFI access data. Sometimes only an `erase flash` help
-![Wrong Credentials](docs/wrong_credentials.jpg)<br>
 
 <br>
 ___________________________________________________________
