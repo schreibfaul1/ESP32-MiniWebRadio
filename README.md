@@ -1,5 +1,5 @@
 
-# ESP32-S3-MiniWebRadio V4
+# ESP32-S3/-S31/-P4-MiniWebRadio V4
 
 ![radio](docs/radio.bmp)
 
@@ -111,18 +111,13 @@ Control is via the display touchscreen or a web page in a browser, no additional
 #### Some features:
 
 - The audioprocess works in its own task and is decoupled. This prevents dropouts when drawing on the display or when the website is loading.
-- The SD card is wired as SD_MMC to improve stability and increase speed. This means that the GPIOs cannot be chosen freely. The [SD card adapter](docs/SD_Card_Adapter_for_SD_MMC_.jpg) must not have any resistors in series. For best display update speed, use 40MHz frequency for SD card if possible (SDMMC_FREQUENCY 40000000 in common.h).
 - Audio can be decoded using software. Possible formats are mp3, aac, mp4, opus, vorbis and flac.
-- External DACs (e.g. UDA13348, MAX98357A, PCM5102A) are connected via I2S, ES8388 and AC101 also require an I2C connection
-- 480x320px display supported. The ILI9486 (SPI display from the Raspberry PI) is also supported
+- External DACs (e.g. UDA13348, MAX98357A, PCM5102A) are connected via I2S, ES8388 and PCM5122 also require an I2C connection
 - The SD card files can be accessed via FTP. See settings for [Filezilla](docs/Filezilla.pdf). The username and password are 'esp32' (this can be changed in 'common.h')
-- Access Point SSID/password can be set using mobile phone browser - no need to modify source code or networks.csv file on SD card
-- Stations URLs support entry of username and password if the server expects access data, "URL|user|pwd"
 - Can process local playlists in m3u format
-- Either the ESP32 or the ESP32-S3 can be used (PSRAM is highly recommended)
 - IR remote button codes can be changed by user using web UI
 - Improved web UI reliability
-- VU meter added to display
+- VU meter ans spectrum added to display
 - Timezone can be set using web UI
 - Play media files on home network DLNA (uPNP/DLNA app on smart phone, router, etc.)
 - Prevent clicks when changing radio stations
@@ -137,7 +132,6 @@ Control is via the display touchscreen or a web page in a browser, no additional
 | wav        | y                                                     |
 | flac       | y (blocksize max 16KB)                                |
 | vorbis     | y <=256Kbit/s                                         |
-| m4a        | y                                                     |
 | opus       | y (except hybrid mode)                                |
 
 
@@ -148,46 +142,6 @@ Control is via the display touchscreen or a web page in a browser, no additional
 
 ***
 
-## Known problems
-### SD Card
-In the simplest case, the SD card is connected directly to the ESP32
-<br>
-![SD Card Pinout](docs/SD_Card_Pinout.jpg)<br>
-Some SD card adapters for displays use series resistors. These are useless and in many cases harmful. Therefore, it is better to remove them and replace them with solder bridges.<br>
-![Display Resistors](docs/Display_resistors.jpg)<br>
-If an ESP32 is used, any existing pull-up resistor at pin D0 must be removed (ESP32 - bootstrap pin). This will be added again later via SW. This is not necessary with the ESP32-S3.
-(Photo from the <a href="https://forum.espuino.de/"> ESPuino </a>forum)![SD Card Adapter ESP32](docs/ESP32_SD_Card_PullUp.jpg)<br>
-
-### Display
-Many displays can be used without any problems. If the touchpad does not work, it may be that the TFT controller does not enable the SPI bus. This is the case with my ILI9488 display. Then MISO of the TFT controller must not be connected.<br>
-![ILI9488 Display](docs/ILI9488_pins.jpg)
-The values ​​of the PLCK frequency specified for RGB displays are not fully achieved. The reason for this is the high load of PSRAM for audio processing.
-<br>
-
-### DAC
-On some PCM5102 boards the solder bridges are missing on the back.<br>
-![PCM5102A Board](docs/PCM5102A.png)<br>
-This is how the DAC CS4344 is connected:<br>
-![CS4344 Board](docs/DAC_CS4344.jpg)<br>
-This is how the DAC CS4344 is connected:<br>
-![PT8211 Board](docs/PT8211.png)<br>
-If the DAC PT8211 is used, the *I2S_COMM_FMT* must be changed in common.h. This DAC requires Japanese LSBJ (Least Significant Bit Justified) format
-
-### IR Receíver
-Various 38KHz IR receivers can be used. While the TSOP4838 can be used without any problems, the VS1838B is very sensitive to high frequency fields despite its metal shielding. The VS1838B should not be installed near the WiFi antenna. The HS0038A2D is also suitable. HS0038 - HS0038A2 can be used with Vcc 5V.<br>
-![IR Receiver](docs/IR_Receiver.jpg)<br>
-
-### IR Remote Control
-The remote control must support the NEC protocol. If several remote controls are operated in one room, they must have different address codes to avoid mutual interference. The "Arduino" remote control on the left in the picture uses the address code 0x00FF and the "Android X96" remote control (right) uses the address code 0x01FE.<br>
-![IR Transmitter](docs/IR_Transmitter.jpg)<br>
-
-### KCX_BT_EMITTER
-The RT pin is not part of the soldering strip, but is located in the middle of the right side.<br>
-![PCM5102A Board](docs/KCX_BT_EMITTER_pins.jpg)<br>
-
-### WiFi Credentials
-If you see that, there are illegal characters in the WIFI access data. Sometimes only an `erase flash` help
-![Wrong Credentials](docs/wrong_credentials.jpg)<br>
 
 <br>
 ___________________________________________________________
