@@ -85,24 +85,22 @@ The remote control must support the NEC protocol. If several remote controls are
 
 ![Android_X96](docs/Android_X96.jpg)<br>
 
+<li>Bluetooth</li>
+Whilst the internal Bluetooth hardware is initialised automatically on the ESP32-S31, the ESP32-S3 and ESP32-P4
+require external hardware for Bluetooth.<br>
+KCX_BT_EMITTER V1.7: for connecting external Bluetooth devices, needs sufficient free GPIOs.
 
+![bt_emitter](docs/bt_emitter.jpg)<br>
 
+<li>BH1750 light sensor</li>
+The BH1750 has a wide range of values, which is still sufficiently sensitive at average room brightness. On the display, you can set the desired brightness when the sensor is darkened. Then the display is dimmed to this value 'at night', needs sufficient free GPIOs.
 
+![BH1750](docs/BH1750.jpg)<br>
 
-<li>KCX_BT_EMITTER V1.7, for connecting external Bluetooth devices, needs sufficient free GPIOs</li>
-<li>BH1750 light sensor: The BH1750 has a wide range of values, which is still sufficiently sensitive at average room brightness. On the display, you can set the desired brightness when the sensor is darkened. Then the display is dimmed to this value 'at night', needs sufficient free GPIOs.</li>
 </ul><br>
 
 Control is via the display touchscreen or a web page in a browser, no additional components such as switches, rotary encoders, capacitors or resistors are required.
 
-Schematic<br>SPI Display
-![Schematic ESP32-S3 with external DAC](docs/MWR_S3_SPI_Display_schematic.jpg)<br>
-![Schematic ESP32-P4 with external DAC](docs/MWR_P4_SPI_Display_schematic.jpg)<br>
-<br>RGB Display
-![Schematic ESP32-S3 with RGB Display](docs/MWR_V4_RGB_Display_schematic.jpg)<br>
-<br>DSI Display
-![Schematic ESP32-P4 with DSI Display](docs/MWR_P4_DSI_Display_schematic.jpg)<br>
-<br>
 
 [Display Layout](docs/MiniWebRadio%20V3.4%20Layout.pdf)<br>
 

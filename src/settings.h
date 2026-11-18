@@ -4,10 +4,10 @@
 #include "../lib/tftLib/tft_structures.h"
 
 //———————————— predifined displays —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-// #define SPI_DISPLAY 1                  //                    SPI display  320x240, 2.8inch,        ILI9341             XPT2046
-// #define SPI_DISPLAY 2                  //                    SPI display  320x240, 3.2inch,        ILI9341             FT6x63
-// #define SPI_DISPLAY 3                  //                    SPI display  480x320, 3.5" od 4"      ILI9488 or ST7796,  XPT2046
-#define SPI_DISPLAY 4                  //                    SPI display  480x320, 3.5" od 4"      ILI9488 or ST7796,  FT6x63
+// #define SPI_DISPLAY 1                  //                    SPI display  320x240, 2.8inch,        ILI9341             XPT2046  /*.------*/
+// #define SPI_DISPLAY 2                  //                    SPI display  320x240, 3.2inch,        ILI9341             FT6x63   /*.------*/
+// #define SPI_DISPLAY 3                  //                    SPI display  480x320, 3.5" od 4"      ILI9488 or ST7796,  XPT2046  /*.------*/
+#define SPI_DISPLAY 4                  //                    SPI display  480x320, 3.5" od 4"      ILI9488 or ST7796,  FT6x63    /*.------*/
 // #define LCD_DISPLAY_ESP32_S3_28        // Hosyond            SPI display  320x240, 2.8inch,        ILI9341             FT6x63,  ESP32s3 N16R8
 // #define LCD_DISPLAY_ESP32_S3_40        // Hosyond            SPI display  480x320, 4"              ST7796,             FT6x63,  ESP32s3 N16R8
 // #define ESP32_8048S070                 // Sunton             RGB display  800x480, 7",                                 GT911,   ESP32s3 N16R8
