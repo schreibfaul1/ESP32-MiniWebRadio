@@ -526,7 +526,8 @@ void loop() {
                 if (s_state == RADIO) audio.stopSong();
                 s_f_WiFi_lost = true;
             }
-        } else {
+        }
+        if (s_f_wifi_credentials_fits && WiFi.isConnected()) {
             if (s_f_WiFi_lost) {
                 s_f_WiFi_lost = false;
                 if (s_state == RADIO) audio.connecttohost(s_settings.lastconnectedhost.get());
@@ -579,7 +580,7 @@ void loop() {
     if (s_f_10sec == true) { // calls every 10 seconds
         s_f_10sec = false;
         updateSettings();
-        //    if (s_f_wifi_credentials_fits) wifiMulti.run();
+        if (s_f_wifi_credentials_fits) wifiMulti.run();
     }
 
     if (s_f_1min == true) { // calls every minute

@@ -183,9 +183,8 @@ bool PCM5122::calculatePLL(uint32_t sampleRate, PLLConfig& cfg) {
 
         cfg.pllFrequency = preset.pllFrequency;
 
-        printf(ANSI_ESC_GREEN "[%s:%i] PCM5122 PLL: Fs=%lu BCLK=%llu PLL=%lu\n" ANSI_ESC_RESET, __FILE__, __LINE__, sampleRate, bclk, cfg.pllFrequency);
-
-        printf(ANSI_ESC_GREEN "[%s:%i] PCM5122 PLL: P=%u J=%u D=%u R=%u\n" ANSI_ESC_RESET, __FILE__, __LINE__, cfg.p, cfg.j, cfg.d, cfg.r);
+        // printf(ANSI_ESC_GREEN "[%s:%i] PCM5122 PLL: Fs=%lu BCLK=%llu PLL=%lu\n" ANSI_ESC_RESET, __FILE__, __LINE__, sampleRate, bclk, cfg.pllFrequency);
+        // printf(ANSI_ESC_GREEN "[%s:%i] PCM5122 PLL: P=%u J=%u D=%u R=%u\n" ANSI_ESC_RESET, __FILE__, __LINE__, cfg.p, cfg.j, cfg.d, cfg.r);
 
         return true;
     }
