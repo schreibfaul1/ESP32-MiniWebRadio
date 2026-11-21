@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 06.11.2026
+ *  Updated on: 21.11.2026
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -3483,9 +3483,6 @@ function appendToTerminal(text) {
                     <img id="Mute" src="SD/png/Button_Mute_Green.png" alt="Mute"
                          onmousedown="this.src='SD/png/Button_Mute_Yellow.png'"
                          ontouchstart="this.src='SD/png/Button_Mute_Yellow.png'"
-                         onmouseup="this.src='SD/png/Button_Mute_Green.png'"
-                         ontouchend="this.src='SD/png/Button_Mute_Green.png'"
-                         onmouseleave="this.src='SD/png/Button_Mute_Green.png'"
                          onclick="socket.send('set_mute')">
                 </div>
 
