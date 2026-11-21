@@ -3188,6 +3188,11 @@ int TFT_Base::findBestBreak(const Word& word, size_t glyphStart, size_t breakPos
 }
 // ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool TFT_Base::wordToLines(int16_t win_W, int16_t win_H, bool noWrap, bool clipNoWrap) {
+
+    if(m_current_font.line_height == 0){
+        MWR_LOG_ERROR("choose a font");
+        return false;
+    }
     uint16_t maxLines = win_H / m_current_font.line_height;
     if (maxLines == 0) return false;
 
