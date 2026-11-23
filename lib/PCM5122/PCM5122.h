@@ -35,6 +35,7 @@ class PCM5122 {
     int8_t   m_addr = -1;
     uint32_t m_sampleRate = 0;
     uint8_t  m_volume = 0;
+    bool     m_log = true;
 
     struct PLLConfig {
         uint8_t  p;

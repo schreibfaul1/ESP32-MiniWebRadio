@@ -396,6 +396,7 @@ inline void  get_registered_names();
 inline void  clearLogo();
 inline void  clearStationName();
 void         timer100ms();
+void         showWeatherIcon_test(uint8_t weatherCode, bool isNight, bool moonVisible, float moonPhase);
 
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
@@ -757,6 +758,28 @@ void ui_aam(){
     aam ? printfln(s_tag.terminal, "anti automute is on") : printfln(s_tag.terminal, "anti automute is off");
 }
 
+void ui_wci(ps_ptr<char> cmd){
+    ps_ptr<char> w, in, mv, mp;
+    int idx1 = cmd.index_of(",") + 1;
+    w = cmd.substr(idx1, 2);
+    int idx2 = cmd.index_of(",", idx1) + 1;
+    in = cmd.substr(idx2, 1);
+    int idx3 = cmd.index_of(",", idx2) + 1;
+    mv = cmd.substr(idx3, 1);
+    int idx4 = cmd.index_of(",", idx3) + 1;
+    mp = cmd.substr(idx4);
+
+    uint8_t weatherCode = w.to_uint8();
+    bool isNight = (in == "1") ? 1 : 0;
+    bool moonVisible = (mv == "1") ? 1 : 0;
+    float moonPhase = mp.to_float();
+    MWR_LOG_INFO("w {}, in {}, mv {}, mp {}", w, in, mv, mp);
+
+
+    printfln(s_tag.terminal, "weatherCode {}, isNight {}, moonVisible {}, moonPhase {}", weatherCode, isNight, moonVisible, moonPhase);
+    showWeatherIcon_test(weatherCode, isNight, moonVisible, moonPhase);
+}
+
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void user_input(ps_ptr<char> input) {
 
@@ -794,4 +817,5 @@ void user_input(ps_ptr<char> input) {
     if (input == "kern") ui_kernig();                                              // distance between two letters that can be moved closer together
     if (input == "btoo") ui_btoo();                                                // bt classic source on/off
     if (input == "aam") ui_aam();                                                  // anti automute for some dacs after 1024 LRCK with zero I2S
+    if (input.starts_with("wci")) ui_wci(input);                                   // test weatherCodeIcon "wci,01,1,1,0.8" wethercode, isNight, moonVisible, moonphase)
 }

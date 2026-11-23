@@ -4,9 +4,12 @@
 
 #include "PCM5122.h"
 
-PCM5122::PCM5122() {}
+PCM5122::PCM5122() {
+    m_log = false;
+}
 
 PCM5122::~PCM5122() {}
+
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool PCM5122::begin(TwoWire* twi, uint8_t address) {
 
@@ -25,7 +28,7 @@ bool PCM5122::begin(TwoWire* twi, uint8_t address) {
     // I2S, 32 Bit
     if (!WriteReg(REG_I2S_CONFIG, I2S_32BIT)) return false;
 
-    printf(ANSI_ESC_GREEN "[%s:%i] CM5122 initialized\n" ANSI_ESC_RESET, __FILE__, __LINE__);
+    if (m_log) printf(ANSI_ESC_GREEN "[%s:%i] CM5122 initialized\n" ANSI_ESC_RESET, __FILE__, __LINE__);
 
     return true;
 }
@@ -121,7 +124,7 @@ void PCM5122::dumpRegisters() {
 
     for (uint8_t reg : regs) {
         if (ReadReg(reg, val)) {
-            printf(ANSI_ESC_GREEN "[%s:%i] PCM5122: Register 0x%02X = 0x%02X\n" ANSI_ESC_RESET, __FILE__, __LINE__, reg, val);
+            if (m_log) printf(ANSI_ESC_GREEN "[%s:%i] PCM5122: Register 0x%02X = 0x%02X\n" ANSI_ESC_RESET, __FILE__, __LINE__, reg, val);
         } else {
             printf(ANSI_ESC_RED "[%s:%i] PCM5122: Read error at register 0x%02X\n" ANSI_ESC_RESET, __FILE__, __LINE__, reg);
         }
@@ -183,13 +186,14 @@ bool PCM5122::calculatePLL(uint32_t sampleRate, PLLConfig& cfg) {
 
         cfg.pllFrequency = preset.pllFrequency;
 
-        // printf(ANSI_ESC_GREEN "[%s:%i] PCM5122 PLL: Fs=%lu BCLK=%llu PLL=%lu\n" ANSI_ESC_RESET, __FILE__, __LINE__, sampleRate, bclk, cfg.pllFrequency);
-        // printf(ANSI_ESC_GREEN "[%s:%i] PCM5122 PLL: P=%u J=%u D=%u R=%u\n" ANSI_ESC_RESET, __FILE__, __LINE__, cfg.p, cfg.j, cfg.d, cfg.r);
+        if (m_log) printf(ANSI_ESC_GREEN "[%s:%i] PCM5122 PLL: Fs=%lu BCLK=%llu PLL=%lu\n" ANSI_ESC_RESET, __FILE__, __LINE__, sampleRate, bclk, cfg.pllFrequency);
+        if (m_log) printf(ANSI_ESC_GREEN "[%s:%i] PCM5122 PLL: P=%u J=%u D=%u R=%u\n" ANSI_ESC_RESET, __FILE__, __LINE__, cfg.p, cfg.j, cfg.d, cfg.r);
 
         return true;
     }
 
     printf(ANSI_ESC_RED "[%s:%i] PCM5122: Unsupported sample rate %lu\n" ANSI_ESC_RESET, __FILE__, __LINE__, sampleRate);
+
     return false;
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -303,7 +307,7 @@ bool PCM5122::configurePLL(uint32_t sampleRate) {
 
     if (!WriteReg(REG_PLL_CTRL, 0x01)) return false;
 
-    printf(ANSI_ESC_GREEN "[%s:%i] PCM5122 PLL configured for %lu Hz\n" ANSI_ESC_RESET, __FILE__, __LINE__, sampleRate);
+    if (m_log) printf(ANSI_ESC_GREEN "[%s:%i] PCM5122 PLL: configured for %lu Hz\n" ANSI_ESC_RESET, __FILE__, __LINE__, sampleRate);
 
     return true;
 }
@@ -325,20 +329,20 @@ bool PCM5122::waitForPllLock(uint32_t timeoutMs) {
     while ((millis() - start) < timeoutMs) {
 
         if (!ReadReg(REG_PLL_CTRL, val)) {
-            printf(ANSI_ESC_RED "[%s:%i] PCM5122: PLL status read error\n" ANSI_ESC_RESET, __FILE__, __LINE__);
+            printf(ANSI_ESC_RED "[%s:%i] PCM5122 PLL: status read error\n" ANSI_ESC_RESET, __FILE__, __LINE__);
             return false;
         }
 
         // PLL must be enabled and locked in
         if ((val & 0x11) == 0x01) {
-            printf(ANSI_ESC_RED "[%s:%i] PCM5122: PLL locked (%lu ms)\n" ANSI_ESC_RESET, __FILE__, __LINE__, millis() - start);
+            if (m_log) printf(ANSI_ESC_GREEN "[%s:%i] PCM5122 PLL: locked (%lu ms)\n" ANSI_ESC_RESET, __FILE__, __LINE__, millis() - start);
             return true;
         }
 
         delay(1);
     }
 
-    printf(ANSI_ESC_RED "[%s:%i] PCM5122: PLL lock timeout (%lu ms)\n" ANSI_ESC_RESET, __FILE__, __LINE__, timeoutMs);
+    printf(ANSI_ESC_RED "[%s:%i] PCM5122 PLL: lock timeout (%lu ms)\n" ANSI_ESC_RESET, __FILE__, __LINE__, timeoutMs);
 
     return false;
 }

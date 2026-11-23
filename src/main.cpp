@@ -4402,3 +4402,6 @@ exit:
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // clang-format on
 /*🟢🟡🔴*/
+void showWeatherIcon_test(uint8_t weatherCode, bool isNight, bool moonVisible, float moonPhase){
+    cls_weather.showWeatherIcon_test(weatherCode, isNight, moonVisible, moonPhase);
+}
