@@ -1475,10 +1475,10 @@ class Textbutton : public RegisterTable {
     void setBorderWidth(uint8_t width) { // 0 = no border
         m_borderWidth = width;
         if (m_borderWidth > 2) m_borderWidth = 2;
-        m_padding_left = max(m_padding_left, m_borderWidth);
-        m_paddig_right = max(m_paddig_right, m_borderWidth);
-        m_paddig_top = max(m_paddig_top, m_borderWidth);
-        m_paddig_bottom = max(m_paddig_bottom, m_borderWidth);
+        m_padding_left = std::max(m_padding_left, m_borderWidth);
+        m_paddig_right = std::max(m_paddig_right, m_borderWidth);
+        m_paddig_top = std::max(m_paddig_top, m_borderWidth);
+        m_paddig_bottom = std::max(m_paddig_bottom, m_borderWidth);
     }
     bool positionXY(uint16_t x, uint16_t y) {
         if (x < m_x) return false;

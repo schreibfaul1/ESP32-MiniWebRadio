@@ -161,8 +161,8 @@ bool TP_XPT2046::read_TP(int16_t& x, int16_t& y) {
 
     // log_i("x %i, y %i", read_x, read_y);
 
-    int32_t clip_x = max(m_cal.xMin, min(m_cal.xMax, read_x));
-    int32_t clip_y = max(m_cal.yMin, min(m_cal.yMax, read_y));
+    int32_t clip_x = std::max(m_cal.xMin, std::min(m_cal.xMax, read_x));
+    int32_t clip_y = std::max(m_cal.yMin, std::min(m_cal.yMax, read_y));
 
     int32_t src_x = map(clip_x, m_cal.xMin, m_cal.xMax, 0, m_h_res - 1);
     int32_t src_y = map(clip_y, m_cal.yMin, m_cal.yMax, 0, m_v_res - 1);

@@ -47,6 +47,9 @@
 #pragma once
 
 #include "Audio.h"
+#include <Arduino.h>
+#include <ArduinoOTA.h>
+#include "WiFi.h"
 #include "BH1750.h"
 #include "DLNAClient.h"
 #include "ESP32FtpServer.h"
@@ -65,8 +68,6 @@
 #include "../ethernet/ethernet.h"
 #include "../tftLib/tft_common_defs.h"
 #include "websrv.h"
-#include <Arduino.h>
-#include <ArduinoOTA.h>
 #include <ESPmDNS.h>
 #include <FFat.h>
 #include <FS.h>

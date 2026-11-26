@@ -186,7 +186,7 @@ bool TP_GT911::readBytes(uint16_t reg, uint8_t* data, uint16_t size) {
 
     uint16_t index = 0;
     while (index < size) {
-        uint8_t req = min((int)(size - index), (int)I2C_BUFFER_LENGTH);
+        uint8_t req = std::min((int)(size - index), (int)I2C_BUFFER_LENGTH);
         if (m_wire->requestFrom(m_addr, req) != req) {
             return false; // ❌ Prüfe ob alle Bytes empfangen wurden
         }

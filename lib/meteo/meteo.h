@@ -12,6 +12,7 @@
 
 #include "Arduino.h"
 #include "Audio.h"
+#include "NetworkClientSecure.h"
 #include "WiFi.h"
 
 class METEO {
