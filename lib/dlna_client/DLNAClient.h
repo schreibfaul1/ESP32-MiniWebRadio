@@ -4,6 +4,9 @@
 #pragma once
 
 #include "Audio.h"
+#include "NetworkClient.h"
+#include "WiFi.h"
+#include "WiFiUdp.h"
 
 #define SSDP_MULTICAST_IP   239, 255, 255, 250
 #define SSDP_LOCAL_PORT     8888

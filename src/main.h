@@ -50,6 +50,24 @@
 #pragma once
 
 #include "Audio.h"
+
+#include <Arduino.h>
+#include <ArduinoOTA.h>
+#include <ESPmDNS.h>
+#include <FFat.h>
+#include <FS.h>
+#include <Preferences.h>
+#include <SD_MMC.h>
+#include <SPI.h>
+#include <Ticker.h>
+#include "WiFi.h"
+#include <WiFiClient.h>
+#include <WiFiClientSecure.h>
+#include <WiFiMulti.h>
+#include <Wire.h>
+
+
+
 #include "BH1750.h"
 #include "DLNAClient.h"
 #include "ESP32FtpServer.h"
@@ -68,19 +86,7 @@
 #include "../ethernet/ethernet.h"
 #include "../tftLib/tft_common_defs.h"
 #include "websrv.h"
-#include <Arduino.h>
-#include <ArduinoOTA.h>
-#include <ESPmDNS.h>
-#include <FFat.h>
-#include <FS.h>
-#include <Preferences.h>
-#include <SD_MMC.h>
-#include <SPI.h>
-#include <Ticker.h>
-#include <WiFiClient.h>
-#include <WiFiClientSecure.h>
-#include <WiFiMulti.h>
-#include <Wire.h>
+
 #include <deque>
 #include <mbedtls/base64.h>
 #include <vector>

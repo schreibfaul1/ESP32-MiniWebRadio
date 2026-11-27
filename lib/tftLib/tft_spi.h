@@ -6,6 +6,7 @@
 #include "../../src/settings.h"
 #include "Arduino.h"
 #include "Audio.h"
+#include "SPI.h"
 #include "driver/gpio.h"
 #include "fonts/fontsdef.h"
 #include "tft_base.h"

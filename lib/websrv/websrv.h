@@ -9,6 +9,8 @@
 #ifndef WEBSRV_H_
 #define WEBSRV_H_
 #include "Audio.h"
+#include "NetworkClient.h"
+#include "NetworkServer.h"
 #include "base64.h"
 #include "psa/crypto.h"
 #include "mbedtls/base64.h"
