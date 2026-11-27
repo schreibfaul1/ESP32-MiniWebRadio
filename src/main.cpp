@@ -8,7 +8,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.2.1h3 - Nov 27, 2026                                                                                                               ";
+    Version 4.2.2 - Nov 27, 2026                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486, ILI9488 or ST7796 (SPI) or
@@ -1470,6 +1470,22 @@ bool detect_i2_c_devices(TwoWire* twi, int8_t sda, int8_t scl, i2c_items_s* i2c_
 
     for (uint8_t addr = 0; addr < 128; addr++) {
         if (arr[addr]) {
+            //-- ES8389 Stereo DAC --------------------------------------------------------------------------------------------------------
+            if (addr == 0x10) {
+                i2c_items->es8389_found = true;
+                i2c_items->es8389_addr = addr;
+                printfln(s_tag.setup, "ES8389 (Stereo Audio Codecr) found at " ANSI_ESC_CYAN "0x{:X}", addr);
+                continue;
+            }
+            //-- ES8311 Mono DAC ----------------------------------------------------------------------------------------------------------
+            if (addr == 0x18 || addr == 0x19) {
+                if (i2c_looks_like_es8311(twi, addr)) {
+                    i2c_items->es8311_found = true;
+                    i2c_items->es8311_addr = 0x18;
+                    printfln(s_tag.setup, "ES8311 (Mono Audio Codec) found at " ANSI_ESC_CYAN "0x{:X}", 0x18);
+                    continue;
+                }
+            }
             //-- CH422G  I/O Extended (Digital Tube Display Drive) ----------------------------------------------------------------------------------------------------------
             if (addr == 0x20) {
                 if (arr[0x21] && arr[0x22] && arr[0x23] && arr[0x24] && arr[0x25] && arr[0x26] && arr[0x27]) {
@@ -1481,20 +1497,11 @@ bool detect_i2_c_devices(TwoWire* twi, int8_t sda, int8_t scl, i2c_items_s* i2c_
                     continue;
                 }
             }
-            //-- ES8311 Mono DAC ----------------------------------------------------------------------------------------------------------
-            if (addr == 0x18 || addr == 0x19) {
-                if (i2c_looks_like_es8311(twi, addr)) {
-                    i2c_items->es8311_found = true;
-                    i2c_items->es8311_addr = 0x18;
-                    printfln(s_tag.setup, "es8311 (Mono Audio Codec) found at " ANSI_ESC_CYAN "0x{:X}", 0x18);
-                    continue;
-                }
-            }
             //-- GT911 Touch Controller ----------------------------------------------------------------------------------------------------------
             if (addr == 0x14 || addr == 0x5D) {
                 i2c_items->gt911_found = true;
                 i2c_items->gt911_addr = addr;
-                printfln(s_tag.setup, "gt911 (Capacitive Touch Controller) found at " ANSI_ESC_CYAN "0x{:X}", addr);
+                printfln(s_tag.setup, "GT911 (Capacitive Touch Controller) found at " ANSI_ESC_CYAN "0x{:X}", addr);
                 continue;
             }
             //-- BH1750 --------------------------------------------------------------------------------------------------------------------------
@@ -1508,14 +1515,14 @@ bool detect_i2_c_devices(TwoWire* twi, int8_t sda, int8_t scl, i2c_items_s* i2c_
             if (addr == 0x38) {
                 i2c_items->ft6x36u_found = true;
                 i2c_items->ft6x36u_addr = addr;
-                printfln(s_tag.setup, "ft6x36u (Capacitive Touch Controller) found at " ANSI_ESC_CYAN "0x{:X}", addr);
+                printfln(s_tag.setup, "FT6x36u (Capacitive Touch Controller) found at " ANSI_ESC_CYAN "0x{:X}", addr);
                 continue;
             }
             //-- ES7210 Codec --------------------------------------------------------------------------------------------------------------------
             if (addr == 0x40) {
                 i2c_items->es7210_found = true;
                 i2c_items->es7210_addr = addr;
-                printfln(s_tag.setup, "es7210 (Four Channels Audio ADC) found at " ANSI_ESC_CYAN "0x{:X}", addr);
+                printfln(s_tag.setup, "ES7210 (Four Channels Audio ADC) found at " ANSI_ESC_CYAN "0x{:X}", addr);
                 continue;
             }
             //-- TCA9554 port expander -----------------------------------------------------------------------------------------------------------
@@ -1525,11 +1532,32 @@ bool detect_i2_c_devices(TwoWire* twi, int8_t sda, int8_t scl, i2c_items_s* i2c_
                 printfln(s_tag.setup, "TCA9554 (8 Channel Port Expander) found at " ANSI_ESC_CYAN "0x{:X}", addr);
                 continue;
             }
+            //-- PCF8506a Real-Time-Clock --------------------------------------------------------------------------------------------------------
+            if (addr == 0x51) {
+                i2c_items->pcf8506a_found = true;
+                i2c_items->pcf8506a_addr = addr;
+                printfln(s_tag.setup, "PCF85063A (Real Time Clock) found at " ANSI_ESC_CYAN "0x{:X}", addr);
+                continue;
+            }
             //-- PCM5122 DAC -----------------------------------------------------------------------------------------------------------
             if (addr == 0x4C) {
                 i2c_items->pcm5122_found = true;
                 i2c_items->pcm5122_addr = addr;
                 printfln(s_tag.setup, "PCM5122 (I2S DAC) found at " ANSI_ESC_CYAN "0x{:X}", addr);
+                continue;
+            }
+            //-- QMI8658 3-Axix Accellerator-------------------------------------------------------------------------------------------------------
+            if (addr == 0x6B) {
+                i2c_items->qmi8658_found = true;
+                i2c_items->qmi8658_addr = addr;
+                printfln(s_tag.setup, "QMI8658 (3-Axis Accellerator) found at " ANSI_ESC_CYAN "0x{:X}", addr);
+                continue;
+            }
+            //-- BQ27220 (Battery Fuel Gauge)-----------------------------------------------------------------------------------------------------
+            if (addr == 0x7E) {
+                i2c_items->bq27220_found = true;
+                i2c_items->bq27220_addr = addr;
+                printfln(s_tag.setup, "BQ27220 (Battery Fuel Gauge) found at " ANSI_ESC_CYAN "0x{:X}", addr);
                 continue;
             }
             //-- Unknown Device  ------------------------------------------------------------------------------------------------------------------
@@ -1566,12 +1594,12 @@ void set_tft_items() {
     getTFT().setFrequency(TFT_FREQUENCY);
     getTFT().setBackGoundColor(TFT_BLACK);
 #elifdef TFT_MODE_RGB
-    getTFT().begin(RGB_PINS, RGB_TIMING);
-    getTFT().setDisplayInversion(false);
     getTFT().setRotation(TFT_ROTATION);
-    vTaskDelay(100 / portTICK_PERIOD_MS); // wait for TFT to be ready
-    getTFT().reset();
-    vTaskDelay(100 / portTICK_PERIOD_MS); // wait for TFT to be ready
+    getTFT().begin(RGB_PINS, RGB_TIMING);
+    vTaskDelay(200 / portTICK_PERIOD_MS); // wait for TFT to be ready
+    getTFT().setDisplayInversion(false);
+    // getTFT().reset();
+    // vTaskDelay(100 / portTICK_PERIOD_MS); // wait for TFT to be ready
 #elifdef TFT_MODE_DSI
     getTFT().begin(DSI_TIMING);
     getTFT().setRotation(TFT_ROTATION);

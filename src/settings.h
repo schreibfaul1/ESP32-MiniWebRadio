@@ -4,21 +4,23 @@
 #include "sdkconfig.h"       // get TARGET, e.g. CONFIG_IDF_TARGET_ESP32S31
 
 #undef I2S_DOUT
+#undef I2S_MCLK
 #include "../lib/tftLib/tft_structures.h"
 
 //———————————— predifined displays —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // #define SPI_DISPLAY 1                  //                    SPI display  320x240, 2.8inch,        ILI9341             XPT2046  /*.------*/
 // #define SPI_DISPLAY 2                  //                    SPI display  320x240, 3.2inch,        ILI9341             FT6x63   /*.------*/
 // #define SPI_DISPLAY 3                  //                    SPI display  480x320, 3.5" od 4"      ILI9488 or ST7796,  XPT2046  /*.------*/
-#define SPI_DISPLAY 4                  //                    SPI display  480x320, 3.5" od 4"      ILI9488 or ST7796,  FT6x63    /*.------*/
-// #define LCD_DISPLAY_ESP32_S3_28        // Hosyond            SPI display  320x240, 2.8inch,        ILI9341             FT6x63,  ESP32s3 N16R8
-// #define LCD_DISPLAY_ESP32_S3_40        // Hosyond            SPI display  480x320, 4"              ST7796,             FT6x63,  ESP32s3 N16R8
-// #define ESP32_8048S070                 // Sunton             RGB display  800x480, 7",                                 GT911,   ESP32s3 N16R8
-// #define ESP32_S3_Touch_LCD7            // Waveshare          RGB display  800x480, 7",                                 GT911,   ESP32s3 N8R8
-// #define ESP32_P4_WIFI6_TOUCH_LCD_43    // Waveshare          DSI display  800x480, 4.3",           ST7701,             GT911,   ESP32p4 N32R32
-// #define ESP32_P4_WIFI6_TOUCH_LCD7_7B   // Waveshare          DSI display 1024x600, 7",             EK97007,            GT911,   ESP32p4_es N32R32
-// #define JC1060P470                     // Guition            DSI display 1024x600, 7",             JD9165,             GT911,   ESP32p4_es N32R32
-// #define JC4880P443                     // Guition            DSI display  800x480, 4.3",           ST7701,             GT911,   ESP32p4_es N16R32
+// #define SPI_DISPLAY 4                  //                    SPI display  480x320, 3.5" od 4"      ILI9488 or ST7796,  FT6x63    /*.------*/
+// #define LCD_DISPLAY_ESP32_S3_28        // Hosyond            SPI display  320x240, 2.8inch,        ILI9341             FT6x63,  esp32s3 N16R8
+// #define LCD_DISPLAY_ESP32_S3_40        // Hosyond            SPI display  480x320, 4"              ST7796,             FT6x63,  esp32s3 N16R8
+// #define ESP32_8048S070                 // Sunton             RGB display  800x480, 7",             ST7262              GT911,   esp32s3 N16R8
+// #define ESP32_S3_Touch_LCD7            // Waveshare          RGB display  800x480, 7",             ST7262              GT911,   esp32s3 N8R8
+#define ESP32_S31_Touch_LCD_43C        // Waveshare          RGB display  800x480, 4.3",           ST7262              GT911,   esp32s31 N16R16V
+// #define ESP32_P4_WIFI6_TOUCH_LCD_43    // Waveshare          DSI display  800x480, 4.3",           ST7701,             GT911,   esp32p4 N32R32
+// #define ESP32_P4_WIFI6_TOUCH_LCD7_7B   // Waveshare          DSI display 1024x600, 7",             EK97007,            GT911,   esp32p4_es N32R32
+// #define JC1060P470                     // Guition            DSI display 1024x600, 7",             JD9165,             GT911,   esp32p4_es N32R32
+// #define JC4880P443                     // Guition            DSI display  800x480, 4.3",           ST7701,             GT911,   esp32p4_es N16R32
 // #define USER_DEFINED_DISPLAY           // Self configurated ESP32-S3 or ESP32-P4 devBoard with SPI display
 
 //———————————— common ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -458,7 +460,55 @@ const Timing RGB_TIMING = {.h_res = 800, .v_res = 480, .pixel_clock_hz = 1300000
         #define I2C_SCL              9 // I2C clock line for capacitive touchpad (-1 if not used)
     #endif
 #endif // CONFIG_IDF_TARGET_ESP32S3
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// 📌📌📌  RGB-DISPLAY [800x480] ESP32-S31 WAVESHARE 4.3"   📌📌📌
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+#if (CONFIG_IDF_TARGET_ESP32S31 == 1)
+    #ifdef ESP32_S31_Touch_LCD_43C
+        #define TFT_CONTROLLER       7 // (7)RGB[800x480]
+        #define TFT_ROTATION         0 // (0) none, (1) 90°CW, (2) 180°CW, (3) 270°CW
+        #define TP_CONTROLLER        7 // (7)GT911
+        #define TP_ROTATION          3 // (0) none, (1) 90°CW, (2) 180°CW, (3) 270°CW
+        #define TP_H_MIRROR          0 // (0) default, (1) mirror left <-> right
+        #define TP_V_MIRROR          0 // (0) default, (1) mirror up <-> down
+        #define DISPLAY_INVERSION    0 // (0) off (1) on
+        #define BRIGHTNESS_INVERSION 1 // (0) off (1) on, bg-led
+        #define BRIGHTNESS_MIN       0 // not used
+        #define AMP_EN_INVERSION     0 // (0) HIGH - amp is enabled, (1) LOW - amp is enabled
+const Pins RGB_PINS = { // WAVESHARE
+    .b0 = 8, .b1 = 9, .b2 = 10, .b3 = 11, .b4 = 12, .g0 = 13, .g1 = 14, .g2 = 15, .g3 = 16, .g4 = 17, .g5 = 18, .r0 = 19, .r1 = 33, .r2 = 34, .r3 = 35, .r4 = 36, .hsync = 44, .vsync = 45, .de = 43, .pclk = 40, .bl = -1};
 
+const Timing RGB_TIMING = {.h_res = 800, .v_res = 480, .pixel_clock_hz = 15000000, .hsync_pulse_width = 4, .hsync_back_porch = 8, .hsync_front_porch = 8, .vsync_pulse_width = 4, .vsync_back_porch = 8, .vsync_front_porch = 8};
+        #define TP_IRQ              -1
+
+        #define SD_MMC_CMD          25
+        #define SD_MMC_CLK          24
+        #define SD_MMC_D0           20
+        #define SD_MMC_D1           -1 //  21
+        #define SD_MMC_D2           -1 //  22
+        #define SD_MMC_D3           -1 //  23
+
+        #define I2S_DOUT            39 // 42
+        #define I2S_BCLK            37
+        #define I2S_LRC             38
+        #define I2S_MCLK            -1 // important, don't change!
+
+        #define IR_PIN              49  // IR Receiver (if available)
+        #define BT_EMITTER_RX       -1 // must be -1, not enough pins
+        #define BT_EMITTER_TX       -1 // must be -1, not enough pins
+        #define BT_EMITTER_LINK     -1 // must be -1, not enough pins
+        #define BT_EMITTER_MODE     -1 // must be -1, not enough pins
+        #define BT_EMITTER_CONNECT  -1 // must be -1, not enough pins
+
+        #define TFT_BL              47 // same as RGB_PINS.bl
+        #define AMP_ENABLED         57 // control pin for extenal amplifier (if available)
+
+        #define I2C_SDA              0 // I2C dala line for capacitive touchpad  (-1 if not used)
+        #define I2C_SCL              1 // I2C clock line for capacitive touchpad (-1 if not used)
+
+
+    #endif
+#endif
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // 📌📌📌  DSI-DISPLAY [800x480] ESP32-P4 WAVESHARE 4.3"   📌📌📌
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

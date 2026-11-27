@@ -158,6 +158,8 @@ struct tone_s {
 struct i2c_items_s {
     bool es8311_found = false;
     int  es8311_addr = -1;
+    bool es8389_found = false;
+    int  es8389_addr = -1;
     bool es7210_found = false;
     int  es7210_addr = -1;
     bool gt911_found = false;
@@ -172,6 +174,12 @@ struct i2c_items_s {
     int  ch422g_addr = -1;
     bool pcm5122_found = false;
     int  pcm5122_addr = -1;
+    bool pcf8506a_found  = false;
+    int  pcf8506a_addr = -1;
+    bool qmi8658_found = false;
+    int  qmi8658_addr = -1;
+    bool bq27220_found = false;
+    int  bq27220_addr = -1;
 } s_i2c_items;
 
 struct tag_s {

@@ -2,7 +2,6 @@
 // updated on Nov 16 2026
 
 #include "Arduino.h"
-#include "esp_idf_version.h" // get IDF e.g. ESP_IDF_VERSION_MAJOR
 #include "sdkconfig.h"       // get TARGET, e.g. CONFIG_IDF_TARGET_ESP32S31
 
 #if(defined(CONFIG_IDF_TARGET_ESP32S3) || defined(CONFIG_IDF_TARGET_ESP32S31))
@@ -93,7 +92,6 @@ void TFT_RGB::begin(const Pins& newPins, const Timing& newTiming) {
     ESP_ERROR_CHECK(esp_lcd_new_rgb_panel(&panel_config, &m_panel));
     ESP_ERROR_CHECK(esp_lcd_panel_reset(m_panel));
     ESP_ERROR_CHECK(esp_lcd_panel_init(m_panel));
-    if (tft_info) tft_info("Display initialisiert.");
 
     // Hintergrundbeleuchtung einschalten
     if (m_pins.bl >= 0) {
@@ -123,6 +121,8 @@ void TFT_RGB::begin(const Pins& newPins, const Timing& newTiming) {
     esp_lcd_rgb_panel_register_event_callbacks(m_panel, &cbs, this);
     esp_lcd_rgb_panel_refresh(m_panel);
     m_rowBuffer = (uint8_t*)ps_malloc(m_rowBufferSize);
+    if (tft_info) tft_info("Display initialisiert.");
+
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_RGB::reset() {
