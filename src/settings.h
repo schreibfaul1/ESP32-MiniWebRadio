@@ -1,5 +1,8 @@
 #pragma once
 #include "Arduino.h"
+#include "esp_idf_version.h" // get IDF e.g. ESP_IDF_VERSION_MAJOR
+#include "sdkconfig.h"       // get TARGET, e.g. CONFIG_IDF_TARGET_ESP32S31
+
 #undef I2S_DOUT
 #include "../lib/tftLib/tft_structures.h"
 

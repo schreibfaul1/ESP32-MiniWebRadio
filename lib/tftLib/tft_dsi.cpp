@@ -2,6 +2,9 @@
 // updated on Jul 05 2026
 
 #include "Arduino.h"
+#include "esp_idf_version.h" // get IDF e.g. ESP_IDF_VERSION_MAJOR
+#include "sdkconfig.h"       // get TARGET, e.g. CONFIG_IDF_TARGET_ESP32S31
+
 #ifdef CONFIG_IDF_TARGET_ESP32P4
     #include "tft_dsi.h"
 

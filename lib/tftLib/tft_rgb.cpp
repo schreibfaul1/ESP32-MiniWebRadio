@@ -2,6 +2,9 @@
 // updated on Nov 16 2026
 
 #include "Arduino.h"
+#include "esp_idf_version.h" // get IDF e.g. ESP_IDF_VERSION_MAJOR
+#include "sdkconfig.h"       // get TARGET, e.g. CONFIG_IDF_TARGET_ESP32S31
+
 #if(defined(CONFIG_IDF_TARGET_ESP32S3) || defined(CONFIG_IDF_TARGET_ESP32S31))
     #include "tft_rgb.h"
 

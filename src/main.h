@@ -2,6 +2,9 @@
 // updated: 24.09.2026
 
 #include "settings.h"
+#include "esp_idf_version.h" // get IDF e.g. ESP_IDF_VERSION_MAJOR
+#include "sdkconfig.h"       // get TARGET, e.g. CONFIG_IDF_TARGET_ESP32S31
+
 #pragma once
 
 #if TFT_CONTROLLER == 0
